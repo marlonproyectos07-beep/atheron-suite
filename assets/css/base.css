@@ -1,0 +1,202 @@
+/* ============================================================
+   BASE.CSS — Fundamentos del diseño de Atheron Suite
+   Aquí vive TODO lo que se repite en el sitio:
+   variables (colores, tipografías, espacios), reset y utilidades.
+   Si quieres cambiar la identidad visual del sitio completo,
+   se cambia aquí y se actualiza en todas las páginas.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. VARIABLES (design tokens)
+   Se declaran en :root y se usan con var(--nombre)
+   ------------------------------------------------------------ */
+:root {
+  /* Colores de marca */
+  --color-noche:        #0f172a;  /* azul muy oscuro: fondos y textos fuertes */
+  --color-noche-suave:  #1e293b;
+  --color-sal:          #c9a227;  /* dorado/ámbar: acento (guiño a la Catedral de Sal) */
+  --color-sal-claro:    #e3c25c;
+  --color-verde:        #2f6b56;  /* verde sabana: acento secundario */
+
+  /* Neutros */
+  --color-blanco:       #ffffff;
+  --color-crema:        #faf8f4;  /* fondo cálido de secciones */
+  --color-gris-100:     #f1f3f6;
+  --color-gris-200:     #e2e6eb;
+  --color-gris-500:     #6b7280;
+  --color-gris-700:     #374151;
+
+  /* Roles semánticos (usa estos en los componentes, no los de arriba) */
+  --fondo:              var(--color-blanco);
+  --fondo-alterno:      var(--color-crema);
+  --texto:              var(--color-noche);
+  --texto-suave:        var(--color-gris-500);
+  --borde:              var(--color-gris-200);
+  --acento:             var(--color-sal);
+
+  /* Tipografías */
+  --fuente-titulo: "Fraunces", Georgia, "Times New Roman", serif;
+  --fuente-texto:  "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Escala de espacios (múltiplos consistentes = diseño ordenado) */
+  --esp-1: 0.5rem;
+  --esp-2: 1rem;
+  --esp-3: 1.5rem;
+  --esp-4: 2rem;
+  --esp-5: 3rem;
+  --esp-6: 4rem;
+  --esp-7: 6rem;
+
+  /* Bordes y sombras */
+  --radio-sm: 8px;
+  --radio-md: 14px;
+  --radio-lg: 24px;
+  --sombra-sm: 0 1px 3px rgba(15, 23, 42, .08);
+  --sombra-md: 0 10px 30px rgba(15, 23, 42, .10);
+  --sombra-lg: 0 24px 60px rgba(15, 23, 42, .16);
+
+  /* Medidas de layout */
+  --ancho-max: 1180px;
+  --alto-header: 76px;
+
+  --transicion: 220ms ease;
+}
+
+/* ------------------------------------------------------------
+   2. RESET — normaliza diferencias entre navegadores
+   ------------------------------------------------------------ */
+*, *::before, *::after { box-sizing: border-box; }
+
+body, h1, h2, h3, h4, p, ul, ol, figure, blockquote {
+  margin: 0;
+  padding: 0;
+}
+
+ul, ol { list-style: none; }
+
+img, picture, svg, video {
+  display: block;
+  max-width: 100%;   /* nunca se desbordan en celular */
+  height: auto;
+}
+
+button, input, textarea, select { font: inherit; color: inherit; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--alto-header) + 16px); /* el header fijo no tapa los títulos */
+}
+
+/* ------------------------------------------------------------
+   3. TIPOGRAFÍA
+   ------------------------------------------------------------ */
+body {
+  font-family: var(--fuente-texto);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--texto);
+  background-color: var(--fondo);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--fuente-titulo);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+/* clamp() = tamaño fluido: se adapta solo entre celular y escritorio */
+h1 { font-size: clamp(2.2rem, 5.5vw, 3.9rem); }
+h2 { font-size: clamp(1.8rem, 3.6vw, 2.7rem); }
+h3 { font-size: clamp(1.2rem, 2vw, 1.45rem); }
+
+a { color: inherit; text-decoration: none; }
+
+strong { font-weight: 600; }
+
+/* ------------------------------------------------------------
+   4. UTILIDADES — clases pequeñas y reutilizables
+   ------------------------------------------------------------ */
+
+/* Centra el contenido y le da aire lateral en celular */
+.contenedor {
+  width: 100%;
+  max-width: var(--ancho-max);
+  margin-inline: auto;
+  padding-inline: var(--esp-3);
+}
+
+/* Espaciado vertical estándar de una sección */
+.seccion { padding-block: var(--esp-7); }
+.seccion--alterna { background-color: var(--fondo-alterno); }
+.seccion--oscura {
+  background-color: var(--color-noche);
+  color: var(--color-blanco);
+}
+.seccion--oscura .texto-suave { color: rgba(255,255,255,.72); }
+
+/* Encabezado de sección (etiqueta + título + bajada) */
+.encabezado-seccion { max-width: 640px; margin-bottom: var(--esp-5); }
+.encabezado-seccion--centrado {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.etiqueta {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--acento);
+  margin-bottom: var(--esp-1);
+}
+
+.texto-suave { color: var(--texto-suave); }
+.texto-grande { font-size: 1.09rem; }
+.centrado { text-align: center; }
+
+/* Rejilla responsive reutilizable: 1 columna en celular, N en escritorio */
+.grid { display: grid; gap: var(--esp-3); }
+@media (min-width: 700px)  { .grid--2 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 700px)  { .grid--3 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .grid--3 { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 700px)  { .grid--4 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .grid--4 { grid-template-columns: repeat(4, 1fr); } }
+
+/* Solo visible para lectores de pantalla (accesibilidad) */
+.solo-lectores {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Enlace "saltar al contenido" para teclado */
+.saltar-contenido {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 999;
+  background: var(--color-noche);
+  color: #fff;
+  padding: var(--esp-2);
+}
+.saltar-contenido:focus { left: 0; }
+
+/* Foco visible: importante para accesibilidad */
+:focus-visible {
+  outline: 3px solid var(--color-sal);
+  outline-offset: 2px;
+}
+
+/* Respeta a quien prefiere menos animación */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}

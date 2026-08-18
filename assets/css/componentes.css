@@ -1,0 +1,413 @@
+/* ============================================================
+   COMPONENTES.CSS — Piezas reutilizables del sitio
+   Header, botones, tarjetas, formularios, footer, etc.
+   Regla practica: si algo aparece en 2 o mas paginas, va aqui.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   HEADER + NAVEGACION
+   ------------------------------------------------------------ */
+.header {
+  position: sticky;      /* se queda arriba al hacer scroll */
+  top: 0;
+  z-index: 100;
+  height: var(--alto-header);
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, .88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--borde);
+}
+
+.header__interior {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+}
+
+/* Logo en texto (mas adelante se puede reemplazar por un SVG) */
+.logo {
+  display: flex;
+  align-items: baseline;
+  gap: .45rem;
+  font-family: var(--fuente-titulo);
+  font-size: 1.32rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.logo__suite {
+  font-family: var(--fuente-texto);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--acento);
+}
+
+.nav { display: none; }              /* oculto en celular */
+.nav__lista {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+.nav__enlace {
+  font-size: .93rem;
+  font-weight: 500;
+  color: var(--color-gris-700);
+  padding-block: .4rem;
+  border-bottom: 2px solid transparent;
+  transition: color var(--transicion), border-color var(--transicion);
+}
+.nav__enlace:hover,
+.nav__enlace[aria-current="page"] {
+  color: var(--texto);
+  border-bottom-color: var(--acento);
+}
+
+/* Boton hamburguesa (solo celular) */
+.boton-menu {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px; height: 44px;
+  padding: 0 10px;
+  background: none;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  cursor: pointer;
+}
+.boton-menu span {
+  display: block;
+  height: 2px;
+  background: var(--texto);
+  transition: transform var(--transicion), opacity var(--transicion);
+}
+.boton-menu[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.boton-menu[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.boton-menu[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Menu desplegable en celular */
+.menu-movil {
+  position: fixed;
+  top: var(--alto-header);
+  left: 0; right: 0;
+  background: var(--color-blanco);
+  border-bottom: 1px solid var(--borde);
+  box-shadow: var(--sombra-md);
+  padding: var(--esp-2) var(--esp-3) var(--esp-4);
+  display: none;
+  z-index: 99;
+}
+.menu-movil[data-abierto="true"] { display: block; }
+.menu-movil a {
+  display: block;
+  padding: var(--esp-2) 0;
+  border-bottom: 1px solid var(--borde);
+  font-weight: 500;
+}
+.menu-movil .boton { margin-top: var(--esp-3); width: 100%; }
+
+/* A partir de 900px: se ve el menu normal y se esconde la hamburguesa */
+@media (min-width: 900px) {
+  .nav { display: block; }
+  .boton-menu { display: none; }
+  .menu-movil { display: none !important; }
+}
+
+/* ------------------------------------------------------------
+   BOTONES  —  .boton + variante
+   ------------------------------------------------------------ */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .85rem 1.6rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: .96rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: transform var(--transicion), background-color var(--transicion),
+              color var(--transicion), box-shadow var(--transicion);
+}
+.boton:hover { transform: translateY(-2px); }
+
+.boton--primario {
+  background: var(--color-noche);
+  color: var(--color-blanco);
+  box-shadow: var(--sombra-sm);
+}
+.boton--primario:hover { background: var(--color-noche-suave); box-shadow: var(--sombra-md); }
+
+.boton--acento {
+  background: var(--color-sal);
+  color: var(--color-noche);
+}
+.boton--acento:hover { background: var(--color-sal-claro); }
+
+.boton--contorno {
+  background: transparent;
+  border-color: var(--color-gris-200);
+  color: var(--texto);
+}
+.boton--contorno:hover { border-color: var(--texto); }
+
+/* Contorno sobre fondo oscuro */
+.boton--claro {
+  background: transparent;
+  border-color: rgba(255,255,255,.4);
+  color: #fff;
+}
+.boton--claro:hover { background: rgba(255,255,255,.12); }
+
+.boton--grande { padding: 1.05rem 2.1rem; font-size: 1.02rem; }
+
+/* Grupo de botones (llamado a la accion doble) */
+.grupo-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+.grupo-botones--centrado { justify-content: center; }
+
+/* ------------------------------------------------------------
+   IMAGEN PLACEHOLDER
+   Mientras no tengamos las fotos reales de los hospedajes,
+   usamos este bloque que deja CLARO que el contenido es temporal.
+   ------------------------------------------------------------ */
+.placeholder {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  background:
+    repeating-linear-gradient(45deg,
+      var(--color-gris-100) 0 12px,
+      var(--color-gris-200) 12px 24px);
+  color: var(--color-gris-500);
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: var(--esp-2);
+  border-radius: var(--radio-md);
+  overflow: hidden;
+}
+.placeholder--alto  { aspect-ratio: 3 / 4; }
+.placeholder--ancho { aspect-ratio: 16 / 9; }
+.placeholder--cuadrado { aspect-ratio: 1 / 1; }
+
+/* Marca de "contenido pendiente" para textos temporales */
+.pendiente {
+  background: #fff8dd;
+  border: 1px dashed #d9b800;
+  border-radius: 6px;
+  padding: 0 .35em;
+  font-size: .93em;
+  color: #6b5500;
+}
+
+/* ------------------------------------------------------------
+   TARJETAS
+   ------------------------------------------------------------ */
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-blanco);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  overflow: hidden;
+  transition: transform var(--transicion), box-shadow var(--transicion);
+}
+.tarjeta:hover { transform: translateY(-4px); box-shadow: var(--sombra-md); }
+
+.tarjeta__media { position: relative; }
+.tarjeta__media .placeholder { border-radius: 0; }
+
+.tarjeta__insignia {
+  position: absolute;
+  top: var(--esp-2); left: var(--esp-2);
+  background: rgba(15,23,42,.85);
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: .3rem .7rem;
+  border-radius: 999px;
+}
+
+.tarjeta__cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  padding: var(--esp-3);
+  flex: 1;                 /* iguala la altura de las tarjetas */
+}
+.tarjeta__titulo { font-size: 1.25rem; }
+.tarjeta__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .9rem;
+  font-size: .87rem;
+  color: var(--texto-suave);
+}
+.tarjeta__pie {
+  margin-top: auto;
+  padding-top: var(--esp-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2);
+}
+.tarjeta__precio { font-weight: 600; }
+.tarjeta__precio span { font-weight: 400; color: var(--texto-suave); font-size: .85rem; }
+
+/* Tarjeta simple para beneficios / caracteristicas */
+.tarjeta-simple {
+  padding: var(--esp-3);
+  background: var(--color-blanco);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+}
+.tarjeta-simple__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px; height: 46px;
+  margin-bottom: var(--esp-2);
+  border-radius: 12px;
+  background: var(--color-crema);
+  font-size: 1.35rem;
+}
+.seccion--oscura .tarjeta-simple {
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.14);
+}
+.seccion--oscura .tarjeta-simple__icono { background: rgba(255,255,255,.1); }
+
+/* ------------------------------------------------------------
+   LISTA DE CARACTERISTICAS (con vineta de check)
+   ------------------------------------------------------------ */
+.lista-check { display: grid; gap: .7rem; }
+.lista-check li {
+  position: relative;
+  padding-left: 1.9rem;
+}
+.lista-check li::before {
+  content: "\2713";
+  position: absolute;
+  left: 0; top: .15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem; height: 1.35rem;
+  border-radius: 50%;
+  background: var(--color-sal);
+  color: var(--color-noche);
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------
+   FORMULARIO DE CONTACTO
+   ------------------------------------------------------------ */
+.formulario { display: grid; gap: var(--esp-2); }
+@media (min-width: 640px) {
+  .formulario__fila { display: grid; grid-template-columns: 1fr 1fr; gap: var(--esp-2); }
+}
+
+.campo { display: grid; gap: .35rem; }
+.campo label { font-size: .88rem; font-weight: 600; }
+.campo input,
+.campo select,
+.campo textarea {
+  width: 100%;
+  padding: .8rem .95rem;
+  background: var(--color-blanco);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  transition: border-color var(--transicion);
+}
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus { border-color: var(--acento); }
+.campo textarea { min-height: 130px; resize: vertical; }
+.campo__ayuda { font-size: .8rem; color: var(--texto-suave); }
+
+/* Mensaje de respuesta del formulario (lo muestra main.js) */
+.aviso-formulario {
+  display: none;
+  padding: var(--esp-2);
+  border-radius: var(--radio-sm);
+  background: #eaf6ef;
+  border: 1px solid #b7ddc6;
+  color: #1d5c39;
+  font-size: .92rem;
+}
+.aviso-formulario[data-visible="true"] { display: block; }
+
+/* ------------------------------------------------------------
+   FOOTER
+   ------------------------------------------------------------ */
+.footer {
+  background: var(--color-noche);
+  color: rgba(255,255,255,.75);
+  padding-block: var(--esp-6) var(--esp-3);
+  font-size: .93rem;
+}
+.footer a:hover { color: #fff; }
+.footer h4 {
+  font-family: var(--fuente-texto);
+  font-size: .8rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: var(--esp-2);
+}
+.footer__grid {
+  display: grid;
+  gap: var(--esp-4);
+  margin-bottom: var(--esp-5);
+}
+@media (min-width: 760px) {
+  .footer__grid { grid-template-columns: 1.6fr 1fr 1fr 1fr; }
+}
+.footer__lista { display: grid; gap: .55rem; }
+.footer .logo { color: #fff; margin-bottom: var(--esp-2); }
+.footer__base {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  justify-content: space-between;
+  padding-top: var(--esp-3);
+  border-top: 1px solid rgba(255,255,255,.14);
+  font-size: .84rem;
+}
+
+/* ------------------------------------------------------------
+   BOTON FLOTANTE DE CONTACTO (llamado a la accion siempre visible)
+   ------------------------------------------------------------ */
+.flotante {
+  position: fixed;
+  right: var(--esp-2);
+  bottom: var(--esp-2);
+  z-index: 90;
+  box-shadow: var(--sombra-lg);
+}
+
+/* ------------------------------------------------------------
+   ANIMACION DE APARICION (la activa main.js al hacer scroll)
+   ------------------------------------------------------------ */
+.aparecer {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.aparecer.visible { opacity: 1; transform: none; }
