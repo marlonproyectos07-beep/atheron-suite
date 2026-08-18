@@ -1,0 +1,12 @@
+# robots.txt — le dice a los buscadores que pueden recorrer.
+# "Allow: /" = todo el sitio es rastreable.
+
+User-agent: *
+Allow: /
+
+# La plantilla no debe indexarse: es un archivo de trabajo,
+# no una pagina real para visitantes.
+Disallow: /hospedajes/plantilla-hospedaje
+
+# Mapa del sitio: aqui Google encuentra la lista de paginas.
+Sitemap: https://atheron-suite.vercel.app/sitemap.xml

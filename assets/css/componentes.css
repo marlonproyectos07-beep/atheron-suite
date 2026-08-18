@@ -164,7 +164,26 @@
 }
 .boton--claro:hover { background: rgba(255,255,255,.12); }
 
+/* WhatsApp: usamos su verde oficial porque la gente lo reconoce
+   al instante. Un boton de WhatsApp que no es verde convierte menos. */
+.boton--whatsapp {
+  background: #25d366;
+  color: #073b23;
+}
+.boton--whatsapp:hover { background: #1fbe5a; }
+
+/* El icono se dibuja con SVG dentro del boton (ver los HTML) */
+.boton__icono {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
 .boton--grande { padding: 1.05rem 2.1rem; font-size: 1.02rem; }
+
+/* Boton de WhatsApp a lo ancho dentro de una tarjeta */
+.boton--bloque { width: 100%; }
 
 /* Grupo de botones (llamado a la accion doble) */
 .grupo-botones {

@@ -14,6 +14,23 @@ sobre `index.html` → *Open with Live Server*. Así la página se recarga sola 
 
 ---
 
+## Cambiar el número de WhatsApp
+
+Está en **un solo lugar**: la primera línea de [assets/js/main.js](assets/js/main.js).
+
+```js
+var WHATSAPP_NUMERO = "573000000000";   // ← cámbialo aquí
+```
+
+Formato internacional, **sin `+` y sin espacios**. Colombia es `57`, así que un
+número como `300 123 4567` se escribe `573001234567`.
+
+Con ese cambio se actualizan todos los botones del sitio a la vez. Cada botón lleva
+su propio mensaje en el atributo `data-whatsapp`, así el cliente no tiene que
+explicar cuál hospedaje le gustó: el mensaje ya llega escrito.
+
+---
+
 ## Publicación (Vercel)
 
 El sitio se publica solo. El flujo es:
@@ -51,6 +68,13 @@ git push
 ├── hospedajes/
 │   ├── index.html                      Listado de los 7 hospedajes
 │   └── plantilla-hospedaje.html        Plantilla para crear cada ficha individual
+│
+├── robots.txt                          Permisos de rastreo para buscadores
+├── sitemap.xml                         Lista de páginas para Google
+├── vercel.json                         Configuración del despliegue
+│
+├── docs/
+│   └── estrategia-seo.md               Plan de posicionamiento y contenido
 │
 ├── assets/
 │   ├── css/

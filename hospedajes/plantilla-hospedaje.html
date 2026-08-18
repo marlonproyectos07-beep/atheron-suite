@@ -28,6 +28,63 @@
   <link rel="stylesheet" href="../assets/css/base.css">
   <link rel="stylesheet" href="../assets/css/componentes.css">
   <link rel="stylesheet" href="../assets/css/paginas.css">
+
+  <!-- ===== SEO ===== -->
+  <link rel="canonical" href="https://atheron-suite.vercel.app/hospedajes/[[ARCHIVO]]">
+
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_CO">
+  <meta property="og:site_name" content="Atheron Suite">
+  <meta property="og:url" content="https://atheron-suite.vercel.app/hospedajes/[[ARCHIVO]]">
+  <meta property="og:title" content="[[NOMBRE DEL HOSPEDAJE]] | Atheron Suite Zipaquira">
+  <meta property="og:description" content="[[Misma descripcion de arriba, en una linea.]]">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- ============================================================
+       DATOS ESTRUCTURADOS DEL HOSPEDAJE
+       Este es el bloque mas valioso de la pagina para el buscador:
+       le entrega la ficha del alojamiento ya masticada.
+
+       Solo el 10,6% de los hoteles tiene esto bien hecho, asi que
+       es una ventaja barata.
+
+       REGLA: rellena unicamente los campos cuyo dato aparezca
+       visible en la pagina. Si no tienes un dato, BORRA esa linea
+       en vez de inventarla.
+       ============================================================ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    "name": "[[NOMBRE DEL HOSPEDAJE]]",
+    "description": "[[Descripcion breve del hospedaje.]]",
+    "url": "https://atheron-suite.vercel.app/hospedajes/[[ARCHIVO]]",
+    "telephone": "[[+57 telefono]]",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "[[Direccion o sector]]",
+      "addressLocality": "Zipaquira",
+      "addressRegion": "Cundinamarca",
+      "addressCountry": "CO"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "[[latitud]]",
+      "longitude": "[[longitud]]"
+    },
+    "numberOfRooms": "[[N]]",
+    "petsAllowed": "[[true o false]]",
+    "amenityFeature": [
+      { "@type": "LocationFeatureSpecification", "name": "Wifi", "value": true },
+      { "@type": "LocationFeatureSpecification", "name": "Parqueadero", "value": true }
+    ],
+    "parentOrganization": {
+      "@type": "Organization",
+      "name": "Atheron Suite",
+      "url": "https://atheron-suite.vercel.app/"
+    }
+  }
+  </script>
 </head>
 
 <body>
@@ -365,7 +422,8 @@
     </div>
   </footer>
 
-  <a class="boton boton--acento flotante" href="#contacto">Consultar</a>
+  <a class="boton boton--whatsapp flotante" href="#contacto"
+     data-whatsapp="Hola, me interesa [[NOMBRE DEL HOSPEDAJE]] de Atheron Suite. Quiero consultar disponibilidad.">WhatsApp</a>
 
   <script src="../assets/js/main.js"></script>
 </body>

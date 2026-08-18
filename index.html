@@ -14,6 +14,29 @@
   <title>Atheron Suite | Hospedajes con alma en Zipaquira, Cundinamarca</title>
   <meta name="description" content="Atheron Suite reune hospedajes seleccionados en Zipaquira, Cundinamarca. Estancias comodas a minutos de la Catedral de Sal y del centro historico.">
 
+  <!-- ============================================================
+       SEO
+       ============================================================ -->
+
+  <!-- Canonica: le dice a Google cual es LA direccion oficial de esta
+       pagina. Evita que la trate como contenido duplicado si se llega
+       por varias rutas (con y sin barra final, por ejemplo). -->
+  <link rel="canonical" href="https://atheron-suite.vercel.app/">
+
+  <!-- Open Graph: controla como se ve el enlace cuando alguien lo
+       comparte por WhatsApp, Facebook o LinkedIn. Sin esto, la vista
+       previa sale fea o vacia, y eso cuesta clics. -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_CO">
+  <meta property="og:site_name" content="Atheron Suite">
+  <meta property="og:url" content="https://atheron-suite.vercel.app/">
+  <meta property="og:title" content="Atheron Suite | Hospedajes en Zipaquira, Cundinamarca">
+  <meta property="og:description" content="Hospedajes seleccionados en Zipaquira, a minutos de la Catedral de Sal y del centro historico.">
+  <!-- PENDIENTE: crear imagen de 1200x630 px y descomentar:
+  <meta property="og:image" content="https://atheron-suite.vercel.app/assets/img/portada-compartir.jpg"> -->
+
+  <meta name="twitter:card" content="summary_large_image">
+
   <!-- Tipografias (necesitan internet; si no cargan, el sitio usa las de respaldo) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,6 +47,36 @@
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/componentes.css">
   <link rel="stylesheet" href="assets/css/paginas.css">
+
+  <!-- ============================================================
+       DATOS ESTRUCTURADOS (JSON-LD)
+       Es una ficha del negocio en un formato que Google y los
+       asistentes de IA leen directamente. No se ve en pantalla.
+
+       REGLA IMPORTANTE: solo se marca informacion que el visitante
+       pueda ver en la pagina. Marcar datos inventados u ocultos es
+       motivo de penalizacion.
+
+       Por eso aqui NO ponemos direccion ni telefono todavia:
+       no los tenemos confirmados. Se agregan en la etapa 2.
+       ============================================================ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Atheron Suite",
+    "description": "Coleccion de hospedajes seleccionados en Zipaquira, Cundinamarca.",
+    "url": "https://atheron-suite.vercel.app/",
+    "areaServed": {
+      "@type": "City",
+      "name": "Zipaquira",
+      "containedInPlace": {
+        "@type": "AdministrativeArea",
+        "name": "Cundinamarca, Colombia"
+      }
+    }
+  }
+  </script>
 </head>
 
 <body>
@@ -512,7 +565,8 @@
   </footer>
 
   <!-- Llamado a la accion flotante, siempre visible en celular -->
-  <a class="boton boton--acento flotante" href="#contacto">Consultar</a>
+  <a class="boton boton--whatsapp flotante" href="#contacto"
+     data-whatsapp="Hola, quiero informacion sobre los hospedajes de Atheron Suite en Zipaquira.">WhatsApp</a>
 
   <script src="assets/js/main.js"></script>
 </body>
