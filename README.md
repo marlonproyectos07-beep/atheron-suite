@@ -14,6 +14,31 @@ sobre `index.html` → *Open with Live Server*. Así la página se recarga sola 
 
 ---
 
+## Publicación (Vercel)
+
+El sitio se publica solo. El flujo es:
+
+```
+editas un archivo  →  git add / git commit  →  git push  →  Vercel republica
+```
+
+Cada `push` a la rama `main` genera un despliegue nuevo en unos segundos.
+Si algo sale mal, en el panel de Vercel puedes volver a un despliegue anterior.
+
+`vercel.json` activa **cleanUrls**: las direcciones se ven sin la extensión.
+`/landing/hospedaje-en-zipaquira.html` se publica como `/landing/hospedaje-en-zipaquira`.
+Los enlaces internos siguen funcionando igual: Vercel redirige automáticamente.
+
+Comandos del día a día:
+
+```bash
+git add -A
+git commit -m "Describe aquí el cambio"
+git push
+```
+
+---
+
 ## Estructura de carpetas
 
 ```
