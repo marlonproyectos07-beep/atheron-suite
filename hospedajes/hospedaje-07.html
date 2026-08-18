@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- ============================================================
+       HOSPEDAJE 07 — Hospedaje 07
+       Estructura replicada de la ficha principal.
+
+       IMPORTANTE — POLITICA DE DIRECCION:
+       Este hospedaje es aliado. NO se publica su direccion exacta.
+       Solo se indica la zona de referencia. La ubicacion precisa se
+       entrega al huesped cuando la reserva esta confirmada y pagada.
+       Por eso el JSON-LD de abajo NO lleva "streetAddress".
+       ============================================================ -->
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ============================================================
+       NOINDEX TEMPORAL
+       Mientras esta ficha no tenga contenido real (nombre, fotos,
+       habitaciones, precio) le pedimos a Google que NO la indexe.
+
+       Por que: publicar varias paginas casi vacias y parecidas entre
+       si es "contenido delgado", y Google lo castiga a nivel de todo
+       el dominio. Es mejor tener 1 pagina buena indexada que 7 flojas.
+
+       QUITAR esta linea cuando la ficha este completa, y anadir su
+       direccion a /sitemap.xml.
+       ============================================================ -->
+  <meta name="robots" content="noindex, follow">
+
+  <title>Hospedaje 07 | Atheron Suite Zipaquira</title>
+  <meta name="description" content="Hospedaje 07, hospedaje de Atheron Suite en Zipaquira, Cundinamarca. Consulta disponibilidad por WhatsApp.">
+
+  <link rel="canonical" href="https://atheron-suite.vercel.app/hospedajes/hospedaje-07">
+
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_CO">
+  <meta property="og:site_name" content="Atheron Suite">
+  <meta property="og:url" content="https://atheron-suite.vercel.app/hospedajes/hospedaje-07">
+  <meta property="og:title" content="Hospedaje 07 | Atheron Suite">
+  <meta property="og:description" content="Hospedaje en Zipaquira, Cundinamarca.">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/componentes.css">
+  <link rel="stylesheet" href="../assets/css/paginas.css">
+
+  <!-- ============================================================
+       DATOS ESTRUCTURADOS
+       Sin "streetAddress" a proposito: no publicamos la direccion
+       exacta de los hospedajes aliados. "addressLocality" si va,
+       porque es cierto y ayuda al posicionamiento local.
+       Sin "geo" por la misma razon.
+       ============================================================ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    "name": "Hospedaje 07",
+    "description": "Hospedaje de Atheron Suite en Zipaquira, Cundinamarca.",
+    "url": "https://atheron-suite.vercel.app/hospedajes/hospedaje-07",
+    "telephone": "+573188983167",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Zipaquira",
+      "addressRegion": "Cundinamarca",
+      "addressCountry": "CO"
+    },
+    "parentOrganization": {
+      "@type": "Organization",
+      "name": "Atheron Suite",
+      "url": "https://atheron-suite.vercel.app/"
+    }
+  }
+  </script>
+</head>
+
+<body>
+
+  <p class="aviso-borrador">
+    Ficha en preparacion. Faltan nombre definitivo, fotos, habitaciones y precios.
+  </p>
+
+  <a class="saltar-contenido" href="#contenido">Saltar al contenido</a>
+
+  <header class="header">
+    <div class="contenedor header__interior">
+      <a class="logo" href="../index.html">Atheron <span class="logo__suite">Suite</span></a>
+
+      <nav class="nav" aria-label="Navegacion principal">
+        <ul class="nav__lista">
+          <li><a class="nav__enlace" href="../index.html">Inicio</a></li>
+          <li><a class="nav__enlace" href="index.html">Hospedajes</a></li>
+          <li><a class="nav__enlace" href="#ubicacion">Ubicacion</a></li>
+          <li><a class="nav__enlace" href="../blog/index.html">Blog</a></li>
+          <li><a class="boton boton--primario" href="#contacto">Consultar</a></li>
+        </ul>
+      </nav>
+
+      <button class="boton-menu" type="button" aria-expanded="false"
+              aria-controls="menu-movil" data-boton-menu>
+        <span></span><span></span><span></span>
+        <span class="solo-lectores">Abrir menu</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="menu-movil" id="menu-movil" data-menu-movil data-abierto="false">
+    <div class="contenedor">
+      <a href="../index.html">Inicio</a>
+      <a href="index.html">Hospedajes</a>
+      <a href="#habitaciones">Habitaciones</a>
+      <a href="#galeria">Galeria</a>
+      <a href="#ubicacion">Ubicacion</a>
+      <a href="../blog/index.html">Blog</a>
+      <a class="boton boton--primario" href="#contacto">Consultar</a>
+    </div>
+  </div>
+
+
+  <main id="contenido">
+
+    <!-- ===== 1. PORTADA ===== -->
+    <section class="hero hero--interior">
+      <div class="contenedor hero__contenido">
+        <span class="hero__etiqueta">Zipaquira, Cundinamarca</span>
+        <h1 class="hero__titulo"><span class="pendiente">Hospedaje 07</span></h1>
+        <p class="hero__texto">
+          <span class="pendiente">Frase de presentacion pendiente: que lo hace
+          especial y para quien es ideal.</span>
+        </p>
+        <div class="grupo-botones">
+          <a class="boton boton--whatsapp boton--grande" href="#contacto"
+             data-whatsapp="Hola, me interesa el hospedaje 07 de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.">
+            Consultar disponibilidad
+          </a>
+          <a class="boton boton--claro boton--grande" href="#galeria">Ver fotos</a>
+        </div>
+        <div class="hero__datos">
+          <div class="dato">
+            <span class="dato__numero"><span class="pendiente">N</span></span>
+            <span class="dato__texto">Huespedes</span>
+          </div>
+          <div class="dato">
+            <span class="dato__numero"><span class="pendiente">N</span></span>
+            <span class="dato__texto">Habitaciones</span>
+          </div>
+          <div class="dato">
+            <span class="dato__numero"><span class="pendiente">N</span></span>
+            <span class="dato__texto">Banos</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ===== 2. DESCRIPCION + CARACTERISTICAS ===== -->
+    <section class="seccion">
+      <div class="contenedor bloque-doble aparecer">
+
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">El hospedaje</span>
+          <h2><span class="pendiente">Titulo descriptivo pendiente</span></h2>
+          <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            <span class="pendiente">Parrafo pendiente: como es el lugar, que se
+            siente al llegar y que tipo de viajero disfruta mas quedarse aqui.</span>
+          </p>
+
+          <h3 style="margin-bottom: var(--esp-2);">Caracteristicas</h3>
+          <ul class="lista-check">
+            <li><span class="pendiente">Caracteristica 1</span></li>
+            <li><span class="pendiente">Caracteristica 2</span></li>
+            <li><span class="pendiente">Caracteristica 3</span></li>
+            <li><span class="pendiente">Caracteristica 4</span></li>
+          </ul>
+        </div>
+
+        <div class="bloque-doble__media">
+          <div class="placeholder placeholder--alto">Foto principal pendiente</div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ===== 3. HABITACIONES ===== -->
+    <section class="seccion seccion--alterna" id="habitaciones">
+      <div class="contenedor">
+
+        <div class="encabezado-seccion aparecer">
+          <span class="etiqueta">Habitaciones</span>
+          <h2>Donde vas a dormir</h2>
+        </div>
+
+        <div class="grid aparecer">
+          <article class="habitacion">
+            <div class="placeholder">Foto pendiente</div>
+            <div>
+              <h3><span class="pendiente">Nombre de la habitacion</span></h3>
+              <div class="habitacion__datos">
+                <span class="habitacion__dato"><span class="pendiente">N</span> huespedes</span>
+                <span class="habitacion__dato"><span class="pendiente">N</span> camas</span>
+                <span class="habitacion__dato"><span class="pendiente">N</span> banos</span>
+              </div>
+              <p class="texto-suave"><span class="pendiente">Descripcion pendiente.</span></p>
+              <div class="tarjeta__pie">
+                <span class="tarjeta__precio"><span class="pendiente">$ ---</span> <span>/ noche</span></span>
+                <a class="boton boton--whatsapp" href="#contacto"
+                   data-whatsapp="Hola, quiero consultar por una habitacion en el hospedaje 07 de Atheron Suite.">
+                  Consultar
+                </a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ===== 4. GALERIA ===== -->
+    <section class="seccion" id="galeria">
+      <div class="contenedor">
+        <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
+          <span class="etiqueta">Galeria</span>
+          <h2>Fotos del hospedaje</h2>
+        </div>
+        <div class="galeria aparecer">
+          <div><div class="placeholder placeholder--cuadrado">Foto 1</div></div>
+          <div><div class="placeholder placeholder--cuadrado">Foto 2</div></div>
+          <div><div class="placeholder placeholder--cuadrado">Foto 3</div></div>
+          <div><div class="placeholder placeholder--cuadrado">Foto 4</div></div>
+          <div><div class="placeholder placeholder--cuadrado">Foto 5</div></div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ===== 5. UBICACION (sin direccion exacta) ===== -->
+    <section class="seccion seccion--alterna" id="ubicacion">
+      <div class="contenedor bloque-doble aparecer">
+
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">Ubicacion</span>
+          <h2>Zipaquira, Cundinamarca</h2>
+          <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            <span class="pendiente">Descripcion de la zona pendiente: que hay
+            alrededor y a que distancia quedan los puntos de interes.</span>
+          </p>
+
+          <ul class="lista-distancias">
+            <li><span>Catedral de Sal</span> <span><span class="pendiente">pendiente</span></span></li>
+            <li><span>Plaza principal</span> <span><span class="pendiente">pendiente</span></span></li>
+            <li><span>Desde Bogota</span> <span>~50 km</span></li>
+          </ul>
+
+          <!-- ==========================================================
+               POLITICA DE DIRECCION
+               No es un detalle legal escondido: se explica de frente y
+               se convierte en una senal de seriedad.
+               ========================================================== -->
+          <div class="nota-reserva" style="margin-top: var(--esp-3);">
+            <span class="nota-reserva__icono" aria-hidden="true">&#128274;</span>
+            <div>
+              <strong>La direccion exacta se entrega al confirmar</strong>
+              Coordinamos la llegada contigo una vez la reserva esta confirmada.
+              Asi protegemos la tranquilidad de los huespedes que ya estan
+              alojados y nos aseguramos de recibirte bien el dia de tu llegada.
+            </div>
+          </div>
+        </div>
+
+        <div class="bloque-doble__media">
+          <!-- Mapa de zona, no de punto exacto: a proposito -->
+          <iframe
+            class="mapa"
+            title="Zona de Zipaquira donde se encuentra el hospedaje"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=-74.02%2C5.00%2C-73.97%2C5.05&layer=mapnik"
+            loading="lazy"></iframe>
+          <p class="campo__ayuda" style="margin-top: var(--esp-1);">
+            Mapa de referencia de la zona. La ubicacion precisa se comparte al confirmar la reserva.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ===== 6. EXPERIENCIAS ===== -->
+    <section class="seccion">
+      <div class="contenedor">
+        <div class="encabezado-seccion aparecer">
+          <span class="etiqueta">Experiencias</span>
+          <h2>Que hacer alrededor</h2>
+        </div>
+        <div class="grid grid--3 aparecer">
+          <article class="experiencia">
+            <div class="experiencia__fondo"></div>
+            <div class="experiencia__texto">
+              <h3>Catedral de Sal</h3>
+              <p>El recorrido subterraneo mas visitado del municipio.</p>
+            </div>
+          </article>
+          <article class="experiencia">
+            <div class="experiencia__fondo"></div>
+            <div class="experiencia__texto">
+              <h3>Centro historico</h3>
+              <p>Plaza principal, catedral diocesana y calles coloniales.</p>
+            </div>
+          </article>
+          <article class="experiencia">
+            <div class="experiencia__fondo"></div>
+            <div class="experiencia__texto">
+              <h3><span class="pendiente">Por definir</span></h3>
+              <p><span class="pendiente">Pendiente.</span></p>
+            </div>
+          </article>
+        </div>
+
+        <div style="margin-top: var(--esp-4);">
+          <p class="texto-suave">
+            Te contamos mas en nuestra
+            <a href="../blog/guia-de-zipaquira.html">guia de Zipaquira</a>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ===== 7. CONTACTO ===== -->
+    <section class="seccion seccion--alterna" id="contacto">
+      <div class="contenedor bloque-doble aparecer">
+
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">Consulta</span>
+          <h2>Consulta disponibilidad</h2>
+          <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            La forma mas rapida es WhatsApp: te respondemos con disponibilidad
+            y precio para tus fechas.
+          </p>
+
+          <div class="grupo-botones" style="margin-bottom: var(--esp-3);">
+            <a class="boton boton--whatsapp boton--grande" href="tel:+573188983167"
+               data-whatsapp="Hola, quiero reservar en el hospedaje 07 de Atheron Suite. Estas son mis fechas:">
+              Escribir por WhatsApp
+            </a>
+          </div>
+
+          <ul class="lista-check">
+            <li>Telefono: <a href="tel:+573188983167">+57 318 898 3167</a></li>
+            <li>Oficina: Cra. 9 #10-32, Zipaquira</li>
+            <li>Atencion directa, sin intermediarios</li>
+          </ul>
+        </div>
+
+        <div class="bloque-doble__media">
+          <form class="formulario" data-formulario-contacto novalidate>
+            <div class="formulario__fila">
+              <div class="campo">
+                <label for="h-nombre">Nombre</label>
+                <input type="text" id="h-nombre" name="nombre" required autocomplete="name">
+              </div>
+              <div class="campo">
+                <label for="h-telefono">Telefono</label>
+                <input type="tel" id="h-telefono" name="telefono" autocomplete="tel">
+              </div>
+            </div>
+            <div class="campo">
+              <label for="h-correo">Correo electronico</label>
+              <input type="email" id="h-correo" name="correo" required autocomplete="email">
+            </div>
+            <div class="formulario__fila">
+              <div class="campo">
+                <label for="h-llegada">Llegada</label>
+                <input type="date" id="h-llegada" name="llegada">
+              </div>
+              <div class="campo">
+                <label for="h-salida">Salida</label>
+                <input type="date" id="h-salida" name="salida">
+              </div>
+            </div>
+            <div class="campo">
+              <label for="h-mensaje">Mensaje</label>
+              <textarea id="h-mensaje" name="mensaje"></textarea>
+            </div>
+            <button class="boton boton--primario boton--grande" type="submit">Enviar consulta</button>
+            <p class="campo__ayuda">Nota tecnica: este formulario todavia no envia datos a ningun servidor. Usa WhatsApp.</p>
+            <div class="aviso-formulario" data-aviso-formulario role="status"></div>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+
+  <footer class="footer">
+    <div class="contenedor">
+      <div class="footer__base" style="border-top: 0;">
+        <span>&copy; <span data-ano>2026</span> Atheron Suite &middot; Zipaquira, Cundinamarca</span>
+        <span><a href="index.html">Ver todos los hospedajes</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <a class="boton boton--whatsapp flotante" href="#contacto"
+     data-whatsapp="Hola, me interesa el hospedaje 07 de Atheron Suite en Zipaquira.">WhatsApp</a>
+
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>

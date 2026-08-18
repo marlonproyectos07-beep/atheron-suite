@@ -91,6 +91,50 @@ Si confirmas esto, tenemos con qué llenar buena parte de la primera ficha de ho
 
 ---
 
+## 3.bis Regla de operación: direcciones
+
+**Esta regla no se rompe nunca.**
+
+- **La Magia de Zipaquirá (Cra. 9 #10-32) es la sede principal y la oficina.** Es la única dirección pública, y es la que va en el Perfil de Empresa de Google, en Booking y en el sitio.
+- **Los otros seis hospedajes son aliados. Su dirección exacta NO se publica.** En el sitio solo aparece la zona de referencia (por ejemplo, "a dos cuadras de la mina de sal").
+- La ubicación precisa se entrega al huésped **cuando la reserva está confirmada y pagada**.
+
+Motivo: evitar que el huésped llegue directo al aliado y saltarse la intermediación.
+
+### Cómo está implementado en el código
+
+- Las fichas de aliados llevan `nota-reserva`: un bloque que explica la política de frente, en positivo ("coordinamos tu llegada", "protegemos la tranquilidad de quienes ya están alojados"). Ocultar sin explicar genera desconfianza; explicar la razón genera lo contrario.
+- Su JSON-LD **no lleva `streetAddress` ni `geo`**. Solo `addressLocality: Zipaquira`, que es cierto y sirve para el posicionamiento local.
+- El mapa de esas fichas muestra la zona, no un punto.
+- El listado de hospedajes abre con un bloque "Cómo funciona" que explica que todo se coordina desde la oficina central.
+
+### Nota sobre indexación
+
+Las seis fichas de aliados llevan `<meta name="robots" content="noindex, follow">` **mientras no tengan contenido real**. Publicar seis páginas casi idénticas y vacías es *contenido delgado*, y Google lo castiga a nivel de todo el dominio: arrastraría hacia abajo también a la ficha buena.
+
+Al completar cada ficha: borrar esa línea y añadir su dirección al `sitemap.xml`.
+
+---
+
+## 3.ter Oportunidad detectada: empresas y estancias largas
+
+Comentaste que **empresas y constructoras** os encuentran en Booking, os buscan en Google y llegan a la oficina a negociar casas por meses.
+
+**Eso es el segmento de mayor valor que tienes, y ahora mismo no lo estás trabajando.** Está llegando solo.
+
+Por qué importa:
+
+- El ticket es mucho mayor: una reserva de un mes equivale a decenas de noches sueltas
+- La ocupación es predecible, no depende de temporada ni de fines de semana
+- La competencia es mínima: Booking y Airbnb están optimizados para el turista de fin de semana, no para una constructora que necesita alojar personal tres meses
+- Son búsquedas de cola larga con intención comercial altísima: "alojamiento para empresas en Zipaquirá", "casas por meses Zipaquirá", "hospedaje para personal de obra Cundinamarca", "apartamentos amoblados por mes Zipaquirá"
+
+**Propuesta: una landing dedicada a este segmento.** No es la misma página que la del turista: cambian el argumento (facturación, estancia mínima, tarifa mensual, capacidad para varias personas), el tono y el llamado a la acción.
+
+Es probablemente la página con mejor retorno de todo el sitio, por encima del blog. Queda propuesta para la siguiente etapa.
+
+---
+
 ## 4. Estudio del referente: @danillamazares
 
 ### Qué hace

@@ -233,6 +233,24 @@
 }
 
 /* ------------------------------------------------------------
+   NOTA DE POLITICA DE RESERVA
+   Explica por que no publicamos la direccion exacta.
+   Bien redactado, esto NO resta confianza: la suma.
+   ------------------------------------------------------------ */
+.nota-reserva {
+  display: flex;
+  gap: var(--esp-2);
+  padding: var(--esp-3);
+  background: var(--color-crema);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--color-verde);
+  border-radius: 0 var(--radio-sm) var(--radio-sm) 0;
+  font-size: .95rem;
+}
+.nota-reserva__icono { font-size: 1.3rem; line-height: 1; flex-shrink: 0; }
+.nota-reserva strong { display: block; margin-bottom: .3rem; }
+
+/* ------------------------------------------------------------
    TARJETAS
    ------------------------------------------------------------ */
 .tarjeta {
