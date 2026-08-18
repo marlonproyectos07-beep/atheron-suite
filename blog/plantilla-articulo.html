@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- ============================================================
+       PLANTILLA DE ARTICULO DEL BLOG
+       ============================================================
+       COMO USARLA:
+       1. Copia este archivo y renombralo con la palabra clave:
+          como-llegar-de-bogota-a-zipaquira.html
+          (minusculas, sin tildes, con guiones)
+       2. Reemplaza todo lo que este entre [[ ]].
+       3. Enlaza el articulo desde guia-de-zipaquira.html (la caja
+          "cluster" del final) y desde index.html del blog.
+       4. Anade su direccion a /sitemap.xml.
+
+       LAS TRES REGLAS QUE NO SE NEGOCIAN:
+       a) Las primeras 200 palabras responden la pregunta completa.
+          Nada de "Zipaquira es un hermoso municipio..." de relleno.
+       b) Datos concretos: kilometros, minutos, pesos, horarios.
+          Anadir datos concretos mejora la visibilidad en buscadores
+          de IA un 41%. Es la tactica individual mas efectiva.
+       c) Nunca inventes un dato. Si no lo verificaste, marcalo como
+          pendiente y publicalo sin el.
+       ============================================================ -->
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- El titulo debe contener la busqueda real que quieres ganar -->
+  <title>[[Titulo con la palabra clave]] | Atheron Suite</title>
+  <meta name="description" content="[[Resumen de 150 caracteres que responda la pregunta. Esto es lo que se lee en Google.]]">
+
+  <link rel="canonical" href="https://atheron-suite.vercel.app/blog/[[ARCHIVO]]">
+
+  <meta property="og:type" content="article">
+  <meta property="og:locale" content="es_CO">
+  <meta property="og:site_name" content="Atheron Suite">
+  <meta property="og:url" content="https://atheron-suite.vercel.app/blog/[[ARCHIVO]]">
+  <meta property="og:title" content="[[Titulo]]">
+  <meta property="og:description" content="[[Resumen corto]]">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/componentes.css">
+  <link rel="stylesheet" href="../assets/css/paginas.css">
+
+  <!-- ============================================================
+       DATOS ESTRUCTURADOS DEL ARTICULO
+       Le dice a Google que esto es un articulo, de quien y de cuando.
+       ============================================================ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "[[Titulo del articulo]]",
+    "description": "[[Resumen corto]]",
+    "datePublished": "[[AAAA-MM-DD]]",
+    "dateModified": "[[AAAA-MM-DD]]",
+    "author": {
+      "@type": "Organization",
+      "name": "Atheron Suite"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Atheron Suite",
+      "url": "https://atheron-suite.vercel.app/"
+    },
+    "mainEntityOfPage": "https://atheron-suite.vercel.app/blog/[[ARCHIVO]]"
+  }
+  </script>
+</head>
+
+<body>
+
+  <p class="aviso-borrador">
+    PLANTILLA DE ARTICULO. Reemplaza lo que esta entre [[corchetes]].
+  </p>
+
+  <a class="saltar-contenido" href="#contenido">Saltar al contenido</a>
+
+  <header class="header">
+    <div class="contenedor header__interior">
+      <a class="logo" href="../index.html">Atheron <span class="logo__suite">Suite</span></a>
+      <nav class="nav" aria-label="Navegacion principal">
+        <ul class="nav__lista">
+          <li><a class="nav__enlace" href="../index.html">Inicio</a></li>
+          <li><a class="nav__enlace" href="../hospedajes/index.html">Hospedajes</a></li>
+          <li><a class="nav__enlace" href="index.html">Blog</a></li>
+          <li><a class="boton boton--primario" href="../landing/hospedaje-en-zipaquira.html">Ver disponibilidad</a></li>
+        </ul>
+      </nav>
+      <button class="boton-menu" type="button" aria-expanded="false"
+              aria-controls="menu-movil" data-boton-menu>
+        <span></span><span></span><span></span>
+        <span class="solo-lectores">Abrir menu</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="menu-movil" id="menu-movil" data-menu-movil data-abierto="false">
+    <div class="contenedor">
+      <a href="../index.html">Inicio</a>
+      <a href="../hospedajes/index.html">Hospedajes</a>
+      <a href="index.html">Blog</a>
+      <a class="boton boton--primario" href="../landing/hospedaje-en-zipaquira.html">Ver disponibilidad</a>
+    </div>
+  </div>
+
+
+  <main id="contenido">
+
+    <section class="seccion">
+      <div class="contenedor">
+        <article class="articulo">
+
+          <p class="articulo__meta">
+            <span><a href="index.html">Blog</a></span>
+            <span>[[Fecha]]</span>
+            <span>[[N]] min de lectura</span>
+          </p>
+
+          <!-- El H1 debe ser la pregunta o la busqueda, casi literal -->
+          <h1>[[Titulo: la pregunta que responde este articulo]]</h1>
+
+          <!-- LA RESPUESTA VA AQUI, NO AL FINAL -->
+          <div class="respuesta-rapida">
+            <strong>En corto</strong>
+            [[Responde la pregunta completa en 3 o 4 lineas, con datos
+            concretos. Si alguien solo lee esto, ya tiene su respuesta.
+            Este bloque es el que hace que un asistente de IA te cite.]]
+          </div>
+
+          <p>[[Parrafo de contexto: para quien es util este articulo.]]</p>
+
+          <h2>[[Subtitulo que sea otra pregunta real]]</h2>
+          <p>[[Desarrollo con datos concretos.]]</p>
+
+          <h2>[[Otro subtitulo]]</h2>
+          <p>[[Desarrollo.]]</p>
+
+          <!-- Las tablas funcionan muy bien: son faciles de leer para
+               una persona y faciles de extraer para una IA -->
+          <table>
+            <thead>
+              <tr><th>[[Columna 1]]</th><th>[[Columna 2]]</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>[[dato]]</td><td>[[dato]]</td></tr>
+            </tbody>
+          </table>
+
+          <h2>[[Subtitulo final]]</h2>
+          <p>[[Cierre.]]</p>
+
+          <!-- ==========================================================
+               PUENTE AL NEGOCIO
+               Un articulo informativo debe llevar al hospedaje sin
+               parecer un anuncio. Se hace al final y en una linea.
+               ========================================================== -->
+          <div class="cluster">
+            <h3>Vas a quedarte en Zipaquira?</h3>
+            <p class="texto-suave">
+              Administramos siete hospedajes en el municipio.
+              <a href="../hospedajes/index.html">Miralos aqui</a>
+              o escribenos y te ayudamos a elegir.
+            </p>
+            <div class="grupo-botones" style="margin-top: var(--esp-2);">
+              <a class="boton boton--whatsapp" href="../index.html#contacto"
+                 data-whatsapp="Hola, lei el articulo [[Titulo]] y quiero consultar disponibilidad.">
+                Consultar por WhatsApp
+              </a>
+            </div>
+          </div>
+
+          <!-- Enlaces al resto del grupo tematico -->
+          <div class="cluster" style="margin-top: var(--esp-3);">
+            <h3>Relacionado</h3>
+            <ul>
+              <li><a href="guia-de-zipaquira.html">Guia completa de Zipaquira</a></li>
+              <li>[[Enlace a otro articulo del cluster]]</li>
+            </ul>
+          </div>
+
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+
+  <footer class="footer">
+    <div class="contenedor">
+      <div class="footer__base" style="border-top: 0;">
+        <span>&copy; <span data-ano>2026</span> Atheron Suite &middot; Zipaquira, Cundinamarca</span>
+        <span><a href="index.html">Volver al blog</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <a class="boton boton--whatsapp flotante" href="../index.html#contacto"
+     data-whatsapp="Hola, quiero informacion sobre los hospedajes de Atheron Suite.">WhatsApp</a>
+
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>

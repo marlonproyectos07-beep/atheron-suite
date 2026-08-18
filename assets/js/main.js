@@ -9,9 +9,8 @@
    ============================================================ */
 
 // Numero de WhatsApp en formato internacional, SIN el signo + y sin espacios.
-// Colombia es 57. Ejemplo real: 573001234567
-// PENDIENTE: reemplazar por el numero verdadero de Atheron Suite.
-var WHATSAPP_NUMERO = "573000000000";
+// 57 = Colombia. Corresponde a +57 318 898 3167.
+var WHATSAPP_NUMERO = "573188983167";
 
 // Mensaje por defecto cuando el enlace no trae uno propio.
 var WHATSAPP_MENSAJE_BASE = "Hola, quiero informacion sobre los hospedajes de Atheron Suite en Zipaquira.";

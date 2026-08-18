@@ -7,6 +7,7 @@ Allow: /
 # La plantilla no debe indexarse: es un archivo de trabajo,
 # no una pagina real para visitantes.
 Disallow: /hospedajes/plantilla-hospedaje
+Disallow: /blog/plantilla-articulo
 
 # Mapa del sitio: aqui Google encuentra la lista de paginas.
 Sitemap: https://atheron-suite.vercel.app/sitemap.xml

@@ -240,3 +240,102 @@
   text-align: center;
   padding: .55rem var(--esp-2);
 }
+
+/* ------------------------------------------------------------
+   BLOG — tipografia de lectura larga
+   Un articulo se lee distinto a una landing: linea mas corta,
+   mas aire entre parrafos, texto un punto mas grande.
+   ------------------------------------------------------------ */
+.articulo {
+  max-width: 68ch;          /* 68 caracteres por linea: lo comodo para leer */
+  margin-inline: auto;
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+.articulo > * + * { margin-top: var(--esp-3); }
+
+.articulo h2 {
+  margin-top: var(--esp-5);
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--borde);
+}
+.articulo h3 { margin-top: var(--esp-4); }
+
+.articulo ul, .articulo ol { display: grid; gap: .6rem; }
+.articulo ul li { position: relative; padding-left: 1.4rem; }
+.articulo ul li::before {
+  content: "\2022";
+  position: absolute;
+  left: .35rem;
+  color: var(--acento);
+  font-weight: 700;
+}
+.articulo ol { counter-reset: paso; }
+.articulo ol li { position: relative; padding-left: 2rem; counter-increment: paso; }
+.articulo ol li::before {
+  content: counter(paso) ".";
+  position: absolute;
+  left: 0;
+  font-weight: 600;
+  color: var(--acento);
+}
+
+.articulo a:not(.boton) {
+  color: var(--color-verde);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* La "respuesta rapida": bloque destacado al inicio del articulo.
+   Existe por SEO y por GEO: los asistentes de IA leen el principio
+   de la pagina para decidir si te citan. */
+.respuesta-rapida {
+  padding: var(--esp-3);
+  background: var(--color-crema);
+  border-left: 4px solid var(--acento);
+  border-radius: 0 var(--radio-sm) var(--radio-sm) 0;
+  font-size: 1.05rem;
+}
+.respuesta-rapida strong { display: block; margin-bottom: .4rem; }
+
+/* Datos del articulo: fecha y tiempo de lectura */
+.articulo__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  font-size: .88rem;
+  color: var(--texto-suave);
+}
+
+/* Tabla dentro de un articulo */
+.articulo table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .95rem;
+}
+.articulo th, .articulo td {
+  padding: .7rem .6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--borde);
+}
+.articulo th { font-weight: 600; background: var(--color-crema); }
+
+/* Caja de enlaces al resto del grupo tematico.
+   Este enlazado interno es lo que construye autoridad. */
+.cluster {
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-crema);
+}
+.cluster h3 { margin-bottom: var(--esp-2); }
+.cluster ul { display: grid; gap: .5rem; }
+
+/* Tarjeta de articulo en el listado del blog */
+.tarjeta-articulo__meta {
+  font-size: .82rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--acento);
+  font-weight: 600;
+}
