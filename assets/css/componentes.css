@@ -448,3 +448,51 @@
   transition: opacity .6s ease, transform .6s ease;
 }
 .aparecer.visible { opacity: 1; transform: none; }
+
+/* ------------------------------------------------------------
+   BANDA DE CODIGO PROMOCIONAL
+   La inserta main.js cuando el visitante llega con ?codigo=XXX
+   ------------------------------------------------------------ */
+.banda-codigo {
+  background: var(--color-verde);
+  color: #fff;
+  text-align: center;
+  padding: .6rem var(--esp-2);
+  font-size: .9rem;
+}
+.banda-codigo strong { letter-spacing: .04em; }
+.banda-codigo span { opacity: .85; }
+
+/* ------------------------------------------------------------
+   BLOQUE "POR QUE RESERVAR DIRECTO"
+   Compara la reserva directa con las plataformas, sin nombrarlas.
+   ------------------------------------------------------------ */
+.directo {
+  display: grid;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  border: 2px solid var(--color-verde);
+  border-radius: var(--radio-lg);
+  background: var(--color-crema);
+}
+@media (min-width: 800px) {
+  .directo { grid-template-columns: 1fr 1fr; gap: var(--esp-5); align-items: center; }
+}
+.directo__lista { display: grid; gap: .8rem; }
+.directo__item {
+  display: flex;
+  gap: .7rem;
+  align-items: flex-start;
+}
+.directo__marca {
+  flex-shrink: 0;
+  width: 1.4rem; height: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-verde);
+  color: #fff;
+  font-size: .8rem;
+  font-weight: 700;
+}

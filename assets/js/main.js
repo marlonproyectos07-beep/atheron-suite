@@ -23,8 +23,48 @@ var ICONO_WHATSAPP =
   '</svg>';
 
 
+/* ============================================================
+   CODIGO PROMOCIONAL Y DE REFERIDO
+   ============================================================
+   Como funciona: se comparte un enlace con el codigo dentro.
+
+     hotelesatheron.com/?codigo=CICLISTAS
+     hotelesatheron.com/hospedajes?codigo=JUANP
+
+   El codigo se guarda mientras dure la visita y se anade
+   automaticamente a TODOS los mensajes de WhatsApp del sitio.
+   Tu recibes el mensaje con el codigo dentro y ya sabes quien
+   te lo mando, sin necesidad de ningun sistema de seguimiento.
+
+   Sirve para dos cosas a la vez:
+   - Codigo promocional (descuento por reserva directa)
+   - Comision de referido (quien trajo al cliente)
+   ============================================================ */
+function leerCodigoPromocional() {
+  var codigo = null;
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var desdeUrl = params.get("codigo");
+
+    // Si viene en la direccion, lo guardamos para el resto de la visita.
+    // Asi el visitante puede navegar por el sitio sin perderlo.
+    if (desdeUrl) {
+      sessionStorage.setItem("codigoAtheron", desdeUrl.trim().toUpperCase());
+    }
+    codigo = sessionStorage.getItem("codigoAtheron");
+  } catch (error) {
+    // Algunos navegadores bloquean sessionStorage en modo privado.
+    // No pasa nada: el sitio sigue funcionando sin codigo.
+    codigo = null;
+  }
+  return codigo;
+}
+
+
 // Esperamos a que el HTML este listo antes de tocar elementos.
 document.addEventListener("DOMContentLoaded", function () {
+
+  var codigoPromo = leerCodigoPromocional();
 
   /* ----------------------------------------------------------
      1. MENU MOVIL
@@ -68,6 +108,11 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll("[data-whatsapp]").forEach(function (enlace) {
     var mensaje = enlace.getAttribute("data-whatsapp") || WHATSAPP_MENSAJE_BASE;
 
+    // Si el visitante llego con un codigo, viaja dentro del mensaje.
+    if (codigoPromo) {
+      mensaje += "\n\nCodigo: " + codigoPromo;
+    }
+
     // encodeURIComponent convierte espacios y tildes en algo que
     // se puede poner dentro de una direccion web.
     enlace.href = "https://wa.me/" + WHATSAPP_NUMERO +
@@ -82,6 +127,25 @@ document.addEventListener("DOMContentLoaded", function () {
       enlace.insertAdjacentHTML("afterbegin", ICONO_WHATSAPP);
     }
   });
+
+  /* ----------------------------------------------------------
+     2.bis BANDA DE CODIGO ACTIVO
+     Si el visitante llego con un codigo, se lo confirmamos en
+     pantalla. Un codigo invisible no convence a nadie: verlo
+     aplicado es lo que empuja a escribir en vez de irse a la OTA.
+
+     La creamos desde JavaScript para no tener que anadir HTML
+     en cada una de las paginas del sitio.
+     ---------------------------------------------------------- */
+  if (codigoPromo) {
+    var banda = document.createElement("div");
+    banda.className = "banda-codigo";
+    banda.setAttribute("role", "status");
+    banda.innerHTML =
+      '<strong>Codigo ' + codigoPromo + ' activo</strong> ' +
+      '<span>Se aplicara al cotizar por WhatsApp.</span>';
+    document.body.insertBefore(banda, document.body.firstChild);
+  }
 
   /* ----------------------------------------------------------
      3. ANO ACTUAL EN EL FOOTER
