@@ -82,8 +82,12 @@ Aquí está el 32% del peso del posicionamiento local. No es código, pero vale 
 | 30 | Completar el perfil: categoría, horarios, teléfono, enlace al sitio, atributos | Alta |
 | 31 | Separar o cerrar el perfil de Atheron Security para que no compita | Media |
 | 32 | Unificar el nombre en Booking, Trivago e Instagram | Media |
-| 33 | Comprar el dominio propio (`atheronsuite.co` o similar) | Alta |
-| 34 | Conectar el dominio a Vercel y actualizar todas las direcciones del código | Después del 33 |
+| 33 | ~~Comprar dominio~~ ✅ **Ya lo tienes: `hotelesatheron.com`** (Namecheap, DNS en Cloudflare) | — |
+| 33.a | **Recuperar acceso a la cuenta de Namecheap** — el dominio vence el 23/03/2027 | **Máxima** |
+| 33.b | Recuperar acceso a Cloudflare (ahí se configuran los DNS) | Alta |
+| 33.c | Activar renovación automática en Namecheap | Alta |
+| 34 | Conectar el dominio a Vercel y actualizar todas las direcciones del código | Después del 33.b |
+| 34.a | Redirigir `atheron1.odoo.com` al dominio nuevo (301) para no competir contigo mismo | Después del 34 |
 | 35 | Crear cuenta de Google Search Console y enviar el sitemap | Alta |
 | 36 | Pedir reseñas a los huéspedes anteriores | Alta y continua |
 
