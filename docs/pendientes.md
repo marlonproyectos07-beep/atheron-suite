@@ -90,6 +90,14 @@ Aquí está el 32% del peso del posicionamiento local. No es código, pero vale 
 | 34.a | Redirigir `atheron1.odoo.com` al dominio nuevo (301) para no competir contigo mismo | Después del 34 |
 | 35 | Crear cuenta de Google Search Console y enviar el sitemap | Alta |
 | 36 | Pedir reseñas a los huéspedes anteriores | Alta y continua |
+| 36.a | Crear cuenta en Metricool (plan gratuito: 1 marca, 50 publicaciones/mes) | Media |
+| 36.b | Conectar Google Business Profile a Metricool y programar publicaciones y fotos | Alta — es el 32% del ranking local |
+| 36.c | Conectar Instagram, Facebook y TikTok | Media |
+| 36.d | Usar códigos en el enlace de la biografía (`?codigo=INSTAGRAM`, `?codigo=TIKTOK`) para medir qué red trae clientes reales | Media |
+
+> **Sobre el orden:** el perfil de Google y las redes **no dependen** de que el sitio esté terminado. Van en paralelo. Como el posicionamiento local tarda de 3 a 6 meses, cada mes de espera es un mes que no empieza a contar.
+>
+> **Sobre el cuello de botella:** las fotos del punto 9 son las mismas que alimentan el perfil de Google y las redes. Una sola sesión fotográfica que cubra los siete hospedajes resuelve tres frentes a la vez.
 
 ---
 
