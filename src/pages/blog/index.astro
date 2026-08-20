@@ -1,0 +1,171 @@
+---
+/* ============================================================
+   BLOG — listado de articulos
+   Su funcion es doble: que el visitante encuentre los articulos
+   y que Google vea la estructura del grupo tematico.
+   ============================================================ */
+
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+
+import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
+---
+
+<Base
+  titulo="Blog sobre Zipaquira | Atheron Suite"
+  descripcion="Guias practicas sobre Zipaquira, Cundinamarca: como llegar, que visitar, donde comer y donde alojarse."
+  ruta="/blog"
+  ogDescripcion="Guias practicas para planear tu visita a Zipaquira."
+  avisoBorrador="Version de trabajo. El blog esta arrancando: por ahora solo esta la guia principal."
+>
+
+  <Cabecera enlaces={menuBlog} cta={ctaDisponibilidad} actual="/blog" />
+
+  <main id="contenido">
+
+    <section class="hero hero--interior">
+      <div class="contenedor hero__contenido">
+        <span class="hero__etiqueta">Blog</span>
+        <h1 class="hero__titulo">Todo sobre Zipaquira</h1>
+        <p class="hero__texto">
+          Guias practicas escritas desde el municipio. Sin relleno:
+          horarios, distancias y precios concretos.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <div class="contenedor">
+
+        {/* ==========================================================
+             ARTICULO DESTACADO: la pagina pilar
+             Va sola y arriba porque es la mas importante del grupo.
+             ========================================================== */}
+        <article class="tarjeta aparecer" style="margin-bottom: var(--esp-5);">
+          <div class="tarjeta__media">
+            <div class="placeholder placeholder--ancho">Foto pendiente</div>
+            <span class="tarjeta__insignia">Guia principal</span>
+          </div>
+          <div class="tarjeta__cuerpo">
+            <p class="tarjeta-articulo__meta">Guia completa</p>
+            <h2 class="tarjeta__titulo">
+              <a href="/blog/guia-de-zipaquira">Guia de Zipaquira: que hacer, como llegar y donde dormir</a>
+            </h2>
+            <p class="texto-suave">
+              Como llegar desde Bogota, cuanto tiempo dedicarle, que ver mas alla
+              de la Catedral de Sal y donde alojarse.
+            </p>
+            <div class="tarjeta__pie">
+              <a class="boton boton--primario" href="/blog/guia-de-zipaquira">Leer la guia</a>
+            </div>
+          </div>
+        </article>
+
+        {/* Articulos publicados */}
+        <div class="encabezado-seccion">
+          <span class="etiqueta">Publicados</span>
+          <h2>Ultimos articulos</h2>
+        </div>
+
+        <div class="grid grid--3" style="margin-bottom: var(--esp-6);">
+          <article class="tarjeta aparecer">
+            <div class="tarjeta__media">
+              <div class="placeholder">Foto pendiente</div>
+              <span class="tarjeta__insignia">Historia</span>
+            </div>
+            <div class="tarjeta__cuerpo">
+              <p class="tarjeta-articulo__meta">Sobre nosotros</p>
+              <h3 class="tarjeta__titulo">
+                <a href="/blog/como-nacio-atheron-suite">Como nacio Atheron Suite</a>
+              </h3>
+              <p class="texto-suave">
+                De una necesidad de alojamiento en Zipaquira a un proyecto de
+                hospedaje para familias y grupos.
+              </p>
+              <div class="tarjeta__pie">
+                <a class="boton boton--contorno" href="/blog/como-nacio-atheron-suite">Leer</a>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="encabezado-seccion">
+          <span class="etiqueta">Proximos articulos</span>
+          <h2>En preparacion</h2>
+          <p class="texto-suave" style="margin-top: var(--esp-2);">
+            Estos son los articulos planeados. El orden esta en
+            <code>docs/estrategia-seo.md</code>.
+          </p>
+        </div>
+
+        {/* ==========================================================
+             ARTICULOS PENDIENTES
+             Cuando escribas uno, convierte su tarjeta en un enlace
+             real (como la de arriba) y anadelo al sitemap.xml.
+             ========================================================== */}
+        <div class="grid grid--3">
+
+          <article class="tarjeta-simple">
+            <p class="tarjeta-articulo__meta">Como llegar</p>
+            <h3><span class="pendiente">Como llegar de Bogota a Zipaquira</span></h3>
+            <p class="texto-suave">Bus, carro y Tren de la Sabana comparados.</p>
+          </article>
+
+          <article class="tarjeta-simple">
+            <p class="tarjeta-articulo__meta">Que visitar</p>
+            <h3><span class="pendiente">Catedral de Sal: horarios y precios</span></h3>
+            <p class="texto-suave">Que esperar del recorrido y cuanto dura.</p>
+          </article>
+
+          <article class="tarjeta-simple">
+            <p class="tarjeta-articulo__meta">Planes</p>
+            <h3><span class="pendiente">Zipaquira en un fin de semana</span></h3>
+            <p class="texto-suave">Itinerario de dos dias sin correr.</p>
+          </article>
+
+          <article class="tarjeta-simple">
+            <p class="tarjeta-articulo__meta">Comer</p>
+            <h3><span class="pendiente">Donde comer en Zipaquira</span></h3>
+            <p class="texto-suave">Opciones por zona y tipo de plan.</p>
+          </article>
+
+          <article class="tarjeta-simple">
+            <p class="tarjeta-articulo__meta">Familia</p>
+            <h3><span class="pendiente">Zipaquira con ninos</span></h3>
+            <p class="texto-suave">Que funciona y que no con los mas pequenos.</p>
+          </article>
+
+          <article class="tarjeta-simple">
+            <p class="tarjeta-articulo__meta">Alojamiento</p>
+            <h3><span class="pendiente">Donde dormir cerca de la Catedral de Sal</span></h3>
+            <p class="texto-suave">Que tener en cuenta al elegir zona.</p>
+          </article>
+
+        </div>
+
+        <div class="cta-final aparecer" style="margin-top: var(--esp-6);">
+          <h2>Vienes a Zipaquira?</h2>
+          <p>Administramos siete hospedajes en el municipio. Escribenos y te ayudamos a elegir.</p>
+          <div class="grupo-botones grupo-botones--centrado">
+            <a class="boton boton--whatsapp boton--grande" href="/#contacto"
+               data-whatsapp="Hola, vengo del blog y quiero informacion sobre los hospedajes.">
+              Escribir por WhatsApp
+            </a>
+            <a class="boton boton--claro boton--grande" href="/hospedajes">Ver los hospedajes</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <Pie />
+
+  {/* OJO: esta pagina es la unica del sitio que NO lleva boton flotante
+       de WhatsApp. Lo dejo como estaba para que la migracion no cambie
+       nada, pero parece un olvido y no una decision. Anadirlo es un
+       cambio de una linea; lo vemos despues de publicar. */}
+
+</Base>

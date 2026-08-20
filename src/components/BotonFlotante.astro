@@ -1,0 +1,28 @@
+---
+/* ============================================================
+   BOTON FLOTANTE DE WHATSAPP
+   Siempre visible en celular, en la esquina inferior.
+
+   Cada pagina le pasa SU propio mensaje. Eso es deliberado:
+   el cliente no tiene que explicar de donde viene ni que le
+   gusto, el mensaje ya llega escrito. Un mensaje generico
+   obliga al cliente a redactar, y redactar es friccion.
+
+   El href es el destino de respaldo. Si el JavaScript falla,
+   el boton sigue llevando a algun sitio en vez de quedar muerto:
+   main.js lo reescribe a wa.me solo cuando ha cargado bien.
+   ============================================================ */
+
+interface Props {
+  /** Destino de respaldo si el JavaScript no carga. */
+  href: string;
+  /** El mensaje que aparecera ya escrito en WhatsApp. */
+  mensaje: string;
+  /** Texto visible del boton. */
+  texto?: string;
+}
+
+const { href, mensaje, texto = 'WhatsApp' } = Astro.props;
+---
+
+<a class="boton boton--whatsapp flotante" href={href} data-whatsapp={mensaje}>{texto}</a>

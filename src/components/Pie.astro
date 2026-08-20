@@ -1,0 +1,90 @@
+---
+/* ============================================================
+   PIE — el cierre de todas las paginas
+
+   Tiene dos formas, y la diferencia es de estrategia, no de estilo:
+
+   - "completo" (solo la portada): cuatro columnas con enlaces a
+     todo el sitio. En la portada interesa repartir al visitante.
+
+   - "simple" (el resto): una sola linea. En un articulo o en una
+     landing, un pie cargado de enlaces se lleva al visitante justo
+     cuando estaba a punto de escribir.
+
+   El ano se pone solo: main.js rellena cualquier elemento con
+   data-ano. Asi no hay que editarlo cada enero.
+   ============================================================ */
+
+interface Props {
+  /** "completo" solo en la portada. "simple" en todo lo demas. */
+  variante?: 'completo' | 'simple';
+  /** Texto del enlace de vuelta, en la variante simple. */
+  textoVuelta?: string;
+  /** A donde lleva ese enlace. Un articulo vuelve al blog, no al inicio. */
+  hrefVuelta?: string;
+}
+
+const {
+  variante = 'simple',
+  textoVuelta = 'Ir al inicio',
+  hrefVuelta = '/',
+} = Astro.props;
+---
+
+{variante === 'completo' ? (
+  <footer class="footer">
+    <div class="contenedor">
+
+      <div class="footer__grid">
+
+        <div>
+          <a class="logo" href="/">Atheron <span class="logo__suite">Suite</span></a>
+          <p>Hospedajes seleccionados en Zipaquira, Cundinamarca. Empezamos con siete.</p>
+        </div>
+
+        <div>
+          <h4>Sitio</h4>
+          <ul class="footer__lista">
+            <li><a href="/">Inicio</a></li>
+            <li><a href="/hospedajes">Hospedajes</a></li>
+            <li><a href="/landing/hospedaje-en-zipaquira">Hospedaje en Zipaquira</a></li>
+            <li><a href="#contacto">Contacto</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>Destino</h4>
+          <ul class="footer__lista">
+            <li><a href="#zipaquira">Sobre Zipaquira</a></li>
+            <li><a href="#experiencias">Experiencias</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>Contacto</h4>
+          <ul class="footer__lista">
+            <li><span class="pendiente">correo pendiente</span></li>
+            <li><span class="pendiente">telefono pendiente</span></li>
+            <li>Zipaquira, Cundinamarca</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="footer__base">
+        <span>&copy; <span data-ano>2026</span> Atheron Suite. Todos los derechos reservados.</span>
+        <span><span class="pendiente">Pendiente: politica de privacidad y terminos.</span></span>
+      </div>
+
+    </div>
+  </footer>
+) : (
+  <footer class="footer">
+    <div class="contenedor">
+      <div class="footer__base" style="border-top: 0;">
+        <span>&copy; <span data-ano>2026</span> Atheron Suite &middot; Zipaquira, Cundinamarca</span>
+        <span><a href={hrefVuelta}>{textoVuelta}</a></span>
+      </div>
+    </div>
+  </footer>
+)}

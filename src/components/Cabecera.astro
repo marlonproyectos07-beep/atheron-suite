@@ -1,0 +1,89 @@
+---
+/* ============================================================
+   CABECERA — la barra superior del sitio
+
+   Sustituye a las 16 copias que habia escritas a mano.
+
+   Tiene dos formas:
+   1. Con menu: logo + navegacion + boton hamburguesa + menu movil.
+   2. Sin menu (landings): logo + un solo boton. Se activa sola
+      cuando no se le pasan enlaces. Ver el motivo en
+      src/data/navegacion.ts, apartado LANDINGS.
+
+   El boton hamburguesa y el menu movil los mueve main.js a traves
+   de los atributos data-boton-menu y data-menu-movil. Nunca se
+   seleccionan por clase de estilo: si cambia el diseno, el codigo
+   se romperia.
+   ============================================================ */
+
+import type { Cta, Enlace } from '../data/navegacion';
+
+interface Props {
+  /** Enlaces del menu de escritorio. Sin ellos, la cabecera es de landing. */
+  enlaces?: Enlace[];
+  /** Enlaces del menu de celular. Si no se pasa, se usan los de escritorio. */
+  enlacesMovil?: Enlace[];
+  /** El boton destacado de la derecha. */
+  cta: Cta;
+  /** href del enlace que corresponde a esta pagina, para marcarlo como actual. */
+  actual?: string;
+}
+
+const { enlaces, enlacesMovil, cta, actual } = Astro.props;
+
+const menuEscritorio = enlaces ?? [];
+const menuCelular = enlacesMovil ?? menuEscritorio;
+const llevaMenu = menuEscritorio.length > 0;
+
+// Astro no escribe los atributos que valen undefined, asi que
+// data-whatsapp solo aparece en los botones que lo necesitan.
+const claseCta = `boton ${cta.clase ?? 'boton--primario'}`;
+---
+
+<header class="header">
+  <div class="contenedor header__interior">
+
+    <a class="logo" href="/">Atheron <span class="logo__suite">Suite</span></a>
+
+    {llevaMenu && (
+      <nav class="nav" aria-label="Navegacion principal">
+        <ul class="nav__lista">
+          {menuEscritorio.map((enlace) => (
+            <li>
+              <a
+                class="nav__enlace"
+                href={enlace.href}
+                aria-current={enlace.href === actual ? 'page' : undefined}
+              >{enlace.texto}</a>
+            </li>
+          ))}
+          <li>
+            <a class={claseCta} href={cta.href} data-whatsapp={cta.whatsapp}>{cta.texto}</a>
+          </li>
+        </ul>
+      </nav>
+    )}
+
+    {!llevaMenu && (
+      <a class={claseCta} href={cta.href} data-whatsapp={cta.whatsapp}>{cta.texto}</a>
+    )}
+
+    {llevaMenu && (
+      <button class="boton-menu" type="button" aria-expanded="false"
+              aria-controls="menu-movil" data-boton-menu>
+        <span></span><span></span><span></span>
+        <span class="solo-lectores">Abrir menu</span>
+      </button>
+    )}
+
+  </div>
+</header>
+
+{llevaMenu && (
+  <div class="menu-movil" id="menu-movil" data-menu-movil data-abierto="false">
+    <div class="contenedor">
+      {menuCelular.map((enlace) => <a href={enlace.href}>{enlace.texto}</a>)}
+      <a class={claseCta} href={cta.href} data-whatsapp={cta.whatsapp}>{cta.texto}</a>
+    </div>
+  </div>
+)}

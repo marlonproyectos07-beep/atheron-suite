@@ -4,11 +4,16 @@
    Esta es la pagina principal: explica QUIEN es Atheron Suite
    y reparte el trafico hacia los hospedajes y el contacto.
 
-   Todo el <head> (titulo, canonica, Open Graph, JSON-LD) lo
-   pone src/layouts/Base.astro. Aqui solo va el contenido.
+   El <head> lo pone src/layouts/Base.astro.
+   La cabecera y el pie son componentes compartidos.
+   Aqui solo vive lo que es propio de la portada.
    ============================================================ */
 
 import Base from '../layouts/Base.astro';
+import Cabecera from '../components/Cabecera.astro';
+import Pie from '../components/Pie.astro';
+import BotonFlotante from '../components/BotonFlotante.astro';
+import { menuHome, menuHomeMovil, ctaDisponibilidad } from '../data/navegacion';
 
 /* Ficha del negocio para Google y los asistentes de IA.
 
@@ -43,60 +48,13 @@ const fichaNegocio = {
   avisoBorrador="Version de trabajo. Los textos y fotos marcados en amarillo son provisionales."
 >
 
-  <!-- ============================================================
-       HEADER — se repite igual en todas las paginas
-       (en la Etapa 2 pasa a ser un componente)
-       ============================================================ -->
-  <header class="header">
-    <div class="contenedor header__interior">
-
-      <a class="logo" href="/">
-        Atheron <span class="logo__suite">Suite</span>
-      </a>
-
-      <nav class="nav" aria-label="Navegacion principal">
-        <ul class="nav__lista">
-          <li><a class="nav__enlace" href="/" aria-current="page">Inicio</a></li>
-          <li><a class="nav__enlace" href="/hospedajes">Hospedajes</a></li>
-          <li><a class="nav__enlace" href="#zipaquira">Zipaquira</a></li>
-          <li><a class="nav__enlace" href="#experiencias">Experiencias</a></li>
-          <li><a class="nav__enlace" href="/landing/casas-para-grupos-en-zipaquira">Grupos</a></li>
-          <li><a class="nav__enlace" href="/blog">Blog</a></li>
-          <li><a class="nav__enlace" href="#contacto">Contacto</a></li>
-          <li><a class="boton boton--primario" href="/landing/hospedaje-en-zipaquira">Ver disponibilidad</a></li>
-        </ul>
-      </nav>
-
-      <!-- Boton hamburguesa: solo se ve en celular -->
-      <button class="boton-menu" type="button" aria-expanded="false"
-              aria-controls="menu-movil" data-boton-menu>
-        <span></span><span></span><span></span>
-        <span class="solo-lectores">Abrir menu</span>
-      </button>
-
-    </div>
-  </header>
-
-  <!-- Menu que se despliega en celular -->
-  <div class="menu-movil" id="menu-movil" data-menu-movil data-abierto="false">
-    <div class="contenedor">
-      <a href="/">Inicio</a>
-      <a href="/hospedajes">Hospedajes</a>
-      <a href="#zipaquira">Zipaquira</a>
-      <a href="#experiencias">Experiencias</a>
-      <a href="/landing/casas-para-grupos-en-zipaquira">Grupos y empresas</a>
-      <a href="/blog">Blog</a>
-      <a href="#contacto">Contacto</a>
-      <a class="boton boton--primario" href="/landing/hospedaje-en-zipaquira">Ver disponibilidad</a>
-    </div>
-  </div>
-
+  <Cabecera enlaces={menuHome} enlacesMovil={menuHomeMovil} cta={ctaDisponibilidad} actual="/" />
 
   <main id="contenido">
 
-    <!-- ============================================================
+    {/* ============================================================
          1. HERO — promesa principal en 5 segundos
-         ============================================================ -->
+         ============================================================ */}
     <section class="hero">
       <div class="contenedor hero__contenido">
 
@@ -122,7 +80,7 @@ const fichaNegocio = {
           </a>
         </div>
 
-        <!-- Datos rapidos: dan confianza sin pedir nada a cambio -->
+        {/* Datos rapidos: dan confianza sin pedir nada a cambio */}
         <div class="hero__datos">
           <div class="dato">
             <span class="dato__numero">7</span>
@@ -142,9 +100,9 @@ const fichaNegocio = {
     </section>
 
 
-    <!-- ============================================================
+    {/* ============================================================
          2. FRANJA DE CONFIANZA
-         ============================================================ -->
+         ============================================================ */}
     <div class="contenedor">
       <div class="franja">
         <div class="franja__item">
@@ -167,9 +125,9 @@ const fichaNegocio = {
     </div>
 
 
-    <!-- ============================================================
+    {/* ============================================================
          3. QUE ES ATHERON SUITE
-         ============================================================ -->
+         ============================================================ */}
     <section class="seccion">
       <div class="contenedor bloque-doble aparecer">
 
@@ -199,7 +157,7 @@ const fichaNegocio = {
     </section>
 
 
-    <!-- ============================================================
+    {/* ============================================================
          3.bis COMO NACIO ATHERON SUITE
          Version corta. La larga vive en el blog.
 
@@ -208,7 +166,7 @@ const fichaNegocio = {
          - Introduce de forma natural terminos que queremos posicionar
            (turismo en Zipaquira, Catedral de Sal, casas para grupos)
          - Diferencia: Booking lista propiedades, no cuenta historias
-         ============================================================ -->
+         ============================================================ */}
     <section class="seccion seccion--oscura" id="historia">
       <div class="contenedor bloque-doble aparecer">
 
@@ -263,10 +221,10 @@ const fichaNegocio = {
     </section>
 
 
-    <!-- ============================================================
+    {/* ============================================================
          4. HOSPEDAJES DESTACADOS
          Aqui mostramos 3; los 7 completos viven en /hospedajes
-         ============================================================ -->
+         ============================================================ */}
     <section class="seccion seccion--alterna" id="hospedajes">
       <div class="contenedor">
 
@@ -281,7 +239,7 @@ const fichaNegocio = {
 
         <div class="grid grid--3 aparecer">
 
-          <!-- TARJETA 1 -->
+          {/* TARJETA 1 */}
           <article class="tarjeta">
             <div class="tarjeta__media">
               <div class="placeholder">Foto pendiente</div>
@@ -306,7 +264,7 @@ const fichaNegocio = {
             </div>
           </article>
 
-          <!-- TARJETA 2 -->
+          {/* TARJETA 2 */}
           <article class="tarjeta">
             <div class="tarjeta__media">
               <div class="placeholder">Foto pendiente</div>
@@ -328,7 +286,7 @@ const fichaNegocio = {
             </div>
           </article>
 
-          <!-- TARJETA 3 -->
+          {/* TARJETA 3 */}
           <article class="tarjeta">
             <div class="tarjeta__media">
               <div class="placeholder">Foto pendiente</div>
@@ -362,9 +320,9 @@ const fichaNegocio = {
     </section>
 
 
-    <!-- ============================================================
+    {/* ============================================================
          5. EXPERIENCIAS
-         ============================================================ -->
+         ============================================================ */}
     <section class="seccion" id="experiencias">
       <div class="contenedor">
 
@@ -404,9 +362,9 @@ const fichaNegocio = {
     </section>
 
 
-    <!-- ============================================================
+    {/* ============================================================
          6. ZIPAQUIRA (el destino tambien vende)
-         ============================================================ -->
+         ============================================================ */}
     <section class="seccion seccion--alterna" id="zipaquira">
       <div class="contenedor bloque-doble bloque-doble--invertido aparecer">
 
@@ -437,9 +395,9 @@ const fichaNegocio = {
     </section>
 
 
-    <!-- ============================================================
+    {/* ============================================================
          7. CONTACTO
-         ============================================================ -->
+         ============================================================ */}
     <section class="seccion" id="contacto">
       <div class="contenedor bloque-doble aparecer">
 
@@ -516,9 +474,9 @@ const fichaNegocio = {
     </section>
 
 
-    <!-- ============================================================
+    {/* ============================================================
          8. LLAMADO A LA ACCION FINAL
-         ============================================================ -->
+         ============================================================ */}
     <section class="seccion">
       <div class="contenedor">
         <div class="cta-final aparecer">
@@ -539,60 +497,11 @@ const fichaNegocio = {
 
   </main>
 
+  <Pie variante="completo" />
 
-  <!-- ============================================================
-       FOOTER — tambien se repite en todas las paginas
-       (en la Etapa 2 pasa a ser un componente)
-       ============================================================ -->
-  <footer class="footer">
-    <div class="contenedor">
-
-      <div class="footer__grid">
-
-        <div>
-          <a class="logo" href="/">Atheron <span class="logo__suite">Suite</span></a>
-          <p>Hospedajes seleccionados en Zipaquira, Cundinamarca. Empezamos con siete.</p>
-        </div>
-
-        <div>
-          <h4>Sitio</h4>
-          <ul class="footer__lista">
-            <li><a href="/">Inicio</a></li>
-            <li><a href="/hospedajes">Hospedajes</a></li>
-            <li><a href="/landing/hospedaje-en-zipaquira">Hospedaje en Zipaquira</a></li>
-            <li><a href="#contacto">Contacto</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h4>Destino</h4>
-          <ul class="footer__lista">
-            <li><a href="#zipaquira">Sobre Zipaquira</a></li>
-            <li><a href="#experiencias">Experiencias</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h4>Contacto</h4>
-          <ul class="footer__lista">
-            <li><span class="pendiente">correo pendiente</span></li>
-            <li><span class="pendiente">telefono pendiente</span></li>
-            <li>Zipaquira, Cundinamarca</li>
-          </ul>
-        </div>
-
-      </div>
-
-      <div class="footer__base">
-        <span>&copy; <span data-ano>2026</span> Atheron Suite. Todos los derechos reservados.</span>
-        <span><span class="pendiente">Pendiente: politica de privacidad y terminos.</span></span>
-      </div>
-
-    </div>
-  </footer>
-
-  <!-- Llamado a la accion flotante, siempre visible en celular -->
-  <a class="boton boton--whatsapp flotante" href="#contacto"
-     data-whatsapp="Hola, quiero informacion sobre los hospedajes de Atheron Suite en Zipaquira.">WhatsApp</a>
+  <BotonFlotante
+    href="#contacto"
+    mensaje="Hola, quiero informacion sobre los hospedajes de Atheron Suite en Zipaquira."
+  />
 
 </Base>

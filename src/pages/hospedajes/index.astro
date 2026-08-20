@@ -1,0 +1,243 @@
+---
+/* ============================================================
+   LISTADO DE LOS 7 HOSPEDAJES
+
+   Antes: siete bloques de HTML casi identicos, copiados a mano.
+   Cambiar el texto del boton de WhatsApp obligaba a editarlo
+   siete veces, y bastaba con olvidarse de uno para que quedara
+   descuadrado.
+
+   Ahora: los datos estan arriba, en una lista, y la maqueta se
+   escribe UNA vez. Anadir un hospedaje es anadir una linea.
+
+   En la Etapa 3 esta misma lista se muda a src/content/hospedajes/
+   y pasa a editarse desde el panel: ahi es donde se cierran los
+   pendientes 1 a 7 (nombres, zonas, capacidad, precios) sin tocar
+   una sola linea de codigo.
+   ============================================================ */
+
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
+
+interface Hospedaje {
+  /** Numero que se ve en la insignia de la tarjeta. */
+  numero: string;
+  /** Ultima parte de la direccion: /hospedajes/<slug> */
+  slug: string;
+  nombre: string;
+  /** true mientras falten los datos reales: pinta el texto en amarillo. */
+  enObra: boolean;
+  /** Primer dato de la linea gris: zona o barrio. */
+  sector: string;
+  /** Segundo dato: distancia, habitaciones... */
+  segundoDato: string;
+  descripcion: string;
+  /** Mensaje que llega ya escrito a WhatsApp. */
+  mensaje: string;
+}
+
+const hospedajes: Hospedaje[] = [
+  {
+    numero: '01',
+    slug: 'la-magia-de-zipaquira',
+    nombre: 'La Magia de Zipaquira',
+    enObra: false,
+    sector: 'Cra. 9, centro',
+    segundoDato: '1,4 km a la Catedral de Sal',
+    descripcion: 'Apartamentos con cocina equipada, wifi y Netflix, a 16 minutos caminando de la Catedral de Sal.',
+    mensaje: 'Hola, me interesa La Magia de Zipaquira. Quiero consultar disponibilidad.',
+  },
+  {
+    numero: '02',
+    slug: 'hospedaje-02',
+    nombre: 'Nombre del hospedaje 2',
+    enObra: true,
+    sector: 'Barrio / sector',
+    segundoDato: 'N',
+    descripcion: 'Descripcion corta pendiente.',
+    mensaje: 'Hola, me interesa el hospedaje 02 de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.',
+  },
+  {
+    numero: '03',
+    slug: 'hospedaje-03',
+    nombre: 'Nombre del hospedaje 3',
+    enObra: true,
+    sector: 'Barrio / sector',
+    segundoDato: 'N',
+    descripcion: 'Descripcion corta pendiente.',
+    mensaje: 'Hola, me interesa el hospedaje 03 de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.',
+  },
+  {
+    numero: '04',
+    slug: 'hospedaje-04',
+    nombre: 'Nombre del hospedaje 4',
+    enObra: true,
+    sector: 'Barrio / sector',
+    segundoDato: 'N',
+    descripcion: 'Descripcion corta pendiente.',
+    mensaje: 'Hola, me interesa el hospedaje 04 de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.',
+  },
+  {
+    numero: '05',
+    slug: 'hospedaje-05',
+    nombre: 'Nombre del hospedaje 5',
+    enObra: true,
+    sector: 'Barrio / sector',
+    segundoDato: 'N',
+    descripcion: 'Descripcion corta pendiente.',
+    mensaje: 'Hola, me interesa el hospedaje 05 de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.',
+  },
+  {
+    numero: '06',
+    slug: 'hospedaje-06',
+    nombre: 'Nombre del hospedaje 6',
+    enObra: true,
+    sector: 'Barrio / sector',
+    segundoDato: 'N',
+    descripcion: 'Descripcion corta pendiente.',
+    mensaje: 'Hola, me interesa el hospedaje 06 de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.',
+  },
+  {
+    numero: '07',
+    slug: 'hospedaje-07',
+    nombre: 'Nombre del hospedaje 7',
+    enObra: true,
+    sector: 'Barrio / sector',
+    segundoDato: 'N',
+    descripcion: 'Descripcion corta pendiente.',
+    mensaje: 'Hola, me interesa el hospedaje 07 de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.',
+  },
+];
+---
+
+<Base
+  titulo="Nuestros hospedajes en Zipaquira | Atheron Suite"
+  descripcion="Conoce los 7 hospedajes de Atheron Suite en Zipaquira, Cundinamarca."
+  ruta="/hospedajes"
+  ogTitulo="Nuestros 7 hospedajes en Zipaquira | Atheron Suite"
+  ogDescripcion="Siete hospedajes seleccionados en Zipaquira, Cundinamarca. Mira habitaciones, fotos y ubicacion."
+  avisoBorrador="Version de trabajo. Faltan los datos reales de los 7 hospedajes."
+>
+
+  <Cabecera enlaces={menuHospedajes} cta={ctaDisponibilidad} actual="/hospedajes" />
+
+  <main id="contenido">
+
+    {/* Hero corto: en paginas internas no hace falta pantalla completa */}
+    <section class="hero hero--interior">
+      <div class="contenedor hero__contenido">
+        <span class="hero__etiqueta">Zipaquira, Cundinamarca</span>
+        <h1 class="hero__titulo">Nuestros 7 hospedajes</h1>
+        <p class="hero__texto">
+          Cada uno tiene su caracter. Entra a la ficha que te llame la atencion
+          para ver habitaciones, fotos y ubicacion.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <div class="contenedor">
+
+        {/* ==========================================================
+             COMO FUNCIONA
+             Explica el modelo antes de que el visitante se confunda:
+             una oficina central coordina todos los hospedajes.
+             ========================================================== */}
+        <div class="nota-reserva" style="margin-bottom: var(--esp-5);">
+          <span class="nota-reserva__icono" aria-hidden="true">&#127968;</span>
+          <div>
+            <strong>Como funciona</strong>
+            Coordinamos todos los hospedajes desde nuestra oficina en la
+            Cra. 9 #10-32 de Zipaquira. Escribenos por WhatsApp, te confirmamos
+            disponibilidad y precio, y al confirmar la reserva te damos la
+            direccion exacta y coordinamos tu llegada.
+          </div>
+        </div>
+
+        {/* ==========================================================
+             GRILLA DE LOS 7 HOSPEDAJES
+             La maqueta se escribe una vez y se repite por cada
+             elemento de la lista de arriba.
+
+             Nota sobre el boton de WhatsApp: cada tarjeta lleva SU
+             mensaje. El cliente no tiene que explicar cual hospedaje
+             le gusto, el mensaje ya llega identificado.
+             ========================================================== */}
+        <div class="grid grid--3">
+
+          {hospedajes.map((hospedaje) => (
+            <article class="tarjeta aparecer">
+              <div class="tarjeta__media">
+                <div class="placeholder">Foto pendiente</div>
+                <span class="tarjeta__insignia">{hospedaje.numero}</span>
+              </div>
+              <div class="tarjeta__cuerpo">
+
+                <h2 class="tarjeta__titulo">
+                  <a href={`/hospedajes/${hospedaje.slug}`}>
+                    {hospedaje.enObra
+                      ? <span class="pendiente">{hospedaje.nombre}</span>
+                      : hospedaje.nombre}
+                  </a>
+                </h2>
+
+                <p class="tarjeta__meta">
+                  <span>
+                    {hospedaje.enObra
+                      ? <span class="pendiente">{hospedaje.sector}</span>
+                      : hospedaje.sector}
+                  </span>
+                  <span>
+                    {hospedaje.enObra
+                      ? <><span class="pendiente">{hospedaje.segundoDato}</span> habitaciones</>
+                      : hospedaje.segundoDato}
+                  </span>
+                </p>
+
+                <p class="texto-suave">
+                  {hospedaje.enObra
+                    ? <span class="pendiente">{hospedaje.descripcion}</span>
+                    : hospedaje.descripcion}
+                </p>
+
+                <div class="tarjeta__pie">
+                  <span class="tarjeta__precio"><span class="pendiente">$ ---</span> <span>/ noche</span></span>
+                  <a class="boton boton--contorno" href={`/hospedajes/${hospedaje.slug}`}>Ver ficha</a>
+                </div>
+
+                <a class="boton boton--whatsapp boton--bloque"
+                   href="/#contacto"
+                   data-whatsapp={hospedaje.mensaje}>
+                  Reservar por WhatsApp
+                </a>
+
+              </div>
+            </article>
+          ))}
+
+        </div>
+
+        <div class="cta-final aparecer" style="margin-top: var(--esp-6);">
+          <h2>No sabes cual elegir?</h2>
+          <p>Cuentanos cuantos son y que fechas manejan. Te recomendamos el mas adecuado.</p>
+          <div class="grupo-botones grupo-botones--centrado">
+            <a class="boton boton--acento boton--grande" href="/landing/hospedaje-en-zipaquira">Consultar disponibilidad</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <Pie />
+
+  <BotonFlotante
+    href="/#contacto"
+    mensaje="Hola, estoy viendo los hospedajes de Atheron Suite en Zipaquira."
+  />
+
+</Base>

@@ -19,10 +19,21 @@ export default defineConfig({
   trailingSlash: 'never',
 
   build: {
-    // 'file' genera  /landing/hospedaje-en-zipaquira.html
-    // 'directory' generaria  /landing/hospedaje-en-zipaquira/index.html
-    // y eso publicaria la pagina CON barra final: direccion distinta
-    // a la actual. Por eso va 'file'.
-    format: 'file',
+    // 'preserve' genera los archivos EXACTAMENTE con la misma forma que
+    // tienen hoy en el repositorio:
+    //
+    //   src/pages/index.astro                     -> /index.html
+    //   src/pages/blog/index.astro                -> /blog/index.html
+    //   src/pages/blog/guia-de-zipaquira.astro    -> /blog/guia-de-zipaquira.html
+    //
+    // Es la opcion que garantiza que ninguna direccion cambie.
+    //
+    // Las otras dos NO sirven aqui:
+    //   'directory' pondria cada pagina en su propia carpeta y la
+    //               publicaria CON barra final: direccion distinta.
+    //   'file'      convertiria /blog/index.astro en /blog.html, que
+    //               funciona pero deja de coincidir con lo que hay
+    //               publicado hoy. Preferimos no depender de eso.
+    format: 'preserve',
   },
 });
