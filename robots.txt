@@ -10,4 +10,4 @@ Disallow: /hospedajes/plantilla-hospedaje
 Disallow: /blog/plantilla-articulo
 
 # Mapa del sitio: aqui Google encuentra la lista de paginas.
-Sitemap: https://atheron-suite.vercel.app/sitemap.xml
+Sitemap: https://hotelesatheron.com/sitemap.xml

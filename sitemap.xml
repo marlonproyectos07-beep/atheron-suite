@@ -10,50 +10,50 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
   <url>
-    <loc>https://atheron-suite.vercel.app/</loc>
+    <loc>https://hotelesatheron.com/</loc>
     <lastmod>2026-08-18</lastmod>
     <priority>1.0</priority>
   </url>
 
   <url>
-    <loc>https://atheron-suite.vercel.app/landing/hospedaje-en-zipaquira</loc>
+    <loc>https://hotelesatheron.com/landing/hospedaje-en-zipaquira</loc>
     <lastmod>2026-08-18</lastmod>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://atheron-suite.vercel.app/hospedajes</loc>
+    <loc>https://hotelesatheron.com/hospedajes</loc>
     <lastmod>2026-08-18</lastmod>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://atheron-suite.vercel.app/blog</loc>
+    <loc>https://hotelesatheron.com/blog</loc>
     <lastmod>2026-08-18</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://atheron-suite.vercel.app/blog/guia-de-zipaquira</loc>
+    <loc>https://hotelesatheron.com/blog/guia-de-zipaquira</loc>
     <lastmod>2026-08-18</lastmod>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://atheron-suite.vercel.app/hospedajes/la-magia-de-zipaquira</loc>
+    <loc>https://hotelesatheron.com/hospedajes/la-magia-de-zipaquira</loc>
     <lastmod>2026-08-18</lastmod>
     <priority>0.9</priority>
   </url>
 
   <!-- PENDIENTE: anadir las 6 fichas de hospedaje restantes -->
   <url>
-    <loc>https://atheron-suite.vercel.app/landing/casas-para-grupos-en-zipaquira</loc>
+    <loc>https://hotelesatheron.com/landing/casas-para-grupos-en-zipaquira</loc>
     <lastmod>2026-08-18</lastmod>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://atheron-suite.vercel.app/blog/como-nacio-atheron-suite</loc>
+    <loc>https://hotelesatheron.com/blog/como-nacio-atheron-suite</loc>
     <lastmod>2026-08-18</lastmod>
     <priority>0.7</priority>
   </url>

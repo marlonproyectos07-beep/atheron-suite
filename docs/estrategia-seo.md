@@ -164,7 +164,7 @@ Sí, es necesario, y es gratis. Es la herramienta que te dice qué está pasando
 Qué hacer, en orden:
 
 1. Entrar a `search.google.com/search-console`
-2. Añadir la propiedad `atheron-suite.vercel.app` (o el dominio propio cuando lo compremos)
+2. Añadir la propiedad `hotelesatheron.com` (o el dominio propio cuando lo compremos)
 3. Verificar la propiedad — con Vercel se hace añadiendo un registro DNS o subiendo un archivo al sitio
 4. Enviar el `sitemap.xml`
 5. Revisarlo cada semana
@@ -181,7 +181,7 @@ Qué te dice:
 
 ## 5. Sobre el dominio propio
 
-`atheron-suite.vercel.app` sirve para trabajar, pero para posicionar en serio hace falta dominio propio: `atheronsuite.com` o `atheronsuite.co`.
+`hotelesatheron.com` sirve para trabajar, pero para posicionar en serio hace falta dominio propio: `atheronsuite.com` o `atheronsuite.co`.
 
 Razones:
 
