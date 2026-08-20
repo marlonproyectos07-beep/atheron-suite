@@ -10,7 +10,7 @@ ogTitulo: La Magia de Zipaquira | Atheron Suite
 ogDescripcion: Hospedaje en Zipaquira a 16 minutos a pie de la Catedral de Sal. Wifi, Netflix, cocina y parqueadero.
 avisoBorrador: Version de trabajo. Faltan las fotos, el numero de habitaciones y los precios.
 
-zona: Cra. 9 #10-32, Zipaquira
+zona: "Cra. 9 #10-32, Zipaquira"
 presentacion: >-
   A 16 minutos caminando de la Catedral de Sal, con cocina equipada,
   wifi, Netflix y vistas a la montana. Pensado para quedarse mas de
@@ -89,11 +89,11 @@ experiencias:
 
 tituloContacto: Reserva tus fechas en La Magia de Zipaquira
 datosContacto:
-  - Cra. 9 #10-32, Zipaquira, Cundinamarca
+  - "Cra. 9 #10-32, Zipaquira, Cundinamarca"
   - Entrada 15:00 · Salida 11:00
 
 # --- Datos estructurados (solo lo confirmado y visible en la pagina) ---
-calle: Cra. 9 #10-32
+calle: "Cra. 9 #10-32"
 checkin: "15:00"
 checkout: "11:00"
 mascotas: false

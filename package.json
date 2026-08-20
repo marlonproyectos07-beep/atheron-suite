@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
+    "comprueba": "node scripts/comprueba-contenido.mjs",
+    "prebuild": "node scripts/comprueba-contenido.mjs",
     "build": "astro build",
     "preview": "astro preview"
   },

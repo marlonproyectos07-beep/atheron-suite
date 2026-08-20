@@ -23,6 +23,11 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
+/* NOTA: la comprobacion de las almohadillas en YAML no puede
+   hacerse aqui. Cuando el texto llega a este archivo, YAML ya lo
+   ha cortado y no queda rastro. Se hace antes de construir, sobre
+   los archivos originales, en scripts/comprueba-contenido.mjs. */
+
 /* Un dato de la fila de cifras de la portada.
    Ej: { numero: "1,4 km", texto: "A la Catedral de Sal" } */
 const dato = z.object({
