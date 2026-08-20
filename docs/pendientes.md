@@ -77,7 +77,7 @@ Aquí está el 32% del peso del posicionamiento local. No es código, pero vale 
 
 | # | Pendiente | Prioridad |
 |---|---|---|
-| 28 | **Corregir la ubicación del perfil de Google: aparece en Cogua, debe ser Zipaquirá** | Máxima |
+| 28 | **Corregir la ubicación del perfil de Google: aparece en Cogua, debe ser Zipaquirá.** Paso a paso en [corregir-perfil-google.md](corregir-perfil-google.md). **Lo que está mal es el pin del mapa, no la dirección: no toques el texto de la dirección o puedes disparar una reverificación.** | Máxima |
 | 29 | Renombrar el perfil de "Atheronsas" a "Atheron Suite" | Alta |
 | 30 | Completar el perfil: categoría, horarios, teléfono, enlace al sitio, atributos | Alta |
 | 31 | Separar o cerrar el perfil de Atheron Security para que no compita | Media |
