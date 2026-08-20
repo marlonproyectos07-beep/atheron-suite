@@ -4,113 +4,43 @@
 
    Antes: siete bloques de HTML casi identicos, copiados a mano.
    Cambiar el texto del boton de WhatsApp obligaba a editarlo
-   siete veces, y bastaba con olvidarse de uno para que quedara
-   descuadrado.
+   siete veces, y bastaba con olvidarse de uno para descuadrarlo.
 
-   Ahora: los datos estan arriba, en una lista, y la maqueta se
-   escribe UNA vez. Anadir un hospedaje es anadir una linea.
-
-   En la Etapa 3 esta misma lista se muda a src/content/hospedajes/
-   y pasa a editarse desde el panel: ahi es donde se cierran los
-   pendientes 1 a 7 (nombres, zonas, capacidad, precios) sin tocar
-   una sola linea de codigo.
+   Ahora esta pagina NO tiene datos propios: los lee de la misma
+   coleccion que alimenta las fichas. Eso significa que el listado
+   y la ficha no pueden contradecirse nunca. Si cambias el nombre
+   de un hospedaje en el panel, cambia en los dos sitios a la vez.
    ============================================================ */
 
+import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Cabecera from '../../components/Cabecera.astro';
 import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
+import Marca from '../../components/Marca.astro';
 import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
 
-interface Hospedaje {
-  /** Numero que se ve en la insignia de la tarjeta. */
-  numero: string;
-  /** Ultima parte de la direccion: /hospedajes/<slug> */
-  slug: string;
-  nombre: string;
-  /** true mientras falten los datos reales: pinta el texto en amarillo. */
-  enObra: boolean;
-  /** Primer dato de la linea gris: zona o barrio. */
-  sector: string;
-  /** Segundo dato: distancia, habitaciones... */
-  segundoDato: string;
-  descripcion: string;
-  /** Mensaje que llega ya escrito a WhatsApp. */
-  mensaje: string;
-}
+/* ------------------------------------------------------------
+   RECOMENDACION PENDIENTE DE TU DECISION
 
-const hospedajes: Hospedaje[] = [
-  {
-    numero: '01',
-    slug: 'la-magia-de-zipaquira',
-    nombre: 'La Magia de Zipaquira',
-    enObra: false,
-    sector: 'Cra. 9, centro',
-    segundoDato: '1,4 km a la Catedral de Sal',
-    descripcion: 'Apartamentos con cocina equipada, wifi y Netflix, a 16 minutos caminando de la Catedral de Sal.',
-    mensaje: 'Hola, me interesa La Magia de Zipaquira. Quiero consultar disponibilidad.',
-  },
-  {
-    numero: '02',
-    slug: 'hospedaje-02',
-    nombre: 'Nombre del hospedaje 2',
-    enObra: true,
-    sector: 'Barrio / sector',
-    segundoDato: 'N',
-    descripcion: 'Descripcion corta pendiente.',
-    mensaje: 'Hola, me interesa el hospedaje 02 de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.',
-  },
-  {
-    numero: '03',
-    slug: 'hospedaje-03',
-    nombre: 'Nombre del hospedaje 3',
-    enObra: true,
-    sector: 'Barrio / sector',
-    segundoDato: 'N',
-    descripcion: 'Descripcion corta pendiente.',
-    mensaje: 'Hola, me interesa el hospedaje 03 de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.',
-  },
-  {
-    numero: '04',
-    slug: 'hospedaje-04',
-    nombre: 'Nombre del hospedaje 4',
-    enObra: true,
-    sector: 'Barrio / sector',
-    segundoDato: 'N',
-    descripcion: 'Descripcion corta pendiente.',
-    mensaje: 'Hola, me interesa el hospedaje 04 de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.',
-  },
-  {
-    numero: '05',
-    slug: 'hospedaje-05',
-    nombre: 'Nombre del hospedaje 5',
-    enObra: true,
-    sector: 'Barrio / sector',
-    segundoDato: 'N',
-    descripcion: 'Descripcion corta pendiente.',
-    mensaje: 'Hola, me interesa el hospedaje 05 de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.',
-  },
-  {
-    numero: '06',
-    slug: 'hospedaje-06',
-    nombre: 'Nombre del hospedaje 6',
-    enObra: true,
-    sector: 'Barrio / sector',
-    segundoDato: 'N',
-    descripcion: 'Descripcion corta pendiente.',
-    mensaje: 'Hola, me interesa el hospedaje 06 de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.',
-  },
-  {
-    numero: '07',
-    slug: 'hospedaje-07',
-    nombre: 'Nombre del hospedaje 7',
-    enObra: true,
-    sector: 'Barrio / sector',
-    segundoDato: 'N',
-    descripcion: 'Descripcion corta pendiente.',
-    mensaje: 'Hola, me interesa el hospedaje 07 de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.',
-  },
-];
+   Hoy las tarjetas de las fichas en obra llevan boton "Ver ficha".
+   Quien lo pulsa aterriza en una pagina que dice "Nombre del
+   hospedaje 2" y "$ ---". Eso es peor que no tener el enlace: el
+   visitante ya estaba interesado y le ensenamos que no hay nada.
+
+   Poniendo esto en true, la tarjeta se queda (comunica que hay
+   siete propiedades) pero el enlace desaparece hasta que la ficha
+   tenga contenido real. El boton de WhatsApp se queda siempre,
+   que es el que convierte de verdad.
+
+   Lo dejo en false para que la migracion no cambie nada todavia.
+   ------------------------------------------------------------ */
+const OCULTAR_ENLACE_DE_FICHAS_EN_OBRA = false;
+
+/* Ordenados por el campo "orden" del contenido, no por el nombre
+   del archivo: asi renombrar un hospedaje no reordena el listado. */
+const hospedajes = (await getCollection('hospedajes'))
+  .sort((a, b) => a.data.orden - b.data.orden);
 ---
 
 <Base
@@ -160,63 +90,61 @@ const hospedajes: Hospedaje[] = [
         {/* ==========================================================
              GRILLA DE LOS 7 HOSPEDAJES
              La maqueta se escribe una vez y se repite por cada
-             elemento de la lista de arriba.
+             hospedaje de la coleccion.
 
              Nota sobre el boton de WhatsApp: cada tarjeta lleva SU
-             mensaje. El cliente no tiene que explicar cual hospedaje
-             le gusto, el mensaje ya llega identificado.
+             mensaje, construido con el nombre del hospedaje. El
+             cliente no tiene que explicar cual le gusto, el mensaje
+             ya llega identificado.
              ========================================================== */}
         <div class="grid grid--3">
 
-          {hospedajes.map((hospedaje) => (
-            <article class="tarjeta aparecer">
-              <div class="tarjeta__media">
-                <div class="placeholder">Foto pendiente</div>
-                <span class="tarjeta__insignia">{hospedaje.numero}</span>
-              </div>
-              <div class="tarjeta__cuerpo">
-
-                <h2 class="tarjeta__titulo">
-                  <a href={`/hospedajes/${hospedaje.slug}`}>
-                    {hospedaje.enObra
-                      ? <span class="pendiente">{hospedaje.nombre}</span>
-                      : hospedaje.nombre}
-                  </a>
-                </h2>
-
-                <p class="tarjeta__meta">
-                  <span>
-                    {hospedaje.enObra
-                      ? <span class="pendiente">{hospedaje.sector}</span>
-                      : hospedaje.sector}
-                  </span>
-                  <span>
-                    {hospedaje.enObra
-                      ? <><span class="pendiente">{hospedaje.segundoDato}</span> habitaciones</>
-                      : hospedaje.segundoDato}
-                  </span>
-                </p>
-
-                <p class="texto-suave">
-                  {hospedaje.enObra
-                    ? <span class="pendiente">{hospedaje.descripcion}</span>
-                    : hospedaje.descripcion}
-                </p>
-
-                <div class="tarjeta__pie">
-                  <span class="tarjeta__precio"><span class="pendiente">$ ---</span> <span>/ noche</span></span>
-                  <a class="boton boton--contorno" href={`/hospedajes/${hospedaje.slug}`}>Ver ficha</a>
+          {hospedajes.map(({ id, data }) => {
+            const enObra = !data.publicado;
+            const enlace = `/hospedajes/${id}`;
+            const mostrarEnlace = !(enObra && OCULTAR_ENLACE_DE_FICHAS_EN_OBRA);
+            return (
+              <article class="tarjeta aparecer">
+                <div class="tarjeta__media">
+                  <div class="placeholder">Foto pendiente</div>
+                  <span class="tarjeta__insignia">{data.insignia}</span>
                 </div>
+                <div class="tarjeta__cuerpo">
 
-                <a class="boton boton--whatsapp boton--bloque"
-                   href="/#contacto"
-                   data-whatsapp={hospedaje.mensaje}>
-                  Reservar por WhatsApp
-                </a>
+                  <h2 class="tarjeta__titulo">
+                    {mostrarEnlace
+                      ? <a href={enlace}><Marca texto={data.nombre} pendiente={enObra} /></a>
+                      : <Marca texto={data.nombre} pendiente={enObra} />}
+                  </h2>
 
-              </div>
-            </article>
-          ))}
+                  <p class="tarjeta__meta">
+                    <span><Marca texto={data.listadoSector} pendiente={enObra} /></span>
+                    <span><Marca texto={data.listadoSegundoDato} pendiente={enObra} />{data.listadoSegundoDatoSufijo}</span>
+                  </p>
+
+                  <p class="texto-suave">
+                    <Marca texto={data.resumen} pendiente={enObra} />
+                  </p>
+
+                  <div class="tarjeta__pie">
+                    <span class="tarjeta__precio">
+                      <Marca texto={data.precio} pendiente={data.precioPendiente} /> <span>/ noche</span>
+                    </span>
+                    {mostrarEnlace && (
+                      <a class="boton boton--contorno" href={enlace}>Ver ficha</a>
+                    )}
+                  </div>
+
+                  <a class="boton boton--whatsapp boton--bloque"
+                     href="/#contacto"
+                     data-whatsapp={`Hola, me interesa ${data.nombre} de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.`}>
+                    Reservar por WhatsApp
+                  </a>
+
+                </div>
+              </article>
+            );
+          })}
 
         </div>
 

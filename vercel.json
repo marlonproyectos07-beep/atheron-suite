@@ -1,4 +1,16 @@
 {
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/hospedajes/plantilla-hospedaje",
+      "destination": "/hospedajes",
+      "permanent": true
+    },
+    {
+      "source": "/blog/plantilla-articulo",
+      "destination": "/blog",
+      "permanent": true
+    }
+  ]
 }

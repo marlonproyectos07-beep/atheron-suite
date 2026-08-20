@@ -1,0 +1,396 @@
+---
+/* ============================================================
+   FICHA DE HOSPEDAJE — UNA plantilla para los siete
+
+   Los corchetes del nombre del archivo, [slug], significan
+   "esta parte de la direccion es variable". Astro recorre la
+   coleccion de hospedajes y genera una pagina por cada uno:
+
+     src/content/hospedajes/la-magia-de-zipaquira.md
+        -> /hospedajes/la-magia-de-zipaquira
+
+   Antes esto eran 8 archivos HTML de 416 lineas cada uno, casi
+   identicos. Cambiar una coma en el formulario obligaba a
+   editarlos los ocho.
+
+   LA DIRECCION LA MANDA EL NOMBRE DEL ARCHIVO .md
+   Cuando llegue el nombre real del hospedaje 02, se renombra el
+   archivo de contenido a, por ejemplo, casa-del-portal.md y la
+   direccion pasa a ser /hospedajes/casa-del-portal. La canonica,
+   el sitemap y los enlaces del listado se actualizan solos.
+   Conviene hacerlo AHORA que las seis fichas estan en noindex y
+   fuera del sitemap: Google no las tiene, asi que no hace falta
+   montar ninguna redireccion.
+   ============================================================ */
+
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import Marca from '../../components/Marca.astro';
+import { menuFicha, menuFichaMovil, ctaConsultar } from '../../data/navegacion';
+
+export async function getStaticPaths() {
+  const fichas = await getCollection('hospedajes');
+  return fichas.map((ficha) => ({
+    params: { slug: ficha.id },
+    props: { ficha },
+  }));
+}
+
+const { ficha } = Astro.props;
+const d = ficha.data;
+const ruta = `/hospedajes/${ficha.id}`;
+
+/* El cuerpo del archivo .md es la descripcion larga del hospedaje. */
+const { Content } = await render(ficha);
+
+/* ============================================================
+   DATOS ESTRUCTURADOS
+   Se construyen a partir del contenido, no a mano.
+
+   REGLA: solo se marca informacion que el visitante pueda ver en
+   la pagina. Por eso cada campo se anade solo si existe:
+   - "calle" solo en los hospedajes propios. En los aliados NO se
+     publica la direccion exacta, ni en pantalla ni aqui.
+   - "geo" solo cuando tengamos las coordenadas (pendiente 8).
+   ============================================================ */
+const fichaNegocio: Record<string, unknown> = {
+  '@context': 'https://schema.org',
+  '@type': 'LodgingBusiness',
+  name: d.nombre,
+  description: d.descripcion,
+  url: `https://hotelesatheron.com${ruta}`,
+  telephone: '+573188983167',
+  address: {
+    '@type': 'PostalAddress',
+    ...(d.calle ? { streetAddress: d.calle } : {}),
+    addressLocality: 'Zipaquira',
+    addressRegion: 'Cundinamarca',
+    addressCountry: 'CO',
+  },
+};
+
+if (d.latitud !== undefined && d.longitud !== undefined) {
+  fichaNegocio.geo = {
+    '@type': 'GeoCoordinates',
+    latitude: d.latitud,
+    longitude: d.longitud,
+  };
+}
+if (d.mascotas !== undefined) fichaNegocio.petsAllowed = d.mascotas;
+if (d.checkin) fichaNegocio.checkinTime = d.checkin;
+if (d.checkout) fichaNegocio.checkoutTime = d.checkout;
+if (d.comodidades.length) {
+  fichaNegocio.amenityFeature = d.comodidades.map((nombre) => ({
+    '@type': 'LocationFeatureSpecification',
+    name: nombre,
+    value: true,
+  }));
+}
+fichaNegocio.parentOrganization = {
+  '@type': 'Organization',
+  name: 'Atheron Suite',
+  url: 'https://hotelesatheron.com/',
+};
+---
+
+<Base
+  titulo={d.titulo}
+  descripcion={d.descripcion}
+  ruta={ruta}
+  ogTitulo={d.ogTitulo}
+  ogDescripcion={d.ogDescripcion}
+  indexable={d.publicado}
+  jsonLd={fichaNegocio}
+  avisoBorrador={d.avisoBorrador}
+>
+
+  <Cabecera enlaces={menuFicha} enlacesMovil={menuFichaMovil} cta={ctaConsultar} />
+
+  <main id="contenido">
+
+    {/* ===== 1. PORTADA ===== */}
+    <section class="hero hero--interior">
+      <div class="contenedor hero__contenido">
+        <span class="hero__etiqueta">{d.zona}</span>
+        <h1 class="hero__titulo"><Marca texto={d.nombre} pendiente={!d.publicado} /></h1>
+        <p class="hero__texto">
+          <Marca texto={d.presentacion} pendiente={d.presentacionPendiente} />
+        </p>
+        <div class="grupo-botones">
+          <a class="boton boton--whatsapp boton--grande" href="#contacto"
+             data-whatsapp={`Hola, me interesa ${d.nombre} de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.`}>
+            Consultar disponibilidad
+          </a>
+          <a class="boton boton--claro boton--grande" href="#galeria">Ver fotos</a>
+        </div>
+
+        {/* Datos duros arriba: es lo que la gente busca confirmar */}
+        <div class="hero__datos">
+          {d.datos.map((dato) => (
+            <div class="dato">
+              <span class="dato__numero"><Marca texto={dato.numero} pendiente={dato.pendiente} /></span>
+              <span class="dato__texto">{dato.texto}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+
+    {/* ===== 2. DESCRIPCION + CARACTERISTICAS ===== */}
+    <section class="seccion">
+      <div class="contenedor bloque-doble aparecer">
+
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">El hospedaje</span>
+          <h2><Marca texto={d.tituloDescripcion} pendiente={d.tituloDescripcionPendiente} /></h2>
+
+          {/* El texto largo viene del cuerpo del archivo .md */}
+          <div class="texto-suave ficha__descripcion">
+            <Content />
+          </div>
+
+          <h3 style="margin-bottom: var(--esp-2);">Caracteristicas</h3>
+          <ul class="lista-check">
+            {d.caracteristicas.map((c) => (
+              <li><Marca texto={c.texto} pendiente={c.pendiente} /></li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="bloque-doble__media">
+          <div class="placeholder placeholder--alto">Foto principal pendiente</div>
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ===== 3. HABITACIONES ===== */}
+    <section class="seccion seccion--alterna" id="habitaciones">
+      <div class="contenedor">
+
+        <div class="encabezado-seccion aparecer">
+          <span class="etiqueta">Habitaciones</span>
+          <h2>Donde vas a dormir</h2>
+          {d.notaHabitaciones && (
+            <p class="texto-suave" style="margin-top: var(--esp-2);">{d.notaHabitaciones}</p>
+          )}
+        </div>
+
+        <div class="grid aparecer">
+          {d.habitaciones.map((h) => (
+            <article class="habitacion">
+              <div class="placeholder">Foto pendiente</div>
+              <div>
+                <h3><Marca texto={h.nombre} pendiente={h.pendiente} /></h3>
+                <div class="habitacion__datos">
+                  <span class="habitacion__dato"><Marca texto={h.huespedes} pendiente={h.pendiente} /> huespedes</span>
+                  <span class="habitacion__dato"><Marca texto={h.camas} pendiente={h.pendiente} /> camas</span>
+                  <span class="habitacion__dato"><Marca texto={h.banos} pendiente={h.pendiente} /> banos</span>
+                </div>
+                <p class="texto-suave"><Marca texto={h.descripcion} pendiente={h.pendiente} /></p>
+                <div class="tarjeta__pie">
+                  <span class="tarjeta__precio">
+                    <Marca texto={h.precio} pendiente={h.pendiente} /> <span>/ noche</span>
+                  </span>
+                  <a class="boton boton--whatsapp" href="#contacto"
+                     data-whatsapp={`Hola, quiero consultar por una habitacion en ${d.nombre} de Atheron Suite.`}>
+                    Consultar
+                  </a>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+
+    {/* ===== 4. GALERIA ===== */}
+    <section class="seccion" id="galeria">
+      <div class="contenedor">
+        <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
+          <span class="etiqueta">Galeria</span>
+          <h2>Fotos del hospedaje</h2>
+        </div>
+        <div class="galeria aparecer">
+          <div><div class="placeholder placeholder--cuadrado">Foto 1</div></div>
+          <div><div class="placeholder placeholder--cuadrado">Foto 2</div></div>
+          <div><div class="placeholder placeholder--cuadrado">Foto 3</div></div>
+          <div><div class="placeholder placeholder--cuadrado">Foto 4</div></div>
+          <div><div class="placeholder placeholder--cuadrado">Foto 5</div></div>
+        </div>
+      </div>
+    </section>
+
+
+    {/* ===== 5. UBICACION ===== */}
+    <section class="seccion seccion--alterna" id="ubicacion">
+      <div class="contenedor bloque-doble aparecer">
+
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">Ubicacion</span>
+          <h2>{d.zona}</h2>
+          <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            <Marca texto={d.descripcionZona} pendiente={d.descripcionZonaPendiente} />
+          </p>
+
+          <ul class="lista-distancias">
+            {d.distancias.map((f) => (
+              <li><span>{f.lugar}</span> <span><Marca texto={f.valor} pendiente={f.pendiente} /></span></li>
+            ))}
+          </ul>
+
+          {d.horarios.length > 0 && (
+            <>
+              <h3 style="margin-top: var(--esp-4); margin-bottom: var(--esp-2);">Horarios</h3>
+              <ul class="lista-distancias">
+                {d.horarios.map((f) => (
+                  <li><span>{f.lugar}</span> <span><Marca texto={f.valor} pendiente={f.pendiente} /></span></li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {/* ==========================================================
+               POLITICA DE DIRECCION
+               Solo aparece en los hospedajes aliados, cuya direccion
+               exacta no publicamos. No es un detalle legal escondido:
+               se explica de frente y se convierte en una senal de
+               seriedad.
+               ========================================================== */}
+          {!d.direccionPublica && (
+            <div class="nota-reserva" style="margin-top: var(--esp-3);">
+              <span class="nota-reserva__icono" aria-hidden="true">&#128274;</span>
+              <div>
+                <strong>La direccion exacta se entrega al confirmar</strong>
+                Coordinamos la llegada contigo una vez la reserva esta confirmada.
+                Asi protegemos la tranquilidad de los huespedes que ya estan
+                alojados y nos aseguramos de recibirte bien el dia de tu llegada.
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div class="bloque-doble__media">
+          <iframe
+            class="mapa"
+            title={d.mapaTitulo}
+            src={`https://www.openstreetmap.org/export/embed.html?bbox=${d.mapaBbox}&layer=mapnik`}
+            loading="lazy"></iframe>
+          <p class="campo__ayuda" style="margin-top: var(--esp-1);">
+            <Marca texto={d.mapaNota} pendiente={d.mapaNotaPendiente} />
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ===== 6. EXPERIENCIAS ===== */}
+    <section class="seccion">
+      <div class="contenedor">
+        <div class="encabezado-seccion aparecer">
+          <span class="etiqueta">Experiencias</span>
+          <h2>Que hacer alrededor</h2>
+        </div>
+        <div class="grid grid--3 aparecer">
+          {d.experiencias.map((e) => (
+            <article class="experiencia">
+              <div class="experiencia__fondo"></div>
+              <div class="experiencia__texto">
+                <h3><Marca texto={e.titulo} pendiente={e.pendiente} /></h3>
+                <p><Marca texto={e.texto} pendiente={e.pendiente} /></p>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div style="margin-top: var(--esp-4);">
+          <p class="texto-suave">
+            Te contamos mas en nuestra
+            <a href="/blog/guia-de-zipaquira">guia de Zipaquira</a>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+
+    {/* ===== 7. CONTACTO ===== */}
+    <section class="seccion seccion--alterna" id="contacto">
+      <div class="contenedor bloque-doble aparecer">
+
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">Consulta</span>
+          <h2>{d.tituloContacto}</h2>
+          <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            La forma mas rapida es WhatsApp: te respondemos con disponibilidad
+            y precio para tus fechas.
+          </p>
+
+          <div class="grupo-botones" style="margin-bottom: var(--esp-3);">
+            <a class="boton boton--whatsapp boton--grande" href="tel:+573188983167"
+               data-whatsapp={`Hola, quiero reservar en ${d.nombre} de Atheron Suite. Estas son mis fechas:`}>
+              Escribir por WhatsApp
+            </a>
+          </div>
+
+          <ul class="lista-check">
+            <li>Telefono: <a href="tel:+573188983167">+57 318 898 3167</a></li>
+            {d.datosContacto.map((linea) => <li>{linea}</li>)}
+          </ul>
+        </div>
+
+        <div class="bloque-doble__media">
+          <form class="formulario" data-formulario-contacto novalidate>
+            <div class="formulario__fila">
+              <div class="campo">
+                <label for="h-nombre">Nombre</label>
+                <input type="text" id="h-nombre" name="nombre" required autocomplete="name" />
+              </div>
+              <div class="campo">
+                <label for="h-telefono">Telefono</label>
+                <input type="tel" id="h-telefono" name="telefono" autocomplete="tel" />
+              </div>
+            </div>
+            <div class="campo">
+              <label for="h-correo">Correo electronico</label>
+              <input type="email" id="h-correo" name="correo" required autocomplete="email" />
+            </div>
+            <div class="formulario__fila">
+              <div class="campo">
+                <label for="h-llegada">Llegada</label>
+                <input type="date" id="h-llegada" name="llegada" />
+              </div>
+              <div class="campo">
+                <label for="h-salida">Salida</label>
+                <input type="date" id="h-salida" name="salida" />
+              </div>
+            </div>
+            <div class="campo">
+              <label for="h-mensaje">Mensaje</label>
+              <textarea id="h-mensaje" name="mensaje"></textarea>
+            </div>
+            <button class="boton boton--primario boton--grande" type="submit">Enviar consulta</button>
+            <p class="campo__ayuda">Nota tecnica: este formulario todavia no envia datos a ningun servidor. Usa WhatsApp.</p>
+            <div class="aviso-formulario" data-aviso-formulario role="status"></div>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <Pie textoVuelta="Ver todos los hospedajes" hrefVuelta="/hospedajes" />
+
+  <BotonFlotante
+    href="#contacto"
+    mensaje={`Hola, me interesa ${d.nombre} de Atheron Suite en Zipaquira.`}
+  />
+
+</Base>

@@ -125,9 +125,14 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
             por los asistentes de IA. Nunca los inventes.</span>
           </p>
 
+          {/* Este enlace apuntaba a la plantilla de articulo, que era una
+              pagina de relleno con textos entre [[corchetes]]. El lector
+              pulsaba esperando un articulo y no encontraba nada. Queda
+              marcado como pendiente hasta que el articulo exista de verdad,
+              igual que los demas del grupo tematico de mas abajo. */}
           <p>
-            Cubrimos cada opcion en detalle en el articulo
-            <a href="/blog/plantilla-articulo">Como llegar de Bogota a Zipaquira</a>.
+            <span class="pendiente">Cubriremos cada opcion en detalle en el
+            articulo "Como llegar de Bogota a Zipaquira" (pendiente 41).</span>
           </p>
 
 
@@ -217,7 +222,7 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
           <div class="cluster">
             <h3>Sigue leyendo sobre Zipaquira</h3>
             <ul>
-              <li><a href="/blog/plantilla-articulo">Como llegar de Bogota a Zipaquira</a> <span class="pendiente">por escribir</span></li>
+              <li><span class="pendiente">Como llegar de Bogota a Zipaquira</span></li>
               <li><span class="pendiente">Catedral de Sal: horarios, precios y que esperar</span></li>
               <li><span class="pendiente">Que hacer en Zipaquira en un fin de semana</span></li>
               <li><span class="pendiente">Donde comer en Zipaquira</span></li>

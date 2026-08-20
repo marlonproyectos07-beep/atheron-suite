@@ -1,4 +1,4 @@
----
+﻿---
 /* ============================================================
    HOME de Atheron Suite
    Esta es la pagina principal: explica QUIEN es Atheron Suite
@@ -9,11 +9,22 @@
    Aqui solo vive lo que es propio de la portada.
    ============================================================ */
 
+import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import Cabecera from '../components/Cabecera.astro';
 import Pie from '../components/Pie.astro';
 import BotonFlotante from '../components/BotonFlotante.astro';
+import Marca from '../components/Marca.astro';
 import { menuHome, menuHomeMovil, ctaDisponibilidad } from '../data/navegacion';
+
+/* Los tres hospedajes destacados salen de la misma coleccion que
+   alimenta el listado y las fichas. Antes estaban escritos a mano
+   aqui, y dos de las tres tarjetas enlazaban a la plantilla en vez
+   de a su ficha: justo el tipo de descuadre que pasa cuando el
+   mismo dato vive en tres sitios. */
+const destacados = (await getCollection('hospedajes'))
+  .sort((a, b) => a.data.orden - b.data.orden)
+  .slice(0, 3);
 
 /* Ficha del negocio para Google y los asistentes de IA.
 
@@ -239,77 +250,37 @@ const fichaNegocio = {
 
         <div class="grid grid--3 aparecer">
 
-          {/* TARJETA 1 */}
-          <article class="tarjeta">
-            <div class="tarjeta__media">
-              <div class="placeholder">Foto pendiente</div>
-              <span class="tarjeta__insignia">Hospedaje 01</span>
-            </div>
-            <div class="tarjeta__cuerpo">
-              <h3 class="tarjeta__titulo">
-                <a href="/hospedajes/la-magia-de-zipaquira">La Magia de Zipaquira</a>
-              </h3>
-              <p class="tarjeta__meta">
-                <span>Zipaquira, centro</span>
-                <span>1,4 km a la Catedral de Sal</span>
-              </p>
-              <p class="texto-suave">
-                Apartamentos con cocina equipada, wifi y Netflix, a 16 minutos
-                caminando de la Catedral de Sal.
-              </p>
-              <div class="tarjeta__pie">
-                <span class="tarjeta__precio"><span class="pendiente">$ ---</span> <span>/ noche</span></span>
-                <a class="boton boton--contorno" href="/hospedajes/la-magia-de-zipaquira">Ver ficha</a>
-              </div>
-            </div>
-          </article>
-
-          {/* TARJETA 2 */}
-          <article class="tarjeta">
-            <div class="tarjeta__media">
-              <div class="placeholder">Foto pendiente</div>
-              <span class="tarjeta__insignia">Hospedaje 02</span>
-            </div>
-            <div class="tarjeta__cuerpo">
-              <h3 class="tarjeta__titulo"><span class="pendiente">Nombre del hospedaje 2</span></h3>
-              <p class="tarjeta__meta">
-                <span>Zipaquira</span>
-                <span><span class="pendiente">N</span> habitaciones</span>
-              </p>
-              <p class="texto-suave">
-                <span class="pendiente">Descripcion corta pendiente (2 lineas).</span>
-              </p>
-              <div class="tarjeta__pie">
-                <span class="tarjeta__precio"><span class="pendiente">$ ---</span> <span>/ noche</span></span>
-                <a class="boton boton--contorno" href="/hospedajes/plantilla-hospedaje">Ver ficha</a>
-              </div>
-            </div>
-          </article>
-
-          {/* TARJETA 3 */}
-          <article class="tarjeta">
-            <div class="tarjeta__media">
-              <div class="placeholder">Foto pendiente</div>
-              <span class="tarjeta__insignia">Hospedaje 03</span>
-            </div>
-            <div class="tarjeta__cuerpo">
-              <h3 class="tarjeta__titulo"><span class="pendiente">Nombre del hospedaje 3</span></h3>
-              <p class="tarjeta__meta">
-                <span>Zipaquira</span>
-                <span><span class="pendiente">N</span> habitaciones</span>
-              </p>
-              <p class="texto-suave">
-                <span class="pendiente">Descripcion corta pendiente (2 lineas).</span>
-              </p>
-              <div class="tarjeta__pie">
-                <span class="tarjeta__precio"><span class="pendiente">$ ---</span> <span>/ noche</span></span>
-                <a class="boton boton--contorno" href="/hospedajes/plantilla-hospedaje">Ver ficha</a>
-              </div>
-            </div>
-          </article>
+          {destacados.map(({ id, data }) => {
+            const enObra = !data.publicado;
+            return (
+              <article class="tarjeta">
+                <div class="tarjeta__media">
+                  <div class="placeholder">Foto pendiente</div>
+                  <span class="tarjeta__insignia">Hospedaje {data.insignia}</span>
+                </div>
+                <div class="tarjeta__cuerpo">
+                  <h3 class="tarjeta__titulo">
+                    <a href={`/hospedajes/${id}`}><Marca texto={data.nombre} pendiente={enObra} /></a>
+                  </h3>
+                  <p class="tarjeta__meta">
+                    <span><Marca texto={data.listadoSector} pendiente={enObra} /></span>
+                    <span><Marca texto={data.listadoSegundoDato} pendiente={enObra} />{data.listadoSegundoDatoSufijo}</span>
+                  </p>
+                  <p class="texto-suave">
+                    <Marca texto={data.resumen} pendiente={enObra} />
+                  </p>
+                  <div class="tarjeta__pie">
+                    <span class="tarjeta__precio">
+                      <Marca texto={data.precio} pendiente={data.precioPendiente} /> <span>/ noche</span>
+                    </span>
+                    <a class="boton boton--contorno" href={`/hospedajes/${id}`}>Ver ficha</a>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
 
         </div>
-
         <div class="grupo-botones grupo-botones--centrado" style="margin-top: var(--esp-4);">
           <a class="boton boton--primario boton--grande" href="/hospedajes">
             Ver los 7 hospedajes
