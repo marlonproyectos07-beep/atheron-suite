@@ -39,6 +39,18 @@ const fila = z.object({
   pendiente: z.boolean().default(false),
 });
 
+/* Texto que puede quedar vacio.
+
+   Si desde el panel se borra el contenido de un campo, lo que llega
+   aqui es una cadena vacia, no la ausencia del campo. Sin esta
+   conversion, el sitio pintaria una banda amarilla vacia o un aviso
+   en blanco. Con ella, vaciar el campo equivale a quitarlo. */
+const textoOpcional = z
+  .string()
+  .nullable()
+  .default(null)
+  .transform((v) => (v && v.trim() ? v : null));
+
 /* Una habitacion del hospedaje. Los campos numericos son texto
    a proposito: mientras no haya dato real llevan "N". */
 const habitacion = z.object({
@@ -88,7 +100,7 @@ const hospedajes = defineCollection({
     ogDescripcion: z.string().optional(),
 
     /* Banda amarilla superior. Se quita poniendo null. */
-    avisoBorrador: z.string().nullable().default(null),
+    avisoBorrador: textoOpcional,
 
     /* ----------------------------------------------------------
        PORTADA DE LA FICHA
@@ -103,7 +115,11 @@ const hospedajes = defineCollection({
     presentacionPendiente: z.boolean().default(false),
 
     /* Las tres cifras de la portada. */
-    datos: z.array(dato).length(3),
+    /* Entre 1 y 4. No se fija en 3 exactos a proposito: si desde el
+       panel se anade una cuarta cifra, el sitio debe seguir
+       construyendose. Un build que falla por un dato de mas es un
+       fallo confuso para quien solo estaba editando texto. */
+    datos: z.array(dato).min(1).max(4),
 
     /* ----------------------------------------------------------
        DESCRIPCION
@@ -148,7 +164,7 @@ const hospedajes = defineCollection({
 
     habitaciones: z.array(habitacion),
     /* Aviso opcional bajo el titulo del apartado. */
-    notaHabitaciones: z.string().nullable().default(null),
+    notaHabitaciones: textoOpcional,
 
     /* ----------------------------------------------------------
        UBICACION
@@ -187,7 +203,7 @@ const hospedajes = defineCollection({
       titulo: z.string(),
       texto: z.string(),
       pendiente: z.boolean().default(false),
-    })).length(3),
+    })).min(1).max(4),
 
     /* ----------------------------------------------------------
        CONTACTO

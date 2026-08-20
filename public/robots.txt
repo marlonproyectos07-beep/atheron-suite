@@ -4,8 +4,12 @@
 User-agent: *
 Allow: /
 
-# La plantilla no debe indexarse: es un archivo de trabajo,
-# no una pagina real para visitantes.
+# El panel de edicion no es una pagina para visitantes.
+Disallow: /admin
+
+# Las dos plantillas ya no existen como paginas: ahora redirigen
+# (301) al listado y al blog. Se dejan aqui un tiempo por si algun
+# buscador todavia guarda la direccion antigua.
 Disallow: /hospedajes/plantilla-hospedaje
 Disallow: /blog/plantilla-articulo
 

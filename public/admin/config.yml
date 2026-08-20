@@ -1,0 +1,245 @@
+# ============================================================
+# CONFIGURACION DEL PANEL — Atheron Suite
+#
+# Este archivo decide QUE ves en el panel y COMO se llama cada
+# campo. No decide como se ve el sitio: eso lo sigue haciendo el
+# codigo. Aqui solo se define el formulario.
+#
+# Regla al tocar este archivo: los nombres tecnicos (name:) tienen
+# que coincidir EXACTAMENTE con los de src/content.config.ts. Si
+# no coinciden, el panel guardara un campo que el sitio no sabe
+# leer y la publicacion fallara.
+# ============================================================
+
+backend:
+  name: github
+  repo: marlonproyectos07-beep/atheron-suite
+  # Rama sobre la que escribe el panel cuando se usa desde internet.
+  # OJO: mientras trabajemos en modo local esta linea no se usa para
+  # nada, porque el panel lee y escribe los archivos de tu carpeta.
+  # Empieza a contar cuando montemos el acceso remoto (Etapa 7), y
+  # para entonces la rama astro ya estara fusionada en main.
+  branch: main
+
+# MODO DE PUBLICACION
+#
+# Se deja en el modo simple: guardar en el panel escribe en la rama
+# y el sitio se republica en menos de un minuto. Es lo que encaja
+# con "editar sin tocar codigo": guardas y lo ves.
+#
+# La alternativa es descomentar la linea de abajo. Con ella, cada
+# cambio abre una peticion de revision y no sale publicado hasta que
+# lo apruebas dentro del propio panel (Borrador -> En revision ->
+# Listo -> Publicar). Es util cuando editan varias personas o
+# cuando quieres revisar antes de que salga.
+#
+# Es un cambio de una linea, reversible en cualquier momento.
+#
+# publish_mode: editorial_workflow
+
+# Donde se guardan las fotos que subas desde el panel, y con que
+# direccion las enlaza el sitio.
+media_folder: public/assets/img
+public_folder: /assets/img
+
+# Idioma del panel.
+locale: es
+
+collections:
+  # ==========================================================
+  # HOSPEDAJES
+  # Un archivo por hospedaje. El NOMBRE DEL ARCHIVO manda la
+  # direccion: casa-del-portal.md se publica en
+  # /hospedajes/casa-del-portal
+  # ==========================================================
+  - name: hospedajes
+    label: Hospedajes
+    label_singular: Hospedaje
+    description: >-
+      Los siete hospedajes. Marca "Publicado" solo cuando la ficha
+      tenga nombre real, fotos y precio: esa casilla la saca en
+      Google y la mete en el mapa del sitio a la vez.
+    folder: src/content/hospedajes
+    extension: md
+    format: frontmatter
+    create: true
+    identifier_field: nombre
+    slug: '{{fields.nombre}}'
+    summary: '{{fields.insignia}} · {{fields.nombre}}'
+    sortable_fields: [orden, nombre, publicado]
+    fields:
+      # ----- Identidad y estado -----
+      - { name: nombre, label: Nombre del hospedaje, widget: string }
+      - name: publicado
+        label: Publicado
+        widget: boolean
+        default: false
+        hint: >-
+          Apagado = Google NO la indexa y la ficha no entra en el mapa
+          del sitio. Enciendelo solo cuando la ficha este completa:
+          publicar fichas casi vacias perjudica a TODO el dominio.
+      - name: orden
+        label: Orden en el listado
+        widget: number
+        value_type: int
+        hint: 1 aparece primero.
+      - { name: insignia, label: Numero de la insignia, widget: string, hint: 'El numero que se ve sobre la foto en el listado. Ej: 02' }
+
+      # ----- SEO -----
+      - name: titulo
+        label: Titulo para Google
+        widget: string
+        hint: Lo que se lee como enlace azul en el buscador. Unos 60 caracteres.
+      - name: descripcion
+        label: Descripcion para Google
+        widget: text
+        hint: El parrafo gris bajo el titulo. Unos 155 caracteres.
+      - { name: ogTitulo, label: Titulo al compartir, widget: string, required: false, hint: 'Si lo dejas vacio se usa el titulo de Google.' }
+      - { name: ogDescripcion, label: Descripcion al compartir, widget: string, required: false }
+      - name: avisoBorrador
+        label: Banda amarilla de aviso
+        widget: string
+        required: false
+        hint: >-
+          Texto de la banda superior de "version de trabajo". Dejalo
+          vacio cuando la ficha este terminada y la banda desaparece.
+
+      # ----- Portada de la ficha -----
+      - name: zona
+        label: Zona de referencia
+        widget: string
+        hint: >-
+          Sale bajo el titulo y como encabezado de la ubicacion.
+          Ej. "A dos cuadras de la mina de sal, Zipaquira".
+      - { name: presentacion, label: Frase de presentacion, widget: text }
+      - { name: presentacionPendiente, label: La presentacion es provisional, widget: boolean, default: false, hint: 'Encendido = se pinta en amarillo.' }
+      - name: datos
+        label: Cifras de la portada
+        widget: list
+        min: 1
+        max: 4
+        summary: '{{fields.numero}} — {{fields.texto}}'
+        fields:
+          - { name: numero, label: Cifra, widget: string }
+          - { name: texto, label: Que significa, widget: string }
+          - { name: pendiente, label: Provisional, widget: boolean, default: false }
+
+      # ----- Descripcion -----
+      - { name: tituloDescripcion, label: Titulo de la descripcion, widget: string }
+      - { name: tituloDescripcionPendiente, label: El titulo es provisional, widget: boolean, default: false }
+      - name: caracteristicas
+        label: Caracteristicas
+        widget: list
+        summary: '{{fields.texto}}'
+        fields:
+          - { name: texto, label: Caracteristica, widget: string }
+          - { name: pendiente, label: Provisional, widget: boolean, default: false }
+
+      # ----- Tarjeta del listado -----
+      - { name: listadoSector, label: 'Listado: sector', widget: string }
+      - { name: listadoSegundoDato, label: 'Listado: segundo dato', widget: string }
+      - { name: listadoSegundoDatoSufijo, label: 'Listado: texto tras el segundo dato', widget: string, required: false, hint: 'Ej: " habitaciones". Este texto NO se pinta en amarillo.' }
+      - { name: resumen, label: 'Listado: descripcion corta', widget: text, hint: 'Dos lineas. Es lo que se lee en la tarjeta.' }
+      - { name: precio, label: Precio por noche, widget: string, default: '$ ---' }
+      - { name: precioPendiente, label: El precio es provisional, widget: boolean, default: true }
+
+      # ----- Habitaciones -----
+      - { name: notaHabitaciones, label: Aviso sobre las habitaciones, widget: string, required: false }
+      - name: habitaciones
+        label: Habitaciones
+        widget: list
+        summary: '{{fields.nombre}}'
+        fields:
+          - { name: nombre, label: Nombre, widget: string }
+          - { name: huespedes, label: Huespedes, widget: string }
+          - { name: camas, label: Camas, widget: string }
+          - { name: banos, label: Banos, widget: string }
+          - { name: descripcion, label: Descripcion, widget: text }
+          - { name: precio, label: Precio por noche, widget: string, default: '$ ---' }
+          - { name: pendiente, label: Provisional, widget: boolean, default: false }
+
+      # ----- Ubicacion -----
+      - { name: descripcionZona, label: Descripcion de la zona, widget: text }
+      - { name: descripcionZonaPendiente, label: La descripcion es provisional, widget: boolean, default: false }
+      - name: distancias
+        label: Distancias
+        widget: list
+        summary: '{{fields.lugar}} — {{fields.valor}}'
+        fields:
+          - { name: lugar, label: Lugar, widget: string }
+          - { name: valor, label: Distancia o tiempo, widget: string }
+          - { name: pendiente, label: Provisional, widget: boolean, default: false }
+      - name: horarios
+        label: Horarios
+        widget: list
+        required: false
+        summary: '{{fields.lugar}} — {{fields.valor}}'
+        fields:
+          - { name: lugar, label: Concepto, widget: string }
+          - { name: valor, label: Horario, widget: string }
+          - { name: pendiente, label: Provisional, widget: boolean, default: false }
+      - name: direccionPublica
+        label: Publicar la direccion exacta
+        widget: boolean
+        default: false
+        hint: >-
+          APAGADO en los hospedajes aliados. Apagado oculta la calle
+          en la pagina y en los datos que lee Google, y muestra el
+          aviso de que la direccion se entrega al confirmar la reserva.
+      - { name: mapaBbox, label: 'Mapa: recuadro', widget: string, hint: 'Coordenadas del recuadro de OpenStreetMap. No lo toques si no sabes que es.' }
+      - { name: mapaTitulo, label: 'Mapa: titulo accesible', widget: string }
+      - { name: mapaNota, label: 'Mapa: nota bajo el mapa', widget: string }
+      - { name: mapaNotaPendiente, label: La nota del mapa es provisional, widget: boolean, default: false }
+
+      # ----- Experiencias -----
+      - name: experiencias
+        label: Experiencias cercanas
+        widget: list
+        min: 1
+        max: 4
+        summary: '{{fields.titulo}}'
+        fields:
+          - { name: titulo, label: Titulo, widget: string }
+          - { name: texto, label: Texto, widget: text }
+          - { name: pendiente, label: Provisional, widget: boolean, default: false }
+
+      # ----- Contacto -----
+      - { name: tituloContacto, label: Titulo del apartado de contacto, widget: string }
+      - name: datosContacto
+        label: Datos de contacto
+        widget: list
+        field: { name: linea, label: Linea, widget: string }
+        hint: >-
+          El telefono NO va aqui: se pone solo, igual en las siete
+          fichas. Aqui van las lineas adicionales.
+
+      # ----- Datos para Google (JSON-LD) -----
+      - name: calle
+        label: Calle y numero
+        widget: string
+        required: false
+        hint: >-
+          SOLO en hospedajes propios. Dejalo vacio en los aliados: su
+          direccion exacta no se publica.
+      - { name: latitud, label: Latitud, widget: number, required: false, value_type: float, hint: 'Google Maps → clic derecho sobre el pin → copiar coordenadas.' }
+      - { name: longitud, label: Longitud, widget: number, required: false, value_type: float }
+      - { name: checkin, label: Hora de entrada, widget: string, required: false, hint: 'Formato 24 h. Ej: 15:00' }
+      - { name: checkout, label: Hora de salida, widget: string, required: false, hint: 'Formato 24 h. Ej: 11:00' }
+      - { name: mascotas, label: Se admiten mascotas, widget: boolean, required: false }
+      - name: comodidades
+        label: Comodidades confirmadas
+        widget: list
+        required: false
+        field: { name: comodidad, label: Comodidad, widget: string }
+        hint: >-
+          Solo lo que el visitante puede VER en la pagina. Marcar
+          comodidades que no se muestran es motivo de penalizacion.
+      - { name: actualizado, label: Fecha del ultimo cambio, widget: datetime, required: false, date_format: 'YYYY-MM-DD', time_format: false, picker_utc: true, hint: 'Va al mapa del sitio que lee Google.' }
+
+      # ----- Texto largo -----
+      - name: body
+        label: Descripcion larga
+        widget: markdown
+        hint: >-
+          Los parrafos que se leen junto a la foto principal.
+          Escribe normal: los saltos de linea crean parrafos.
