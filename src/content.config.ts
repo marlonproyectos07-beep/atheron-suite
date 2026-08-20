@@ -28,6 +28,54 @@ import { glob } from 'astro/loaders';
    ha cortado y no queda rastro. Se hace antes de construir, sobre
    los archivos originales, en scripts/comprueba-contenido.mjs. */
 
+/* ------------------------------------------------------------
+   CAMPOS OPCIONALES, TAL Y COMO LOS ESCRIBE EL PANEL
+
+   Cuando dejas un campo vacio en el panel, este NO omite la linea:
+   escribe el campo con un valor vacio.
+
+       latitud: null
+       actualizado: ''
+
+   El ".optional()" normal significa "el campo puede no estar", y
+   no acepta ni null ni cadena vacia. Resultado: dejar un campo en
+   blanco desde el panel tumbaba la publicacion con un mensaje que
+   no dice nada a quien solo estaba editando texto.
+
+   Estas ayudas tratan null y "" como "no hay dato".
+   ------------------------------------------------------------ */
+const estaVacio = (v: unknown) => v === null || v === undefined || v === '';
+
+/** Texto que puede venir vacio desde el panel. */
+const textoOpcionalPanel = z
+  .union([z.string(), z.null()])
+  .optional()
+  .transform((v) => (estaVacio(v) ? undefined : (v as string)));
+
+/** Numero que puede venir vacio, o como texto, desde el panel. */
+const numeroOpcionalPanel = z
+  .union([z.number(), z.string(), z.null()])
+  .optional()
+  .transform((v) => (estaVacio(v) ? undefined : Number(v)))
+  .refine((v) => v === undefined || !Number.isNaN(v), {
+    message: 'Tiene que ser un numero, o quedar vacio.',
+  });
+
+/** Si/no que puede venir vacio desde el panel. */
+const siNoOpcionalPanel = z
+  .union([z.boolean(), z.null()])
+  .optional()
+  .transform((v) => (v === null ? undefined : v));
+
+/** Fecha que puede venir vacia desde el panel. */
+const fechaOpcionalPanel = z
+  .union([z.string(), z.date(), z.null()])
+  .optional()
+  .transform((v) => (estaVacio(v) ? undefined : new Date(v as string)))
+  .refine((v) => v === undefined || !Number.isNaN(v.getTime()), {
+    message: 'La fecha no se entiende. Dejala vacia o usa AAAA-MM-DD.',
+  });
+
 /* Un dato de la fila de cifras de la portada.
    Ej: { numero: "1,4 km", texto: "A la Catedral de Sal" } */
 const dato = z.object({
@@ -56,6 +104,16 @@ const textoOpcional = z
   .default(null)
   .transform((v) => (v && v.trim() ? v : null));
 
+/* Una foto de la galeria.
+
+   El "alt" no es opcional: es lo que lee Google y lo que oye quien
+   usa un lector de pantalla. Una foto sin alt es una foto que no
+   aporta nada al posicionamiento. */
+const fotoGaleria = z.object({
+  imagen: z.string(),
+  alt: z.string(),
+});
+
 /* Una habitacion del hospedaje. Los campos numericos son texto
    a proposito: mientras no haya dato real llevan "N". */
 const habitacion = z.object({
@@ -66,6 +124,8 @@ const habitacion = z.object({
   descripcion: z.string(),
   precio: z.string().default('$ ---'),
   pendiente: z.boolean().default(false),
+  foto: textoOpcionalPanel,
+  fotoAlt: textoOpcionalPanel,
 });
 
 const hospedajes = defineCollection({
@@ -101,8 +161,8 @@ const hospedajes = defineCollection({
 
     titulo: z.string(),
     descripcion: z.string(),
-    ogTitulo: z.string().optional(),
-    ogDescripcion: z.string().optional(),
+    ogTitulo: textoOpcionalPanel,
+    ogDescripcion: textoOpcionalPanel,
 
     /* Banda amarilla superior. Se quita poniendo null. */
     avisoBorrador: textoOpcional,
@@ -118,6 +178,29 @@ const hospedajes = defineCollection({
     /* Frase de presentacion bajo el titulo. */
     presentacion: z.string(),
     presentacionPendiente: z.boolean().default(false),
+
+    /* ----------------------------------------------------------
+       FOTOS
+
+       Mientras un campo de foto este vacio, la pagina sigue
+       pintando el rectangulo rayado de "foto pendiente". En cuanto
+       subes la imagen desde el panel, aparece la foto. No hay que
+       tocar codigo en ningun momento.
+
+       Cierra los pendientes 9 y 10.
+       ---------------------------------------------------------- */
+
+    /* La que se ve en la tarjeta del listado y de la portada. */
+    fotoTarjeta: textoOpcionalPanel,
+    fotoTarjetaAlt: textoOpcionalPanel,
+
+    /* La grande, junto a la descripcion de la ficha. */
+    fotoPrincipal: textoOpcionalPanel,
+    fotoPrincipalAlt: textoOpcionalPanel,
+
+    /* Las cinco de la galeria. Si esta vacia, se pintan los cinco
+       rectangulos de siempre. */
+    galeria: z.array(fotoGaleria).default([]),
 
     /* Las tres cifras de la portada. */
     /* Entre 1 y 4. No se fija en 3 exactos a proposito: si desde el
@@ -232,16 +315,16 @@ const hospedajes = defineCollection({
 
     /* Direccion exacta. Solo para hospedajes propios; en los
        aliados se deja sin poner a proposito. */
-    calle: z.string().optional(),
+    calle: textoOpcionalPanel,
     /* Coordenadas. Pendiente 8: se anaden cuando salgan de Google Maps. */
-    latitud: z.number().optional(),
-    longitud: z.number().optional(),
-    checkin: z.string().optional(),
-    checkout: z.string().optional(),
-    mascotas: z.boolean().optional(),
+    latitud: numeroOpcionalPanel,
+    longitud: numeroOpcionalPanel,
+    checkin: textoOpcionalPanel,
+    checkout: textoOpcionalPanel,
+    mascotas: siNoOpcionalPanel,
     /* Fecha del ultimo cambio real de la ficha. Va al sitemap.
        Si no se pone, se usa la fecha en que se publico el sitio. */
-    actualizado: z.coerce.date().optional(),
+    actualizado: fechaOpcionalPanel,
 
     /* Comodidades confirmadas y visibles en la pagina. */
     comodidades: z.array(z.string()).default([]),

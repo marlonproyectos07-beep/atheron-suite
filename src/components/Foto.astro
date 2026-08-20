@@ -1,0 +1,51 @@
+---
+/* ============================================================
+   FOTO — muestra la imagen si existe, y si no el rectangulo rayado
+
+   Es la pieza que convierte "foto pendiente" en una foto de verdad
+   sin tocar ni una linea de codigo: en cuanto subes la imagen desde
+   el panel, este componente deja de pintar el rectangulo y pinta la
+   foto. Las proporciones son las mismas, asi que el diseno no se
+   mueve.
+
+   Sobre el texto alternativo (alt):
+   es lo que lee un buscador y lo que oye alguien que usa lector de
+   pantalla. No es opcional por capricho: una foto sin alt es una
+   foto que Google no entiende. Si falta, avisamos en la consola
+   durante el desarrollo en vez de dejarlo pasar en silencio.
+   ============================================================ */
+
+interface Props {
+  /** Direccion de la imagen. Si no hay, se pinta el rectangulo. */
+  src?: string;
+  /** Que se ve en la foto, en una frase. */
+  alt?: string;
+  /** Forma: "alto", "ancho", "cuadrado" o nada para 4/3. */
+  forma?: 'alto' | 'ancho' | 'cuadrado';
+}
+
+const { src, alt, forma } = Astro.props;
+
+const sufijo = forma ? `--${forma}` : '';
+const claseFoto = `foto${sufijo ? ` foto${sufijo}` : ''}`;
+const clasePlaceholder = `placeholder${sufijo ? ` placeholder${sufijo}` : ''}`;
+
+if (src && !alt) {
+  console.warn(
+    `[Foto] La imagen ${src} no tiene texto alternativo. ` +
+    `Rellena el campo "Que se ve en la foto" en el panel.`,
+  );
+}
+---
+
+{src ? (
+  <img
+    class={claseFoto}
+    src={src}
+    alt={alt ?? ''}
+    loading="lazy"
+    decoding="async"
+  />
+) : (
+  <div class={clasePlaceholder}><slot /></div>
+)}

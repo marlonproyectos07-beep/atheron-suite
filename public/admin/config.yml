@@ -113,6 +113,43 @@ collections:
           Ej. "A dos cuadras de la mina de sal, Zipaquira".
       - { name: presentacion, label: Frase de presentacion, widget: text }
       - { name: presentacionPendiente, label: La presentacion es provisional, widget: boolean, default: false, hint: 'Encendido = se pinta en amarillo.' }
+
+      # ----- Fotos (pendientes 9 y 10) -----
+      # Mientras un campo de foto este vacio, la pagina sigue
+      # mostrando el rectangulo rayado de "foto pendiente". En cuanto
+      # subes la imagen, aparece la foto. Nada mas que hacer.
+      - name: fotoTarjeta
+        label: Foto de la tarjeta
+        widget: image
+        required: false
+        hint: >-
+          La que se ve en el listado y en la portada. Es la primera
+          impresion del hospedaje: elige la mejor. Horizontal, y a ser
+          posible por debajo de 300 KB.
+      - name: fotoTarjetaAlt
+        label: Que se ve en la foto de la tarjeta
+        widget: string
+        required: false
+        hint: >-
+          Descripcion en una frase, para Google y para quien usa lector
+          de pantalla. Ej: "Fachada de la casa con jardin delantero".
+      - name: fotoPrincipal
+        label: Foto principal de la ficha
+        widget: image
+        required: false
+        hint: 'La grande, junto a la descripcion. Vertical queda mejor aqui.'
+      - { name: fotoPrincipalAlt, label: Que se ve en la foto principal, widget: string, required: false }
+      - name: galeria
+        label: Galeria de fotos
+        widget: list
+        required: false
+        summary: '{{fields.alt}}'
+        hint: >-
+          Cinco fotos funcionan bien. Si no subes ninguna, se siguen
+          viendo los cinco rectangulos de "foto pendiente".
+        fields:
+          - { name: imagen, label: Foto, widget: image }
+          - { name: alt, label: Que se ve en la foto, widget: string }
       - name: datos
         label: Cifras de la portada
         widget: list
@@ -157,6 +194,8 @@ collections:
           - { name: descripcion, label: Descripcion, widget: text }
           - { name: precio, label: Precio por noche, widget: string, default: '$ ---' }
           - { name: pendiente, label: Provisional, widget: boolean, default: false }
+          - { name: foto, label: Foto de la habitacion, widget: image, required: false }
+          - { name: fotoAlt, label: Que se ve en la foto, widget: string, required: false }
 
       # ----- Ubicacion -----
       - { name: descripcionZona, label: Descripcion de la zona, widget: text }

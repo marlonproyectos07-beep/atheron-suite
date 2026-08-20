@@ -29,6 +29,7 @@ import Cabecera from '../../components/Cabecera.astro';
 import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import Marca from '../../components/Marca.astro';
+import Foto from '../../components/Foto.astro';
 import { menuFicha, menuFichaMovil, ctaConsultar } from '../../data/navegacion';
 
 export async function getStaticPaths() {
@@ -162,7 +163,7 @@ fichaNegocio.parentOrganization = {
         </div>
 
         <div class="bloque-doble__media">
-          <div class="placeholder placeholder--alto">Foto principal pendiente</div>
+          <Foto src={d.fotoPrincipal} alt={d.fotoPrincipalAlt} forma="alto">Foto principal pendiente</Foto>
         </div>
 
       </div>
@@ -184,7 +185,7 @@ fichaNegocio.parentOrganization = {
         <div class="grid aparecer">
           {d.habitaciones.map((h) => (
             <article class="habitacion">
-              <div class="placeholder">Foto pendiente</div>
+              <Foto src={h.foto} alt={h.fotoAlt}>Foto pendiente</Foto>
               <div>
                 <h3><Marca texto={h.nombre} pendiente={h.pendiente} /></h3>
                 <div class="habitacion__datos">
@@ -217,12 +218,18 @@ fichaNegocio.parentOrganization = {
           <span class="etiqueta">Galeria</span>
           <h2>Fotos del hospedaje</h2>
         </div>
+        {/* Si todavia no hay fotos subidas, se pintan los cinco
+             rectangulos de siempre para que la seccion no se vea rota.
+             En cuanto subes la primera desde el panel, la galeria pasa
+             a mostrar solo las fotos reales. */}
         <div class="galeria aparecer">
-          <div><div class="placeholder placeholder--cuadrado">Foto 1</div></div>
-          <div><div class="placeholder placeholder--cuadrado">Foto 2</div></div>
-          <div><div class="placeholder placeholder--cuadrado">Foto 3</div></div>
-          <div><div class="placeholder placeholder--cuadrado">Foto 4</div></div>
-          <div><div class="placeholder placeholder--cuadrado">Foto 5</div></div>
+          {d.galeria.length > 0
+            ? d.galeria.map((f) => (
+                <div><Foto src={f.imagen} alt={f.alt} forma="cuadrado" /></div>
+              ))
+            : [1, 2, 3, 4, 5].map((n) => (
+                <div><Foto forma="cuadrado">Foto {n}</Foto></div>
+              ))}
         </div>
       </div>
     </section>

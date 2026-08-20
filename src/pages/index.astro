@@ -15,6 +15,7 @@ import Cabecera from '../components/Cabecera.astro';
 import Pie from '../components/Pie.astro';
 import BotonFlotante from '../components/BotonFlotante.astro';
 import Marca from '../components/Marca.astro';
+import Foto from '../components/Foto.astro';
 import { menuHome, menuHomeMovil, ctaDisponibilidad } from '../data/navegacion';
 
 /* Los tres hospedajes destacados salen de la misma coleccion que
@@ -255,7 +256,7 @@ const fichaNegocio = {
             return (
               <article class="tarjeta">
                 <div class="tarjeta__media">
-                  <div class="placeholder">Foto pendiente</div>
+                  <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
                   <span class="tarjeta__insignia">Hospedaje {data.insignia}</span>
                 </div>
                 <div class="tarjeta__cuerpo">

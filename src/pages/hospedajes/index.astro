@@ -18,6 +18,7 @@ import Cabecera from '../../components/Cabecera.astro';
 import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import Marca from '../../components/Marca.astro';
+import Foto from '../../components/Foto.astro';
 import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
 
 /* ------------------------------------------------------------
@@ -106,7 +107,7 @@ const hospedajes = (await getCollection('hospedajes'))
             return (
               <article class="tarjeta aparecer">
                 <div class="tarjeta__media">
-                  <div class="placeholder">Foto pendiente</div>
+                  <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
                   <span class="tarjeta__insignia">{data.insignia}</span>
                 </div>
                 <div class="tarjeta__cuerpo">
