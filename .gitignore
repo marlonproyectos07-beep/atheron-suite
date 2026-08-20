@@ -12,3 +12,10 @@ desktop.ini
 
 # Dependencias (por ahora no usamos ninguna)
 node_modules/
+
+# Astro
+dist/
+.astro/
+
+# Configuracion local del servidor de desarrollo (lleva rutas de esta maquina)
+.claude/launch.json

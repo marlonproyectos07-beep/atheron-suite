@@ -1,0 +1,143 @@
+---
+/* ============================================================
+   BASE.ASTRO — el <head> de TODO el sitio en un solo archivo
+
+   Antes: las 19 paginas repetian a mano titulo, descripcion,
+   canonica, Open Graph y hojas de estilo. Cambiar una coma
+   obligaba a editar 19 archivos.
+
+   Ahora: cada pagina solo declara QUE es distinto en ella
+   (su titulo, su descripcion, su JSON-LD) y este archivo se
+   encarga del resto.
+
+   REGLA CRITICA: la canonica se construye sola a partir de
+   "ruta". No se escribe el dominio a mano en ningun sitio.
+   Asi es imposible que se quede una canonica apuntando al
+   dominio viejo o con una barra de mas.
+   ============================================================ */
+
+interface Props {
+  /** Titulo de la pestana y del buscador. */
+  titulo: string;
+  /** Meta descripcion: el parrafo que sale bajo el titulo en Google. */
+  descripcion: string;
+  /** Ruta de esta pagina, empezando por barra: "/", "/hospedajes"... */
+  ruta: string;
+  /** Titulo al compartir. Si no se pone, se usa el titulo normal. */
+  ogTitulo?: string;
+  /** Descripcion al compartir. Si no se pone, se usa la normal. */
+  ogDescripcion?: string;
+  /** false => se pide a Google que NO indexe la pagina (fichas en obra). */
+  indexable?: boolean;
+  /** Ficha de datos estructurados. null = esta pagina no lleva. */
+  jsonLd?: Record<string, unknown> | null;
+  /** Texto de la banda amarilla superior. null = no se muestra. */
+  avisoBorrador?: string | null;
+}
+
+const {
+  titulo,
+  descripcion,
+  ruta,
+  ogTitulo,
+  ogDescripcion,
+  indexable = true,
+  jsonLd = null,
+  avisoBorrador = null,
+} = Astro.props;
+
+// new URL() une el dominio de astro.config.mjs con la ruta de la pagina.
+// De aqui salen la canonica y og:url, siempre iguales entre si.
+const urlCanonica = new URL(ruta, Astro.site).href;
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+  <meta charset="UTF-8">
+  <!-- viewport: sin esta linea el sitio NO se ve bien en celular -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>{titulo}</title>
+  <meta name="description" content={descripcion}>
+
+  <!-- ============================================================
+       NOINDEX
+       Solo aparece si la pagina se declara con indexable={false}.
+
+       Por que existe: publicar varias paginas casi vacias y
+       parecidas entre si es "contenido delgado", y Google lo
+       castiga a nivel de todo el dominio. Es mejor 1 pagina buena
+       indexada que 7 flojas.
+       ============================================================ -->
+  {!indexable && <meta name="robots" content="noindex, follow" />}
+
+  <!-- ============================================================
+       SEO
+       ============================================================ -->
+
+  <!-- Canonica: le dice a Google cual es LA direccion oficial de esta
+       pagina. Evita que la trate como contenido duplicado si se llega
+       por varias rutas (con y sin barra final, por ejemplo). -->
+  <link rel="canonical" href={urlCanonica}>
+
+  <!-- Open Graph: controla como se ve el enlace cuando alguien lo
+       comparte por WhatsApp, Facebook o LinkedIn. Sin esto, la vista
+       previa sale fea o vacia, y eso cuesta clics. -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_CO">
+  <meta property="og:site_name" content="Atheron Suite">
+  <meta property="og:url" content={urlCanonica}>
+  <meta property="og:title" content={ogTitulo ?? titulo}>
+  <meta property="og:description" content={ogDescripcion ?? descripcion}>
+  <!-- PENDIENTE 14: crear imagen de 1200x630 px y anadir aqui og:image -->
+
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Tipografias (necesitan internet; si no cargan, el sitio usa las de respaldo) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Nuestras hojas de estilo, siempre en este orden:
+       base (variables) -> componentes -> paginas -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/componentes.css">
+  <link rel="stylesheet" href="/assets/css/paginas.css">
+
+  <!-- ============================================================
+       DATOS ESTRUCTURADOS (JSON-LD)
+       Es una ficha del negocio en un formato que Google y los
+       asistentes de IA leen directamente. No se ve en pantalla.
+
+       REGLA IMPORTANTE: solo se marca informacion que el visitante
+       pueda ver en la pagina. Marcar datos inventados u ocultos es
+       motivo de penalizacion.
+
+       Nota tecnica: va con set:html para que Astro escriba el JSON
+       tal cual, sin escapar las comillas. Si se escapan, el JSON
+       queda invalido y Google deja de leer la ficha SIN avisar.
+       ============================================================ -->
+  {jsonLd && (
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd, null, 2)}></script>
+  )}
+
+</head>
+
+<body>
+
+  {avisoBorrador && <p class="aviso-borrador">{avisoBorrador}</p>}
+
+  <!-- Accesibilidad: permite saltar el menu con el teclado -->
+  <a class="saltar-contenido" href="#contenido">Saltar al contenido</a>
+
+  <slot />
+
+  <!-- main.js se enlaza con is:inline para que Astro NO lo empaquete
+       ni le cambie el nombre. El archivo sigue siendo el mismo de
+       siempre en /assets/js/main.js: numero de WhatsApp, codigos
+       promocionales, menu movil y animaciones. -->
+  <script is:inline src="/assets/js/main.js"></script>
+
+</body>
+</html>
