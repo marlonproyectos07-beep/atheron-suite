@@ -14,12 +14,35 @@
 backend:
   name: github
   repo: marlonproyectos07-beep/atheron-suite
-  # Rama sobre la que escribe el panel cuando se usa desde internet.
-  # OJO: mientras trabajemos en modo local esta linea no se usa para
-  # nada, porque el panel lee y escribe los archivos de tu carpeta.
-  # Empieza a contar cuando montemos el acceso remoto (Etapa 7), y
-  # para entonces la rama astro ya estara fusionada en main.
-  branch: main
+
+  # EL PORTERO.
+  #
+  # GitHub no deja que una pagina web le pida permiso directamente:
+  # exige un intermediario que guarde las credenciales fuera de la
+  # vista. Eso es esta direccion.
+  #
+  # Es un programa minusculo alojado gratis en Cloudflare Workers.
+  # Solo hace una cosa: recibir la peticion del panel, hablar con
+  # GitHub, y devolver el permiso al navegador. NO guarda nada.
+  #
+  # Lleva lista blanca de dominios: solo responde a hotelesatheron.com,
+  # sus subdominios y la direccion de pruebas de Vercel. Si otra web
+  # intentara usarlo para conseguir acceso a este repositorio, lo
+  # rechaza.
+  base_url: https://sveltia-cms-auth.comercialgsc001.workers.dev
+  # ============================================================
+  # RAMA SOBRE LA QUE ESCRIBE EL PANEL
+  #
+  # AHORA: "astro", porque es donde vive el sitio nuevo. La rama
+  # main todavia tiene el sitio antiguo, sin carpeta de contenido:
+  # si el panel escribiera ahi, guardaria archivos que nadie lee.
+  #
+  # AL FUSIONAR: hay que cambiar esta linea a "main". Es el paso
+  # numero 1 de la lista previa a produccion. Si se olvida, el
+  # panel seguira guardando en una rama que ya no se publica y los
+  # cambios no apareceran en el sitio, sin ningun error visible.
+  # ============================================================
+  branch: astro
 
 # MODO DE PUBLICACION
 #
