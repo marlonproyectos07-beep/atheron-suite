@@ -540,7 +540,55 @@ curl -s -o /dev/null -w '%{http_code}\n' https://sveltia-cms-auth.comercialgsc00
 
 ---
 
-## 19. Documentos del proyecto
+## 19. Notas del entorno (para una sesión nueva de Claude)
+
+Dos trampas que costaron varios intentos en la sesión original:
+
+**1. Node está instalado pero no en el PATH de las terminales nuevas.**
+Se instaló con `winget` durante la sesión, en `C:\Program Files\nodejs`. Las
+terminales que abre el sistema **no lo encuentran**. Hay que refrescar el PATH
+al principio de cada comando:
+
+```powershell
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+npm run build
+```
+
+**2. `.claude/launch.json` está en `.gitignore`.** Lleva la ruta absoluta de
+`node.exe` de esta máquina, así que no es portable. Si hace falta levantar el
+servidor de desarrollo desde el navegador integrado, hay que recrearlo:
+
+```json
+{
+  "version": "0.0.1",
+  "configurations": [{
+    "name": "atheron-dev",
+    "runtimeExecutable": "C:/Program Files/nodejs/node.exe",
+    "runtimeArgs": ["node_modules/astro/bin/astro.mjs", "dev"],
+    "port": 4321
+  }]
+}
+```
+
+**3. Los heredocs largos fallan** en el shell de este entorno. Para archivos
+grandes, usar la herramienta de escritura directa en vez de `cat > archivo <<EOF`.
+
+**4. Se puede verificar mucho sin credenciales.** La API pública de GitHub da el
+estado de los despliegues de Vercel y las direcciones de vista previa, porque el
+repositorio es público:
+
+```bash
+curl -s "https://api.github.com/repos/marlonproyectos07-beep/atheron-suite/deployments?per_page=3"
+curl -s "https://api.github.com/repos/marlonproyectos07-beep/atheron-suite/commits/<sha>/status"
+```
+
+Las vistas previas de Vercel están protegidas: devuelven 302 a su pantalla de
+acceso. **No se pueden leer sin la sesión del usuario**, y no hay que pedirle
+que la desactive salvo que haga falta una auditoría automática completa.
+
+---
+
+## 20. Documentos del proyecto
 
 | Documento | Para qué |
 |---|---|
