@@ -14,6 +14,8 @@ import Cabecera from '../../components/Cabecera.astro';
 import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import { ctaLandingGrupos } from '../../data/navegacion';
+import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
+import { formularioContactoActivo } from '../../data/ajustes';
 
 const fichaServicio = {
   '@context': 'https://schema.org',
@@ -346,7 +348,6 @@ const fichaServicio = {
             <summary style="cursor:pointer; font-weight:600;">Hay parqueadero para bicicletas o motos?</summary>
             <p class="texto-suave" style="margin-top: var(--esp-1);">
               Si, contamos con parqueadero.
-              <span class="pendiente">PENDIENTE: confirmar capacidad y si hay espacio cubierto.</span>
             </p>
           </details>
 
@@ -392,6 +393,7 @@ const fichaServicio = {
         </div>
 
         <div class="bloque-doble__media">
+          {formularioContactoActivo ? (
           <form class="formulario" data-formulario-contacto novalidate>
 
             <div class="formulario__fila">
@@ -448,13 +450,16 @@ const fichaServicio = {
               Solicitar cotizacion
             </button>
 
-            <p class="campo__ayuda">
-              Nota tecnica: este formulario todavia no envia datos a ningun servidor. Usa WhatsApp.
-            </p>
-
             <div class="aviso-formulario" data-aviso-formulario role="status"></div>
 
           </form>
+          ) : (
+            <ContactoWhatsApp
+              mensaje="Hola, necesito alojamiento para un grupo en Zipaquira."
+              titulo="Cotiza tu grupo por WhatsApp"
+              texto="Cuentanos cuantas personas son y que fechas manejan, y te enviamos una cotizacion concreta."
+              textoBoton="Cotizar por WhatsApp" />
+          )}
         </div>
 
       </div>

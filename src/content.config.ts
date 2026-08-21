@@ -267,7 +267,7 @@ const hospedajes = defineCollection({
     /* Recuadro del mapa de OpenStreetMap. */
     mapaBbox: z.string(),
     mapaTitulo: z.string(),
-    mapaNota: z.string(),
+    mapaNota: textoOpcional,
     mapaNotaPendiente: z.boolean().default(false),
 
     /* POLITICA DE DIRECCION.

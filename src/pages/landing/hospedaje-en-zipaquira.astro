@@ -18,6 +18,8 @@ import Cabecera from '../../components/Cabecera.astro';
 import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import { ctaLandingHospedaje } from '../../data/navegacion';
+import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
+import { formularioContactoActivo } from '../../data/ajustes';
 ---
 
 <Base
@@ -341,9 +343,6 @@ import { ctaLandingHospedaje } from '../../data/navegacion';
             title="Mapa de Zipaquira, Cundinamarca"
             src="https://www.openstreetmap.org/export/embed.html?bbox=-74.02%2C5.00%2C-73.97%2C5.05&layer=mapnik"
             loading="lazy"></iframe>
-          <p class="campo__ayuda" style="margin-top: var(--esp-1);">
-            <span class="pendiente">Mapa provisional: falta ubicar cada hospedaje.</span>
-          </p>
         </div>
 
       </div>
@@ -448,6 +447,7 @@ import { ctaLandingHospedaje } from '../../data/navegacion';
         </div>
 
         <div class="bloque-doble__media">
+          {formularioContactoActivo ? (
           <form class="formulario" data-formulario-contacto novalidate>
 
             <div class="formulario__fila">
@@ -497,13 +497,15 @@ import { ctaLandingHospedaje } from '../../data/navegacion';
               Consultar disponibilidad
             </button>
 
-            <p class="campo__ayuda">
-              Nota tecnica: este formulario todavia no envia datos a ningun servidor.
-            </p>
-
             <div class="aviso-formulario" data-aviso-formulario role="status"></div>
 
           </form>
+          ) : (
+            <ContactoWhatsApp
+              mensaje="Hola, vi la pagina de hospedaje en Zipaquira y quiero consultar disponibilidad."
+              titulo="Consulta disponibilidad por WhatsApp"
+              texto="Dinos las fechas y cuantas personas son. Te respondemos con las opciones que hay libres." />
+          )}
         </div>
 
       </div>

@@ -1,0 +1,46 @@
+---
+/* ============================================================
+   CONTACTO POR WHATSAPP
+
+   Ocupa el lugar del formulario mientras este esta desactivado
+   (ver src/data/ajustes.ts).
+
+   La regla que cumple: no prometer nada que no ocurra. El boton
+   abre WhatsApp con el mensaje ya escrito, y ahi si contesta una
+   persona. El formulario, hoy, no llega a ninguna parte.
+
+   El href es el destino de respaldo, igual que en BotonFlotante:
+   si el JavaScript no carga, el boton sigue funcionando.
+   main.js lo reescribe con el mensaje cuando ha cargado bien.
+   ============================================================ */
+import { whatsappRespaldo } from '../data/ajustes';
+
+interface Props {
+  /** El mensaje que aparecera ya escrito en WhatsApp. */
+  mensaje: string;
+  /** Titulo del bloque. */
+  titulo?: string;
+  /** Texto de apoyo bajo el titulo. */
+  texto?: string;
+  /** Texto visible del boton. */
+  textoBoton?: string;
+}
+
+const {
+  mensaje,
+  titulo = 'Escribenos por WhatsApp',
+  texto = 'Es el canal por el que respondemos. Cuentanos las fechas y el numero de personas, y te contestamos con opciones concretas.',
+  textoBoton = 'Escribir por WhatsApp',
+} = Astro.props;
+---
+
+<div class="tarjeta">
+  <h3>{titulo}</h3>
+  <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+    {texto}
+  </p>
+  <a
+    class="boton boton--whatsapp boton--grande"
+    href={whatsappRespaldo}
+    data-whatsapp={mensaje}>{textoBoton}</a>
+</div>

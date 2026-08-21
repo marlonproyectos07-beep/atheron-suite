@@ -115,6 +115,125 @@ for (const ruta of archivosMarkdown(CARPETA)) {
   });
 }
 
+
+/* ============================================================
+   MINIMO PUBLICABLE DE UN HOSPEDAJE
+
+   Que problema resuelve:
+   la casilla "Publicado" del panel es la puerta de salida de una
+   ficha. Al encenderla, esa ficha aparece en la portada, en el
+   listado, en el sitemap y en Google.
+
+   Sin esta comprobacion, se puede encender la casilla de una
+   ficha que todavia dice "Hospedaje 02", "$ ---" y "N huespedes".
+   El visitante ve una tarjeta vacia y se va; Google ve contenido
+   delgado y lo castiga en TODO el dominio, no solo en esa pagina.
+
+   Que hace:
+   revisa cada ficha con "publicado: true" y comprueba que tenga
+   lo minimo para defenderse sola delante de un cliente.
+
+   Por que hoy solo AVISA y no detiene:
+   La Magia de Zipaquira todavia no cumple (faltan precio y datos
+   de habitaciones, que el usuario entregara). Cuando la lista de
+   abajo salga vacia, pon MINIMO_BLOQUEA en true y a partir de ahi
+   ninguna ficha incompleta podra publicarse por descuido.
+   ============================================================ */
+const MINIMO_BLOQUEA = false;
+
+/* Lee un campo de primer nivel del frontmatter. */
+function valorDe(frontmatter, campo) {
+  const encontrado = frontmatter.match(new RegExp('^' + campo + ':\\s*(.*)$', 'm'));
+  if (!encontrado) return '';
+  return encontrado[1].trim().replace(/^['"]|['"]$/g, '');
+}
+
+/* Lee un bloque entero (una lista) hasta el siguiente campo de primer nivel. */
+function bloqueDe(frontmatter, campo) {
+  const lineas = frontmatter.split('\n');
+  const inicio = lineas.findIndex((l) => l.startsWith(campo + ':'));
+  if (inicio === -1) return '';
+  const resto = lineas.slice(inicio + 1);
+  const fin = resto.findIndex((l) => /^[a-zA-Z]/.test(l));
+  return (fin === -1 ? resto : resto.slice(0, fin)).join('\n');
+}
+
+const vacio = (v) => !v || v === "''" || v === '""';
+
+const REQUISITOS = [
+  {
+    texto: 'nombre real (no "Hospedaje 02")',
+    cumple: (f) => {
+      const v = valorDe(f, 'nombre');
+      return !vacio(v) && !/^Hospedaje\s+\d+$/i.test(v);
+    },
+  },
+  {
+    texto: 'precio real (hoy "$ ---" o marcado como pendiente)',
+    cumple: (f) =>
+      valorDe(f, 'precioPendiente') !== 'true' && !/-{2,}/.test(valorDe(f, 'precio')),
+  },
+  {
+    texto: 'al menos una habitacion con datos reales',
+    cumple: (f) => /pendiente:\s*false/.test(bloqueDe(f, 'habitaciones')),
+  },
+  {
+    texto: 'foto de tarjeta (la que se ve en portada y listado)',
+    cumple: (f) => !vacio(valorDe(f, 'fotoTarjeta')),
+  },
+  {
+    texto: 'presentacion escrita (no el texto de ejemplo)',
+    cumple: (f) => valorDe(f, 'presentacionPendiente') !== 'true',
+  },
+  {
+    texto: 'sector real en el listado (no "Barrio / sector")',
+    cumple: (f) => {
+      const v = valorDe(f, 'listadoSector');
+      return !vacio(v) && !/barrio\s*\/\s*sector/i.test(v);
+    },
+  },
+  {
+    texto: 'descripcion para buscadores de al menos 80 caracteres',
+    cumple: (f) => valorDe(f, 'descripcion').length >= 80,
+  },
+];
+
+const fichasIncompletas = [];
+
+for (const ruta of archivosMarkdown(join(CARPETA, 'hospedajes'))) {
+  const partes = readFileSync(ruta, 'utf8').split(/^---\s*$/m);
+  if (partes.length < 3) continue;
+  const frontmatter = partes[1];
+
+  if (valorDe(frontmatter, 'publicado') !== 'true') continue;
+
+  const faltan = REQUISITOS.filter((r) => !r.cumple(frontmatter)).map((r) => r.texto);
+  if (faltan.length) fichasIncompletas.push({ ruta, faltan });
+}
+
+if (fichasIncompletas.length) {
+  const cabecera = MINIMO_BLOQUEA
+    ? 'PUBLICACION DETENIDA — ficha publicada sin el minimo'
+    : 'AVISO  ficha publicada que aun no cumple el minimo publicable';
+  const escribir = MINIMO_BLOQUEA ? console.error : console.warn;
+
+  escribir('');
+  escribir(cabecera);
+  escribir('');
+  for (const f of fichasIncompletas) {
+    escribir(`  ${f.ruta}`);
+    escribir(`    esta marcada como publicada, pero le falta:`);
+    for (const q of f.faltan) escribir(`      - ${q}`);
+    escribir('');
+  }
+  escribir('    Mientras falte algo de esto, la ficha se ve incompleta para un');
+  escribir('    cliente. La alternativa es apagar "Publicado" hasta completarla:');
+  escribir('    la ficha sigue editandose en el panel y desaparece de la portada,');
+  escribir('    del listado, del sitemap y de Google.');
+  escribir('');
+
+  if (MINIMO_BLOQUEA) process.exit(1);
+}
 /* Los avisos no detienen nada: se dejan visibles y se sigue. */
 for (const f of fotosAvisadas) {
   console.warn(

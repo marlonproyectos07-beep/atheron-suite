@@ -41,6 +41,7 @@ const OCULTAR_ENLACE_DE_FICHAS_EN_OBRA = false;
 /* Ordenados por el campo "orden" del contenido, no por el nombre
    del archivo: asi renombrar un hospedaje no reordena el listado. */
 const hospedajes = (await getCollection('hospedajes'))
+  .filter((f) => f.data.publicado)
   .sort((a, b) => a.data.orden - b.data.orden);
 ---
 
@@ -61,7 +62,7 @@ const hospedajes = (await getCollection('hospedajes'))
     <section class="hero hero--interior">
       <div class="contenedor hero__contenido">
         <span class="hero__etiqueta">Zipaquira, Cundinamarca</span>
-        <h1 class="hero__titulo">Nuestros 7 hospedajes</h1>
+        <h1 class="hero__titulo">Nuestros hospedajes</h1>
         <p class="hero__texto">
           Cada uno tiene su caracter. Entra a la ficha que te llame la atencion
           para ver habitaciones, fotos y ubicacion.

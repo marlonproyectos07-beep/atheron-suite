@@ -275,8 +275,19 @@ pie.** Verificado funcionando dentro de Vercel.
 | Asunto | Estado |
 |---|---|
 | El permiso `repo` alcanza todos los repositorios | Aceptado, mitigado por la lista blanca |
-| Verificación en dos pasos en GitHub | **Sin confirmar. Debe activarse** |
-| Un secreto de cliente pasó por el chat | **Se rota al cerrar esta sesión.** Si el documento sigue diciendo esto, comprobar que se hizo |
+| Verificación en dos pasos en GitHub | ✅ **Activada el 21 de agosto de 2026**, con aplicación de autenticación (TOTP). Los códigos de recuperación quedan en poder del usuario |
+| Un secreto de cliente pasó por el chat | ✅ **Rotado el 21 de agosto de 2026.** Secreto nuevo generado en GitHub, pegado en Cloudflare sin pasar por el chat, y verificado con un inicio de sesión completo. El antiguo fue eliminado: ya no existe |
+| **La cuenta de GitHub no tiene contraseña propia** | **Descubierto el 21 de agosto de 2026.** Se entra a `marlonproyectos07-beep` únicamente a través de la cuenta de Google. Ver la nota de abajo |
+
+> **La puerta real del proyecto es la cuenta de Google, no GitHub.**
+> `marlonproyectos07-beep` figura con `Contraseña: No configurado` y un único
+> método de entrada: *Google, 1 cuenta conectada*. Quien controle ese correo
+> controla el repositorio del sitio y la aplicación OAuth del panel. El 2FA de
+> GitHub ya está activo y protege las operaciones sensibles dentro de GitHub,
+> pero **queda por verificar la verificación en dos pasos de la cuenta de
+> Google**, que es el eslabón que sostiene todo lo demás. Lo mismo aplica a la
+> cuenta de Cloudflare `Comercialgsc001@gmail.com`, que guarda el secreto del
+> portero: su 2FA tampoco está confirmado.
 
 ### Regla permanente
 
@@ -416,9 +427,9 @@ esta lista corta:
 | # | Tarea | Quién | Estado |
 |---|---|---|---|
 | 1 | **Cambiar `public/admin/config.yml` línea 45: `branch: astro` → `branch: main`** | Claude | ⬜ Pendiente |
-| 2 | Rotar el Client Secret | Usuario | ⬜ En curso al cerrar la sesión |
-| 3 | Quitar el texto de prueba `ZIPAQUIRA` del nombre del hospedaje 01 | Usuario, desde el panel | ⬜ Pendiente |
-| 4 | Activar verificación en dos pasos en GitHub | Usuario | ⬜ Sin confirmar |
+| 2 | Rotar el Client Secret | Usuario | ✅ **Hecho el 21/08/2026** — rotado, actualizado en Cloudflare, probado de punta a punta y el antiguo eliminado |
+| 3 | Quitar el texto de prueba `ZIPAQUIRA` del nombre del hospedaje 01 | Claude, en el repositorio | ✅ **Hecho el 21/08/2026** |
+| 4 | Activar verificación en dos pasos en GitHub | Usuario | ✅ **Hecho el 21/08/2026** — aplicación de autenticación (TOTP) |
 | 5 | Decidir sobre el plan de Vercel | Usuario | ⬜ Pendiente |
 
 ### Sobre el punto 1 — el más importante
@@ -597,5 +608,150 @@ que la desactive salvo que haga falta una auditoría automática completa.
 | [pendientes.md](pendientes.md) | Lista maestra numerada |
 | [corregir-perfil-google.md](corregir-perfil-google.md) | El pendiente 28, el de máxima prioridad |
 | [estrategia-seo.md](estrategia-seo.md) | Plan de posicionamiento |
+| [propuesta-multiidioma-y-video.md](propuesta-multiidioma-y-video.md) | **Decisiones estratégicas del 21/08/2026**: idiomas ES/EN/ZH, video por hospedaje, marca. Análisis, sin implementar |
 | [dominio-y-arquitectura.md](dominio-y-arquitectura.md) | Por qué este dominio, e integración futura con Odoo |
 | [perfiles-y-flujo-de-trabajo.md](perfiles-y-flujo-de-trabajo.md) | Diagnóstico de perfiles y consistencia de nombre |
+
+---
+
+## 21. Actualización del 21 de agosto de 2026
+
+Sesión posterior al traspaso. **Sigue sin fusionarse a `main`.**
+
+### 21.1 Seguridad — cerrada
+
+Ver §10 y §15. Resumen: Client Secret rotado y el antiguo eliminado, verificación
+en dos pasos activada con aplicación de autenticación, códigos de recuperación en
+poder del usuario. Se descubrió además que la cuenta de GitHub **no tiene
+contraseña propia** y se entra por Google: la nota está en §10.
+
+### 21.2 Limpieza de textos internos visibles
+
+Se encontraron **116 fragmentos marcados en amarillo** repartidos por las 8
+páginas indexadas, y varios textos internos que llegaban al visitante. **Ya
+estaban publicados en producción**: no los introdujo la migración.
+
+Eliminados (14 textos):
+
+| Texto | Dónde |
+|---|---|
+| *"Nota tecnica: este formulario todavia no envia datos a ningun servidor"* | 4 páginas |
+| *"PENDIENTE: completar esta tabla… Nunca los inventes"* y 3 bloques más | Guía de Zipaquirá |
+| *"PENDIENTE: definir la promesa diferencial definitiva de la marca"* | Portada |
+| *"PENDIENTE 8: centrar el mapa en las coordenadas exactas"* | Ficha La Magia |
+| *"Faltan los datos exactos… Los cargamos en cuanto me los pases"* | Ficha La Magia |
+| *"Mapa provisional: falta ubicar cada hospedaje"* | Landing hospedaje |
+| *"PENDIENTE: confirmar capacidad y si hay espacio cubierto"* | Landing grupos |
+| *"(pendiente 41)"* — referencia interna de ticket | Guía de Zipaquirá |
+
+De paso: `mapaNota` pasó a ser **opcional** en el esquema y en el panel. Antes era
+obligatoria y no se podía vaciar desde el CMS.
+
+### 21.3 Formularios de contacto — desactivados a propósito
+
+**El problema:** los cuatro formularios respondían *"Gracias, recibimos tu
+mensaje"* y **no enviaban nada a ningún servidor**. Un cliente se iba creyendo que
+había escrito, y nunca llegaba nada.
+
+**La solución, reversible:** un interruptor en `src/data/ajustes.ts`.
+
+```ts
+export const formularioContactoActivo = false;
+```
+
+- El marcado del formulario **no se ha borrado**: sigue en cada página dentro de
+  la rama `true` de la condición.
+- En su lugar aparece `src/components/ContactoWhatsApp.astro`, con el mensaje ya
+  escrito, igual que el resto de botones del sitio.
+- Para volver a encenderlo: `true` en esa línea. **Y antes**, corregir el mensaje
+  de confirmación de `public/assets/js/main.js`, que sigue diciendo que el mensaje
+  fue recibido.
+
+Cierra parcialmente el pendiente 50, que queda como "construir el formulario real
+conectado al flujo comercial".
+
+### 21.4 Mínimo publicable de un hospedaje
+
+**La casilla `publicado` es la puerta de salida.** Al encenderla, la ficha aparece
+en portada, listado, sitemap y Google. Sin control, se puede encender una ficha
+que aún dice "Hospedaje 02", "$ ---" y "N huéspedes".
+
+Una ficha cumple el mínimo publicable cuando tiene:
+
+| # | Requisito |
+|---|---|
+| 1 | **Nombre real** — no vale `Hospedaje 02` |
+| 2 | **Precio real** — ni `$ ---` ni marcado como pendiente |
+| 3 | **Al menos una habitación con datos reales** (una con `pendiente: false`) |
+| 4 | **Foto de tarjeta** — es la que se ve en portada y listado |
+| 5 | **Presentación escrita** — no el texto de ejemplo |
+| 6 | **Sector real en el listado** — no `Barrio / sector` |
+| 7 | **Descripción para buscadores** de 80 caracteres o más |
+
+Verificado automáticamente en `scripts/comprueba-contenido.mjs`.
+
+> **Hoy solo AVISA, todavía no detiene la publicación.** La Magia de Zipaquirá aún
+> no cumple los puntos 2 y 3. Cuando el aviso salga vacío, poner
+> `MINIMO_BLOQUEA = true` en ese script y a partir de ahí ninguna ficha incompleta
+> podrá publicarse por descuido.
+
+### 21.5 Los hospedajes 02–07, fuera de las superficies públicas
+
+Con `publicado: false`, una ficha ahora queda fuera de:
+
+| Superficie | Cómo |
+|---|---|
+| Portada | `.filter((f) => f.data.publicado)` en `src/pages/index.astro` |
+| Listado público | mismo filtro en `src/pages/hospedajes/index.astro` |
+| Sitemap | ya filtraba desde antes |
+| Enlaces internos | consecuencia de los dos filtros: no queda ningún enlace |
+| Indexación | `noindex`, como ya ocurría |
+
+**Se siguen editando con normalidad en el panel**, y sus páginas se siguen
+construyendo.
+
+> **Por qué se siguen construyendo y no se retiran del todo:**
+> `hotelesatheron.com/hospedajes/hospedaje-02` y `-03` **responden 200 hoy en
+> producción**. Dejar de generarlas convertiría dos direcciones vivas en 404 al
+> fusionar. Con `noindex` y sin ningún enlace que apunte a ellas, quedan fuera del
+> alcance práctico de un visitante. Si más adelante se quieren retirar, hay que
+> añadir su redirección 308 en `vercel.json`, como ya se hizo con las plantillas.
+
+### 21.6 Textos que quedaron desmentidos al ocultar seis fichas
+
+Corregidos, porque eran mecánicos:
+
+- Botón de la portada: *"Ver los 7 hospedajes"* → *"Ver los hospedajes"*
+- `<h1>` del listado: *"Nuestros 7 hospedajes"* → *"Nuestros hospedajes"*
+- Se retiró el texto de la portada *"Los nombres y datos que ves ahora son
+  provisionales"*, que ya no es cierto: la única ficha visible es real.
+
+**Sin corregir, a la espera de decisión editorial** — siguen diciendo 7 mientras
+se ve 1:
+
+| Dónde | Texto |
+|---|---|
+| Portada, título de sección | *"Siete formas de quedarse en Zipaquira"* |
+| Portada, cierre | *"…cuál de los siete hospedajes"* |
+| Listado, `descripcion` | *"Conoce los 7 hospedajes de Atheron Suite…"* |
+| Listado, `ogTitulo` | *"Nuestros 7 hospedajes en Zipaquira…"* |
+| Listado, `ogDescripcion` | *"Siete hospedajes seleccionados…"* |
+| Listado, `avisoBorrador` | *"…Faltan los datos reales de los 7 hospedajes"* |
+
+No se tocaron porque son afirmaciones sobre el negocio —que sí tiene siete
+hospedajes— y no sobre lo que se muestra. La decisión es del usuario.
+
+### 21.7 Decisiones estratégicas registradas
+
+Multiidioma (ES / EN / ZH), video por hospedaje y trabajo de marca. **Aprobadas en
+concepto, sin implementar.** Análisis completo en
+[propuesta-multiidioma-y-video.md](propuesta-multiidioma-y-video.md).
+
+El logo **lo entrega el usuario**. No se diseña ni se modifica.
+
+### 21.8 Estado al cerrar
+
+- Build: **14 páginas**, comprobación de contenido en verde, código de salida 0
+- Único hospedaje público: **La Magia de Zipaquirá**
+- Sitemap: **8 direcciones**, sin cambios
+- Sin commit en `main`. Sin publicar. Sin tocar DNS ni dominio

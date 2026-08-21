@@ -153,7 +153,7 @@ Un artículo cada 15 días. El orden importa: los primeros son los que más busc
 | 47 | ~~Quitar el `noindex` de cada ficha~~ ✅ **Resuelto por el panel:** es la casilla "Publicado" |
 | 48 | ~~Añadir cada ficha al `sitemap.xml`~~ ✅ **Resuelto:** el sitemap se genera solo desde la misma casilla |
 | 49 | Quitar la banda amarilla de "versión de trabajo" | Cuando el sitio esté listo. **Ahora es un campo del panel:** se vacía y desaparece |
-| 50 | Conectar el formulario de contacto a un servicio real de envío | Cuando haya correo |
+| 50 | Construir el formulario de contacto real, conectado al flujo comercial/CRM de Atheron | **Los formularios falsos se desactivaron el 21/08/2026** (interruptor en `src/data/ajustes.ts`). Mientras tanto el canal es WhatsApp. Requiere el correo oficial, pendiente 22 |
 | 51 | Visor de fotos (lightbox) en las galerías | Cuando haya fotos |
 | 52 | Optimizar el peso de las imágenes | **Parcial.** Hay compresión manual (`npm run foto`), aviso a partir de 300 KB y la publicación se detiene por encima de 1 MB. Falta la parte automática, ver el 55 |
 | 53 | Página de contacto independiente | Etapa posterior |
@@ -167,7 +167,7 @@ Un artículo cada 15 días. El orden importa: los primeros son los que más busc
 | 56 | Migrar los artículos del blog a colección de contenido, para poder editarlos desde el panel | Media |
 | 57 | Ajustes generales editables desde el panel: número de WhatsApp, correo, textos del pie | Media |
 | 58 | Colores y tipografías editables desde el panel | Baja |
-| 59 | Decidir si las fichas en obra deben dejar de tener enlace "Ver ficha". Está a una palabra de distancia en `src/pages/hospedajes/index.astro` | Baja, pero mejora la experiencia |
+| 59 | ~~Decidir si las fichas en obra deben dejar de tener enlace "Ver ficha"~~ ✅ **Resuelto el 21/08/2026:** las fichas sin publicar desaparecen enteras de la portada y del listado. Ver §21.5 de CONTINUIDAD |
 | 60 | `/blog` es la única página del sitio sin botón flotante de WhatsApp. Parece un olvido | Baja |
 | 61 | Unificar los menús: el listado muestra 5 enlaces, el blog 3 y la ficha otros 4. Descoordinación heredada | Baja |
 | 62 | Vercel: el plan gratuito es para uso **no comercial**. Un sitio de hospedajes lo es. Valorar si conviene pasar al plan de pago antes de que lo revisen ellos | Media — riesgo de suspensión |

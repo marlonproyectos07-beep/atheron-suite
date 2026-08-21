@@ -31,6 +31,8 @@ import BotonFlotante from '../../components/BotonFlotante.astro';
 import Marca from '../../components/Marca.astro';
 import Foto from '../../components/Foto.astro';
 import { menuFicha, menuFichaMovil, ctaConsultar } from '../../data/navegacion';
+import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
+import { formularioContactoActivo } from '../../data/ajustes';
 
 export async function getStaticPaths() {
   const fichas = await getCollection('hospedajes');
@@ -289,9 +291,11 @@ fichaNegocio.parentOrganization = {
             title={d.mapaTitulo}
             src={`https://www.openstreetmap.org/export/embed.html?bbox=${d.mapaBbox}&layer=mapnik`}
             loading="lazy"></iframe>
-          <p class="campo__ayuda" style="margin-top: var(--esp-1);">
-            <Marca texto={d.mapaNota} pendiente={d.mapaNotaPendiente} />
-          </p>
+          {d.mapaNota && (
+            <p class="campo__ayuda" style="margin-top: var(--esp-1);">
+              <Marca texto={d.mapaNota} pendiente={d.mapaNotaPendiente} />
+            </p>
+          )}
         </div>
 
       </div>
@@ -353,6 +357,7 @@ fichaNegocio.parentOrganization = {
         </div>
 
         <div class="bloque-doble__media">
+          {formularioContactoActivo ? (
           <form class="formulario" data-formulario-contacto novalidate>
             <div class="formulario__fila">
               <div class="campo">
@@ -383,9 +388,11 @@ fichaNegocio.parentOrganization = {
               <textarea id="h-mensaje" name="mensaje"></textarea>
             </div>
             <button class="boton boton--primario boton--grande" type="submit">Enviar consulta</button>
-            <p class="campo__ayuda">Nota tecnica: este formulario todavia no envia datos a ningun servidor. Usa WhatsApp.</p>
             <div class="aviso-formulario" data-aviso-formulario role="status"></div>
           </form>
+          ) : (
+            <ContactoWhatsApp mensaje={`Hola, me interesa ${d.nombre} de Atheron Suite en Zipaquira.`} />
+          )}
         </div>
 
       </div>

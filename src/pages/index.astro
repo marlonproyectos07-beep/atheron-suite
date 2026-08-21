@@ -17,6 +17,8 @@ import BotonFlotante from '../components/BotonFlotante.astro';
 import Marca from '../components/Marca.astro';
 import Foto from '../components/Foto.astro';
 import { menuHome, menuHomeMovil, ctaDisponibilidad } from '../data/navegacion';
+import ContactoWhatsApp from '../components/ContactoWhatsApp.astro';
+import { formularioContactoActivo } from '../data/ajustes';
 
 /* Los tres hospedajes destacados salen de la misma coleccion que
    alimenta el listado y las fichas. Antes estaban escritos a mano
@@ -24,6 +26,7 @@ import { menuHome, menuHomeMovil, ctaDisponibilidad } from '../data/navegacion';
    de a su ficha: justo el tipo de descuadre que pasa cuando el
    mismo dato vive en tres sitios. */
 const destacados = (await getCollection('hospedajes'))
+  .filter((f) => f.data.publicado)
   .sort((a, b) => a.data.orden - b.data.orden)
   .slice(0, 3);
 
@@ -155,7 +158,6 @@ const fichaNegocio = {
             <li>Cada hospedaje tiene su propia pagina con fotos, habitaciones y ubicacion.</li>
             <li>Precios y condiciones claros, sin sorpresas al final.</li>
             <li>Un solo canal de contacto para resolver dudas antes de decidir.</li>
-            <li><span class="pendiente">PENDIENTE: definir la promesa diferencial definitiva de la marca.</span></li>
           </ul>
         </div>
 
@@ -243,10 +245,6 @@ const fichaNegocio = {
         <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
           <span class="etiqueta">Nuestros hospedajes</span>
           <h2>Siete formas de quedarse en Zipaquira</h2>
-          <p class="texto-suave" style="margin-top: var(--esp-2);">
-            Estamos preparando la ficha completa de cada uno.
-            Los nombres y datos que ves ahora son provisionales.
-          </p>
         </div>
 
         <div class="grid grid--3 aparecer">
@@ -284,7 +282,7 @@ const fichaNegocio = {
         </div>
         <div class="grupo-botones grupo-botones--centrado" style="margin-top: var(--esp-4);">
           <a class="boton boton--primario boton--grande" href="/hospedajes">
-            Ver los 7 hospedajes
+            Ver los hospedajes
           </a>
         </div>
 
@@ -389,6 +387,7 @@ const fichaNegocio = {
         </div>
 
         <div class="bloque-doble__media">
+          {formularioContactoActivo ? (
           <form class="formulario" data-formulario-contacto novalidate>
 
             <div class="formulario__fila">
@@ -433,13 +432,12 @@ const fichaNegocio = {
               Enviar consulta
             </button>
 
-            <p class="campo__ayuda">
-              Nota tecnica: este formulario todavia no envia datos a ningun servidor.
-            </p>
-
             <div class="aviso-formulario" data-aviso-formulario role="status"></div>
 
           </form>
+          ) : (
+            <ContactoWhatsApp mensaje="Hola, quiero informacion sobre los hospedajes de Atheron Suite en Zipaquira." />
+          )}
         </div>
 
       </div>

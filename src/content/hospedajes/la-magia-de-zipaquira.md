@@ -1,5 +1,5 @@
 ---
-nombre: La Magia de Zipaquira ZIPAQUIRA
+nombre: La Magia de Zipaquira
 publicado: true
 orden: 1
 insignia: '01'
@@ -11,8 +11,8 @@ avisoBorrador: Version de trabajo. Faltan las fotos, el numero de habitaciones y
 zona: 'Cra. 9 #10-32, Zipaquira'
 presentacion: A 16 minutos caminando de la Catedral de Sal, con cocina equipada, wifi, Netflix y vistas a la montana. Pensado para quedarse mas de una noche sin sentir que estas en un hotel de paso.
 presentacionPendiente: false
-fotoTarjeta: ''
-fotoTarjetaAlt: ''
+fotoTarjeta: /assets/img/hospedajes/la-magia-de-zipaquira-sala.jpg
+fotoTarjetaAlt: Sala principal de La Magia de Zipaquira con televisor y barra
 fotoPrincipal: /assets/img/hospedajes/la-magia-de-zipaquira-sala.jpg
 fotoPrincipalAlt: Sala principal de La Magia de Zipaquirá con TV y barra
 galeria: []
@@ -49,7 +49,7 @@ listadoSegundoDatoSufijo: ''
 resumen: Apartamentos con cocina equipada, wifi y Netflix, a 16 minutos caminando de la Catedral de Sal.
 precio: $ ---
 precioPendiente: true
-notaHabitaciones: Faltan los datos exactos de cada habitacion. Los cargamos en cuanto me los pases.
+notaHabitaciones: ''
 habitaciones:
   - nombre: Nombre de la habitacion 1
     huespedes: N
@@ -85,8 +85,8 @@ horarios:
 direccionPublica: true
 mapaBbox: -74.01%2C5.01%2C-73.99%2C5.03
 mapaTitulo: Mapa de ubicacion de La Magia de Zipaquira
-mapaNota: 'PENDIENTE 8: centrar el mapa en las coordenadas exactas y anadirlas al JSON-LD.'
-mapaNotaPendiente: true
+mapaNota: ''
+mapaNotaPendiente: false
 experiencias:
   - titulo: Catedral de Sal
     texto: A 16 minutos caminando. El recorrido subterraneo mas visitado del municipio.

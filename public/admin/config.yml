@@ -273,7 +273,7 @@ collections:
           aviso de que la direccion se entrega al confirmar la reserva.
       - { name: mapaBbox, label: 'Mapa: recuadro', widget: string, hint: 'Coordenadas del recuadro de OpenStreetMap. No lo toques si no sabes que es.' }
       - { name: mapaTitulo, label: 'Mapa: titulo accesible', widget: string }
-      - { name: mapaNota, label: 'Mapa: nota bajo el mapa', widget: string }
+      - { name: mapaNota, label: 'Mapa: nota bajo el mapa', widget: string, required: false }
       - { name: mapaNotaPendiente, label: La nota del mapa es provisional, widget: boolean, default: false }
 
       # ----- Experiencias -----
