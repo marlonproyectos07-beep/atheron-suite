@@ -609,6 +609,7 @@ que la desactive salvo que haga falta una auditoría automática completa.
 | [corregir-perfil-google.md](corregir-perfil-google.md) | El pendiente 28, el de máxima prioridad |
 | [estrategia-seo.md](estrategia-seo.md) | Plan de posicionamiento |
 | [propuesta-multiidioma-y-video.md](propuesta-multiidioma-y-video.md) | **Decisiones estratégicas del 21/08/2026**: idiomas ES/EN/ZH, video por hospedaje, marca. Análisis, sin implementar |
+| [fotografias.md](fotografias.md) | **Nombres, recortes, pesos y orden de galería.** Qué entregar para cerrar una habitación |
 | [dominio-y-arquitectura.md](dominio-y-arquitectura.md) | Por qué este dominio, e integración futura con Odoo |
 | [perfiles-y-flujo-de-trabajo.md](perfiles-y-flujo-de-trabajo.md) | Diagnóstico de perfiles y consistencia de nombre |
 

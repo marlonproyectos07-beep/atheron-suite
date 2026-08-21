@@ -242,6 +242,19 @@ collections:
           - { name: pendiente, label: Provisional, widget: boolean, default: false }
           - { name: foto, label: Foto de la habitacion, widget: image, required: false, hint: 'MAXIMO 300 KB y 1600 px de ancho.' }
           - { name: fotoAlt, label: Que se ve en la foto, widget: string, required: false }
+          - name: galeria
+            label: Galeria de la habitacion
+            widget: list
+            required: false
+            summary: '{{fields.alt}}'
+            hint: >-
+              Opcional. Orden recomendado: principal, camas, sala, cocina,
+              bano, vista. La PRIMERA ocupa el doble en pantalla, asi que
+              va la mejor. Se recortan en cuadrado: deja aire alrededor.
+              Cada una: MAXIMO 300 KB y 1600 px de ancho.
+            fields:
+              - { name: imagen, label: Foto, widget: image }
+              - { name: alt, label: Que se ve en la foto, widget: string }
 
       # ----- Ubicacion -----
       - { name: descripcionZona, label: Descripcion de la zona, widget: text }

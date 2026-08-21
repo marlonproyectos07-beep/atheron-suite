@@ -126,6 +126,13 @@ const habitacion = z.object({
   pendiente: z.boolean().default(false),
   foto: textoOpcionalPanel,
   fotoAlt: textoOpcionalPanel,
+
+  /* Galeria propia de la habitacion. Opcional y aditiva: una
+     habitacion sin fotos sigue funcionando igual, solo que no
+     pinta el bloque. La galeria del hospedaje (galeria, mas
+     abajo) se mantiene aparte, para zonas comunes, fachada y
+     entorno. */
+  galeria: z.array(fotoGaleria).default([]),
 });
 
 const hospedajes = defineCollection({

@@ -227,6 +227,18 @@ fichaNegocio.parentOrganization = {
                   </a>
                 </div>
               </div>
+
+              {/* Galeria propia de la habitacion. Reutiliza la misma
+                   rejilla que la galeria del hospedaje: la primera foto
+                   ocupa el doble. Si la habitacion no tiene fotos, este
+                   bloque no existe y la tarjeta se ve igual que antes. */}
+              {h.galeria.length > 0 && (
+                <div class="galeria" style="grid-column: 1 / -1;">
+                  {h.galeria.map((f) => (
+                    <div><Foto src={f.imagen} alt={f.alt} forma="cuadrado" /></div>
+                  ))}
+                </div>
+              )}
             </article>
           ))}
         </div>
