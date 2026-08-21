@@ -9,6 +9,15 @@ generan páginas HTML estáticas. Sin base de datos y sin servidor propio.
 > **El contenido se edita desde un panel en el navegador**, no tocando código.
 > Ver **[docs/panel-de-edicion.md](docs/panel-de-edicion.md)**.
 
+> ### 🔴 Si retomas el proyecto, empieza aquí
+>
+> **[docs/CONTINUIDAD-PROYECTO.md](docs/CONTINUIDAD-PROYECTO.md)**
+>
+> El sitio nuevo y el panel están terminados y probados, pero **viven en la rama
+> `astro` y todavía no se han publicado**. `hotelesatheron.com` sirve el sitio
+> antiguo desde `main`. Ese documento explica el estado exacto, qué no tocar, y
+> el procedimiento seguro para fusionar.
+
 ---
 
 ## Cómo ver el sitio en tu computador
@@ -135,8 +144,14 @@ Ahora cada cosa vive en un solo sitio:
 
 ## Publicación
 
+Hay **dos** caminos, y llevan al mismo sitio:
+
 ```
-editas → git commit → git push → Vercel republica
+DESDE EL PANEL (lo habitual)
+  guardas → commit automático → Vercel republica
+
+DESDE EL CÓDIGO
+  editas → git commit → git push → Vercel republica
 ```
 
 Cada `push` a la rama `main` genera un despliegue nuevo en menos de un minuto.

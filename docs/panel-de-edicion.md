@@ -2,6 +2,9 @@
 
 > Cómo administrar Atheron Suite sin tocar código.
 > 20 de agosto de 2026.
+>
+> **Estado: funcionando online.** Falta solo fusionar a `main` para que viva en
+> `hotelesatheron.com/admin`. Ver [CONTINUIDAD-PROYECTO.md](CONTINUIDAD-PROYECTO.md).
 
 ---
 
@@ -17,10 +20,15 @@ No deja cambiar **la estructura**: el diseño, las secciones de las páginas, lo
 
 | Situación | Dirección |
 |---|---|
-| **Desde internet** (objetivo final) | `hotelesatheron.com/admin` |
-| **En tu computador** (pruebas) | `http://localhost:4321/admin/index.html` |
+| **Desde internet** (después del merge) | `hotelesatheron.com/admin` |
+| **Ahora, para probar** | `atheron-suite-git-astro-marlon-atheron.vercel.app/admin` |
+| **En tu computador** (desarrollo) | `http://localhost:4321/admin/index.html` |
 
-El modo local necesita el servidor de desarrollo en marcha (`npm run dev`) y **solo funciona en Chrome, Edge o Brave** — usa una función que Firefox y Safari no tienen.
+Entras con **tu cuenta de GitHub**. No hay usuario ni contraseña de Atheron
+Suite: es deliberado, así no hay una contraseña más que gestionar ni que se
+pueda filtrar.
+
+El modo local necesita el servidor de desarrollo en marcha (`npm run dev`) y **solo funciona en Chrome, Edge o Brave** — usa una función que Firefox y Safari no tienen. El modo online funciona en cualquier navegador, **también en el móvil**: puedes hacer la foto en la propiedad y subirla ahí mismo.
 
 ---
 
@@ -39,7 +47,23 @@ Vercel lo detecta y reconstruye el sitio
 hotelesatheron.com actualizado        ~40 a 60 segundos
 ```
 
+**Verificado de punta a punta** el 20 de agosto de 2026: una edición hecha desde
+el panel online generó el commit `400d938` en GitHub, Vercel construyó sin
+errores, y el cambio apareció en la ficha, en el listado, en la portada y en el
+mensaje de WhatsApp. **Una sola edición, cuatro sitios actualizados.**
+
 **En modo local esto no ocurre.** El panel escribe archivos en tu disco y ahí se quedan: hay que subirlos con Git a mano. El flujo automático solo existe cuando el panel entra desde internet.
+
+> ### ⚠️ Antes del merge, una advertencia
+>
+> El panel está configurado para escribir en la rama **`astro`**, no en `main`.
+> Es lo correcto ahora mismo, porque `main` todavía sirve el sitio antiguo.
+>
+> **Después del merge hay que cambiar `public/admin/config.yml`, línea 45, de
+> `branch: astro` a `branch: main`.** Si se olvida, guardarás desde el panel,
+> verás "guardado", y el sitio no cambiará nunca — sin ningún error visible.
+>
+> Está anotado como paso 1 en [CONTINUIDAD-PROYECTO.md](CONTINUIDAD-PROYECTO.md).
 
 ---
 
@@ -155,7 +179,40 @@ No se implementa todavía porque añade complejidad y riesgo a una etapa que ya 
 
 ---
 
-## 10. Qué NO puede hacer el panel
+## 10. Cómo entra el panel a GitHub
+
+Cuando pulsas *"Iniciar sesión con GitHub"* pasa esto:
+
+```
+El panel  →  el portero en Cloudflare  →  GitHub  →  de vuelta al panel
+```
+
+El **portero** es un programa minúsculo alojado gratis en Cloudflare
+(`sveltia-cms-auth.comercialgsc001.workers.dev`). Existe porque GitHub no deja
+que una página web le pida permiso directamente: exige un intermediario que
+guarde las credenciales fuera de la vista.
+
+**No almacena nada.** Recibe el permiso de GitHub y te lo devuelve al navegador.
+
+Lleva **lista blanca de dominios**: solo responde desde `hotelesatheron.com`,
+sus subdominios y la dirección de pruebas. Si otra web intentara usarlo para
+conseguir acceso a tu repositorio, lo rechaza. Está verificado.
+
+### Qué permiso recibe, dicho sin adornos
+
+GitHub concede un permiso llamado `repo`, que alcanza **todos tus
+repositorios**, no solo este. Es más de lo necesario y es el punto débil de
+este montaje.
+
+Lo que lo compensa: el permiso vive **solo en tu navegador**, el panel solo
+conoce `atheron-suite`, y el portero tiene la lista blanca.
+
+**Para cortar el acceso al instante:** GitHub → Settings → Applications →
+`Atheron Suite CMS` → *Revocar todos los tokens de usuario*.
+
+---
+
+## 11. Qué NO puede hacer el panel
 
 - Cambiar el diseño, los colores o las tipografías *(previsto para una etapa posterior)*
 - Editar los artículos del blog *(siguen en código; previsto para una etapa posterior)*

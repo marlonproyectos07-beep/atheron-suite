@@ -6,6 +6,24 @@
 >
 > **Muchos de estos pendientes ya no se resuelven tocando código:** se resuelven
 > desde el panel de edición. Ver [panel-de-edicion.md](panel-de-edicion.md).
+>
+> **Estado del proyecto y qué no tocar:**
+> [CONTINUIDAD-PROYECTO.md](CONTINUIDAD-PROYECTO.md).
+
+---
+
+## Bloque 0 — Antes de publicar el sitio nuevo
+
+> El sitio migrado a Astro y el panel online están terminados y probados, pero
+> viven en la rama `astro`. Esto es lo que falta para fusionar a `main`.
+
+| # | Pendiente | Quién |
+|---|---|---|
+| **0.1** | **Cambiar `public/admin/config.yml` línea 45: `branch: astro` → `branch: main`.** Si se olvida, el panel guardará en una rama que ya no se publica y el sitio no cambiará nunca, **sin ningún error visible** | Claude |
+| 0.2 | Rotar el Client Secret de la aplicación OAuth (el anterior pasó por un chat) | Usuario |
+| 0.3 | Quitar el texto de prueba `ZIPAQUIRA` del nombre del hospedaje 01, desde el panel | Usuario |
+| 0.4 | Activar verificación en dos pasos en GitHub | Usuario |
+| 0.5 | Decidir sobre el plan de Vercel (ver el 62) | Usuario |
 
 **Nombre comercial confirmado: "Atheron Suite"** (singular). No usar "Atheron Suites".
 
