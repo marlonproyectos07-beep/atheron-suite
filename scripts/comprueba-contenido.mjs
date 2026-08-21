@@ -28,10 +28,25 @@
    todo de las ediciones hechas a mano en los archivos.
    ============================================================ */
 
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const CARPETA = 'src/content';
+
+/* ------------------------------------------------------------
+   LIMITES DE PESO DE LAS FOTOS
+
+   Por que existen: en la primera prueba del panel se subio una
+   captura de pantalla de 1,1 MB. Multiplicado por 5 fotos de
+   galeria y 7 hospedajes, son 38 MB que el visitante descarga.
+   En movil con datos, eso es abandono.
+
+   AVISA por encima de 300 KB: sigue publicando, pero deja constancia.
+   DETIENE por encima de 1 MB: a ese peso el dano es real, y es mejor
+   un error claro ahora que un sitio lento del que nadie se entera.
+   ------------------------------------------------------------ */
+const AVISO_KB = 300;
+const LIMITE_KB = 1024;
 
 /* Devuelve todos los .md de una carpeta y sus subcarpetas. */
 function archivosMarkdown(dir) {
@@ -45,9 +60,28 @@ function archivosMarkdown(dir) {
 }
 
 const problemas = [];
+const fotosPesadas = [];
+const fotosAvisadas = [];
+const fotosQueFaltan = [];
 
 for (const ruta of archivosMarkdown(CARPETA)) {
   const contenido = readFileSync(ruta, 'utf8');
+
+  /* ----------------------------------------------------------
+     FOTOS: que existan y que no pesen de mas
+     Se buscan las direcciones que empiezan por /assets/img/,
+     que es como las escribe el panel.
+     ---------------------------------------------------------- */
+  for (const [, direccion] of contenido.matchAll(/(\/assets\/img\/[^\s'"]+)/g)) {
+    const enDisco = join('public', direccion);
+    if (!existsSync(enDisco)) {
+      fotosQueFaltan.push({ ruta, direccion });
+      continue;
+    }
+    const kb = Math.round(statSync(enDisco).size / 1024);
+    if (kb > LIMITE_KB) fotosPesadas.push({ ruta, direccion, kb });
+    else if (kb > AVISO_KB) fotosAvisadas.push({ ruta, direccion, kb });
+  }
 
   /* El frontmatter es lo que va entre las dos lineas de tres guiones. */
   const partes = contenido.split(/^---\s*$/m);
@@ -81,8 +115,46 @@ for (const ruta of archivosMarkdown(CARPETA)) {
   });
 }
 
+/* Los avisos no detienen nada: se dejan visibles y se sigue. */
+for (const f of fotosAvisadas) {
+  console.warn(
+    `AVISO  ${f.direccion} pesa ${f.kb} KB (recomendado: menos de ${AVISO_KB} KB). ` +
+    `Comprimela con:  npm run foto -- <archivo> <nombre> <hospedaje>`,
+  );
+}
+
+if (fotosQueFaltan.length || fotosPesadas.length) {
+  console.error('');
+  console.error('PUBLICACION DETENIDA — problema con las fotos');
+  console.error('');
+
+  for (const f of fotosQueFaltan) {
+    console.error(`  ${f.ruta}`);
+    console.error(`    la foto ${f.direccion} no existe en el proyecto.`);
+    console.error(`    Vuelve a subirla desde el panel.`);
+    console.error('');
+  }
+
+  for (const f of fotosPesadas) {
+    console.error(`  ${f.ruta}`);
+    console.error(`    la foto ${f.direccion} pesa ${f.kb} KB.`);
+    console.error(`    El maximo son ${LIMITE_KB} KB. Una foto asi hace lento el sitio`);
+    console.error(`    en movil, que es donde entra la mayoria de tus clientes.`);
+    console.error('');
+    console.error(`    Comprimela sin perder calidad visible con:`);
+    console.error(`      npm run foto -- <archivo original> <nombre> <hospedaje>`);
+    console.error('');
+  }
+
+  process.exit(1);
+}
+
 if (problemas.length === 0) {
-  console.log('Contenido comprobado: ningun texto se corta en una almohadilla.');
+  const total = fotosAvisadas.length;
+  console.log(
+    `Contenido comprobado: ningun texto se corta en una almohadilla` +
+    (total ? `, y ${total} foto(s) por encima del peso recomendado.` : `, y las fotos estan dentro de peso.`),
+  );
   process.exit(0);
 }
 

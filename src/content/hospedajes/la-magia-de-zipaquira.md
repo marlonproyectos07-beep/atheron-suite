@@ -11,6 +11,11 @@ avisoBorrador: Version de trabajo. Faltan las fotos, el numero de habitaciones y
 zona: 'Cra. 9 #10-32, Zipaquira'
 presentacion: A 16 minutos caminando de la Catedral de Sal, con cocina equipada, wifi, Netflix y vistas a la montana. Pensado para quedarse mas de una noche sin sentir que estas en un hotel de paso.
 presentacionPendiente: false
+fotoTarjeta: ''
+fotoTarjetaAlt: ''
+fotoPrincipal: /assets/img/hospedajes/la-magia-de-zipaquira-sala.jpg
+fotoPrincipalAlt: Sala principal de La Magia de Zipaquirá con TV y barra
+galeria: []
 datos:
   - numero: 1,4 km
     texto: A la Catedral de Sal
@@ -53,6 +58,8 @@ habitaciones:
     descripcion: Descripcion pendiente.
     precio: $ ---
     pendiente: true
+    foto: ''
+    fotoAlt: ''
 descripcionZona: En el centro de Zipaquira, a distancia caminable de la Catedral de Sal y de la plaza principal.
 descripcionZonaPendiente: false
 distancias:
@@ -115,4 +122,4 @@ Sal queda a 1,4 kilometros: se llega caminando en unos 16 minutos,
 sin necesidad de transporte.
 
 Tener cocina cambia la estancia. Si vienes en familia o te quedas
-varios dias, no dependes de restaurantes para cada comida.PRUEBA CMS ATHERON
+varios dias, no dependes de restaurantes para cada comida.

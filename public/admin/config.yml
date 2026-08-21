@@ -39,8 +39,28 @@ backend:
 
 # Donde se guardan las fotos que subas desde el panel, y con que
 # direccion las enlaza el sitio.
-media_folder: public/assets/img
-public_folder: /assets/img
+#
+# Van todas a la carpeta "hospedajes" para que no se mezclen con las
+# fotos generales del sitio (logo, imagen para compartir).
+#
+# ANTES DE SUBIR UNA FOTO, LEE ESTO:
+#
+#   Peso maximo recomendado ... 300 KB
+#   Ancho recomendado ......... 1600 px
+#   Formato ................... JPG
+#
+# Una foto de camara o una captura de pantalla puede pesar mas de
+# 1 MB. Multiplicado por 5 fotos de galeria y 7 hospedajes, son 38 MB
+# que el visitante descarga: en movil con datos, eso es abandono.
+#
+# La publicacion AVISA por encima de 300 KB y SE DETIENE por encima
+# de 1 MB, para que una foto pesada no llegue al sitio sin que nadie
+# se entere.
+#
+# Para comprimir sin saber de edicion de imagen, hay una herramienta
+# en el proyecto. Ver README.md, apartado "Fotos".
+media_folder: public/assets/img/hospedajes
+public_folder: /assets/img/hospedajes
 
 # Idioma del panel.
 locale: es
@@ -123,9 +143,9 @@ collections:
         widget: image
         required: false
         hint: >-
-          La que se ve en el listado y en la portada. Es la primera
-          impresion del hospedaje: elige la mejor. Horizontal, y a ser
-          posible por debajo de 300 KB.
+          La que se ve en el listado y en la portada: es la primera
+          impresion del hospedaje. Horizontal. MAXIMO 300 KB y 1600 px
+          de ancho. Por encima de 1 MB la publicacion se detiene.
       - name: fotoTarjetaAlt
         label: Que se ve en la foto de la tarjeta
         widget: string
@@ -137,7 +157,9 @@ collections:
         label: Foto principal de la ficha
         widget: image
         required: false
-        hint: 'La grande, junto a la descripcion. Vertical queda mejor aqui.'
+        hint: >-
+          La grande, junto a la descripcion. Vertical queda mejor aqui.
+          MAXIMO 300 KB y 1600 px de ancho.
       - { name: fotoPrincipalAlt, label: Que se ve en la foto principal, widget: string, required: false }
       - name: galeria
         label: Galeria de fotos
@@ -147,6 +169,7 @@ collections:
         hint: >-
           Cinco fotos funcionan bien. Si no subes ninguna, se siguen
           viendo los cinco rectangulos de "foto pendiente".
+          Cada una: MAXIMO 300 KB y 1600 px de ancho.
         fields:
           - { name: imagen, label: Foto, widget: image }
           - { name: alt, label: Que se ve en la foto, widget: string }
@@ -194,7 +217,7 @@ collections:
           - { name: descripcion, label: Descripcion, widget: text }
           - { name: precio, label: Precio por noche, widget: string, default: '$ ---' }
           - { name: pendiente, label: Provisional, widget: boolean, default: false }
-          - { name: foto, label: Foto de la habitacion, widget: image, required: false }
+          - { name: foto, label: Foto de la habitacion, widget: image, required: false, hint: 'MAXIMO 300 KB y 1600 px de ancho.' }
           - { name: fotoAlt, label: Que se ve en la foto, widget: string, required: false }
 
       # ----- Ubicacion -----

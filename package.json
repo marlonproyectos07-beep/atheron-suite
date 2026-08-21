@@ -6,11 +6,15 @@
   "scripts": {
     "dev": "astro dev",
     "comprueba": "node scripts/comprueba-contenido.mjs",
+    "foto": "node scripts/optimiza-fotos.mjs",
     "prebuild": "node scripts/comprueba-contenido.mjs",
     "build": "astro build",
     "preview": "astro preview"
   },
   "dependencies": {
     "astro": "7.2.4"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.3"
   }
 }
