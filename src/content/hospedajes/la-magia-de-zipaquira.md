@@ -1,5 +1,5 @@
 ---
-nombre: La Magia de Zipaquira
+nombre: La Magia de Zipaquira ZIPAQUIRA
 publicado: true
 orden: 1
 insignia: '01'
