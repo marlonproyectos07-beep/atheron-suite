@@ -46,6 +46,26 @@ const { ficha } = Astro.props;
 const d = ficha.data;
 const ruta = `/hospedajes/${ficha.id}`;
 
+/* ------------------------------------------------------------
+   QUE SECCIONES TIENEN DATOS DE VERDAD
+
+   Regla del proyecto: si un dato todavia no existe, se oculta el
+   bloque entero. Nunca se muestra "$ ---", "N huespedes" ni
+   "Descripcion pendiente" a un cliente.
+
+   Las anclas del menu de celular se filtran en consecuencia, para
+   que no queden enlaces que no llevan a ninguna parte.
+   ------------------------------------------------------------ */
+const hayHabitaciones = d.habitaciones.some((h) => !h.pendiente);
+const hayGaleria = d.galeria.length > 0;
+const experiencias = d.experiencias.filter((e) => !e.pendiente);
+
+const enlacesMovil = menuFichaMovil.filter((e) => {
+  if (e.href === '#habitaciones') return hayHabitaciones;
+  if (e.href === '#galeria') return hayGaleria;
+  return true;
+});
+
 /* El cuerpo del archivo .md es la descripcion larga del hospedaje. */
 const { Content } = await render(ficha);
 
@@ -110,7 +130,7 @@ fichaNegocio.parentOrganization = {
   avisoBorrador={d.avisoBorrador}
 >
 
-  <Cabecera enlaces={menuFicha} enlacesMovil={menuFichaMovil} cta={ctaConsultar} />
+  <Cabecera enlaces={menuFicha} enlacesMovil={enlacesMovil} cta={ctaConsultar} />
 
   <main id="contenido">
 
@@ -127,7 +147,7 @@ fichaNegocio.parentOrganization = {
              data-whatsapp={`Hola, me interesa ${d.nombre} de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.`}>
             Consultar disponibilidad
           </a>
-          <a class="boton boton--claro boton--grande" href="#galeria">Ver fotos</a>
+          {hayGaleria && <a class="boton boton--claro boton--grande" href="#galeria">Ver fotos</a>}
         </div>
 
         {/* Datos duros arriba: es lo que la gente busca confirmar */}
@@ -173,6 +193,7 @@ fichaNegocio.parentOrganization = {
 
 
     {/* ===== 3. HABITACIONES ===== */}
+    {hayHabitaciones && (
     <section class="seccion seccion--alterna" id="habitaciones">
       <div class="contenedor">
 
@@ -211,9 +232,11 @@ fichaNegocio.parentOrganization = {
         </div>
       </div>
     </section>
+    )}
 
 
     {/* ===== 4. GALERIA ===== */}
+    {hayGaleria && (
     <section class="seccion" id="galeria">
       <div class="contenedor">
         <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
@@ -235,6 +258,7 @@ fichaNegocio.parentOrganization = {
         </div>
       </div>
     </section>
+    )}
 
 
     {/* ===== 5. UBICACION ===== */}
@@ -303,6 +327,7 @@ fichaNegocio.parentOrganization = {
 
 
     {/* ===== 6. EXPERIENCIAS ===== */}
+    {experiencias.length > 0 && (
     <section class="seccion">
       <div class="contenedor">
         <div class="encabezado-seccion aparecer">
@@ -310,7 +335,7 @@ fichaNegocio.parentOrganization = {
           <h2>Que hacer alrededor</h2>
         </div>
         <div class="grid grid--3 aparecer">
-          {d.experiencias.map((e) => (
+          {experiencias.map((e) => (
             <article class="experiencia">
               <div class="experiencia__fondo"></div>
               <div class="experiencia__texto">
@@ -329,6 +354,7 @@ fichaNegocio.parentOrganization = {
         </div>
       </div>
     </section>
+    )}
 
 
     {/* ===== 7. CONTACTO ===== */}

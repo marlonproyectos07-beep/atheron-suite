@@ -60,7 +60,7 @@ const fichaNegocio = {
   ogTitulo="Atheron Suite | Hospedajes en Zipaquira, Cundinamarca"
   ogDescripcion="Hospedajes seleccionados en Zipaquira, a minutos de la Catedral de Sal y del centro historico."
   jsonLd={fichaNegocio}
-  avisoBorrador="Version de trabajo. Los textos y fotos marcados en amarillo son provisionales."
+  avisoBorrador="Version de trabajo. Faltan fotografias en algunas secciones."
 >
 
   <Cabecera enlaces={menuHome} enlacesMovil={menuHomeMovil} cta={ctaDisponibilidad} actual="/" />
@@ -150,7 +150,7 @@ const fichaNegocio = {
           <span class="etiqueta">Quienes somos</span>
           <h2>Una coleccion, no un directorio</h2>
           <p class="texto-grande texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
-            Atheron Suite nace en Zipaquira con siete hospedajes seleccionados uno por uno.
+            Atheron Suite nace en Zipaquira con hospedajes seleccionados uno por uno.
             No listamos todo lo que existe: mostramos los lugares donde nosotros mismos
             nos quedariamos.
           </p>
@@ -244,7 +244,7 @@ const fichaNegocio = {
 
         <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
           <span class="etiqueta">Nuestros hospedajes</span>
-          <h2>Siete formas de quedarse en Zipaquira</h2>
+          <h2>Hospedajes para descubrir Zipaquira</h2>
         </div>
 
         <div class="grid grid--3 aparecer">
@@ -269,9 +269,11 @@ const fichaNegocio = {
                     <Marca texto={data.resumen} pendiente={enObra} />
                   </p>
                   <div class="tarjeta__pie">
+                    {!data.precioPendiente && (
                     <span class="tarjeta__precio">
-                      <Marca texto={data.precio} pendiente={data.precioPendiente} /> <span>/ noche</span>
+                      {data.precio} <span>/ noche</span>
                     </span>
+                    )}
                     <a class="boton boton--contorno" href={`/hospedajes/${id}`}>Ver ficha</a>
                   </div>
                 </div>
@@ -319,14 +321,6 @@ const fichaNegocio = {
             </div>
           </article>
 
-          <article class="experiencia">
-            <div class="experiencia__fondo"></div>
-            <div class="experiencia__texto">
-              <h3><span class="pendiente">Experiencia por definir</span></h3>
-              <p><span class="pendiente">Pendiente: elegir la tercera experiencia (naturaleza, gastronomia o cultura).</span></p>
-            </div>
-          </article>
-
         </div>
       </div>
     </section>
@@ -355,9 +349,6 @@ const fichaNegocio = {
 
           <ul class="lista-distancias">
             <li><span>Desde Bogota</span> <span>~50 km</span></li>
-            <li><span>Catedral de Sal</span> <span><span class="pendiente">min pendientes</span></span></li>
-            <li><span>Plaza principal</span> <span><span class="pendiente">min pendientes</span></span></li>
-            <li><span>Estacion del tren turistico</span> <span><span class="pendiente">min pendientes</span></span></li>
           </ul>
         </div>
 
@@ -380,8 +371,7 @@ const fichaNegocio = {
           </p>
 
           <ul class="lista-check">
-            <li>Correo: <span class="pendiente">correo pendiente</span></li>
-            <li>Telefono / WhatsApp: <span class="pendiente">numero pendiente</span></li>
+            <li>Telefono / WhatsApp: <a href="tel:+573188983167">+57 318 898 3167</a></li>
             <li>Zipaquira, Cundinamarca, Colombia</li>
           </ul>
         </div>
@@ -452,8 +442,7 @@ const fichaNegocio = {
         <div class="cta-final aparecer">
           <h2>Tu proxima escapada empieza aqui</h2>
           <p>
-            Escribenos y te ayudamos a elegir cual de los siete hospedajes
-            encaja mejor con tu plan.
+            Escribenos y te ayudamos a elegir que hospedaje se adapta mejor a tu viaje.
           </p>
           <div class="grupo-botones grupo-botones--centrado">
             <a class="boton boton--acento boton--grande" href="/landing/hospedaje-en-zipaquira">

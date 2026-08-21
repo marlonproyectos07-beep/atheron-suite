@@ -25,7 +25,6 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
   ogTipo="article"
   ogTitulo="Guia de Zipaquira: que hacer, como llegar y donde dormir"
   ogDescripcion="Todo lo practico para planear tu visita a Zipaquira, Cundinamarca."
-  avisoBorrador="Version de trabajo. Los datos marcados en amarillo hay que verificarlos en fuente oficial antes de publicar."
 >
 
   <Cabecera enlaces={menuBlog} cta={ctaDisponibilidad} actual="/blog" />
@@ -38,7 +37,6 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
 
           <p class="articulo__meta">
             <span>Guia completa</span>
-            <span>Actualizado: <span class="pendiente">fecha al publicar</span></span>
           </p>
 
           <h1>Guia de Zipaquira: que hacer, como llegar y donde dormir</h1>
@@ -90,33 +88,6 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
             Zipaquira esta a unos 50 km al norte de Bogota. Hay tres formas
             de llegar, y la eleccion cambia bastante la experiencia.
           </p>
-
-          <table>
-            <thead>
-              <tr>
-                <th>Medio</th>
-                <th>Duracion</th>
-                <th>Costo aproximado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Bus intermunicipal</td>
-                <td><span class="pendiente">verificar</span></td>
-                <td><span class="pendiente">verificar</span></td>
-              </tr>
-              <tr>
-                <td>Carro particular</td>
-                <td><span class="pendiente">verificar</span></td>
-                <td><span class="pendiente">peajes por verificar</span></td>
-              </tr>
-              <tr>
-                <td>Tren de la Sabana</td>
-                <td><span class="pendiente">verificar</span></td>
-                <td><span class="pendiente">verificar</span></td>
-              </tr>
-            </tbody>
-          </table>
 
           {/* Este enlace apuntaba a la plantilla de articulo, que era una
               pagina de relleno con textos entre [[corchetes]]. El lector

@@ -7,7 +7,7 @@ titulo: La Magia de Zipaquira | Hospedaje a 16 min de la Catedral de Sal
 descripcion: Hospedaje en Zipaquira a 1,4 km de la Catedral de Sal. Wifi, Netflix, cocina equipada, parqueadero y vistas a la montana. Consulta disponibilidad por WhatsApp.
 ogTitulo: La Magia de Zipaquira | Atheron Suite
 ogDescripcion: Hospedaje en Zipaquira a 16 minutos a pie de la Catedral de Sal. Wifi, Netflix, cocina y parqueadero.
-avisoBorrador: Version de trabajo. Faltan las fotos, el numero de habitaciones y los precios.
+avisoBorrador: ''
 zona: 'Cra. 9 #10-32, Zipaquira'
 presentacion: A 16 minutos caminando de la Catedral de Sal, con cocina equipada, wifi, Netflix y vistas a la montana. Pensado para quedarse mas de una noche sin sentir que estas en un hotel de paso.
 presentacionPendiente: false

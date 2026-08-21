@@ -27,7 +27,7 @@ import { formularioContactoActivo } from '../../data/ajustes';
   descripcion="Hospedaje comodo en Zipaquira, Cundinamarca, cerca de la Catedral de Sal y del centro historico. Consulta disponibilidad con Atheron Suite."
   ruta="/landing/hospedaje-en-zipaquira"
   ogDescripcion="Siete hospedajes seleccionados a minutos de la Catedral de Sal. Consulta disponibilidad por WhatsApp."
-  avisoBorrador="Version de trabajo. Los textos y fotos marcados en amarillo son provisionales."
+  avisoBorrador="Version de trabajo. Faltan fotografias en algunas secciones."
 >
 
   <Cabecera cta={ctaLandingHospedaje} />
@@ -54,7 +54,6 @@ import { formularioContactoActivo } from '../../data/ajustes';
 
         <div class="grupo-botones">
           <a class="boton boton--acento boton--grande" href="#consultar">Consultar disponibilidad</a>
-          <a class="boton boton--claro boton--grande" href="#habitaciones">Ver habitaciones</a>
         </div>
 
         <div class="hero__datos">
@@ -111,12 +110,6 @@ import { formularioContactoActivo } from '../../data/ajustes';
             <div class="tarjeta-simple__icono" aria-hidden="true">&#8962;</div>
             <h3>Para cada plan</h3>
             <p class="texto-suave">Pareja, familia o viaje de trabajo: hay una opcion distinta para cada caso.</p>
-          </article>
-
-          <article class="tarjeta-simple">
-            <div class="tarjeta-simple__icono" aria-hidden="true">&#9200;</div>
-            <h3>Estancias flexibles</h3>
-            <p class="texto-suave"><span class="pendiente">Pendiente: confirmar estancia minima y politicas.</span></p>
           </article>
 
           <article class="tarjeta-simple">
@@ -202,63 +195,6 @@ import { formularioContactoActivo } from '../../data/ajustes';
     </section>
 
 
-    {/* ============================================================
-         3. HABITACIONES
-         ============================================================ */}
-    <section class="seccion seccion--alterna" id="habitaciones">
-      <div class="contenedor">
-
-        <div class="encabezado-seccion aparecer">
-          <span class="etiqueta">Habitaciones</span>
-          <h2>Tipos de habitacion disponibles</h2>
-          <p class="texto-suave" style="margin-top: var(--esp-2);">
-            Esta seccion se llenara con los datos reales de cada hospedaje.
-            Por ahora dejamos la estructura lista.
-          </p>
-        </div>
-
-        <div class="grid aparecer">
-
-          <article class="habitacion">
-            <div class="placeholder">Foto pendiente</div>
-            <div>
-              <h3><span class="pendiente">Habitacion tipo 1</span></h3>
-              <div class="habitacion__datos">
-                <span class="habitacion__dato"><span class="pendiente">N</span> huespedes</span>
-                <span class="habitacion__dato"><span class="pendiente">N</span> camas</span>
-                <span class="habitacion__dato"><span class="pendiente">N</span> banos</span>
-                <span class="habitacion__dato"><span class="pendiente">N</span> m2</span>
-              </div>
-              <p class="texto-suave"><span class="pendiente">Descripcion pendiente de la habitacion.</span></p>
-              <div class="tarjeta__pie">
-                <span class="tarjeta__precio"><span class="pendiente">$ ---</span> <span>/ noche</span></span>
-                <a class="boton boton--contorno" href="#consultar">Consultar</a>
-              </div>
-            </div>
-          </article>
-
-          <article class="habitacion">
-            <div class="placeholder">Foto pendiente</div>
-            <div>
-              <h3><span class="pendiente">Habitacion tipo 2</span></h3>
-              <div class="habitacion__datos">
-                <span class="habitacion__dato"><span class="pendiente">N</span> huespedes</span>
-                <span class="habitacion__dato"><span class="pendiente">N</span> camas</span>
-                <span class="habitacion__dato"><span class="pendiente">N</span> banos</span>
-                <span class="habitacion__dato"><span class="pendiente">N</span> m2</span>
-              </div>
-              <p class="texto-suave"><span class="pendiente">Descripcion pendiente de la habitacion.</span></p>
-              <div class="tarjeta__pie">
-                <span class="tarjeta__precio"><span class="pendiente">$ ---</span> <span>/ noche</span></span>
-                <a class="boton boton--contorno" href="#consultar">Consultar</a>
-              </div>
-            </div>
-          </article>
-
-        </div>
-      </div>
-    </section>
-
 
     {/* ============================================================
          4. CARACTERISTICAS INCLUIDAS
@@ -276,9 +212,8 @@ import { formularioContactoActivo } from '../../data/ajustes';
           <ul class="lista-check">
             <li>Wifi en todo el hospedaje</li>
             <li>Agua caliente y ropa de cama incluida</li>
-            <li>Cocina o zona de preparacion <span class="pendiente">(confirmar por hospedaje)</span></li>
-            <li>Parqueadero <span class="pendiente">(confirmar por hospedaje)</span></li>
-            <li>Calefaccion o cobijas extra <span class="pendiente">(confirmar)</span></li>
+            <li>Cocina o zona de preparacion</li>
+            <li>Parqueadero</li>
             <li>Check-in coordinado con el anfitrion</li>
           </ul>
         </div>
@@ -327,12 +262,6 @@ import { formularioContactoActivo } from '../../data/ajustes';
             Zipaquira esta a unos 50 km al norte de Bogota. Las distancias exactas
             desde cada hospedaje se completaran en su ficha individual.
           </p>
-          <ul class="lista-distancias">
-            <li><span>Catedral de Sal</span> <span><span class="pendiente">pendiente</span></span></li>
-            <li><span>Plaza principal</span> <span><span class="pendiente">pendiente</span></span></li>
-            <li><span>Estacion del tren turistico</span> <span><span class="pendiente">pendiente</span></span></li>
-            <li><span>Terminal / transporte</span> <span><span class="pendiente">pendiente</span></span></li>
-          </ul>
         </div>
 
         <div class="bloque-doble__media">
@@ -369,10 +298,6 @@ import { formularioContactoActivo } from '../../data/ajustes';
             <h3>Centro historico</h3>
             <p class="texto-suave">Plaza, catedral diocesana y calles coloniales para caminar.</p>
           </article>
-          <article class="tarjeta-simple">
-            <h3><span class="pendiente">Experiencia por definir</span></h3>
-            <p class="texto-suave"><span class="pendiente">Pendiente: naturaleza, gastronomia o cultura.</span></p>
-          </article>
         </div>
 
       </div>
@@ -395,29 +320,7 @@ import { formularioContactoActivo } from '../../data/ajustes';
           <details style="border-bottom:1px solid var(--borde); padding: var(--esp-2) 0;">
             <summary style="cursor:pointer; font-weight:600;">Como reservo?</summary>
             <p class="texto-suave" style="margin-top: var(--esp-1);">
-              Por ahora la reserva se coordina escribiendonos por el formulario.
-              <span class="pendiente">Pendiente: definir el proceso definitivo.</span>
-            </p>
-          </details>
-
-          <details style="border-bottom:1px solid var(--borde); padding: var(--esp-2) 0;">
-            <summary style="cursor:pointer; font-weight:600;">Cual es la hora de entrada y salida?</summary>
-            <p class="texto-suave" style="margin-top: var(--esp-1);">
-              <span class="pendiente">Pendiente: definir horarios de check-in y check-out.</span>
-            </p>
-          </details>
-
-          <details style="border-bottom:1px solid var(--borde); padding: var(--esp-2) 0;">
-            <summary style="cursor:pointer; font-weight:600;">Aceptan mascotas?</summary>
-            <p class="texto-suave" style="margin-top: var(--esp-1);">
-              <span class="pendiente">Pendiente: confirmar politica por hospedaje.</span>
-            </p>
-          </details>
-
-          <details style="border-bottom:1px solid var(--borde); padding: var(--esp-2) 0;">
-            <summary style="cursor:pointer; font-weight:600;">Que formas de pago manejan?</summary>
-            <p class="texto-suave" style="margin-top: var(--esp-1);">
-              <span class="pendiente">Pendiente: definir metodos de pago.</span>
+              Por ahora la reserva se coordina escribiendonos por WhatsApp.
             </p>
           </details>
         </div>

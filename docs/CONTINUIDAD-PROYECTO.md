@@ -749,9 +749,46 @@ concepto, sin implementar.** Análisis completo en
 
 El logo **lo entrega el usuario**. No se diseña ni se modifica.
 
-### 21.8 Estado al cerrar
+
+### 21.8 Segunda pasada: se ocultan todos los bloques sin dato real
+
+Decisión del usuario: **ningún placeholder técnico visible en una página
+comercial. Si el dato no existe, se oculta el bloque entero.** Nada se inventa.
+
+**Marcas amarillas visibles: 116 → 13.** Las 13 que quedan son los enlaces a
+artículos futuros de `/blog` y de la guía, que se conservan a propósito.
+
+| Página | Qué se hizo |
+|---|---|
+| **Portada** | Teléfono real visible. Correo oculto. Tarjeta de la tercera experiencia oculta. Tres filas de distancias sin minutos ocultas. Precio oculto mientras esté pendiente |
+| **Pie** | Correo oculto, teléfono real visible, enlace de política de privacidad oculto hasta que exista |
+| **Listado** | Metadatos y `<h1>` sin cifra. Precio oculto mientras esté pendiente |
+| **Landing hospedaje** | Sección de habitaciones de ejemplo **eliminada** (y con ella el botón "Ver habitaciones" del hero, que quedaba huérfano). Tres preguntas frecuentes sin respuesta eliminadas. Tarjeta "Estancias flexibles" sin política eliminada. Lista de distancias sin datos eliminada. Tercera experiencia eliminada. Paréntesis internos retirados de cocina y parqueadero; "calefacción (confirmar)" eliminado |
+| **Guía de Zipaquirá** | Tabla de transporte eliminada: sus seis celdas de duración y costo decían *"verificar"*. Se conserva el párrafo introductorio, que sí es cierto. `Actualizado: fecha al publicar` eliminado |
+| **Ficha de hospedaje** | Habitaciones, galería y experiencias se muestran **solo si tienen datos reales**. El menú de celular filtra sus anclas para no dejar enlaces muertos |
+
+**El teléfono** `+57 318 898 3167` pasa a ser visible en portada y pie. No es un
+dato nuevo: es el número que `public/assets/js/main.js` ya usaba en todos los
+botones de WhatsApp del sitio.
+
+**Redacción sin cifras.** Los textos que decían "7 hospedajes" o "siete" se
+reescribieron en neutro, no a "1": el negocio sí administra varios, pero no se
+debe afirmar una cantidad que no se está mostrando.
+
+**Banda de "Versión de trabajo" de La Magia: retirada.** Tras ocultar los bloques
+sin dato, la ficha no muestra ni un solo placeholder, que era la condición fijada
+por el usuario. La del listado se mantiene. Es un campo del panel: se restaura
+escribiendo en él.
+
+> **Lo que sigue faltando no ha desaparecido, solo dejó de mostrarse:** precio,
+> habitaciones, galería y tercera experiencia de La Magia. El aviso del mínimo
+> publicable en `comprueba-contenido.mjs` los sigue señalando en cada build.
+
+### 21.9 Estado al cerrar
 
 - Build: **14 páginas**, comprobación de contenido en verde, código de salida 0
-- Único hospedaje público: **La Magia de Zipaquirá**
+- Único hospedaje público: **La Magia de Zipaquirá**, sin placeholders visibles
+- Marcas amarillas visibles: **13**, todas enlaces a artículos futuros
 - Sitemap: **8 direcciones**, sin cambios
 - Sin commit en `main`. Sin publicar. Sin tocar DNS ni dominio
+- `public/admin/config.yml` sigue en `branch: astro`. **Es el paso previo obligatorio al merge**

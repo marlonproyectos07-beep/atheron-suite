@@ -47,11 +47,11 @@ const hospedajes = (await getCollection('hospedajes'))
 
 <Base
   titulo="Nuestros hospedajes en Zipaquira | Atheron Suite"
-  descripcion="Conoce los 7 hospedajes de Atheron Suite en Zipaquira, Cundinamarca."
+  descripcion="Conoce nuestros hospedajes en Zipaquira, Cundinamarca. Habitaciones, fotos, servicios y ubicacion de cada uno."
   ruta="/hospedajes"
-  ogTitulo="Nuestros 7 hospedajes en Zipaquira | Atheron Suite"
-  ogDescripcion="Siete hospedajes seleccionados en Zipaquira, Cundinamarca. Mira habitaciones, fotos y ubicacion."
-  avisoBorrador="Version de trabajo. Faltan los datos reales de los 7 hospedajes."
+  ogTitulo="Hospedajes en Zipaquira | Atheron Suite"
+  ogDescripcion="Hospedajes seleccionados en Zipaquira, Cundinamarca. Mira habitaciones, fotos y ubicacion."
+  avisoBorrador="Version de trabajo. Estamos completando la informacion de cada hospedaje."
 >
 
   <Cabecera enlaces={menuHospedajes} cta={ctaDisponibilidad} actual="/hospedajes" />
@@ -129,9 +129,11 @@ const hospedajes = (await getCollection('hospedajes'))
                   </p>
 
                   <div class="tarjeta__pie">
+                    {!data.precioPendiente && (
                     <span class="tarjeta__precio">
-                      <Marca texto={data.precio} pendiente={data.precioPendiente} /> <span>/ noche</span>
+                      {data.precio} <span>/ noche</span>
                     </span>
+                    )}
                     {mostrarEnlace && (
                       <a class="boton boton--contorno" href={enlace}>Ver ficha</a>
                     )}
