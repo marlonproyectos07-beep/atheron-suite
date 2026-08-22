@@ -13,8 +13,8 @@ presentacion: A 16 minutos caminando de la Catedral de Sal, con cocina equipada,
 presentacionPendiente: false
 fotoTarjeta: /assets/img/hospedajes/la-magia-de-zipaquira-sala.jpg
 fotoTarjetaAlt: Sala principal de La Magia de Zipaquira con televisor y barra
-fotoPrincipal: /assets/img/hospedajes/la-magia-de-zipaquira-sala.jpg
-fotoPrincipalAlt: Sala principal de La Magia de Zipaquirá con TV y barra
+fotoPrincipal: /assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg
+fotoPrincipalAlt: Sala de La Magia de Zipaquira con sofa, televisor, barra alta y ventana con vista a la ciudad
 galeria: []
 datos:
   - numero: 1,4 km
