@@ -15,7 +15,21 @@ fotoTarjeta: /assets/img/hospedajes/la-magia-de-zipaquira-sala.jpg
 fotoTarjetaAlt: Sala principal de La Magia de Zipaquira con televisor y barra
 fotoPrincipal: /assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg
 fotoPrincipalAlt: Sala de La Magia de Zipaquira con sofa, televisor, barra alta y ventana con vista a la ciudad
-galeria: []
+galeria:
+  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-principal.jpg
+    alt: Sala de la Suite 301 con sofa, escritorio, televisor y ventanal con vista a las montanas de Zipaquira
+  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg
+    alt: Habitacion de la Suite 301 con cama amplia, camarote de dos camas y ropa de cama azul y blanca
+  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-sala.jpg
+    alt: Zona social de la Suite 301 con televisor, escritorio de trabajo y barra alta con taburetes
+  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-cocina.jpg
+    alt: Cocina equipada de la Suite 301 con barra, taburetes altos y nevera
+  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-bano.jpg
+    alt: Bano privado de la Suite 301 con ducha de vidrio, sanitario y lavamanos
+  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-vista.jpg
+    alt: Vista panoramica a Zipaquira y sus montanas desde el ventanal de la Suite 301
+  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-entrada.jpg
+    alt: Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera
 datos:
   - numero: 1,4 km
     texto: A la Catedral de Sal
