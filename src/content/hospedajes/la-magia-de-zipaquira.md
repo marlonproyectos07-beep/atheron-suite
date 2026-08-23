@@ -58,8 +58,9 @@ habitaciones:
     descripcion: Descripcion pendiente.
     precio: $ ---
     pendiente: true
-    foto: ''
+    foto: /assets/img/hospedajes/ChatGPT Image 22 ago 2026, 14_52_41.png
     fotoAlt: ''
+    galeria: []
 descripcionZona: En el centro de Zipaquira, a distancia caminable de la Catedral de Sal y de la plaza principal.
 descripcionZonaPendiente: false
 distancias:
