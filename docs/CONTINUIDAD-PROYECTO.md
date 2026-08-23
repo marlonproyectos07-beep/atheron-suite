@@ -908,6 +908,11 @@ dorado, ni la cama — todo ello presente en la fotografía real del mismo saló
 
 Informe completo en `ATHERON_IA\00_CONTROL\RESULTADO_001_SUITE_301_MONTAR_FOTOS.txt`.
 
+> **SUPERADO el 23 de agosto de 2026.** Marlon revisó las pruebas y **autorizó
+> publicar las siete imágenes**. Lo que aquí se lee como bloqueo quedó resuelto por
+> decisión del dueño: ver §23.1. Siguen siendo imágenes generadas por IA, con todo
+> lo que eso implica; lo que cambió es la decisión, no los hechos.
+
 > **Regla que esto confirma:** antes de publicar cualquier fotografía que llegue
 > de un tercero, **verificar su procedencia por metadatos**. Cuesta una fracción
 > de lo que cuesta abrirlas una a una y da una prueba más sólida.
@@ -955,10 +960,138 @@ Los otros cinco recorridos del hotel: `Habitación 201/202/203/302.mp4` y
 
 ### 22.7 Lo que sigue bloqueando la Suite 301
 
-1. **Fotografías reales** de la Suite 301. Las que hay están generadas por IA.
+1. ~~**Fotografías reales** de la Suite 301.~~ **Resuelto por decisión de Marlon el
+   23 de agosto:** las generadas por IA se publicaron con su autorización. Ver §23.1.
 2. **Los cinco datos comerciales**: capacidad, camas, baños, precio y descripción
    corta. Sin al menos una habitación con datos reales, la sección de
    habitaciones **no se dibuja** y las fotos no tendrían dónde aparecer.
 
 Y sigue en pie todo lo de la §21: **sin merge, sin producción, y
 `public/admin/config.yml` todavía en `branch: astro`.**
+
+---
+
+## 23. Actualización del 23 de agosto de 2026
+
+Jornada repartida en dos sesiones. Sigue **sin fusionarse a `main`** y sin tocar
+producción ni DNS.
+
+### 23.1 Las siete fotos de la Suite 301 — autorizadas por Marlon
+
+Lo que §22.4 dejó como BLOQUEADO **quedó desbloqueado por decisión del dueño.**
+Marlon revisó las siete imágenes con las pruebas de procedencia delante y
+autorizó publicarlas. Están montadas en la **galería del hospedaje** (commit
+`655d83e`), no en la de la habitación, porque la sección de habitaciones sigue
+sin dibujarse.
+
+Lo que no cambia con la autorización, y por eso se deja escrito:
+
+- **Siguen siendo imágenes regeneradas por IA.** El manifiesto C2PA viaja dentro
+  de cada archivo: `claim_generator_info` = *OpenAI Media Service API*,
+  `digitalSourceType` = *trainedAlgorithmicMedia*, acción `c2pa.created`.
+- La comparación pixel a pixel contra la foto real del salón dio una diferencia
+  media de luminancia de **26,04 sobre 255**; el retoque fiel del día anterior
+  dio 6,75. Cuatro veces más.
+- **Distribución y mobiliario se conservan.** Lo redibujado son superficies,
+  objetos pequeños de las repisas y la vista por la ventana.
+- **Consecuencia a vigilar:** Google Imágenes, Booking y Airbnb leen el sello
+  C2PA y pueden etiquetar las fotos como generadas por IA.
+
+Peso: 15,2 MB → 1,4 MB tras `npm run foto`. En Drive se copiaron a la ruta buena,
+`03_WEB_APROBADAS / La Magia de Zipaquira / Suite 301`. La carpeta con sufijo
+`(1)` sigue existiendo: unificarla requiere autorización.
+
+### 23.2 Una foto de 2,4 MB subida desde el panel tumbó la publicación
+
+El commit `29fd42c`, escrito desde `/admin`, subió un PNG de **2.418.112 bytes**
+como foto de la habitación. El comprobador detiene la publicación por encima de
+1 MB, así que **el despliegue de Vercel falló y el sitio anterior siguió en pie**:
+la red de seguridad hizo exactamente su trabajo.
+
+Arreglado en `f405813`, repuntando a la versión optimizada de 169 KB. El PNG
+huérfano quedó en el repositorio y **se borró el 23 de agosto con autorización
+expresa de Marlon**.
+
+> **Lección que hay que recordar:** las fotos subidas desde `/admin` **no pasan
+> por `npm run foto`**. Tal como salen del teléfono o de una descarga, tumban la
+> publicación. Hasta que exista la optimización automática (pendiente 55), toda
+> foto debe pasar antes por:
+> `npm run foto -- "<archivo>" <nombre> la-magia-de-zipaquira`
+
+### 23.3 Regla permanente: PageSpeed en verde
+
+**Marlon vigila el sitio con PageSpeed Insights y quiere las cuatro
+puntuaciones en verde, con el rendimiento móvil como prioridad.** El motivo es
+comercial: va a pagar publicidad, y el visitante que llega por un anuncio a una
+página lenta se va antes de ver nada. Además la velocidad es factor de
+posicionamiento desde 2021.
+
+**Se trata como requisito, no como mejora opcional.** Antes de dar por cerrada
+cualquier tarea que toque imágenes, fuentes, CSS o JavaScript, hay que comprobar
+su efecto en el peso y en el LCP.
+
+### 23.4 PageSpeed no puede medir la vista previa de Vercel
+
+Se intentó y **el informe midió la pantalla de acceso de Vercel**, no el sitio:
+la vista previa está protegida por SSO y Google llega sin sesión. Se reconoce
+porque el informe muestra `vercel.com/login?next=...`, miniaturas con *"Log in to
+Vercel"* y orígenes como `accounts.google.com` o `images.ctfassets.net`. Las
+puntuaciones de ese informe son las de Vercel.
+
+**Tampoco sirve medir `hotelesatheron.com`:** hasta el merge, ese dominio sirve el
+sitio antiguo desde `main`.
+
+### 23.5 Cómo medir de verdad, sin publicar nada
+
+Lighthouse —el mismo motor de PageSpeed— contra el sitio **ya construido**,
+servido en local. El servidor de desarrollo no vale: no representa lo que recibe
+el visitante.
+
+```bash
+npm run build
+node node_modules/astro/bin/astro.mjs preview --port 4322
+npx lighthouse "http://localhost:4322/" --chrome-flags="--headless=new" \
+  --output=json --output-path=informe.json \
+  --only-categories=performance,accessibility,best-practices,seo
+```
+
+Notas del entorno, ya pagadas:
+
+- `npx.cmd` **falla desde el shell tipo Unix** por el espacio de
+  `C:\Program Files\nodejs`. Hay que lanzarlo desde PowerShell con `&`.
+- Al terminar, Lighthouse escribe `EPERM` al limpiar su perfil temporal de
+  Chrome. **El informe ya está generado**: el error es de limpieza, no de medida.
+- `.claude/launch.json` está en `.gitignore` y ahora lleva dos configuraciones:
+  `atheron-dev` (desarrollo, 4321) y `atheron-preview` (sitio construido, 4322).
+
+### 23.6 Medición base del 23 de agosto — rama `astro`, móvil
+
+| Página | Rendimiento | Accesibilidad | Prácticas | SEO | Peso |
+|---|---|---|---|---|---|
+| Portada | **90** | 94 | 96 | **100** | 134 KB |
+| Ficha La Magia | **81** | 96 | 96 | **100** | **2.068 KB** |
+
+Métricas de la ficha: FCP 2,9 s · LCP 4,2 s · TBT 0 ms · CLS 0.
+
+**Lo que ya está bien y no hay que tocar:** SEO 100 en las dos, CLS 0 —ningún
+salto de diseño—, TBT 0 ms, y las imágenes **sí** tienen tamaño reservado por CSS.
+El elemento LCP **no es una imagen**, es el párrafo del hero: nada que ver con la
+carga diferida de las fotos.
+
+**Lo que cuesta puntos, por orden de impacto:**
+
+| # | Hallazgo | Ahorro estimado |
+|---|---|---|
+| 1 | **Recursos que bloquean el renderizado** — la hoja de Google Fonts (894 ms) más tres CSS y `main.js`, que se carga sin `defer` | **~2.055 ms** |
+| 2 | **Imágenes servidas mucho más grandes de lo que se muestran** — los JPEG de 1600 px aparecen como cuadrados pequeños en el mosaico | ~1.482 KB |
+| 3 | **Formatos de nueva generación** (WebP/AVIF) — es el pendiente 55 | ~546 KB |
+| 4 | **404 de `/favicon.ico`** — el sitio no tiene icono; ensucia la consola y cuesta en Prácticas recomendadas | — |
+| 5 | **Contraste insuficiente** en `.logo__suite` | — |
+| 6 | Encabezados fuera de orden secuencial en la portada | — |
+
+El punto 1 afecta **a las dos páginas por igual** y es el que más sube la nota.
+El punto 2 es el que explica los 2 MB de la ficha: aunque la galería va en
+diferido, el navegador acaba descargando las ocho fotos a tamaño completo.
+
+> **Ninguno de estos arreglos se ha aplicado todavía.** Requieren autorización,
+> y quedan medidos contra esta línea base para poder demostrar la mejora.
