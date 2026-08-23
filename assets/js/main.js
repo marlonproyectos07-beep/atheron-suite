@@ -48,10 +48,19 @@ function leerCodigoPromocional() {
 
     // Si viene en la direccion, lo guardamos para el resto de la visita.
     // Asi el visitante puede navegar por el sitio sin perderlo.
-    if (desdeUrl) {
-      sessionStorage.setItem("codigoAtheron", desdeUrl.trim().toUpperCase());
+    if (desdeUrl !== null) {
+      desdeUrl = desdeUrl.trim().toUpperCase();
+      if (/^[A-Z0-9_-]{1,50}$/.test(desdeUrl)) {
+        sessionStorage.setItem("codigoAtheron", desdeUrl);
+      } else {
+        sessionStorage.removeItem("codigoAtheron");
+      }
     }
     codigo = sessionStorage.getItem("codigoAtheron");
+    if (codigo && !/^[A-Z0-9_-]{1,50}$/.test(codigo)) {
+      sessionStorage.removeItem("codigoAtheron");
+      codigo = null;
+    }
   } catch (error) {
     // Algunos navegadores bloquean sessionStorage en modo privado.
     // No pasa nada: el sitio sigue funcionando sin codigo.
@@ -139,11 +148,15 @@ document.addEventListener("DOMContentLoaded", function () {
      ---------------------------------------------------------- */
   if (codigoPromo) {
     var banda = document.createElement("div");
+    var tituloCodigo = document.createElement("strong");
+    var detalleCodigo = document.createElement("span");
     banda.className = "banda-codigo";
     banda.setAttribute("role", "status");
-    banda.innerHTML =
-      '<strong>Codigo ' + codigoPromo + ' activo</strong> ' +
-      '<span>Se aplicara al cotizar por WhatsApp.</span>';
+    tituloCodigo.textContent = "Codigo " + codigoPromo + " activo";
+    detalleCodigo.textContent = "Se aplicara al cotizar por WhatsApp.";
+    banda.appendChild(tituloCodigo);
+    banda.appendChild(document.createTextNode(" "));
+    banda.appendChild(detalleCodigo);
     document.body.insertBefore(banda, document.body.firstChild);
   }
 
