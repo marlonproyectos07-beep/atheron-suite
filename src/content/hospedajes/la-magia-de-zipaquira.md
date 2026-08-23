@@ -72,8 +72,8 @@ habitaciones:
     descripcion: Descripcion pendiente.
     precio: $ ---
     pendiente: true
-    foto: /assets/img/hospedajes/ChatGPT Image 22 ago 2026, 14_52_41.png
-    fotoAlt: ''
+    foto: /assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg
+    fotoAlt: Habitacion de la Suite 301 con cama amplia, camarote de dos camas y ropa de cama azul y blanca
     galeria: []
 descripcionZona: En el centro de Zipaquira, a distancia caminable de la Catedral de Sal y de la plaza principal.
 descripcionZonaPendiente: false
