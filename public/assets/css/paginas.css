@@ -232,26 +232,6 @@
    AVISO DE CONTENIDO PENDIENTE (banda superior de trabajo)
    Se quita cuando el sitio tenga contenido real.
    ------------------------------------------------------------ */
-/* ------------------------------------------------------------
-   FRANJA DE PRUEBA (temporal)
-   Banda de comprobacion que se activa con la prop "avisoPrueba".
-   Es de quita y pon: no la usa ninguna pagina de forma permanente.
-   ------------------------------------------------------------ */
-.aviso-prueba {
-  margin: 0;
-  background: #0b3d6b;
-  color: #fff;
-  font-size: .85rem;
-  font-weight: 600;
-  line-height: 1.35;
-  letter-spacing: .01em;
-  text-align: center;
-  padding: .5rem var(--esp-2);
-}
-@media (min-width: 48rem) {
-  .aviso-prueba { font-size: .95rem; padding: .6rem var(--esp-2); }
-}
-
 .aviso-borrador {
   background: #fff4cc;
   border-bottom: 1px solid #e6cf80;
