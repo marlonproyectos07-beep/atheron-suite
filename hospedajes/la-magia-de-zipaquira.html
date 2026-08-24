@@ -246,49 +246,63 @@
 
             <!-- Las siete fotos de la Suite 301. Van dentro del article y
                  ocupan el ancho completo de la tarjeta, igual que en astro. -->
-            <div class="galeria" style="grid-column: 1 / -1;">
-              <div>
+            <div class="galeria" id="galeria-301" data-galeria style="grid-column: 1 / -1;">
+              <button type="button" class="galeria__abrir"
+                      data-foto="1"
+                      aria-label="Ampliar foto 1 de 7: Sala de la Suite 301 con sofa, escritorio, televisor y ventanal con vista a las montanas de Zipaquira">
                 <img class="foto foto--cuadrado"
                      src="../assets/img/hospedajes/la-magia-de-zipaquira-301-principal.jpg"
                      alt="Sala de la Suite 301 con sofa, escritorio, televisor y ventanal con vista a las montanas de Zipaquira"
                      loading="lazy" decoding="async">
-              </div>
-              <div>
+              </button>
+              <button type="button" class="galeria__abrir"
+                      data-foto="2"
+                      aria-label="Ampliar foto 2 de 7: Habitacion de la Suite 301 con cama doble, camarote de dos camas y ropa de cama azul y blanca">
                 <img class="foto foto--cuadrado"
                      src="../assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg"
                      alt="Habitacion de la Suite 301 con cama doble, camarote de dos camas y ropa de cama azul y blanca"
                      loading="lazy" decoding="async">
-              </div>
-              <div>
+              </button>
+              <button type="button" class="galeria__abrir"
+                      data-foto="3"
+                      aria-label="Ampliar foto 3 de 7: Zona social de la Suite 301 con televisor, escritorio de trabajo y barra alta con taburetes">
                 <img class="foto foto--cuadrado"
                      src="../assets/img/hospedajes/la-magia-de-zipaquira-301-sala.jpg"
                      alt="Zona social de la Suite 301 con televisor, escritorio de trabajo y barra alta con taburetes"
                      loading="lazy" decoding="async">
-              </div>
-              <div>
+              </button>
+              <button type="button" class="galeria__abrir"
+                      data-foto="4"
+                      aria-label="Ampliar foto 4 de 7: Cocina equipada de la Suite 301 con barra, taburetes altos y nevera">
                 <img class="foto foto--cuadrado"
                      src="../assets/img/hospedajes/la-magia-de-zipaquira-301-cocina.jpg"
                      alt="Cocina equipada de la Suite 301 con barra, taburetes altos y nevera"
                      loading="lazy" decoding="async">
-              </div>
-              <div>
+              </button>
+              <button type="button" class="galeria__abrir"
+                      data-foto="5"
+                      aria-label="Ampliar foto 5 de 7: Bano privado de la Suite 301 con ducha de vidrio, sanitario y lavamanos">
                 <img class="foto foto--cuadrado"
                      src="../assets/img/hospedajes/la-magia-de-zipaquira-301-bano.jpg"
                      alt="Bano privado de la Suite 301 con ducha de vidrio, sanitario y lavamanos"
                      loading="lazy" decoding="async">
-              </div>
-              <div>
+              </button>
+              <button type="button" class="galeria__abrir"
+                      data-foto="6"
+                      aria-label="Ampliar foto 6 de 7: Vista panoramica a Zipaquira y sus montanas desde el ventanal de la Suite 301">
                 <img class="foto foto--cuadrado"
                      src="../assets/img/hospedajes/la-magia-de-zipaquira-301-vista.jpg"
                      alt="Vista panoramica a Zipaquira y sus montanas desde el ventanal de la Suite 301"
                      loading="lazy" decoding="async">
-              </div>
-              <div>
+              </button>
+              <button type="button" class="galeria__abrir"
+                      data-foto="7"
+                      aria-label="Ampliar foto 7 de 7: Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera">
                 <img class="foto foto--cuadrado"
                      src="../assets/img/hospedajes/la-magia-de-zipaquira-301-entrada.jpg"
                      alt="Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera"
                      loading="lazy" decoding="async">
-              </div>
+              </button>
             </div>
           </article>
 
@@ -466,6 +480,26 @@
   <a class="boton boton--whatsapp flotante" href="#contacto"
      data-whatsapp="Hola, me interesa el Hotel Atheron Suite. Quiero consultar disponibilidad.">WhatsApp</a>
 
+
+  <!-- ==========================================================
+       VISOR DE FOTOS (lightbox)
+       <dialog> nativo: el navegador ya trae el fondo oscuro, el
+       cierre con ESC y el foco atrapado dentro. No hace falta
+       ninguna libreria; el guion son 60 lineas en lightbox.js.
+       Va fuera del flujo de la pagina, asi que no desplaza nada
+       ni suma CLS. La foto grande se pide al abrir, no antes.
+       ========================================================== -->
+  <dialog class="visor" id="visor" aria-label="Fotos de la Suite 301">
+    <button type="button" class="visor__cerrar" data-visor-cerrar aria-label="Cerrar">&times;</button>
+    <button type="button" class="visor__paso visor__paso--antes" data-visor-antes aria-label="Foto anterior">&lsaquo;</button>
+    <figure class="visor__marco">
+      <img class="visor__foto" id="visor-foto" alt="">
+      <figcaption class="visor__pie"><span data-visor-cuenta></span> <span data-visor-alt></span></figcaption>
+    </figure>
+    <button type="button" class="visor__paso visor__paso--despues" data-visor-despues aria-label="Foto siguiente">&rsaquo;</button>
+  </dialog>
+
   <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/lightbox.js" defer></script>
 </body>
 </html>
