@@ -95,6 +95,14 @@ const fichaNegocio: Record<string, unknown> = {
   },
 };
 
+/* El nombre anterior solo se marca porque la pagina lo dice: va en
+   descripcionZona, a la vista. Marcar lo que no se ve es motivo de
+   penalizacion. */
+if (d.nombreAnterior) fichaNegocio.alternateName = d.nombreAnterior;
+/* Mientras no haya coordenadas, esta es la referencia buena de donde
+   esta el hospedaje. */
+if (d.enlaceMapa) fichaNegocio.hasMap = d.enlaceMapa;
+
 if (d.latitud !== undefined && d.longitud !== undefined) {
   fichaNegocio.geo = {
     '@type': 'GeoCoordinates',
@@ -356,6 +364,14 @@ function dato(valor, singular, plural) {
             title={d.mapaTitulo}
             src={`https://www.openstreetmap.org/export/embed.html?bbox=${d.mapaBbox}&layer=mapnik`}
             loading="lazy"></iframe>
+          {d.enlaceMapa && (
+            <p class="campo__ayuda" style="margin-top: var(--esp-2);">
+              <a href={d.enlaceMapa} target="_blank" rel="noopener">
+                Ver {d.nombre} en Google Maps
+              </a>
+              {d.calle && <> &middot; {d.calle}, Zipaquira, Cundinamarca, Colombia</>}
+            </p>
+          )}
           {d.mapaNota && (
             <p class="campo__ayuda" style="margin-top: var(--esp-1);">
               <Marca texto={d.mapaNota} pendiente={d.mapaNotaPendiente} />

@@ -84,7 +84,7 @@ habitaciones:
         alt: Vista panoramica a Zipaquira y sus montanas desde el ventanal de la Suite 301
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-entrada.jpg
         alt: Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera
-descripcionZona: En el centro de Zipaquira, a distancia caminable de la Catedral de Sal y de la plaza principal.
+descripcionZona: 'En el centro de Zipaquira, a distancia caminable de la Catedral de Sal y de la plaza principal. Antes se llamaba Hospedaje La Magia de Zipaquira: es el mismo sitio, en la misma direccion.'
 descripcionZonaPendiente: false
 distancias:
   - lugar: Catedral de Sal
@@ -108,7 +108,9 @@ horarios:
     pendiente: false
 direccionPublica: true
 mapaBbox: -74.01%2C5.01%2C-73.99%2C5.03
-mapaTitulo: Mapa de ubicacion del Hotel Atheron Suite
+mapaTitulo: Mapa del centro de Zipaquira, donde esta el Hotel Atheron Suite
+enlaceMapa: 'https://maps.app.goo.gl/v8SN7csVkdZiFF9WA'
+nombreAnterior: Hospedaje La Magia de Zipaquira
 mapaNota: ''
 mapaNotaPendiente: false
 experiencias:

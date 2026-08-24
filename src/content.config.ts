@@ -277,6 +277,17 @@ const hospedajes = defineCollection({
     mapaNota: textoOpcional,
     mapaNotaPendiente: z.boolean().default(false),
 
+    /* Enlace a la ficha del hospedaje en Google Maps. Es el que
+       lleva al punto exacto mientras el recuadro de arriba solo
+       encuadre el barrio. Alimenta tambien "hasMap" del JSON-LD. */
+    enlaceMapa: textoOpcional,
+
+    /* Como se llamaba antes el hospedaje. Sirve para que quien lo
+       busque por el nombre viejo lo encuentre, y para decirle a
+       Google que es un cambio de nombre y no dos negocios. Se
+       muestra en la pagina antes de marcarlo en el JSON-LD. */
+    nombreAnterior: textoOpcional,
+
     /* POLITICA DE DIRECCION.
        false => se muestra la caja que explica que la direccion
                 exacta se entrega al confirmar la reserva.
