@@ -43,7 +43,14 @@ const claseCta = `boton ${cta.clase ?? 'boton--primario'}`;
 <header class="header">
   <div class="contenedor header__interior">
 
-    <a class="logo" href="/">Atheron <span class="logo__suite">Suite</span></a>
+    <a class="logo logo--marca" href="/">
+      <picture>
+        <source srcset="/assets/img/marca/atheron-simbolo.avif" type="image/avif" />
+        <img class="logo__simbolo" src="/assets/img/marca/atheron-simbolo.webp"
+             width="137" height="120" alt="" decoding="async" />
+      </picture>
+      <span class="logo__nombre">Atheron <span class="logo__suite">Suite</span></span>
+    </a>
 
     {llevaMenu && (
       <nav class="nav" aria-label="Navegacion principal">

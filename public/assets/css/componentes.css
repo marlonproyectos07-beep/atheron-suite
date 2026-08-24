@@ -36,6 +36,42 @@
   font-weight: 600;
   letter-spacing: -0.02em;
 }
+/* ------------------------------------------------------------
+   LOGO CON EL SIMBOLO OFICIAL
+   El simbolo va como imagen y el nombre sigue siendo texto: asi se
+   lee bien a cualquier tamano, lo entiende un buscador y no depende
+   de que cargue una imagen.
+
+   El <img> lleva width y height escritos, asi que el navegador
+   reserva el hueco antes de descargarlo y la cabecera no da ningun
+   salto (CLS 0).
+   ------------------------------------------------------------ */
+.logo--marca {
+  align-items: center;
+  gap: .6rem;
+}
+.logo__simbolo {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+/* El nombre conserva la alineacion por linea base que tenia antes
+   entre "Atheron" y "SUITE". */
+.logo__nombre {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .45rem;
+}
+/* Sobre la cabecera blanca, el dorado del acento se quedaba en 2,41
+   de contraste, por debajo del minimo. Aqui "SUITE" toma el azul del
+   propio logo: sube a 9,5 y ademas casa con el simbolo. En el pie,
+   que es oscuro, el dorado se mantiene. */
+.logo--marca .logo__suite { color: var(--color-marca); }
+
+@media (max-width: 26rem) {
+  .logo__simbolo { height: 34px; }
+}
+
 .logo__suite {
   font-family: var(--fuente-texto);
   font-size: .72rem;
@@ -400,6 +436,7 @@
   font-size: .93rem;
 }
 .footer a:hover { color: #fff; }
+.footer h3,
 .footer h4 {
   font-family: var(--fuente-texto);
   font-size: .8rem;

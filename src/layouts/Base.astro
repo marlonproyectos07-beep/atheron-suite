@@ -125,6 +125,11 @@ const urlCanonica = new URL(ruta, Astro.site).href;
 
   <meta name="twitter:card" content="summary_large_image">
 
+  {/* Iconos de pestana y de pantalla de inicio, del logo oficial.
+       Declararlos evita ademas la peticion a /favicon.ico que fallaba. */}
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/marca/atheron-icono-32.png">
+  <link rel="apple-touch-icon" href="/assets/img/marca/atheron-icono-180.png">
+
   {/* Tipografias (necesitan internet; si no cargan, el sitio usa las de respaldo) */}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
