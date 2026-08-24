@@ -52,14 +52,20 @@
   <!-- ============================================================
        DATOS ESTRUCTURADOS
        Solo con datos confirmados y visibles en la pagina.
-       Falta "geo" (latitud y longitud) a proposito: no los tenemos.
-       Se anaden cuando saques las coordenadas de Google Maps.
+       Falta "geo" (latitud y longitud) a proposito: no los tenemos
+       confirmados. El enlace de Google Maps que paso Marlon no se
+       puede abrir desde el entorno de trabajo, asi que las
+       coordenadas no se han podido verificar. Marcar unas
+       aproximadas seria peor que no marcar ninguna: Google trata
+       una ubicacion equivocada como dato erroneo del negocio.
+       Se anaden en cuanto Marlon las lea en Google Maps.
        ============================================================ -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "LodgingBusiness",
     "name": "Hotel Atheron Suite",
+    "alternateName": "Hospedaje La Magia de Zipaquira",
     "description": "Hospedaje en Zipaquira, Cundinamarca, a 1,4 km de la Catedral de Sal. Wifi, Netflix, cocina equipada, parqueadero y vistas a la montana.",
     "url": "https://hotelesatheron.com/hospedajes/la-magia-de-zipaquira",
     "telephone": "+573188983167",
@@ -70,6 +76,7 @@
       "addressRegion": "Cundinamarca",
       "addressCountry": "CO"
     },
+    "hasMap": "https://maps.app.goo.gl/v8SN7csVkdZiFF9WA",
     "petsAllowed": false,
     "checkinTime": "15:00",
     "checkoutTime": "11:00",
@@ -371,7 +378,8 @@
           <h2>Cra. 9 #10-32, Zipaquira</h2>
           <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
             En el centro de Zipaquira, a distancia caminable de la Catedral de Sal
-            y de la plaza principal.
+            y de la plaza principal. Antes se llamaba Hospedaje La Magia de
+            Zipaquira: es el mismo sitio, en la misma direccion.
           </p>
 
           <ul class="lista-distancias">
@@ -389,11 +397,24 @@
         </div>
 
         <div class="bloque-doble__media">
+          <!-- El recuadro de OpenStreetMap encuadra el centro de Zipaquira,
+               no marca el portal: para centrarlo en el edificio hacen falta
+               las coordenadas exactas, que todavia no tenemos. Por eso el
+               titulo dice lo que de verdad muestra, y debajo va el enlace a
+               la ficha de Google Maps del hospedaje, que si lleva al punto
+               exacto. En cuanto tengamos latitud y longitud, este recuadro
+               se centra y se le pone un marcador. -->
           <iframe
             class="mapa"
-            title="Mapa de ubicacion del Hotel Atheron Suite"
+            title="Mapa del centro de Zipaquira, donde esta el Hotel Atheron Suite"
             src="https://www.openstreetmap.org/export/embed.html?bbox=-74.01%2C5.01%2C-73.99%2C5.03&layer=mapnik"
             loading="lazy"></iframe>
+          <p class="campo__ayuda" style="margin-top: var(--esp-2);">
+            <a href="https://maps.app.goo.gl/v8SN7csVkdZiFF9WA" target="_blank" rel="noopener">
+              Ver el Hotel Atheron Suite en Google Maps
+            </a>
+            &middot; Cra. 9 #10-32, Zipaquira, Cundinamarca, Colombia
+          </p>
         </div>
 
       </div>
