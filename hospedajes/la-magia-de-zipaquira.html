@@ -108,7 +108,6 @@
       <a href="../index.html">Inicio</a>
       <a href="index.html">Hospedajes</a>
       <a href="#habitaciones">Habitaciones</a>
-      <a href="#galeria">Galeria</a>
       <a href="#ubicacion">Ubicacion</a>
       <a href="../blog/index.html">Blog</a>
       <a class="boton boton--primario" href="#contacto">Consultar</a>
@@ -135,7 +134,6 @@
              data-whatsapp="Hola, me interesa el Hotel Atheron Suite. Quiero consultar disponibilidad.">
             Consultar disponibilidad
           </a>
-          <a class="boton boton--claro boton--grande" href="#galeria">Ver fotos</a>
         </div>
 
         <!-- Datos duros arriba: es lo que la gente busca confirmar -->
@@ -209,53 +207,91 @@
           <span class="etiqueta">Habitaciones</span>
           <h2>Donde vas a dormir</h2>
           <p class="texto-suave" style="margin-top: var(--esp-2);">
-            Faltan los datos exactos de cada habitacion. Los cargamos en cuanto
-            me los pases.
+            Hasta 7 huespedes con las camas fijas. Para grupos de 8 a 10
+            anadimos camas adicionales: escribenos y lo coordinamos
+            directamente.
           </p>
         </div>
 
         <div class="grid aparecer">
 
           <article class="habitacion">
-            <div class="placeholder">Foto pendiente</div>
+            <img class="foto"
+                 src="../assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg"
+                 alt="Habitacion de la Suite 301 con cama doble, camarote de dos camas y ropa de cama azul y blanca"
+                 loading="lazy" decoding="async">
             <div>
-              <h3><span class="pendiente">Nombre de la habitacion 1</span></h3>
+              <h3>Suite 301</h3>
               <div class="habitacion__datos">
-                <span class="habitacion__dato"><span class="pendiente">N</span> huespedes</span>
-                <span class="habitacion__dato"><span class="pendiente">N</span> camas</span>
-                <span class="habitacion__dato"><span class="pendiente">N</span> banos</span>
+                <span class="habitacion__dato">Hasta 7 huespedes</span>
+                <span class="habitacion__dato">1 cama doble con cama nido debajo, 1 camarote y 1 sofa cama</span>
+                <span class="habitacion__dato">1 bano</span>
               </div>
-              <p class="texto-suave"><span class="pendiente">Descripcion pendiente.</span></p>
+              <p class="texto-suave">
+                Suite amplia y elegante, automatizada con Alexa: enciendes luces,
+                televisor y musica con la voz. Se entra por puerta inteligente con
+                clave digital, y la barra es el punto de reunion. A una cuadra
+                tienes supermercados, droguerias, panaderias y restaurantes, y en
+                quince minutos caminando estas en el centro historico y la
+                Catedral de Sal.
+              </p>
               <div class="tarjeta__pie">
-                <span class="tarjeta__precio"><span class="pendiente">$ ---</span> <span>/ noche</span></span>
+                <span class="tarjeta__precio">Desde $ 150.000 <span>/ noche</span></span>
                 <a class="boton boton--whatsapp" href="#contacto"
-                   data-whatsapp="Hola, quiero consultar por una habitacion en el Hotel Atheron Suite.">
+                   data-whatsapp="Hola, quiero consultar por la Suite 301 del Hotel Atheron Suite.">
                   Consultar
                 </a>
               </div>
             </div>
+
+            <!-- Las siete fotos de la Suite 301. Van dentro del article y
+                 ocupan el ancho completo de la tarjeta, igual que en astro. -->
+            <div class="galeria" style="grid-column: 1 / -1;">
+              <div>
+                <img class="foto foto--cuadrado"
+                     src="../assets/img/hospedajes/la-magia-de-zipaquira-301-principal.jpg"
+                     alt="Sala de la Suite 301 con sofa, escritorio, televisor y ventanal con vista a las montanas de Zipaquira"
+                     loading="lazy" decoding="async">
+              </div>
+              <div>
+                <img class="foto foto--cuadrado"
+                     src="../assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg"
+                     alt="Habitacion de la Suite 301 con cama doble, camarote de dos camas y ropa de cama azul y blanca"
+                     loading="lazy" decoding="async">
+              </div>
+              <div>
+                <img class="foto foto--cuadrado"
+                     src="../assets/img/hospedajes/la-magia-de-zipaquira-301-sala.jpg"
+                     alt="Zona social de la Suite 301 con televisor, escritorio de trabajo y barra alta con taburetes"
+                     loading="lazy" decoding="async">
+              </div>
+              <div>
+                <img class="foto foto--cuadrado"
+                     src="../assets/img/hospedajes/la-magia-de-zipaquira-301-cocina.jpg"
+                     alt="Cocina equipada de la Suite 301 con barra, taburetes altos y nevera"
+                     loading="lazy" decoding="async">
+              </div>
+              <div>
+                <img class="foto foto--cuadrado"
+                     src="../assets/img/hospedajes/la-magia-de-zipaquira-301-bano.jpg"
+                     alt="Bano privado de la Suite 301 con ducha de vidrio, sanitario y lavamanos"
+                     loading="lazy" decoding="async">
+              </div>
+              <div>
+                <img class="foto foto--cuadrado"
+                     src="../assets/img/hospedajes/la-magia-de-zipaquira-301-vista.jpg"
+                     alt="Vista panoramica a Zipaquira y sus montanas desde el ventanal de la Suite 301"
+                     loading="lazy" decoding="async">
+              </div>
+              <div>
+                <img class="foto foto--cuadrado"
+                     src="../assets/img/hospedajes/la-magia-de-zipaquira-301-entrada.jpg"
+                     alt="Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera"
+                     loading="lazy" decoding="async">
+              </div>
+            </div>
           </article>
 
-        </div>
-      </div>
-    </section>
-
-
-    <!-- ==========================================================
-         4. GALERIA
-         ========================================================== -->
-    <section class="seccion" id="galeria">
-      <div class="contenedor">
-        <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
-          <span class="etiqueta">Galeria</span>
-          <h2>Fotos del hospedaje</h2>
-        </div>
-        <div class="galeria aparecer">
-          <div><div class="placeholder placeholder--cuadrado">Foto 1</div></div>
-          <div><div class="placeholder placeholder--cuadrado">Foto 2</div></div>
-          <div><div class="placeholder placeholder--cuadrado">Foto 3</div></div>
-          <div><div class="placeholder placeholder--cuadrado">Foto 4</div></div>
-          <div><div class="placeholder placeholder--cuadrado">Foto 5</div></div>
         </div>
       </div>
     </section>
