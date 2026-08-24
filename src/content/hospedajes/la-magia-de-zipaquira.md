@@ -1,20 +1,20 @@
 ---
-nombre: La Magia de Zipaquira
+nombre: Hotel Atheron Suite
 publicado: true
 orden: 1
 insignia: '01'
-titulo: La Magia de Zipaquira | Hospedaje a 16 min de la Catedral de Sal
+titulo: Hotel Atheron Suite | Hospedaje a 16 min de la Catedral de Sal
 descripcion: Hospedaje en Zipaquira a 1,4 km de la Catedral de Sal. Wifi, Netflix, cocina equipada, parqueadero y vistas a la montana. Consulta disponibilidad por WhatsApp.
-ogTitulo: La Magia de Zipaquira | Atheron Suite
+ogTitulo: Hotel Atheron Suite | Zipaquira, Cundinamarca
 ogDescripcion: Hospedaje en Zipaquira a 16 minutos a pie de la Catedral de Sal. Wifi, Netflix, cocina y parqueadero.
 avisoBorrador: ''
 zona: 'Cra. 9 #10-32, Zipaquira'
 presentacion: A 16 minutos caminando de la Catedral de Sal, con cocina equipada, wifi, Netflix y vistas a la montana. Pensado para quedarse mas de una noche sin sentir que estas en un hotel de paso.
 presentacionPendiente: false
 fotoTarjeta: /assets/img/hospedajes/la-magia-de-zipaquira-sala.jpg
-fotoTarjetaAlt: Sala principal de La Magia de Zipaquira con televisor y barra
+fotoTarjetaAlt: Sala principal del Hotel Atheron Suite con televisor y barra
 fotoPrincipal: /assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg
-fotoPrincipalAlt: Sala de La Magia de Zipaquira con sofa, televisor, barra alta y ventana con vista a la ciudad
+fotoPrincipalAlt: Sala del Hotel Atheron Suite con sofa, televisor, barra alta y ventana con vista a la ciudad
 galeria: []
 datos:
   - numero: 1,4 km
@@ -108,7 +108,7 @@ horarios:
     pendiente: false
 direccionPublica: true
 mapaBbox: -74.01%2C5.01%2C-73.99%2C5.03
-mapaTitulo: Mapa de ubicacion de La Magia de Zipaquira
+mapaTitulo: Mapa de ubicacion del Hotel Atheron Suite
 mapaNota: ''
 mapaNotaPendiente: false
 experiencias:
@@ -121,7 +121,7 @@ experiencias:
   - titulo: Por definir
     texto: 'Pendiente: elegir la tercera experiencia.'
     pendiente: true
-tituloContacto: Reserva tus fechas en La Magia de Zipaquira
+tituloContacto: Reserva tus fechas en el Hotel Atheron Suite
 datosContacto:
   - 'Cra. 9 #10-32, Zipaquira, Cundinamarca'
   - Entrada 15:00 · Salida 11:00
@@ -140,7 +140,7 @@ comodidades:
 actualizado: ''
 ---
 
-La Magia de Zipaquira son apartamentos con cocina equipada y vistas
+El Hotel Atheron Suite ofrece apartamentos con cocina equipada y vistas
 a la montana, en la Carrera 9 del centro de Zipaquira. La Catedral de
 Sal queda a 1,4 kilometros: se llega caminando en unos 16 minutos,
 sin necesidad de transporte.
