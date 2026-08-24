@@ -1,0 +1,102 @@
+/* ============================================================
+   VISOR DE FOTOS (lightbox)
+
+   Amplia las fotos de la galeria de una habitacion. Se apoya en
+   <dialog>, que el navegador ya sabe abrir en modal: pinta el
+   fondo oscuro, cierra con ESC y atrapa el foco dentro. Por eso
+   este archivo es corto y no hay ninguna libreria detras.
+
+   POR QUE ASI Y NO CON UNA LIBRERIA:
+   las de galerias pesan entre 30 y 90 KB y cargan CSS aparte. Esto
+   son unos 2 KB, va con "defer" y solo lo pide la ficha que tiene
+   galeria. En movil con datos, esa diferencia se nota.
+
+   COMO SE ENGANCHA:
+   la galeria lleva data-galeria y cada foto va dentro de un
+   <button class="galeria__abrir">. Si este archivo no llega o
+   falla, los botones no hacen nada y las fotos se siguen viendo
+   igual: la pagina nunca depende de este guion para mostrarse.
+
+   La foto grande se pide al abrir el visor, no al cargar la
+   pagina, y se reutiliza el mismo <img> al pasar de una a otra.
+   ============================================================ */
+(function () {
+  'use strict';
+
+  var galeria = document.querySelector('[data-galeria]');
+  var visor = document.getElementById('visor');
+  if (!galeria || !visor || typeof visor.showModal !== 'function') return;
+
+  var foto = visor.querySelector('#visor-foto');
+  var cuenta = visor.querySelector('[data-visor-cuenta]');
+  var pieAlt = visor.querySelector('[data-visor-alt]');
+  var botones = Array.prototype.slice.call(galeria.querySelectorAll('.galeria__abrir'));
+  if (!botones.length) return;
+
+  /* Las fuentes salen de las miniaturas: misma foto, sin una
+     segunda lista que se pueda desincronizar con el HTML. */
+  var fotos = botones.map(function (b) {
+    var img = b.querySelector('img');
+    return { src: img.getAttribute('src'), alt: img.getAttribute('alt') };
+  });
+
+  var actual = 0;
+  var abridor = null; // a que boton devolver el foco al cerrar
+
+  function pinta(i) {
+    actual = (i + fotos.length) % fotos.length; // da la vuelta en los extremos
+    foto.src = fotos[actual].src;
+    foto.alt = fotos[actual].alt;
+    cuenta.textContent = actual + 1 + ' / ' + fotos.length;
+    pieAlt.textContent = fotos[actual].alt;
+  }
+
+  function abre(i, boton) {
+    abridor = boton || null;
+    pinta(i);
+    visor.showModal();
+  }
+
+  botones.forEach(function (b, i) {
+    b.addEventListener('click', function () { abre(i, b); });
+  });
+
+  visor.querySelector('[data-visor-antes]').addEventListener('click', function () { pinta(actual - 1); });
+  visor.querySelector('[data-visor-despues]').addEventListener('click', function () { pinta(actual + 1); });
+  visor.querySelector('[data-visor-cerrar]').addEventListener('click', function () { visor.close(); });
+
+  /* Flechas del teclado. ESC ya lo hace <dialog> por su cuenta. */
+  visor.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); pinta(actual - 1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); pinta(actual + 1); }
+  });
+
+  /* Click en el fondo -fuera del marco de la foto- cierra. */
+  visor.addEventListener('click', function (e) {
+    if (e.target === visor) visor.close();
+  });
+
+  /* Deslizar en celular. Se exige un recorrido horizontal claro
+     (60 px y mas horizontal que vertical) para no robarle el
+     gesto al desplazamiento normal de la pagina. */
+  var x0 = null, y0 = null;
+  visor.addEventListener('touchstart', function (e) {
+    x0 = e.changedTouches[0].clientX;
+    y0 = e.changedTouches[0].clientY;
+  }, { passive: true });
+
+  visor.addEventListener('touchend', function (e) {
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    var dy = e.changedTouches[0].clientY - y0;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) pinta(actual + (dx < 0 ? 1 : -1));
+    x0 = y0 = null;
+  }, { passive: true });
+
+  /* Al cerrar, el foco vuelve a la miniatura desde la que se
+     abrio: quien navega con teclado no acaba al principio. */
+  visor.addEventListener('close', function () {
+    if (abridor) abridor.focus();
+    abridor = null;
+  });
+})();
