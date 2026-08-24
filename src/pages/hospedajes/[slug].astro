@@ -244,9 +244,16 @@ function dato(valor, singular, plural) {
                    ocupa el doble. Si la habitacion no tiene fotos, este
                    bloque no existe y la tarjeta se ve igual que antes. */}
               {h.galeria.length > 0 && (
-                <div class="galeria" style="grid-column: 1 / -1;">
-                  {h.galeria.map((f) => (
-                    <div><Foto src={f.imagen} alt={f.alt} forma="cuadrado" /></div>
+                <div class="galeria" data-galeria style="grid-column: 1 / -1;">
+                  {h.galeria.map((f, i) => (
+                    <button
+                      type="button"
+                      class="galeria__abrir"
+                      data-foto={i + 1}
+                      aria-label={`Ampliar foto ${i + 1} de ${h.galeria.length}: ${f.alt}`}
+                    >
+                      <Foto src={f.imagen} alt={f.alt} forma="cuadrado" />
+                    </button>
                   ))}
                 </div>
               )}
@@ -455,5 +462,26 @@ function dato(valor, singular, plural) {
     href="#contacto"
     mensaje={`Hola, me interesa ${d.nombre} de Atheron Suite en Zipaquira.`}
   />
+
+  {/* ===== VISOR DE FOTOS (lightbox) =====
+       Portado tal cual desde main. <dialog> nativo: el navegador ya
+       trae el fondo oscuro, el cierre con ESC y el foco atrapado
+       dentro. El guion son 4 KB sin dependencias y va con defer.
+       Solo se monta si la habitacion tiene fotos que ampliar. */}
+  {hayHabitaciones && d.habitaciones.some((h) => h.galeria.length > 0) && (
+    <>
+      <dialog class="visor" id="visor" aria-label={`Fotos de ${d.nombre}`}>
+        <button type="button" class="visor__cerrar" data-visor-cerrar aria-label="Cerrar">&times;</button>
+        <button type="button" class="visor__paso visor__paso--antes" data-visor-antes aria-label="Foto anterior">&lsaquo;</button>
+        <figure class="visor__marco">
+          <img class="visor__foto" id="visor-foto" alt="" />
+          <figcaption class="visor__pie"><span data-visor-cuenta></span> <span data-visor-alt></span></figcaption>
+        </figure>
+        <button type="button" class="visor__paso visor__paso--despues" data-visor-despues aria-label="Foto siguiente">&rsaquo;</button>
+      </dialog>
+
+      <script is:inline defer src="/assets/js/lightbox.js"></script>
+    </>
+  )}
 
 </Base>
