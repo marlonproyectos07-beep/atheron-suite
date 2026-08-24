@@ -211,9 +211,35 @@
         </div>
 
         <div class="bloque-doble__media">
-          <div class="placeholder placeholder--alto">
-            Foto principal pendiente<br>Fachada o sala
-          </div>
+          <!-- Foto real de la sala, aprobada por Marlon. Se sirve en tres
+               anchos y en tres formatos: el navegador escoge el mas ligero
+               que entienda y el tamano que le hace falta. En celular baja
+               16 KB en AVIF; el JPG queda de respaldo universal.
+               width y height van escritos para que el hueco este reservado
+               antes de descargarla: la pagina no da ningun salto (CLS 0).
+               Queda por debajo del primer pantallazo -a 1669 px en celular
+               y 925 px en escritorio-, asi que va con lazy: el LCP de esta
+               ficha es el texto del hero y adelantar la foto solo le
+               robaria ancho de banda. -->
+          <picture>
+            <source type="image/avif"
+                    sizes="(min-width: 900px) 540px, calc(100vw - 3rem)"
+                    srcset="../assets/img/hospedajes/la-magia-de-zipaquira-principal-400.avif 400w,
+                            ../assets/img/hospedajes/la-magia-de-zipaquira-principal-600.avif 600w,
+                            ../assets/img/hospedajes/la-magia-de-zipaquira-principal-700.avif 700w,
+                            ../assets/img/hospedajes/la-magia-de-zipaquira-principal-900.avif 900w">
+            <source type="image/webp"
+                    sizes="(min-width: 900px) 540px, calc(100vw - 3rem)"
+                    srcset="../assets/img/hospedajes/la-magia-de-zipaquira-principal-400.webp 400w,
+                            ../assets/img/hospedajes/la-magia-de-zipaquira-principal-600.webp 600w,
+                            ../assets/img/hospedajes/la-magia-de-zipaquira-principal-700.webp 700w,
+                            ../assets/img/hospedajes/la-magia-de-zipaquira-principal-900.webp 900w">
+            <img class="foto"
+                 src="../assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg"
+                 width="900" height="675"
+                 alt="Sala del Hotel Atheron Suite con sofa cama, escritorio, televisor sobre pared de madera, barra con taburetes y ventanal con vista a Zipaquira"
+                 loading="lazy" decoding="async">
+          </picture>
         </div>
 
       </div>
