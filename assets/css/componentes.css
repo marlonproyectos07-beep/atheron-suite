@@ -496,3 +496,32 @@
   font-size: .8rem;
   font-weight: 700;
 }
+
+/* ------------------------------------------------------------
+   FOTOS REALES
+   Mismas proporciones que .placeholder, para que al sustituir el
+   rectangulo rayado por una foto no se mueva nada del diseno.
+   object-fit: cover recorta la foto para llenar el hueco sin
+   deformarla, pase lo que pase con sus medidas originales.
+   ------------------------------------------------------------ */
+.foto {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radio-md);
+  background: var(--color-gris-100);
+}
+
+.foto--alto      { aspect-ratio: 3 / 4; }
+.foto--ancho     { aspect-ratio: 16 / 9; }
+.foto--cuadrado  { aspect-ratio: 1 / 1; }
+
+/* Dentro de una tarjeta la foto va a sangre, sin esquinas redondeadas */
+.tarjeta__media .foto { border-radius: 0; }
+
+@media (min-width: 800px) {
+  /* La primera foto de la galeria ocupa el doble: mismo mosaico
+     que ya hacia el rectangulo de "foto pendiente". */
+  .galeria > *:first-child .foto { aspect-ratio: 1 / 1; height: 100%; }
+}
