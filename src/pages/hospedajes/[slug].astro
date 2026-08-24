@@ -58,6 +58,10 @@ const ruta = `/hospedajes/${ficha.id}`;
    ------------------------------------------------------------ */
 const hayHabitaciones = d.habitaciones.some((h) => !h.pendiente);
 const hayGaleria = d.galeria.length > 0;
+/* Coordenadas ya listas para meter en una direccion. Vacio si la ficha
+   no las tiene: entonces no salen los botones de "como llegar". */
+const coordenadas =
+  d.latitud != null && d.longitud != null ? `${d.latitud}%2C${d.longitud}` : '';
 const experiencias = d.experiencias.filter((e) => !e.pendiente);
 
 const enlacesMovil = menuFichaMovil.filter((e) => {
@@ -372,12 +376,39 @@ function dato(valor, singular, plural) {
                 : ''
             }`}
             loading="lazy"></iframe>
+          {/* Navegacion directa desde el celular. Los tres enlaces llevan
+               las coordenadas exactas, no la direccion escrita: asi el
+               telefono va al portal y no a lo que el buscador entienda de
+               "Cra. 9 #10-32".
+
+               Son enlaces https normales, no esquemas propios de cada app
+               (nada de "waze://" ni "comgooglemaps://"). Android e iOS los
+               reconocen como enlaces de esas apps y las abren si estan
+               instaladas; si no lo estan, se abre la version web. Un
+               esquema propio, en cambio, deja al visitante con un error
+               cuando no tiene la app.
+
+               Salen del mismo par de coordenadas que alimenta "geo" y el
+               marcador del mapa, asi que los tres no pueden desalinearse. */}
+          {coordenadas && (
+            <nav class="botones-mapa" aria-label={`Como llegar al ${d.nombre}`}>
+              <a class="boton boton--primario" target="_blank" rel="noopener"
+                 href={`https://www.google.com/maps/search/?api=1&query=${coordenadas}`}
+              >Abrir en Google Maps</a>
+              <a class="boton boton--contorno" target="_blank" rel="noopener"
+                 href={`https://waze.com/ul?ll=${coordenadas}&navigate=yes`}
+              >Abrir en Waze</a>
+              <a class="boton boton--contorno" target="_blank" rel="noopener"
+                 href={`https://www.google.com/maps/dir/?api=1&destination=${coordenadas}&travelmode=walking`}
+              >Como llegar caminando</a>
+            </nav>
+          )}
           {d.enlaceMapa && (
             <p class="campo__ayuda" style="margin-top: var(--esp-2);">
+              {d.calle && <>{d.calle}, Zipaquira, Cundinamarca, Colombia &middot; </>}
               <a href={d.enlaceMapa} target="_blank" rel="noopener">
-                Ver {d.nombre} en Google Maps
+                ver la ficha en Google Maps
               </a>
-              {d.calle && <> &middot; {d.calle}, Zipaquira, Cundinamarca, Colombia</>}
             </p>
           )}
           {d.mapaNota && (
