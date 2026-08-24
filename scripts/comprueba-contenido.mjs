@@ -133,13 +133,13 @@ for (const ruta of archivosMarkdown(CARPETA)) {
    revisa cada ficha con "publicado: true" y comprueba que tenga
    lo minimo para defenderse sola delante de un cliente.
 
-   Por que hoy solo AVISA y no detiene:
-   La Magia de Zipaquira todavia no cumple (faltan precio y datos
-   de habitaciones, que el usuario entregara). Cuando la lista de
-   abajo salga vacia, pon MINIMO_BLOQUEA en true y a partir de ahi
-   ninguna ficha incompleta podra publicarse por descuido.
+   ACTIVADO el 23 de agosto de 2026. La Magia de Zipaquira ya cumple
+   los siete requisitos -llegaron el precio y los datos de la Suite
+   301-, asi que el aviso salia vacio y esto paso de avisar a detener.
+   Desde ahora, encender "publicado" en una ficha incompleta detiene la
+   publicacion en vez de sacarla a medias a la calle.
    ============================================================ */
-const MINIMO_BLOQUEA = false;
+const MINIMO_BLOQUEA = true;
 
 /* Lee un campo de primer nivel del frontmatter. */
 function valorDe(frontmatter, campo) {

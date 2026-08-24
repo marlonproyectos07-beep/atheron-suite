@@ -117,6 +117,17 @@ fichaNegocio.parentOrganization = {
   name: 'Atheron Suite',
   url: 'https://hotelesatheron.com/',
 };
+/* Los datos de una habitacion admiten un numero ("3") o un texto entero
+   ("1 cama doble con cama nido debajo, 1 camarote y 1 sofa cama"). Antes la
+   plantilla pegaba la palabra siempre, y salia "1 banos" o "...sofa cama
+   camas". Ahora solo la anade si el propio valor no la dice ya. */
+function dato(valor, singular, plural) {
+  const v = String(valor ?? "").trim();
+  if (!v) return "";
+  if (v.toLowerCase().includes(singular)) return v;
+  return v === "1" ? v + " " + singular : v + " " + plural;
+}
+
 ---
 
 <Base
@@ -212,9 +223,9 @@ fichaNegocio.parentOrganization = {
               <div>
                 <h3><Marca texto={h.nombre} pendiente={h.pendiente} /></h3>
                 <div class="habitacion__datos">
-                  <span class="habitacion__dato"><Marca texto={h.huespedes} pendiente={h.pendiente} /> huespedes</span>
-                  <span class="habitacion__dato"><Marca texto={h.camas} pendiente={h.pendiente} /> camas</span>
-                  <span class="habitacion__dato"><Marca texto={h.banos} pendiente={h.pendiente} /> banos</span>
+                  <span class="habitacion__dato"><Marca texto={dato(h.huespedes, "huesped", "huespedes")} pendiente={h.pendiente} /></span>
+                  <span class="habitacion__dato"><Marca texto={dato(h.camas, "cama", "camas")} pendiente={h.pendiente} /></span>
+                  <span class="habitacion__dato"><Marca texto={dato(h.banos, "bano", "banos")} pendiente={h.pendiente} /></span>
                 </div>
                 <p class="texto-suave"><Marca texto={h.descripcion} pendiente={h.pendiente} /></p>
                 <div class="tarjeta__pie">

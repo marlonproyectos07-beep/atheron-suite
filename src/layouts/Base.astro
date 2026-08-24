@@ -1,4 +1,24 @@
 ---
+import fs from 'node:fs';
+
+/* ============================================================
+     ESTILOS INCRUSTADOS  (rendimiento)
+     Las tres hojas se leen aqui, al construir, y viajan dentro
+     del HTML. Antes eran tres peticiones que BLOQUEABAN el
+     pintado: hasta que las tres no llegaban, el visitante veia
+     una pagina en blanco. Lighthouse lo medio en unos 2 segundos
+     en movil con red lenta.
+     Los archivos siguen existiendo en public/assets/css/ y se
+     editan alli como siempre: aqui solo se copian, sin comentarios
+     y sin sangrado, que no le sirven de nada al navegador.
+     ============================================================ */
+const estilos = ['base', 'componentes', 'paginas']
+  .map((hoja) => fs.readFileSync('public/assets/css/' + hoja + '.css', 'utf8'))
+  .join('\n')
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .replace(/\s+/g, ' ')
+  .trim();
+
 /* ============================================================
    BASE.ASTRO — el <head> de TODO el sitio en un solo archivo
 
@@ -108,13 +128,22 @@ const urlCanonica = new URL(ruta, Astro.site).href;
   {/* Tipografias (necesitan internet; si no cargan, el sitio usa las de respaldo) */}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  {/* La hoja de fuentes se pide sin bloquear el pintado: entra como
+       hoja de impresion -que el navegador no espera- y en cuanto llega
+       se activa para pantalla. El texto se ve desde el primer momento
+       con la tipografia de respaldo y luego cambia. Sin esto, Google
+       Fonts retrasaba el primer pintado unos 900 ms en movil. */}
+  <link rel="stylesheet" media="print" onload="this.media='all'; this.onload=null"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
+  <noscript>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
+  </noscript>
 
   {/* Nuestras hojas de estilo, siempre en este orden:
-       base (variables) -> componentes -> paginas */}
-  <link rel="stylesheet" href="/assets/css/base.css">
-  <link rel="stylesheet" href="/assets/css/componentes.css">
-  <link rel="stylesheet" href="/assets/css/paginas.css">
+       base (variables) -> componentes -> paginas.
+       Van incrustadas: ver el comentario de arriba del todo. */}
+  <style is:inline set:html={estilos}></style>
 
   {/* ============================================================
        DATOS ESTRUCTURADOS (JSON-LD)
@@ -148,7 +177,7 @@ const urlCanonica = new URL(ruta, Astro.site).href;
        ni le cambie el nombre. El archivo sigue siendo el mismo de
        siempre en /assets/js/main.js: numero de WhatsApp, codigos
        promocionales, menu movil y animaciones. */}
-  <script is:inline src="/assets/js/main.js"></script>
+  <script is:inline defer src="/assets/js/main.js"></script>
 
 </body>
 </html>

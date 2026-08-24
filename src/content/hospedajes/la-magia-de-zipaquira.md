@@ -15,21 +15,7 @@ fotoTarjeta: /assets/img/hospedajes/la-magia-de-zipaquira-sala.jpg
 fotoTarjetaAlt: Sala principal de La Magia de Zipaquira con televisor y barra
 fotoPrincipal: /assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg
 fotoPrincipalAlt: Sala de La Magia de Zipaquira con sofa, televisor, barra alta y ventana con vista a la ciudad
-galeria:
-  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-principal.jpg
-    alt: Sala de la Suite 301 con sofa, escritorio, televisor y ventanal con vista a las montanas de Zipaquira
-  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg
-    alt: Habitacion de la Suite 301 con cama amplia, camarote de dos camas y ropa de cama azul y blanca
-  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-sala.jpg
-    alt: Zona social de la Suite 301 con televisor, escritorio de trabajo y barra alta con taburetes
-  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-cocina.jpg
-    alt: Cocina equipada de la Suite 301 con barra, taburetes altos y nevera
-  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-bano.jpg
-    alt: Bano privado de la Suite 301 con ducha de vidrio, sanitario y lavamanos
-  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-vista.jpg
-    alt: Vista panoramica a Zipaquira y sus montanas desde el ventanal de la Suite 301
-  - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-entrada.jpg
-    alt: Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera
+galeria: []
 datos:
   - numero: 1,4 km
     texto: A la Catedral de Sal
@@ -44,6 +30,10 @@ tituloDescripcion: Apartamentos con cocina, a un paseo del centro historico
 tituloDescripcionPendiente: false
 caracteristicas:
   - texto: Wifi gratis en toda la propiedad
+    pendiente: false
+  - texto: 'Control por voz con Alexa: luces, televisor y musica'
+    pendiente: false
+  - texto: Entrada con clave digital, sin llaves
     pendiente: false
   - texto: Netflix incluido
     pendiente: false
@@ -61,20 +51,39 @@ listadoSector: Cra. 9, centro
 listadoSegundoDato: 1,4 km a la Catedral de Sal
 listadoSegundoDatoSufijo: ''
 resumen: Apartamentos con cocina equipada, wifi y Netflix, a 16 minutos caminando de la Catedral de Sal.
-precio: $ ---
-precioPendiente: true
-notaHabitaciones: ''
+precio: Desde $ 150.000
+precioPendiente: false
+notaHabitaciones: 'Hasta 7 huespedes con las camas fijas. Para grupos de 8 a 10 anadimos camas adicionales: escribenos y lo coordinamos directamente.'
 habitaciones:
-  - nombre: Nombre de la habitacion 1
-    huespedes: N
-    camas: N
-    banos: N
-    descripcion: Descripcion pendiente.
-    precio: $ ---
-    pendiente: true
+  - nombre: Suite 301
+    huespedes: Hasta 7
+    camas: 1 cama doble con cama nido debajo, 1 camarote y 1 sofa cama
+    banos: '1'
+    descripcion: >-
+      Suite amplia y elegante, automatizada con Alexa: enciendes luces,
+      televisor y musica con la voz. Se entra por puerta inteligente con clave
+      digital, y la barra es el punto de reunion. A una cuadra tienes
+      supermercados, droguerias, panaderias y restaurantes, y en quince minutos
+      caminando estas en el centro historico y la Catedral de Sal.
+    precio: Desde $ 150.000
+    pendiente: false
     foto: /assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg
-    fotoAlt: Habitacion de la Suite 301 con cama amplia, camarote de dos camas y ropa de cama azul y blanca
-    galeria: []
+    fotoAlt: Habitacion de la Suite 301 con cama doble, camarote de dos camas y ropa de cama azul y blanca
+    galeria:
+      - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-principal.jpg
+        alt: Sala de la Suite 301 con sofa, escritorio, televisor y ventanal con vista a las montanas de Zipaquira
+      - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg
+        alt: Habitacion de la Suite 301 con cama doble, camarote de dos camas y ropa de cama azul y blanca
+      - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-sala.jpg
+        alt: Zona social de la Suite 301 con televisor, escritorio de trabajo y barra alta con taburetes
+      - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-cocina.jpg
+        alt: Cocina equipada de la Suite 301 con barra, taburetes altos y nevera
+      - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-bano.jpg
+        alt: Bano privado de la Suite 301 con ducha de vidrio, sanitario y lavamanos
+      - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-vista.jpg
+        alt: Vista panoramica a Zipaquira y sus montanas desde el ventanal de la Suite 301
+      - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-entrada.jpg
+        alt: Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera
 descripcionZona: En el centro de Zipaquira, a distancia caminable de la Catedral de Sal y de la plaza principal.
 descripcionZonaPendiente: false
 distancias:
