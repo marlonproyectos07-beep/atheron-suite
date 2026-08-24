@@ -43,6 +43,8 @@ para que Marlon edite sin tocar código.
    prioridad en móvil. Marlon va a pagar publicidad. Después de cada tanda de
    contenido nuevo hay que **volver a medir**.
 8. **Borrar, mover o sobrescribir archivos requiere autorización.** Leer, no.
+9. **Todas las respuestas al usuario deben ser en español, salvo código o
+   términos técnicos que deban conservarse en inglés.**
 
 ## Cómo se mide el rendimiento
 
