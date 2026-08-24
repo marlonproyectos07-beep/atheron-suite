@@ -25,9 +25,25 @@
   <meta property="og:description" content="Hospedaje en Zipaquira a 16 minutos a pie de la Catedral de Sal. Wifi, Netflix, cocina y parqueadero.">
   <meta name="twitter:card" content="summary_large_image">
 
+  <!-- Iconos de pestana y de pantalla de inicio, del logo oficial.
+       Declararlos evita ademas la peticion a /favicon.ico que fallaba. -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/marca/atheron-icono-32.png">
+  <link rel="apple-touch-icon" href="../assets/img/marca/atheron-icono-180.png">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- La hoja de fuentes se pide sin bloquear el pintado: entra como
+       hoja de impresion -que el navegador no espera- y en cuanto llega
+       se activa para pantalla. El texto se ve desde el primer momento
+       con la tipografia de respaldo y luego cambia. Bloqueando, Google
+       Fonts retrasaba el primer pintado unos 780 ms en movil. Es el
+       mismo arreglo que ya lleva la rama astro. -->
+  <link rel="stylesheet" media="print" onload="this.media='all'; this.onload=null"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
+  <noscript>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
+  </noscript>
 
   <link rel="stylesheet" href="../assets/css/base.css">
   <link rel="stylesheet" href="../assets/css/componentes.css">
@@ -83,7 +99,14 @@
 
   <header class="header">
     <div class="contenedor header__interior">
-      <a class="logo" href="../index.html">Atheron <span class="logo__suite">Suite</span></a>
+      <a class="logo logo--marca" href="../index.html">
+        <picture>
+          <source srcset="../assets/img/marca/atheron-simbolo.avif" type="image/avif">
+          <img class="logo__simbolo" src="../assets/img/marca/atheron-simbolo.webp"
+               width="137" height="120" alt="" decoding="async">
+        </picture>
+        <span class="logo__nombre">Atheron <span class="logo__suite">Suite</span></span>
+      </a>
 
       <nav class="nav" aria-label="Navegacion principal">
         <ul class="nav__lista">
@@ -499,7 +522,7 @@
     <button type="button" class="visor__paso visor__paso--despues" data-visor-despues aria-label="Foto siguiente">&rsaquo;</button>
   </dialog>
 
-  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/main.js" defer></script>
   <script src="../assets/js/lightbox.js" defer></script>
 </body>
 </html>
