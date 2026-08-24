@@ -103,7 +103,7 @@ if (d.nombreAnterior) fichaNegocio.alternateName = d.nombreAnterior;
    esta el hospedaje. */
 if (d.enlaceMapa) fichaNegocio.hasMap = d.enlaceMapa;
 
-if (d.latitud !== undefined && d.longitud !== undefined) {
+if (d.latitud != null && d.longitud != null) {
   fichaNegocio.geo = {
     '@type': 'GeoCoordinates',
     latitude: d.latitud,
@@ -359,10 +359,18 @@ function dato(valor, singular, plural) {
         </div>
 
         <div class="bloque-doble__media">
+          {/* Si la ficha tiene coordenadas, el recuadro ademas planta el
+               marcador en el portal. Salen del mismo par que alimenta "geo"
+               en el JSON-LD, asi que el mapa y lo que lee Google no pueden
+               acabar diciendo cosas distintas. */}
           <iframe
             class="mapa"
             title={d.mapaTitulo}
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=${d.mapaBbox}&layer=mapnik`}
+            src={`https://www.openstreetmap.org/export/embed.html?bbox=${d.mapaBbox}&layer=mapnik${
+              d.latitud != null && d.longitud != null
+                ? `&marker=${d.latitud}%2C${d.longitud}`
+                : ''
+            }`}
             loading="lazy"></iframe>
           {d.enlaceMapa && (
             <p class="campo__ayuda" style="margin-top: var(--esp-2);">

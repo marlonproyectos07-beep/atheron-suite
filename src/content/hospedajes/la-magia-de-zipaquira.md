@@ -107,8 +107,8 @@ horarios:
     valor: hasta las 11:00
     pendiente: false
 direccionPublica: true
-mapaBbox: -74.01%2C5.01%2C-73.99%2C5.03
-mapaTitulo: Mapa del centro de Zipaquira, donde esta el Hotel Atheron Suite
+mapaBbox: -74.002874%2C5.026163%2C-73.997514%2C5.029363
+mapaTitulo: 'Mapa con la ubicacion del Hotel Atheron Suite en la Cra. 9 #10-32 de Zipaquira'
 enlaceMapa: 'https://maps.app.goo.gl/v8SN7csVkdZiFF9WA'
 nombreAnterior: Hospedaje La Magia de Zipaquira
 mapaNota: ''
@@ -128,8 +128,8 @@ datosContacto:
   - 'Cra. 9 #10-32, Zipaquira, Cundinamarca'
   - Entrada 15:00 · Salida 11:00
 calle: 'Cra. 9 #10-32'
-latitud: null
-longitud: null
+latitud: 5.027763
+longitud: -74.000194
 checkin: 15:00
 checkout: 11:00
 mascotas: false
