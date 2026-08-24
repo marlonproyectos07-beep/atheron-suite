@@ -48,10 +48,27 @@ function leerCodigoPromocional() {
 
     // Si viene en la direccion, lo guardamos para el resto de la visita.
     // Asi el visitante puede navegar por el sitio sin perderlo.
-    if (desdeUrl) {
-      sessionStorage.setItem("codigoAtheron", desdeUrl.trim().toUpperCase());
+    //
+    // SOLO letras, numeros, guion y guion bajo, hasta 50 caracteres.
+    // El codigo llega desde la direccion, o sea desde fuera, y despues
+    // se pinta en pantalla. Sin este filtro, un enlace preparado con
+    // malicia podria colar etiquetas en la pagina de quien lo abra.
+    if (desdeUrl !== null) {
+      desdeUrl = desdeUrl.trim().toUpperCase();
+      if (/^[A-Z0-9_-]{1,50}$/.test(desdeUrl)) {
+        sessionStorage.setItem("codigoAtheron", desdeUrl);
+      } else {
+        sessionStorage.removeItem("codigoAtheron");
+      }
     }
     codigo = sessionStorage.getItem("codigoAtheron");
+
+    // Lo guardado en visitas anteriores tambien se revisa: pudo quedar
+    // de una version sin este filtro.
+    if (codigo && !/^[A-Z0-9_-]{1,50}$/.test(codigo)) {
+      sessionStorage.removeItem("codigoAtheron");
+      codigo = null;
+    }
   } catch (error) {
     // Algunos navegadores bloquean sessionStorage en modo privado.
     // No pasa nada: el sitio sigue funcionando sin codigo.
@@ -141,9 +158,15 @@ document.addEventListener("DOMContentLoaded", function () {
     var banda = document.createElement("div");
     banda.className = "banda-codigo";
     banda.setAttribute("role", "status");
-    banda.innerHTML =
-      '<strong>Codigo ' + codigoPromo + ' activo</strong> ' +
-      '<span>Se aplicara al cotizar por WhatsApp.</span>';
+    /* Se arma pieza a pieza en vez de con innerHTML: asi el codigo
+       entra como TEXTO y nunca como etiquetas, pase lo que pase. */
+    var tituloCodigo = document.createElement("strong");
+    var detalleCodigo = document.createElement("span");
+    tituloCodigo.textContent = "Codigo " + codigoPromo + " activo";
+    detalleCodigo.textContent = "Se aplicara al cotizar por WhatsApp.";
+    banda.appendChild(tituloCodigo);
+    banda.appendChild(document.createTextNode(" "));
+    banda.appendChild(detalleCodigo);
     document.body.insertBefore(banda, document.body.firstChild);
   }
 
