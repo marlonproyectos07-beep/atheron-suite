@@ -52,13 +52,11 @@
   <!-- ============================================================
        DATOS ESTRUCTURADOS
        Solo con datos confirmados y visibles en la pagina.
-       Falta "geo" (latitud y longitud) a proposito: no los tenemos
-       confirmados. El enlace de Google Maps que paso Marlon no se
-       puede abrir desde el entorno de trabajo, asi que las
-       coordenadas no se han podido verificar. Marcar unas
-       aproximadas seria peor que no marcar ninguna: Google trata
-       una ubicacion equivocada como dato erroneo del negocio.
-       Se anaden en cuanto Marlon las lea en Google Maps.
+       "geo" lleva las coordenadas que Marlon leyo en la ficha de
+       Google Maps del hospedaje y confirmo. Son las mismas que
+       centran el mapa de mas abajo: si alguna vez hay que
+       cambiarlas, se cambian en los dos sitios a la vez o el mapa
+       y lo que lee Google dejan de decir lo mismo.
        ============================================================ -->
   <script type="application/ld+json">
   {
@@ -77,6 +75,11 @@
       "addressCountry": "CO"
     },
     "hasMap": "https://maps.app.goo.gl/v8SN7csVkdZiFF9WA",
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 5.027763,
+      "longitude": -74.000194
+    },
     "petsAllowed": false,
     "checkinTime": "15:00",
     "checkoutTime": "11:00",
@@ -397,17 +400,19 @@
         </div>
 
         <div class="bloque-doble__media">
-          <!-- El recuadro de OpenStreetMap encuadra el centro de Zipaquira,
-               no marca el portal: para centrarlo en el edificio hacen falta
-               las coordenadas exactas, que todavia no tenemos. Por eso el
-               titulo dice lo que de verdad muestra, y debajo va el enlace a
-               la ficha de Google Maps del hospedaje, que si lleva al punto
-               exacto. En cuanto tengamos latitud y longitud, este recuadro
-               se centra y se le pone un marcador. -->
+          <!-- Mapa centrado en el portal, con marcador. Las coordenadas
+               -5.027763, -74.000194- las leyo Marlon en la ficha de Google
+               Maps del hospedaje y las confirmo.
+               El recuadro abarca unos 594 x 356 m: se ve la manzana y las
+               calles de alrededor, que es lo que le sirve a alguien que
+               esta buscando la entrada. La proporcion del bbox sigue la del
+               recuadro en escritorio (534x320) para que el mapa no salga
+               estirado; el ancho en grados va dividido por el coseno de la
+               latitud, que es lo que corrige la deformacion de Mercator. -->
           <iframe
             class="mapa"
-            title="Mapa del centro de Zipaquira, donde esta el Hotel Atheron Suite"
-            src="https://www.openstreetmap.org/export/embed.html?bbox=-74.01%2C5.01%2C-73.99%2C5.03&layer=mapnik"
+            title="Mapa con la ubicacion del Hotel Atheron Suite en la Cra. 9 #10-32 de Zipaquira"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=-74.002874%2C5.026163%2C-73.997514%2C5.029363&layer=mapnik&marker=5.027763%2C-74.000194"
             loading="lazy"></iframe>
           <p class="campo__ayuda" style="margin-top: var(--esp-2);">
             <a href="https://maps.app.goo.gl/v8SN7csVkdZiFF9WA" target="_blank" rel="noopener">
