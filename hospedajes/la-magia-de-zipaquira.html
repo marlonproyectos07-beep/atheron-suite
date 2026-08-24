@@ -414,11 +414,28 @@
             title="Mapa con la ubicacion del Hotel Atheron Suite en la Cra. 9 #10-32 de Zipaquira"
             src="https://www.openstreetmap.org/export/embed.html?bbox=-74.002874%2C5.026163%2C-73.997514%2C5.029363&layer=mapnik&marker=5.027763%2C-74.000194"
             loading="lazy"></iframe>
+          <!-- Navegacion directa desde el celular. Los tres enlaces llevan
+               las coordenadas exactas, no la direccion escrita: asi el
+               telefono va al portal y no a lo que el buscador entienda de
+               "Cra. 9 #10-32".
+
+               Son enlaces https normales, no esquemas propios de cada app
+               (nada de "waze://" ni "comgooglemaps://"). Android e iOS los
+               reconocen como enlaces de esas apps y las abren si estan
+               instaladas; si no lo estan, se abre la version web. Un
+               esquema propio, en cambio, deja al visitante con un error
+               cuando no tiene la app. -->
+          <nav class="botones-mapa" aria-label="Como llegar al Hotel Atheron Suite">
+            <a class="boton boton--primario" href="https://www.google.com/maps/search/?api=1&amp;query=5.027763%2C-74.000194"
+               target="_blank" rel="noopener">Abrir en Google Maps</a>
+            <a class="boton boton--contorno" href="https://waze.com/ul?ll=5.027763%2C-74.000194&amp;navigate=yes"
+               target="_blank" rel="noopener">Abrir en Waze</a>
+            <a class="boton boton--contorno" href="https://www.google.com/maps/dir/?api=1&amp;destination=5.027763%2C-74.000194&amp;travelmode=walking"
+               target="_blank" rel="noopener">Como llegar caminando</a>
+          </nav>
           <p class="campo__ayuda" style="margin-top: var(--esp-2);">
-            <a href="https://maps.app.goo.gl/v8SN7csVkdZiFF9WA" target="_blank" rel="noopener">
-              Ver el Hotel Atheron Suite en Google Maps
-            </a>
-            &middot; Cra. 9 #10-32, Zipaquira, Cundinamarca, Colombia
+            Cra. 9 #10-32, Zipaquira, Cundinamarca, Colombia
+            &middot; <a href="https://maps.app.goo.gl/v8SN7csVkdZiFF9WA" target="_blank" rel="noopener">ver la ficha en Google Maps</a>
           </p>
         </div>
 

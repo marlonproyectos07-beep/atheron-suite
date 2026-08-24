@@ -230,6 +230,29 @@
 .grupo-botones--centrado { justify-content: center; }
 
 /* ------------------------------------------------------------
+   BOTONES DE "COMO LLEGAR"
+   Van debajo del mapa de la ficha. En celular se apilan a todo lo
+   ancho, que es donde de verdad se usan: el pulgar acierta sin
+   apuntar. Desde 32rem se reparten en fila y solo ocupan lo que
+   necesitan.
+
+   La altura la pone .boton (unos 46 px), por encima de los 44 que
+   se consideran el minimo comodo para tocar con el dedo.
+   ------------------------------------------------------------ */
+.botones-mapa {
+  display: grid;
+  gap: var(--esp-2);
+  margin-top: var(--esp-3);
+}
+@media (min-width: 32rem) {
+  .botones-mapa {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    justify-content: start;
+  }
+}
+
+/* ------------------------------------------------------------
    IMAGEN PLACEHOLDER
    Mientras no tengamos las fotos reales de los hospedajes,
    usamos este bloque que deja CLARO que el contenido es temporal.
