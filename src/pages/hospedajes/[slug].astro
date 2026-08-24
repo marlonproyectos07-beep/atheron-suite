@@ -196,7 +196,18 @@ function dato(valor, singular, plural) {
         </div>
 
         <div class="bloque-doble__media">
-          <Foto src={d.fotoPrincipal} alt={d.fotoPrincipalAlt} forma="alto">Foto principal pendiente</Foto>
+          {/* La foto principal va con las mismas variantes que en main:
+               AVIF y WebP en cuatro anchos, y el JPEG de respaldo. Se
+               quita forma="alto" porque la foto aprobada es 4:3 y en 3:4
+               habria que recortarla. */}
+          <Foto
+            src={d.fotoPrincipal}
+            alt={d.fotoPrincipalAlt}
+            anchos={[400, 600, 700, 900]}
+            medidas="(min-width: 900px) 540px, calc(100vw - 3rem)"
+            ancho={900}
+            alto={675}
+          >Foto principal pendiente</Foto>
         </div>
 
       </div>

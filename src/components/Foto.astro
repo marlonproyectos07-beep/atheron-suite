@@ -22,9 +22,31 @@ interface Props {
   alt?: string;
   /** Forma: "alto", "ancho", "cuadrado" o nada para 4/3. */
   forma?: 'alto' | 'ancho' | 'cuadrado';
+  /* --- Version responsive (opcional) ---
+     Si se pasan "anchos", la foto sale dentro de un <picture> con
+     AVIF y WebP en esos tamanos, y el src queda de respaldo. Los
+     archivos tienen que existir con el sufijo del ancho, tal como
+     los deja el mismo proceso que se uso en main:
+       la-magia-de-zipaquira-principal-700.avif
+     Sin "anchos", este componente se comporta exactamente igual
+     que antes: un <img> y ya. */
+  anchos?: number[];
+  /** Que espacio ocupa la foto, para que el navegador elija tamano. */
+  medidas?: string;
+  /** Medidas reales del archivo, para reservar el hueco (evita CLS). */
+  ancho?: number;
+  alto?: number;
 }
 
-const { src, alt, forma } = Astro.props;
+const { src, alt, forma, anchos, medidas, ancho, alto } = Astro.props;
+
+/* Las variantes se nombran a partir del propio src: se le quita la
+   extension y se le pega "-<ancho>.<formato>". Asi no hay una segunda
+   lista de rutas que se pueda desincronizar con los archivos. */
+const sinExtension = src ? src.replace(/\.[^.]+$/, '') : '';
+const juego = (formato: string) =>
+  (anchos ?? []).map((w) => `${sinExtension}-${w}.${formato} ${w}w`).join(', ');
+const hayVariantes = Boolean(src && anchos && anchos.length);
 
 const sufijo = forma ? `--${forma}` : '';
 const claseFoto = `foto${sufijo ? ` foto${sufijo}` : ''}`;
@@ -38,7 +60,21 @@ if (src && !alt) {
 }
 ---
 
-{src ? (
+{src && hayVariantes ? (
+  <picture>
+    <source type="image/avif" sizes={medidas} srcset={juego('avif')} />
+    <source type="image/webp" sizes={medidas} srcset={juego('webp')} />
+    <img
+      class={claseFoto}
+      src={src}
+      alt={alt ?? ''}
+      width={ancho}
+      height={alto}
+      loading="lazy"
+      decoding="async"
+    />
+  </picture>
+) : src ? (
   <img
     class={claseFoto}
     src={src}

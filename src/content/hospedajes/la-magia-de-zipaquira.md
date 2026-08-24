@@ -14,7 +14,7 @@ presentacionPendiente: false
 fotoTarjeta: /assets/img/hospedajes/la-magia-de-zipaquira-sala.jpg
 fotoTarjetaAlt: Sala principal del Hotel Atheron Suite con televisor y barra
 fotoPrincipal: /assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg
-fotoPrincipalAlt: Sala del Hotel Atheron Suite con sofa, televisor, barra alta y ventana con vista a la ciudad
+fotoPrincipalAlt: Sala del Hotel Atheron Suite con sofa cama, escritorio, televisor sobre pared de madera, barra con taburetes y ventanal con vista a Zipaquira
 galeria: []
 datos:
   - numero: 1,4 km
