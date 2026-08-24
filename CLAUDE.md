@@ -110,3 +110,20 @@ ATHERON_IA/00_CONTROL/ESTADO_ORDENES.txt   <- índice del estado de cada orden
 
 Distinguir siempre **HECHO / VERIFICADO / PENDIENTE / BLOQUEADO / HIPÓTESIS**, y
 no afirmar que algo está publicado sin comprobarlo contra el sitio real.
+
+Respuesta breve en español. **Al terminar CADA tarea**, cerrar siempre con un
+único bloque de código —y solo uno— titulado `REPORTE PARA CHATGPT`, de diez
+líneas como máximo y sin repetir lo ya explicado. Va en bloque de código para
+que Marlon lo copie de una pulsación y lo pegue en ChatGPT. Campos, en este
+orden y sin añadir otros:
+
+```
+REPORTE PARA CHATGPT
+- TAREA:
+- ESTADO:
+- CAMBIOS:
+- PR/RAMA:
+- PREVIEW:
+- RIESGO:
+- DECISIÓN QUE NECESITO:
+```
