@@ -63,6 +63,8 @@ interface Props {
   jsonLd?: Record<string, unknown> | null;
   /** Texto de la banda amarilla superior. null = no se muestra. */
   avisoBorrador?: string | null;
+  /** Franja temporal de prueba, por encima de todo. null = no se muestra. */
+  avisoPrueba?: string | null;
 }
 
 const {
@@ -75,6 +77,7 @@ const {
   indexable = true,
   jsonLd = null,
   avisoBorrador = null,
+  avisoPrueba = null,
 } = Astro.props;
 
 // new URL() une el dominio de astro.config.mjs con la ruta de la pagina.
@@ -165,6 +168,10 @@ const urlCanonica = new URL(ruta, Astro.site).href;
 </head>
 
 <body>
+
+  {/* Franja de prueba: va la primera, por encima incluso del aviso de
+       borrador. Es temporal y se quita borrando la prop de la pagina. */}
+  {avisoPrueba && <p class="aviso-prueba">{avisoPrueba}</p>}
 
   {avisoBorrador && <p class="aviso-borrador">{avisoBorrador}</p>}
 
