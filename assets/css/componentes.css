@@ -710,3 +710,98 @@
 @media (min-width: 700px) {
   .visor__paso { position: static; transform: none; width: 52px; height: 52px; }
 }
+
+/* ------------------------------------------------------------
+   TARJETA DE VIDEO EN LA GALERIA
+   Es un elemento mas de la misma rejilla que las fotos, al final.
+   Tiene que leerse de un vistazo como VIDEO y no como una foto mas,
+   asi que lleva un velo oscuro, un triangulo de play y su rotulo.
+
+   La miniatura es el poster del propio video, con las mismas
+   proporciones que .foto--cuadrado: la rejilla no se descuadra.
+   ------------------------------------------------------------ */
+.galeria__video {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--radio-md);
+  overflow: hidden;
+}
+.galeria__video:focus-visible {
+  outline: 3px solid var(--color-acento, #c8a34a);
+  outline-offset: 3px;
+}
+
+/* Velo: sin el, el texto blanco no se lee sobre una foto clara. */
+.galeria__video-capa {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: .5rem;
+  padding: var(--esp-2);
+  background: linear-gradient(180deg, rgba(15, 23, 42, .25), rgba(15, 23, 42, .72));
+  color: #fff;
+  text-align: center;
+}
+
+.galeria__video-play {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .92);
+}
+/* El triangulo se dibuja con bordes: ni icono, ni fuente, ni peticion. */
+.galeria__video-play::before {
+  content: "";
+  border-style: solid;
+  border-width: 9px 0 9px 15px;
+  border-color: transparent transparent transparent var(--color-noche, #0f172a);
+  margin-left: 3px;
+}
+.galeria__video:hover .galeria__video-play { background: #fff; transform: scale(1.06); }
+.galeria__video-play { transition: transform var(--transicion), background-color var(--transicion); }
+
+.galeria__video-texto {
+  font-size: .82rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+.galeria__video-duracion {
+  font-size: .72rem;
+  opacity: .85;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------
+   VISOR DE VIDEO
+   Reutiliza .visor -el fondo oscuro, el cierre, el marco- y solo
+   cambia lo propio del video.
+   ------------------------------------------------------------ */
+.visor--video[open] { grid-template-columns: 1fr; }
+
+/* La proporcion la pone la plantilla desde las medidas del archivo,
+   asi que el hueco esta reservado antes de que cargue nada. */
+.visor__marco--video { width: min(96vw, 1100px); }
+.visor__video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 78vh;
+  aspect-ratio: var(--proporcion, 16 / 9);
+  object-fit: contain;
+  background: #000;
+  border-radius: var(--radio-md);
+}
+@media (min-width: 700px) {
+  .visor__video { max-height: 82vh; }
+}
