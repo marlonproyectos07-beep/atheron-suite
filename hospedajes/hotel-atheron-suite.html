@@ -362,6 +362,25 @@
                      alt="Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera"
                      loading="lazy" decoding="async">
               </button>
+
+              <!-- Octavo elemento de la rejilla: el video. Con siete fotos en
+                   dos columnas quedaba una celda suelta en celular; esta la
+                   ocupa. No es un boton de la galeria de fotos: lleva su
+                   propia clase y abre su propio visor, asi que el lightbox de
+                   las siete fotos no se entera.
+                   El poster es un fotograma real del propio video. -->
+              <button type="button" class="galeria__video" data-abrir-video
+                      aria-label="Ver el video: Suite 301 · Experiencia inteligente: una habitacion que puedes controlar con tu voz">
+                <img class="foto foto--cuadrado"
+                     src="../assets/video/suite-301-video-poster.webp"
+                     alt="" width="960" height="1706"
+                     loading="lazy" decoding="async">
+                <span class="galeria__video-capa">
+                  <span class="galeria__video-play" aria-hidden="true"></span>
+                  <span class="galeria__video-texto">Ver experiencia inteligente</span>
+                  <span class="galeria__video-duracion">0:33</span>
+                </span>
+              </button>
             </div>
           </article>
 
@@ -580,7 +599,47 @@
     <button type="button" class="visor__paso visor__paso--despues" data-visor-despues aria-label="Foto siguiente">&rsaquo;</button>
   </dialog>
 
+
+  <!-- ==========================================================
+       VISOR DE VIDEO
+       Su propio <dialog>, aparte del de las fotos: el lightbox de
+       la galeria se queda exactamente como estaba.
+
+       preload="none" evita que el archivo se descargue al entrar en
+       la ficha: el navegador no pide un solo byte hasta que alguien
+       le da al play.
+
+       El poster va en data-poster y NO en el atributo poster. Con
+       el atributo, el navegador se baja la imagen nada mas cargar
+       la pagina -aunque el dialogo este cerrado y aunque el video
+       lleve preload="none"-, y esos 64 KB compitiendo con las hojas
+       de estilo retrasaban el pintado del texto: medido, el LCP de
+       la ficha pasaba de 1,1 a 1,8 s. Ahora lo pone el guion al
+       abrir, y para entonces la imagen ya esta en cache porque es
+       la misma miniatura de la tarjeta.
+
+       El <video> lleva sus medidas escritas y el marco su
+       proporcion, asi que abrir el visor no mueve nada.
+       ========================================================== -->
+  <dialog class="visor visor--video" id="visor-video"
+          aria-label="Suite 301 · Experiencia inteligente: una habitacion que puedes controlar con tu voz">
+    <button type="button" class="visor__cerrar" data-video-cerrar aria-label="Cerrar el video">&times;</button>
+    <figure class="visor__marco visor__marco--video" style="--proporcion: 960 / 1706">
+      <video class="visor__video" id="video-suite" controls preload="none" playsinline
+             data-poster="../assets/video/suite-301-video-poster.webp"
+             width="960" height="1706">
+        <source src="../assets/video/suite-301-experiencia-inteligente.mp4" type="video/mp4">
+        <p>
+          Tu navegador no puede reproducir el video.
+          <a href="../assets/video/suite-301-experiencia-inteligente.mp4">Abrelo en una pestana aparte</a>.
+        </p>
+      </video>
+      <figcaption class="visor__pie">Suite 301 · Experiencia inteligente</figcaption>
+    </figure>
+  </dialog>
+
   <script src="../assets/js/main.js" defer></script>
+  <script src="../assets/js/visor-video.js" defer></script>
   <script src="../assets/js/lightbox.js" defer></script>
 </body>
 </html>
