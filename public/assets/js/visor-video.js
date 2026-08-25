@@ -12,9 +12,10 @@
    QUE NO HACE, Y ES DELIBERADO:
    - No reproduce solo al cargar la pagina. Nadie quiere que un video
      arranque sin pedirlo, y menos con datos moviles.
-   - No descarga el video de entrada: eso lo garantiza preload="none"
-     en el propio <video>. Lo unico que baja al entrar es el poster,
-     que ademas ya se usa como miniatura de la tarjeta.
+   - No descarga nada de entrada: ni el video -eso lo garantiza
+     preload="none"- ni el poster, que va en data-poster y se asigna
+     al abrir. Con el atributo poster puesto en el HTML, el navegador
+     se baja esa imagen nada mas cargar la pagina.
    - No trae ninguna libreria. Son los controles nativos.
 
    Si este archivo no llega o falla, el boton no hace nada y la ficha
@@ -31,6 +32,12 @@
   var cerrar = visor.querySelector('[data-video-cerrar]');
 
   boton.addEventListener('click', function () {
+    /* El poster se pone aqui, no en el HTML. Con el atributo poster
+       el navegador se baja la imagen al cargar la pagina, aunque el
+       dialogo este cerrado, y compite con las hojas de estilo. Para
+       cuando alguien pulsa, la imagen ya esta en cache: es la misma
+       miniatura de la tarjeta. */
+    if (video && !video.poster && video.dataset.poster) video.poster = video.dataset.poster;
     visor.showModal();
     /* El play va despues de abrir, y solo si el navegador lo permite
        sin gesto adicional. Si lo rechaza -algunos moviles lo hacen-

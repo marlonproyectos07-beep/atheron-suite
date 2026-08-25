@@ -591,11 +591,17 @@ function dato(valor, singular, plural) {
        Su propio <dialog>, aparte del de las fotos: asi el lightbox de
        la galeria se queda exactamente como estaba.
 
-       preload="none" es lo que evita que el archivo se descargue al
-       entrar en la ficha: el navegador no pide un solo byte hasta que
-       alguien le da al play. Lo unico que baja de entrada es el
-       poster, que ademas es la propia miniatura de la tarjeta y por
-       tanto ya estaba pedida.
+       preload="none" evita que el archivo se descargue al entrar en
+       la ficha: el navegador no pide un solo byte hasta que alguien
+       le da al play.
+
+       El poster va en data-poster y NO en el atributo poster. Con el
+       atributo, el navegador se baja la imagen nada mas cargar la
+       pagina -aunque el dialogo este cerrado y aunque el video lleve
+       preload="none"-. Medido en esta ficha: el LCP pasaba de 1,1 a
+       1,6 s. Ahora lo pone el guion al abrir, y para entonces la
+       imagen ya esta en cache porque es la misma miniatura de la
+       tarjeta.
 
        El <video> lleva sus medidas escritas y el marco su proporcion,
        asi que abrir el visor no mueve nada de la pagina. */}
@@ -611,7 +617,7 @@ function dato(valor, singular, plural) {
             controls
             preload="none"
             playsinline
-            poster={habitacionConVideo.poster}
+            data-poster={habitacionConVideo.poster}
             width={habitacionConVideo.ancho}
             height={habitacionConVideo.alto}
           >
