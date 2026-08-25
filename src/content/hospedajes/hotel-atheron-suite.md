@@ -69,6 +69,14 @@ habitaciones:
     pendiente: false
     foto: /assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg
     fotoAlt: Habitacion de la Suite 301 con cama doble, camarote de dos camas y ropa de cama azul y blanca
+    video:
+      src: /assets/video/suite-301-experiencia-inteligente.mp4
+      poster: /assets/video/suite-301-video-poster.webp
+      titulo: 'Suite 301 · Experiencia inteligente: una habitacion que puedes controlar con tu voz'
+      etiqueta: Ver experiencia inteligente
+      ancho: 960
+      alto: 1706
+      duracion: '0:33'
     galeria:
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-principal.jpg
         alt: Sala de la Suite 301 con sofa, escritorio, televisor y ventanal con vista a las montanas de Zipaquira
