@@ -133,6 +133,41 @@ const habitacion = z.object({
      abajo) se mantiene aparte, para zonas comunes, fachada y
      entorno. */
   galeria: z.array(fotoGaleria).default([]),
+
+  /* Video de la habitacion. OPCIONAL y aditivo, igual que la
+     galeria: una habitacion sin video se ve exactamente como antes,
+     sin hueco ni tarjeta vacia, y su ficha ni siquiera carga el
+     guion del visor.
+
+     Sirve para cualquier habitacion de cualquier hospedaje: la 301
+     hoy, y manana la 201, la 202 o las de otro hospedaje. Solo hay
+     que rellenar estos campos.
+
+     "ancho" y "alto" son los del archivo, y no estan de adorno: de
+     ellos sale la proporcion de la tarjeta y del visor, para que el
+     hueco este reservado antes de que cargue nada y la pagina no de
+     ningun salto.
+
+     "webm" es opcional: si esta, el navegador que lo entienda se
+     lleva el archivo mas ligero y el resto se queda con el mp4. */
+  video: z
+    .object({
+      /* Archivo principal, en mp4 (H.264 + AAC): lo reproduce todo. */
+      src: z.string(),
+      /* Alternativa mas ligera, si se genera. */
+      webm: textoOpcional,
+      /* Portada. Tiene que salir de un fotograma del propio video. */
+      poster: z.string(),
+      /* Que se ve, para el boton y para el lector de pantalla. */
+      titulo: z.string(),
+      /* Texto del boton. Si no se pone, se usa uno generico. */
+      etiqueta: textoOpcional,
+      ancho: z.number(),
+      alto: z.number(),
+      /* Duracion en texto ("1:12"), solo para mostrarla. */
+      duracion: textoOpcional,
+    })
+    .optional(),
 });
 
 const hospedajes = defineCollection({

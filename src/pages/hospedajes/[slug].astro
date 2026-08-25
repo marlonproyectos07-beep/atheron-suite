@@ -60,6 +60,10 @@ const hayHabitaciones = d.habitaciones.some((h) => !h.pendiente);
 const hayGaleria = d.galeria.length > 0;
 /* Coordenadas ya listas para meter en una direccion. Vacio si la ficha
    no las tiene: entonces no salen los botones de "como llegar". */
+/* La primera habitacion con video. Hoy solo puede haber una por ficha;
+   si algun dia hay varias, aqui se decide como se listan. */
+const habitacionConVideo = d.habitaciones.find((h) => h.video)?.video;
+
 const coordenadas =
   d.latitud != null && d.longitud != null ? `${d.latitud}%2C${d.longitud}` : '';
 const experiencias = d.experiencias.filter((e) => !e.pendiente);
@@ -266,7 +270,7 @@ function dato(valor, singular, plural) {
                    rejilla que la galeria del hospedaje: la primera foto
                    ocupa el doble. Si la habitacion no tiene fotos, este
                    bloque no existe y la tarjeta se ve igual que antes. */}
-              {h.galeria.length > 0 && (
+              {(h.galeria.length > 0 || h.video) && (
                 <div class="galeria" data-galeria style="grid-column: 1 / -1;">
                   {h.galeria.map((f, i) => (
                     <button
@@ -278,6 +282,39 @@ function dato(valor, singular, plural) {
                       <Foto src={f.imagen} alt={f.alt} forma="cuadrado" />
                     </button>
                   ))}
+
+                  {/* El video va como un elemento mas de la misma rejilla, al
+                       final. Con siete fotos en dos columnas quedaba una celda
+                       suelta en celular; esta la ocupa. No es un boton de la
+                       galeria de fotos: lleva su propia clase y abre su propio
+                       visor, asi que el lightbox de las fotos no se entera. */}
+                  {h.video && (
+                    <button
+                      type="button"
+                      class="galeria__video"
+                      data-abrir-video
+                      aria-label={`Ver el video: ${h.video.titulo}`}
+                    >
+                      <img
+                        class="foto foto--cuadrado"
+                        src={h.video.poster}
+                        alt=""
+                        width={h.video.ancho}
+                        height={h.video.alto}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <span class="galeria__video-capa">
+                        <span class="galeria__video-play" aria-hidden="true"></span>
+                        <span class="galeria__video-texto">
+                          {h.video.etiqueta ?? 'Ver experiencia inteligente'}
+                        </span>
+                        {h.video.duracion && (
+                          <span class="galeria__video-duracion">{h.video.duracion}</span>
+                        )}
+                      </span>
+                    </button>
+                  )}
                 </div>
               )}
             </article>
@@ -547,6 +584,49 @@ function dato(valor, singular, plural) {
       </dialog>
 
       <script is:inline defer src="/assets/js/lightbox.js"></script>
+    </>
+  )}
+
+  {/* ===== VISOR DE VIDEO =====
+       Su propio <dialog>, aparte del de las fotos: asi el lightbox de
+       la galeria se queda exactamente como estaba.
+
+       preload="none" es lo que evita que el archivo se descargue al
+       entrar en la ficha: el navegador no pide un solo byte hasta que
+       alguien le da al play. Lo unico que baja de entrada es el
+       poster, que ademas es la propia miniatura de la tarjeta y por
+       tanto ya estaba pedida.
+
+       El <video> lleva sus medidas escritas y el marco su proporcion,
+       asi que abrir el visor no mueve nada de la pagina. */}
+  {habitacionConVideo && (
+    <>
+      <dialog class="visor visor--video" id="visor-video" aria-label={habitacionConVideo.titulo}>
+        <button type="button" class="visor__cerrar" data-video-cerrar aria-label="Cerrar el video">&times;</button>
+        <figure class="visor__marco visor__marco--video"
+                style={`--proporcion: ${habitacionConVideo.ancho} / ${habitacionConVideo.alto}`}>
+          <video
+            class="visor__video"
+            id="video-suite"
+            controls
+            preload="none"
+            playsinline
+            poster={habitacionConVideo.poster}
+            width={habitacionConVideo.ancho}
+            height={habitacionConVideo.alto}
+          >
+            {habitacionConVideo.webm && <source src={habitacionConVideo.webm} type="video/webm" />}
+            <source src={habitacionConVideo.src} type="video/mp4" />
+            <p>
+              Tu navegador no puede reproducir el video.
+              <a href={habitacionConVideo.src}>Abrelo en una pestana aparte</a>.
+            </p>
+          </video>
+          <figcaption class="visor__pie">{habitacionConVideo.titulo}</figcaption>
+        </figure>
+      </dialog>
+
+      <script is:inline defer src="/assets/js/visor-video.js"></script>
     </>
   )}
 
