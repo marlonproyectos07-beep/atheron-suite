@@ -92,6 +92,41 @@ habitaciones:
         alt: Vista panoramica a Zipaquira y sus montanas desde el ventanal de la Suite 301
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-entrada.jpg
         alt: Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera
+  - nombre: Habitacion 302
+    huespedes: Hasta 3
+    camas: 1 cama doble y 1 sofa cama
+    banos: '1'
+    descripcion: >-
+      Habitacion 302 de Atheron Suite, comoda y funcional, con cama doble,
+      sofa cama, bano privado, ducha con agua caliente, TV con Netflix y
+      Wi-Fi. Ideal para hasta 3 huespedes.
+    precio: Precio a consultar
+    pendiente: false
+    foto: /assets/img/hospedajes/hotel-atheron-suite-302-habitacion.jpg
+    fotoAlt: Habitacion 302 con cama doble de cabecero capitone gris y sofa cama al lado
+    video:
+      src: /assets/302/Atheron_Suite_Habitacion_302_WEB.mp4
+      poster: /assets/video/habitacion-302-video-poster.webp
+      titulo: 'Habitacion 302 en video: fachada, entrada, habitacion y bano'
+      etiqueta: Ver la habitacion en video
+      ancho: 1080
+      alto: 1920
+      duracion: '0:18'
+    galeria:
+      - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-fachada.jpg
+        alt: Fachada del Hotel Atheron Suite en la Carrera 9 de Zipaquira, edificio de tres pisos con el aviso del hotel
+      - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-escalera.jpg
+        alt: Escalera de acceso a la habitacion 302, entre las puertas de la 301 y la 302
+      - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-entrada.jpg
+        alt: Puerta abierta de la habitacion 302 con la placa del numero y la cama al fondo
+      - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-habitacion.jpg
+        alt: Habitacion 302 con cama doble de cabecero capitone gris y sofa cama al lado
+      - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-tv.jpg
+        alt: Televisor de pantalla plana en la habitacion 302 y puerta abierta al bano privado
+      - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-bano.jpg
+        alt: Bano privado de la habitacion 302 con ducha de vidrio, lavamanos y sanitario
+      - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-ducha.jpg
+        alt: Ducha y lavamanos de la habitacion 302, con grifo cromado y ventana al exterior
 descripcionZona: 'En el centro de Zipaquira, a distancia caminable de la Catedral de Sal y de la plaza principal. Antes se llamaba Hospedaje La Magia de Zipaquira: es el mismo sitio, en la misma direccion.'
 descripcionZonaPendiente: false
 distancias:
