@@ -60,9 +60,14 @@ const hayHabitaciones = d.habitaciones.some((h) => !h.pendiente);
 const hayGaleria = d.galeria.length > 0;
 /* Coordenadas ya listas para meter en una direccion. Vacio si la ficha
    no las tiene: entonces no salen los botones de "como llegar". */
-/* La primera habitacion con video. Hoy solo puede haber una por ficha;
-   si algun dia hay varias, aqui se decide como se listan. */
-const habitacionConVideo = d.habitaciones.find((h) => h.video)?.video;
+/* Las habitaciones que traen video. Cada una tiene su propio visor con
+   un identificador propio -visor-video-1, visor-video-2...- y el boton
+   de su tarjeta apunta a el por nombre. El indice sale de la posicion
+   en d.habitaciones, no de la lista filtrada, para que el boton y el
+   dialogo coincidan aunque la primera habitacion no tenga video. */
+const videos = d.habitaciones
+  .map((h, i) => (h.video ? { ...h.video, id: `visor-video-${i + 1}` } : null))
+  .filter((v) => v !== null);
 
 const coordenadas =
   d.latitud != null && d.longitud != null ? `${d.latitud}%2C${d.longitud}` : '';
@@ -244,7 +249,7 @@ function dato(valor, singular, plural) {
         </div>
 
         <div class="grid aparecer">
-          {d.habitaciones.map((h) => (
+          {d.habitaciones.map((h, i) => (
             <article class="habitacion">
               <Foto src={h.foto} alt={h.fotoAlt}>Foto pendiente</Foto>
               <div>
@@ -292,7 +297,8 @@ function dato(valor, singular, plural) {
                     <button
                       type="button"
                       class="galeria__video"
-                      data-abrir-video
+                      data-abrir-video={`visor-video-${i + 1}`}
+                      aria-controls={`visor-video-${i + 1}`}
                       aria-label={`Ver el video: ${h.video.titulo}`}
                     >
                       <img
@@ -605,32 +611,34 @@ function dato(valor, singular, plural) {
 
        El <video> lleva sus medidas escritas y el marco su proporcion,
        asi que abrir el visor no mueve nada de la pagina. */}
-  {habitacionConVideo && (
+  {videos.length > 0 && (
     <>
-      <dialog class="visor visor--video" id="visor-video" aria-label={habitacionConVideo.titulo}>
-        <button type="button" class="visor__cerrar" data-video-cerrar aria-label="Cerrar el video">&times;</button>
-        <figure class="visor__marco visor__marco--video"
-                style={`--proporcion: ${habitacionConVideo.ancho} / ${habitacionConVideo.alto}`}>
-          <video
-            class="visor__video"
-            id="video-suite"
-            controls
-            preload="none"
-            playsinline
-            data-poster={habitacionConVideo.poster}
-            width={habitacionConVideo.ancho}
-            height={habitacionConVideo.alto}
-          >
-            {habitacionConVideo.webm && <source src={habitacionConVideo.webm} type="video/webm" />}
-            <source src={habitacionConVideo.src} type="video/mp4" />
-            <p>
-              Tu navegador no puede reproducir el video.
-              <a href={habitacionConVideo.src}>Abrelo en una pestana aparte</a>.
-            </p>
-          </video>
-          <figcaption class="visor__pie">{habitacionConVideo.titulo}</figcaption>
-        </figure>
-      </dialog>
+      {videos.map((v) => (
+        <dialog class="visor visor--video" id={v.id} aria-label={v.titulo}>
+          <button type="button" class="visor__cerrar" data-video-cerrar aria-label="Cerrar el video">&times;</button>
+          <figure class="visor__marco visor__marco--video"
+                  style={`--proporcion: ${v.ancho} / ${v.alto}`}>
+            <video
+              class="visor__video"
+              id={`${v.id}-media`}
+              controls
+              preload="none"
+              playsinline
+              data-poster={v.poster}
+              width={v.ancho}
+              height={v.alto}
+            >
+              {v.webm && <source src={v.webm} type="video/webm" />}
+              <source src={v.src} type="video/mp4" />
+              <p>
+                Tu navegador no puede reproducir el video.
+                <a href={v.src}>Abrelo en una pestana aparte</a>.
+              </p>
+            </video>
+            <figcaption class="visor__pie">{v.titulo}</figcaption>
+          </figure>
+        </dialog>
+      ))}
 
       <script is:inline defer src="/assets/js/visor-video.js"></script>
     </>

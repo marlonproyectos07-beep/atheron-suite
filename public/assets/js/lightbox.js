@@ -12,10 +12,20 @@
    galeria. En movil con datos, esa diferencia se nota.
 
    COMO SE ENGANCHA:
-   la galeria lleva data-galeria y cada foto va dentro de un
+   cada galeria lleva data-galeria y cada foto va dentro de un
    <button class="galeria__abrir">. Si este archivo no llega o
    falla, los botones no hacen nada y las fotos se siguen viendo
    igual: la pagina nunca depende de este guion para mostrarse.
+
+   VARIAS HABITACIONES EN LA MISMA FICHA:
+   antes se cogia una sola galeria -querySelector, en singular- y
+   con dos habitaciones las fotos de la segunda no abrian. Ahora se
+   recorren todas: cada galeria tiene su propia lista de fotos y su
+   propio contador, y el <dialog> es uno solo, compartido. Al pulsar
+   una miniatura, esa lista pasa a ser la activa; asi "3 / 7" cuenta
+   dentro de la habitacion que estas mirando y las flechas no se
+   escapan a las fotos de otra. Una ficha con una sola habitacion se
+   comporta exactamente igual que antes.
 
    La foto grande se pide al abrir el visor, no al cargar la
    pagina, y se reutiliza el mismo <img> al pasar de una a otra.
@@ -23,27 +33,20 @@
 (function () {
   'use strict';
 
-  var galeria = document.querySelector('[data-galeria]');
+  var galerias = Array.prototype.slice.call(document.querySelectorAll('[data-galeria]'));
   var visor = document.getElementById('visor');
-  if (!galeria || !visor || typeof visor.showModal !== 'function') return;
+  if (!galerias.length || !visor || typeof visor.showModal !== 'function') return;
 
   var foto = visor.querySelector('#visor-foto');
   var cuenta = visor.querySelector('[data-visor-cuenta]');
   var pieAlt = visor.querySelector('[data-visor-alt]');
-  var botones = Array.prototype.slice.call(galeria.querySelectorAll('.galeria__abrir'));
-  if (!botones.length) return;
 
-  /* Las fuentes salen de las miniaturas: misma foto, sin una
-     segunda lista que se pueda desincronizar con el HTML. */
-  var fotos = botones.map(function (b) {
-    var img = b.querySelector('img');
-    return { src: img.getAttribute('src'), alt: img.getAttribute('alt') };
-  });
-
+  var fotos = [];     // lista de la galeria que se esta viendo
   var actual = 0;
   var abridor = null; // a que boton devolver el foco al cerrar
 
   function pinta(i) {
+    if (!fotos.length) return;
     actual = (i + fotos.length) % fotos.length; // da la vuelta en los extremos
     foto.src = fotos[actual].src;
     foto.alt = fotos[actual].alt;
@@ -51,14 +54,27 @@
     pieAlt.textContent = fotos[actual].alt;
   }
 
-  function abre(i, boton) {
+  function abre(lista, i, boton) {
+    fotos = lista;
     abridor = boton || null;
     pinta(i);
     visor.showModal();
   }
 
-  botones.forEach(function (b, i) {
-    b.addEventListener('click', function () { abre(i, b); });
+  galerias.forEach(function (galeria) {
+    var botones = Array.prototype.slice.call(galeria.querySelectorAll('.galeria__abrir'));
+    if (!botones.length) return;
+
+    /* Las fuentes salen de las miniaturas: misma foto, sin una
+       segunda lista que se pueda desincronizar con el HTML. */
+    var lista = botones.map(function (b) {
+      var img = b.querySelector('img');
+      return { src: img.getAttribute('src'), alt: img.getAttribute('alt') };
+    });
+
+    botones.forEach(function (b, i) {
+      b.addEventListener('click', function () { abre(lista, i, b); });
+    });
   });
 
   visor.querySelector('[data-visor-antes]').addEventListener('click', function () { pinta(actual - 1); });
