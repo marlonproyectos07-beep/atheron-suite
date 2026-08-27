@@ -261,8 +261,13 @@ function dato(valor, singular, plural) {
                 </div>
                 <p class="texto-suave"><Marca texto={h.descripcion} pendiente={h.pendiente} /></p>
                 <div class="tarjeta__pie">
+                  {/* El "/ noche" solo tiene sentido detras de una cifra.
+                       Una habitacion cuyo precio todavia se cierra por
+                       WhatsApp pone "Consultar", y "Consultar / noche" no
+                       se entiende. Se mira si hay algun digito. */}
                   <span class="tarjeta__precio">
-                    <Marca texto={h.precio} pendiente={h.pendiente} /> <span>/ noche</span>
+                    <Marca texto={h.precio} pendiente={h.pendiente} />
+                    {/\d/.test(h.precio) && <span> / noche</span>}
                   </span>
                   <a class="boton boton--whatsapp" href="#contacto"
                      data-whatsapp={`Hola, quiero consultar por una habitacion en ${d.nombre} de Atheron Suite.`}>
