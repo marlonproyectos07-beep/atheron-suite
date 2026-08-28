@@ -254,10 +254,20 @@ function dato(valor, singular, plural) {
               <Foto src={h.foto} alt={h.fotoAlt}>Foto pendiente</Foto>
               <div>
                 <h3><Marca texto={h.nombre} pendiente={h.pendiente} /></h3>
+                {/* Cada etiqueta sale solo si tiene dato. Una habitacion
+                     cuya capacidad todavia no esta confirmada muestra las
+                     otras dos y ya: mejor una etiqueta menos que un numero
+                     inventado, y mejor eso que una pastilla vacia. */}
                 <div class="habitacion__datos">
-                  <span class="habitacion__dato"><Marca texto={dato(h.huespedes, "huesped", "huespedes")} pendiente={h.pendiente} /></span>
-                  <span class="habitacion__dato"><Marca texto={dato(h.camas, "cama", "camas")} pendiente={h.pendiente} /></span>
-                  <span class="habitacion__dato"><Marca texto={dato(h.banos, "bano", "banos")} pendiente={h.pendiente} /></span>
+                  {[
+                    dato(h.huespedes, "huesped", "huespedes"),
+                    dato(h.camas, "cama", "camas"),
+                    dato(h.banos, "bano", "banos"),
+                  ]
+                    .filter(Boolean)
+                    .map((texto) => (
+                      <span class="habitacion__dato"><Marca texto={texto} pendiente={h.pendiente} /></span>
+                    ))}
                 </div>
                 <p class="texto-suave"><Marca texto={h.descripcion} pendiente={h.pendiente} /></p>
                 <div class="tarjeta__pie">

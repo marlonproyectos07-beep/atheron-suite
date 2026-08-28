@@ -118,9 +118,14 @@ const fotoGaleria = z.object({
    a proposito: mientras no haya dato real llevan "N". */
 const habitacion = z.object({
   nombre: z.string(),
-  huespedes: z.string(),
-  camas: z.string(),
-  banos: z.string(),
+  /* Los tres datos de la cabecera pueden faltar. No es lo normal, pero
+     una habitacion recien cargada puede tener confirmada la cama y
+     todavia no cuantas personas admite. Antes que poner un numero
+     supuesto, el dato no sale: la ficha se ve igual, con una etiqueta
+     menos. Cuando llegue el dato se rellena y aparece. */
+  huespedes: textoOpcionalPanel,
+  camas: textoOpcionalPanel,
+  banos: textoOpcionalPanel,
   descripcion: z.string(),
   precio: z.string().default('$ ---'),
   pendiente: z.boolean().default(false),
