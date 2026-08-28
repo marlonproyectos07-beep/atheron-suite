@@ -151,6 +151,46 @@ const urlCanonica = new URL(ruta, Astro.site).href;
   <style is:inline set:html={estilos}></style>
 
   {/* ============================================================
+       PERMISO PARA ANIMAR
+
+       La animacion de aparicion esconde el bloque -opacity 0- y lo
+       muestra cuando entra en pantalla. Si algo impide que ese
+       "cuando entra en pantalla" llegue a ocurrir, el contenido se
+       queda escondido para siempre y la pagina muestra un hueco en
+       blanco. Paso de verdad: con cinco habitaciones el bloque mide
+       5.500 px y en un portatil no se veia ninguna.
+
+       Por eso el CSS solo esconde si el <html> lleva la clase
+       "anima", y esa clase la pone este guion. Sin JavaScript, con
+       JavaScript bloqueado, o si este archivo no llega, la clase no
+       se pone y el contenido se ve tal cual: sin animacion, pero
+       visible. El contenido nunca depende de que un guion funcione.
+
+       Va aqui, incrustado y antes del <body>, y no en main.js: main
+       se carga con defer y para entonces la pagina ya se pinto, asi
+       que el contenido apareceria y se ocultaria de golpe.
+
+       El plazo de dos segundos cubre el caso restante: la clase
+       puesta pero main.js sin llegar a montar el observador -red
+       lenta, error de carga-. Si a los dos segundos main no ha
+       avisado, se retira el permiso y todo se ve.
+
+       Y si el visitante pidio menos movimiento, no se anima nada.
+       ============================================================ */}
+  <script is:inline>
+    (function () {
+      var raiz = document.documentElement;
+      try {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      } catch (e) { return; }
+      raiz.classList.add('anima');
+      setTimeout(function () {
+        if (!window.__aparecerListo) raiz.classList.remove('anima');
+      }, 2000);
+    })();
+  </script>
+
+  {/* ============================================================
        DATOS ESTRUCTURADOS (JSON-LD)
        Es una ficha del negocio en un formato que Google y los
        asistentes de IA leen directamente. No se ve en pantalla.

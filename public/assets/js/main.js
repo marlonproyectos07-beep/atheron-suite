@@ -194,13 +194,25 @@ document.addEventListener("DOMContentLoaded", function () {
           observador.unobserve(entrada.target); // solo se anima una vez
         }
       });
-    }, { threshold: 0.12 });
+    }, { threshold: 0 });
+    /* threshold 0: basta con que asome un pixel. Con 0.12 se pedia que
+       se viera el 12 % del bloque, y eso es imposible cuando el bloque
+       es mas alto que ocho pantallas: con cinco habitaciones, el 12 %
+       de 5.500 px son 660 px de bloque a la vez, y entre el titulo de
+       la seccion y el alto de un portatil no se llegaba. El bloque se
+       quedaba en opacity 0 y la pagina mostraba un hueco en blanco. */
 
     elementosAnimados.forEach(function (el) { observador.observe(el); });
   } else {
     // Si el navegador no lo soporta, mostramos todo sin animacion.
     elementosAnimados.forEach(function (el) { el.classList.add("visible"); });
   }
+
+  /* Aviso al guion del <head>: el observador esta montado, ya puede
+     dejar de vigilar. Si esta linea no llega a ejecutarse -main.js no
+     carga, o revienta antes-, aquel retira el permiso de animar a los
+     dos segundos y el contenido se ve igualmente. */
+  window.__aparecerListo = true;
 
   /* ----------------------------------------------------------
      5. FORMULARIO DE CONTACTO (demo)
