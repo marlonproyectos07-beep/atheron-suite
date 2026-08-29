@@ -125,24 +125,20 @@ const urlCanonica = new URL(ruta, Astro.site).href;
 
   <meta name="twitter:card" content="summary_large_image">
 
-  {/* Iconos de pestana y de pantalla de inicio, del logo oficial.
-       Declararlos evita ademas la peticion a /favicon.ico que fallaba. */}
+  {/* Iconos de pestana y de pantalla de inicio, del logo oficial. */}
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/marca/atheron-icono-32.png">
   <link rel="apple-touch-icon" href="/assets/img/marca/atheron-icono-180.png">
 
-  {/* Tipografias (necesitan internet; si no cargan, el sitio usa las de respaldo) */}
+  {/* Solo la tipografia de titulos se descarga. El texto normal usa la
+       pila nativa del sistema: mantiene legibilidad y elimina ~48 KB
+       y una fuente externa del camino inicial en movil. */}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  {/* La hoja de fuentes se pide sin bloquear el pintado: entra como
-       hoja de impresion -que el navegador no espera- y en cuanto llega
-       se activa para pantalla. El texto se ve desde el primer momento
-       con la tipografia de respaldo y luego cambia. Sin esto, Google
-       Fonts retrasaba el primer pintado unos 900 ms en movil. */}
   <link rel="stylesheet" media="print" onload="this.media='all'; this.onload=null"
-        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
   <noscript>
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
+          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
   </noscript>
 
   {/* Nuestras hojas de estilo, siempre en este orden:
@@ -219,9 +215,7 @@ const urlCanonica = new URL(ruta, Astro.site).href;
   <slot />
 
   {/* main.js se enlaza con is:inline para que Astro NO lo empaquete
-       ni le cambie el nombre. El archivo sigue siendo el mismo de
-       siempre en /assets/js/main.js: numero de WhatsApp, codigos
-       promocionales, menu movil y animaciones. */}
+       ni le cambie el nombre. */}
   <script is:inline defer src="/assets/js/main.js"></script>
 
 </body>
