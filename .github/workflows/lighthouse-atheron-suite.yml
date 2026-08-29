@@ -1,0 +1,106 @@
+name: Lighthouse — Hotel Atheron Suite
+
+on:
+  push:
+    branches:
+      - claude/habitaciones-202-203
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    name: Lighthouse móvil + escritorio
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Verificar contenido
+        run: npm run comprueba
+
+      - name: Construir sitio
+        run: npm run build
+
+      - name: Arrancar Astro Preview local
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4321 > /tmp/astro-preview.log 2>&1 &
+          echo $! > /tmp/astro-preview.pid
+          npx --yes wait-on http://127.0.0.1:4321/hospedajes/hotel-atheron-suite --timeout 30000
+
+      - name: Lighthouse móvil
+        run: |
+          npx --yes lighthouse http://127.0.0.1:4321/hospedajes/hotel-atheron-suite \
+            --quiet \
+            --chrome-flags="--headless --no-sandbox" \
+            --only-categories=performance,accessibility,best-practices,seo \
+            --output=json \
+            --output-path=/tmp/lighthouse-mobile.json
+
+      - name: Lighthouse escritorio
+        run: |
+          npx --yes lighthouse http://127.0.0.1:4321/hospedajes/hotel-atheron-suite \
+            --quiet \
+            --preset=desktop \
+            --chrome-flags="--headless --no-sandbox" \
+            --only-categories=performance,accessibility,best-practices,seo \
+            --output=json \
+            --output-path=/tmp/lighthouse-desktop.json
+
+      - name: Mostrar puntuaciones y exigir calidad
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const files = [
+            ['MÓVIL', '/tmp/lighthouse-mobile.json'],
+            ['ESCRITORIO', '/tmp/lighthouse-desktop.json'],
+          ];
+          let fail = false;
+          for (const [label, file] of files) {
+            const r = JSON.parse(fs.readFileSync(file, 'utf8'));
+            const c = r.categories;
+            const scores = {
+              rendimiento: Math.round(c.performance.score * 100),
+              accesibilidad: Math.round(c.accessibility.score * 100),
+              practicas: Math.round(c['best-practices'].score * 100),
+              seo: Math.round(c.seo.score * 100),
+            };
+            console.log(`\n${label}:`, scores);
+            console.log('LCP:', r.audits['largest-contentful-paint']?.displayValue);
+            console.log('CLS:', r.audits['cumulative-layout-shift']?.displayValue);
+            console.log('TBT:', r.audits['total-blocking-time']?.displayValue);
+
+            // Regla Atheron: estas tres categorías no se negocian.
+            if (scores.accesibilidad < 100 || scores.practicas < 100 || scores.seo < 100) fail = true;
+            // Objetivo de rendimiento: 100. Permitimos >=95 en CI para evitar falsos fallos
+            // por variaciones de CPU de GitHub Actions, pero siempre imprimimos el valor real.
+            if (scores.rendimiento < 95) fail = true;
+          }
+          if (fail) {
+            console.error('\nAuditoría por debajo del estándar Atheron. Revisar los JSON adjuntos.');
+            process.exit(1);
+          }
+          NODE
+
+      - name: Guardar informes Lighthouse
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-atheron-suite
+          path: |
+            /tmp/lighthouse-mobile.json
+            /tmp/lighthouse-desktop.json
+            /tmp/astro-preview.log
+          retention-days: 14
