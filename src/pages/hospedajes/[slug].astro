@@ -251,7 +251,25 @@ function dato(valor, singular, plural) {
         <div class="grid aparecer">
           {d.habitaciones.map((h, i) => (
             <article class="habitacion">
-              <Foto src={h.foto} alt={h.fotoAlt}>Foto pendiente</Foto>
+              {/* La foto grande de la tarjeta abre la galeria de ESTA
+                   habitacion. Antes era una imagen y ya: quien la tocaba
+                   esperando verla mas grande no conseguia nada. Solo se
+                   vuelve pulsable si hay galeria que abrir; si no, se
+                   pinta la foto tal cual y no hay boton que no lleve a
+                   ningun sitio. */}
+              {h.galeria.length > 0 ? (
+                <button
+                  type="button"
+                  class="habitacion__foto"
+                  data-abrir-galeria={`galeria-${i + 1}`}
+                  aria-label={`Ver las ${h.galeria.length} fotos de ${h.nombre}`}
+                >
+                  <Foto src={h.foto} alt={h.fotoAlt}>Foto pendiente</Foto>
+                  <span class="habitacion__lupa" aria-hidden="true">Ver fotos</span>
+                </button>
+              ) : (
+                <Foto src={h.foto} alt={h.fotoAlt}>Foto pendiente</Foto>
+              )}
               <div>
                 <h3><Marca texto={h.nombre} pendiente={h.pendiente} /></h3>
                 {/* Cada etiqueta sale solo si tiene dato. Una habitacion
@@ -279,10 +297,29 @@ function dato(valor, singular, plural) {
                     <Marca texto={h.precio} pendiente={h.pendiente} />
                     {/\d/.test(h.precio) && <span> / noche</span>}
                   </span>
-                  <a class="boton boton--whatsapp" href="#contacto"
-                     data-whatsapp={`Hola, quiero consultar por una habitacion en ${d.nombre} de Atheron Suite.`}>
-                    Consultar
-                  </a>
+                  {/* Dos acciones, con jerarquia clara: la de mirar y la
+                       de escribir. Antes solo estaba la verde, y las fotos
+                       de abajo no se leian como algo que se pudiera abrir.
+
+                       El mensaje de WhatsApp nombra la habitacion. Hasta
+                       ahora las cinco mandaban el mismo texto generico y
+                       quien recibia la consulta no sabia por cual
+                       preguntaban. */}
+                  <div class="tarjeta__acciones">
+                    {h.galeria.length > 0 && (
+                      <button
+                        type="button"
+                        class="boton boton--contorno"
+                        data-abrir-galeria={`galeria-${i + 1}`}
+                      >
+                        Ver fotos
+                      </button>
+                    )}
+                    <a class="boton boton--whatsapp" href="#contacto"
+                       data-whatsapp={`Hola, quiero consultar por la ${h.nombre} del ${d.nombre}.`}>
+                      Consultar
+                    </a>
+                  </div>
                 </div>
               </div>
 
@@ -291,7 +328,7 @@ function dato(valor, singular, plural) {
                    ocupa el doble. Si la habitacion no tiene fotos, este
                    bloque no existe y la tarjeta se ve igual que antes. */}
               {(h.galeria.length > 0 || h.video) && (
-                <div class="galeria" data-galeria style="grid-column: 1 / -1;">
+                <div class="galeria" data-galeria id={`galeria-${i + 1}`} style="grid-column: 1 / -1;">
                   {h.galeria.map((f, i) => (
                     <button
                       type="button"

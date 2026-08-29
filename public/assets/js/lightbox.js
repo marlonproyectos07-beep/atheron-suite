@@ -75,6 +75,18 @@
     botones.forEach(function (b, i) {
       b.addEventListener('click', function () { abre(lista, i, b); });
     });
+
+    /* Atajos que abren esta galeria desde fuera de la rejilla: la foto
+       grande de la tarjeta y el boton "Ver fotos". Apuntan a la galeria
+       por su identificador -data-abrir-galeria="galeria-2"- y entran por
+       la primera foto. Si el guion no llega, esos botones no hacen nada
+       y las miniaturas de abajo siguen ahi: no se pierde el acceso. */
+    if (galeria.id) {
+      var atajos = document.querySelectorAll('[data-abrir-galeria="' + galeria.id + '"]');
+      Array.prototype.forEach.call(atajos, function (atajo) {
+        atajo.addEventListener('click', function () { abre(lista, 0, atajo); });
+      });
+    }
   });
 
   visor.querySelector('[data-visor-antes]').addEventListener('click', function () { pinta(actual - 1); });
