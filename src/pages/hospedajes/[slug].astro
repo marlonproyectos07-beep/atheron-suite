@@ -112,7 +112,24 @@ function idHabitacion(nombre) {
   <Cabecera enlaces={menuFicha} enlacesMovil={enlacesMovil} cta={ctaConsultar} />
 
   <main id="contenido">
-    <section class="hero hero--interior">
+    <section class:list={['hero', 'hero--interior', esHotelAtheron && 'hero--hotel-atheron']}>
+      {esHotelAtheron && (
+        <picture class="hero-hotel__fondo" aria-hidden="true">
+          <source media="(max-width: 700px)" type="image/avif" srcset="/assets/img/hospedajes/la-magia-de-zipaquira-principal-700.avif" />
+          <source media="(max-width: 700px)" type="image/webp" srcset="/assets/img/hospedajes/la-magia-de-zipaquira-principal-700.webp" />
+          <source type="image/avif" srcset="/assets/img/hospedajes/la-magia-de-zipaquira-principal-900.avif" />
+          <source type="image/webp" srcset="/assets/img/hospedajes/la-magia-de-zipaquira-principal-900.webp" />
+          <img
+            src="/assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg"
+            alt=""
+            width="900"
+            height="675"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </picture>
+      )}
       <div class="contenedor hero__contenido">
         <span class="hero__etiqueta">{d.zona}</span>
         <h1 class="hero__titulo"><Marca texto={d.nombre} pendiente={!d.publicado} /></h1>
@@ -194,7 +211,14 @@ function idHabitacion(nombre) {
 
               <article class="hotel-casa">
                 <a class="hotel-casa__foto" href="#detalle-casa-completa" aria-label="Ver la opcion Casa completa">
-                  <Foto src={d.fotoPrincipal} alt={d.fotoPrincipalAlt} />
+                  <Foto
+                    src={d.fotoPrincipal}
+                    alt={d.fotoPrincipalAlt}
+                    anchos={[400, 600, 700, 900]}
+                    medidas="(min-width: 900px) 510px, calc(100vw - 3rem)"
+                    ancho={900}
+                    alto={675}
+                  />
                 </a>
                 <div class="hotel-casa__contenido">
                   <span class="hotel-casa__insignia">Mejor opcion para grupos</span>
@@ -236,7 +260,14 @@ function idHabitacion(nombre) {
                   return (
                     <article class="hotel-mini">
                       <a class="hotel-mini__foto" href={`#detalle-${id}`} aria-label={`Ver fotos y detalles de ${h.nombre}`}>
-                        <Foto src={h.foto} alt={h.fotoAlt} />
+                        <Foto
+                          src={h.foto}
+                          alt={h.fotoAlt}
+                          anchos={[240, 360, 480]}
+                          medidas="(min-width: 900px) 220px, calc(100vw - 3rem)"
+                          ancho={900}
+                          alto={675}
+                        />
                       </a>
                       <div class="hotel-mini__cuerpo">
                         <h3>{h.nombre}</h3>
@@ -283,7 +314,15 @@ function idHabitacion(nombre) {
               <div class="hotel-casa-detalle__mini">
                 {d.habitaciones.map((h) => (
                   <a href={`#detalle-${idHabitacion(h.nombre)}`}>
-                    <Foto src={h.foto} alt={h.fotoAlt} forma="cuadrado" />
+                    <Foto
+                      src={h.foto}
+                      alt={h.fotoAlt}
+                      forma="cuadrado"
+                      anchos={[240, 360, 480]}
+                      medidas="(min-width: 900px) 190px, 42vw"
+                      ancho={900}
+                      alto={675}
+                    />
                     <strong>{h.nombre}</strong>
                   </a>
                 ))}
@@ -305,7 +344,14 @@ function idHabitacion(nombre) {
                       data-abrir-galeria={`galeria-${i + 1}`}
                       aria-label={`Ver las ${h.galeria.length} fotos de ${h.nombre}`}
                     >
-                      <Foto src={h.foto} alt={h.fotoAlt}>Foto pendiente</Foto>
+                      <Foto
+                        src={h.foto}
+                        alt={h.fotoAlt}
+                        anchos={[360, 480]}
+                        medidas="(min-width: 800px) 320px, calc(100vw - 3rem)"
+                        ancho={900}
+                        alto={675}
+                      >Foto pendiente</Foto>
                       <span class="habitacion__lupa" aria-hidden="true">Ver fotos</span>
                     </button>
                   ) : (
