@@ -196,8 +196,8 @@ body:has(.hotel-selector-seccion) .hero--interior .hero__datos {
     background-image:
       linear-gradient(180deg, rgba(8,18,34,.74) 0%, rgba(8,18,34,.76) 58%, rgba(8,18,34,.90) 100%),
       image-set(
-        url('/assets/img/hospedajes/la-magia-de-zipaquira-principal-700.avif') type('image/avif'),
-        url('/assets/img/hospedajes/la-magia-de-zipaquira-principal-700.webp') type('image/webp'),
+        url('/assets/img/hospedajes/la-magia-de-zipaquira-principal-900.avif') type('image/avif'),
+        url('/assets/img/hospedajes/la-magia-de-zipaquira-principal-900.webp') type('image/webp'),
         url('/assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg') type('image/jpeg')
       );
   }
