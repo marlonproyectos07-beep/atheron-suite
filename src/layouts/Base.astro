@@ -3,16 +3,16 @@ import fs from 'node:fs';
 
 /* ============================================================
      ESTILOS INCRUSTADOS  (rendimiento)
-     Las tres hojas se leen aqui, al construir, y viajan dentro
-     del HTML. Antes eran tres peticiones que BLOQUEABAN el
-     pintado: hasta que las tres no llegaban, el visitante veia
+     Las hojas se leen aqui, al construir, y viajan dentro
+     del HTML. Antes eran peticiones que BLOQUEABAN el
+     pintado: hasta que no llegaban, el visitante veia
      una pagina en blanco. Lighthouse lo medio en unos 2 segundos
      en movil con red lenta.
      Los archivos siguen existiendo en public/assets/css/ y se
      editan alli como siempre: aqui solo se copian, sin comentarios
      y sin sangrado, que no le sirven de nada al navegador.
      ============================================================ */
-const estilos = ['base', 'componentes', 'paginas']
+const estilos = ['base', 'componentes', 'paginas', 'hotel-selector']
   .map((hoja) => fs.readFileSync('public/assets/css/' + hoja + '.css', 'utf8'))
   .join('\n')
   .replace(/\/\*[\s\S]*?\*\//g, '')
@@ -146,7 +146,7 @@ const urlCanonica = new URL(ruta, Astro.site).href;
   </noscript>
 
   {/* Nuestras hojas de estilo, siempre en este orden:
-       base (variables) -> componentes -> paginas.
+       base (variables) -> componentes -> paginas -> ajustes del selector.
        Van incrustadas: ver el comentario de arriba del todo. */}
   <style is:inline set:html={estilos}></style>
 
