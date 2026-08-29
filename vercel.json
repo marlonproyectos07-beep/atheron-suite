@@ -25,6 +25,15 @@
   ],
   "headers": [
     {
+      "source": "/hospedajes/hotel-atheron-suite",
+      "headers": [
+        {
+          "key": "Link",
+          "value": "</assets/img/hospedajes/la-magia-de-zipaquira-principal-900.avif>; rel=preload; as=image; type=image/avif"
+        }
+      ]
+    },
+    {
       "source": "/assets/(.*)",
       "headers": [
         {
