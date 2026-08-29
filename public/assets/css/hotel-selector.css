@@ -1,0 +1,151 @@
+/* ============================================================
+   HOTEL SELECTOR — ajustes comerciales de la ficha Atheron Suite
+   Estas clases solo existen en /hospedajes/hotel-atheron-suite.
+   ============================================================ */
+
+/* La eleccion de Casa completa debe aparecer rapido al llegar a la
+   seccion, sin tanto aire vertical antes del producto principal. */
+.hotel-selector-seccion {
+  padding-top: clamp(2rem, 4vw, 3.5rem);
+}
+.hotel-selector-seccion .encabezado-seccion {
+  margin-bottom: var(--esp-4);
+}
+.hotel-selector {
+  margin-top: .25rem;
+}
+
+/* ------------------------------------------------------------
+   TARJETAS COMPACTAS DE LAS 5 HABITACIONES
+   ------------------------------------------------------------ */
+.hotel-mini__foto {
+  position: relative;
+}
+
+/* Distintivo visible sobre la foto. Se usa el href real de cada ficha
+   para no depender de la posicion de la tarjeta en el grid. */
+.hotel-mini__foto::after {
+  position: absolute;
+  left: .65rem;
+  top: .65rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  max-width: calc(100% - 1.3rem);
+  padding: .32rem .62rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, .84);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, .16);
+  font-size: .72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .01em;
+  pointer-events: none;
+}
+.hotel-mini__foto[href="#detalle-habitacion-201"]::after,
+.hotel-mini__foto[href="#detalle-habitacion-202"]::after {
+  content: "🚿 Baño compartido";
+}
+.hotel-mini__foto[href="#detalle-habitacion-203"]::after,
+.hotel-mini__foto[href="#detalle-habitacion-302"]::after {
+  content: "🔒 Baño privado";
+  background: rgba(47, 107, 86, .94);
+}
+.hotel-mini__foto[href="#detalle-suite-301"]::after {
+  content: "★ Premium · Alexa";
+  background: var(--color-sal);
+  color: var(--color-noche);
+}
+.hotel-mini__foto[href="#detalle-suite-301"] {
+  border-bottom: 3px solid var(--color-sal);
+}
+
+/* Los CTA se estaban convirtiendo en dos pastillas enormes por el poco
+   ancho disponible cuando hay cinco tarjetas en una sola fila. En cada
+   tarjeta ahora van apilados, compactos y faciles de leer. */
+.hotel-mini__acciones {
+  grid-template-columns: 1fr;
+  gap: .45rem;
+}
+.hotel-mini__acciones .boton {
+  width: 100%;
+  min-height: 40px;
+  padding: .55rem .7rem;
+  font-size: .82rem;
+  line-height: 1.2;
+}
+/* Visualmente acortamos el CTA secundario; el texto original sigue en el
+   DOM para mantener una descripcion clara de la accion. */
+.hotel-mini__acciones .boton--contorno {
+  font-size: 0;
+}
+.hotel-mini__acciones .boton--contorno::after {
+  content: "Ver habitación";
+  font-size: .82rem;
+}
+.hotel-mini:has(.hotel-mini__foto[href="#detalle-suite-301"]) .hotel-mini__acciones .boton--contorno::after {
+  content: "Ver suite";
+}
+
+/* Refuerzo sutil de la Suite 301 sin volverla estridente. */
+.hotel-mini:has(.hotel-mini__foto[href="#detalle-suite-301"]) {
+  border-color: color-mix(in srgb, var(--color-sal) 70%, var(--borde));
+  box-shadow: 0 12px 32px rgba(201, 162, 39, .14);
+}
+
+/* ------------------------------------------------------------
+   VISTA CASA COMPLETA
+   ------------------------------------------------------------ */
+.hotel-casa-detalle .hotel-volver {
+  width: max-content;
+  margin-bottom: .65rem;
+}
+.hotel-casa-detalle > .hotel-selector__ceja {
+  display: block;
+  margin-bottom: .45rem;
+}
+.hotel-casa-detalle__mini a {
+  position: relative;
+  padding-bottom: .55rem;
+}
+.hotel-casa-detalle__mini a::after {
+  color: var(--texto-suave);
+  font-size: .76rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.hotel-casa-detalle__mini a[href="#detalle-habitacion-201"]::after,
+.hotel-casa-detalle__mini a[href="#detalle-habitacion-202"]::after {
+  content: "Baño compartido";
+}
+.hotel-casa-detalle__mini a[href="#detalle-habitacion-203"]::after,
+.hotel-casa-detalle__mini a[href="#detalle-habitacion-302"]::after {
+  content: "Baño privado";
+  color: var(--color-verde);
+}
+.hotel-casa-detalle__mini a[href="#detalle-suite-301"]::after {
+  content: "★ Premium · Alexa";
+  color: #856a10;
+}
+.hotel-casa-detalle__mini a[href="#detalle-suite-301"] .foto {
+  outline: 3px solid var(--color-sal);
+  outline-offset: -3px;
+}
+
+/* En la vista de Casa completa se conserva UN CTA principal para la
+   reserva del grupo. Las cinco miniaturas sirven para explorar cada
+   habitacion y no compiten con cinco WhatsApps diferentes. */
+
+@media (max-width: 700px) {
+  .hotel-selector-seccion {
+    padding-top: var(--esp-4);
+  }
+  .hotel-mini__acciones .boton {
+    min-height: 44px;
+    font-size: .9rem;
+  }
+  .hotel-mini__acciones .boton--contorno::after {
+    font-size: .9rem;
+  }
+}
