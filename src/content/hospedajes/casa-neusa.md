@@ -1,6 +1,6 @@
 ---
 nombre: Casa Neusa
-publicado: false
+publicado: true
 orden: 3
 insignia: '03'
 modalidad: casa-completa
@@ -8,7 +8,7 @@ titulo: Casa Neusa | Casa de campo en Cogua, Cundinamarca
 descripcion: Casa de campo entera en el sector de Neusa, Cogua, Cundinamarca. Hasta 8 huespedes, 2 habitaciones, chimenea, balcon con vista panoramica y zona de BBQ. Consulta disponibilidad y tarifa.
 ogTitulo: Casa Neusa | Casa de campo entera en Cogua
 ogDescripcion: Una casa de campo entera rodeada de naturaleza en el sector de Neusa, Cogua. Hasta 8 huespedes, chimenea, balcon y zona exterior de BBQ.
-avisoBorrador: Ficha en revision. Contenido y fotografias verificados; pendiente el visto bueno del preview y la tarifa.
+avisoBorrador: ''
 nombreAnterior: Casa de campo en Neusa
 zona: 'Neusa, Cogua, Cundinamarca'
 localidad: Cogua
@@ -250,7 +250,7 @@ comodidades:
   - Zona de trabajo privada
   - Estacionamiento gratuito en las instalaciones
   - Zonas verdes
-actualizado: ''
+actualizado: 2026-09-01
 ---
 
 Casa Neusa es una casa de campo en el sector de Neusa, en Cogua,
