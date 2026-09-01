@@ -90,11 +90,17 @@ export const menuFicha: Enlace[] = [
   { texto: 'Blog', href: '/blog' },
 ];
 
+/* Los enlaces a secciones (los que empiezan por #) se filtran en la
+   ficha: solo se muestran los que esa ficha pinta de verdad. Un menu
+   que lleva a un ancla que no existe deja al visitante donde estaba,
+   sin decirle por que. */
 export const menuFichaMovil: Enlace[] = [
   { texto: 'Inicio', href: '/' },
   { texto: 'Hospedajes', href: '/hospedajes' },
+  { texto: 'La casa', href: '#espacios' },
   { texto: 'Habitaciones', href: '#habitaciones' },
   { texto: 'Galeria', href: '#galeria' },
+  { texto: 'Opiniones', href: '#opiniones' },
   { texto: 'Ubicacion', href: '#ubicacion' },
   { texto: 'Blog', href: '/blog' },
 ];

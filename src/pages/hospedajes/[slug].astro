@@ -27,6 +27,12 @@ const ruta = `/hospedajes/${ficha.id}`;
    siguiente casa habia que duplicar doscientas lineas. Ahora un
    hospedaje con este modelo solo rellena "casaCompleta" en su .md. */
 const casa = d.casaCompleta ?? null;
+/* El municipio sale del contenido. Estaba escrito a mano en cinco
+   sitios de esta plantilla, y valia mientras todo estuviera en
+   Zipaquira; con la primera casa en Cogua, esos cinco textos habrian
+   mandado al huesped al municipio equivocado. El valor por defecto
+   sigue siendo Zipaquira, asi que las fichas de antes no cambian. */
+const mensajeInteres = `Hola, me interesa ${d.nombre} de Atheron Suite en ${d.localidad}.`;
 /* Sin foto principal no hay portada fotografica que valga: las fichas
    en obra todavia no la tienen y pedirla reventaba el build. */
 const heroFoto = d.heroFoto && Boolean(d.fotoPrincipal);
@@ -37,6 +43,11 @@ const baseHero = (d.fotoPrincipal ?? '').replace(/\.(jpe?g|png|webp)$/i, '');
 
 const hayHabitaciones = d.habitaciones.some((h) => !h.pendiente);
 const hayGaleria = d.galeria.length > 0;
+/* Bloques aditivos: si el .md no los trae, la ficha se pinta
+   exactamente igual que antes de que existieran. */
+const espacios = d.espacios?.lista.length ? d.espacios : null;
+const opiniones = d.pruebaSocial ?? null;
+const condiciones = d.antesDeReservar ?? null;
 const videos = d.habitaciones
   .map((h, i) => (h.video ? { ...h.video, id: `visor-video-${i + 1}` } : null))
   .filter((v) => v !== null);
@@ -48,6 +59,8 @@ const experiencias = d.experiencias.filter((e) => !e.pendiente);
 const enlacesMovil = menuFichaMovil.filter((e) => {
   if (e.href === '#habitaciones') return hayHabitaciones;
   if (e.href === '#galeria') return hayGaleria;
+  if (e.href === '#espacios') return Boolean(espacios);
+  if (e.href === '#opiniones') return Boolean(opiniones);
   return true;
 });
 
@@ -63,13 +76,23 @@ const fichaNegocio: Record<string, unknown> = {
   address: {
     '@type': 'PostalAddress',
     ...(d.calle ? { streetAddress: d.calle } : {}),
-    addressLocality: 'Zipaquira',
-    addressRegion: 'Cundinamarca',
+    addressLocality: d.localidad,
+    addressRegion: d.departamento,
     addressCountry: 'CO',
   },
 };
 
 if (d.nombreAnterior) fichaNegocio.alternateName = d.nombreAnterior;
+/* El anuncio del alojamiento en la plataforma donde ya tiene
+   historial. "sameAs" dice que las dos direcciones son el mismo
+   sitio, que es un dato verificable y comprobable por cualquiera.
+
+   Lo que NO se marca es la puntuacion. Las resenas son de Airbnb y
+   se recogieron alli; sacarlas del contexto de su plataforma y
+   marcarlas como valoraciones propias es justo lo que Google
+   penaliza. En la pagina se muestran citadas y atribuidas, que es
+   como se citan las opiniones de un tercero. */
+if (d.pruebaSocial?.enlace) fichaNegocio.sameAs = [d.pruebaSocial.enlace];
 if (d.enlaceMapa) fichaNegocio.hasMap = d.enlaceMapa;
 if (d.latitud != null && d.longitud != null) {
   fichaNegocio.geo = {
@@ -176,7 +199,7 @@ function idHabitacion(nombre) {
           <a
             class="boton boton--whatsapp boton--grande"
             href="#contacto"
-            data-whatsapp={`Hola, me interesa ${d.nombre} de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.`}
+            data-whatsapp={`${mensajeInteres} Quiero consultar disponibilidad.`}
           >
             Consultar disponibilidad
           </a>
@@ -222,6 +245,44 @@ function idHabitacion(nombre) {
         </div>
       </div>
     </section>
+
+    {/* LOS ESPACIOS DE LA CASA
+         Las zonas que no se reservan por separado pero son la razon
+         por la que alguien elige una casa entera: la sala con
+         chimenea, la cocina, el balcon, el asador. Cada una lleva su
+         foto cuando la hay; mientras no llegue, el mismo rectangulo
+         de "foto pendiente" que usa el resto del sitio. */}
+    {espacios && (
+      <section class="seccion seccion--alterna" id="espacios">
+        <div class="contenedor">
+          <div class="encabezado-seccion aparecer">
+            <span class="etiqueta">{espacios.etiqueta}</span>
+            <h2>{espacios.titulo}</h2>
+            {espacios.intro && (
+              <p class="texto-suave" style="margin-top: var(--esp-2);">{espacios.intro}</p>
+            )}
+          </div>
+          <div class="grid grid--3 aparecer">
+            {espacios.lista.map((e) => (
+              <article class="espacio">
+                <Foto
+                  src={e.foto}
+                  alt={e.fotoAlt}
+                  anchos={e.foto ? [360, 480] : undefined}
+                  medidas="(min-width: 900px) 340px, calc(100vw - 3rem)"
+                  ancho={900}
+                  alto={675}
+                >Foto pendiente</Foto>
+                <div class="espacio__texto">
+                  <h3>{e.titulo}</h3>
+                  <p class="texto-suave">{e.texto}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
 
     {hayHabitaciones && (
       <section class:list={['seccion', 'seccion--alterna', casa && 'hotel-selector-seccion']} id="habitaciones">
@@ -540,6 +601,77 @@ function idHabitacion(nombre) {
       </section>
     )}
 
+    {/* OPINIONES DE TERCEROS
+         Se citan, no se apropian. La fuente va en la cabecera del
+         bloque, en cada cita y en la nota final, y el enlace lleva
+         al anuncio original para que cualquiera compruebe la cifra.
+         Sin ese hilo, una puntuacion en la propia web del hospedaje
+         es solo el hospedaje diciendo que es bueno. */}
+    {opiniones && (
+      <section class="seccion opiniones" id="opiniones">
+        <div class="contenedor">
+          <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
+            <span class="etiqueta">{opiniones.etiqueta}</span>
+            <h2>{opiniones.titulo}</h2>
+            {opiniones.intro && (
+              <p class="texto-suave" style="margin-top: var(--esp-2);">{opiniones.intro}</p>
+            )}
+          </div>
+
+          <div class="opiniones__cifras aparecer">
+            {opiniones.puntuacion && (
+              <div class="opiniones__cifra">
+                <span class="opiniones__numero">
+                  {opiniones.puntuacion}{opiniones.sobre && <span class="opiniones__sobre">/{opiniones.sobre}</span>}
+                </span>
+                <span class="opiniones__pie">en {opiniones.fuente}</span>
+              </div>
+            )}
+            {opiniones.resenas !== undefined && (
+              <div class="opiniones__cifra">
+                <span class="opiniones__numero">{opiniones.resenas}</span>
+                <span class="opiniones__pie">{opiniones.resenas === 1 ? 'resena' : 'resenas'}</span>
+              </div>
+            )}
+            {opiniones.distintivo && (
+              <div class="opiniones__cifra opiniones__cifra--distintivo">
+                <span class="opiniones__distintivo">{opiniones.distintivo}</span>
+                <span class="opiniones__pie">segun {opiniones.fuente}</span>
+              </div>
+            )}
+          </div>
+
+          {opiniones.extractos.length > 0 && (
+            <div class="grid grid--3 aparecer">
+              {opiniones.extractos.map((r) => (
+                <figure class="opinion">
+                  <blockquote class="opinion__texto">{r.texto}</blockquote>
+                  <figcaption class="opinion__firma">
+                    <strong>{r.autor}</strong>
+                    <span>{r.fecha} &middot; huesped de {opiniones.fuente}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
+
+          {(opiniones.nota || opiniones.enlace) && (
+            <p class="opiniones__nota campo__ayuda aparecer">
+              {opiniones.nota}
+              {opiniones.enlace && (
+                <>
+                  {opiniones.nota && ' '}
+                  <a href={opiniones.enlace} target="_blank" rel="noopener nofollow">
+                    {opiniones.enlaceTexto}
+                  </a>.
+                </>
+              )}
+            </p>
+          )}
+        </div>
+      </section>
+    )}
+
     <section class="seccion seccion--alterna" id="ubicacion">
       <div class="contenedor bloque-doble aparecer">
         <div class="bloque-doble__texto">
@@ -613,7 +745,7 @@ function idHabitacion(nombre) {
 
           {d.enlaceMapa && (
             <p class="campo__ayuda" style="margin-top: var(--esp-2);">
-              {d.calle && <>{d.calle}, Zipaquira, Cundinamarca, Colombia &middot; </>}
+              {d.calle && <>{d.calle}, {d.localidad}, {d.departamento}, Colombia &middot; </>}
               <a href={d.enlaceMapa} target="_blank" rel="noopener">ver la ficha en Google Maps</a>
             </p>
           )}
@@ -626,6 +758,57 @@ function idHabitacion(nombre) {
         </div>
       </div>
     </section>
+
+    {/* ANTES DE RESERVAR
+         Lo que hay que saber para no llevarse una sorpresa: que pasa
+         con las mascotas, que esta sujeto a consulta, y que dice el
+         anuncio sobre seguridad.
+
+         El apartado de seguridad distingue lo confirmado de lo que
+         NO consta, y son cosas distintas. Que no conste un detector
+         no es lo mismo que decir que no lo hay: es decir que no esta
+         verificado. Se dice tal cual, sin adornarlo y sin asustar. */}
+    {condiciones && (
+      <section class="seccion" id="antes-de-reservar">
+        <div class="contenedor">
+          <div class="encabezado-seccion aparecer">
+            <span class="etiqueta">{condiciones.etiqueta}</span>
+            <h2>{condiciones.titulo}</h2>
+            {condiciones.intro && (
+              <p class="texto-suave" style="margin-top: var(--esp-2);">{condiciones.intro}</p>
+            )}
+          </div>
+
+          {condiciones.condiciones.length > 0 && (
+            <div class="grid grid--2 aparecer">
+              {condiciones.condiciones.map((c) => (
+                <article class="condicion">
+                  <h3>{c.titulo}</h3>
+                  <p class="texto-suave">{c.texto}</p>
+                </article>
+              ))}
+            </div>
+          )}
+
+          {condiciones.seguridad.length > 0 && (
+            <div class="seguridad aparecer">
+              <h3>{condiciones.seguridadTitulo ?? 'Seguridad'}</h3>
+              <ul class="seguridad__lista">
+                {condiciones.seguridad.map((s) => (
+                  <li class="seguridad__punto" data-consta={s.consta ? '' : undefined}>
+                    <span class="seguridad__marca" aria-hidden="true">{s.consta ? '✓' : '–'}</span>
+                    <span>{s.texto}</span>
+                  </li>
+                ))}
+              </ul>
+              {condiciones.seguridadNota && (
+                <p class="campo__ayuda" style="margin-top: var(--esp-2);">{condiciones.seguridadNota}</p>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+    )}
 
     {experiencias.length > 0 && (
       <section class="seccion">
@@ -712,7 +895,7 @@ function idHabitacion(nombre) {
               <div class="aviso-formulario" data-aviso-formulario role="status"></div>
             </form>
           ) : (
-            <ContactoWhatsApp mensaje={`Hola, me interesa ${d.nombre} de Atheron Suite en Zipaquira.`} />
+            <ContactoWhatsApp mensaje={mensajeInteres} />
           )}
         </div>
       </div>
@@ -723,7 +906,7 @@ function idHabitacion(nombre) {
 
   <BotonFlotante
     href="#contacto"
-    mensaje={`Hola, me interesa ${d.nombre} de Atheron Suite en Zipaquira.`}
+    mensaje={mensajeInteres}
   />
 
   {/* El visor se monta si hay ALGO que ampliar: fotos de habitacion o
