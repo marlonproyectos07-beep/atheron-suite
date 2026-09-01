@@ -11,11 +11,13 @@ avisoBorrador: ''
 zona: Zipaquira, Cundinamarca
 presentacion: Una casa entera para que tu grupo se hospede junto. Hasta 22 personas, cinco habitaciones, cocina equipada, sala y comedor para reunirse, y parqueadero para dos carros.
 presentacionPendiente: false
-fotoTarjeta: /assets/img/hospedajes/casa-algarra/casa-algarra-01-fachada-atardecer.webp
-fotoTarjetaAlt: Fachada de Casa Algarra al atardecer, con las luces encendidas
-fotoPrincipal: /assets/img/hospedajes/casa-algarra/casa-algarra-01-fachada-atardecer.webp
-fotoPrincipalAlt: Fachada de Casa Algarra al atardecer, casa de dos pisos con las luces encendidas
+fotoTarjeta: /assets/img/hospedajes/casa-algarra/casa-algarra-02-sala-comedor.webp
+fotoTarjetaAlt: Sala y comedor de Casa Algarra con chimenea
+fotoPrincipal: /assets/img/hospedajes/casa-algarra/casa-algarra-02-sala-comedor.webp
+fotoPrincipalAlt: Sala y comedor de Casa Algarra con chimenea, vistos desde la entrada
 galeria:
+  - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-01-fachada-atardecer.webp
+    alt: Fachada de Casa Algarra al atardecer, casa de dos pisos con las luces encendidas
   - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-02-sala-comedor.webp
     alt: Sala y comedor de Casa Algarra con chimenea, vistos desde la entrada
   - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-03-sala-escalera.webp
@@ -69,7 +71,7 @@ precio: $ 65.000 por persona
 precioPendiente: false
 notaHabitaciones: ''
 heroFoto: true
-heroEncuadre: center 26%
+heroEncuadre: center 30%
 casaCompleta:
   etiquetaSeccion: Como hospedarse
   tituloSeccion: Tu grupo bajo el mismo techo

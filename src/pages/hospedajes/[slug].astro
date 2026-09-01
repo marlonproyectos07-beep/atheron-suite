@@ -506,15 +506,36 @@ function idHabitacion(nombre) {
             <span class="etiqueta">Galeria</span>
             <h2>Fotos del hospedaje</h2>
           </div>
-          <div class="galeria aparecer">
-            {d.galeria.length > 0
-              ? d.galeria.map((f) => (
-                  <div><Foto src={f.imagen} alt={f.alt} forma="cuadrado" /></div>
-                ))
-              : [1, 2, 3, 4, 5].map((n) => (
-                  <div><Foto forma="cuadrado">Foto {n}</Foto></div>
-                ))}
-          </div>
+          {/* Cada foto va dentro de un boton, igual que en las galerias de
+               las habitaciones. Antes eran <div> sueltos: se veian, pero
+               tocarlas no hacia nada, porque el visor engancha por
+               [data-galeria] y .galeria__abrir y aqui no habia ninguno
+               de los dos. No se notaba porque hasta ahora ninguna ficha
+               publicada tenia fotos en esta seccion.
+
+               Los recuadros de "foto pendiente" siguen siendo <div>: no
+               hay nada que ampliar, y un boton que no lleva a ningun
+               sitio es peor que ninguno. */}
+          {d.galeria.length > 0 ? (
+            <div class="galeria aparecer" data-galeria id="galeria-hospedaje">
+              {d.galeria.map((f, i) => (
+                <button
+                  type="button"
+                  class="galeria__abrir"
+                  data-foto={i + 1}
+                  aria-label={`Ampliar foto ${i + 1} de ${d.galeria.length}: ${f.alt}`}
+                >
+                  <Foto src={f.imagen} alt={f.alt} forma="cuadrado" />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div class="galeria aparecer">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <div><Foto forma="cuadrado">Foto {n}</Foto></div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     )}
@@ -705,7 +726,11 @@ function idHabitacion(nombre) {
     mensaje={`Hola, me interesa ${d.nombre} de Atheron Suite en Zipaquira.`}
   />
 
-  {hayHabitaciones && d.habitaciones.some((h) => h.galeria.length > 0) && (
+  {/* El visor se monta si hay ALGO que ampliar: fotos de habitacion o
+       de la galeria del hospedaje. Antes solo miraba las habitaciones, y
+       una ficha con galeria general y sin fotos de habitacion se quedaba
+       sin visor. */}
+  {(hayGaleria || (hayHabitaciones && d.habitaciones.some((h) => h.galeria.length > 0))) && (
     <>
       <dialog class="visor" id="visor" aria-label={`Fotos de ${d.nombre}`}>
         <button type="button" class="visor__cerrar" data-visor-cerrar aria-label="Cerrar">&times;</button>
