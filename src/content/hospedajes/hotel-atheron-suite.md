@@ -54,8 +54,36 @@ resumen: Apartamentos con cocina equipada, wifi y Netflix, a 16 minutos caminand
 precio: Desde $ 150.000
 precioPendiente: false
 notaHabitaciones: 'Hasta 7 huespedes con las camas fijas. Para grupos de 8 a 10 anadimos camas adicionales: escribenos y lo coordinamos directamente.'
+heroFoto: true
+casaCompleta:
+  etiquetaSeccion: Opciones de alojamiento
+  tituloSeccion: Elige como quieres hospedarte
+  introSeccion: 'Reserva una habitacion individual o, si viajan en grupo, toma la casa completa para hasta 22 personas.'
+  ceja: '¿Viajan juntos?'
+  titulo: Casa completa para grupos
+  insignia: Mejor opcion para grupos
+  nombre: Casa completa · Atheron Suite
+  datos:
+    - Hasta 22 huespedes
+    - 5 habitaciones
+  resumen: Para familias, grupos de amigos, empresas o viajeros que quieren hospedarse juntos en una sola propiedad.
+  precio: 'Precio para grupos: consultar'
+  detalleCeja: Para grupos grandes
+  detalleTitulo: Casa completa · hasta 22 huespedes
+  detalleTexto: Reserva las cinco habitaciones de Atheron Suite para que tu grupo se hospede en una sola propiedad.
+  detalleDatos:
+    - Hasta 22 huespedes
+    - 5 habitaciones
+    - Una sola propiedad
+  ctaVer: Ver casa completa
+  ctaCotizar: Cotizar casa completa
+  mensaje: Hola, quiero cotizar la casa completa de Hotel Atheron Suite. Somos un grupo y quiero consultar disponibilidad y precio.
+  cejaHabitaciones: '¿Prefieres una habitacion?'
+  tituloHabitaciones: Conoce las cinco opciones
+  introHabitaciones: Compara primero y entra solo a la habitacion que te interese.
 habitaciones:
   - nombre: Habitacion 201
+    tipoBano: compartido
     camas: 1 cama doble
     banos: Bano compartido
     descripcion: >-
@@ -78,6 +106,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-cocina-compartida.jpg
         alt: Cocina compartida del segundo piso del Hotel Atheron Suite en Zipaquira, con estufa a gas, horno, nevera y mesa
   - nombre: Habitacion 202
+    tipoBano: compartido
     camas: 1 cama doble y 1 camarote
     banos: Bano compartido
     descripcion: >-
@@ -104,6 +133,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-cocina-compartida.jpg
         alt: Cocina compartida del segundo piso del Hotel Atheron Suite en Zipaquira, con estufa a gas, horno, nevera y mesa
   - nombre: Habitacion 203
+    tipoBano: privado
     camas: 1 cama nido
     banos: Bano privado
     descripcion: >-
@@ -130,6 +160,10 @@ habitaciones:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-cocina-compartida.jpg
         alt: Cocina compartida del segundo piso del Hotel Atheron Suite en Zipaquira, con estufa a gas, horno, nevera y mesa
   - nombre: Suite 301
+    tipoBano: privado
+    insignia: ★ Premium · Alexa
+    destacada: true
+    etiquetaVer: Ver suite
     huespedes: Hasta 7
     camas: 1 cama doble con cama nido debajo, 1 camarote y 1 sofa cama
     banos: '1'
@@ -167,6 +201,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-entrada.jpg
         alt: Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera
   - nombre: Habitacion 302
+    tipoBano: privado
     huespedes: Hasta 3
     camas: 1 cama doble y 1 sofa cama
     banos: '1'

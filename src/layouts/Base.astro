@@ -63,6 +63,10 @@ interface Props {
   jsonLd?: Record<string, unknown> | null;
   /** Texto de la banda amarilla superior. null = no se muestra. */
   avisoBorrador?: string | null;
+  /** Foto para la vista previa al compartir. Ruta del sitio, sin dominio. */
+  imagen?: string;
+  /** Que se ve en esa foto. */
+  imagenAlt?: string;
 }
 
 const {
@@ -75,11 +79,16 @@ const {
   indexable = true,
   jsonLd = null,
   avisoBorrador = null,
+  imagen,
+  imagenAlt,
 } = Astro.props;
 
 // new URL() une el dominio de astro.config.mjs con la ruta de la pagina.
 // De aqui salen la canonica y og:url, siempre iguales entre si.
 const urlCanonica = new URL(ruta, Astro.site).href;
+/* og:image tiene que ser una direccion absoluta: WhatsApp y Facebook la
+   piden desde fuera y una ruta relativa no les sirve de nada. */
+const urlImagen = imagen ? new URL(imagen, Astro.site).href : null;
 ---
 <!DOCTYPE html>
 <html lang="es">
@@ -121,7 +130,20 @@ const urlCanonica = new URL(ruta, Astro.site).href;
   <meta property="og:url" content={urlCanonica}>
   <meta property="og:title" content={ogTitulo ?? titulo}>
   <meta property="og:description" content={ogDescripcion ?? descripcion}>
-  {/* PENDIENTE 14: crear imagen de 1200x630 px y anadir aqui og:image */}
+  {/* La vista previa al compartir. Sin og:image, WhatsApp y Facebook
+       pintan un enlace pelado: menos clics por el mismo trabajo. Cada
+       pagina manda su propia foto; si no manda ninguna, no se inventa
+       una que no le corresponda.
+
+       PENDIENTE: una imagen dedicada de 1200x630 luce mejor que una
+       foto vertical, que las redes recortan por el centro. Mientras
+       tanto, la foto real de la ficha es mucho mejor que nada. */}
+  {urlImagen && (
+    <>
+      <meta property="og:image" content={urlImagen} />
+      {imagenAlt && <meta property="og:image:alt" content={imagenAlt} />}
+    </>
+  )}
 
   <meta name="twitter:card" content="summary_large_image">
 

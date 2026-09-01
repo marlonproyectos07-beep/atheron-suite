@@ -33,3 +33,22 @@ public/assets/img/hospedajes/*-360.avif
 public/assets/img/hospedajes/*-360.webp
 public/assets/img/hospedajes/*-480.avif
 public/assets/img/hospedajes/*-480.webp
+
+# Variantes por ancho de las fichas nuevas: las regenera el prebuild
+# (scripts/optimiza-selector.mjs) a partir de los originales, que si
+# estan versionados. Las del hero de Hotel Atheron Suite se hicieron a
+# mano antes de que existiera el script y siguen versionadas.
+public/assets/img/hospedajes/*/*-240.avif
+public/assets/img/hospedajes/*/*-240.webp
+public/assets/img/hospedajes/*/*-360.avif
+public/assets/img/hospedajes/*/*-360.webp
+public/assets/img/hospedajes/*/*-480.avif
+public/assets/img/hospedajes/*/*-480.webp
+public/assets/img/hospedajes/*/*-400.avif
+public/assets/img/hospedajes/*/*-400.webp
+public/assets/img/hospedajes/*/*-600.avif
+public/assets/img/hospedajes/*/*-600.webp
+public/assets/img/hospedajes/*/*-700.avif
+public/assets/img/hospedajes/*/*-700.webp
+public/assets/img/hospedajes/*/*-900.avif
+public/assets/img/hospedajes/*/*-900.webp

@@ -21,7 +21,19 @@ export async function getStaticPaths() {
 const { ficha } = Astro.props;
 const d = ficha.data;
 const ruta = `/hospedajes/${ficha.id}`;
-const esHotelAtheron = ficha.id === 'hotel-atheron-suite';
+/* La presentacion comercial la manda el contenido, no el nombre del
+   hospedaje. Antes esto era ficha.id === 'hotel-atheron-suite' y toda
+   la seccion estaba escrita a medida de esa ficha: para montar la
+   siguiente casa habia que duplicar doscientas lineas. Ahora un
+   hospedaje con este modelo solo rellena "casaCompleta" en su .md. */
+const casa = d.casaCompleta ?? null;
+/* Sin foto principal no hay portada fotografica que valga: las fichas
+   en obra todavia no la tienen y pedirla reventaba el build. */
+const heroFoto = d.heroFoto && Boolean(d.fotoPrincipal);
+/* La portada a sangre usa la foto principal de la ficha y sus
+   variantes por ancho, con la misma convencion de nombres que el
+   resto del sitio: <nombre>-700.avif, <nombre>-900.webp... */
+const baseHero = (d.fotoPrincipal ?? '').replace(/\.(jpe?g|png|webp)$/i, '');
 
 const hayHabitaciones = d.habitaciones.some((h) => !h.pendiente);
 const hayGaleria = d.galeria.length > 0;
@@ -89,6 +101,21 @@ function dato(valor, singular, plural) {
   return v === '1' ? `${v} ${singular}` : `${v} ${plural}`;
 }
 
+/* El distintivo de la tarjeta compacta. Sale del dato, no del nombre
+   ni del numero de la habitacion: si no hay dato confirmado, no se
+   pinta nada. "insignia" gana al tipo de bano, para las habitaciones
+   cuyo argumento de venta es otro. */
+const TEXTO_BANO = {
+  privado: '🔒 Baño privado',
+  compartido: '🚿 Baño compartido',
+  auxiliar: '🚻 Baño auxiliar',
+};
+function insigniaDe(h) {
+  if (h.insignia) return { texto: h.insignia, tipo: null };
+  if (h.tipoBano) return { texto: TEXTO_BANO[h.tipoBano], tipo: h.tipoBano };
+  return null;
+}
+
 function idHabitacion(nombre) {
   return String(nombre)
     .toLowerCase()
@@ -108,19 +135,28 @@ function idHabitacion(nombre) {
   indexable={d.publicado}
   jsonLd={fichaNegocio}
   avisoBorrador={d.avisoBorrador}
+  imagen={d.fotoPrincipal}
+  imagenAlt={d.fotoPrincipalAlt}
 >
   <Cabecera enlaces={menuFicha} enlacesMovil={enlacesMovil} cta={ctaConsultar} />
 
   <main id="contenido">
-    <section class:list={['hero', 'hero--interior', esHotelAtheron && 'hero--hotel-atheron']}>
-      {esHotelAtheron && (
-        <picture class="hero-hotel__fondo" aria-hidden="true">
-          <source media="(max-width: 700px)" type="image/avif" srcset="/assets/img/hospedajes/la-magia-de-zipaquira-principal-700.avif" />
-          <source media="(max-width: 700px)" type="image/webp" srcset="/assets/img/hospedajes/la-magia-de-zipaquira-principal-700.webp" />
-          <source type="image/avif" srcset="/assets/img/hospedajes/la-magia-de-zipaquira-principal-900.avif" />
-          <source type="image/webp" srcset="/assets/img/hospedajes/la-magia-de-zipaquira-principal-900.webp" />
+    <section class:list={['hero', 'hero--interior', heroFoto && 'hero--foto']}>
+      {heroFoto && (
+        <picture
+          class="hero-hotel__fondo"
+          aria-hidden="true"
+          style={[
+            d.heroEncuadre && `--encuadre: ${d.heroEncuadre}`,
+            d.heroEncuadreMovil && `--encuadre-movil: ${d.heroEncuadreMovil}`,
+          ].filter(Boolean).join('; ') || undefined}
+        >
+          <source media="(max-width: 700px)" type="image/avif" srcset={`${baseHero}-700.avif`} />
+          <source media="(max-width: 700px)" type="image/webp" srcset={`${baseHero}-700.webp`} />
+          <source type="image/avif" srcset={`${baseHero}-900.avif`} />
+          <source type="image/webp" srcset={`${baseHero}-900.webp`} />
           <img
-            src="/assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg"
+            src={d.fotoPrincipal}
             alt=""
             width="900"
             height="675"
@@ -188,25 +224,23 @@ function idHabitacion(nombre) {
     </section>
 
     {hayHabitaciones && (
-      <section class:list={['seccion', 'seccion--alterna', esHotelAtheron && 'hotel-selector-seccion']} id="habitaciones">
+      <section class:list={['seccion', 'seccion--alterna', casa && 'hotel-selector-seccion']} id="habitaciones">
         <div class="contenedor">
           <div class="encabezado-seccion aparecer">
-            <span class="etiqueta">{esHotelAtheron ? 'Opciones de alojamiento' : 'Habitaciones'}</span>
-            <h2>{esHotelAtheron ? 'Elige como quieres hospedarte' : 'Donde vas a dormir'}</h2>
-            {esHotelAtheron ? (
+            <span class="etiqueta">{casa ? casa.etiquetaSeccion : 'Habitaciones'}</span>
+            <h2>{casa ? casa.tituloSeccion : 'Donde vas a dormir'}</h2>
+            {(casa?.introSeccion ?? d.notaHabitaciones) && (
               <p class="texto-suave" style="margin-top: var(--esp-2);">
-                Reserva una habitacion individual o, si viajan en grupo, toma la casa completa para hasta 22 personas.
+                {casa?.introSeccion ?? d.notaHabitaciones}
               </p>
-            ) : d.notaHabitaciones ? (
-              <p class="texto-suave" style="margin-top: var(--esp-2);">{d.notaHabitaciones}</p>
-            ) : null}
+            )}
           </div>
 
-          {esHotelAtheron && (
+          {casa && (
             <div class="hotel-selector aparecer">
               <div class="hotel-selector__titulo">
-                <span class="hotel-selector__ceja">¿Viajan juntos?</span>
-                <h3>Casa completa para grupos</h3>
+                <span class="hotel-selector__ceja">{casa.ceja}</span>
+                <h3>{casa.titulo}</h3>
               </div>
 
               <article class="hotel-casa">
@@ -221,31 +255,33 @@ function idHabitacion(nombre) {
                   />
                 </a>
                 <div class="hotel-casa__contenido">
-                  <span class="hotel-casa__insignia">Mejor opcion para grupos</span>
-                  <h3>Casa completa · Atheron Suite</h3>
+                  <span class="hotel-casa__insignia">{casa.insignia}</span>
+                  <h3>{casa.nombre}</h3>
                   <div class="hotel-selector__datos">
-                    <span>Hasta 22 huespedes</span>
-                    <span>5 habitaciones</span>
+                    {casa.datos.map((texto) => <span>{texto}</span>)}
                   </div>
-                  <p class="texto-suave">
-                    Para familias, grupos de amigos, empresas o viajeros que quieren hospedarse juntos en una sola propiedad.
-                  </p>
-                  <p class="hotel-casa__precio">Precio para grupos: consultar</p>
+                  <p class="texto-suave">{casa.resumen}</p>
+                  {/* El precio y su condicion van juntos y en este orden.
+                       Una tarifa de grupo sin decir desde cuantas personas
+                       aplica es publicidad enganosa, asi que la nota no es
+                       decorativa: acompana siempre a la cifra. */}
+                  {casa.precio && <p class="hotel-casa__precio">{casa.precio}</p>}
+                  {casa.precioNota && <p class="hotel-casa__precio-nota">{casa.precioNota}</p>}
                   <div class="hotel-selector__acciones">
-                    <a class="boton boton--contorno" href="#detalle-casa-completa">Ver casa completa</a>
+                    <a class="boton boton--contorno" href="#detalle-casa-completa">{casa.ctaVer}</a>
                     <a
                       class="boton boton--whatsapp"
                       href="#contacto"
-                      data-whatsapp="Hola, quiero cotizar la casa completa de Hotel Atheron Suite para un grupo de hasta 22 personas."
-                    >Cotizar grupo</a>
+                      data-whatsapp={casa.mensaje}
+                    >{casa.ctaCotizar}</a>
                   </div>
                 </div>
               </article>
 
               <div class="hotel-selector__titulo hotel-selector__titulo--habitaciones">
-                <span class="hotel-selector__ceja">¿Prefieres una habitacion?</span>
-                <h3>Conoce las cinco opciones</h3>
-                <p class="texto-suave">Compara primero y entra solo a la habitacion que te interese.</p>
+                <span class="hotel-selector__ceja">{casa.cejaHabitaciones}</span>
+                <h3>{casa.tituloHabitaciones}</h3>
+                {casa.introHabitaciones && <p class="texto-suave">{casa.introHabitaciones}</p>}
               </div>
 
               <div class="hotel-habitaciones-grid">
@@ -258,8 +294,17 @@ function idHabitacion(nombre) {
                   ].filter(Boolean).slice(0, 2);
 
                   return (
-                    <article class="hotel-mini">
+                    <article class="hotel-mini" data-destacada={h.destacada ? '' : undefined}>
                       <a class="hotel-mini__foto" href={`#detalle-${id}`} aria-label={`Ver fotos y detalles de ${h.nombre}`}>
+                        {/* El distintivo va en el DOM y no como contenido de
+                             CSS: dice algo que el visitante necesita saber
+                             -si el bano es suyo o compartido- y eso tiene que
+                             poder leerlo tambien un lector de pantalla. */}
+                        {insigniaDe(h) && (
+                          <span class="hotel-mini__insignia" data-bano={insigniaDe(h).tipo ?? undefined}>
+                            {insigniaDe(h).texto}
+                          </span>
+                        )}
                         <Foto
                           src={h.foto}
                           alt={h.fotoAlt}
@@ -277,11 +322,15 @@ function idHabitacion(nombre) {
                         <p class="hotel-mini__resumen texto-suave">{h.descripcion}</p>
                         <div class="hotel-mini__precio">{h.precio}</div>
                         <div class="hotel-mini__acciones">
-                          <a class="boton boton--contorno" href={`#detalle-${id}`}>Ver fotos y detalles</a>
+                          <a
+                            class="boton boton--contorno"
+                            href={`#detalle-${id}`}
+                            data-etiqueta-ver={h.etiquetaVer ?? undefined}
+                          >Ver fotos y detalles</a>
                           <a
                             class="boton boton--whatsapp"
                             href="#contacto"
-                            data-whatsapp={`Hola, quiero consultar disponibilidad y precio de ${h.nombre} en Hotel Atheron Suite.`}
+                            data-whatsapp={`Hola, quiero consultar disponibilidad y precio de ${h.nombre} en ${d.nombre}.`}
                           >Consultar</a>
                         </div>
                       </div>
@@ -292,28 +341,28 @@ function idHabitacion(nombre) {
             </div>
           )}
 
-          {esHotelAtheron && (
+          {casa && (
             <article class="hotel-casa-detalle" id="detalle-casa-completa">
               <a class="hotel-volver" href="#habitaciones">← Ver todas las opciones</a>
-              <span class="hotel-selector__ceja">Para grupos grandes</span>
-              <h3>Casa completa · hasta 22 huespedes</h3>
-              <p class="texto-suave">
-                Reserva las cinco habitaciones de Atheron Suite para que tu grupo se hospede en una sola propiedad.
-              </p>
+              <span class="hotel-selector__ceja">{casa.detalleCeja}</span>
+              <h3>{casa.detalleTitulo}</h3>
+              <p class="texto-suave">{casa.detalleTexto}</p>
               <div class="hotel-selector__datos">
-                <span>Hasta 22 huespedes</span>
-                <span>5 habitaciones</span>
-                <span>Una sola propiedad</span>
+                {casa.detalleDatos.map((texto) => <span>{texto}</span>)}
               </div>
+              {casa.precioNota && <p class="hotel-casa__precio-nota">{casa.precioNota}</p>}
               <a
                 class="boton boton--whatsapp"
                 href="#contacto"
-                data-whatsapp="Hola, quiero cotizar la casa completa de Hotel Atheron Suite. Somos un grupo y quiero consultar disponibilidad y precio."
-              >Cotizar casa completa</a>
+                data-whatsapp={casa.mensaje}
+              >{casa.ctaCotizar}</a>
 
               <div class="hotel-casa-detalle__mini">
                 {d.habitaciones.map((h) => (
-                  <a href={`#detalle-${idHabitacion(h.nombre)}`}>
+                  <a
+                    href={`#detalle-${idHabitacion(h.nombre)}`}
+                    class:list={[h.destacada && 'hotel-mini-destacada']}
+                  >
                     <Foto
                       src={h.foto}
                       alt={h.fotoAlt}
@@ -324,18 +373,23 @@ function idHabitacion(nombre) {
                       alto={675}
                     />
                     <strong>{h.nombre}</strong>
+                    {insigniaDe(h) && (
+                      <span class="hotel-casa-detalle__bano" data-bano={insigniaDe(h).tipo ?? undefined}>
+                        {insigniaDe(h).tipo ? TEXTO_BANO[insigniaDe(h).tipo].replace(/^\S+\s/, '') : insigniaDe(h).texto}
+                      </span>
+                    )}
                   </a>
                 ))}
               </div>
             </article>
           )}
 
-          <div class:list={['grid', 'aparecer', esHotelAtheron && 'hotel-detalles']}>
+          <div class:list={['grid', 'aparecer', casa && 'hotel-detalles']}>
             {d.habitaciones.map((h, i) => {
               const id = idHabitacion(h.nombre);
               return (
-                <article class="habitacion" id={esHotelAtheron ? `detalle-${id}` : undefined}>
-                  {esHotelAtheron && <a class="hotel-volver" href="#habitaciones">← Ver todas las opciones</a>}
+                <article class="habitacion" id={casa ? `detalle-${id}` : undefined}>
+                  {casa && <a class="hotel-volver" href="#habitaciones">← Ver todas las opciones</a>}
 
                   {h.galeria.length > 0 ? (
                     <button
@@ -504,16 +558,29 @@ function idHabitacion(nombre) {
         </div>
 
         <div class="bloque-doble__media">
-          <iframe
-            class="mapa"
-            title={d.mapaTitulo}
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=${d.mapaBbox}&layer=mapnik${
-              d.latitud != null && d.longitud != null
-                ? `&marker=${d.latitud}%2C${d.longitud}`
-                : ''
-            }`}
-            loading="lazy"
-          ></iframe>
+          {d.mapaBbox ? (
+            <iframe
+              class="mapa"
+              title={d.mapaTitulo ?? `Mapa con la ubicacion de ${d.nombre}`}
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${d.mapaBbox}&layer=mapnik${
+                d.latitud != null && d.longitud != null
+                  ? `&marker=${d.latitud}%2C${d.longitud}`
+                  : ''
+              }`}
+              loading="lazy"
+            ></iframe>
+          ) : (
+            /* Sin encuadre confirmado no se pinta mapa. Antes que
+               ensenar un punto que no es, se dice lo que hay. */
+            <div class="nota-reserva">
+              <span class="nota-reserva__icono" aria-hidden="true">&#128205;</span>
+              <div>
+                <strong>Ubicacion exacta al confirmar</strong>
+                Estamos terminando de publicar el mapa. Escribenos por WhatsApp y te
+                contamos como llegar y que tienes alrededor.
+              </div>
+            </div>
+          )}
 
           {coordenadas && (
             <nav class="botones-mapa" aria-label={`Como llegar al ${d.nombre}`}>
