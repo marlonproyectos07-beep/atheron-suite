@@ -302,6 +302,70 @@ const hospedajes = defineCollection({
     notaHabitaciones: textoOpcional,
 
     /* ----------------------------------------------------------
+       PRESENTACION COMERCIAL
+
+       Portada con la foto a sangre, en vez de la portada sobria de
+       color. Se pide desde el contenido y no desde el nombre del
+       hospedaje, para que valga en cualquiera. */
+    heroFoto: z.boolean().default(false),
+    /* Que parte de la foto se ve en la franja de portada. La foto no
+       se toca: es la misma, solo cambia el trozo que queda a la vista
+       cuando la banda es mucho mas ancha que alta. Se escribe como el
+       object-position del CSS ("center 30%"). Vacio = centrada. */
+    heroEncuadre: textoOpcional,
+    /* Lo mismo, para pantallas estrechas: ahi la franja es alta y el
+       recorte bueno suele ser otro. Vacio = el afinado por defecto. */
+    heroEncuadreMovil: textoOpcional,
+
+    /* Venta del alojamiento entero, por delante de las habitaciones
+       sueltas. Si este bloque no esta, la ficha lista las
+       habitaciones y ya, como siempre.
+
+       Todo lo que se lee en pantalla vive aqui y no en la plantilla:
+       un hospedaje nuevo con este modelo no necesita tocar codigo,
+       solo rellenar estos campos en su .md. Los que llevan valor por
+       defecto se pueden omitir. */
+    casaCompleta: z
+      .object({
+        /* Cabecera del apartado */
+        etiquetaSeccion: z.string().default('Opciones de alojamiento'),
+        tituloSeccion: z.string().default('Elige como quieres hospedarte'),
+        introSeccion: textoOpcional,
+
+        /* Tarjeta destacada */
+        ceja: z.string().default('¿Viajan juntos?'),
+        titulo: z.string().default('Casa completa para grupos'),
+        insignia: z.string().default('Mejor opcion para grupos'),
+        nombre: z.string(),
+        /* Datos duros de la tarjeta: "Hasta 22 huespedes", "5 habitaciones"... */
+        datos: z.array(z.string()).default([]),
+        resumen: z.string(),
+        /* El precio va en dos lineas a proposito. La segunda es la
+           condicion, y no se puede quedar fuera: una tarifa de grupo
+           sin decir desde cuantas personas aplica es publicidad
+           enganosa. */
+        precio: textoOpcional,
+        precioNota: textoOpcional,
+
+        /* Bloque de detalle al que llevan los botones */
+        detalleCeja: z.string().default('Para grupos grandes'),
+        detalleTitulo: z.string(),
+        detalleTexto: z.string(),
+        detalleDatos: z.array(z.string()).default([]),
+
+        /* Botones y mensaje que se manda por WhatsApp */
+        ctaVer: z.string().default('Ver casa completa'),
+        ctaCotizar: z.string().default('Cotizar casa completa'),
+        mensaje: z.string(),
+
+        /* Cabecera del listado de habitaciones */
+        cejaHabitaciones: z.string().default('¿Prefieres una habitacion?'),
+        tituloHabitaciones: z.string().default('Conoce las opciones'),
+        introHabitaciones: textoOpcional,
+      })
+      .optional(),
+
+    /* ----------------------------------------------------------
        UBICACION
        ---------------------------------------------------------- */
 
@@ -312,8 +376,13 @@ const hospedajes = defineCollection({
     horarios: z.array(fila).default([]),
 
     /* Recuadro del mapa de OpenStreetMap. */
-    mapaBbox: z.string(),
-    mapaTitulo: z.string(),
+    /* Opcionales a proposito: un hospedaje cuya ubicacion todavia no
+       esta confirmada no puede pintar un mapa. Encuadrar un punto
+       cualquiera para rellenar el hueco seria inventar una direccion,
+       y eso no se hace. Sin bbox, la ficha lo dice y ofrece
+       coordinarlo por WhatsApp. */
+    mapaBbox: textoOpcional,
+    mapaTitulo: textoOpcional,
     mapaNota: textoOpcional,
     mapaNotaPendiente: z.boolean().default(false),
 
@@ -349,7 +418,10 @@ const hospedajes = defineCollection({
       titulo: z.string(),
       texto: z.string(),
       pendiente: z.boolean().default(false),
-    })).min(1).max(4),
+    })).max(4),
+    /* Sin minimo: un hospedaje cuya zona todavia no esta confirmada no
+       puede listar que hay alrededor sin inventarselo. Con la lista
+       vacia, el apartado no se pinta. */
 
     /* ----------------------------------------------------------
        CONTACTO
