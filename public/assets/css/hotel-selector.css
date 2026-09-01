@@ -80,9 +80,13 @@
   position: relative;
 }
 
-/* Distintivo visible sobre la foto. Se usa el href real de cada ficha
-   para no depender de la posicion de la tarjeta en el grid. */
-.hotel-mini__foto::after {
+/* Distintivo visible sobre la foto. El texto viene del contenido y va
+   en el DOM -no como content de CSS-, porque dice algo que el
+   visitante necesita saber y que un lector de pantalla tiene que
+   poder leer. Antes estas reglas miraban el href de cada tarjeta, es
+   decir el numero de la habitacion: con dos hospedajes cuyas
+   habitaciones se llaman igual, acertaba por casualidad. */
+.hotel-mini__insignia {
   position: absolute;
   left: .65rem;
   top: .65rem;
@@ -101,21 +105,16 @@
   letter-spacing: .01em;
   pointer-events: none;
 }
-.hotel-mini__foto[href="#detalle-habitacion-201"]::after,
-.hotel-mini__foto[href="#detalle-habitacion-202"]::after {
-  content: "🚿 Baño compartido";
-}
-.hotel-mini__foto[href="#detalle-habitacion-203"]::after,
-.hotel-mini__foto[href="#detalle-habitacion-302"]::after {
-  content: "🔒 Baño privado";
+/* El bano propio se destaca en verde: es lo que mas pesa al elegir. */
+.hotel-mini__insignia[data-bano="privado"] {
   background: rgba(47, 107, 86, .94);
 }
-.hotel-mini__foto[href="#detalle-suite-301"]::after {
-  content: "★ Premium · Alexa";
+/* La habitacion estrella del hospedaje, con su distintivo propio. */
+.hotel-mini[data-destacada] .hotel-mini__insignia {
   background: var(--color-sal);
   color: var(--color-noche);
 }
-.hotel-mini__foto[href="#detalle-suite-301"] {
+.hotel-mini[data-destacada] .hotel-mini__foto {
   border-bottom: 3px solid var(--color-sal);
 }
 
@@ -142,12 +141,14 @@
   content: "Ver habitación";
   font-size: .82rem;
 }
-.hotel-mini:has(.hotel-mini__foto[href="#detalle-suite-301"]) .hotel-mini__acciones .boton--contorno::after {
-  content: "Ver suite";
+/* Una habitacion puede pedir su propio texto corto -"Ver suite"- desde
+   el contenido, sin que el CSS tenga que saber cual es. */
+.hotel-mini__acciones .boton--contorno[data-etiqueta-ver]::after {
+  content: attr(data-etiqueta-ver);
 }
 
-/* Refuerzo sutil de la Suite 301 sin volverla estridente. */
-.hotel-mini:has(.hotel-mini__foto[href="#detalle-suite-301"]) {
+/* Refuerzo sutil de la habitacion destacada, sin volverla estridente. */
+.hotel-mini[data-destacada] {
   border-color: color-mix(in srgb, var(--color-sal) 70%, var(--borde));
   box-shadow: 0 12px 32px rgba(201, 162, 39, .14);
 }
@@ -167,26 +168,21 @@
   position: relative;
   padding-bottom: .55rem;
 }
-.hotel-casa-detalle__mini a::after {
+/* El pie de cada miniatura, tambien desde el contenido y en el DOM. */
+.hotel-casa-detalle__bano {
+  display: block;
   color: var(--texto-suave);
   font-size: .76rem;
   font-weight: 600;
   line-height: 1.25;
 }
-.hotel-casa-detalle__mini a[href="#detalle-habitacion-201"]::after,
-.hotel-casa-detalle__mini a[href="#detalle-habitacion-202"]::after {
-  content: "Baño compartido";
-}
-.hotel-casa-detalle__mini a[href="#detalle-habitacion-203"]::after,
-.hotel-casa-detalle__mini a[href="#detalle-habitacion-302"]::after {
-  content: "Baño privado";
+.hotel-casa-detalle__bano[data-bano="privado"] {
   color: var(--color-verde);
 }
-.hotel-casa-detalle__mini a[href="#detalle-suite-301"]::after {
-  content: "★ Premium · Alexa";
+.hotel-mini-destacada .hotel-casa-detalle__bano {
   color: #856a10;
 }
-.hotel-casa-detalle__mini a[href="#detalle-suite-301"] .foto {
+.hotel-mini-destacada .foto {
   outline: 3px solid var(--color-sal);
   outline-offset: -3px;
 }

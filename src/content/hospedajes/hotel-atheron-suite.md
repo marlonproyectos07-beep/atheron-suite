@@ -83,6 +83,7 @@ casaCompleta:
   introHabitaciones: Compara primero y entra solo a la habitacion que te interese.
 habitaciones:
   - nombre: Habitacion 201
+    tipoBano: compartido
     camas: 1 cama doble
     banos: Bano compartido
     descripcion: >-
@@ -105,6 +106,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-cocina-compartida.jpg
         alt: Cocina compartida del segundo piso del Hotel Atheron Suite en Zipaquira, con estufa a gas, horno, nevera y mesa
   - nombre: Habitacion 202
+    tipoBano: compartido
     camas: 1 cama doble y 1 camarote
     banos: Bano compartido
     descripcion: >-
@@ -131,6 +133,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-cocina-compartida.jpg
         alt: Cocina compartida del segundo piso del Hotel Atheron Suite en Zipaquira, con estufa a gas, horno, nevera y mesa
   - nombre: Habitacion 203
+    tipoBano: privado
     camas: 1 cama nido
     banos: Bano privado
     descripcion: >-
@@ -157,6 +160,10 @@ habitaciones:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-cocina-compartida.jpg
         alt: Cocina compartida del segundo piso del Hotel Atheron Suite en Zipaquira, con estufa a gas, horno, nevera y mesa
   - nombre: Suite 301
+    tipoBano: privado
+    insignia: ★ Premium · Alexa
+    destacada: true
+    etiquetaVer: Ver suite
     huespedes: Hasta 7
     camas: 1 cama doble con cama nido debajo, 1 camarote y 1 sofa cama
     banos: '1'
@@ -194,6 +201,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-entrada.jpg
         alt: Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera
   - nombre: Habitacion 302
+    tipoBano: privado
     huespedes: Hasta 3
     camas: 1 cama doble y 1 sofa cama
     banos: '1'

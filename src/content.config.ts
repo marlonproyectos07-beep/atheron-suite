@@ -132,6 +132,28 @@ const habitacion = z.object({
   foto: textoOpcionalPanel,
   fotoAlt: textoOpcionalPanel,
 
+  /* ----------------------------------------------------------
+     COMO SE DISTINGUE ESTA HABITACION EN EL SELECTOR
+
+     El distintivo que va sobre la foto salia del CSS, atado al
+     identificador de cada habitacion del Hotel Atheron Suite. Con
+     Casa Algarra acertaba por casualidad -se llaman igual- y su
+     habitacion principal se quedaba sin decir que el bano es
+     privado, que es justo lo que la vende. Ahora sale del dato.
+
+     Vacio = sin distintivo. NO se deduce del nombre ni del numero:
+     si no esta confirmado, no se pinta nada.
+     ---------------------------------------------------------- */
+  tipoBano: z.enum(['privado', 'compartido', 'auxiliar']).optional(),
+  /* Distintivo propio, cuando lo que distingue a la habitacion no es
+     el bano. Sustituye al del tipo de bano. */
+  insignia: textoOpcionalPanel,
+  /* Realce visual de la habitacion estrella del hospedaje. */
+  destacada: z.boolean().default(false),
+  /* Texto corto del boton en la tarjeta compacta, si el generico no
+     encaja. Ej: "Ver suite". */
+  etiquetaVer: textoOpcionalPanel,
+
   /* Galeria propia de la habitacion. Opcional y aditiva: una
      habitacion sin fotos sigue funcionando igual, solo que no
      pinta el bloque. La galeria del hospedaje (galeria, mas

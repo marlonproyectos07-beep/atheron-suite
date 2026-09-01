@@ -101,6 +101,21 @@ function dato(valor, singular, plural) {
   return v === '1' ? `${v} ${singular}` : `${v} ${plural}`;
 }
 
+/* El distintivo de la tarjeta compacta. Sale del dato, no del nombre
+   ni del numero de la habitacion: si no hay dato confirmado, no se
+   pinta nada. "insignia" gana al tipo de bano, para las habitaciones
+   cuyo argumento de venta es otro. */
+const TEXTO_BANO = {
+  privado: '🔒 Baño privado',
+  compartido: '🚿 Baño compartido',
+  auxiliar: '🚻 Baño auxiliar',
+};
+function insigniaDe(h) {
+  if (h.insignia) return { texto: h.insignia, tipo: null };
+  if (h.tipoBano) return { texto: TEXTO_BANO[h.tipoBano], tipo: h.tipoBano };
+  return null;
+}
+
 function idHabitacion(nombre) {
   return String(nombre)
     .toLowerCase()
@@ -279,8 +294,17 @@ function idHabitacion(nombre) {
                   ].filter(Boolean).slice(0, 2);
 
                   return (
-                    <article class="hotel-mini">
+                    <article class="hotel-mini" data-destacada={h.destacada ? '' : undefined}>
                       <a class="hotel-mini__foto" href={`#detalle-${id}`} aria-label={`Ver fotos y detalles de ${h.nombre}`}>
+                        {/* El distintivo va en el DOM y no como contenido de
+                             CSS: dice algo que el visitante necesita saber
+                             -si el bano es suyo o compartido- y eso tiene que
+                             poder leerlo tambien un lector de pantalla. */}
+                        {insigniaDe(h) && (
+                          <span class="hotel-mini__insignia" data-bano={insigniaDe(h).tipo ?? undefined}>
+                            {insigniaDe(h).texto}
+                          </span>
+                        )}
                         <Foto
                           src={h.foto}
                           alt={h.fotoAlt}
@@ -298,7 +322,11 @@ function idHabitacion(nombre) {
                         <p class="hotel-mini__resumen texto-suave">{h.descripcion}</p>
                         <div class="hotel-mini__precio">{h.precio}</div>
                         <div class="hotel-mini__acciones">
-                          <a class="boton boton--contorno" href={`#detalle-${id}`}>Ver fotos y detalles</a>
+                          <a
+                            class="boton boton--contorno"
+                            href={`#detalle-${id}`}
+                            data-etiqueta-ver={h.etiquetaVer ?? undefined}
+                          >Ver fotos y detalles</a>
                           <a
                             class="boton boton--whatsapp"
                             href="#contacto"
@@ -331,7 +359,10 @@ function idHabitacion(nombre) {
 
               <div class="hotel-casa-detalle__mini">
                 {d.habitaciones.map((h) => (
-                  <a href={`#detalle-${idHabitacion(h.nombre)}`}>
+                  <a
+                    href={`#detalle-${idHabitacion(h.nombre)}`}
+                    class:list={[h.destacada && 'hotel-mini-destacada']}
+                  >
                     <Foto
                       src={h.foto}
                       alt={h.fotoAlt}
@@ -342,6 +373,11 @@ function idHabitacion(nombre) {
                       alto={675}
                     />
                     <strong>{h.nombre}</strong>
+                    {insigniaDe(h) && (
+                      <span class="hotel-casa-detalle__bano" data-bano={insigniaDe(h).tipo ?? undefined}>
+                        {insigniaDe(h).tipo ? TEXTO_BANO[insigniaDe(h).tipo].replace(/^\S+\s/, '') : insigniaDe(h).texto}
+                      </span>
+                    )}
                   </a>
                 ))}
               </div>

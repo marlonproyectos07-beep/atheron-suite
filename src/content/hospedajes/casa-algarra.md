@@ -102,6 +102,7 @@ casaCompleta:
   introHabitaciones: Cuando la casa no esta reservada entera, podemos alquilar habitaciones sueltas. Escribenos y lo miramos.
 habitaciones:
   - nombre: Habitacion 201
+    tipoBano: compartido
     camas: 1 cama doble
     banos: Bano social compartido
     descripcion: >-
@@ -119,6 +120,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-08-hall-piso-2.webp
         alt: Hall del segundo piso de Casa Algarra, por el que se accede a la habitacion
   - nombre: Habitacion 202
+    tipoBano: compartido
     camas: '2'
     banos: Bano social compartido
     descripcion: >-
@@ -136,6 +138,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-08-hall-piso-2.webp
         alt: Hall del segundo piso de Casa Algarra, por el que se accede a la habitacion
   - nombre: Habitacion 203 Principal
+    tipoBano: privado
     camas: '2'
     banos: Bano privado
     descripcion: >-
