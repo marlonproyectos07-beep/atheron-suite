@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "comprueba": "node scripts/comprueba-contenido.mjs",
+    "prueba": "node scripts/prueba-minimo-publicable.mjs",
     "foto": "node scripts/optimiza-fotos.mjs",
     "prebuild": "node scripts/comprueba-contenido.mjs && node scripts/optimiza-selector.mjs",
     "build": "astro build",

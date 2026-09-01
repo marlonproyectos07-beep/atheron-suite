@@ -29,6 +29,7 @@
    ============================================================ */
 
 import { readdirSync, readFileSync, existsSync, statSync } from 'node:fs';
+import { loQueFalta } from './minimo-publicable.mjs';
 import { join } from 'node:path';
 
 const CARPETA = 'src/content';
@@ -141,62 +142,11 @@ for (const ruta of archivosMarkdown(CARPETA)) {
    ============================================================ */
 const MINIMO_BLOQUEA = true;
 
-/* Lee un campo de primer nivel del frontmatter. */
-function valorDe(frontmatter, campo) {
-  const encontrado = frontmatter.match(new RegExp('^' + campo + ':\\s*(.*)$', 'm'));
-  if (!encontrado) return '';
-  return encontrado[1].trim().replace(/^['"]|['"]$/g, '');
-}
-
-/* Lee un bloque entero (una lista) hasta el siguiente campo de primer nivel. */
-function bloqueDe(frontmatter, campo) {
-  const lineas = frontmatter.split('\n');
-  const inicio = lineas.findIndex((l) => l.startsWith(campo + ':'));
-  if (inicio === -1) return '';
-  const resto = lineas.slice(inicio + 1);
-  const fin = resto.findIndex((l) => /^[a-zA-Z]/.test(l));
-  return (fin === -1 ? resto : resto.slice(0, fin)).join('\n');
-}
-
-const vacio = (v) => !v || v === "''" || v === '""';
-
-const REQUISITOS = [
-  {
-    texto: 'nombre real (no "Hospedaje 02")',
-    cumple: (f) => {
-      const v = valorDe(f, 'nombre');
-      return !vacio(v) && !/^Hospedaje\s+\d+$/i.test(v);
-    },
-  },
-  {
-    texto: 'precio real (hoy "$ ---" o marcado como pendiente)',
-    cumple: (f) =>
-      valorDe(f, 'precioPendiente') !== 'true' && !/-{2,}/.test(valorDe(f, 'precio')),
-  },
-  {
-    texto: 'al menos una habitacion con datos reales',
-    cumple: (f) => /pendiente:\s*false/.test(bloqueDe(f, 'habitaciones')),
-  },
-  {
-    texto: 'foto de tarjeta (la que se ve en portada y listado)',
-    cumple: (f) => !vacio(valorDe(f, 'fotoTarjeta')),
-  },
-  {
-    texto: 'presentacion escrita (no el texto de ejemplo)',
-    cumple: (f) => valorDe(f, 'presentacionPendiente') !== 'true',
-  },
-  {
-    texto: 'sector real en el listado (no "Barrio / sector")',
-    cumple: (f) => {
-      const v = valorDe(f, 'listadoSector');
-      return !vacio(v) && !/barrio\s*\/\s*sector/i.test(v);
-    },
-  },
-  {
-    texto: 'descripcion para buscadores de al menos 80 caracteres',
-    cumple: (f) => valorDe(f, 'descripcion').length >= 80,
-  },
-];
+/* Los requisitos y sus ayudantes viven en scripts/minimo-publicable.mjs.
+   Salieron de aqui para poder probarlos: las pruebas ejecutan ese mismo
+   codigo, no una copia. Ahi tambien esta la razon por la que hay dos
+   modelos de venta -por habitaciones y casa completa- y por que a la
+   casa entera se le pide otra cosa, no menos. */
 
 const fichasIncompletas = [];
 
@@ -205,9 +155,7 @@ for (const ruta of archivosMarkdown(join(CARPETA, 'hospedajes'))) {
   if (partes.length < 3) continue;
   const frontmatter = partes[1];
 
-  if (valorDe(frontmatter, 'publicado') !== 'true') continue;
-
-  const faltan = REQUISITOS.filter((r) => !r.cumple(frontmatter)).map((r) => r.texto);
+  const faltan = loQueFalta(frontmatter);
   if (faltan.length) fichasIncompletas.push({ ruta, faltan });
 }
 

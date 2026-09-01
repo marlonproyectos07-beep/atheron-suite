@@ -3,22 +3,45 @@ nombre: Casa Neusa
 publicado: false
 orden: 3
 insignia: '03'
+modalidad: casa-completa
 titulo: Casa Neusa | Casa de campo en Cogua, Cundinamarca
 descripcion: Casa de campo entera en el sector de Neusa, Cogua, Cundinamarca. Hasta 8 huespedes, 2 habitaciones, chimenea, balcon con vista panoramica y zona de BBQ. Consulta disponibilidad y tarifa.
 ogTitulo: Casa Neusa | Casa de campo entera en Cogua
 ogDescripcion: Una casa de campo entera rodeada de naturaleza en el sector de Neusa, Cogua. Hasta 8 huespedes, chimenea, balcon y zona exterior de BBQ.
-avisoBorrador: Ficha en preparacion. El contenido esta verificado; faltan las 11 fotografias aprobadas y el precio.
+avisoBorrador: Ficha en revision. Contenido y fotografias verificados; pendiente el visto bueno del preview y la tarifa.
 nombreAnterior: Casa de campo en Neusa
 zona: 'Neusa, Cogua, Cundinamarca'
 localidad: Cogua
 departamento: Cundinamarca
 presentacion: Una casa de campo entera para desconectar, rodeada de zonas verdes y paisaje rural. Chimenea adentro, balcon con vista panoramica y zona de BBQ afuera.
 presentacionPendiente: false
-fotoTarjeta: ''
-fotoTarjetaAlt: ''
-fotoPrincipal: ''
-fotoPrincipalAlt: ''
-galeria: []
+fotoTarjeta: /assets/img/hospedajes/casa-neusa/casa-neusa-01-portada-sala-chimenea.webp
+fotoTarjetaAlt: Sala de Casa Neusa con techo de madera y ventanales al campo
+fotoPrincipal: /assets/img/hospedajes/casa-neusa/casa-neusa-01-portada-sala-chimenea.webp
+fotoPrincipalAlt: Sala de Casa Neusa con techo de madera a dos aguas, sofas en L, chimenea de piedra y ventanales que dan al campo
+galeria:
+  - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-01-portada-sala-chimenea.webp
+    alt: Sala de Casa Neusa con techo de madera a dos aguas, sofas en L, chimenea de piedra y ventanales que dan al campo
+  - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-02-exterior-principal.webp
+    alt: Exterior de Casa Neusa, casa de tejado a dos aguas con fachada blanca y vigas de madera, rodeada de cesped
+  - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-09-balcon-panoramico.webp
+    alt: Balcon de madera de Casa Neusa con baranda metalica, abierto al paisaje verde y a las montanas
+  - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-10-zona-bbq.webp
+    alt: Zona exterior de BBQ de Casa Neusa, con estructura de madera techada sobre el cesped y una gran roca al frente
+  - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-06-cocina.webp
+    alt: Cocina en L de Casa Neusa, con nevera, encimera oscura y ventana sobre el fregadero con vista al campo
+  - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-07-comedor.webp
+    alt: Comedor de Casa Neusa con mesa de madera para seis, techo de madera y la escalera al fondo
+  - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-03-habitacion-uno.webp
+    alt: Primera habitacion de Casa Neusa, bajo el techo de madera inclinado y con ventana al campo
+  - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-04-habitacion-dos.webp
+    alt: Segunda habitacion de Casa Neusa, bajo el techo de madera inclinado y con salida al balcon
+  - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-05-sala-auxiliar-balcon.webp
+    alt: Sala auxiliar del segundo piso de Casa Neusa, con sofa bajo el techo de madera y salida al balcon
+  - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-08-bano.webp
+    alt: Bano completo de Casa Neusa, con ducha de vidrio, lavamanos y espejo
+  - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-11-acceso-los-laureles.webp
+    alt: Acceso a Casa Neusa de noche, con el muro iluminado y el letrero Los Laureles
 datos:
   - numero: '8'
     texto: Huespedes
@@ -69,8 +92,8 @@ precio: Consultar
 precioPendiente: true
 habitaciones: []
 notaHabitaciones: ''
-heroFoto: false
-heroEncuadre: ''
+heroFoto: true
+heroEncuadre: center 62%
 heroEncuadreMovil: ''
 espacios:
   etiqueta: La casa
@@ -79,39 +102,59 @@ espacios:
   lista:
     - titulo: Sala con chimenea
       texto: >-
-        El punto de reunion de la casa. La chimenea interior es lo que
-        cambia una noche fria de campo por una noche de campo.
-      foto: ''
-      fotoAlt: ''
-    - titulo: Cocina y comedor
+        El punto de reunion de la casa, bajo el techo de madera y con
+        los ventanales abiertos al campo. La chimenea es lo que cambia
+        una noche fria de campo por una noche de campo.
+      foto: /assets/img/hospedajes/casa-neusa/casa-neusa-01-portada-sala-chimenea.webp
+      fotoAlt: Sala de Casa Neusa con chimenea de piedra, sofas en L y ventanales al campo
+    - titulo: Cocina
       texto: >-
-        Cocina para preparar lo de todos y comedor para sentarse a la
-        vez, sin turnos.
-      foto: ''
-      fotoAlt: ''
+        Cocina en L con nevera y espacio de trabajo, y una ventana
+        sobre el fregadero que da al campo.
+      foto: /assets/img/hospedajes/casa-neusa/casa-neusa-06-cocina.webp
+      fotoAlt: Cocina en L de Casa Neusa, con nevera y ventana sobre el fregadero
+    - titulo: Comedor
+      texto: >-
+        Mesa de madera para seis, para que el grupo se siente a la vez
+        y no por turnos.
+      foto: /assets/img/hospedajes/casa-neusa/casa-neusa-07-comedor.webp
+      fotoAlt: Comedor de Casa Neusa con mesa de madera para seis personas
     - titulo: Balcon con vista panoramica
       texto: >-
-        Balcon abierto al paisaje rural, con vista a la montana y a las
-        zonas verdes que rodean la casa.
-      foto: ''
-      fotoAlt: ''
+        Balcon de madera abierto al paisaje rural, con vista a las
+        montanas y a las zonas verdes que rodean la casa.
+      foto: /assets/img/hospedajes/casa-neusa/casa-neusa-09-balcon-panoramico.webp
+      fotoAlt: Balcon de madera de Casa Neusa con vista al paisaje verde y a las montanas
     - titulo: Zona exterior de BBQ
       texto: >-
-        Asador al aire libre para la carne del sabado, en la zona
-        exterior de la casa.
-      foto: ''
-      fotoAlt: ''
-    - titulo: Dos habitaciones
+        Asador al aire libre bajo su propia estructura de madera, en el
+        cesped, junto a la gran roca que identifica la casa.
+      foto: /assets/img/hospedajes/casa-neusa/casa-neusa-10-zona-bbq.webp
+      fotoAlt: Zona de BBQ de Casa Neusa, con estructura de madera techada sobre el cesped
+    - titulo: Sala auxiliar del segundo piso
       texto: >-
-        La casa publica dos habitaciones y dos camas, para un maximo de
-        8 viajeros. La distribucion concreta la confirmamos por
-        WhatsApp segun cuantos vengan.
-      foto: ''
-      fotoAlt: ''
+        Un segundo lugar de estar arriba, con salida al balcon, para
+        cuando el grupo se reparte.
+      foto: /assets/img/hospedajes/casa-neusa/casa-neusa-05-sala-auxiliar-balcon.webp
+      fotoAlt: Sala auxiliar del segundo piso de Casa Neusa, con sofa y salida al balcon
+    - titulo: Primera habitacion
+      texto: >-
+        Habitacion bajo el techo de madera inclinado, con ventana al
+        campo.
+      foto: /assets/img/hospedajes/casa-neusa/casa-neusa-03-habitacion-uno.webp
+      fotoAlt: Primera habitacion de Casa Neusa, bajo el techo de madera inclinado
+    - titulo: Segunda habitacion
+      texto: >-
+        La segunda habitacion, tambien bajo el techo de madera, con
+        salida al balcon.
+      foto: /assets/img/hospedajes/casa-neusa/casa-neusa-04-habitacion-dos.webp
+      fotoAlt: Segunda habitacion de Casa Neusa, con salida al balcon
     - titulo: Un bano completo
-      texto: Bano completo con ducha, compartido por la casa.
-      foto: ''
-      fotoAlt: ''
+      texto: >-
+        La casa tiene un bano, con ducha, lavamanos y espejo. Es el
+        unico, y lo comparte todo el grupo.
+      foto: /assets/img/hospedajes/casa-neusa/casa-neusa-08-bano.webp
+      fotoAlt: Bano completo de Casa Neusa, con ducha de vidrio y lavamanos
 pruebaSocial:
   fuente: Airbnb
   etiqueta: Opiniones

@@ -225,6 +225,25 @@ const hospedajes = defineCollection({
     insignia: z.string(),
 
     /* ----------------------------------------------------------
+       COMO SE VENDE ESTE HOSPEDAJE
+
+       "habitaciones" => se alquilan habitaciones sueltas, aunque
+                         ademas se ofrezca la casa entera.
+       "casa-completa" => solo se alquila entera.
+
+       Lo usa el guardian del minimo publicable (scripts/
+       minimo-publicable.mjs) para saber que pedirle a la ficha antes
+       de dejarla salir. Una casa que solo se alquila entera no tiene
+       -ni va a tener- ficha comercial por habitacion, y con el
+       guardian anterior no se podia publicar nunca.
+
+       Se declara, no se deduce: si se dedujera de que la ficha no
+       tiene habitaciones, cualquier ficha a la que simplemente le
+       falten pasaria por casa completa, que es justo el descuido que
+       el guardian existe para atrapar. */
+    modalidad: z.enum(['habitaciones', 'casa-completa']).default('habitaciones'),
+
+    /* ----------------------------------------------------------
        SEO
        ---------------------------------------------------------- */
 
