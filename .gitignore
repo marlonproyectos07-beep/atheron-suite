@@ -19,3 +19,17 @@ dist/
 
 # Configuracion local del servidor de desarrollo (lleva rutas de esta maquina)
 .claude/launch.json
+
+# Miniaturas del selector de habitaciones.
+# Las genera scripts/optimiza-selector.mjs en cada "prebuild", a partir
+# de los JPG que si estan versionados, asi que Vercel las recrea sola en
+# cada despliegue. Versionarlas seria guardar 364 KB de salida de build
+# que cambia cada vez que se toca una foto. Ojo: solo los anchos que
+# genera ese script. Las variantes del hero -400, 600, 700 y 900- se
+# hicieron a mano y siguen versionadas.
+public/assets/img/hospedajes/*-240.avif
+public/assets/img/hospedajes/*-240.webp
+public/assets/img/hospedajes/*-360.avif
+public/assets/img/hospedajes/*-360.webp
+public/assets/img/hospedajes/*-480.avif
+public/assets/img/hospedajes/*-480.webp

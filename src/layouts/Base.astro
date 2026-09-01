@@ -3,16 +3,16 @@ import fs from 'node:fs';
 
 /* ============================================================
      ESTILOS INCRUSTADOS  (rendimiento)
-     Las tres hojas se leen aqui, al construir, y viajan dentro
-     del HTML. Antes eran tres peticiones que BLOQUEABAN el
-     pintado: hasta que las tres no llegaban, el visitante veia
+     Las hojas se leen aqui, al construir, y viajan dentro
+     del HTML. Antes eran peticiones que BLOQUEABAN el
+     pintado: hasta que no llegaban, el visitante veia
      una pagina en blanco. Lighthouse lo medio en unos 2 segundos
      en movil con red lenta.
      Los archivos siguen existiendo en public/assets/css/ y se
      editan alli como siempre: aqui solo se copian, sin comentarios
      y sin sangrado, que no le sirven de nada al navegador.
      ============================================================ */
-const estilos = ['base', 'componentes', 'paginas']
+const estilos = ['base', 'componentes', 'paginas', 'hotel-selector']
   .map((hoja) => fs.readFileSync('public/assets/css/' + hoja + '.css', 'utf8'))
   .join('\n')
   .replace(/\/\*[\s\S]*?\*\//g, '')
@@ -125,30 +125,66 @@ const urlCanonica = new URL(ruta, Astro.site).href;
 
   <meta name="twitter:card" content="summary_large_image">
 
-  {/* Iconos de pestana y de pantalla de inicio, del logo oficial.
-       Declararlos evita ademas la peticion a /favicon.ico que fallaba. */}
+  {/* Iconos de pestana y de pantalla de inicio, del logo oficial. */}
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/marca/atheron-icono-32.png">
   <link rel="apple-touch-icon" href="/assets/img/marca/atheron-icono-180.png">
 
-  {/* Tipografias (necesitan internet; si no cargan, el sitio usa las de respaldo) */}
+  {/* Solo la tipografia de titulos se descarga. El texto normal usa la
+       pila nativa del sistema: mantiene legibilidad y elimina ~48 KB
+       y una fuente externa del camino inicial en movil. */}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  {/* La hoja de fuentes se pide sin bloquear el pintado: entra como
-       hoja de impresion -que el navegador no espera- y en cuanto llega
-       se activa para pantalla. El texto se ve desde el primer momento
-       con la tipografia de respaldo y luego cambia. Sin esto, Google
-       Fonts retrasaba el primer pintado unos 900 ms en movil. */}
   <link rel="stylesheet" media="print" onload="this.media='all'; this.onload=null"
-        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
   <noscript>
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
+          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
   </noscript>
 
   {/* Nuestras hojas de estilo, siempre en este orden:
-       base (variables) -> componentes -> paginas.
+       base (variables) -> componentes -> paginas -> ajustes del selector.
        Van incrustadas: ver el comentario de arriba del todo. */}
   <style is:inline set:html={estilos}></style>
+
+  {/* ============================================================
+       PERMISO PARA ANIMAR
+
+       La animacion de aparicion esconde el bloque -opacity 0- y lo
+       muestra cuando entra en pantalla. Si algo impide que ese
+       "cuando entra en pantalla" llegue a ocurrir, el contenido se
+       queda escondido para siempre y la pagina muestra un hueco en
+       blanco. Paso de verdad: con cinco habitaciones el bloque mide
+       5.500 px y en un portatil no se veia ninguna.
+
+       Por eso el CSS solo esconde si el <html> lleva la clase
+       "anima", y esa clase la pone este guion. Sin JavaScript, con
+       JavaScript bloqueado, o si este archivo no llega, la clase no
+       se pone y el contenido se ve tal cual: sin animacion, pero
+       visible. El contenido nunca depende de que un guion funcione.
+
+       Va aqui, incrustado y antes del <body>, y no en main.js: main
+       se carga con defer y para entonces la pagina ya se pinto, asi
+       que el contenido apareceria y se ocultaria de golpe.
+
+       El plazo de dos segundos cubre el caso restante: la clase
+       puesta pero main.js sin llegar a montar el observador -red
+       lenta, error de carga-. Si a los dos segundos main no ha
+       avisado, se retira el permiso y todo se ve.
+
+       Y si el visitante pidio menos movimiento, no se anima nada.
+       ============================================================ */}
+  <script is:inline>
+    (function () {
+      var raiz = document.documentElement;
+      try {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      } catch (e) { return; }
+      raiz.classList.add('anima');
+      setTimeout(function () {
+        if (!window.__aparecerListo) raiz.classList.remove('anima');
+      }, 2000);
+    })();
+  </script>
 
   {/* ============================================================
        DATOS ESTRUCTURADOS (JSON-LD)
@@ -179,9 +215,7 @@ const urlCanonica = new URL(ruta, Astro.site).href;
   <slot />
 
   {/* main.js se enlaza con is:inline para que Astro NO lo empaquete
-       ni le cambie el nombre. El archivo sigue siendo el mismo de
-       siempre en /assets/js/main.js: numero de WhatsApp, codigos
-       promocionales, menu movil y animaciones. */}
+       ni le cambie el nombre. */}
   <script is:inline defer src="/assets/js/main.js"></script>
 
 </body>

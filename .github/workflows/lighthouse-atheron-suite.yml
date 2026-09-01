@@ -1,0 +1,60 @@
+name: Lighthouse — Hotel Atheron Suite
+
+on:
+  push:
+    branches:
+      - claude/habitaciones-202-203
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    name: Lighthouse móvil + escritorio
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Verificar contenido
+        run: npm run comprueba
+
+      - name: Construir sitio
+        run: npm run build
+
+      - name: Arrancar Astro Preview local
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4321 > /tmp/astro-preview.log 2>&1 &
+          npx --yes wait-on http://127.0.0.1:4321/hospedajes/hotel-atheron-suite --timeout 30000
+
+      - name: Lighthouse móvil
+        run: npx --yes lighthouse http://127.0.0.1:4321/hospedajes/hotel-atheron-suite --quiet --chrome-flags="--headless --no-sandbox" --only-categories=performance,accessibility,best-practices,seo --output=json --output-path=/tmp/lighthouse-mobile.json
+
+      - name: Lighthouse escritorio
+        run: npx --yes lighthouse http://127.0.0.1:4321/hospedajes/hotel-atheron-suite --quiet --preset=desktop --chrome-flags="--headless --no-sandbox" --only-categories=performance,accessibility,best-practices,seo --output=json --output-path=/tmp/lighthouse-desktop.json
+
+      - name: Mostrar puntuaciones y exigir calidad
+        run: node scripts/verifica-lighthouse.mjs
+
+      - name: Guardar informes Lighthouse
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-atheron-suite
+          path: |
+            /tmp/lighthouse-mobile.json
+            /tmp/lighthouse-desktop.json
+            /tmp/astro-preview.log
+          retention-days: 14

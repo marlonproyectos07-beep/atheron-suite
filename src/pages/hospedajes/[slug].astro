@@ -1,28 +1,4 @@
 ---
-/* ============================================================
-   FICHA DE HOSPEDAJE — UNA plantilla para los siete
-
-   Los corchetes del nombre del archivo, [slug], significan
-   "esta parte de la direccion es variable". Astro recorre la
-   coleccion de hospedajes y genera una pagina por cada uno:
-
-     src/content/hospedajes/hotel-atheron-suite.md
-        -> /hospedajes/hotel-atheron-suite
-
-   Antes esto eran 8 archivos HTML de 416 lineas cada uno, casi
-   identicos. Cambiar una coma en el formulario obligaba a
-   editarlos los ocho.
-
-   LA DIRECCION LA MANDA EL NOMBRE DEL ARCHIVO .md
-   Cuando llegue el nombre real del hospedaje 02, se renombra el
-   archivo de contenido a, por ejemplo, casa-del-portal.md y la
-   direccion pasa a ser /hospedajes/casa-del-portal. La canonica,
-   el sitemap y los enlaces del listado se actualizan solos.
-   Conviene hacerlo AHORA que las seis fichas estan en noindex y
-   fuera del sitemap: Google no las tiene, asi que no hace falta
-   montar ninguna redireccion.
-   ============================================================ */
-
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Cabecera from '../../components/Cabecera.astro';
@@ -45,26 +21,10 @@ export async function getStaticPaths() {
 const { ficha } = Astro.props;
 const d = ficha.data;
 const ruta = `/hospedajes/${ficha.id}`;
+const esHotelAtheron = ficha.id === 'hotel-atheron-suite';
 
-/* ------------------------------------------------------------
-   QUE SECCIONES TIENEN DATOS DE VERDAD
-
-   Regla del proyecto: si un dato todavia no existe, se oculta el
-   bloque entero. Nunca se muestra "$ ---", "N huespedes" ni
-   "Descripcion pendiente" a un cliente.
-
-   Las anclas del menu de celular se filtran en consecuencia, para
-   que no queden enlaces que no llevan a ninguna parte.
-   ------------------------------------------------------------ */
 const hayHabitaciones = d.habitaciones.some((h) => !h.pendiente);
 const hayGaleria = d.galeria.length > 0;
-/* Coordenadas ya listas para meter en una direccion. Vacio si la ficha
-   no las tiene: entonces no salen los botones de "como llegar". */
-/* Las habitaciones que traen video. Cada una tiene su propio visor con
-   un identificador propio -visor-video-1, visor-video-2...- y el boton
-   de su tarjeta apunta a el por nombre. El indice sale de la posicion
-   en d.habitaciones, no de la lista filtrada, para que el boton y el
-   dialogo coincidan aunque la primera habitacion no tenga video. */
 const videos = d.habitaciones
   .map((h, i) => (h.video ? { ...h.video, id: `visor-video-${i + 1}` } : null))
   .filter((v) => v !== null);
@@ -79,19 +39,8 @@ const enlacesMovil = menuFichaMovil.filter((e) => {
   return true;
 });
 
-/* El cuerpo del archivo .md es la descripcion larga del hospedaje. */
 const { Content } = await render(ficha);
 
-/* ============================================================
-   DATOS ESTRUCTURADOS
-   Se construyen a partir del contenido, no a mano.
-
-   REGLA: solo se marca informacion que el visitante pueda ver en
-   la pagina. Por eso cada campo se anade solo si existe:
-   - "calle" solo en los hospedajes propios. En los aliados NO se
-     publica la direccion exacta, ni en pantalla ni aqui.
-   - "geo" solo cuando tengamos las coordenadas (pendiente 8).
-   ============================================================ */
 const fichaNegocio: Record<string, unknown> = {
   '@context': 'https://schema.org',
   '@type': 'LodgingBusiness',
@@ -108,14 +57,8 @@ const fichaNegocio: Record<string, unknown> = {
   },
 };
 
-/* El nombre anterior solo se marca porque la pagina lo dice: va en
-   descripcionZona, a la vista. Marcar lo que no se ve es motivo de
-   penalizacion. */
 if (d.nombreAnterior) fichaNegocio.alternateName = d.nombreAnterior;
-/* Mientras no haya coordenadas, esta es la referencia buena de donde
-   esta el hospedaje. */
 if (d.enlaceMapa) fichaNegocio.hasMap = d.enlaceMapa;
-
 if (d.latitud != null && d.longitud != null) {
   fichaNegocio.geo = {
     '@type': 'GeoCoordinates',
@@ -138,17 +81,22 @@ fichaNegocio.parentOrganization = {
   name: 'Atheron Suite',
   url: 'https://hotelesatheron.com/',
 };
-/* Los datos de una habitacion admiten un numero ("3") o un texto entero
-   ("1 cama doble con cama nido debajo, 1 camarote y 1 sofa cama"). Antes la
-   plantilla pegaba la palabra siempre, y salia "1 banos" o "...sofa cama
-   camas". Ahora solo la anade si el propio valor no la dice ya. */
+
 function dato(valor, singular, plural) {
-  const v = String(valor ?? "").trim();
-  if (!v) return "";
+  const v = String(valor ?? '').trim();
+  if (!v) return '';
   if (v.toLowerCase().includes(singular)) return v;
-  return v === "1" ? v + " " + singular : v + " " + plural;
+  return v === '1' ? `${v} ${singular}` : `${v} ${plural}`;
 }
 
+function idHabitacion(nombre) {
+  return String(nombre)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
 ---
 
 <Base
@@ -161,13 +109,27 @@ function dato(valor, singular, plural) {
   jsonLd={fichaNegocio}
   avisoBorrador={d.avisoBorrador}
 >
-
   <Cabecera enlaces={menuFicha} enlacesMovil={enlacesMovil} cta={ctaConsultar} />
 
   <main id="contenido">
-
-    {/* ===== 1. PORTADA ===== */}
-    <section class="hero hero--interior">
+    <section class:list={['hero', 'hero--interior', esHotelAtheron && 'hero--hotel-atheron']}>
+      {esHotelAtheron && (
+        <picture class="hero-hotel__fondo" aria-hidden="true">
+          <source media="(max-width: 700px)" type="image/avif" srcset="/assets/img/hospedajes/la-magia-de-zipaquira-principal-700.avif" />
+          <source media="(max-width: 700px)" type="image/webp" srcset="/assets/img/hospedajes/la-magia-de-zipaquira-principal-700.webp" />
+          <source type="image/avif" srcset="/assets/img/hospedajes/la-magia-de-zipaquira-principal-900.avif" />
+          <source type="image/webp" srcset="/assets/img/hospedajes/la-magia-de-zipaquira-principal-900.webp" />
+          <img
+            src="/assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg"
+            alt=""
+            width="900"
+            height="675"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </picture>
+      )}
       <div class="contenedor hero__contenido">
         <span class="hero__etiqueta">{d.zona}</span>
         <h1 class="hero__titulo"><Marca texto={d.nombre} pendiente={!d.publicado} /></h1>
@@ -175,39 +137,35 @@ function dato(valor, singular, plural) {
           <Marca texto={d.presentacion} pendiente={d.presentacionPendiente} />
         </p>
         <div class="grupo-botones">
-          <a class="boton boton--whatsapp boton--grande" href="#contacto"
-             data-whatsapp={`Hola, me interesa ${d.nombre} de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.`}>
+          <a
+            class="boton boton--whatsapp boton--grande"
+            href="#contacto"
+            data-whatsapp={`Hola, me interesa ${d.nombre} de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.`}
+          >
             Consultar disponibilidad
           </a>
           {hayGaleria && <a class="boton boton--claro boton--grande" href="#galeria">Ver fotos</a>}
         </div>
 
-        {/* Datos duros arriba: es lo que la gente busca confirmar */}
         <div class="hero__datos">
-          {d.datos.map((dato) => (
+          {d.datos.map((item) => (
             <div class="dato">
-              <span class="dato__numero"><Marca texto={dato.numero} pendiente={dato.pendiente} /></span>
-              <span class="dato__texto">{dato.texto}</span>
+              <span class="dato__numero"><Marca texto={item.numero} pendiente={item.pendiente} /></span>
+              <span class="dato__texto">{item.texto}</span>
             </div>
           ))}
         </div>
       </div>
     </section>
 
-
-    {/* ===== 2. DESCRIPCION + CARACTERISTICAS ===== */}
     <section class="seccion">
       <div class="contenedor bloque-doble aparecer">
-
         <div class="bloque-doble__texto">
           <span class="etiqueta">El hospedaje</span>
           <h2><Marca texto={d.tituloDescripcion} pendiente={d.tituloDescripcionPendiente} /></h2>
-
-          {/* El texto largo viene del cuerpo del archivo .md */}
           <div class="texto-suave ficha__descripcion">
             <Content />
           </div>
-
           <h3 style="margin-bottom: var(--esp-2);">Caracteristicas</h3>
           <ul class="lista-check">
             {d.caracteristicas.map((c) => (
@@ -217,10 +175,6 @@ function dato(valor, singular, plural) {
         </div>
 
         <div class="bloque-doble__media">
-          {/* La foto principal va con las mismas variantes que en main:
-               AVIF y WebP en cuatro anchos, y el JPEG de respaldo. Se
-               quita forma="alto" porque la foto aprobada es 4:3 y en 3:4
-               habria que recortarla. */}
           <Foto
             src={d.fotoPrincipal}
             alt={d.fotoPrincipalAlt}
@@ -230,152 +184,289 @@ function dato(valor, singular, plural) {
             alto={675}
           >Foto principal pendiente</Foto>
         </div>
-
       </div>
     </section>
 
-
-    {/* ===== 3. HABITACIONES ===== */}
     {hayHabitaciones && (
-    <section class="seccion seccion--alterna" id="habitaciones">
-      <div class="contenedor">
+      <section class:list={['seccion', 'seccion--alterna', esHotelAtheron && 'hotel-selector-seccion']} id="habitaciones">
+        <div class="contenedor">
+          <div class="encabezado-seccion aparecer">
+            <span class="etiqueta">{esHotelAtheron ? 'Opciones de alojamiento' : 'Habitaciones'}</span>
+            <h2>{esHotelAtheron ? 'Elige como quieres hospedarte' : 'Donde vas a dormir'}</h2>
+            {esHotelAtheron ? (
+              <p class="texto-suave" style="margin-top: var(--esp-2);">
+                Reserva una habitacion individual o, si viajan en grupo, toma la casa completa para hasta 22 personas.
+              </p>
+            ) : d.notaHabitaciones ? (
+              <p class="texto-suave" style="margin-top: var(--esp-2);">{d.notaHabitaciones}</p>
+            ) : null}
+          </div>
 
-        <div class="encabezado-seccion aparecer">
-          <span class="etiqueta">Habitaciones</span>
-          <h2>Donde vas a dormir</h2>
-          {d.notaHabitaciones && (
-            <p class="texto-suave" style="margin-top: var(--esp-2);">{d.notaHabitaciones}</p>
-          )}
-        </div>
-
-        <div class="grid aparecer">
-          {d.habitaciones.map((h, i) => (
-            <article class="habitacion">
-              <Foto src={h.foto} alt={h.fotoAlt}>Foto pendiente</Foto>
-              <div>
-                <h3><Marca texto={h.nombre} pendiente={h.pendiente} /></h3>
-                {/* Cada etiqueta sale solo si tiene dato. Una habitacion
-                     cuya capacidad todavia no esta confirmada muestra las
-                     otras dos y ya: mejor una etiqueta menos que un numero
-                     inventado, y mejor eso que una pastilla vacia. */}
-                <div class="habitacion__datos">
-                  {[
-                    dato(h.huespedes, "huesped", "huespedes"),
-                    dato(h.camas, "cama", "camas"),
-                    dato(h.banos, "bano", "banos"),
-                  ]
-                    .filter(Boolean)
-                    .map((texto) => (
-                      <span class="habitacion__dato"><Marca texto={texto} pendiente={h.pendiente} /></span>
-                    ))}
-                </div>
-                <p class="texto-suave"><Marca texto={h.descripcion} pendiente={h.pendiente} /></p>
-                <div class="tarjeta__pie">
-                  {/* El "/ noche" solo tiene sentido detras de una cifra.
-                       Una habitacion cuyo precio todavia se cierra por
-                       WhatsApp pone "Consultar", y "Consultar / noche" no
-                       se entiende. Se mira si hay algun digito. */}
-                  <span class="tarjeta__precio">
-                    <Marca texto={h.precio} pendiente={h.pendiente} />
-                    {/\d/.test(h.precio) && <span> / noche</span>}
-                  </span>
-                  <a class="boton boton--whatsapp" href="#contacto"
-                     data-whatsapp={`Hola, quiero consultar por una habitacion en ${d.nombre} de Atheron Suite.`}>
-                    Consultar
-                  </a>
-                </div>
+          {esHotelAtheron && (
+            <div class="hotel-selector aparecer">
+              <div class="hotel-selector__titulo">
+                <span class="hotel-selector__ceja">¿Viajan juntos?</span>
+                <h3>Casa completa para grupos</h3>
               </div>
 
-              {/* Galeria propia de la habitacion. Reutiliza la misma
-                   rejilla que la galeria del hospedaje: la primera foto
-                   ocupa el doble. Si la habitacion no tiene fotos, este
-                   bloque no existe y la tarjeta se ve igual que antes. */}
-              {(h.galeria.length > 0 || h.video) && (
-                <div class="galeria" data-galeria style="grid-column: 1 / -1;">
-                  {h.galeria.map((f, i) => (
-                    <button
-                      type="button"
-                      class="galeria__abrir"
-                      data-foto={i + 1}
-                      aria-label={`Ampliar foto ${i + 1} de ${h.galeria.length}: ${f.alt}`}
-                    >
-                      <Foto src={f.imagen} alt={f.alt} forma="cuadrado" />
-                    </button>
-                  ))}
-
-                  {/* El video va como un elemento mas de la misma rejilla, al
-                       final. Con siete fotos en dos columnas quedaba una celda
-                       suelta en celular; esta la ocupa. No es un boton de la
-                       galeria de fotos: lleva su propia clase y abre su propio
-                       visor, asi que el lightbox de las fotos no se entera. */}
-                  {h.video && (
-                    <button
-                      type="button"
-                      class="galeria__video"
-                      data-abrir-video={`visor-video-${i + 1}`}
-                      aria-controls={`visor-video-${i + 1}`}
-                      aria-label={`Ver el video: ${h.video.titulo}`}
-                    >
-                      <img
-                        class="foto foto--cuadrado"
-                        src={h.video.poster}
-                        alt=""
-                        width={h.video.ancho}
-                        height={h.video.alto}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                      <span class="galeria__video-capa">
-                        <span class="galeria__video-play" aria-hidden="true"></span>
-                        <span class="galeria__video-texto">
-                          {h.video.etiqueta ?? 'Ver experiencia inteligente'}
-                        </span>
-                        {h.video.duracion && (
-                          <span class="galeria__video-duracion">{h.video.duracion}</span>
-                        )}
-                      </span>
-                    </button>
-                  )}
+              <article class="hotel-casa">
+                <a class="hotel-casa__foto" href="#detalle-casa-completa" aria-label="Ver la opcion Casa completa">
+                  <Foto
+                    src={d.fotoPrincipal}
+                    alt={d.fotoPrincipalAlt}
+                    anchos={[400, 600, 700, 900]}
+                    medidas="(min-width: 900px) 510px, calc(100vw - 3rem)"
+                    ancho={900}
+                    alto={675}
+                  />
+                </a>
+                <div class="hotel-casa__contenido">
+                  <span class="hotel-casa__insignia">Mejor opcion para grupos</span>
+                  <h3>Casa completa · Atheron Suite</h3>
+                  <div class="hotel-selector__datos">
+                    <span>Hasta 22 huespedes</span>
+                    <span>5 habitaciones</span>
+                  </div>
+                  <p class="texto-suave">
+                    Para familias, grupos de amigos, empresas o viajeros que quieren hospedarse juntos en una sola propiedad.
+                  </p>
+                  <p class="hotel-casa__precio">Precio para grupos: consultar</p>
+                  <div class="hotel-selector__acciones">
+                    <a class="boton boton--contorno" href="#detalle-casa-completa">Ver casa completa</a>
+                    <a
+                      class="boton boton--whatsapp"
+                      href="#contacto"
+                      data-whatsapp="Hola, quiero cotizar la casa completa de Hotel Atheron Suite para un grupo de hasta 22 personas."
+                    >Cotizar grupo</a>
+                  </div>
                 </div>
-              )}
+              </article>
+
+              <div class="hotel-selector__titulo hotel-selector__titulo--habitaciones">
+                <span class="hotel-selector__ceja">¿Prefieres una habitacion?</span>
+                <h3>Conoce las cinco opciones</h3>
+                <p class="texto-suave">Compara primero y entra solo a la habitacion que te interese.</p>
+              </div>
+
+              <div class="hotel-habitaciones-grid">
+                {d.habitaciones.map((h) => {
+                  const id = idHabitacion(h.nombre);
+                  const datos = [
+                    dato(h.huespedes, 'huesped', 'huespedes'),
+                    dato(h.camas, 'cama', 'camas'),
+                    dato(h.banos, 'bano', 'banos'),
+                  ].filter(Boolean).slice(0, 2);
+
+                  return (
+                    <article class="hotel-mini">
+                      <a class="hotel-mini__foto" href={`#detalle-${id}`} aria-label={`Ver fotos y detalles de ${h.nombre}`}>
+                        <Foto
+                          src={h.foto}
+                          alt={h.fotoAlt}
+                          anchos={[240, 360, 480]}
+                          medidas="(min-width: 900px) 220px, calc(100vw - 3rem)"
+                          ancho={900}
+                          alto={675}
+                        />
+                      </a>
+                      <div class="hotel-mini__cuerpo">
+                        <h3>{h.nombre}</h3>
+                        <div class="hotel-selector__datos hotel-selector__datos--mini">
+                          {datos.map((texto) => <span>{texto}</span>)}
+                        </div>
+                        <p class="hotel-mini__resumen texto-suave">{h.descripcion}</p>
+                        <div class="hotel-mini__precio">{h.precio}</div>
+                        <div class="hotel-mini__acciones">
+                          <a class="boton boton--contorno" href={`#detalle-${id}`}>Ver fotos y detalles</a>
+                          <a
+                            class="boton boton--whatsapp"
+                            href="#contacto"
+                            data-whatsapp={`Hola, quiero consultar disponibilidad y precio de ${h.nombre} en Hotel Atheron Suite.`}
+                          >Consultar</a>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {esHotelAtheron && (
+            <article class="hotel-casa-detalle" id="detalle-casa-completa">
+              <a class="hotel-volver" href="#habitaciones">← Ver todas las opciones</a>
+              <span class="hotel-selector__ceja">Para grupos grandes</span>
+              <h3>Casa completa · hasta 22 huespedes</h3>
+              <p class="texto-suave">
+                Reserva las cinco habitaciones de Atheron Suite para que tu grupo se hospede en una sola propiedad.
+              </p>
+              <div class="hotel-selector__datos">
+                <span>Hasta 22 huespedes</span>
+                <span>5 habitaciones</span>
+                <span>Una sola propiedad</span>
+              </div>
+              <a
+                class="boton boton--whatsapp"
+                href="#contacto"
+                data-whatsapp="Hola, quiero cotizar la casa completa de Hotel Atheron Suite. Somos un grupo y quiero consultar disponibilidad y precio."
+              >Cotizar casa completa</a>
+
+              <div class="hotel-casa-detalle__mini">
+                {d.habitaciones.map((h) => (
+                  <a href={`#detalle-${idHabitacion(h.nombre)}`}>
+                    <Foto
+                      src={h.foto}
+                      alt={h.fotoAlt}
+                      forma="cuadrado"
+                      anchos={[240, 360, 480]}
+                      medidas="(min-width: 900px) 190px, 42vw"
+                      ancho={900}
+                      alto={675}
+                    />
+                    <strong>{h.nombre}</strong>
+                  </a>
+                ))}
+              </div>
             </article>
-          ))}
+          )}
+
+          <div class:list={['grid', 'aparecer', esHotelAtheron && 'hotel-detalles']}>
+            {d.habitaciones.map((h, i) => {
+              const id = idHabitacion(h.nombre);
+              return (
+                <article class="habitacion" id={esHotelAtheron ? `detalle-${id}` : undefined}>
+                  {esHotelAtheron && <a class="hotel-volver" href="#habitaciones">← Ver todas las opciones</a>}
+
+                  {h.galeria.length > 0 ? (
+                    <button
+                      type="button"
+                      class="habitacion__foto"
+                      data-abrir-galeria={`galeria-${i + 1}`}
+                      aria-label={`Ver las ${h.galeria.length} fotos de ${h.nombre}`}
+                    >
+                      <Foto
+                        src={h.foto}
+                        alt={h.fotoAlt}
+                        anchos={[360, 480]}
+                        medidas="(min-width: 800px) 320px, calc(100vw - 3rem)"
+                        ancho={900}
+                        alto={675}
+                      >Foto pendiente</Foto>
+                      <span class="habitacion__lupa" aria-hidden="true">Ver fotos</span>
+                    </button>
+                  ) : (
+                    <Foto src={h.foto} alt={h.fotoAlt}>Foto pendiente</Foto>
+                  )}
+
+                  <div>
+                    <h3><Marca texto={h.nombre} pendiente={h.pendiente} /></h3>
+                    <div class="habitacion__datos">
+                      {[
+                        dato(h.huespedes, 'huesped', 'huespedes'),
+                        dato(h.camas, 'cama', 'camas'),
+                        dato(h.banos, 'bano', 'banos'),
+                      ]
+                        .filter(Boolean)
+                        .map((texto) => (
+                          <span class="habitacion__dato"><Marca texto={texto} pendiente={h.pendiente} /></span>
+                        ))}
+                    </div>
+                    <p class="texto-suave"><Marca texto={h.descripcion} pendiente={h.pendiente} /></p>
+                    <div class="tarjeta__pie">
+                      <span class="tarjeta__precio">
+                        <Marca texto={h.precio} pendiente={h.pendiente} />
+                        {/\d/.test(h.precio) && <span> / noche</span>}
+                      </span>
+                      <div class="tarjeta__acciones">
+                        {h.galeria.length > 0 && (
+                          <button
+                            type="button"
+                            class="boton boton--contorno"
+                            data-abrir-galeria={`galeria-${i + 1}`}
+                          >
+                            Ver fotos
+                          </button>
+                        )}
+                        <a
+                          class="boton boton--whatsapp"
+                          href="#contacto"
+                          data-whatsapp={`Hola, quiero consultar por la ${h.nombre} del ${d.nombre}.`}
+                        >
+                          Consultar
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {(h.galeria.length > 0 || h.video) && (
+                    <div class="galeria" data-galeria id={`galeria-${i + 1}`} style="grid-column: 1 / -1;">
+                      {h.galeria.map((f, j) => (
+                        <button
+                          type="button"
+                          class="galeria__abrir"
+                          data-foto={j + 1}
+                          aria-label={`Ampliar foto ${j + 1} de ${h.galeria.length}: ${f.alt}`}
+                        >
+                          <Foto src={f.imagen} alt={f.alt} forma="cuadrado" />
+                        </button>
+                      ))}
+
+                      {h.video && (
+                        <button
+                          type="button"
+                          class="galeria__video"
+                          data-abrir-video={`visor-video-${i + 1}`}
+                          aria-controls={`visor-video-${i + 1}`}
+                          aria-label={`Ver el video: ${h.video.titulo}`}
+                        >
+                          <img
+                            class="foto foto--cuadrado"
+                            src={h.video.poster}
+                            alt=""
+                            width={h.video.ancho}
+                            height={h.video.alto}
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          <span class="galeria__video-capa">
+                            <span class="galeria__video-play" aria-hidden="true"></span>
+                            <span class="galeria__video-texto">{h.video.etiqueta ?? 'Ver experiencia inteligente'}</span>
+                            {h.video.duracion && <span class="galeria__video-duracion">{h.video.duracion}</span>}
+                          </span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
     )}
 
-
-    {/* ===== 4. GALERIA ===== */}
     {hayGaleria && (
-    <section class="seccion" id="galeria">
-      <div class="contenedor">
-        <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
-          <span class="etiqueta">Galeria</span>
-          <h2>Fotos del hospedaje</h2>
+      <section class="seccion" id="galeria">
+        <div class="contenedor">
+          <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
+            <span class="etiqueta">Galeria</span>
+            <h2>Fotos del hospedaje</h2>
+          </div>
+          <div class="galeria aparecer">
+            {d.galeria.length > 0
+              ? d.galeria.map((f) => (
+                  <div><Foto src={f.imagen} alt={f.alt} forma="cuadrado" /></div>
+                ))
+              : [1, 2, 3, 4, 5].map((n) => (
+                  <div><Foto forma="cuadrado">Foto {n}</Foto></div>
+                ))}
+          </div>
         </div>
-        {/* Si todavia no hay fotos subidas, se pintan los cinco
-             rectangulos de siempre para que la seccion no se vea rota.
-             En cuanto subes la primera desde el panel, la galeria pasa
-             a mostrar solo las fotos reales. */}
-        <div class="galeria aparecer">
-          {d.galeria.length > 0
-            ? d.galeria.map((f) => (
-                <div><Foto src={f.imagen} alt={f.alt} forma="cuadrado" /></div>
-              ))
-            : [1, 2, 3, 4, 5].map((n) => (
-                <div><Foto forma="cuadrado">Foto {n}</Foto></div>
-              ))}
-        </div>
-      </div>
-    </section>
+      </section>
     )}
 
-
-    {/* ===== 5. UBICACION ===== */}
     <section class="seccion seccion--alterna" id="ubicacion">
       <div class="contenedor bloque-doble aparecer">
-
         <div class="bloque-doble__texto">
           <span class="etiqueta">Ubicacion</span>
           <h2>{d.zona}</h2>
@@ -400,31 +491,19 @@ function dato(valor, singular, plural) {
             </>
           )}
 
-          {/* ==========================================================
-               POLITICA DE DIRECCION
-               Solo aparece en los hospedajes aliados, cuya direccion
-               exacta no publicamos. No es un detalle legal escondido:
-               se explica de frente y se convierte en una senal de
-               seriedad.
-               ========================================================== */}
           {!d.direccionPublica && (
             <div class="nota-reserva" style="margin-top: var(--esp-3);">
               <span class="nota-reserva__icono" aria-hidden="true">&#128274;</span>
               <div>
                 <strong>La direccion exacta se entrega al confirmar</strong>
                 Coordinamos la llegada contigo una vez la reserva esta confirmada.
-                Asi protegemos la tranquilidad de los huespedes que ya estan
-                alojados y nos aseguramos de recibirte bien el dia de tu llegada.
+                Asi protegemos la tranquilidad de los huespedes que ya estan alojados y nos aseguramos de recibirte bien el dia de tu llegada.
               </div>
             </div>
           )}
         </div>
 
         <div class="bloque-doble__media">
-          {/* Si la ficha tiene coordenadas, el recuadro ademas planta el
-               marcador en el portal. Salen del mismo par que alimenta "geo"
-               en el JSON-LD, asi que el mapa y lo que lee Google no pueden
-               acabar diciendo cosas distintas. */}
           <iframe
             class="mapa"
             title={d.mapaTitulo}
@@ -433,99 +512,73 @@ function dato(valor, singular, plural) {
                 ? `&marker=${d.latitud}%2C${d.longitud}`
                 : ''
             }`}
-            loading="lazy"></iframe>
-          {/* Navegacion directa desde el celular. Los tres enlaces llevan
-               las coordenadas exactas, no la direccion escrita: asi el
-               telefono va al portal y no a lo que el buscador entienda de
-               "Cra. 9 #10-32".
+            loading="lazy"
+          ></iframe>
 
-               Son enlaces https normales, no esquemas propios de cada app
-               (nada de "waze://" ni "comgooglemaps://"). Android e iOS los
-               reconocen como enlaces de esas apps y las abren si estan
-               instaladas; si no lo estan, se abre la version web. Un
-               esquema propio, en cambio, deja al visitante con un error
-               cuando no tiene la app.
-
-               Salen del mismo par de coordenadas que alimenta "geo" y el
-               marcador del mapa, asi que los tres no pueden desalinearse. */}
           {coordenadas && (
             <nav class="botones-mapa" aria-label={`Como llegar al ${d.nombre}`}>
-              <a class="boton boton--primario" target="_blank" rel="noopener"
-                 href={`https://www.google.com/maps/search/?api=1&query=${coordenadas}`}
-              >Abrir en Google Maps</a>
-              <a class="boton boton--contorno" target="_blank" rel="noopener"
-                 href={`https://waze.com/ul?ll=${coordenadas}&navigate=yes`}
-              >Abrir en Waze</a>
-              <a class="boton boton--contorno" target="_blank" rel="noopener"
-                 href={`https://www.google.com/maps/dir/?api=1&destination=${coordenadas}&travelmode=walking`}
-              >Como llegar caminando</a>
+              <a class="boton boton--primario" target="_blank" rel="noopener" href={`https://www.google.com/maps/search/?api=1&query=${coordenadas}`}>Abrir en Google Maps</a>
+              <a class="boton boton--contorno" target="_blank" rel="noopener" href={`https://waze.com/ul?ll=${coordenadas}&navigate=yes`}>Abrir en Waze</a>
+              <a class="boton boton--contorno" target="_blank" rel="noopener" href={`https://www.google.com/maps/dir/?api=1&destination=${coordenadas}&travelmode=walking`}>Como llegar caminando</a>
             </nav>
           )}
+
           {d.enlaceMapa && (
             <p class="campo__ayuda" style="margin-top: var(--esp-2);">
               {d.calle && <>{d.calle}, Zipaquira, Cundinamarca, Colombia &middot; </>}
-              <a href={d.enlaceMapa} target="_blank" rel="noopener">
-                ver la ficha en Google Maps
-              </a>
+              <a href={d.enlaceMapa} target="_blank" rel="noopener">ver la ficha en Google Maps</a>
             </p>
           )}
+
           {d.mapaNota && (
             <p class="campo__ayuda" style="margin-top: var(--esp-1);">
               <Marca texto={d.mapaNota} pendiente={d.mapaNotaPendiente} />
             </p>
           )}
         </div>
-
       </div>
     </section>
 
-
-    {/* ===== 6. EXPERIENCIAS ===== */}
     {experiencias.length > 0 && (
-    <section class="seccion">
-      <div class="contenedor">
-        <div class="encabezado-seccion aparecer">
-          <span class="etiqueta">Experiencias</span>
-          <h2>Que hacer alrededor</h2>
+      <section class="seccion">
+        <div class="contenedor">
+          <div class="encabezado-seccion aparecer">
+            <span class="etiqueta">Experiencias</span>
+            <h2>Que hacer alrededor</h2>
+          </div>
+          <div class="grid grid--3 aparecer">
+            {experiencias.map((e) => (
+              <article class="experiencia">
+                <div class="experiencia__fondo"></div>
+                <div class="experiencia__texto">
+                  <h3><Marca texto={e.titulo} pendiente={e.pendiente} /></h3>
+                  <p><Marca texto={e.texto} pendiente={e.pendiente} /></p>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div style="margin-top: var(--esp-4);">
+            <p class="texto-suave">Te contamos mas en nuestra <a href="/blog/guia-de-zipaquira">guia de Zipaquira</a>.</p>
+          </div>
         </div>
-        <div class="grid grid--3 aparecer">
-          {experiencias.map((e) => (
-            <article class="experiencia">
-              <div class="experiencia__fondo"></div>
-              <div class="experiencia__texto">
-                <h3><Marca texto={e.titulo} pendiente={e.pendiente} /></h3>
-                <p><Marca texto={e.texto} pendiente={e.pendiente} /></p>
-              </div>
-            </article>
-          ))}
-        </div>
-
-        <div style="margin-top: var(--esp-4);">
-          <p class="texto-suave">
-            Te contamos mas en nuestra
-            <a href="/blog/guia-de-zipaquira">guia de Zipaquira</a>.
-          </p>
-        </div>
-      </div>
-    </section>
+      </section>
     )}
 
-
-    {/* ===== 7. CONTACTO ===== */}
     <section class="seccion seccion--alterna" id="contacto">
       <div class="contenedor bloque-doble aparecer">
-
         <div class="bloque-doble__texto">
           <span class="etiqueta">Consulta</span>
           <h2>{d.tituloContacto}</h2>
           <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
-            La forma mas rapida es WhatsApp: te respondemos con disponibilidad
-            y precio para tus fechas.
+            La forma mas rapida es WhatsApp: te respondemos con disponibilidad y precio para tus fechas.
           </p>
 
           <div class="grupo-botones" style="margin-bottom: var(--esp-3);">
-            <a class="boton boton--whatsapp boton--grande" href="tel:+573188983167"
-               data-whatsapp={`Hola, quiero reservar en ${d.nombre} de Atheron Suite. Estas son mis fechas:`}>
+            <a
+              class="boton boton--whatsapp boton--grande"
+              href="tel:+573188983167"
+              data-whatsapp={`Hola, quiero reservar en ${d.nombre} de Atheron Suite. Estas son mis fechas:`}
+            >
               Escribir por WhatsApp
             </a>
           </div>
@@ -538,46 +591,44 @@ function dato(valor, singular, plural) {
 
         <div class="bloque-doble__media">
           {formularioContactoActivo ? (
-          <form class="formulario" data-formulario-contacto novalidate>
-            <div class="formulario__fila">
-              <div class="campo">
-                <label for="h-nombre">Nombre</label>
-                <input type="text" id="h-nombre" name="nombre" required autocomplete="name" />
+            <form class="formulario" data-formulario-contacto novalidate>
+              <div class="formulario__fila">
+                <div class="campo">
+                  <label for="h-nombre">Nombre</label>
+                  <input type="text" id="h-nombre" name="nombre" required autocomplete="name" />
+                </div>
+                <div class="campo">
+                  <label for="h-telefono">Telefono</label>
+                  <input type="tel" id="h-telefono" name="telefono" autocomplete="tel" />
+                </div>
               </div>
               <div class="campo">
-                <label for="h-telefono">Telefono</label>
-                <input type="tel" id="h-telefono" name="telefono" autocomplete="tel" />
+                <label for="h-correo">Correo electronico</label>
+                <input type="email" id="h-correo" name="correo" required />
               </div>
-            </div>
-            <div class="campo">
-              <label for="h-correo">Correo electronico</label>
-              <input type="email" id="h-correo" name="correo" required autocomplete="email" />
-            </div>
-            <div class="formulario__fila">
+              <div class="formulario__fila">
+                <div class="campo">
+                  <label for="h-llegada">Llegada</label>
+                  <input type="date" id="h-llegada" name="llegada" />
+                </div>
+                <div class="campo">
+                  <label for="h-salida">Salida</label>
+                  <input type="date" id="h-salida" name="salida" />
+                </div>
+              </div>
               <div class="campo">
-                <label for="h-llegada">Llegada</label>
-                <input type="date" id="h-llegada" name="llegada" />
+                <label for="h-mensaje">Mensaje</label>
+                <textarea id="h-mensaje" name="mensaje"></textarea>
               </div>
-              <div class="campo">
-                <label for="h-salida">Salida</label>
-                <input type="date" id="h-salida" name="salida" />
-              </div>
-            </div>
-            <div class="campo">
-              <label for="h-mensaje">Mensaje</label>
-              <textarea id="h-mensaje" name="mensaje"></textarea>
-            </div>
-            <button class="boton boton--primario boton--grande" type="submit">Enviar consulta</button>
-            <div class="aviso-formulario" data-aviso-formulario role="status"></div>
-          </form>
+              <button class="boton boton--primario boton--grande" type="submit">Enviar consulta</button>
+              <div class="aviso-formulario" data-aviso-formulario role="status"></div>
+            </form>
           ) : (
             <ContactoWhatsApp mensaje={`Hola, me interesa ${d.nombre} de Atheron Suite en Zipaquira.`} />
           )}
         </div>
-
       </div>
     </section>
-
   </main>
 
   <Pie textoVuelta="Ver todos los hospedajes" hrefVuelta="/hospedajes" />
@@ -587,11 +638,6 @@ function dato(valor, singular, plural) {
     mensaje={`Hola, me interesa ${d.nombre} de Atheron Suite en Zipaquira.`}
   />
 
-  {/* ===== VISOR DE FOTOS (lightbox) =====
-       Portado tal cual desde main. <dialog> nativo: el navegador ya
-       trae el fondo oscuro, el cierre con ESC y el foco atrapado
-       dentro. El guion son 4 KB sin dependencias y va con defer.
-       Solo se monta si la habitacion tiene fotos que ampliar. */}
   {hayHabitaciones && d.habitaciones.some((h) => h.galeria.length > 0) && (
     <>
       <dialog class="visor" id="visor" aria-label={`Fotos de ${d.nombre}`}>
@@ -603,36 +649,16 @@ function dato(valor, singular, plural) {
         </figure>
         <button type="button" class="visor__paso visor__paso--despues" data-visor-despues aria-label="Foto siguiente">&rsaquo;</button>
       </dialog>
-
       <script is:inline defer src="/assets/js/lightbox.js"></script>
     </>
   )}
 
-  {/* ===== VISOR DE VIDEO =====
-       Su propio <dialog>, aparte del de las fotos: asi el lightbox de
-       la galeria se queda exactamente como estaba.
-
-       preload="none" evita que el archivo se descargue al entrar en
-       la ficha: el navegador no pide un solo byte hasta que alguien
-       le da al play.
-
-       El poster va en data-poster y NO en el atributo poster. Con el
-       atributo, el navegador se baja la imagen nada mas cargar la
-       pagina -aunque el dialogo este cerrado y aunque el video lleve
-       preload="none"-. Medido en esta ficha: el LCP pasaba de 1,1 a
-       1,6 s. Ahora lo pone el guion al abrir, y para entonces la
-       imagen ya esta en cache porque es la misma miniatura de la
-       tarjeta.
-
-       El <video> lleva sus medidas escritas y el marco su proporcion,
-       asi que abrir el visor no mueve nada de la pagina. */}
   {videos.length > 0 && (
     <>
       {videos.map((v) => (
         <dialog class="visor visor--video" id={v.id} aria-label={v.titulo}>
           <button type="button" class="visor__cerrar" data-video-cerrar aria-label="Cerrar el video">&times;</button>
-          <figure class="visor__marco visor__marco--video"
-                  style={`--proporcion: ${v.ancho} / ${v.alto}`}>
+          <figure class="visor__marco visor__marco--video" style={`--proporcion: ${v.ancho} / ${v.alto}`}>
             <video
               class="visor__video"
               id={`${v.id}-media`}
@@ -645,18 +671,272 @@ function dato(valor, singular, plural) {
             >
               {v.webm && <source src={v.webm} type="video/webm" />}
               <source src={v.src} type="video/mp4" />
-              <p>
-                Tu navegador no puede reproducir el video.
-                <a href={v.src}>Abrelo en una pestana aparte</a>.
-              </p>
+              <p>Tu navegador no puede reproducir el video. <a href={v.src}>Abrelo en una pestana aparte</a>.</p>
             </video>
             <figcaption class="visor__pie">{v.titulo}</figcaption>
           </figure>
         </dialog>
       ))}
-
       <script is:inline defer src="/assets/js/visor-video.js"></script>
     </>
   )}
-
 </Base>
+
+<style is:global>
+  .hotel-selector {
+    display: grid;
+    gap: 2rem;
+    margin-top: 1.5rem;
+  }
+
+  .hotel-selector__titulo {
+    max-width: 760px;
+  }
+
+  .hotel-selector__titulo--habitaciones {
+    margin-top: 1rem;
+  }
+
+  .hotel-selector__titulo h3 {
+    margin: .35rem 0 .65rem;
+    font-size: clamp(1.5rem, 2.7vw, 2.05rem);
+  }
+
+  .hotel-selector__ceja {
+    display: inline-block;
+    color: var(--color-verde);
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .hotel-casa {
+    display: grid;
+    overflow: hidden;
+    background: #fff;
+    border: 2px solid color-mix(in srgb, var(--color-verde) 34%, var(--borde));
+    border-radius: var(--radio-lg);
+    box-shadow: 0 14px 38px rgba(15, 23, 42, .08);
+  }
+
+  .hotel-casa__foto {
+    display: block;
+    min-height: 260px;
+    overflow: hidden;
+    background: var(--color-crema);
+  }
+
+  .hotel-casa__foto .foto {
+    width: 100%;
+    height: 100%;
+    min-height: 260px;
+    object-fit: cover;
+  }
+
+  .hotel-casa__contenido {
+    padding: clamp(1.25rem, 3vw, 2rem);
+  }
+
+  .hotel-casa__insignia {
+    display: inline-flex;
+    padding: .35rem .75rem;
+    margin-bottom: .8rem;
+    border-radius: 999px;
+    background: var(--color-verde);
+    color: #fff;
+    font-size: .78rem;
+    font-weight: 700;
+  }
+
+  .hotel-casa__precio,
+  .hotel-mini__precio {
+    font-weight: 700;
+  }
+
+  .hotel-selector__datos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+    margin: .75rem 0 1rem;
+  }
+
+  .hotel-selector__datos span {
+    padding: .35rem .7rem;
+    border-radius: 999px;
+    background: var(--color-crema);
+    font-size: .82rem;
+  }
+
+  .hotel-selector__datos--mini {
+    margin: .55rem 0 .7rem;
+  }
+
+  .hotel-selector__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .7rem;
+    margin-top: 1.1rem;
+  }
+
+  .hotel-selector__acciones .boton {
+    justify-content: center;
+  }
+
+  .hotel-habitaciones-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+    gap: 1rem;
+  }
+
+  .hotel-mini {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-md);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, .06);
+  }
+
+  .hotel-mini__foto {
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--color-crema);
+  }
+
+  .hotel-mini__foto .foto {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .2s ease;
+  }
+
+  .hotel-mini__foto:hover .foto {
+    transform: scale(1.025);
+  }
+
+  .hotel-mini__cuerpo {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  .hotel-mini__cuerpo h3 {
+    margin: 0 0 .35rem;
+  }
+
+  .hotel-mini__resumen {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    font-size: .92rem;
+  }
+
+  .hotel-mini__precio {
+    margin-top: auto;
+    padding-top: .8rem;
+  }
+
+  .hotel-mini__acciones {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .55rem;
+    margin-top: .8rem;
+  }
+
+  .hotel-mini__acciones .boton {
+    min-height: 44px;
+    padding: .7rem .55rem;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .hotel-volver {
+    display: inline-flex;
+    grid-column: 1 / -1;
+    margin-bottom: 1rem;
+    color: var(--color-verde);
+    font-weight: 700;
+  }
+
+  .hotel-detalles {
+    margin-top: 1.5rem;
+  }
+
+  .hotel-selector-seccion .hotel-detalles > .habitacion {
+    display: none;
+    scroll-margin-top: 6.5rem;
+  }
+
+  .hotel-selector-seccion .hotel-detalles > .habitacion:target {
+    display: grid;
+  }
+
+  .hotel-casa-detalle {
+    display: none;
+    margin-top: 1.5rem;
+    padding: clamp(1.2rem, 3vw, 2rem);
+    scroll-margin-top: 6.5rem;
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-lg);
+    box-shadow: 0 14px 38px rgba(15, 23, 42, .08);
+  }
+
+  .hotel-casa-detalle:target {
+    display: block;
+  }
+
+  .hotel-casa-detalle__mini {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: .75rem;
+    margin-top: 1.25rem;
+  }
+
+  .hotel-casa-detalle__mini a {
+    display: grid;
+    gap: .45rem;
+    color: inherit;
+    font-weight: 700;
+  }
+
+  .hotel-casa-detalle__mini .foto {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: var(--radio-sm);
+  }
+
+  @media (min-width: 800px) {
+    .hotel-casa {
+      grid-template-columns: minmax(300px, .9fr) 1.1fr;
+      align-items: stretch;
+    }
+
+    .hotel-casa__foto,
+    .hotel-casa__foto .foto {
+      min-height: 100%;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .hotel-mini__acciones,
+    .hotel-selector__acciones {
+      grid-template-columns: 1fr;
+    }
+
+    .hotel-selector__acciones {
+      display: grid;
+    }
+
+    .hotel-selector__acciones .boton {
+      width: 100%;
+    }
+  }
+</style>

@@ -358,11 +358,63 @@
   margin-top: auto;
   padding-top: var(--esp-2);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--esp-2);
 }
 .tarjeta__precio { font-weight: 600; }
+
+/* Las dos acciones de la tarjeta de habitacion: "Ver fotos" y
+   "Consultar". En pantalla ancha van en fila; si no caben -movil, o
+   un precio largo- bajan y se apilan solas, sin media query. */
+.tarjeta__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1, .5rem);
+  justify-content: flex-end;
+}
+.tarjeta__acciones .boton { flex: 1 1 auto; }
+/* Si los dos botones no caben al lado del precio, el bloque entero baja
+   a su propia linea y ocupa el ancho: en celular queda el precio arriba
+   y los dos botones debajo, del mismo tamano, en vez de una columna
+   estrecha pegada a la derecha. */
+.tarjeta__acciones { flex: 1 1 16rem; }
+
+/* La foto grande de la tarjeta, cuando abre la galeria. Es un boton,
+   asi que hay que quitarle lo de boton y dejarle solo la foto. */
+.habitacion__foto {
+  display: block;
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  width: 100%;
+  border-radius: var(--radio-md);
+  overflow: hidden;
+}
+.habitacion__foto:focus-visible {
+  outline: 2px solid var(--color-noche);
+  outline-offset: 3px;
+}
+
+/* La pista de que la foto se puede abrir. Discreta, sobre la esquina.
+   Sin esto, la foto parecia decorativa y nadie la tocaba. */
+.habitacion__lupa {
+  position: absolute;
+  left: .6rem;
+  bottom: .6rem;
+  padding: .35rem .7rem;
+  border-radius: 999px;
+  background: rgba(12, 20, 33, .72);
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 600;
+  pointer-events: none;
+  transition: background var(--transicion);
+}
+.habitacion__foto:hover .habitacion__lupa { background: rgba(12, 20, 33, .9); }
 .tarjeta__precio span { font-weight: 400; color: var(--texto-suave); font-size: .85rem; }
 
 /* Tarjeta simple para beneficios / caracteristicas */
@@ -502,12 +554,18 @@
 /* ------------------------------------------------------------
    ANIMACION DE APARICION (la activa main.js al hacer scroll)
    ------------------------------------------------------------ */
-.aparecer {
+/* La animacion solo esconde el bloque si <html> lleva "anima", y esa
+   clase la pone un guion incrustado en el <head> (ver Base.astro).
+   Sin JavaScript, o si ese guion no llega a ejecutarse, estas reglas
+   no aplican y el contenido se ve tal cual: sin animacion, pero
+   visible. Nunca al reves. Un bloque de contenido no puede quedarse
+   invisible porque una animacion decorativa no se haya disparado. */
+.anima .aparecer {
   opacity: 0;
   transform: translateY(18px);
   transition: opacity .6s ease, transform .6s ease;
 }
-.aparecer.visible { opacity: 1; transform: none; }
+.anima .aparecer.visible { opacity: 1; transform: none; }
 
 /* ------------------------------------------------------------
    BANDA DE CODIGO PROMOCIONAL

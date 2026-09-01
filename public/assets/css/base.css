@@ -35,9 +35,10 @@
   --borde:              var(--color-gris-200);
   --acento:             var(--color-sal);
 
-  /* Tipografías */
+  /* Tipografías: títulos conservan Fraunces; texto usa la pila nativa
+     del sistema para evitar descargar otra fuente de ~48 KB en móvil. */
   --fuente-titulo: "Fraunces", Georgia, "Times New Roman", serif;
-  --fuente-texto:  "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --fuente-texto: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 
   /* Escala de espacios (múltiplos consistentes = diseño ordenado) */
   --esp-1: 0.5rem;

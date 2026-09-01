@@ -7,7 +7,7 @@
     "dev": "astro dev",
     "comprueba": "node scripts/comprueba-contenido.mjs",
     "foto": "node scripts/optimiza-fotos.mjs",
-    "prebuild": "node scripts/comprueba-contenido.mjs",
+    "prebuild": "node scripts/comprueba-contenido.mjs && node scripts/optimiza-selector.mjs",
     "build": "astro build",
     "preview": "astro preview"
   },

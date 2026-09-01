@@ -41,13 +41,13 @@
   var cuenta = visor.querySelector('[data-visor-cuenta]');
   var pieAlt = visor.querySelector('[data-visor-alt]');
 
-  var fotos = [];     // lista de la galeria que se esta viendo
+  var fotos = [];
   var actual = 0;
-  var abridor = null; // a que boton devolver el foco al cerrar
+  var abridor = null;
 
   function pinta(i) {
     if (!fotos.length) return;
-    actual = (i + fotos.length) % fotos.length; // da la vuelta en los extremos
+    actual = (i + fotos.length) % fotos.length;
     foto.src = fotos[actual].src;
     foto.alt = fotos[actual].alt;
     cuenta.textContent = actual + 1 + ' / ' + fotos.length;
@@ -65,8 +65,6 @@
     var botones = Array.prototype.slice.call(galeria.querySelectorAll('.galeria__abrir'));
     if (!botones.length) return;
 
-    /* Las fuentes salen de las miniaturas: misma foto, sin una
-       segunda lista que se pueda desincronizar con el HTML. */
     var lista = botones.map(function (b) {
       var img = b.querySelector('img');
       return { src: img.getAttribute('src'), alt: img.getAttribute('alt') };
@@ -75,26 +73,28 @@
     botones.forEach(function (b, i) {
       b.addEventListener('click', function () { abre(lista, i, b); });
     });
+
+    if (galeria.id) {
+      var atajos = document.querySelectorAll('[data-abrir-galeria="' + galeria.id + '"]');
+      Array.prototype.forEach.call(atajos, function (atajo) {
+        atajo.addEventListener('click', function () { abre(lista, 0, atajo); });
+      });
+    }
   });
 
   visor.querySelector('[data-visor-antes]').addEventListener('click', function () { pinta(actual - 1); });
   visor.querySelector('[data-visor-despues]').addEventListener('click', function () { pinta(actual + 1); });
   visor.querySelector('[data-visor-cerrar]').addEventListener('click', function () { visor.close(); });
 
-  /* Flechas del teclado. ESC ya lo hace <dialog> por su cuenta. */
   visor.addEventListener('keydown', function (e) {
     if (e.key === 'ArrowLeft') { e.preventDefault(); pinta(actual - 1); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); pinta(actual + 1); }
   });
 
-  /* Click en el fondo -fuera del marco de la foto- cierra. */
   visor.addEventListener('click', function (e) {
     if (e.target === visor) visor.close();
   });
 
-  /* Deslizar en celular. Se exige un recorrido horizontal claro
-     (60 px y mas horizontal que vertical) para no robarle el
-     gesto al desplazamiento normal de la pagina. */
   var x0 = null, y0 = null;
   visor.addEventListener('touchstart', function (e) {
     x0 = e.changedTouches[0].clientX;
@@ -109,8 +109,6 @@
     x0 = y0 = null;
   }, { passive: true });
 
-  /* Al cerrar, el foco vuelve a la miniatura desde la que se
-     abrio: quien navega con teclado no acaba al principio. */
   visor.addEventListener('close', function () {
     if (abridor) abridor.focus();
     abridor = null;
