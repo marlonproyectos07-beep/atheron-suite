@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <!-- Esta pagina NO debe salir en Google: es el panel de edicion,
+         no una pagina para visitantes. Ademas esta bloqueada en
+         robots.txt con "Disallow: /admin". -->
+    <meta name="robots" content="noindex" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel de Atheron Suite</title>
+  </head>
+  <body>
+    <!-- Sveltia CMS se carga entero desde aqui. No lleva hoja de
+         estilos aparte ni type="module": todo va dentro de este
+         archivo. La configuracion (que campos ves y como se llaman)
+         esta en config.yml, en esta misma carpeta. -->
+    <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js"></script>
+  </body>
+</html>

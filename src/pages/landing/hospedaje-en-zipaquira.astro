@@ -1,0 +1,443 @@
+---
+/* ============================================================
+   LANDING COMERCIAL — Hospedaje en Zipaquira
+
+   Objetivo unico: que el visitante deje sus fechas.
+   Por eso la cabecera NO lleva menu: cada enlace del menu es una
+   puerta de salida. Ver src/data/navegacion.ts, apartado LANDINGS.
+
+   PENDIENTE (etapa 3): cuando las preguntas frecuentes tengan
+   respuestas reales, agregar aqui un JSON-LD de tipo FAQPage.
+   Google lo usa para mostrar las preguntas desplegables en los
+   resultados. No se puede marcar mientras las respuestas digan
+   "pendiente": solo se marca lo que el visitante ve de verdad.
+   ============================================================ */
+
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import { ctaLandingHospedaje } from '../../data/navegacion';
+import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
+import { formularioContactoActivo } from '../../data/ajustes';
+---
+
+<Base
+  titulo="Hospedaje en Zipaquira | Atheron Suite"
+  descripcion="Hospedaje comodo en Zipaquira, Cundinamarca, cerca de la Catedral de Sal y del centro historico. Consulta disponibilidad con Atheron Suite."
+  ruta="/landing/hospedaje-en-zipaquira"
+  ogDescripcion="Siete hospedajes seleccionados a minutos de la Catedral de Sal. Consulta disponibilidad por WhatsApp."
+  avisoBorrador="Version de trabajo. Faltan fotografias en algunas secciones."
+>
+
+  <Cabecera cta={ctaLandingHospedaje} />
+
+  <main id="contenido">
+
+    {/* ============================================================
+         1. HERO — promesa + accion inmediata
+         ============================================================ */}
+    <section class="hero">
+      <div class="contenedor hero__contenido">
+
+        <span class="hero__etiqueta">Zipaquira, Cundinamarca</span>
+
+        <h1 class="hero__titulo">
+          Tu hospedaje en Zipaquira, <em>listo y sin vueltas</em>
+        </h1>
+
+        <p class="hero__texto">
+          Siete hospedajes seleccionados a pocos minutos de la Catedral de Sal
+          y del centro historico. Nos cuentas tus fechas y te respondemos con
+          opciones reales, no con un catalogo interminable.
+        </p>
+
+        <div class="grupo-botones">
+          <a class="boton boton--acento boton--grande" href="#consultar">Consultar disponibilidad</a>
+        </div>
+
+        <div class="hero__datos">
+          <div class="dato">
+            <span class="dato__numero">7</span>
+            <span class="dato__texto">Opciones de hospedaje</span>
+          </div>
+          <div class="dato">
+            <span class="dato__numero">24 h</span>
+            <span class="dato__texto">Tiempo de respuesta objetivo</span>
+          </div>
+          <div class="dato">
+            <span class="dato__numero">0</span>
+            <span class="dato__texto">Costos ocultos</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         2. BENEFICIOS — que gana el visitante (no que hacemos nosotros)
+         ============================================================ */}
+    <section class="seccion">
+      <div class="contenedor">
+
+        <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
+          <span class="etiqueta">Por que con nosotros</span>
+          <h2>Menos busqueda, mejor estancia</h2>
+        </div>
+
+        <div class="grid grid--3 aparecer">
+
+          <article class="tarjeta-simple">
+            <div class="tarjeta-simple__icono" aria-hidden="true">&#9733;</div>
+            <h3>Lugares verificados</h3>
+            <p class="texto-suave">Visitamos cada hospedaje antes de incluirlo. Lo que ves es lo que hay.</p>
+          </article>
+
+          <article class="tarjeta-simple">
+            <div class="tarjeta-simple__icono" aria-hidden="true">&#9992;</div>
+            <h3>Bien ubicados</h3>
+            <p class="texto-suave">Cerca del centro historico y de los sitios que vas a querer visitar.</p>
+          </article>
+
+          <article class="tarjeta-simple">
+            <div class="tarjeta-simple__icono" aria-hidden="true">&#9993;</div>
+            <h3>Respuesta directa</h3>
+            <p class="texto-suave">Escribes una vez y hablas con quien administra el hospedaje.</p>
+          </article>
+
+          <article class="tarjeta-simple">
+            <div class="tarjeta-simple__icono" aria-hidden="true">&#8962;</div>
+            <h3>Para cada plan</h3>
+            <p class="texto-suave">Pareja, familia o viaje de trabajo: hay una opcion distinta para cada caso.</p>
+          </article>
+
+          <article class="tarjeta-simple">
+            <div class="tarjeta-simple__icono" aria-hidden="true">&#9873;</div>
+            <h3>Consejo local</h3>
+            <p class="texto-suave">Te decimos que vale la pena y que no, segun los dias que tengas.</p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         2.bis POR QUE RESERVAR DIRECTO
+         ============================================================
+         OJO CON LO QUE SE ESCRIBE AQUI:
+         El contrato con las plataformas puede exigir "paridad
+         tarifaria", es decir, no anunciar publicamente un precio
+         menor que el de ellas. Por eso este bloque NO promete un
+         precio mas bajo: promete condiciones mejores.
+
+         Eso se llama "rate fence" y es la forma legal de premiar
+         la reserva directa aunque exista paridad.
+
+         No nombramos a ninguna plataforma. Decir "mas barato que
+         Booking" es justo lo que puede meterte en problemas.
+         ============================================================ */}
+    <section class="seccion">
+      <div class="contenedor">
+        <div class="directo aparecer">
+
+          <div>
+            <span class="etiqueta">Reserva directa</span>
+            <h2>Escribirnos directo tiene ventajas</h2>
+            <p class="texto-suave" style="margin-top: var(--esp-2);">
+              Cuando reservas con nosotros hablas con quien administra el
+              hospedaje, no con un intermediario. Eso cambia lo que podemos
+              hacer por ti.
+            </p>
+          </div>
+
+          <div class="directo__lista">
+            <div class="directo__item">
+              <span class="directo__marca" aria-hidden="true">&#10003;</span>
+              <div>
+                <strong>Condiciones que podemos ajustar</strong>
+                <p class="texto-suave">Horas de llegada y salida, camas adicionales, necesidades del grupo.</p>
+              </div>
+            </div>
+            <div class="directo__item">
+              <span class="directo__marca" aria-hidden="true">&#10003;</span>
+              <div>
+                <strong>Respuesta de una persona</strong>
+                <p class="texto-suave">Sin formularios ni centros de atencion. Escribes y te contestamos.</p>
+              </div>
+            </div>
+            <div class="directo__item">
+              <span class="directo__marca" aria-hidden="true">&#10003;</span>
+              <div>
+                <strong>Tarifa segun tu caso</strong>
+                <p class="texto-suave">Mas noches o mas personas, mejor condicion. Se estudia contigo.</p>
+              </div>
+            </div>
+            <div class="directo__item">
+              <span class="directo__marca" aria-hidden="true">&#10003;</span>
+              <div>
+                <strong>Beneficios para quien vuelve</strong>
+                <p class="texto-suave">Si ya te quedaste con nosotros, pregunta por tu codigo de huesped.</p>
+              </div>
+            </div>
+
+            <div class="grupo-botones" style="margin-top: var(--esp-2);">
+              <a class="boton boton--whatsapp" href="#consultar"
+                 data-whatsapp="Hola, quiero reservar directo un hospedaje en Zipaquira. Estas son mis fechas:">
+                Reservar directo
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+
+    {/* ============================================================
+         4. CARACTERISTICAS INCLUIDAS
+         ============================================================ */}
+    <section class="seccion">
+      <div class="contenedor bloque-doble aparecer">
+
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">Caracteristicas</span>
+          <h2>Que incluye tu estancia</h2>
+          <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            Lista base comun a los hospedajes. Cada ficha individual detallara
+            lo que tiene de particular.
+          </p>
+          <ul class="lista-check">
+            <li>Wifi en todo el hospedaje</li>
+            <li>Agua caliente y ropa de cama incluida</li>
+            <li>Cocina o zona de preparacion</li>
+            <li>Parqueadero</li>
+            <li>Check-in coordinado con el anfitrion</li>
+          </ul>
+        </div>
+
+        <div class="bloque-doble__media">
+          <div class="placeholder placeholder--alto">Foto pendiente<br />Zona comun o habitacion</div>
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         5. GALERIA
+         ============================================================ */}
+    <section class="seccion seccion--alterna">
+      <div class="contenedor">
+
+        <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
+          <span class="etiqueta">Galeria</span>
+          <h2>Como se ve por dentro</h2>
+        </div>
+
+        <div class="galeria aparecer">
+          <div><div class="placeholder placeholder--cuadrado">Foto 1 pendiente</div></div>
+          <div><div class="placeholder placeholder--cuadrado">Foto 2 pendiente</div></div>
+          <div><div class="placeholder placeholder--cuadrado">Foto 3 pendiente</div></div>
+          <div><div class="placeholder placeholder--cuadrado">Foto 4 pendiente</div></div>
+          <div><div class="placeholder placeholder--cuadrado">Foto 5 pendiente</div></div>
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         6. UBICACION
+         ============================================================ */}
+    <section class="seccion">
+      <div class="contenedor bloque-doble aparecer">
+
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">Ubicacion</span>
+          <h2>En Zipaquira, cerca de lo importante</h2>
+          <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            Zipaquira esta a unos 50 km al norte de Bogota. Las distancias exactas
+            desde cada hospedaje se completaran en su ficha individual.
+          </p>
+        </div>
+
+        <div class="bloque-doble__media">
+          {/* Mapa provisional centrado en Zipaquira.
+               Cuando tengamos la direccion exacta se cambia el enlace. */}
+          <iframe
+            class="mapa"
+            title="Mapa de Zipaquira, Cundinamarca"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=-74.02%2C5.00%2C-73.97%2C5.05&layer=mapnik"
+            loading="lazy"></iframe>
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         7. EXPERIENCIAS
+         ============================================================ */}
+    <section class="seccion seccion--oscura">
+      <div class="contenedor">
+
+        <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
+          <span class="etiqueta">Experiencias</span>
+          <h2>Tu plan en Zipaquira</h2>
+        </div>
+
+        <div class="grid grid--3 aparecer">
+          <article class="tarjeta-simple">
+            <h3>Catedral de Sal</h3>
+            <p class="texto-suave">El recorrido subterraneo mas visitado del municipio.</p>
+          </article>
+          <article class="tarjeta-simple">
+            <h3>Centro historico</h3>
+            <p class="texto-suave">Plaza, catedral diocesana y calles coloniales para caminar.</p>
+          </article>
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         8. PREGUNTAS FRECUENTES
+         <details> es HTML puro: se abre y cierra sin JavaScript.
+         ============================================================ */}
+    <section class="seccion">
+      <div class="contenedor" style="max-width: 780px;">
+
+        <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
+          <span class="etiqueta">Dudas</span>
+          <h2>Preguntas frecuentes</h2>
+        </div>
+
+        <div class="aparecer">
+          <details style="border-bottom:1px solid var(--borde); padding: var(--esp-2) 0;">
+            <summary style="cursor:pointer; font-weight:600;">Como reservo?</summary>
+            <p class="texto-suave" style="margin-top: var(--esp-1);">
+              Por ahora la reserva se coordina escribiendonos por WhatsApp.
+            </p>
+          </details>
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         9. FORMULARIO — el objetivo de toda la pagina
+         ============================================================ */}
+    <section class="seccion seccion--alterna" id="consultar">
+      <div class="contenedor bloque-doble aparecer">
+
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">Consulta</span>
+          <h2>Dinos tus fechas y te respondemos</h2>
+          <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            Cuantas personas son y cuantas noches se quedan. Con eso te enviamos
+            las opciones que realmente encajan.
+          </p>
+          <ul class="lista-check">
+            <li>Sin compromiso ni pago por adelantado</li>
+            <li>Respuesta con opciones concretas</li>
+            <li>Atencion directa del anfitrion</li>
+          </ul>
+        </div>
+
+        <div class="bloque-doble__media">
+          {formularioContactoActivo ? (
+          <form class="formulario" data-formulario-contacto novalidate>
+
+            <div class="formulario__fila">
+              <div class="campo">
+                <label for="l-nombre">Nombre</label>
+                <input type="text" id="l-nombre" name="nombre" required autocomplete="name" />
+              </div>
+              <div class="campo">
+                <label for="l-telefono">Telefono</label>
+                <input type="tel" id="l-telefono" name="telefono" autocomplete="tel" />
+              </div>
+            </div>
+
+            <div class="campo">
+              <label for="l-correo">Correo electronico</label>
+              <input type="email" id="l-correo" name="correo" required autocomplete="email" />
+            </div>
+
+            <div class="formulario__fila">
+              <div class="campo">
+                <label for="l-llegada">Llegada</label>
+                <input type="date" id="l-llegada" name="llegada" />
+              </div>
+              <div class="campo">
+                <label for="l-salida">Salida</label>
+                <input type="date" id="l-salida" name="salida" />
+              </div>
+            </div>
+
+            <div class="campo">
+              <label for="l-personas">Personas</label>
+              <select id="l-personas" name="personas">
+                <option value="1">1</option>
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5+">5 o mas</option>
+              </select>
+            </div>
+
+            <div class="campo">
+              <label for="l-mensaje">Mensaje</label>
+              <textarea id="l-mensaje" name="mensaje" placeholder="Viajamos en pareja, buscamos algo tranquilo..."></textarea>
+            </div>
+
+            <button class="boton boton--primario boton--grande" type="submit">
+              Consultar disponibilidad
+            </button>
+
+            <div class="aviso-formulario" data-aviso-formulario role="status"></div>
+
+          </form>
+          ) : (
+            <ContactoWhatsApp
+              mensaje="Hola, vi la pagina de hospedaje en Zipaquira y quiero consultar disponibilidad."
+              titulo="Consulta disponibilidad por WhatsApp"
+              texto="Dinos las fechas y cuantas personas son. Te respondemos con las opciones que hay libres." />
+          )}
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         10. CIERRE
+         ============================================================ */}
+    <section class="seccion">
+      <div class="contenedor">
+        <div class="cta-final aparecer">
+          <h2>Zipaquira te queda mas cerca de lo que crees</h2>
+          <p>Escribenos hoy y te confirmamos disponibilidad para tus fechas.</p>
+          <div class="grupo-botones grupo-botones--centrado">
+            <a class="boton boton--acento boton--grande" href="#consultar">Consultar ahora</a>
+            <a class="boton boton--claro boton--grande" href="/hospedajes">Ver los 7 hospedajes</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <Pie textoVuelta="Ir al sitio principal" />
+
+  <BotonFlotante
+    href="#consultar"
+    mensaje="Hola, vi la pagina de hospedaje en Zipaquira y quiero consultar disponibilidad."
+  />
+
+</Base>

@@ -1,0 +1,21 @@
+---
+/* ============================================================
+   MARCA — pinta un texto en amarillo si todavia es provisional
+
+   El sistema de "pendientes" del sitio: todo lo que no es un dato
+   real va marcado en amarillo, para que sea imposible publicarlo
+   por error creyendo que era definitivo.
+
+   Antes se escribia a mano <span class="pendiente">...</span> en
+   cada sitio. Ahora la decision viene del dato: si el contenido
+   dice que ese campo esta pendiente, se marca solo.
+   ============================================================ */
+
+interface Props {
+  texto: string;
+  pendiente?: boolean;
+}
+
+const { texto, pendiente = false } = Astro.props;
+---
+{pendiente ? <span class="pendiente">{texto}</span> : texto}

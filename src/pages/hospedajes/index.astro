@@ -1,0 +1,182 @@
+---
+/* ============================================================
+   LISTADO DE LOS 7 HOSPEDAJES
+
+   Antes: siete bloques de HTML casi identicos, copiados a mano.
+   Cambiar el texto del boton de WhatsApp obligaba a editarlo
+   siete veces, y bastaba con olvidarse de uno para descuadrarlo.
+
+   Ahora esta pagina NO tiene datos propios: los lee de la misma
+   coleccion que alimenta las fichas. Eso significa que el listado
+   y la ficha no pueden contradecirse nunca. Si cambias el nombre
+   de un hospedaje en el panel, cambia en los dos sitios a la vez.
+   ============================================================ */
+
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import Marca from '../../components/Marca.astro';
+import Foto from '../../components/Foto.astro';
+import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
+
+/* ------------------------------------------------------------
+   RECOMENDACION PENDIENTE DE TU DECISION
+
+   Hoy las tarjetas de las fichas en obra llevan boton "Ver ficha".
+   Quien lo pulsa aterriza en una pagina que dice "Nombre del
+   hospedaje 2" y "$ ---". Eso es peor que no tener el enlace: el
+   visitante ya estaba interesado y le ensenamos que no hay nada.
+
+   Poniendo esto en true, la tarjeta se queda (comunica que hay
+   siete propiedades) pero el enlace desaparece hasta que la ficha
+   tenga contenido real. El boton de WhatsApp se queda siempre,
+   que es el que convierte de verdad.
+
+   Lo dejo en false para que la migracion no cambie nada todavia.
+   ------------------------------------------------------------ */
+const OCULTAR_ENLACE_DE_FICHAS_EN_OBRA = false;
+
+/* Ordenados por el campo "orden" del contenido, no por el nombre
+   del archivo: asi renombrar un hospedaje no reordena el listado. */
+const hospedajes = (await getCollection('hospedajes'))
+  .filter((f) => f.data.publicado)
+  .sort((a, b) => a.data.orden - b.data.orden);
+---
+
+<Base
+  titulo="Nuestros hospedajes en Zipaquira | Atheron Suite"
+  descripcion="Conoce nuestros hospedajes en Zipaquira, Cundinamarca. Habitaciones, fotos, servicios y ubicacion de cada uno."
+  ruta="/hospedajes"
+  ogTitulo="Hospedajes en Zipaquira | Atheron Suite"
+  ogDescripcion="Hospedajes seleccionados en Zipaquira, Cundinamarca. Mira habitaciones, fotos y ubicacion."
+  avisoBorrador="Version de trabajo. Estamos completando la informacion de cada hospedaje."
+>
+
+  <Cabecera enlaces={menuHospedajes} cta={ctaDisponibilidad} actual="/hospedajes" />
+
+  <main id="contenido">
+
+    {/* Hero corto: en paginas internas no hace falta pantalla completa */}
+    <section class="hero hero--interior">
+      <div class="contenedor hero__contenido">
+        <span class="hero__etiqueta">Zipaquira, Cundinamarca</span>
+        <h1 class="hero__titulo">Nuestros hospedajes</h1>
+        <p class="hero__texto">
+          Cada uno tiene su caracter. Entra a la ficha que te llame la atencion
+          para ver habitaciones, fotos y ubicacion.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <div class="contenedor">
+
+        {/* ==========================================================
+             COMO FUNCIONA
+             Explica el modelo antes de que el visitante se confunda:
+             una oficina central coordina todos los hospedajes.
+             ========================================================== */}
+        <div class="nota-reserva" style="margin-bottom: var(--esp-5);">
+          <span class="nota-reserva__icono" aria-hidden="true">&#127968;</span>
+          <div>
+            <strong>Como funciona</strong>
+            Coordinamos todos los hospedajes desde nuestra oficina en la
+            Cra. 9 #10-32 de Zipaquira. Escribenos por WhatsApp, te confirmamos
+            disponibilidad y precio, y al confirmar la reserva te damos la
+            direccion exacta y coordinamos tu llegada.
+          </div>
+        </div>
+
+        {/* ==========================================================
+             GRILLA DE LOS 7 HOSPEDAJES
+             La maqueta se escribe una vez y se repite por cada
+             hospedaje de la coleccion.
+
+             Nota sobre el boton de WhatsApp: cada tarjeta lleva SU
+             mensaje, construido con el nombre del hospedaje. El
+             cliente no tiene que explicar cual le gusto, el mensaje
+             ya llega identificado.
+             ========================================================== */}
+        <div class="grid grid--3">
+
+          {hospedajes.map(({ id, data }) => {
+            const enObra = !data.publicado;
+            const enlace = `/hospedajes/${id}`;
+            const mostrarEnlace = !(enObra && OCULTAR_ENLACE_DE_FICHAS_EN_OBRA);
+            return (
+              <article class="tarjeta aparecer">
+                <div class="tarjeta__media">
+                  <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                  <span class="tarjeta__insignia">{data.insignia}</span>
+                </div>
+                <div class="tarjeta__cuerpo">
+
+                  <h2 class="tarjeta__titulo">
+                    {mostrarEnlace
+                      ? <a href={enlace}><Marca texto={data.nombre} pendiente={enObra} /></a>
+                      : <Marca texto={data.nombre} pendiente={enObra} />}
+                  </h2>
+
+                  <p class="tarjeta__meta">
+                    <span><Marca texto={data.listadoSector} pendiente={enObra} /></span>
+                    <span><Marca texto={data.listadoSegundoDato} pendiente={enObra} />{data.listadoSegundoDatoSufijo}</span>
+                  </p>
+
+                  <p class="texto-suave">
+                    <Marca texto={data.resumen} pendiente={enObra} />
+                  </p>
+
+                  <div class="tarjeta__pie">
+                    {!data.precioPendiente && (
+                    <span class="tarjeta__precio">
+                      {data.precio} <span>/ noche</span>
+                    </span>
+                    )}
+                    {mostrarEnlace && (
+                      <a class="boton boton--contorno" href={enlace}>Ver ficha</a>
+                    )}
+                  </div>
+
+                  <a class="boton boton--whatsapp boton--bloque"
+                     href="/#contacto"
+                     {/* El municipio sale de la ficha. Se quedo escrito a
+                          mano cuando se saco de la plantilla de ficha, y
+                          en cuanto Casa Neusa aparecio en este listado su
+                          boton mandaba al cliente a consultar por una casa
+                          "en Zipaquira" que esta en Cogua. Por defecto
+                          sigue siendo Zipaquira, asi que el resto de
+                          tarjetas no cambia. */}
+                     data-whatsapp={`Hola, me interesa ${data.nombre} de Atheron Suite en ${data.localidad}. Quiero consultar disponibilidad.`}>
+                    Reservar por WhatsApp
+                  </a>
+
+                </div>
+              </article>
+            );
+          })}
+
+        </div>
+
+        <div class="cta-final aparecer" style="margin-top: var(--esp-6);">
+          <h2>No sabes cual elegir?</h2>
+          <p>Cuentanos cuantos son y que fechas manejan. Te recomendamos el mas adecuado.</p>
+          <div class="grupo-botones grupo-botones--centrado">
+            <a class="boton boton--acento boton--grande" href="/landing/hospedaje-en-zipaquira">Consultar disponibilidad</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <Pie />
+
+  <BotonFlotante
+    href="/#contacto"
+    mensaje="Hola, estoy viendo los hospedajes de Atheron Suite en Zipaquira."
+  />
+
+</Base>

@@ -1,174 +1,233 @@
 # Atheron Suite — Sitio web
 
-Proyecto web de práctica: sitio de hospedajes en **Zipaquirá, Cundinamarca**.
-Hecho con **HTML, CSS y JavaScript puros** — sin frameworks, sin servidor, sin base de datos.
+Sitio de hospedajes en **Zipaquirá, Cundinamarca**, publicado en
+**[hotelesatheron.com](https://hotelesatheron.com)**.
+
+Hecho con **Astro**: el contenido vive en archivos de texto, y de ahí se
+generan páginas HTML estáticas. Sin base de datos y sin servidor propio.
+
+> **El contenido se edita desde un panel en el navegador**, no tocando código.
+> Ver **[docs/panel-de-edicion.md](docs/panel-de-edicion.md)**.
+
+> ### 🔴 Si retomas el proyecto, empieza aquí
+>
+> **[docs/CONTINUIDAD-PROYECTO.md](docs/CONTINUIDAD-PROYECTO.md)**
+>
+> El sitio nuevo y el panel están terminados y probados, pero **viven en la rama
+> `astro` y todavía no se han publicado**. `hotelesatheron.com` sirve el sitio
+> antiguo desde `main`. Ese documento explica el estado exacto, qué no tocar, y
+> el procedimiento seguro para fusionar.
 
 ---
 
-## Cómo ver el sitio
+## Cómo ver el sitio en tu computador
 
-Abre `index.html` con doble clic en el navegador. Ya funciona.
+Necesitas **Node.js** instalado (versión 24 o superior). Después, en una
+terminal dentro de esta carpeta:
 
-Recomendado si usas VS Code: instala la extensión **Live Server** y da clic derecho
-sobre `index.html` → *Open with Live Server*. Así la página se recarga sola al guardar.
+```bash
+npm install
+npm run dev
+```
+
+Y abre `http://localhost:4321`.
+
+Si acabas de instalar Node, **abre una terminal nueva**: las que ya tuvieras
+abiertas no lo conocen todavía.
+
+---
+
+## Los comandos del proyecto
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Levanta el sitio en tu computador para trabajar |
+| `npm run build` | Construye el sitio para publicar, en `dist/` |
+| `npm run comprueba` | Revisa el contenido sin construir nada |
+| `npm run foto` | Comprime y renombra una foto para el sitio |
+
+### `npm run foto`
+
+```bash
+npm run foto -- "C:/ruta/a/tu/foto.jpg" sala la-magia-de-zipaquira
+```
+
+Reduce a 1600 px, convierte a JPG y guarda en
+`public/assets/img/hospedajes/la-magia-de-zipaquira-sala.jpg`.
+En la prueba: de 1.095 KB a 102 KB, **un 91% menos** sin diferencia visible.
 
 ---
 
 ## Cambiar el número de WhatsApp
 
-Está en **un solo lugar**: la primera línea de [assets/js/main.js](assets/js/main.js).
+Está en **un solo lugar**: la primera línea de
+[public/assets/js/main.js](public/assets/js/main.js).
 
 ```js
-var WHATSAPP_NUMERO = "573000000000";   // ← cámbialo aquí
+var WHATSAPP_NUMERO = "573188983167";   // ← cámbialo aquí
 ```
 
-Formato internacional, **sin `+` y sin espacios**. Colombia es `57`, así que un
-número como `300 123 4567` se escribe `573001234567`.
+Formato internacional, **sin `+` y sin espacios**. Colombia es `57`.
 
-Con ese cambio se actualizan todos los botones del sitio a la vez. Cada botón lleva
-su propio mensaje en el atributo `data-whatsapp`, así el cliente no tiene que
-explicar cuál hospedaje le gustó: el mensaje ya llega escrito.
+Con ese cambio se actualizan todos los botones del sitio a la vez. Cada botón
+lleva su propio mensaje, así el cliente no tiene que explicar cuál hospedaje le
+gustó: el mensaje ya llega escrito.
+
+### Códigos promocionales y de referido
+
+Se comparte un enlace con el código dentro:
+
+```
+hotelesatheron.com/?codigo=CICLISTAS
+hotelesatheron.com/hospedajes?codigo=JUANP
+```
+
+El código se guarda mientras dure la visita y se añade automáticamente a
+**todos** los mensajes de WhatsApp del sitio. Tú recibes el mensaje con el
+código dentro y ya sabes quién te lo mandó, sin ningún sistema de seguimiento.
 
 ---
 
-## Publicación (Vercel)
-
-El sitio se publica solo. El flujo es:
-
-```
-editas un archivo  →  git add / git commit  →  git push  →  Vercel republica
-```
-
-Cada `push` a la rama `main` genera un despliegue nuevo en unos segundos.
-Si algo sale mal, en el panel de Vercel puedes volver a un despliegue anterior.
-
-`vercel.json` activa **cleanUrls**: las direcciones se ven sin la extensión.
-`/landing/hospedaje-en-zipaquira.html` se publica como `/landing/hospedaje-en-zipaquira`.
-Los enlaces internos siguen funcionando igual: Vercel redirige automáticamente.
-
-Comandos del día a día:
-
-```bash
-git add -A
-git commit -m "Describe aquí el cambio"
-git push
-```
-
----
-
-## Estructura de carpetas
+## Estructura del proyecto
 
 ```
 /
-├── index.html                          Home (página principal)
+├── src/
+│   ├── pages/                    Una carpeta = una dirección del sitio
+│   │   ├── index.astro                       →  /
+│   │   ├── hospedajes/index.astro            →  /hospedajes
+│   │   ├── hospedajes/[slug].astro           →  UNA plantilla, 7 fichas
+│   │   ├── blog/                             →  /blog y sus artículos
+│   │   ├── landing/                          →  las dos landings
+│   │   └── sitemap.xml.ts                    →  el mapa del sitio, generado
+│   │
+│   ├── content/hospedajes/       LOS DATOS de los 7 hospedajes.
+│   │                             Esto es lo que edita el panel.
+│   ├── content.config.ts         Qué campos tiene un hospedaje
+│   │
+│   ├── layouts/Base.astro        El <head> de TODAS las páginas
+│   ├── components/               Cabecera, pie, botones, fotos
+│   └── data/navegacion.ts        Todos los menús del sitio
 │
-├── landing/
-│   └── hospedaje-en-zipaquira.html     Landing comercial (objetivo: captar contactos)
+├── public/                       Se copia tal cual al sitio publicado
+│   ├── admin/                    EL PANEL DE EDICIÓN
+│   ├── assets/css/               Los 3 archivos de estilo
+│   ├── assets/js/main.js         WhatsApp, códigos, menú móvil
+│   ├── assets/img/hospedajes/    Las fotos
+│   └── robots.txt
 │
-├── hospedajes/
-│   ├── index.html                      Listado de los 7 hospedajes
-│   └── plantilla-hospedaje.html        Plantilla para crear cada ficha individual
+├── scripts/
+│   ├── comprueba-contenido.mjs   Se ejecuta ANTES de cada publicación
+│   └── optimiza-fotos.mjs        `npm run foto`
 │
-├── robots.txt                          Permisos de rastreo para buscadores
-├── sitemap.xml                         Lista de páginas para Google
-├── vercel.json                         Configuración del despliegue
-│
-├── docs/
-│   └── estrategia-seo.md               Plan de posicionamiento y contenido
-│
-├── assets/
-│   ├── css/
-│   │   ├── base.css                    Variables, reset, tipografía, utilidades
-│   │   ├── componentes.css             Header, botones, tarjetas, formularios, footer
-│   │   └── paginas.css                 Hero, galería, ubicación, experiencias...
-│   ├── js/
-│   │   └── main.js                     Menú móvil, animaciones, formulario
-│   └── img/
-│       └── hospedajes/                 Aquí van las fotos reales
-│
-└── README.md                           Este archivo
+├── docs/                         Estrategia, pendientes y guías
+├── astro.config.mjs              Configuración del sitio
+└── vercel.json                   Publicación y redirecciones
 ```
 
-### Por qué el CSS está en 3 archivos
+### Por qué esta estructura
 
-| Archivo | Contiene | Cuándo lo tocas |
-|---|---|---|
-| `base.css` | Colores, tipografías, espacios (variables) | Al cambiar la identidad visual |
-| `componentes.css` | Piezas que se repiten (botón, tarjeta) | Al crear o ajustar una pieza |
-| `paginas.css` | Secciones concretas (hero, galería) | Al diseñar una sección nueva |
+Antes, cada página era un archivo HTML completo. La cabecera estaba escrita a
+mano **16 veces** y las seis fichas de hospedaje eran 2.496 líneas para
+almacenar seis números distintos.
 
-**Regla de oro:** nunca escribas un color "a mano" (`#0f172a`). Usa la variable
-(`var(--color-noche)`). Así cambias el color una vez y se actualiza todo el sitio.
+Ahora cada cosa vive en un solo sitio:
+
+| Si quieres cambiar... | Tocas |
+|---|---|
+| Un dato de un hospedaje | El panel (o `src/content/hospedajes/`) |
+| Un enlace del menú | `src/data/navegacion.ts` |
+| Algo del `<head>` de todas las páginas | `src/layouts/Base.astro` |
+| Un color o una tipografía | `public/assets/css/base.css` |
+
+---
+
+## Publicación
+
+Hay **dos** caminos, y llevan al mismo sitio:
+
+```
+DESDE EL PANEL (lo habitual)
+  guardas → commit automático → Vercel republica
+
+DESDE EL CÓDIGO
+  editas → git commit → git push → Vercel republica
+```
+
+Cada `push` a la rama `main` genera un despliegue nuevo en menos de un minuto.
+Si algo sale mal, en el panel de Vercel puedes volver a un despliegue anterior
+con un clic.
+
+**Antes de publicar se ejecuta sola una comprobación** del contenido
+(`scripts/comprueba-contenido.mjs`). Si encuentra un problema, **detiene la
+publicación y el sitio anterior sigue en pie.** Hoy revisa dos cosas:
+
+1. **Texto cortado por YAML.** Una almohadilla precedida de espacio empieza un
+   comentario, así que `zona: Cra. 9 #10-32` se leía como `"Cra. 9"` y el resto
+   desaparecía sin ningún aviso. Nos pasó de verdad. La solución es escribir el
+   valor entre comillas, y el script señala la línea exacta.
+2. **Fotos.** Que existan, y que no pesen de más. Avisa por encima de 300 KB y
+   detiene la publicación por encima de 1 MB.
+
+---
+
+## Direcciones del sitio
+
+**El dominio oficial es `hotelesatheron.com`, sin `www`.**
+`www.hotelesatheron.com` redirige permanentemente a él. Hay **una sola versión
+canónica**, y es la que aparece en las canónicas, en el sitemap y en el
+`robots.txt`.
+
+`vercel.json` activa **cleanUrls**: las direcciones se ven sin la extensión.
+También contiene las redirecciones permanentes de las dos plantillas que se
+retiraron del sitio.
+
+Las direcciones no cambiaron al migrar a Astro: `build.format: 'preserve'` en
+`astro.config.mjs` genera los archivos exactamente con la misma forma que
+tenían antes. **No toques esa opción.**
 
 ---
 
 ## Contenido provisional
 
-Todavía no tenemos los datos reales de los 7 hospedajes. Para que sea imposible
-publicar algo inventado por error, el contenido temporal está **marcado en amarillo**:
+Todo lo que no es un dato real va **marcado en amarillo**, para que sea
+imposible publicarlo por error creyendo que era definitivo:
 
-- `<span class="pendiente">texto</span>` → texto provisional (fondo amarillo)
-- `<div class="placeholder">` → foto que falta (rectángulo rayado)
-- `[[TEXTO ENTRE CORCHETES]]` → campo por llenar en la plantilla
-- La banda amarilla superior (`.aviso-borrador`) se borra cuando el sitio esté listo
+- En el panel, las casillas **"Provisional"** junto a cada campo
+- En el código, `<span class="pendiente">texto</span>`
+- Las fichas sin publicar salen en amarillo solas en el listado
 
-**Buscar todo lo pendiente:** busca en el proyecto la palabra `pendiente`.
-
----
-
-## Cómo agregar un hospedaje nuevo
-
-1. Copia `hospedajes/plantilla-hospedaje.html`.
-2. Renómbralo con el nombre del hospedaje: `casa-del-portal.html`
-   (minúsculas, sin tildes, con guiones — así queda una URL limpia).
-3. Reemplaza todo lo que esté entre `[[ ]]`.
-4. Pon las fotos en `assets/img/hospedajes/` y cambia los `.placeholder` por `<img>`.
-5. En `hospedajes/index.html`, actualiza la tarjeta correspondiente y su enlace `href`.
+**Buscar todo lo pendiente:** busca en el proyecto la palabra `pendiente`, o
+mira [docs/pendientes.md](docs/pendientes.md).
 
 ---
 
-## Datos que faltan para avanzar
+## Cómo añadir un hospedaje nuevo
 
-- [ ] Nombre, sector y descripción de cada uno de los 7 hospedajes
-- [ ] Número de habitaciones, camas, baños y capacidad
-- [ ] Precios por noche y política de estancia mínima
-- [ ] Fotos de cada hospedaje
-- [ ] Correo y teléfono de contacto oficiales
-- [ ] Dirección o coordenadas de cada hospedaje (para el mapa)
-- [ ] Horarios de check-in / check-out, política de mascotas y de pagos
-- [ ] Logo definitivo (hoy el logo es solo texto)
+**Desde el panel:** pulsa "Nuevo hospedaje" y rellena los campos. La dirección
+del sitio sale del nombre que le pongas.
 
----
+**Desde el código:** copia un archivo de `src/content/hospedajes/`, renómbralo
+(minúsculas, sin tildes, con guiones) y cambia los datos. El nombre del archivo
+manda la dirección: `casa-del-portal.md` se publica en
+`/hospedajes/casa-del-portal`.
 
-## Siguientes etapas del curso
-
-Ya hecho en la etapa 1:
-
-- [x] Estructura del proyecto
-- [x] Diseño base (variables, componentes)
-- [x] Home
-- [x] Landing comercial de Zipaquirá
-- [x] Estructura preparada para los 7 hospedajes
-
-Por hacer más adelante:
-
-- [ ] Página propia para cada uno de los 7 hospedajes
-- [ ] Página de contacto independiente
-- [ ] Página sobre Zipaquirá (contenido del destino)
-- [ ] Galería con visor de fotos (lightbox)
-- [ ] Envío real del formulario
-- [ ] Optimización de imágenes y SEO
-- [ ] Publicación del sitio en internet
+En los dos casos, el listado, la portada, el mapa del sitio y los enlaces se
+actualizan solos.
 
 ---
 
 ## Convenciones de código
 
 - **Todo en español**: clases, comentarios y nombres de archivo.
-- **Nombres de clase estilo BUEM**: `bloque`, `bloque__elemento`, `bloque--variante`.
-  Ejemplo: `.tarjeta`, `.tarjeta__titulo`, `.boton--primario`.
+- **Nombres de clase estilo BUEM**: `bloque`, `bloque__elemento`,
+  `bloque--variante`. Ejemplo: `.tarjeta`, `.tarjeta__titulo`, `.boton--primario`.
 - **Móvil primero**: el CSS se escribe para celular y luego se amplía con
   `@media (min-width: ...)`.
-- **Los atributos `data-*`** (como `data-menu-movil`) son los ganchos del JavaScript.
-  Nunca uses una clase de estilo para seleccionar algo desde JS: si cambia el diseño,
-  se rompe el código.
+- **Los atributos `data-*`** son los ganchos del JavaScript. Nunca uses una
+  clase de estilo para seleccionar algo desde JS: si cambia el diseño, se rompe.
+- **Nunca escribas un color a mano** (`#0f172a`). Usa la variable
+  (`var(--color-noche)`).
+- **Los comentarios van entre llaves**, no como comentario de HTML. Los de HTML
+  se envían al navegador y cualquiera los lee con "ver código fuente"; los
+  nuestros incluyen notas internas que no deben viajar.

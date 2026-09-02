@@ -1,0 +1,244 @@
+---
+import fs from 'node:fs';
+
+/* ============================================================
+     ESTILOS INCRUSTADOS  (rendimiento)
+     Las hojas se leen aqui, al construir, y viajan dentro
+     del HTML. Antes eran peticiones que BLOQUEABAN el
+     pintado: hasta que no llegaban, el visitante veia
+     una pagina en blanco. Lighthouse lo medio en unos 2 segundos
+     en movil con red lenta.
+     Los archivos siguen existiendo en public/assets/css/ y se
+     editan alli como siempre: aqui solo se copian, sin comentarios
+     y sin sangrado, que no le sirven de nada al navegador.
+     ============================================================ */
+const estilos = ['base', 'componentes', 'paginas', 'hotel-selector']
+  .map((hoja) => fs.readFileSync('public/assets/css/' + hoja + '.css', 'utf8'))
+  .join('\n')
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+/* ============================================================
+   BASE.ASTRO — el <head> de TODO el sitio en un solo archivo
+
+   Antes: las 19 paginas repetian a mano titulo, descripcion,
+   canonica, Open Graph y hojas de estilo. Cambiar una coma
+   obligaba a editar 19 archivos.
+
+   Ahora: cada pagina solo declara QUE es distinto en ella
+   (su titulo, su descripcion, su JSON-LD) y este archivo se
+   encarga del resto.
+
+   REGLA CRITICA: la canonica se construye sola a partir de
+   "ruta". No se escribe el dominio a mano en ningun sitio.
+   Asi es imposible que se quede una canonica apuntando al
+   dominio viejo o con una barra de mas.
+
+   NOTA SOBRE LOS COMENTARIOS DE ESTE ARCHIVO:
+   los de abajo van entre llaves, no como comentario de HTML.
+   Es a proposito. Los comentarios normales de HTML se envian al
+   navegador y cualquiera los lee con "ver codigo fuente"; los
+   nuestros incluyen notas internas y pendientes, que no deben
+   viajar. Entre llaves, el comentario se queda en el archivo y
+   desaparece de la pagina publicada.
+   ============================================================ */
+
+interface Props {
+  /** Titulo de la pestana y del buscador. */
+  titulo: string;
+  /** Meta descripcion: el parrafo que sale bajo el titulo en Google. */
+  descripcion: string;
+  /** Ruta de esta pagina, empezando por barra: "/", "/hospedajes"... */
+  ruta: string;
+  /** Tipo de contenido al compartir: "website" o "article". */
+  ogTipo?: string;
+  /** Titulo al compartir. Si no se pone, se usa el titulo normal. */
+  ogTitulo?: string;
+  /** Descripcion al compartir. Si no se pone, se usa la normal. */
+  ogDescripcion?: string;
+  /** false => se pide a Google que NO indexe la pagina (fichas en obra). */
+  indexable?: boolean;
+  /** Ficha de datos estructurados. null = esta pagina no lleva. */
+  jsonLd?: Record<string, unknown> | null;
+  /** Texto de la banda amarilla superior. null = no se muestra. */
+  avisoBorrador?: string | null;
+  /** Foto para la vista previa al compartir. Ruta del sitio, sin dominio. */
+  imagen?: string;
+  /** Que se ve en esa foto. */
+  imagenAlt?: string;
+}
+
+const {
+  titulo,
+  descripcion,
+  ruta,
+  ogTipo = 'website',
+  ogTitulo,
+  ogDescripcion,
+  indexable = true,
+  jsonLd = null,
+  avisoBorrador = null,
+  imagen,
+  imagenAlt,
+} = Astro.props;
+
+// new URL() une el dominio de astro.config.mjs con la ruta de la pagina.
+// De aqui salen la canonica y og:url, siempre iguales entre si.
+const urlCanonica = new URL(ruta, Astro.site).href;
+/* og:image tiene que ser una direccion absoluta: WhatsApp y Facebook la
+   piden desde fuera y una ruta relativa no les sirve de nada. */
+const urlImagen = imagen ? new URL(imagen, Astro.site).href : null;
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+  <meta charset="UTF-8">
+  {/* viewport: sin esta linea el sitio NO se ve bien en celular */}
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>{titulo}</title>
+  <meta name="description" content={descripcion}>
+
+  {/* ============================================================
+       NOINDEX
+       Solo aparece si la pagina se declara con indexable={false}.
+
+       Por que existe: publicar varias paginas casi vacias y
+       parecidas entre si es "contenido delgado", y Google lo
+       castiga a nivel de todo el dominio. Es mejor 1 pagina buena
+       indexada que 7 flojas.
+       ============================================================ */}
+  {!indexable && <meta name="robots" content="noindex, follow" />}
+
+  {/* ============================================================
+       SEO
+       ============================================================ */}
+
+  {/* Canonica: le dice a Google cual es LA direccion oficial de esta
+       pagina. Evita que la trate como contenido duplicado si se llega
+       por varias rutas (con y sin barra final, por ejemplo). */}
+  <link rel="canonical" href={urlCanonica}>
+
+  {/* Open Graph: controla como se ve el enlace cuando alguien lo
+       comparte por WhatsApp, Facebook o LinkedIn. Sin esto, la vista
+       previa sale fea o vacia, y eso cuesta clics. */}
+  <meta property="og:type" content={ogTipo}>
+  <meta property="og:locale" content="es_CO">
+  <meta property="og:site_name" content="Atheron Suite">
+  <meta property="og:url" content={urlCanonica}>
+  <meta property="og:title" content={ogTitulo ?? titulo}>
+  <meta property="og:description" content={ogDescripcion ?? descripcion}>
+  {/* La vista previa al compartir. Sin og:image, WhatsApp y Facebook
+       pintan un enlace pelado: menos clics por el mismo trabajo. Cada
+       pagina manda su propia foto; si no manda ninguna, no se inventa
+       una que no le corresponda.
+
+       PENDIENTE: una imagen dedicada de 1200x630 luce mejor que una
+       foto vertical, que las redes recortan por el centro. Mientras
+       tanto, la foto real de la ficha es mucho mejor que nada. */}
+  {urlImagen && (
+    <>
+      <meta property="og:image" content={urlImagen} />
+      {imagenAlt && <meta property="og:image:alt" content={imagenAlt} />}
+    </>
+  )}
+
+  <meta name="twitter:card" content="summary_large_image">
+
+  {/* Iconos de pestana y de pantalla de inicio, del logo oficial. */}
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/marca/atheron-icono-32.png">
+  <link rel="apple-touch-icon" href="/assets/img/marca/atheron-icono-180.png">
+
+  {/* Solo la tipografia de titulos se descarga. El texto normal usa la
+       pila nativa del sistema: mantiene legibilidad y elimina ~48 KB
+       y una fuente externa del camino inicial en movil. */}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" media="print" onload="this.media='all'; this.onload=null"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
+  <noscript>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
+  </noscript>
+
+  {/* Nuestras hojas de estilo, siempre en este orden:
+       base (variables) -> componentes -> paginas -> ajustes del selector.
+       Van incrustadas: ver el comentario de arriba del todo. */}
+  <style is:inline set:html={estilos}></style>
+
+  {/* ============================================================
+       PERMISO PARA ANIMAR
+
+       La animacion de aparicion esconde el bloque -opacity 0- y lo
+       muestra cuando entra en pantalla. Si algo impide que ese
+       "cuando entra en pantalla" llegue a ocurrir, el contenido se
+       queda escondido para siempre y la pagina muestra un hueco en
+       blanco. Paso de verdad: con cinco habitaciones el bloque mide
+       5.500 px y en un portatil no se veia ninguna.
+
+       Por eso el CSS solo esconde si el <html> lleva la clase
+       "anima", y esa clase la pone este guion. Sin JavaScript, con
+       JavaScript bloqueado, o si este archivo no llega, la clase no
+       se pone y el contenido se ve tal cual: sin animacion, pero
+       visible. El contenido nunca depende de que un guion funcione.
+
+       Va aqui, incrustado y antes del <body>, y no en main.js: main
+       se carga con defer y para entonces la pagina ya se pinto, asi
+       que el contenido apareceria y se ocultaria de golpe.
+
+       El plazo de dos segundos cubre el caso restante: la clase
+       puesta pero main.js sin llegar a montar el observador -red
+       lenta, error de carga-. Si a los dos segundos main no ha
+       avisado, se retira el permiso y todo se ve.
+
+       Y si el visitante pidio menos movimiento, no se anima nada.
+       ============================================================ */}
+  <script is:inline>
+    (function () {
+      var raiz = document.documentElement;
+      try {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      } catch (e) { return; }
+      raiz.classList.add('anima');
+      setTimeout(function () {
+        if (!window.__aparecerListo) raiz.classList.remove('anima');
+      }, 2000);
+    })();
+  </script>
+
+  {/* ============================================================
+       DATOS ESTRUCTURADOS (JSON-LD)
+       Es una ficha del negocio en un formato que Google y los
+       asistentes de IA leen directamente. No se ve en pantalla.
+
+       REGLA IMPORTANTE: solo se marca informacion que el visitante
+       pueda ver en la pagina. Marcar datos inventados u ocultos es
+       motivo de penalizacion.
+
+       Nota tecnica: va con set:html para que Astro escriba el JSON
+       tal cual, sin escapar las comillas. Si se escapan, el JSON
+       queda invalido y Google deja de leer la ficha SIN avisar.
+       ============================================================ */}
+  {jsonLd && (
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd, null, 2)}></script>
+  )}
+
+</head>
+
+<body>
+
+  {avisoBorrador && <p class="aviso-borrador">{avisoBorrador}</p>}
+
+  {/* Accesibilidad: permite saltar el menu con el teclado */}
+  <a class="saltar-contenido" href="#contenido">Saltar al contenido</a>
+
+  <slot />
+
+  {/* main.js se enlaza con is:inline para que Astro NO lo empaquete
+       ni le cambie el nombre. */}
+  <script is:inline defer src="/assets/js/main.js"></script>
+
+</body>
+</html>

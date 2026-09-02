@@ -2,9 +2,33 @@
 
 > Lista maestra. Los vamos cerrando uno a uno.
 > Para trabajar en uno, basta con decir el número: *"hagamos el 12"*.
-> Última actualización: 18 de agosto de 2026.
+> Última actualización: 20 de agosto de 2026.
+>
+> **Muchos de estos pendientes ya no se resuelven tocando código:** se resuelven
+> desde el panel de edición. Ver [panel-de-edicion.md](panel-de-edicion.md).
+>
+> **Estado del proyecto y qué no tocar:**
+> [CONTINUIDAD-PROYECTO.md](CONTINUIDAD-PROYECTO.md).
+
+---
+
+## Bloque 0 — Antes de publicar el sitio nuevo
+
+> El sitio migrado a Astro y el panel online están terminados y probados, pero
+> viven en la rama `astro`. Esto es lo que falta para fusionar a `main`.
+
+| # | Pendiente | Quién |
+|---|---|---|
+| **0.1** | **Cambiar `public/admin/config.yml` línea 45: `branch: astro` → `branch: main`.** Si se olvida, el panel guardará en una rama que ya no se publica y el sitio no cambiará nunca, **sin ningún error visible** | Claude |
+| 0.2 | Rotar el Client Secret de la aplicación OAuth (el anterior pasó por un chat) | Usuario |
+| 0.3 | Quitar el texto de prueba `ZIPAQUIRA` del nombre del hospedaje 01, desde el panel | Usuario |
+| 0.4 | Activar verificación en dos pasos en GitHub | Usuario |
+| 0.5 | Decidir sobre el plan de Vercel (ver el 62) | Usuario |
 
 **Nombre comercial confirmado: "Atheron Suite"** (singular). No usar "Atheron Suites".
+
+**Dominio oficial: `hotelesatheron.com`, sin `www`.** Una sola versión canónica;
+`www` redirige permanentemente a ella.
 
 ---
 
@@ -77,7 +101,7 @@ Aquí está el 32% del peso del posicionamiento local. No es código, pero vale 
 
 | # | Pendiente | Prioridad |
 |---|---|---|
-| 28 | **Corregir la ubicación del perfil de Google: aparece en Cogua, debe ser Zipaquirá** | Máxima |
+| 28 | **Corregir la ubicación del perfil de Google: aparece en Cogua, debe ser Zipaquirá.** Paso a paso en [corregir-perfil-google.md](corregir-perfil-google.md). **Lo que está mal es el pin del mapa, no la dirección: no toques el texto de la dirección o puedes disparar una reverificación.** | Máxima |
 | 29 | Renombrar el perfil de "Atheronsas" a "Atheron Suite" | Alta |
 | 30 | Completar el perfil: categoría, horarios, teléfono, enlace al sitio, atributos | Alta |
 | 31 | Separar o cerrar el perfil de Atheron Security para que no compita | Media |
@@ -126,14 +150,27 @@ Un artículo cada 15 días. El orden importa: los primeros son los que más busc
 
 | # | Pendiente | Cuándo |
 |---|---|---|
-| 47 | Quitar el `noindex` de cada ficha cuando tenga contenido real | Al cerrar cada ficha |
-| 48 | Añadir cada ficha al `sitemap.xml` | Al quitar su noindex |
-| 49 | Quitar la banda amarilla de "versión de trabajo" | Cuando el sitio esté listo |
-| 50 | Conectar el formulario de contacto a un servicio real de envío | Cuando haya correo |
+| 47 | ~~Quitar el `noindex` de cada ficha~~ ✅ **Resuelto por el panel:** es la casilla "Publicado" |
+| 48 | ~~Añadir cada ficha al `sitemap.xml`~~ ✅ **Resuelto:** el sitemap se genera solo desde la misma casilla |
+| 49 | Quitar la banda amarilla de "versión de trabajo" | Cuando el sitio esté listo. **Ahora es un campo del panel:** se vacía y desaparece |
+| 50 | Construir el formulario de contacto real, conectado al flujo comercial/CRM de Atheron | **Los formularios falsos se desactivaron el 21/08/2026** (interruptor en `src/data/ajustes.ts`). Mientras tanto el canal es WhatsApp. Requiere el correo oficial, pendiente 22 |
 | 51 | Visor de fotos (lightbox) en las galerías | Cuando haya fotos |
-| 52 | Optimizar el peso de las imágenes | Cuando haya fotos |
+| 52 | Optimizar el peso de las imágenes | **Parcial.** Hay compresión manual (`npm run foto`), aviso a partir de 300 KB y la publicación se detiene por encima de 1 MB. Falta la parte automática, ver el 55 |
 | 53 | Página de contacto independiente | Etapa posterior |
 | 54 | Página sobre Zipaquirá como destino | Etapa posterior |
+
+### Nacidos de la migración a Astro y del panel
+
+| # | Pendiente | Prioridad |
+|---|---|---|
+| 55 | **Optimización automática de imágenes al subirlas: compresión y conversión a WebP/AVIF.** Hoy es manual con `npm run foto`. El objetivo es que el administrador no tenga que saber nada de optimización de imágenes | Media. No se hizo antes para no añadir riesgo a la etapa del panel |
+| 56 | Migrar los artículos del blog a colección de contenido, para poder editarlos desde el panel | Media |
+| 57 | Ajustes generales editables desde el panel: número de WhatsApp, correo, textos del pie | Media |
+| 58 | Colores y tipografías editables desde el panel | Baja |
+| 59 | ~~Decidir si las fichas en obra deben dejar de tener enlace "Ver ficha"~~ ✅ **Resuelto el 21/08/2026:** las fichas sin publicar desaparecen enteras de la portada y del listado. Ver §21.5 de CONTINUIDAD |
+| 60 | `/blog` es la única página del sitio sin botón flotante de WhatsApp. Parece un olvido | Baja |
+| 61 | Unificar los menús: el listado muestra 5 enlaces, el blog 3 y la ficha otros 4. Descoordinación heredada | Baja |
+| 62 | Vercel: el plan gratuito es para uso **no comercial**. Un sitio de hospedajes lo es. Valorar si conviene pasar al plan de pago antes de que lo revisen ellos | Media — riesgo de suspensión |
 
 ---
 

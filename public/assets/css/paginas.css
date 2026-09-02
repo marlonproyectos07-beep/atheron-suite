@@ -1,0 +1,492 @@
+/* ============================================================
+   PAGINAS.CSS — Estilos de secciones concretas
+   (hero, galeria, ubicacion, experiencias, franja de datos...)
+   Van aqui las cosas que NO se repiten como componente suelto.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   HERO — la primera pantalla que ve el visitante
+   ------------------------------------------------------------ */
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: min(88vh, 760px);
+  padding-block: var(--esp-6);
+  color: #fff;
+  overflow: hidden;
+  /* Degradado provisional. Cuando tengamos la foto real se cambia por:
+     background-image: linear-gradient(...), url("../img/hero.jpg"); */
+  background:
+    linear-gradient(160deg, rgba(15,23,42,.92) 0%, rgba(15,23,42,.72) 45%, rgba(47,107,86,.75) 100%),
+    radial-gradient(circle at 80% 20%, rgba(201,162,39,.45), transparent 55%),
+    var(--color-noche);
+  background-size: cover;
+  background-position: center;
+}
+
+.hero__contenido { max-width: 720px; }
+
+.hero__etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .4rem .9rem;
+  margin-bottom: var(--esp-3);
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  font-size: .82rem;
+  font-weight: 500;
+  letter-spacing: .04em;
+}
+
+.hero__titulo { margin-bottom: var(--esp-3); }
+.hero__titulo em {
+  font-style: normal;
+  color: var(--color-sal-claro);
+}
+
+.hero__texto {
+  font-size: clamp(1rem, 1.6vw, 1.18rem);
+  color: rgba(255,255,255,.85);
+  max-width: 56ch;
+  margin-bottom: var(--esp-4);
+}
+
+/* Datos rapidos bajo el hero */
+.hero__datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-4);
+  margin-top: var(--esp-5);
+  padding-top: var(--esp-3);
+  border-top: 1px solid rgba(255,255,255,.18);
+}
+.dato__numero {
+  display: block;
+  font-family: var(--fuente-titulo);
+  font-size: 1.9rem;
+  line-height: 1.1;
+  color: var(--color-sal-claro);
+}
+.dato__texto {
+  font-size: .84rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.7);
+}
+
+/* Hero mas corto para paginas internas */
+.hero--interior { min-height: auto; padding-block: var(--esp-6) var(--esp-5); }
+
+/* ------------------------------------------------------------
+   BLOQUE DE DOS COLUMNAS (texto + imagen)
+   ------------------------------------------------------------ */
+.bloque-doble {
+  display: grid;
+  gap: var(--esp-4);
+  align-items: center;
+}
+@media (min-width: 900px) {
+  .bloque-doble { grid-template-columns: 1fr 1fr; gap: var(--esp-6); }
+  /* .bloque-doble--invertido pone la imagen a la izquierda */
+  .bloque-doble--invertido .bloque-doble__media { order: -1; }
+}
+
+/* ------------------------------------------------------------
+   FRANJA DE CONFIANZA (numeros / promesas)
+   ------------------------------------------------------------ */
+.franja {
+  display: grid;
+  gap: var(--esp-3);
+  padding-block: var(--esp-4);
+  border-block: 1px solid var(--borde);
+  text-align: center;
+}
+@media (min-width: 700px) { .franja { grid-template-columns: repeat(4, 1fr); } }
+.franja__item strong {
+  display: block;
+  font-family: var(--fuente-titulo);
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+.franja__item span { font-size: .87rem; color: var(--texto-suave); }
+
+/* ------------------------------------------------------------
+   GALERIA DE FOTOS
+   ------------------------------------------------------------ */
+.galeria {
+  display: grid;
+  gap: var(--esp-2);
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 800px) {
+  .galeria { grid-template-columns: repeat(4, 1fr); }
+  /* La primera foto ocupa el doble: crea un mosaico mas interesante */
+  .galeria > *:first-child { grid-column: span 2; grid-row: span 2; }
+  .galeria > *:first-child .placeholder { aspect-ratio: 1 / 1; height: 100%; }
+}
+
+/* ------------------------------------------------------------
+   UBICACION
+   ------------------------------------------------------------ */
+.mapa {
+  width: 100%;
+  min-height: 320px;
+  border: 0;
+  border-radius: var(--radio-md);
+}
+
+.lista-distancias { display: grid; gap: .1rem; }
+.lista-distancias li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  padding: .75rem 0;
+  border-bottom: 1px solid var(--borde);
+}
+.lista-distancias span:last-child {
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------
+   EXPERIENCIAS (tarjetas con foto grande)
+   ------------------------------------------------------------ */
+.experiencia {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 320px;
+  padding: var(--esp-3);
+  border-radius: var(--radio-md);
+  overflow: hidden;
+  color: #fff;
+  background: var(--color-noche-suave);
+}
+.experiencia::after {
+  /* capa oscura para que el texto siempre se lea */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(15,23,42,.9) 10%, rgba(15,23,42,.15) 70%);
+}
+.experiencia__fondo {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(45deg,
+      rgba(255,255,255,.06) 0 12px,
+      rgba(255,255,255,.12) 12px 24px);
+}
+.experiencia__texto { position: relative; z-index: 1; }
+.experiencia__texto p { color: rgba(255,255,255,.82); font-size: .93rem; }
+
+/* ------------------------------------------------------------
+   HABITACIONES (fila con foto + detalle)
+   ------------------------------------------------------------ */
+.habitacion {
+  display: grid;
+  gap: var(--esp-3);
+  padding: var(--esp-3);
+  background: var(--color-blanco);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+}
+@media (min-width: 800px) {
+  .habitacion { grid-template-columns: 320px 1fr; align-items: center; gap: var(--esp-4); }
+}
+.habitacion__datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-block: var(--esp-2);
+}
+.habitacion__dato {
+  padding: .3rem .8rem;
+  background: var(--color-crema);
+  border-radius: 999px;
+  font-size: .84rem;
+}
+
+/* ------------------------------------------------------------
+   BLOQUE FINAL DE LLAMADO A LA ACCION
+   ------------------------------------------------------------ */
+.cta-final {
+  position: relative;
+  padding: var(--esp-6) var(--esp-3);
+  border-radius: var(--radio-lg);
+  text-align: center;
+  color: #fff;
+  background:
+    linear-gradient(135deg, var(--color-noche) 0%, var(--color-verde) 140%);
+}
+.cta-final p {
+  max-width: 55ch;
+  margin: var(--esp-2) auto var(--esp-4);
+  color: rgba(255,255,255,.82);
+}
+
+/* ------------------------------------------------------------
+   AVISO DE CONTENIDO PENDIENTE (banda superior de trabajo)
+   Se quita cuando el sitio tenga contenido real.
+   ------------------------------------------------------------ */
+.aviso-borrador {
+  background: #fff4cc;
+  border-bottom: 1px solid #e6cf80;
+  color: #6b5500;
+  font-size: .82rem;
+  text-align: center;
+  padding: .55rem var(--esp-2);
+}
+
+/* ------------------------------------------------------------
+   BLOG — tipografia de lectura larga
+   Un articulo se lee distinto a una landing: linea mas corta,
+   mas aire entre parrafos, texto un punto mas grande.
+   ------------------------------------------------------------ */
+.articulo {
+  max-width: 68ch;          /* 68 caracteres por linea: lo comodo para leer */
+  margin-inline: auto;
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+.articulo > * + * { margin-top: var(--esp-3); }
+
+.articulo h2 {
+  margin-top: var(--esp-5);
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--borde);
+}
+.articulo h3 { margin-top: var(--esp-4); }
+
+.articulo ul, .articulo ol { display: grid; gap: .6rem; }
+.articulo ul li { position: relative; padding-left: 1.4rem; }
+.articulo ul li::before {
+  content: "\2022";
+  position: absolute;
+  left: .35rem;
+  color: var(--acento);
+  font-weight: 700;
+}
+.articulo ol { counter-reset: paso; }
+.articulo ol li { position: relative; padding-left: 2rem; counter-increment: paso; }
+.articulo ol li::before {
+  content: counter(paso) ".";
+  position: absolute;
+  left: 0;
+  font-weight: 600;
+  color: var(--acento);
+}
+
+.articulo a:not(.boton) {
+  color: var(--color-verde);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* La "respuesta rapida": bloque destacado al inicio del articulo.
+   Existe por SEO y por GEO: los asistentes de IA leen el principio
+   de la pagina para decidir si te citan. */
+.respuesta-rapida {
+  padding: var(--esp-3);
+  background: var(--color-crema);
+  border-left: 4px solid var(--acento);
+  border-radius: 0 var(--radio-sm) var(--radio-sm) 0;
+  font-size: 1.05rem;
+}
+.respuesta-rapida strong { display: block; margin-bottom: .4rem; }
+
+/* Datos del articulo: fecha y tiempo de lectura */
+.articulo__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  font-size: .88rem;
+  color: var(--texto-suave);
+}
+
+/* Tabla dentro de un articulo */
+.articulo table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .95rem;
+}
+.articulo th, .articulo td {
+  padding: .7rem .6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--borde);
+}
+.articulo th { font-weight: 600; background: var(--color-crema); }
+
+/* Caja de enlaces al resto del grupo tematico.
+   Este enlazado interno es lo que construye autoridad. */
+.cluster {
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-crema);
+}
+.cluster h3 { margin-bottom: var(--esp-2); }
+.cluster ul { display: grid; gap: .5rem; }
+
+/* Tarjeta de articulo en el listado del blog */
+.tarjeta-articulo__meta {
+  font-size: .82rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--acento);
+  font-weight: 600;
+}
+
+/* ============================================================
+   ESPACIOS DE LA CASA
+
+   Las zonas comunes que no se reservan por separado pero venden
+   la casa: la sala con chimenea, la cocina, el balcon, el asador.
+   Misma tarjeta de siempre; lo unico propio es que la foto manda
+   y el texto acompana.
+   ============================================================ */
+.espacio {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--fondo);
+  box-shadow: var(--sombra-sm);
+}
+.espacio .foto,
+.espacio .placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+.espacio__texto { padding: var(--esp-3); }
+.espacio__texto h3 { margin-bottom: var(--esp-1); font-size: 1.15rem; }
+
+/* ============================================================
+   OPINIONES DE TERCEROS
+
+   Se citan, no se apropian: de ahi que la plataforma salga en las
+   cifras, en cada firma y en la nota final. El borde superior las
+   separa de la seccion anterior cuando las dos van sobre fondo
+   blanco.
+   ============================================================ */
+.opiniones { border-top: 1px solid var(--borde); }
+
+.opiniones__cifras {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--esp-3);
+  margin-bottom: var(--esp-5);
+}
+.opiniones__cifra {
+  flex: 1 1 12rem;
+  max-width: 18rem;
+  padding: var(--esp-3);
+  text-align: center;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-crema);
+}
+.opiniones__numero {
+  display: block;
+  font-family: var(--fuente-titulo);
+  font-size: 2.4rem;
+  line-height: 1.1;
+  color: var(--color-noche);
+}
+.opiniones__sobre { font-size: 1.2rem; color: var(--texto-suave); }
+.opiniones__distintivo {
+  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  color: var(--color-verde);
+  /* La insignia ocupa el hueco de la cifra para que las tres cajas
+     queden a la misma altura sin fijarles un alto a mano. */
+  min-height: 2.64rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.opiniones__pie {
+  display: block;
+  margin-top: var(--esp-1);
+  font-size: .82rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.opinion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-left: 3px solid var(--acento);
+  border-radius: var(--radio-md);
+  background: var(--fondo);
+  box-shadow: var(--sombra-sm);
+}
+.opinion__texto {
+  margin: 0;
+  font-style: italic;
+  color: var(--color-gris-700);
+}
+.opinion__texto::before { content: '\201C'; }
+.opinion__texto::after  { content: '\201D'; }
+.opinion__firma {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  font-size: .9rem;
+}
+.opinion__firma span { color: var(--texto-suave); font-size: .82rem; }
+
+.opiniones__nota {
+  margin-top: var(--esp-4);
+  text-align: center;
+}
+
+/* ============================================================
+   ANTES DE RESERVAR
+
+   Condiciones y seguridad. El apartado de seguridad distingue lo
+   confirmado de lo que no consta, y esa diferencia no puede vivir
+   solo en el color: el simbolo va en el DOM y cada punto dice por
+   escrito lo que es.
+   ============================================================ */
+.condicion {
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-crema);
+}
+.condicion h3 { margin-bottom: var(--esp-1); font-size: 1.05rem; }
+
+.seguridad {
+  margin-top: var(--esp-4);
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+}
+.seguridad h3 { margin-bottom: var(--esp-2); font-size: 1.05rem; }
+.seguridad__lista { display: grid; gap: .6rem; list-style: none; padding: 0; }
+.seguridad__punto {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr;
+  align-items: start;
+  gap: .5rem;
+  color: var(--texto-suave);
+}
+.seguridad__marca {
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-gris-500);
+}
+.seguridad__punto[data-consta] { color: var(--color-gris-700); }
+.seguridad__punto[data-consta] .seguridad__marca { color: var(--color-verde); }

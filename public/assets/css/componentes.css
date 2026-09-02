@@ -1,0 +1,865 @@
+/* ============================================================
+   COMPONENTES.CSS — Piezas reutilizables del sitio
+   Header, botones, tarjetas, formularios, footer, etc.
+   Regla practica: si algo aparece en 2 o mas paginas, va aqui.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   HEADER + NAVEGACION
+   ------------------------------------------------------------ */
+.header {
+  position: sticky;      /* se queda arriba al hacer scroll */
+  top: 0;
+  z-index: 100;
+  height: var(--alto-header);
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, .88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--borde);
+}
+
+.header__interior {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+}
+
+/* Logo en texto (mas adelante se puede reemplazar por un SVG) */
+.logo {
+  display: flex;
+  align-items: baseline;
+  gap: .45rem;
+  font-family: var(--fuente-titulo);
+  font-size: 1.32rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+/* ------------------------------------------------------------
+   LOGO CON EL SIMBOLO OFICIAL
+   El simbolo va como imagen y el nombre sigue siendo texto: asi se
+   lee bien a cualquier tamano, lo entiende un buscador y no depende
+   de que cargue una imagen.
+
+   El <img> lleva width y height escritos, asi que el navegador
+   reserva el hueco antes de descargarlo y la cabecera no da ningun
+   salto (CLS 0).
+   ------------------------------------------------------------ */
+.logo--marca {
+  align-items: center;
+  gap: .6rem;
+}
+.logo__simbolo {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+/* El nombre conserva la alineacion por linea base que tenia antes
+   entre "Atheron" y "SUITE". */
+.logo__nombre {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .45rem;
+}
+/* Sobre la cabecera blanca, el dorado del acento se quedaba en 2,41
+   de contraste, por debajo del minimo. Aqui "SUITE" toma el azul del
+   propio logo: sube a 9,5 y ademas casa con el simbolo. En el pie,
+   que es oscuro, el dorado se mantiene. */
+.logo--marca .logo__suite { color: var(--color-marca); }
+
+@media (max-width: 26rem) {
+  .logo__simbolo { height: 34px; }
+}
+
+.logo__suite {
+  font-family: var(--fuente-texto);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--acento);
+}
+
+.nav { display: none; }              /* oculto en celular */
+.nav__lista {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+.nav__enlace {
+  font-size: .93rem;
+  font-weight: 500;
+  color: var(--color-gris-700);
+  padding-block: .4rem;
+  border-bottom: 2px solid transparent;
+  transition: color var(--transicion), border-color var(--transicion);
+}
+.nav__enlace:hover,
+.nav__enlace[aria-current="page"] {
+  color: var(--texto);
+  border-bottom-color: var(--acento);
+}
+
+/* Boton hamburguesa (solo celular) */
+.boton-menu {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px; height: 44px;
+  padding: 0 10px;
+  background: none;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  cursor: pointer;
+}
+.boton-menu span {
+  display: block;
+  height: 2px;
+  background: var(--texto);
+  transition: transform var(--transicion), opacity var(--transicion);
+}
+.boton-menu[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.boton-menu[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.boton-menu[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Menu desplegable en celular */
+.menu-movil {
+  position: fixed;
+  top: var(--alto-header);
+  left: 0; right: 0;
+  background: var(--color-blanco);
+  border-bottom: 1px solid var(--borde);
+  box-shadow: var(--sombra-md);
+  padding: var(--esp-2) var(--esp-3) var(--esp-4);
+  display: none;
+  z-index: 99;
+}
+.menu-movil[data-abierto="true"] { display: block; }
+.menu-movil a {
+  display: block;
+  padding: var(--esp-2) 0;
+  border-bottom: 1px solid var(--borde);
+  font-weight: 500;
+}
+.menu-movil .boton { margin-top: var(--esp-3); width: 100%; }
+
+/* A partir de 900px: se ve el menu normal y se esconde la hamburguesa */
+@media (min-width: 900px) {
+  .nav { display: block; }
+  .boton-menu { display: none; }
+  .menu-movil { display: none !important; }
+}
+
+/* ------------------------------------------------------------
+   BOTONES  —  .boton + variante
+   ------------------------------------------------------------ */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .85rem 1.6rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: .96rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: transform var(--transicion), background-color var(--transicion),
+              color var(--transicion), box-shadow var(--transicion);
+}
+.boton:hover { transform: translateY(-2px); }
+
+.boton--primario {
+  background: var(--color-noche);
+  color: var(--color-blanco);
+  box-shadow: var(--sombra-sm);
+}
+.boton--primario:hover { background: var(--color-noche-suave); box-shadow: var(--sombra-md); }
+
+.boton--acento {
+  background: var(--color-sal);
+  color: var(--color-noche);
+}
+.boton--acento:hover { background: var(--color-sal-claro); }
+
+.boton--contorno {
+  background: transparent;
+  border-color: var(--color-gris-200);
+  color: var(--texto);
+}
+.boton--contorno:hover { border-color: var(--texto); }
+
+/* Contorno sobre fondo oscuro */
+.boton--claro {
+  background: transparent;
+  border-color: rgba(255,255,255,.4);
+  color: #fff;
+}
+.boton--claro:hover { background: rgba(255,255,255,.12); }
+
+/* WhatsApp: usamos su verde oficial porque la gente lo reconoce
+   al instante. Un boton de WhatsApp que no es verde convierte menos. */
+.boton--whatsapp {
+  background: #25d366;
+  color: #073b23;
+}
+.boton--whatsapp:hover { background: #1fbe5a; }
+
+/* El icono se dibuja con SVG dentro del boton (ver los HTML) */
+.boton__icono {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
+.boton--grande { padding: 1.05rem 2.1rem; font-size: 1.02rem; }
+
+/* Boton de WhatsApp a lo ancho dentro de una tarjeta */
+.boton--bloque { width: 100%; }
+
+/* Grupo de botones (llamado a la accion doble) */
+.grupo-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+.grupo-botones--centrado { justify-content: center; }
+
+/* ------------------------------------------------------------
+   BOTONES DE "COMO LLEGAR"
+   Van debajo del mapa de la ficha. En celular se apilan a todo lo
+   ancho, que es donde de verdad se usan: el pulgar acierta sin
+   apuntar. Desde 32rem se reparten en fila y solo ocupan lo que
+   necesitan.
+
+   La altura la pone .boton (unos 46 px), por encima de los 44 que
+   se consideran el minimo comodo para tocar con el dedo.
+   ------------------------------------------------------------ */
+.botones-mapa {
+  display: grid;
+  gap: var(--esp-2);
+  margin-top: var(--esp-3);
+}
+@media (min-width: 32rem) {
+  .botones-mapa {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    justify-content: start;
+  }
+}
+
+/* ------------------------------------------------------------
+   IMAGEN PLACEHOLDER
+   Mientras no tengamos las fotos reales de los hospedajes,
+   usamos este bloque que deja CLARO que el contenido es temporal.
+   ------------------------------------------------------------ */
+.placeholder {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  background:
+    repeating-linear-gradient(45deg,
+      var(--color-gris-100) 0 12px,
+      var(--color-gris-200) 12px 24px);
+  color: var(--color-gris-500);
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: var(--esp-2);
+  border-radius: var(--radio-md);
+  overflow: hidden;
+}
+.placeholder--alto  { aspect-ratio: 3 / 4; }
+.placeholder--ancho { aspect-ratio: 16 / 9; }
+.placeholder--cuadrado { aspect-ratio: 1 / 1; }
+
+/* Marca de "contenido pendiente" para textos temporales */
+.pendiente {
+  background: #fff8dd;
+  border: 1px dashed #d9b800;
+  border-radius: 6px;
+  padding: 0 .35em;
+  font-size: .93em;
+  color: #6b5500;
+}
+
+/* ------------------------------------------------------------
+   NOTA DE POLITICA DE RESERVA
+   Explica por que no publicamos la direccion exacta.
+   Bien redactado, esto NO resta confianza: la suma.
+   ------------------------------------------------------------ */
+.nota-reserva {
+  display: flex;
+  gap: var(--esp-2);
+  padding: var(--esp-3);
+  background: var(--color-crema);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--color-verde);
+  border-radius: 0 var(--radio-sm) var(--radio-sm) 0;
+  font-size: .95rem;
+}
+.nota-reserva__icono { font-size: 1.3rem; line-height: 1; flex-shrink: 0; }
+.nota-reserva strong { display: block; margin-bottom: .3rem; }
+
+/* ------------------------------------------------------------
+   TARJETAS
+   ------------------------------------------------------------ */
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-blanco);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  overflow: hidden;
+  transition: transform var(--transicion), box-shadow var(--transicion);
+}
+.tarjeta:hover { transform: translateY(-4px); box-shadow: var(--sombra-md); }
+
+.tarjeta__media { position: relative; }
+.tarjeta__media .placeholder { border-radius: 0; }
+
+.tarjeta__insignia {
+  position: absolute;
+  top: var(--esp-2); left: var(--esp-2);
+  background: rgba(15,23,42,.85);
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: .3rem .7rem;
+  border-radius: 999px;
+}
+
+.tarjeta__cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  padding: var(--esp-3);
+  flex: 1;                 /* iguala la altura de las tarjetas */
+}
+.tarjeta__titulo { font-size: 1.25rem; }
+.tarjeta__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .9rem;
+  font-size: .87rem;
+  color: var(--texto-suave);
+}
+.tarjeta__pie {
+  margin-top: auto;
+  padding-top: var(--esp-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-2);
+}
+.tarjeta__precio { font-weight: 600; }
+
+/* Las dos acciones de la tarjeta de habitacion: "Ver fotos" y
+   "Consultar". En pantalla ancha van en fila; si no caben -movil, o
+   un precio largo- bajan y se apilan solas, sin media query. */
+.tarjeta__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1, .5rem);
+  justify-content: flex-end;
+}
+.tarjeta__acciones .boton { flex: 1 1 auto; }
+/* Si los dos botones no caben al lado del precio, el bloque entero baja
+   a su propia linea y ocupa el ancho: en celular queda el precio arriba
+   y los dos botones debajo, del mismo tamano, en vez de una columna
+   estrecha pegada a la derecha. */
+.tarjeta__acciones { flex: 1 1 16rem; }
+
+/* La foto grande de la tarjeta, cuando abre la galeria. Es un boton,
+   asi que hay que quitarle lo de boton y dejarle solo la foto. */
+.habitacion__foto {
+  display: block;
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  width: 100%;
+  border-radius: var(--radio-md);
+  overflow: hidden;
+}
+.habitacion__foto:focus-visible {
+  outline: 2px solid var(--color-noche);
+  outline-offset: 3px;
+}
+
+/* La pista de que la foto se puede abrir. Discreta, sobre la esquina.
+   Sin esto, la foto parecia decorativa y nadie la tocaba. */
+.habitacion__lupa {
+  position: absolute;
+  left: .6rem;
+  bottom: .6rem;
+  padding: .35rem .7rem;
+  border-radius: 999px;
+  background: rgba(12, 20, 33, .72);
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 600;
+  pointer-events: none;
+  transition: background var(--transicion);
+}
+.habitacion__foto:hover .habitacion__lupa { background: rgba(12, 20, 33, .9); }
+.tarjeta__precio span { font-weight: 400; color: var(--texto-suave); font-size: .85rem; }
+
+/* Tarjeta simple para beneficios / caracteristicas */
+.tarjeta-simple {
+  padding: var(--esp-3);
+  background: var(--color-blanco);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+}
+.tarjeta-simple__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px; height: 46px;
+  margin-bottom: var(--esp-2);
+  border-radius: 12px;
+  background: var(--color-crema);
+  font-size: 1.35rem;
+}
+.seccion--oscura .tarjeta-simple {
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.14);
+}
+.seccion--oscura .tarjeta-simple__icono { background: rgba(255,255,255,.1); }
+
+/* ------------------------------------------------------------
+   LISTA DE CARACTERISTICAS (con vineta de check)
+   ------------------------------------------------------------ */
+.lista-check { display: grid; gap: .7rem; }
+.lista-check li {
+  position: relative;
+  padding-left: 1.9rem;
+}
+.lista-check li::before {
+  content: "\2713";
+  position: absolute;
+  left: 0; top: .15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem; height: 1.35rem;
+  border-radius: 50%;
+  background: var(--color-sal);
+  color: var(--color-noche);
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------
+   FORMULARIO DE CONTACTO
+   ------------------------------------------------------------ */
+.formulario { display: grid; gap: var(--esp-2); }
+@media (min-width: 640px) {
+  .formulario__fila { display: grid; grid-template-columns: 1fr 1fr; gap: var(--esp-2); }
+}
+
+.campo { display: grid; gap: .35rem; }
+.campo label { font-size: .88rem; font-weight: 600; }
+.campo input,
+.campo select,
+.campo textarea {
+  width: 100%;
+  padding: .8rem .95rem;
+  background: var(--color-blanco);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  transition: border-color var(--transicion);
+}
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus { border-color: var(--acento); }
+.campo textarea { min-height: 130px; resize: vertical; }
+.campo__ayuda { font-size: .8rem; color: var(--texto-suave); }
+
+/* Mensaje de respuesta del formulario (lo muestra main.js) */
+.aviso-formulario {
+  display: none;
+  padding: var(--esp-2);
+  border-radius: var(--radio-sm);
+  background: #eaf6ef;
+  border: 1px solid #b7ddc6;
+  color: #1d5c39;
+  font-size: .92rem;
+}
+.aviso-formulario[data-visible="true"] { display: block; }
+
+/* ------------------------------------------------------------
+   FOOTER
+   ------------------------------------------------------------ */
+.footer {
+  background: var(--color-noche);
+  color: rgba(255,255,255,.75);
+  padding-block: var(--esp-6) var(--esp-3);
+  font-size: .93rem;
+}
+.footer a:hover { color: #fff; }
+.footer h3,
+.footer h4 {
+  font-family: var(--fuente-texto);
+  font-size: .8rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: var(--esp-2);
+}
+.footer__grid {
+  display: grid;
+  gap: var(--esp-4);
+  margin-bottom: var(--esp-5);
+}
+@media (min-width: 760px) {
+  .footer__grid { grid-template-columns: 1.6fr 1fr 1fr 1fr; }
+}
+.footer__lista { display: grid; gap: .55rem; }
+.footer .logo { color: #fff; margin-bottom: var(--esp-2); }
+.footer__base {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  justify-content: space-between;
+  padding-top: var(--esp-3);
+  border-top: 1px solid rgba(255,255,255,.14);
+  font-size: .84rem;
+}
+
+/* ------------------------------------------------------------
+   BOTON FLOTANTE DE CONTACTO (llamado a la accion siempre visible)
+   ------------------------------------------------------------ */
+.flotante {
+  position: fixed;
+  right: var(--esp-2);
+  bottom: var(--esp-2);
+  z-index: 90;
+  box-shadow: var(--sombra-lg);
+}
+
+/* ------------------------------------------------------------
+   ANIMACION DE APARICION (la activa main.js al hacer scroll)
+   ------------------------------------------------------------ */
+/* La animacion solo esconde el bloque si <html> lleva "anima", y esa
+   clase la pone un guion incrustado en el <head> (ver Base.astro).
+   Sin JavaScript, o si ese guion no llega a ejecutarse, estas reglas
+   no aplican y el contenido se ve tal cual: sin animacion, pero
+   visible. Nunca al reves. Un bloque de contenido no puede quedarse
+   invisible porque una animacion decorativa no se haya disparado. */
+.anima .aparecer {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.anima .aparecer.visible { opacity: 1; transform: none; }
+
+/* ------------------------------------------------------------
+   BANDA DE CODIGO PROMOCIONAL
+   La inserta main.js cuando el visitante llega con ?codigo=XXX
+   ------------------------------------------------------------ */
+.banda-codigo {
+  background: var(--color-verde);
+  color: #fff;
+  text-align: center;
+  padding: .6rem var(--esp-2);
+  font-size: .9rem;
+}
+.banda-codigo strong { letter-spacing: .04em; }
+.banda-codigo span { opacity: .85; }
+
+/* ------------------------------------------------------------
+   BLOQUE "POR QUE RESERVAR DIRECTO"
+   Compara la reserva directa con las plataformas, sin nombrarlas.
+   ------------------------------------------------------------ */
+.directo {
+  display: grid;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  border: 2px solid var(--color-verde);
+  border-radius: var(--radio-lg);
+  background: var(--color-crema);
+}
+@media (min-width: 800px) {
+  .directo { grid-template-columns: 1fr 1fr; gap: var(--esp-5); align-items: center; }
+}
+.directo__lista { display: grid; gap: .8rem; }
+.directo__item {
+  display: flex;
+  gap: .7rem;
+  align-items: flex-start;
+}
+.directo__marca {
+  flex-shrink: 0;
+  width: 1.4rem; height: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-verde);
+  color: #fff;
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------
+   FOTOS REALES
+   Mismas proporciones que .placeholder, para que al sustituir el
+   rectangulo rayado por una foto no se mueva nada del diseno.
+   object-fit: cover recorta la foto para llenar el hueco sin
+   deformarla, pase lo que pase con sus medidas originales.
+   ------------------------------------------------------------ */
+.foto {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radio-md);
+  background: var(--color-gris-100);
+}
+
+.foto--alto      { aspect-ratio: 3 / 4; }
+.foto--ancho     { aspect-ratio: 16 / 9; }
+.foto--cuadrado  { aspect-ratio: 1 / 1; }
+
+/* Dentro de una tarjeta la foto va a sangre, sin esquinas redondeadas */
+.tarjeta__media .foto { border-radius: 0; }
+
+@media (min-width: 800px) {
+  /* La primera foto de la galeria ocupa el doble: mismo mosaico
+     que ya hacia el rectangulo de "foto pendiente". */
+  .galeria > *:first-child .foto { aspect-ratio: 1 / 1; height: 100%; }
+}
+
+/* ------------------------------------------------------------
+   VISOR DE FOTOS (lightbox)
+   Estilos del <dialog> que amplia las fotos de la galeria y del
+   boton que envuelve cada miniatura.
+
+   La miniatura la sigue dibujando .foto: el boton solo aporta el
+   area de pulsacion, asi que no cambia ni una medida del mosaico
+   y no puede mover nada al cargar.
+   ------------------------------------------------------------ */
+.galeria__abrir {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  border-radius: var(--radio-md);
+}
+.galeria__abrir:focus-visible {
+  outline: 3px solid var(--color-acento, #c8a34a);
+  outline-offset: 3px;
+}
+
+.visor {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+}
+.visor::backdrop { background: rgba(0, 0, 0, .92); }
+
+/* Rejilla de tres columnas: flecha, foto, flecha. En celular las
+   flechas se van encima de la foto para no robarle ancho. */
+.visor[open] {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: center;
+  justify-items: center;
+  gap: var(--esp-2);
+}
+@media (min-width: 700px) {
+  .visor[open] {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    padding: var(--esp-3);
+  }
+}
+
+.visor__marco {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: var(--esp-2);
+  max-width: 100%;
+}
+
+/* La foto nunca se sale de la pantalla ni se deforma:
+   se limita por ancho y por alto, y object-fit la mantiene
+   con sus proporciones originales. */
+.visor__foto {
+  display: block;
+  max-width: 96vw;
+  max-height: 74vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radio-md);
+}
+@media (min-width: 700px) {
+  .visor__foto { max-width: 100%; max-height: 82vh; }
+}
+
+.visor__pie {
+  max-width: 60ch;
+  padding-inline: var(--esp-2);
+  color: rgba(255, 255, 255, .85);
+  font-size: .85rem;
+  line-height: 1.4;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* Botones del visor: circulos oscuros, translucidos, con el area
+   de 44 px que pide una pulsacion comoda en celular. */
+.visor__cerrar,
+.visor__paso {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.visor__cerrar:hover,
+.visor__paso:hover { background: rgba(255, 255, 255, .28); }
+.visor__cerrar:focus-visible,
+.visor__paso:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+.visor__cerrar {
+  position: fixed;
+  top: max(var(--esp-2), env(safe-area-inset-top));
+  right: var(--esp-2);
+  font-size: 1.9rem;
+}
+
+/* En celular, las flechas flotan sobre los bordes de la foto. */
+.visor__paso { position: fixed; top: 50%; transform: translateY(-50%); }
+.visor__paso--antes   { left: var(--esp-2); }
+.visor__paso--despues { right: var(--esp-2); }
+@media (min-width: 700px) {
+  .visor__paso { position: static; transform: none; width: 52px; height: 52px; }
+}
+
+/* ------------------------------------------------------------
+   TARJETA DE VIDEO EN LA GALERIA
+   Es un elemento mas de la misma rejilla que las fotos, al final.
+   Tiene que leerse de un vistazo como VIDEO y no como una foto mas,
+   asi que lleva un velo oscuro, un triangulo de play y su rotulo.
+
+   La miniatura es el poster del propio video, con las mismas
+   proporciones que .foto--cuadrado: la rejilla no se descuadra.
+   ------------------------------------------------------------ */
+.galeria__video {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--radio-md);
+  overflow: hidden;
+}
+.galeria__video:focus-visible {
+  outline: 3px solid var(--color-acento, #c8a34a);
+  outline-offset: 3px;
+}
+
+/* Velo: sin el, el texto blanco no se lee sobre una foto clara. */
+.galeria__video-capa {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: .5rem;
+  padding: var(--esp-2);
+  background: linear-gradient(180deg, rgba(15, 23, 42, .25), rgba(15, 23, 42, .72));
+  color: #fff;
+  text-align: center;
+}
+
+.galeria__video-play {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .92);
+}
+/* El triangulo se dibuja con bordes: ni icono, ni fuente, ni peticion. */
+.galeria__video-play::before {
+  content: "";
+  border-style: solid;
+  border-width: 9px 0 9px 15px;
+  border-color: transparent transparent transparent var(--color-noche, #0f172a);
+  margin-left: 3px;
+}
+.galeria__video:hover .galeria__video-play { background: #fff; transform: scale(1.06); }
+.galeria__video-play { transition: transform var(--transicion), background-color var(--transicion); }
+
+.galeria__video-texto {
+  font-size: .82rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+.galeria__video-duracion {
+  font-size: .72rem;
+  opacity: .85;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------
+   VISOR DE VIDEO
+   Reutiliza .visor -el fondo oscuro, el cierre, el marco- y solo
+   cambia lo propio del video.
+   ------------------------------------------------------------ */
+.visor--video[open] { grid-template-columns: 1fr; }
+
+/* La proporcion la pone la plantilla desde las medidas del archivo,
+   asi que el hueco esta reservado antes de que cargue nada. */
+.visor__marco--video { width: min(96vw, 1100px); }
+.visor__video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 78vh;
+  aspect-ratio: var(--proporcion, 16 / 9);
+  object-fit: contain;
+  background: #000;
+  border-radius: var(--radio-md);
+}
+@media (min-width: 700px) {
+  .visor__video { max-height: 82vh; }
+}

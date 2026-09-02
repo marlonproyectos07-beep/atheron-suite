@@ -1,0 +1,17 @@
+# robots.txt — le dice a los buscadores que pueden recorrer.
+# "Allow: /" = todo el sitio es rastreable.
+
+User-agent: *
+Allow: /
+
+# El panel de edicion no es una pagina para visitantes.
+Disallow: /admin
+
+# Las dos plantillas ya no existen como paginas: ahora redirigen
+# (301) al listado y al blog. Se dejan aqui un tiempo por si algun
+# buscador todavia guarda la direccion antigua.
+Disallow: /hospedajes/plantilla-hospedaje
+Disallow: /blog/plantilla-articulo
+
+# Mapa del sitio: aqui Google encuentra la lista de paginas.
+Sitemap: https://hotelesatheron.com/sitemap.xml

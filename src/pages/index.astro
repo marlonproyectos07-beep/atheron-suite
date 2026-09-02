@@ -1,0 +1,466 @@
+﻿---
+/* ============================================================
+   HOME de Atheron Suite
+   Esta es la pagina principal: explica QUIEN es Atheron Suite
+   y reparte el trafico hacia los hospedajes y el contacto.
+
+   El <head> lo pone src/layouts/Base.astro.
+   La cabecera y el pie son componentes compartidos.
+   Aqui solo vive lo que es propio de la portada.
+   ============================================================ */
+
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Cabecera from '../components/Cabecera.astro';
+import Pie from '../components/Pie.astro';
+import BotonFlotante from '../components/BotonFlotante.astro';
+import Marca from '../components/Marca.astro';
+import Foto from '../components/Foto.astro';
+import { menuHome, menuHomeMovil, ctaDisponibilidad } from '../data/navegacion';
+import ContactoWhatsApp from '../components/ContactoWhatsApp.astro';
+import { formularioContactoActivo } from '../data/ajustes';
+
+/* Los tres hospedajes destacados salen de la misma coleccion que
+   alimenta el listado y las fichas. Antes estaban escritos a mano
+   aqui, y dos de las tres tarjetas enlazaban a la plantilla en vez
+   de a su ficha: justo el tipo de descuadre que pasa cuando el
+   mismo dato vive en tres sitios. */
+const destacados = (await getCollection('hospedajes'))
+  .filter((f) => f.data.publicado)
+  .sort((a, b) => a.data.orden - b.data.orden)
+  .slice(0, 3);
+
+/* Ficha del negocio para Google y los asistentes de IA.
+
+   Aqui NO ponemos direccion ni telefono todavia: no los tenemos
+   confirmados. Solo se marca informacion que el visitante pueda
+   ver en la pagina; marcar datos inventados es motivo de
+   penalizacion. Se agregan cuando cierren los pendientes 8 y 22. */
+const fichaNegocio = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Atheron Suite',
+  description: 'Coleccion de hospedajes seleccionados en Zipaquira, Cundinamarca.',
+  url: 'https://hotelesatheron.com/',
+  areaServed: {
+    '@type': 'City',
+    name: 'Zipaquira',
+    containedInPlace: {
+      '@type': 'AdministrativeArea',
+      name: 'Cundinamarca, Colombia',
+    },
+  },
+};
+---
+
+<Base
+  titulo="Atheron Suite | Hospedajes con alma en Zipaquira, Cundinamarca"
+  descripcion="Atheron Suite reune hospedajes seleccionados en Zipaquira, Cundinamarca. Estancias comodas a minutos de la Catedral de Sal y del centro historico."
+  ruta="/"
+  ogTitulo="Atheron Suite | Hospedajes en Zipaquira, Cundinamarca"
+  ogDescripcion="Hospedajes seleccionados en Zipaquira, a minutos de la Catedral de Sal y del centro historico."
+  jsonLd={fichaNegocio}
+  avisoBorrador="Version de trabajo. Faltan fotografias en algunas secciones."
+>
+
+  <Cabecera enlaces={menuHome} enlacesMovil={menuHomeMovil} cta={ctaDisponibilidad} actual="/" />
+
+  <main id="contenido">
+
+    {/* ============================================================
+         1. HERO — promesa principal en 5 segundos
+         ============================================================ */}
+    <section class="hero">
+      <div class="contenedor hero__contenido">
+
+        <span class="hero__etiqueta">Zipaquira, Cundinamarca</span>
+
+        <h1 class="hero__titulo">
+          Hospedajes con alma, <br />
+          a minutos de la <em>Catedral de Sal</em>
+        </h1>
+
+        <p class="hero__texto">
+          Atheron Suite reune una seleccion de hospedajes en Zipaquira pensados
+          para descansar de verdad: espacios cuidados, atencion cercana y la
+          sabana de Cundinamarca a la salida.
+        </p>
+
+        <div class="grupo-botones">
+          <a class="boton boton--acento boton--grande" href="/hospedajes">
+            Conocer los hospedajes
+          </a>
+          <a class="boton boton--claro boton--grande" href="#contacto">
+            Escribirnos
+          </a>
+        </div>
+
+        {/* Datos rapidos: dan confianza sin pedir nada a cambio */}
+        <div class="hero__datos">
+          <div class="dato">
+            <span class="dato__numero">7</span>
+            <span class="dato__texto">Hospedajes</span>
+          </div>
+          <div class="dato">
+            <span class="dato__numero">1</span>
+            <span class="dato__texto">Ciudad: Zipaquira</span>
+          </div>
+          <div class="dato">
+            <span class="dato__numero">~50 km</span>
+            <span class="dato__texto">Desde Bogota</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         2. FRANJA DE CONFIANZA
+         ============================================================ */}
+    <div class="contenedor">
+      <div class="franja">
+        <div class="franja__item">
+          <strong>Atencion directa</strong>
+          <span>Hablas con el anfitrion, sin intermediarios</span>
+        </div>
+        <div class="franja__item">
+          <strong>Ubicaciones elegidas</strong>
+          <span>Cerca del centro historico y de la Catedral de Sal</span>
+        </div>
+        <div class="franja__item">
+          <strong>Espacios verificados</strong>
+          <span>Revisamos cada hospedaje antes de publicarlo</span>
+        </div>
+        <div class="franja__item">
+          <strong>Trato local</strong>
+          <span>Recomendaciones de quien vive Zipaquira</span>
+        </div>
+      </div>
+    </div>
+
+
+    {/* ============================================================
+         3. QUE ES ATHERON SUITE
+         ============================================================ */}
+    <section class="seccion">
+      <div class="contenedor bloque-doble aparecer">
+
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">Quienes somos</span>
+          <h2>Una coleccion, no un directorio</h2>
+          <p class="texto-grande texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            Atheron Suite nace en Zipaquira con hospedajes seleccionados uno por uno.
+            No listamos todo lo que existe: mostramos los lugares donde nosotros mismos
+            nos quedariamos.
+          </p>
+          <ul class="lista-check">
+            <li>Cada hospedaje tiene su propia pagina con fotos, habitaciones y ubicacion.</li>
+            <li>Precios y condiciones claros, sin sorpresas al final.</li>
+            <li>Un solo canal de contacto para resolver dudas antes de decidir.</li>
+          </ul>
+        </div>
+
+        <div class="bloque-doble__media">
+          <div class="placeholder placeholder--alto">
+            Foto pendiente<br />Fachada o interior representativo
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         3.bis COMO NACIO ATHERON SUITE
+         Version corta. La larga vive en el blog.
+
+         Por que esta seccion existe y no es relleno:
+         - Da contexto real que ninguna plataforma de reserva ofrece
+         - Introduce de forma natural terminos que queremos posicionar
+           (turismo en Zipaquira, Catedral de Sal, casas para grupos)
+         - Diferencia: Booking lista propiedades, no cuenta historias
+         ============================================================ */}
+    <section class="seccion seccion--oscura" id="historia">
+      <div class="contenedor bloque-doble aparecer">
+
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">Nuestra historia</span>
+          <h2>Como nacio Atheron Suite</h2>
+
+          <p class="texto-grande texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            Todo empezo con un problema que vimos de cerca. Llegaron cerca de mil
+            turistas de China a conocer la Catedral de Sal, y Zipaquira no tenia
+            como recibirlos: faltaba alojamiento y faltaban servicios.
+          </p>
+
+          <p class="texto-suave" style="margin-bottom: var(--esp-3);">
+            Ahi entendimos dos cosas. Que el turismo en Zipaquira crecia mas
+            rapido que su capacidad de atenderlo, y que buena parte del valor que
+            ese turismo genera se estaba yendo de la region. Empezamos con
+            recursos limitados y unos pocos hospedajes, aprendiendo de cada
+            huesped y mejorando cada propiedad con lo que ese mismo trabajo iba
+            dejando.
+          </p>
+
+          <p class="texto-suave" style="margin-bottom: var(--esp-3);">
+            Hoy recibimos familias, viajeros y grupos grandes en Zipaquira. Pero
+            Atheron Suite no es solo alojamiento: es nuestra prueba piloto.
+            Queremos demostrar aqui que se puede combinar hospitalidad,
+            tecnologia y automatizacion para construir mejores destinos, y
+            despues llevar ese modelo a otras ciudades.
+          </p>
+
+          <p style="font-family: var(--fuente-titulo); font-size: 1.35rem; color: var(--color-sal-claro); margin-bottom: var(--esp-3);">
+            Empezamos pequenos, pero pensamos en grande.
+          </p>
+
+          <div class="grupo-botones">
+            <a class="boton boton--acento" href="/blog/como-nacio-atheron-suite">
+              Leer la historia completa
+            </a>
+            <a class="boton boton--claro" href="/hospedajes">
+              Conocer los hospedajes
+            </a>
+          </div>
+        </div>
+
+        <div class="bloque-doble__media">
+          <div class="placeholder placeholder--alto">
+            Foto pendiente<br />Zipaquira o primera propiedad
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         4. HOSPEDAJES DESTACADOS
+         Aqui mostramos 3; los 7 completos viven en /hospedajes
+         ============================================================ */}
+    <section class="seccion seccion--alterna" id="hospedajes">
+      <div class="contenedor">
+
+        <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
+          <span class="etiqueta">Nuestros hospedajes</span>
+          <h2>Hospedajes para descubrir Zipaquira</h2>
+        </div>
+
+        <div class="grid grid--3 aparecer">
+
+          {destacados.map(({ id, data }) => {
+            const enObra = !data.publicado;
+            return (
+              <article class="tarjeta">
+                <div class="tarjeta__media">
+                  <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                  <span class="tarjeta__insignia">Hospedaje {data.insignia}</span>
+                </div>
+                <div class="tarjeta__cuerpo">
+                  <h3 class="tarjeta__titulo">
+                    <a href={`/hospedajes/${id}`}><Marca texto={data.nombre} pendiente={enObra} /></a>
+                  </h3>
+                  <p class="tarjeta__meta">
+                    <span><Marca texto={data.listadoSector} pendiente={enObra} /></span>
+                    <span><Marca texto={data.listadoSegundoDato} pendiente={enObra} />{data.listadoSegundoDatoSufijo}</span>
+                  </p>
+                  <p class="texto-suave">
+                    <Marca texto={data.resumen} pendiente={enObra} />
+                  </p>
+                  <div class="tarjeta__pie">
+                    {!data.precioPendiente && (
+                    <span class="tarjeta__precio">
+                      {data.precio} <span>/ noche</span>
+                    </span>
+                    )}
+                    <a class="boton boton--contorno" href={`/hospedajes/${id}`}>Ver ficha</a>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+
+        </div>
+        <div class="grupo-botones grupo-botones--centrado" style="margin-top: var(--esp-4);">
+          <a class="boton boton--primario boton--grande" href="/hospedajes">
+            Ver los hospedajes
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         5. EXPERIENCIAS
+         ============================================================ */}
+    <section class="seccion" id="experiencias">
+      <div class="contenedor">
+
+        <div class="encabezado-seccion aparecer">
+          <span class="etiqueta">Experiencias</span>
+          <h2>Que hacer mientras te quedas con nosotros</h2>
+        </div>
+
+        <div class="grid grid--3 aparecer">
+
+          <article class="experiencia">
+            <div class="experiencia__fondo"></div>
+            <div class="experiencia__texto">
+              <h3>Catedral de Sal</h3>
+              <p>El recorrido subterraneo mas conocido de Zipaquira, a pocos minutos del centro.</p>
+            </div>
+          </article>
+
+          <article class="experiencia">
+            <div class="experiencia__fondo"></div>
+            <div class="experiencia__texto">
+              <h3>Centro historico</h3>
+              <p>Plaza principal, catedral diocesana, cafes y calles coloniales para caminar sin prisa.</p>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         6. ZIPAQUIRA (el destino tambien vende)
+         ============================================================ */}
+    <section class="seccion seccion--alterna" id="zipaquira">
+      <div class="contenedor bloque-doble bloque-doble--invertido aparecer">
+
+        <div class="bloque-doble__media">
+          <div class="placeholder placeholder--ancho">
+            Foto pendiente<br />Zipaquira / sabana de Cundinamarca
+          </div>
+        </div>
+
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">El destino</span>
+          <h2>Zipaquira, cerca de todo y lejos del ruido</h2>
+          <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            A unos 50 km al norte de Bogota, Zipaquira combina patrimonio, clima frio
+            de sabana y una escala amable para caminar. Es un destino de fin de semana
+            y tambien una base tranquila para trabajar unos dias.
+          </p>
+
+          <ul class="lista-distancias">
+            <li><span>Desde Bogota</span> <span>~50 km</span></li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         7. CONTACTO
+         ============================================================ */}
+    <section class="seccion" id="contacto">
+      <div class="contenedor bloque-doble aparecer">
+
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">Contacto</span>
+          <h2>Cuentanos que fecha tienes en mente</h2>
+          <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            Respondemos con opciones concretas segun el numero de personas
+            y los dias que necesites.
+          </p>
+
+          <ul class="lista-check">
+            <li>Telefono / WhatsApp: <a href="tel:+573188983167">+57 318 898 3167</a></li>
+            <li>Zipaquira, Cundinamarca, Colombia</li>
+          </ul>
+        </div>
+
+        <div class="bloque-doble__media">
+          {formularioContactoActivo ? (
+          <form class="formulario" data-formulario-contacto novalidate>
+
+            <div class="formulario__fila">
+              <div class="campo">
+                <label for="nombre">Nombre</label>
+                <input type="text" id="nombre" name="nombre" required autocomplete="name" />
+              </div>
+              <div class="campo">
+                <label for="telefono">Telefono</label>
+                <input type="tel" id="telefono" name="telefono" autocomplete="tel" />
+              </div>
+            </div>
+
+            <div class="campo">
+              <label for="correo">Correo electronico</label>
+              <input type="email" id="correo" name="correo" required autocomplete="email" />
+            </div>
+
+            <div class="formulario__fila">
+              <div class="campo">
+                <label for="llegada">Fecha de llegada</label>
+                <input type="date" id="llegada" name="llegada" />
+              </div>
+              <div class="campo">
+                <label for="personas">Personas</label>
+                <select id="personas" name="personas">
+                  <option value="1">1</option>
+                  <option value="2" selected>2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5+">5 o mas</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="campo">
+              <label for="mensaje">Mensaje</label>
+              <textarea id="mensaje" name="mensaje" placeholder="Cuentanos que buscas..."></textarea>
+            </div>
+
+            <button class="boton boton--primario boton--grande" type="submit">
+              Enviar consulta
+            </button>
+
+            <div class="aviso-formulario" data-aviso-formulario role="status"></div>
+
+          </form>
+          ) : (
+            <ContactoWhatsApp mensaje="Hola, quiero informacion sobre los hospedajes de Atheron Suite en Zipaquira." />
+          )}
+        </div>
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         8. LLAMADO A LA ACCION FINAL
+         ============================================================ */}
+    <section class="seccion">
+      <div class="contenedor">
+        <div class="cta-final aparecer">
+          <h2>Tu proxima escapada empieza aqui</h2>
+          <p>
+            Escribenos y te ayudamos a elegir que hospedaje se adapta mejor a tu viaje.
+          </p>
+          <div class="grupo-botones grupo-botones--centrado">
+            <a class="boton boton--acento boton--grande" href="/landing/hospedaje-en-zipaquira">
+              Ver la oferta de hospedaje
+            </a>
+            <a class="boton boton--claro boton--grande" href="#contacto">Escribirnos</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <Pie variante="completo" />
+
+  <BotonFlotante
+    href="#contacto"
+    mensaje="Hola, quiero informacion sobre los hospedajes de Atheron Suite en Zipaquira."
+  />
+
+</Base>
