@@ -42,7 +42,7 @@ backend:
   # panel seguira guardando en una rama que ya no se publica y los
   # cambios no apareceran en el sitio, sin ningun error visible.
   # ============================================================
-  branch: astro
+  branch: main
 
 # MODO DE PUBLICACION
 #
