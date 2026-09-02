@@ -225,6 +225,25 @@ const hospedajes = defineCollection({
     insignia: z.string(),
 
     /* ----------------------------------------------------------
+       COMO SE VENDE ESTE HOSPEDAJE
+
+       "habitaciones" => se alquilan habitaciones sueltas, aunque
+                         ademas se ofrezca la casa entera.
+       "casa-completa" => solo se alquila entera.
+
+       Lo usa el guardian del minimo publicable (scripts/
+       minimo-publicable.mjs) para saber que pedirle a la ficha antes
+       de dejarla salir. Una casa que solo se alquila entera no tiene
+       -ni va a tener- ficha comercial por habitacion, y con el
+       guardian anterior no se podia publicar nunca.
+
+       Se declara, no se deduce: si se dedujera de que la ficha no
+       tiene habitaciones, cualquier ficha a la que simplemente le
+       falten pasaria por casa completa, que es justo el descuido que
+       el guardian existe para atrapar. */
+    modalidad: z.enum(['habitaciones', 'casa-completa']).default('habitaciones'),
+
+    /* ----------------------------------------------------------
        SEO
        ---------------------------------------------------------- */
 
@@ -243,6 +262,23 @@ const hospedajes = defineCollection({
     /* Zona de referencia. Sale en la etiqueta de la portada y como
        titulo del apartado de ubicacion. */
     zona: z.string(),
+
+    /* ----------------------------------------------------------
+       MUNICIPIO
+
+       Hasta ahora la maqueta escribia "Zipaquira" a mano en cinco
+       sitios: el addressLocality del JSON-LD, los tres mensajes de
+       WhatsApp y la linea que acompana al enlace de Google Maps.
+       Valia mientras todos los hospedajes estuvieran en Zipaquira.
+       Casa Neusa esta en Cogua, y con el texto fijo habriamos
+       publicado datos estructurados que situan la casa en un
+       municipio que no es el suyo.
+
+       El valor por defecto es Zipaquira, asi que las fichas que ya
+       existen no cambian ni una letra. */
+    localidad: z.string().default('Zipaquira'),
+    /* Departamento, por si algun dia hay algo fuera de Cundinamarca. */
+    departamento: z.string().default('Cundinamarca'),
 
     /* Frase de presentacion bajo el titulo. */
     presentacion: z.string(),
@@ -384,6 +420,118 @@ const hospedajes = defineCollection({
         cejaHabitaciones: z.string().default('¿Prefieres una habitacion?'),
         tituloHabitaciones: z.string().default('Conoce las opciones'),
         introHabitaciones: textoOpcional,
+      })
+      .optional(),
+
+    /* ----------------------------------------------------------
+       ESPACIOS DE LA CASA
+
+       Las zonas comunes que se venden solas: la sala con chimenea,
+       la cocina, el balcon, la zona de BBQ. No son habitaciones -no
+       se reservan por separado- pero son lo que hace que alguien
+       elija una casa y no un hotel.
+
+       Aditivo: sin este bloque la ficha se ve exactamente como
+       antes. Sirve para cualquier hospedaje, no solo para el que lo
+       estrena.
+       ---------------------------------------------------------- */
+    espacios: z
+      .object({
+        etiqueta: z.string().default('La casa'),
+        titulo: z.string(),
+        intro: textoOpcional,
+        lista: z
+          .array(
+            z.object({
+              titulo: z.string(),
+              texto: z.string(),
+              foto: textoOpcionalPanel,
+              fotoAlt: textoOpcionalPanel,
+            }),
+          )
+          .default([]),
+      })
+      .optional(),
+
+    /* ----------------------------------------------------------
+       PRUEBA SOCIAL
+
+       Valoraciones que YA existen en una plataforma de terceros.
+       No son testimonios recogidos por Atheron, y la ficha tiene
+       que decirlo: por eso "fuente" es obligatoria y el texto de
+       atribucion se pinta siempre junto a la nota.
+
+       La nota tampoco es decorativa. Una puntuacion es una foto de
+       un dia; si manana entran dos resenas malas, la cifra de la
+       pagina deja de ser cierta. Decir de donde sale y que puede
+       cambiar es la diferencia entre citar y afirmar.
+       ---------------------------------------------------------- */
+    pruebaSocial: z
+      .object({
+        /* De donde salen los datos. Ej: "Airbnb". */
+        fuente: z.string(),
+        etiqueta: z.string().default('Opiniones'),
+        titulo: z.string(),
+        intro: textoOpcional,
+        /* La cifra, tal cual se escribe. Texto y no numero: en
+           Colombia se escribe con coma. */
+        puntuacion: textoOpcional,
+        /* Sobre cuanto. Sin esto, un "4,92" no significa nada. */
+        sobre: textoOpcional,
+        resenas: numeroOpcionalPanel,
+        distintivo: textoOpcional,
+        /* Aviso de que el dato es de un tercero y puede cambiar. */
+        nota: textoOpcional,
+        enlace: textoOpcional,
+        enlaceTexto: z.string().default('Ver el anuncio original'),
+        /* Extractos literales. "autor" y "fecha" no son opcionales:
+           una cita sin quien la dijo y cuando no se puede verificar,
+           y entonces no es prueba de nada. */
+        extractos: z
+          .array(
+            z.object({
+              texto: z.string(),
+              autor: z.string(),
+              fecha: z.string(),
+            }),
+          )
+          .default([]),
+      })
+      .optional(),
+
+    /* ----------------------------------------------------------
+       ANTES DE RESERVAR
+
+       Las condiciones que el huesped necesita saber ANTES de
+       escribir, no despues: mascotas, uso de zonas exteriores,
+       y lo que el anuncio dice sobre seguridad.
+
+       Sobre la seguridad: "consta" distingue lo confirmado de lo
+       que NO consta. Son cosas distintas y la pagina no puede
+       mezclarlas. Que no conste un detector de humo no significa
+       que no lo haya; significa que no esta verificado, y eso es
+       exactamente lo que hay que decir, sin adornarlo y sin
+       asustar a nadie.
+       ---------------------------------------------------------- */
+    antesDeReservar: z
+      .object({
+        etiqueta: z.string().default('Antes de reservar'),
+        titulo: z.string(),
+        intro: textoOpcional,
+        condiciones: z
+          .array(z.object({ titulo: z.string(), texto: z.string() }))
+          .default([]),
+        seguridadTitulo: textoOpcional,
+        seguridadNota: textoOpcional,
+        seguridad: z
+          .array(
+            z.object({
+              texto: z.string(),
+              /* true = confirmado. false = no consta en el anuncio. */
+              consta: z.boolean().default(false),
+            }),
+          )
+          .default([]),
       })
       .optional(),
 

@@ -339,3 +339,154 @@
   color: var(--acento);
   font-weight: 600;
 }
+
+/* ============================================================
+   ESPACIOS DE LA CASA
+
+   Las zonas comunes que no se reservan por separado pero venden
+   la casa: la sala con chimenea, la cocina, el balcon, el asador.
+   Misma tarjeta de siempre; lo unico propio es que la foto manda
+   y el texto acompana.
+   ============================================================ */
+.espacio {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--fondo);
+  box-shadow: var(--sombra-sm);
+}
+.espacio .foto,
+.espacio .placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+.espacio__texto { padding: var(--esp-3); }
+.espacio__texto h3 { margin-bottom: var(--esp-1); font-size: 1.15rem; }
+
+/* ============================================================
+   OPINIONES DE TERCEROS
+
+   Se citan, no se apropian: de ahi que la plataforma salga en las
+   cifras, en cada firma y en la nota final. El borde superior las
+   separa de la seccion anterior cuando las dos van sobre fondo
+   blanco.
+   ============================================================ */
+.opiniones { border-top: 1px solid var(--borde); }
+
+.opiniones__cifras {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--esp-3);
+  margin-bottom: var(--esp-5);
+}
+.opiniones__cifra {
+  flex: 1 1 12rem;
+  max-width: 18rem;
+  padding: var(--esp-3);
+  text-align: center;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-crema);
+}
+.opiniones__numero {
+  display: block;
+  font-family: var(--fuente-titulo);
+  font-size: 2.4rem;
+  line-height: 1.1;
+  color: var(--color-noche);
+}
+.opiniones__sobre { font-size: 1.2rem; color: var(--texto-suave); }
+.opiniones__distintivo {
+  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  color: var(--color-verde);
+  /* La insignia ocupa el hueco de la cifra para que las tres cajas
+     queden a la misma altura sin fijarles un alto a mano. */
+  min-height: 2.64rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.opiniones__pie {
+  display: block;
+  margin-top: var(--esp-1);
+  font-size: .82rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.opinion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-left: 3px solid var(--acento);
+  border-radius: var(--radio-md);
+  background: var(--fondo);
+  box-shadow: var(--sombra-sm);
+}
+.opinion__texto {
+  margin: 0;
+  font-style: italic;
+  color: var(--color-gris-700);
+}
+.opinion__texto::before { content: '\201C'; }
+.opinion__texto::after  { content: '\201D'; }
+.opinion__firma {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  font-size: .9rem;
+}
+.opinion__firma span { color: var(--texto-suave); font-size: .82rem; }
+
+.opiniones__nota {
+  margin-top: var(--esp-4);
+  text-align: center;
+}
+
+/* ============================================================
+   ANTES DE RESERVAR
+
+   Condiciones y seguridad. El apartado de seguridad distingue lo
+   confirmado de lo que no consta, y esa diferencia no puede vivir
+   solo en el color: el simbolo va en el DOM y cada punto dice por
+   escrito lo que es.
+   ============================================================ */
+.condicion {
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-crema);
+}
+.condicion h3 { margin-bottom: var(--esp-1); font-size: 1.05rem; }
+
+.seguridad {
+  margin-top: var(--esp-4);
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+}
+.seguridad h3 { margin-bottom: var(--esp-2); font-size: 1.05rem; }
+.seguridad__lista { display: grid; gap: .6rem; list-style: none; padding: 0; }
+.seguridad__punto {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr;
+  align-items: start;
+  gap: .5rem;
+  color: var(--texto-suave);
+}
+.seguridad__marca {
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-gris-500);
+}
+.seguridad__punto[data-consta] { color: var(--color-gris-700); }
+.seguridad__punto[data-consta] .seguridad__marca { color: var(--color-verde); }

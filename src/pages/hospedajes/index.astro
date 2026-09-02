@@ -141,7 +141,14 @@ const hospedajes = (await getCollection('hospedajes'))
 
                   <a class="boton boton--whatsapp boton--bloque"
                      href="/#contacto"
-                     data-whatsapp={`Hola, me interesa ${data.nombre} de Atheron Suite en Zipaquira. Quiero consultar disponibilidad.`}>
+                     {/* El municipio sale de la ficha. Se quedo escrito a
+                          mano cuando se saco de la plantilla de ficha, y
+                          en cuanto Casa Neusa aparecio en este listado su
+                          boton mandaba al cliente a consultar por una casa
+                          "en Zipaquira" que esta en Cogua. Por defecto
+                          sigue siendo Zipaquira, asi que el resto de
+                          tarjetas no cambia. */}
+                     data-whatsapp={`Hola, me interesa ${data.nombre} de Atheron Suite en ${data.localidad}. Quiero consultar disponibilidad.`}>
                     Reservar por WhatsApp
                   </a>
 
