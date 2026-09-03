@@ -341,6 +341,32 @@ function idHabitacion(nombre) {
       </section>
     )}
 
+    {d.videoPrincipal && (
+      <section class="seccion video-principal" id="video">
+        <div class="contenedor video-principal__interior aparecer">
+          <div class="video-principal__texto">
+            <span class="etiqueta">Recorrido en video</span>
+            <h2>{d.videoPrincipal.titulo}</h2>
+            {d.videoPrincipal.descripcion && <p class="texto-suave">{d.videoPrincipal.descripcion}</p>}
+            {d.videoPrincipal.duracion && <span class="video-principal__duracion">{d.videoPrincipal.duracion}</span>}
+          </div>
+          <video
+            class="video-principal__reproductor"
+            controls
+            playsinline
+            preload="metadata"
+            poster={d.videoPrincipal.poster}
+            width={d.videoPrincipal.ancho}
+            height={d.videoPrincipal.alto}
+            aria-label={d.videoPrincipal.titulo}
+          >
+            <source src={d.videoPrincipal.src} type="video/mp4" />
+            Tu navegador no puede reproducir este video.
+          </video>
+        </div>
+      </section>
+    )}
+
     {hayHabitaciones && (
       <section class:list={['seccion', 'seccion--alterna', casa && 'hotel-selector-seccion']} id="habitaciones">
         <div class="contenedor">
