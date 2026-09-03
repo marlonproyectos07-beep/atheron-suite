@@ -5,7 +5,7 @@ orden: 3
 insignia: '03'
 modalidad: casa-completa
 titulo: Casa Neusa | Casa de campo en Cogua, Cundinamarca
-descripcion: Casa de campo entera en el sector de Neusa, Cogua, Cundinamarca. Hasta 8 huespedes, 2 habitaciones, chimenea, balcon con vista panoramica y zona de BBQ. Consulta disponibilidad y tarifa.
+descripcion: Casa de campo entera en el sector de Neusa, Cogua, Cundinamarca. Desde $ 300.000 por noche para hasta 4 huespedes, maximo 8. Chimenea, balcon panoramico y zona de BBQ.
 ogTitulo: Casa Neusa | Casa de campo entera en Cogua
 ogDescripcion: Una casa de campo entera rodeada de naturaleza en el sector de Neusa, Cogua. Hasta 8 huespedes, chimenea, balcon y zona exterior de BBQ.
 avisoBorrador: ''
@@ -88,8 +88,29 @@ listadoSector: Cogua
 listadoSegundoDato: '8'
 listadoSegundoDatoSufijo: ' huespedes'
 resumen: Casa de campo entera en el sector de Neusa, en Cogua, para hasta 8 huespedes. Chimenea, balcon panoramico y zona de BBQ.
-precio: Consultar
-precioPendiente: true
+precio: Desde $ 300.000
+precioPendiente: false
+tarifas:
+  etiqueta: Tarifas
+  titulo: Cuanto cuesta la noche
+  desde: Desde $ 300.000 por noche
+  cubre: para hasta 4 huespedes
+  intro: La casa se alquila entera. La tarifa base cubre hasta cuatro personas y sube por cada huesped adicional.
+  filas:
+    - huespedes: Hasta 4 huespedes
+      precio: $ 300.000
+    - huespedes: 5 huespedes
+      precio: $ 360.000
+    - huespedes: 6 huespedes
+      precio: $ 420.000
+    - huespedes: 7 huespedes
+      precio: $ 480.000
+    - huespedes: 8 huespedes
+      precio: $ 540.000
+  regla: Desde el quinto huesped se suman $ 60.000 por persona, hasta el maximo de 8.
+  nota: Precios por noche en pesos colombianos. La tarifa es la misma entre semana y en fin de semana. Escribenos con tus fechas y cuantos vienen, y te confirmamos disponibilidad y el total.
+  cta: Consultar disponibilidad
+  mensaje: 'Hola, quiero consultar disponibilidad y tarifa de Casa Neusa en Cogua. Somos [numero] personas y estas son mis fechas:'
 habitaciones: []
 notaHabitaciones: ''
 heroFoto: true
@@ -186,7 +207,8 @@ antesDeReservar:
       texto: >-
         No se aceptan automaticamente. Cada solicitud se analiza segun el
         caso y requiere aprobacion antes de confirmar la reserva. En caso
-        de autorizarse, se aplica un costo adicional.
+        de autorizarse, se aplica un costo adicional que se confirma al
+        aprobar la solicitud.
     - titulo: Fogata al aire libre
       texto: >-
         El anuncio menciona fogata al aire libre. No esta disponible de
@@ -199,8 +221,9 @@ antesDeReservar:
         reservar.
     - titulo: Capacidad
       texto: >-
-        La casa admite un maximo de 8 viajeros. La tarifa y la
-        disponibilidad se confirman por WhatsApp para tus fechas.
+        La casa admite un maximo de 8 viajeros. La tarifa depende de
+        cuantos vengan: esta publicada mas arriba, desde $ 300.000 por
+        noche para hasta cuatro personas.
   seguridadTitulo: Seguridad
   seguridadNota: Tomado del anuncio publicado. Que un elemento no conste no significa que no exista, sino que no esta verificado en la ficha; si necesitas confirmarlo antes de viajar, escribenos y lo comprobamos.
   seguridad:
@@ -225,7 +248,7 @@ horarios:
 direccionPublica: false
 mapaBbox: ''
 mapaTitulo: ''
-enlaceMapa: ''
+enlaceMapa: https://maps.app.goo.gl/KQQZySBkEzBAnZ8g9
 mapaNota: ''
 mapaNotaPendiente: false
 experiencias: []
@@ -237,6 +260,7 @@ datosContacto:
 calle: ''
 latitud: null
 longitud: null
+rangoPrecio: COP $300.000-$540.000 por noche segun numero de huespedes
 checkin: '15:00'
 checkout: '11:00'
 comodidades:
@@ -250,7 +274,7 @@ comodidades:
   - Zona de trabajo privada
   - Estacionamiento gratuito en las instalaciones
   - Zonas verdes
-actualizado: 2026-09-01
+actualizado: 2026-09-02
 ---
 
 Casa Neusa es una casa de campo en el sector de Neusa, en Cogua,

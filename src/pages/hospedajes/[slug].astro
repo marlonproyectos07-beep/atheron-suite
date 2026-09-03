@@ -45,6 +45,7 @@ const hayHabitaciones = d.habitaciones.some((h) => !h.pendiente);
 const hayGaleria = d.galeria.length > 0;
 /* Bloques aditivos: si el .md no los trae, la ficha se pinta
    exactamente igual que antes de que existieran. */
+const tarifas = d.tarifas ?? null;
 const espacios = d.espacios?.lista.length ? d.espacios : null;
 const opiniones = d.pruebaSocial ?? null;
 const condiciones = d.antesDeReservar ?? null;
@@ -59,6 +60,7 @@ const experiencias = d.experiencias.filter((e) => !e.pendiente);
 const enlacesMovil = menuFichaMovil.filter((e) => {
   if (e.href === '#habitaciones') return hayHabitaciones;
   if (e.href === '#galeria') return hayGaleria;
+  if (e.href === '#tarifas') return Boolean(tarifas);
   if (e.href === '#espacios') return Boolean(espacios);
   if (e.href === '#opiniones') return Boolean(opiniones);
   return true;
@@ -102,6 +104,10 @@ if (d.latitud != null && d.longitud != null) {
   };
 }
 if (d.mascotas !== undefined) fichaNegocio.petsAllowed = d.mascotas;
+/* El rango de tarifa, solo si la pagina lo muestra. No se marca
+   disponibilidad ni una oferta con fechas: lo unico verificado es
+   cuanto cuesta la noche segun cuantos vengan. */
+if (d.rangoPrecio) fichaNegocio.priceRange = d.rangoPrecio;
 if (d.checkin) fichaNegocio.checkinTime = d.checkin;
 if (d.checkout) fichaNegocio.checkoutTime = d.checkout;
 if (d.comodidades.length) {
@@ -245,6 +251,54 @@ function idHabitacion(nombre) {
         </div>
       </div>
     </section>
+
+    {/* TARIFAS
+         Va arriba, justo despues de la descripcion, porque es lo
+         primero que quiere saber quien esta decidiendo. Se publican
+         la cifra base Y el desglose completo: una tarifa "desde" sin
+         decir que cubre, o sin el precio de venir ocho, obliga al
+         cliente a descubrir el precio real por WhatsApp, y eso no es
+         una tarifa, es un anzuelo. */}
+    {tarifas && (
+      <section class="seccion tarifas" id="tarifas">
+        <div class="contenedor">
+          <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
+            <span class="etiqueta">{tarifas.etiqueta}</span>
+            <h2>{tarifas.titulo}</h2>
+            {tarifas.intro && (
+              <p class="texto-suave" style="margin-top: var(--esp-2);">{tarifas.intro}</p>
+            )}
+          </div>
+
+          <div class="tarifas__caja aparecer">
+            <div class="tarifas__cabeza">
+              <span class="tarifas__desde">{tarifas.desde}</span>
+              <span class="tarifas__cubre">{tarifas.cubre}</span>
+            </div>
+
+            {tarifas.filas.length > 0 && (
+              <ul class="tarifas__lista">
+                {tarifas.filas.map((f) => (
+                  <li class="tarifas__fila">
+                    <span class="tarifas__huespedes">{f.huespedes}</span>
+                    <span class="tarifas__precio">{f.precio}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {tarifas.regla && <p class="tarifas__regla">{tarifas.regla}</p>}
+            {tarifas.nota && <p class="campo__ayuda tarifas__nota">{tarifas.nota}</p>}
+
+            <a
+              class="boton boton--whatsapp boton--grande tarifas__cta"
+              href="#contacto"
+              data-whatsapp={tarifas.mensaje ?? mensajeInteres}
+            >{tarifas.cta}</a>
+          </div>
+        </div>
+      </section>
+    )}
 
     {/* LOS ESPACIOS DE LA CASA
          Las zonas que no se reservan por separado pero son la razon
@@ -729,8 +783,16 @@ function idHabitacion(nombre) {
               <span class="nota-reserva__icono" aria-hidden="true">&#128205;</span>
               <div>
                 <strong>Ubicacion exacta al confirmar</strong>
-                Estamos terminando de publicar el mapa. Escribenos por WhatsApp y te
-                contamos como llegar y que tienes alrededor.
+                {/* Con enlace de Google Maps el texto NO puede seguir diciendo
+                     que falta el mapa: justo debajo hay un boton que abre la
+                     ubicacion, y decir las dos cosas a la vez confunde. Lo que
+                     falta es el mapa incrustado, que necesita coordenadas. */}
+                {d.enlaceMapa
+                  ? <>Abajo puedes abrir la ubicacion en Google Maps. El mapa
+                      dentro de la pagina llegara en cuanto confirmemos las
+                      coordenadas exactas.</>
+                  : <>Estamos terminando de publicar el mapa. Escribenos por WhatsApp y te
+                      contamos como llegar y que tienes alrededor.</>}
               </div>
             </div>
           )}
@@ -743,7 +805,30 @@ function idHabitacion(nombre) {
             </nav>
           )}
 
-          {d.enlaceMapa && (
+          {/* Boton de "como llegar" cuando el hospedaje tiene enlace de
+               Google Maps pero todavia NO tiene coordenadas. Sin
+               coordenadas no se pinta ni mapa ni la barra de botones de
+               arriba, asi que el visitante se quedaba sin manera de
+               abrir la ubicacion: el enlace vivia en una linea de letra
+               pequena. Con coordenadas la barra ya existe y no se toca,
+               para no anadir un cuarto boton redundante. */}
+          {d.enlaceMapa && !coordenadas && (
+            <nav class="botones-mapa" aria-label={`Como llegar a ${d.nombre}`}>
+              <a
+                class="boton boton--primario"
+                href={d.enlaceMapa}
+                target="_blank"
+                rel="noopener"
+              >Ver ubicacion en Google Maps</a>
+            </nav>
+          )}
+
+          {/* Esta linea existe para mostrar la direccion escrita junto a su
+               enlace. Si el hospedaje no publica direccion, lo unico que
+               queda es el enlace, y entonces repite el boton de arriba: dos
+               enlaces al mismo sitio, uno debajo del otro. Sin direccion, no
+               se pinta. */}
+          {d.enlaceMapa && (d.calle || coordenadas) && (
             <p class="campo__ayuda" style="margin-top: var(--esp-2);">
               {d.calle && <>{d.calle}, {d.localidad}, {d.departamento}, Colombia &middot; </>}
               <a href={d.enlaceMapa} target="_blank" rel="noopener">ver la ficha en Google Maps</a>
