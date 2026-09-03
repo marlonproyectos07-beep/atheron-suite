@@ -5,7 +5,7 @@ orden: 4
 insignia: '04'
 modalidad: casa-completa
 titulo: Apartamentos en Algarra, Zipaquira | Alojamiento para grupos
-descripcion: Seis apartamentos independientes en el sector de Algarra, Zipaquira, comercializados por Atheron Suite. Cocina, wifi y zona de trabajo en cada uno, y capacidad grupal bajo confirmacion.
+descripcion: Seis apartamentos independientes en el sector de Algarra, Zipaquira, comercializados por Atheron Suite. Cocina equipada, wifi y zona de trabajo en cada uno, y capacidad grupal bajo confirmacion.
 ogTitulo: Apartamentos en Algarra | Alojamiento para grupos en Zipaquira
 ogDescripcion: Seis apartamentos independientes en Algarra, Zipaquira. Para familias, delegaciones y equipos que necesitan varias unidades a la vez.
 avisoBorrador: Ficha en preparacion. Faltan el nombre comercial definitivo, las fotografias autorizadas y varios datos por confirmar con la administracion.
@@ -13,7 +13,7 @@ avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibili
 zona: 'Algarra, Zipaquira'
 localidad: Zipaquira
 departamento: Cundinamarca
-presentacion: Seis apartamentos independientes en el mismo edificio, cada uno con cocina, wifi y zona de trabajo. Pensado para grupos que necesitan varias unidades a la vez sin repartirse por la ciudad.
+presentacion: Seis apartamentos independientes en el mismo edificio, cada uno con cocina equipada, wifi y zona de trabajo. Pensado para grupos que necesitan varias unidades a la vez sin repartirse por la ciudad.
 presentacionPendiente: false
 fotoTarjeta: ''
 fotoTarjetaAlt: ''
@@ -38,7 +38,7 @@ tituloDescripcionPendiente: false
 caracteristicas:
   - texto: Seis apartamentos independientes en el mismo edificio
     pendiente: false
-  - texto: Cocina en cada apartamento
+  - texto: Cocina equipada en cada apartamento
     pendiente: false
   - texto: Wifi
     pendiente: false
@@ -69,11 +69,11 @@ casaCompleta:
   datos:
     - Hasta 35 huespedes en modalidad grupal
     - 6 apartamentos independientes
-    - Cocina en cada unidad
+    - Cocina equipada en cada unidad
     - 2 parqueaderos
   resumen: >-
     Para familias grandes, delegaciones, equipos de trabajo y grupos que
-    prefieren estar en el mismo edificio, cada uno con su cocina y su bano,
+    prefieren estar en el mismo edificio, cada uno con su cocina equipada y su bano,
     en vez de repartirse entre hoteles.
   precio: 'Tarifa de referencia: desde $ 65.000 por persona por noche'
   precioNota: 'Para grupos la tarifa se cotiza a la medida, segun fechas, numero de personas y unidades disponibles.'
@@ -88,7 +88,7 @@ casaCompleta:
   detalleDatos:
     - Hasta 35 huespedes, bajo confirmacion
     - Varias unidades del mismo edificio
-    - Cocina y bano en cada apartamento
+    - Cocina equipada y bano en cada apartamento
   ctaVer: Ver la propuesta para grupos
   ctaCotizar: Solicitar cotizacion para grupos
   mensaje: 'Hola, quiero cotizar los apartamentos de Algarra en Zipaquira para un grupo. Somos [numero] personas y estas son mis fechas:'
@@ -98,10 +98,10 @@ casaCompleta:
 habitaciones:
   - nombre: Apartamento 201
     huespedes: Hasta 6
-    camas: 2 camas dobles y 1 sofa cama
+    camas: 2 camas dobles de 1,40 m y 1 sofa cama
     banos: '1'
     descripcion: >-
-      Apartamento de una habitacion con cocina, wifi, zona de trabajo,
+      Apartamento de una habitacion con cocina equipada, wifi, zona de trabajo,
       television y refrigerador.
     precio: Consultar
     pendiente: false
@@ -109,10 +109,10 @@ habitaciones:
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 301
     huespedes: Hasta 6
-    camas: 3 camas dobles y 1 sofa cama
+    camas: 3 camas dobles de 1,40 m y 1 sofa cama
     banos: '1'
     descripcion: >-
-      Apartamento de una habitacion con cocina, wifi, zona de trabajo,
+      Apartamento de una habitacion con cocina equipada, wifi, zona de trabajo,
       television y refrigerador.
     precio: Consultar
     pendiente: false
@@ -120,10 +120,10 @@ habitaciones:
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 302
     huespedes: Hasta 6
-    camas: 3 camas dobles y 1 sofa cama
+    camas: 3 camas dobles de 1,40 m y 1 sofa cama
     banos: '1'
     descripcion: >-
-      Apartamento de una habitacion con cocina, wifi, zona de trabajo,
+      Apartamento de una habitacion con cocina equipada, wifi, zona de trabajo,
       television y refrigerador. Llegada autonoma con cerradura de teclado.
     precio: Consultar
     pendiente: false
@@ -131,20 +131,20 @@ habitaciones:
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 401
     huespedes: Hasta 7
-    camas: 3 camas dobles y 1 sofa cama
+    camas: 3 camas dobles de 1,40 m y 1 sofa cama
     banos: '1'
     descripcion: >-
-      El de mayor capacidad publicada. Una habitacion, con cocina, wifi, zona
+      El de mayor capacidad publicada. Una habitacion, con cocina equipada, wifi, zona
       de trabajo, television y refrigerador.
     precio: Consultar
     pendiente: false
     enlace: /hospedajes/algarra-401
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 402
-    camas: 3 camas dobles
+    camas: 3 camas dobles de 1,40 m
     banos: '1'
     descripcion: >-
-      Apartamento de una habitacion con cocina, wifi, zona de trabajo,
+      Apartamento de una habitacion con cocina equipada, wifi, zona de trabajo,
       television y refrigerador. La capacidad exacta esta por confirmar con la
       administracion.
     precio: Consultar
@@ -155,7 +155,7 @@ habitaciones:
     huespedes: Hasta 6
     banos: '1'
     descripcion: >-
-      Apartamento duplex con cocina, wifi, zona de trabajo y television. La
+      Apartamento duplex con cocina equipada, wifi, zona de trabajo y television. La
       distribucion exacta esta por confirmar con la administracion.
     precio: Consultar
     pendiente: false
@@ -206,9 +206,14 @@ antesDeReservar:
     - titulo: Estacionamiento
       texto: >-
         Dos espacios de estacionamiento para vehiculos de tamano normal,
-        sujetos a disponibilidad. En reservas individuales tienen costo
+        ubicados dentro del edificio y detras del porton, sujetos a disponibilidad. En reservas individuales tienen costo
         adicional; para reservas grupales del conjunto completo pueden estar
         incluidos, previa confirmacion.
+    - titulo: Acceso por escaleras
+      texto: >-
+        El edificio no tiene ascensor. El acceso a los apartamentos es por
+        escaleras y no se ofrece como alojamiento adaptado para personas con
+        movilidad reducida.
     - titulo: Mascotas, bajo consulta previa
       texto: >-
         La administracion del edificio las acepta segun el caso. Las
@@ -250,7 +255,9 @@ checkin: ''
 checkout: ''
 comodidades:
   - Wifi
-  - Cocina
+  - Cocina equipada
+  - Agua caliente
+  - Lavadora
   - Zona de trabajo
   - Television
   - Refrigerador
