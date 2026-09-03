@@ -363,6 +363,21 @@ const hospedajes = defineCollection({
     precio: z.string().default('$ ---'),
     precioPendiente: z.boolean().default(true),
 
+    /* Video principal del hospedaje. Se usa cuando el recorrido debe
+       quedar visible en la ficha general y no escondido dentro de una
+       habitacion. Es opcional y no altera las fichas existentes. */
+    videoPrincipal: z
+      .object({
+        src: z.string(),
+        poster: z.string(),
+        titulo: z.string(),
+        descripcion: textoOpcional,
+        ancho: z.number(),
+        alto: z.number(),
+        duracion: textoOpcional,
+      })
+      .optional(),
+
     /* ----------------------------------------------------------
        HABITACIONES
        ---------------------------------------------------------- */
