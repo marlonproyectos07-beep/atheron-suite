@@ -797,29 +797,18 @@ function idHabitacion(nombre) {
             </div>
           )}
 
-          {coordenadas && (
-            <nav class="botones-mapa" aria-label={`Como llegar al ${d.nombre}`}>
-              <a class="boton boton--primario" target="_blank" rel="noopener" href={`https://www.google.com/maps/search/?api=1&query=${coordenadas}`}>Abrir en Google Maps</a>
+          {/* El primer boton usa el enlace oficial del hospedaje cuando lo
+               hay: lleva a su ficha real de Google Maps, con el nombre y
+               las fotos, en vez de a un punto en el mapa. Sin enlace, se
+               busca por coordenadas como hasta ahora. Waze y "como llegar"
+               necesitan coordenadas y solo salen si las hay. */}
+          {(coordenadas || d.enlaceMapa) && (
+            <nav class="botones-mapa" aria-label={`Como llegar a ${d.nombre}`}>
+              <a class="boton boton--primario" target="_blank" rel="noopener" href={d.enlaceMapa ?? `https://www.google.com/maps/search/?api=1&query=${coordenadas}`}>Ver ubicacion en Google Maps</a>
+              {coordenadas && (<>
               <a class="boton boton--contorno" target="_blank" rel="noopener" href={`https://waze.com/ul?ll=${coordenadas}&navigate=yes`}>Abrir en Waze</a>
               <a class="boton boton--contorno" target="_blank" rel="noopener" href={`https://www.google.com/maps/dir/?api=1&destination=${coordenadas}&travelmode=walking`}>Como llegar caminando</a>
-            </nav>
-          )}
-
-          {/* Boton de "como llegar" cuando el hospedaje tiene enlace de
-               Google Maps pero todavia NO tiene coordenadas. Sin
-               coordenadas no se pinta ni mapa ni la barra de botones de
-               arriba, asi que el visitante se quedaba sin manera de
-               abrir la ubicacion: el enlace vivia en una linea de letra
-               pequena. Con coordenadas la barra ya existe y no se toca,
-               para no anadir un cuarto boton redundante. */}
-          {d.enlaceMapa && !coordenadas && (
-            <nav class="botones-mapa" aria-label={`Como llegar a ${d.nombre}`}>
-              <a
-                class="boton boton--primario"
-                href={d.enlaceMapa}
-                target="_blank"
-                rel="noopener"
-              >Ver ubicacion en Google Maps</a>
+              </>)}
             </nav>
           )}
 
@@ -870,6 +859,14 @@ function idHabitacion(nombre) {
                 <article class="condicion">
                   <h3>{c.titulo}</h3>
                   <p class="texto-suave">{c.texto}</p>
+                  {c.enlace && (
+                    <a
+                      class="boton boton--contorno condicion__enlace"
+                      href={c.enlace}
+                      target="_blank"
+                      rel="noopener"
+                    >{c.enlaceTexto ?? 'Ver mas'}</a>
+                  )}
                 </article>
               ))}
             </div>
@@ -943,6 +940,16 @@ function idHabitacion(nombre) {
             <li>Telefono: <a href="tel:+573188983167">+57 318 898 3167</a></li>
             {d.datosContacto.map((linea) => <li>{linea}</li>)}
           </ul>
+
+          {/* Facturacion. Va discreto y al final, porque no es un
+               argumento de venta para quien viaja por placer, pero si es
+               lo primero que pregunta una empresa. No se publican razon
+               social ni NIT: eso se entrega al facturar. */}
+          <div class="nota-factura">
+            <strong>&iquest;Necesitas factura electronica?</strong>
+            Emitimos factura electronica para reservas directas. Solicitala al
+            momento de reservar y nuestro equipo te indicara los datos necesarios.
+          </div>
         </div>
 
         <div class="bloque-doble__media">

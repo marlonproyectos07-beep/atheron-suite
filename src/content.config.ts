@@ -553,7 +553,18 @@ const hospedajes = defineCollection({
         titulo: z.string(),
         intro: textoOpcional,
         condiciones: z
-          .array(z.object({ titulo: z.string(), texto: z.string() }))
+          .array(
+            z.object({
+              titulo: z.string(),
+              texto: z.string(),
+              /* Enlace externo opcional de la condicion. Sirve para lo
+                 que el huesped tiene que mirar por su cuenta: un
+                 parqueadero publico que no es nuestro, por ejemplo.
+                 Abre en pestana nueva y con noopener. */
+              enlace: textoOpcional,
+              enlaceTexto: textoOpcional,
+            }),
+          )
           .default([]),
         seguridadTitulo: textoOpcional,
         seguridadNota: textoOpcional,
