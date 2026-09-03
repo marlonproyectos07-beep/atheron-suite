@@ -30,8 +30,8 @@ mala en una ficha nuestra la paga la marca, no el aliado.
 | Limpieza de sábanas | Protocolo de cambio y verificación por unidad |
 | Polvo bajo camas y muebles | Checklist de aseo profundo, no solo superficies visibles |
 | Apartamentos aún en aseo al llegar | Hora de corte de limpieza frente a la hora de entrada |
-| Dotación limitada de ollas y utensilios | Inventario mínimo por apartamento, acordado por escrito |
-| Parqueadero no disponible a veces | Cómo se confirma y qué pasa si falla el día de la llegada |
+| Dotación limitada de ollas y utensilios | La cocina equipada está confirmada; falta inventario detallado por apartamento |
+| Parqueadero no disponible a veces | Hay dos cupos tras el portón; falta definir el protocolo de asignación cuando haya varias reservas |
 | Ruido entre pisos | Qué se puede mitigar y qué hay que advertir por escrito |
 | Internet inestable en el dúplex | Medición real antes de publicar la ficha del dúplex |
 | Cobro por mascotas poco claro | Condición y monto por escrito antes de anunciarlo |
@@ -41,6 +41,14 @@ mala en una ficha nuestra la paga la marca, no el aliado.
 Además, el **402** aparece hoy en el tramo peor valorado de su categoría en
 Airbnb. Es un dato de control de calidad, no un argumento comercial, y no
 se muestra en ninguna página.
+
+## Datos ya confirmados
+
+- No hay ascensor: el acceso es por escaleras y no se ofrece accesibilidad para movilidad reducida.
+- Hay dos espacios para carros normales dentro del edificio, detrás del portón.
+- Cada apartamento tiene cocina equipada, agua caliente y lavadora.
+- Las camas dobles miden 1,40 m.
+- Los apartamentos conservan, en términos generales, el mismo diseño, estructura y acabados.
 
 ## Datos pendientes de confirmar
 
