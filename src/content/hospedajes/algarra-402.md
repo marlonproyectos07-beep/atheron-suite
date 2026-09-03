@@ -6,13 +6,13 @@ insignia: '402'
 titulo: Apartamento 402 en Algarra, Zipaquira | Atheron Suite
 descripcion: Apartamento 402 en el sector de Algarra, Zipaquira. Una habitacion, un bano, cocina, wifi y zona de trabajo. Alojamiento aliado comercializado por Atheron Suite. Consulta disponibilidad por WhatsApp.
 ogTitulo: Apartamento 402 en Algarra, Zipaquira
-ogDescripcion: Apartamento independiente en Algarra, Zipaquira, con cocina, wifi y zona de trabajo.
+ogDescripcion: Apartamento independiente en Algarra, Zipaquira, con cocina equipada, wifi y zona de trabajo.
 avisoBorrador: Ficha en preparacion. Faltan las fotografias autorizadas y varios datos por confirmar con la administracion.
 avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operacion y la entrega del apartamento se coordinan con la administracion del edificio.
 zona: 'Algarra, Zipaquira'
 localidad: Zipaquira
 departamento: Cundinamarca
-presentacion: Apartamento independiente en el sector de Algarra, con cocina propia, wifi y zona de trabajo.
+presentacion: Apartamento independiente en el sector de Algarra, con cocina propia equipada, wifi y zona de trabajo.
 presentacionPendiente: false
 fotoTarjeta: ''
 fotoTarjetaAlt: ''
@@ -29,9 +29,9 @@ datos:
 tituloDescripcion: Un apartamento para ti solo
 tituloDescripcionPendiente: false
 caracteristicas:
-  - texto: 3 camas dobles
+  - texto: 3 camas dobles de 1,40 m
     pendiente: false
-  - texto: Cocina
+  - texto: Cocina equipada
     pendiente: false
   - texto: Wifi
     pendiente: false
@@ -48,7 +48,7 @@ caracteristicas:
 listadoSector: Algarra
 listadoSegundoDato: '1'
 listadoSegundoDatoSufijo: ' habitacion'
-resumen: Apartamento 402 independiente en Algarra, Zipaquira, con cocina, wifi y zona de trabajo.
+resumen: Apartamento 402 independiente en Algarra, Zipaquira, con cocina equipada, wifi y zona de trabajo.
 precio: Consultar
 precioPendiente: true
 habitaciones: []
@@ -60,8 +60,12 @@ antesDeReservar:
   condiciones:
     - titulo: Estacionamiento
       texto: >-
-        El edificio tiene dos espacios para vehiculos de tamano normal, sujetos
-        a disponibilidad y con costo adicional en reservas individuales.
+        El edificio tiene dos espacios para vehiculos de tamano normal, dentro
+        del edificio y detras del porton, sujetos a disponibilidad y con costo adicional en reservas individuales.
+    - titulo: Acceso por escaleras
+      texto: >-
+        El edificio no tiene ascensor. El acceso es por escaleras y el
+        apartamento no se ofrece como adaptado para movilidad reducida.
     - titulo: Mascotas, bajo consulta previa
       texto: >-
         La administracion del edificio las acepta segun el caso. Las
@@ -92,15 +96,17 @@ checkin: ''
 checkout: ''
 comodidades:
   - Wifi
-  - Cocina
+  - Cocina equipada
   - Zona de trabajo
   - Television
   - Refrigerador
+  - Agua caliente
+  - Lavadora
 actualizado: ''
 ---
 
 Apartamento 402 independiente en el sector de Algarra, en Zipaquira. Tiene una
-habitacion, un bano y cocina propia, ademas de wifi y zona de trabajo,
+habitacion, un bano y cocina propia equipada, ademas de wifi y zona de trabajo,
 asi que sirve tanto para una escapada corta como para quedarse a
 trabajar unos dias.
 
