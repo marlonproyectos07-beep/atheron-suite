@@ -14,11 +14,27 @@ localidad: Zipaquira
 departamento: Cundinamarca
 presentacion: Apartamento independiente en el sector de Algarra, con cocina propia equipada, wifi y zona de trabajo. Es el de mayor capacidad publicada del edificio.
 presentacionPendiente: false
-fotoTarjeta: ''
-fotoTarjetaAlt: ''
-fotoPrincipal: ''
-fotoPrincipalAlt: ''
-galeria: []
+fotoTarjeta: /assets/edificio-algarra/apto-401/01.webp
+fotoTarjetaAlt: Zona de descanso del apartamento 401 con camas dobles
+fotoPrincipal: /assets/edificio-algarra/apto-401/01.webp
+fotoPrincipalAlt: Zona de descanso del apartamento 401 con camas dobles
+galeria:
+  - imagen: /assets/edificio-algarra/apto-401/01.webp
+    alt: Zona de descanso del apartamento 401 con camas dobles
+  - imagen: /assets/edificio-algarra/apto-401/02.webp
+    alt: Cocina equipada y sala del apartamento 401
+  - imagen: /assets/edificio-algarra/apto-401/03.webp
+    alt: Comedor y sofa cama del apartamento 401
+  - imagen: /assets/edificio-algarra/apto-401/04.webp
+    alt: Camas dobles del apartamento 401
+  - imagen: /assets/edificio-algarra/apto-401/05.webp
+    alt: Cocina equipada del apartamento 401
+  - imagen: /assets/edificio-algarra/apto-401/06.webp
+    alt: Armario y espacio de trabajo del apartamento 401
+  - imagen: /assets/edificio-algarra/apto-401/07.webp
+    alt: Zona de descanso completa del apartamento 401
+  - imagen: /assets/edificio-algarra/apto-401/08.webp
+    alt: Comedor y cocina del apartamento 401
 datos:
   - numero: '7'
     texto: Huespedes
@@ -56,7 +72,7 @@ precio: Consultar
 precioPendiente: true
 habitaciones: []
 notaHabitaciones: ''
-heroFoto: false
+heroFoto: true
 antesDeReservar:
   etiqueta: Antes de reservar
   titulo: Lo que conviene saber
