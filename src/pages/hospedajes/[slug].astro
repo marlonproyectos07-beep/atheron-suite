@@ -49,6 +49,7 @@ const tarifas = d.tarifas ?? null;
 const espacios = d.espacios?.lista.length ? d.espacios : null;
 const opiniones = d.pruebaSocial ?? null;
 const condiciones = d.antesDeReservar ?? null;
+const faq = d.faq?.preguntas.length ? d.faq : null;
 const videos = d.habitaciones
   .map((h, i) => (h.video ? { ...h.video, id: `visor-video-${i + 1}` } : null))
   .filter((v) => v !== null);
@@ -63,6 +64,7 @@ const enlacesMovil = menuFichaMovil.filter((e) => {
   if (e.href === '#tarifas') return Boolean(tarifas);
   if (e.href === '#espacios') return Boolean(espacios);
   if (e.href === '#opiniones') return Boolean(opiniones);
+  if (e.href === '#faq') return Boolean(faq);
   return true;
 });
 
@@ -402,6 +404,9 @@ function idHabitacion(nombre) {
               <div class="hotel-habitaciones-grid">
                 {d.habitaciones.map((h) => {
                   const id = idHabitacion(h.nombre);
+                  /* Si la unidad tiene ficha propia, los enlaces van
+                     alli en vez de al bloque de detalle de esta pagina. */
+                  const destino = h.enlace ?? `#detalle-${id}`;
                   const datos = [
                     dato(h.huespedes, 'huesped', 'huespedes'),
                     dato(h.camas, 'cama', 'camas'),
@@ -410,7 +415,7 @@ function idHabitacion(nombre) {
 
                   return (
                     <article class="hotel-mini" data-destacada={h.destacada ? '' : undefined}>
-                      <a class="hotel-mini__foto" href={`#detalle-${id}`} aria-label={`Ver fotos y detalles de ${h.nombre}`}>
+                      <a class="hotel-mini__foto" href={destino} aria-label={`Ver fotos y detalles de ${h.nombre}`}>
                         {/* El distintivo va en el DOM y no como contenido de
                              CSS: dice algo que el visitante necesita saber
                              -si el bano es suyo o compartido- y eso tiene que
@@ -439,7 +444,7 @@ function idHabitacion(nombre) {
                         <div class="hotel-mini__acciones">
                           <a
                             class="boton boton--contorno"
-                            href={`#detalle-${id}`}
+                            href={destino}
                             data-etiqueta-ver={h.etiquetaVer ?? undefined}
                           >Ver fotos y detalles</a>
                           <a
@@ -833,6 +838,32 @@ function idHabitacion(nombre) {
       </div>
     </section>
 
+    {/* PREGUNTAS FRECUENTES
+         Lo que la gente pregunta por WhatsApp antes de decidirse.
+         Cada respuesta aqui es una conversacion menos que atender y
+         una duda menos que frene la reserva. Se usa <details> nativo:
+         funciona con teclado y con lector de pantalla sin una linea
+         de JavaScript. */}
+    {faq && (
+      <section class="seccion seccion--alterna" id="faq">
+        <div class="contenedor">
+          <div class="encabezado-seccion aparecer">
+            <span class="etiqueta">{faq.etiqueta}</span>
+            <h2>{faq.titulo}</h2>
+            {faq.intro && <p class="texto-suave" style="margin-top: var(--esp-2);">{faq.intro}</p>}
+          </div>
+          <div class="faq aparecer">
+            {faq.preguntas.map((p) => (
+              <details class="faq__item">
+                <summary class="faq__pregunta">{p.pregunta}</summary>
+                <p class="faq__respuesta texto-suave">{p.respuesta}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
     {/* ANTES DE RESERVAR
          Lo que hay que saber para no llevarse una sorpresa: que pasa
          con las mascotas, que esta sujeto a consulta, y que dice el
@@ -992,6 +1023,17 @@ function idHabitacion(nombre) {
         </div>
       </div>
     </section>
+    {/* Quien opera el alojamiento. El huesped tiene derecho a saber
+         donde va a dormir y con quien se coordina la entrega; no es un
+         aviso de alarma, asi que va discreto y al final, no en una
+         banda roja arriba. Nada del acuerdo comercial se publica. */}
+    {d.avisoAliado && (
+      <section class="seccion seccion--estrecha">
+        <div class="contenedor">
+          <p class="nota-aliado">{d.avisoAliado}</p>
+        </div>
+      </section>
+    )}
   </main>
 
   <Pie textoVuelta="Ver todos los hospedajes" hrefVuelta="/hospedajes" />

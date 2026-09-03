@@ -153,6 +153,12 @@ const habitacion = z.object({
   /* Texto corto del boton en la tarjeta compacta, si el generico no
      encaja. Ej: "Ver suite". */
   etiquetaVer: textoOpcionalPanel,
+  /* Ficha propia de la unidad, cuando tiene pagina aparte en vez de
+     un bloque de detalle dentro de la misma ficha. Un edificio con
+     seis apartamentos no cabe en una sola pagina sin que ninguno se
+     pueda enlazar ni posicionar por su cuenta. Vacio = el
+     comportamiento de siempre, con ancla interna. */
+  enlace: textoOpcionalPanel,
 
   /* Galeria propia de la habitacion. Opcional y aditiva: una
      habitacion sin fotos sigue funcionando igual, solo que no
@@ -254,6 +260,12 @@ const hospedajes = defineCollection({
 
     /* Banda amarilla superior. Se quita poniendo null. */
     avisoBorrador: textoOpcional,
+
+    /* Nota de alojamiento aliado. Va discreta y al pie del contenido,
+       no como banda de alarma: el visitante tiene derecho a saber
+       quien opera donde va a dormir, pero no es un aviso de peligro.
+       Vacio = el hospedaje es propio y no se pinta nada. */
+    avisoAliado: textoOpcional,
 
     /* ----------------------------------------------------------
        PORTADA DE LA FICHA
@@ -529,6 +541,28 @@ const hospedajes = defineCollection({
               fecha: z.string(),
             }),
           )
+          .default([]),
+      })
+      .optional(),
+
+    /* ----------------------------------------------------------
+       PREGUNTAS FRECUENTES
+
+       Lo que la gente pregunta por WhatsApp antes de decidirse. Cada
+       respuesta contestada en la pagina es una conversacion menos que
+       atender y una duda menos que frene la reserva.
+
+       NO se marca FAQPage en el JSON-LD: Google restringio ese
+       resultado enriquecido a sitios de sanidad y gobierno, y marcarlo
+       aqui no aporta nada y anade superficie que mantener.
+       ---------------------------------------------------------- */
+    faq: z
+      .object({
+        etiqueta: z.string().default('Preguntas frecuentes'),
+        titulo: z.string(),
+        intro: textoOpcional,
+        preguntas: z
+          .array(z.object({ pregunta: z.string(), respuesta: z.string() }))
           .default([]),
       })
       .optional(),
