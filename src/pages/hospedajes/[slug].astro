@@ -354,7 +354,7 @@ function idHabitacion(nombre) {
             class="video-principal__reproductor"
             controls
             playsinline
-            preload="metadata"
+            preload="none"
             poster={d.videoPrincipal.poster}
             width={d.videoPrincipal.ancho}
             height={d.videoPrincipal.alto}
@@ -651,7 +651,7 @@ function idHabitacion(nombre) {
         <div class="contenedor">
           <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
             <span class="etiqueta">Galeria</span>
-            <h2>Fotos del hospedaje</h2>
+            <h2>{d.videoPrincipal ? 'Fotos y video del hospedaje' : 'Fotos del hospedaje'}</h2>
           </div>
           {/* Cada foto va dentro de un boton, igual que en las galerias de
                las habitaciones. Antes eran <div> sueltos: se veian, pero
@@ -675,6 +675,28 @@ function idHabitacion(nombre) {
                   <Foto src={f.imagen} alt={f.alt} forma="cuadrado" />
                 </button>
               ))}
+              {d.videoPrincipal && (
+                <a
+                  class="galeria__video"
+                  href="#video"
+                  aria-label={`Reproducir: ${d.videoPrincipal.titulo}`}
+                >
+                  <img
+                    class="foto foto--cuadrado"
+                    src={d.videoPrincipal.poster}
+                    alt=""
+                    width={d.videoPrincipal.ancho}
+                    height={d.videoPrincipal.alto}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span class="galeria__video-capa">
+                    <span class="galeria__video-play" aria-hidden="true"></span>
+                    <span class="galeria__video-texto">Ver recorrido en video</span>
+                    {d.videoPrincipal.duracion && <span class="galeria__video-duracion">{d.videoPrincipal.duracion}</span>}
+                  </span>
+                </a>
+              )}
             </div>
           ) : (
             <div class="galeria aparecer">
