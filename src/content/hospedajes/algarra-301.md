@@ -14,11 +14,27 @@ localidad: Zipaquira
 departamento: Cundinamarca
 presentacion: Apartamento independiente en el sector de Algarra, con cocina propia equipada, wifi y zona de trabajo.
 presentacionPendiente: false
-fotoTarjeta: ''
-fotoTarjetaAlt: ''
-fotoPrincipal: ''
-fotoPrincipalAlt: ''
-galeria: []
+fotoTarjeta: /assets/edificio-algarra/apto-301/01.webp
+fotoTarjetaAlt: Sala comedor del apartamento 301 con sofa, mesa y ventanal
+fotoPrincipal: /assets/edificio-algarra/apto-301/01.webp
+fotoPrincipalAlt: Sala comedor del apartamento 301 con sofa, mesa y ventanal
+galeria:
+  - imagen: /assets/edificio-algarra/apto-301/01.webp
+    alt: Sala comedor del apartamento 301 con sofa, mesa y ventanal
+  - imagen: /assets/edificio-algarra/apto-301/02.webp
+    alt: Zona de descanso del apartamento 301 con camas dobles
+  - imagen: /assets/edificio-algarra/apto-301/03.webp
+    alt: Balcon del apartamento 301 con vista al sector de Algarra
+  - imagen: /assets/edificio-algarra/apto-301/04.webp
+    alt: Espacio de trabajo del apartamento 301 con escritorio y armario
+  - imagen: /assets/edificio-algarra/apto-301/05.webp
+    alt: Vista longitudinal de la sala comedor del apartamento 301
+  - imagen: /assets/edificio-algarra/apto-301/06.webp
+    alt: Comedor y sala iluminados del apartamento 301
+  - imagen: /assets/edificio-algarra/apto-301/07.webp
+    alt: Sala, comedor y cocina integrada del apartamento 301
+  - imagen: /assets/edificio-algarra/apto-301/08.webp
+    alt: Bano del apartamento 301 con ducha de vidrio
 datos:
   - numero: '6'
     texto: Huespedes
@@ -54,7 +70,7 @@ precio: Consultar
 precioPendiente: true
 habitaciones: []
 notaHabitaciones: ''
-heroFoto: false
+heroFoto: true
 antesDeReservar:
   etiqueta: Antes de reservar
   titulo: Lo que conviene saber
