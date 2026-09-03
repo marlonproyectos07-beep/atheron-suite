@@ -424,6 +424,40 @@ const hospedajes = defineCollection({
       .optional(),
 
     /* ----------------------------------------------------------
+       TARIFA POR NUMERO DE HUESPEDES
+
+       Un alojamiento entero no tiene "un" precio: tiene una tarifa
+       base y un incremento por persona. Poner solo la cifra baja es
+       publicidad enganosa, y poner solo la alta espanta. Se publican
+       las dos y el desglose completo, para que nadie descubra el
+       precio real al escribir por WhatsApp.
+
+       Aditivo: sin este bloque la ficha se pinta como antes.
+       ---------------------------------------------------------- */
+    tarifas: z
+      .object({
+        etiqueta: z.string().default('Tarifas'),
+        titulo: z.string(),
+        /* La cifra grande. Ej: "Desde $300.000 por noche". */
+        desde: z.string(),
+        /* Que cubre esa cifra. NO es opcional: una tarifa "desde"
+           sin decir hasta cuantas personas cubre no informa de nada. */
+        cubre: z.string(),
+        intro: textoOpcional,
+        /* El desglose. Cada fila es un numero de huespedes y su precio. */
+        filas: z
+          .array(z.object({ huespedes: z.string(), precio: z.string() }))
+          .default([]),
+        /* La regla en una linea, para quien quiera calcularlo. */
+        regla: textoOpcional,
+        nota: textoOpcional,
+        cta: z.string().default('Consultar disponibilidad'),
+        /* Mensaje de WhatsApp propio del bloque. */
+        mensaje: textoOpcional,
+      })
+      .optional(),
+
+    /* ----------------------------------------------------------
        ESPACIOS DE LA CASA
 
        Las zonas comunes que se venden solas: la sala con chimenea,
@@ -622,6 +656,10 @@ const hospedajes = defineCollection({
     checkin: textoOpcionalPanel,
     checkout: textoOpcionalPanel,
     mascotas: siNoOpcionalPanel,
+    /* Rango de tarifa para el JSON-LD ("priceRange"). Solo se rellena
+       si las dos cifras se muestran en la pagina: marcar un rango que
+       el visitante no puede ver es exactamente lo que no se hace. */
+    rangoPrecio: textoOpcionalPanel,
     /* Fecha del ultimo cambio real de la ficha. Va al sitemap.
        Si no se pone, se usa la fecha en que se publico el sitio. */
     actualizado: fechaOpcionalPanel,

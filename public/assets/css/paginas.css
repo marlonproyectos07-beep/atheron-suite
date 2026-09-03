@@ -490,3 +490,69 @@
 }
 .seguridad__punto[data-consta] { color: var(--color-gris-700); }
 .seguridad__punto[data-consta] .seguridad__marca { color: var(--color-verde); }
+
+/* ============================================================
+   TARIFAS POR NUMERO DE HUESPEDES
+
+   Una caja, no una tabla suelta: la cifra base manda y el desglose
+   la acompana. El borde superior de la seccion la separa de la
+   descripcion cuando las dos van sobre fondo blanco.
+   ============================================================ */
+.tarifas { border-top: 1px solid var(--borde); }
+
+.tarifas__caja {
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: var(--esp-4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-lg);
+  background: var(--fondo);
+  box-shadow: var(--sombra-md);
+}
+
+.tarifas__cabeza {
+  padding-bottom: var(--esp-3);
+  margin-bottom: var(--esp-3);
+  border-bottom: 1px solid var(--borde);
+  text-align: center;
+}
+.tarifas__desde {
+  display: block;
+  font-family: var(--fuente-titulo);
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  line-height: 1.15;
+  color: var(--color-noche);
+}
+/* Lo que cubre la tarifa va pegado a la cifra y no en letra pequena
+   al final: una tarifa "desde" sin su condicion al lado es media
+   verdad, y media verdad en un precio es un problema. */
+.tarifas__cubre {
+  display: block;
+  margin-top: var(--esp-1);
+  font-size: .95rem;
+  color: var(--texto-suave);
+}
+
+.tarifas__lista { display: grid; gap: .1rem; list-style: none; padding: 0; }
+.tarifas__fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--esp-2);
+  padding: .6rem .2rem;
+  border-bottom: 1px dashed var(--borde);
+}
+.tarifas__fila:last-child { border-bottom: 0; }
+.tarifas__huespedes { color: var(--color-gris-700); }
+.tarifas__precio { font-weight: 600; color: var(--color-noche); white-space: nowrap; }
+
+.tarifas__regla {
+  margin-top: var(--esp-3);
+  padding: var(--esp-2) var(--esp-3);
+  border-radius: var(--radio-sm);
+  background: var(--color-crema);
+  font-size: .95rem;
+  color: var(--color-gris-700);
+}
+.tarifas__nota { margin-top: var(--esp-2); }
+.tarifas__cta { width: 100%; margin-top: var(--esp-3); justify-content: center; }

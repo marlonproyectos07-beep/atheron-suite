@@ -97,6 +97,7 @@ export const menuFicha: Enlace[] = [
 export const menuFichaMovil: Enlace[] = [
   { texto: 'Inicio', href: '/' },
   { texto: 'Hospedajes', href: '/hospedajes' },
+  { texto: 'Tarifas', href: '#tarifas' },
   { texto: 'La casa', href: '#espacios' },
   { texto: 'Habitaciones', href: '#habitaciones' },
   { texto: 'Galeria', href: '#galeria' },
