@@ -125,6 +125,8 @@ habitaciones:
       television y refrigerador.
     precio: Consultar
     pendiente: false
+    foto: /assets/edificio-algarra/duplex/01.webp
+    fotoAlt: Fachada general del edificio donde se encuentra el apartamento 201
     enlace: /hospedajes/algarra-201
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 301
