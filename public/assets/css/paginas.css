@@ -620,3 +620,37 @@
   color: var(--texto-suave);
   text-align: center;
 }
+
+
+/* Recorrido principal del alojamiento aliado. El video vertical conserva
+   su proporcion real y no fuerza saltos de diseno mientras carga. */
+.video-principal { background: var(--fondo-alterno); }
+.video-principal__interior {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 390px);
+  gap: var(--esp-5);
+  align-items: center;
+}
+.video-principal__texto h2 { margin-block: var(--esp-2); }
+.video-principal__duracion {
+  display: inline-block;
+  margin-top: var(--esp-2);
+  padding: .35rem .7rem;
+  border-radius: 999px;
+  background: var(--fondo);
+  font-size: .85rem;
+  font-weight: 600;
+}
+.video-principal__reproductor {
+  display: block;
+  width: 100%;
+  max-height: 72vh;
+  margin-inline: auto;
+  border-radius: var(--radio-md);
+  background: #000;
+  box-shadow: var(--sombra-md);
+}
+@media (max-width: 760px) {
+  .video-principal__interior { grid-template-columns: 1fr; }
+  .video-principal__reproductor { max-width: 340px; }
+}
