@@ -15,11 +15,31 @@ localidad: Zipaquira
 departamento: Cundinamarca
 presentacion: Seis apartamentos independientes en el mismo edificio, cada uno con cocina equipada, wifi y zona de trabajo. Pensado para grupos que necesitan varias unidades a la vez sin repartirse por la ciudad.
 presentacionPendiente: false
-fotoTarjeta: ''
-fotoTarjetaAlt: ''
-fotoPrincipal: ''
-fotoPrincipalAlt: ''
-galeria: []
+fotoTarjeta: /assets/edificio-algarra/duplex/01.webp
+fotoTarjetaAlt: Fachada del edificio de apartamentos en el sector de Algarra
+fotoPrincipal: /assets/edificio-algarra/duplex/01.webp
+fotoPrincipalAlt: Fachada del edificio de apartamentos en el sector de Algarra
+galeria:
+  - imagen: /assets/edificio-algarra/duplex/01.webp
+    alt: Fachada del edificio de apartamentos en el sector de Algarra
+  - imagen: /assets/edificio-algarra/duplex/02.webp
+    alt: Escaleras interiores de acceso a los apartamentos del edificio
+  - imagen: /assets/edificio-algarra/apto-301/01.webp
+    alt: Sala comedor del apartamento 301
+  - imagen: /assets/edificio-algarra/apto-302/01.webp
+    alt: Sala comedor y cocina integrada del apartamento 302
+  - imagen: /assets/edificio-algarra/apto-302/04.webp
+    alt: Zona de descanso del apartamento 302
+  - imagen: /assets/edificio-algarra/apto-401/02.webp
+    alt: Cocina equipada y sala del apartamento 401
+  - imagen: /assets/edificio-algarra/apto-402/01.webp
+    alt: Cocina equipada, comedor y sala del apartamento 402
+  - imagen: /assets/edificio-algarra/apto-402/06.webp
+    alt: Balcon del apartamento 402 con vista al sector
+  - imagen: /assets/edificio-algarra/duplex/07.webp
+    alt: Cocina equipada del duplex
+  - imagen: /assets/edificio-algarra/duplex/05.webp
+    alt: Habitacion del duplex con cama doble
 datos:
   - numero: '6'
     texto: Apartamentos
@@ -162,7 +182,7 @@ habitaciones:
     enlace: /hospedajes/algarra-duplex
     etiquetaVer: Ver apartamento
 notaHabitaciones: ''
-heroFoto: false
+heroFoto: true
 heroEncuadre: ''
 heroEncuadreMovil: ''
 faq:
