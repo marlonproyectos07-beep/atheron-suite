@@ -14,11 +14,27 @@ localidad: Zipaquira
 departamento: Cundinamarca
 presentacion: Apartamento independiente en el sector de Algarra, con cocina propia equipada, wifi y zona de trabajo. La llegada es autonoma, con cerradura de teclado.
 presentacionPendiente: false
-fotoTarjeta: ''
-fotoTarjetaAlt: ''
-fotoPrincipal: ''
-fotoPrincipalAlt: ''
-galeria: []
+fotoTarjeta: /assets/edificio-algarra/apto-302/01.webp
+fotoTarjetaAlt: Sala comedor y cocina integrada del apartamento 302
+fotoPrincipal: /assets/edificio-algarra/apto-302/01.webp
+fotoPrincipalAlt: Sala comedor y cocina integrada del apartamento 302
+galeria:
+  - imagen: /assets/edificio-algarra/apto-302/01.webp
+    alt: Sala comedor y cocina integrada del apartamento 302
+  - imagen: /assets/edificio-algarra/apto-302/02.webp
+    alt: Sala del apartamento 302 junto al comedor y la cocina
+  - imagen: /assets/edificio-algarra/apto-302/03.webp
+    alt: Vista exterior desde el ventanal del apartamento 302
+  - imagen: /assets/edificio-algarra/apto-302/04.webp
+    alt: Zona de descanso del apartamento 302 con camas dobles
+  - imagen: /assets/edificio-algarra/apto-302/05.webp
+    alt: Bano del apartamento 302
+  - imagen: /assets/edificio-algarra/apto-302/06.webp
+    alt: Cocina equipada y sala comedor del apartamento 302
+  - imagen: /assets/edificio-algarra/apto-302/07.webp
+    alt: Cocina, comedor y sofa cama del apartamento 302
+  - imagen: /assets/edificio-algarra/apto-302/08.webp
+    alt: Zona de lavanderia del apartamento 302
 datos:
   - numero: '6'
     texto: Huespedes
@@ -56,7 +72,7 @@ precio: Consultar
 precioPendiente: true
 habitaciones: []
 notaHabitaciones: ''
-heroFoto: false
+heroFoto: true
 antesDeReservar:
   etiqueta: Antes de reservar
   titulo: Lo que conviene saber
