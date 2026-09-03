@@ -21,6 +21,7 @@ export async function getStaticPaths() {
 const { ficha } = Astro.props;
 const d = ficha.data;
 const ruta = `/hospedajes/${ficha.id}`;
+const heroConVariantes = !d.fotoPrincipal?.startsWith('/assets/edificio-algarra/');
 /* La presentacion comercial la manda el contenido, no el nombre del
    hospedaje. Antes esto era ficha.id === 'hotel-atheron-suite' y toda
    la seccion estaba escrita a medida de esa ficha: para montar la
@@ -182,10 +183,10 @@ function idHabitacion(nombre) {
             d.heroEncuadreMovil && `--encuadre-movil: ${d.heroEncuadreMovil}`,
           ].filter(Boolean).join('; ') || undefined}
         >
-          <source media="(max-width: 700px)" type="image/avif" srcset={`${baseHero}-700.avif`} />
-          <source media="(max-width: 700px)" type="image/webp" srcset={`${baseHero}-700.webp`} />
-          <source type="image/avif" srcset={`${baseHero}-900.avif`} />
-          <source type="image/webp" srcset={`${baseHero}-900.webp`} />
+          {heroConVariantes && <source media="(max-width: 700px)" type="image/avif" srcset={`${baseHero}-700.avif`} />}
+          {heroConVariantes && <source media="(max-width: 700px)" type="image/webp" srcset={`${baseHero}-700.webp`} />}
+          {heroConVariantes && <source type="image/avif" srcset={`${baseHero}-900.avif`} />}
+          {heroConVariantes && <source type="image/webp" srcset={`${baseHero}-900.webp`} />}
           <img
             src={d.fotoPrincipal}
             alt=""
