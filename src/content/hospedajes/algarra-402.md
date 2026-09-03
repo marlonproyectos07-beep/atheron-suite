@@ -14,11 +14,27 @@ localidad: Zipaquira
 departamento: Cundinamarca
 presentacion: Apartamento independiente en el sector de Algarra, con cocina propia equipada, wifi y zona de trabajo.
 presentacionPendiente: false
-fotoTarjeta: ''
-fotoTarjetaAlt: ''
-fotoPrincipal: ''
-fotoPrincipalAlt: ''
-galeria: []
+fotoTarjeta: /assets/edificio-algarra/apto-402/01.webp
+fotoTarjetaAlt: Cocina equipada, comedor y sala del apartamento 402
+fotoPrincipal: /assets/edificio-algarra/apto-402/01.webp
+fotoPrincipalAlt: Cocina equipada, comedor y sala del apartamento 402
+galeria:
+  - imagen: /assets/edificio-algarra/apto-402/01.webp
+    alt: Cocina equipada, comedor y sala del apartamento 402
+  - imagen: /assets/edificio-algarra/apto-402/02.webp
+    alt: Espacio de trabajo y armario del apartamento 402
+  - imagen: /assets/edificio-algarra/apto-402/03.webp
+    alt: Zona de descanso del apartamento 402 con camas dobles
+  - imagen: /assets/edificio-algarra/apto-402/04.webp
+    alt: Comedor y sala iluminada del apartamento 402
+  - imagen: /assets/edificio-algarra/apto-402/05.webp
+    alt: Acceso al apartamento 402 desde las escaleras
+  - imagen: /assets/edificio-algarra/apto-402/06.webp
+    alt: Balcon del apartamento 402 con vista al sector de Algarra
+  - imagen: /assets/edificio-algarra/apto-402/07.webp
+    alt: Cocina equipada y comedor del apartamento 402
+  - imagen: /assets/edificio-algarra/apto-402/08.webp
+    alt: Bano del apartamento 402
 datos:
   - numero: '1'
     texto: Habitacion
@@ -53,7 +69,7 @@ precio: Consultar
 precioPendiente: true
 habitaciones: []
 notaHabitaciones: ''
-heroFoto: false
+heroFoto: true
 antesDeReservar:
   etiqueta: Antes de reservar
   titulo: Lo que conviene saber
