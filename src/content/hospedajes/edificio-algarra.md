@@ -115,6 +115,14 @@ casaCompleta:
   cejaHabitaciones: '¿Vienen pocos?'
   tituloHabitaciones: Los apartamentos, uno a uno
   introHabitaciones: Cada apartamento se reserva por separado. Las fotografias corresponden a la unidad indicada; las del apartamento 201 siguen pendientes de validacion.
+videoPrincipal:
+  src: /assets/edificio-algarra/video/apto-402-recorrido.mp4
+  poster: /assets/edificio-algarra/video/apto-402-poster.webp
+  titulo: Recorrido en video del apartamento 402
+  descripcion: Conoce en video la distribucion, los acabados, la cocina equipada y los espacios reales de una de las unidades del edificio.
+  ancho: 720
+  alto: 1280
+  duracion: '0:50'
 habitaciones:
   - nombre: Apartamento 201
     huespedes: Hasta 6
