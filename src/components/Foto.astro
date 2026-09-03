@@ -46,7 +46,11 @@ const { src, alt, forma, anchos, medidas, ancho, alto } = Astro.props;
 const sinExtension = src ? src.replace(/\.[^.]+$/, '') : '';
 const juego = (formato: string) =>
   (anchos ?? []).map((w) => `${sinExtension}-${w}.${formato} ${w}w`).join(', ');
-const hayVariantes = Boolean(src && anchos && anchos.length);
+/* Las fotos ya optimizadas del edificio aliado se cargan directamente.
+   No tienen todavía el juego de derivados -240/-400/etc.; anunciar
+   variantes inexistentes en <source> hace que el navegador elija un 404. */
+const esFotoEdificioAlgarra = Boolean(src?.startsWith('/assets/edificio-algarra/'));
+const hayVariantes = Boolean(src && anchos && anchos.length && !esFotoEdificioAlgarra);
 
 const sufijo = forma ? `--${forma}` : '';
 const claseFoto = `foto${sufijo ? ` foto${sufijo}` : ''}`;
