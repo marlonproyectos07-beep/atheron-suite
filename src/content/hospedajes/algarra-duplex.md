@@ -14,11 +14,27 @@ localidad: Zipaquira
 departamento: Cundinamarca
 presentacion: Apartamento independiente en el sector de Algarra, con cocina propia equipada, wifi y zona de trabajo.
 presentacionPendiente: false
-fotoTarjeta: ''
-fotoTarjetaAlt: ''
-fotoPrincipal: ''
-fotoPrincipalAlt: ''
-galeria: []
+fotoTarjeta: /assets/edificio-algarra/duplex/01.webp
+fotoTarjetaAlt: Fachada del edificio de apartamentos en Algarra
+fotoPrincipal: /assets/edificio-algarra/duplex/01.webp
+fotoPrincipalAlt: Fachada del edificio de apartamentos en Algarra
+galeria:
+  - imagen: /assets/edificio-algarra/duplex/01.webp
+    alt: Fachada del edificio de apartamentos en Algarra
+  - imagen: /assets/edificio-algarra/duplex/02.webp
+    alt: Escaleras interiores del edificio de apartamentos en Algarra
+  - imagen: /assets/edificio-algarra/duplex/03.webp
+    alt: Sala del duplex con sofa cama
+  - imagen: /assets/edificio-algarra/duplex/04.webp
+    alt: Distribuidor interior del duplex hacia habitacion y bano
+  - imagen: /assets/edificio-algarra/duplex/05.webp
+    alt: Habitacion del duplex con cama doble
+  - imagen: /assets/edificio-algarra/duplex/06.webp
+    alt: Bano completo del duplex
+  - imagen: /assets/edificio-algarra/duplex/07.webp
+    alt: Cocina equipada del duplex
+  - imagen: /assets/edificio-algarra/duplex/08.webp
+    alt: Segunda zona de descanso del duplex
 datos:
   - numero: '6'
     texto: Huespedes
@@ -54,7 +70,7 @@ precio: Consultar
 precioPendiente: true
 habitaciones: []
 notaHabitaciones: ''
-heroFoto: false
+heroFoto: true
 antesDeReservar:
   etiqueta: Antes de reservar
   titulo: Lo que conviene saber
