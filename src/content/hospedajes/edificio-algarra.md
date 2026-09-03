@@ -114,7 +114,7 @@ casaCompleta:
   mensaje: 'Hola, quiero cotizar los apartamentos de Algarra en Zipaquira para un grupo. Somos [numero] personas y estas son mis fechas:'
   cejaHabitaciones: '¿Vienen pocos?'
   tituloHabitaciones: Los apartamentos, uno a uno
-  introHabitaciones: Cada apartamento se reserva por separado. Estos son los datos publicados por la administracion; las fotografias se anaden cuando esten autorizadas.
+  introHabitaciones: Cada apartamento se reserva por separado. Las fotografias corresponden a la unidad indicada; las del apartamento 201 siguen pendientes de validacion.
 habitaciones:
   - nombre: Apartamento 201
     huespedes: Hasta 6
@@ -136,6 +136,8 @@ habitaciones:
       television y refrigerador.
     precio: Consultar
     pendiente: false
+    foto: /assets/edificio-algarra/apto-301/01.webp
+    fotoAlt: Sala comedor del apartamento 301 con sofa, mesa y ventanal
     enlace: /hospedajes/algarra-301
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 302
@@ -147,6 +149,8 @@ habitaciones:
       television y refrigerador. Llegada autonoma con cerradura de teclado.
     precio: Consultar
     pendiente: false
+    foto: /assets/edificio-algarra/apto-302/01.webp
+    fotoAlt: Sala comedor y cocina integrada del apartamento 302
     enlace: /hospedajes/algarra-302
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 401
@@ -158,6 +162,8 @@ habitaciones:
       de trabajo, television y refrigerador.
     precio: Consultar
     pendiente: false
+    foto: /assets/edificio-algarra/apto-401/02.webp
+    fotoAlt: Cocina equipada y sala del apartamento 401
     enlace: /hospedajes/algarra-401
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 402
@@ -169,6 +175,16 @@ habitaciones:
       administracion.
     precio: Consultar
     pendiente: false
+    foto: /assets/edificio-algarra/apto-402/01.webp
+    fotoAlt: Cocina equipada, comedor y sala del apartamento 402
+    video:
+      src: /assets/edificio-algarra/video/apto-402-recorrido.mp4
+      poster: /assets/edificio-algarra/video/apto-402-poster.webp
+      titulo: Recorrido en video por el apartamento 402 del edificio de Algarra
+      etiqueta: Ver recorrido del apartamento 402
+      ancho: 720
+      alto: 1280
+      duracion: '0:50'
     enlace: /hospedajes/algarra-402
     etiquetaVer: Ver apartamento
   - nombre: Duplex
@@ -179,6 +195,8 @@ habitaciones:
       distribucion exacta esta por confirmar con la administracion.
     precio: Consultar
     pendiente: false
+    foto: /assets/edificio-algarra/duplex/03.webp
+    fotoAlt: Sala del duplex con sofa cama
     enlace: /hospedajes/algarra-duplex
     etiquetaVer: Ver apartamento
 notaHabitaciones: ''
