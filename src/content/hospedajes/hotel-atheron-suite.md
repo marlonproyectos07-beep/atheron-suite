@@ -170,7 +170,11 @@ habitaciones:
     descripcion: >-
       Suite amplia y elegante, automatizada con Alexa: enciendes luces,
       televisor y musica con la voz. Se entra por puerta inteligente con clave
-      digital, y la barra es el punto de reunion. A una cuadra tienes
+      digital, y la barra es el punto de reunion. Tiene una practica estacion
+      para bebidas y alimentos ligeros, con nevera, cafetera, hervidor, platos,
+      copas y utensilios basicos; no hay estufa dentro de la habitacion, y para
+      cocinar de verdad esta la cocina compartida del segundo piso, con estufa a
+      gas, nevera, ollas y utensilios, de libre uso. A una cuadra tienes
       supermercados, droguerias, panaderias y restaurantes, y en quince minutos
       caminando estas en el centro historico y la Catedral de Sal.
     precio: Desde $ 150.000
@@ -193,7 +197,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-sala.jpg
         alt: Zona social de la Suite 301 con televisor, escritorio de trabajo y barra alta con taburetes
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-cocina.jpg
-        alt: Cocina equipada de la Suite 301 con barra, taburetes altos y nevera
+        alt: Estacion para bebidas y alimentos ligeros de la Suite 301, con barra, taburetes altos y nevera
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-bano.jpg
         alt: Bano privado de la Suite 301 con ducha de vidrio, sanitario y lavamanos
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-vista.jpg

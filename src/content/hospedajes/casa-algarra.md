@@ -32,6 +32,16 @@ galeria:
     alt: Sala del segundo piso de Casa Algarra
   - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-08-hall-piso-2.webp
     alt: Hall de distribucion del segundo piso de Casa Algarra, con acceso a las habitaciones
+  - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-09-habitacion-201.webp
+    alt: Habitacion 201 de Casa Algarra, con cama doble
+  - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-10-habitacion-202.webp
+    alt: Habitacion 202 de Casa Algarra, con dos camas
+  - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-12-habitacion-203-principal.webp
+    alt: Habitacion 203 principal de Casa Algarra, con dos camas y bano privado
+  - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-14-habitacion-204.webp
+    alt: Habitacion 204 de Casa Algarra, en el segundo piso
+  - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-15-habitacion-205.webp
+    alt: Habitacion 205 de Casa Algarra, en el segundo piso
 datos:
   - numero: '22'
     texto: Huespedes
@@ -61,7 +71,7 @@ caracteristicas:
     pendiente: false
   - texto: Agua caliente
     pendiente: false
-  - texto: Parqueadero hasta para 2 carros
+  - texto: Parqueadero propio para 2 carros, sin costo adicional
     pendiente: false
 listadoSector: Zipaquira
 listadoSegundoDato: '22'
@@ -177,6 +187,24 @@ habitaciones:
         alt: Habitacion 205 de Casa Algarra en Zipaquira
       - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-08-hall-piso-2.webp
         alt: Hall del segundo piso de Casa Algarra, por el que se accede a la habitacion
+antesDeReservar:
+  etiqueta: Antes de reservar
+  titulo: Lo que conviene saber
+  intro: Preferimos decirlo antes que despues. Si algo de esto te afecta, escribenos y lo miramos.
+  condiciones:
+    - titulo: Parqueadero incluido
+      texto: >-
+        Dos espacios para vehiculos dentro de la propiedad, frente a la
+        casa, sin costo adicional. Es una zona exterior, abierta y sin
+        cubierta, monitoreada por camaras.
+    - titulo: Si necesitas mas espacio
+      texto: >-
+        A unas cuatro cuadras, en el sector de la carrera 15 con calle 4,
+        hay un parqueadero publico. Es un establecimiento independiente
+        de Casa Algarra: la disponibilidad, el horario y la tarifa se
+        confirman directamente alli, y el pago se hace en el parqueadero.
+      enlace: 'https://www.google.com/maps/search/?api=1&query=Parqueadero%20P%C3%BAblico%20parque%20la%20esperanza%20Zipaquir%C3%A1'
+      enlaceTexto: Como llegar al parqueadero publico
 descripcionZona: En Zipaquira, Cundinamarca. La direccion exacta y las distancias se publican en cuanto esten confirmadas.
 descripcionZonaPendiente: false
 distancias: []
@@ -209,7 +237,7 @@ comodidades:
   - Sala
   - Comedor
   - Parqueadero para 2 carros
-actualizado: ''
+actualizado: 2026-09-03
 ---
 
 Casa Algarra es una casa entera en Zipaquira pensada para que un grupo

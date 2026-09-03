@@ -556,3 +556,19 @@
 }
 .tarifas__nota { margin-top: var(--esp-2); }
 .tarifas__cta { width: 100%; margin-top: var(--esp-3); justify-content: center; }
+
+/* Enlace externo dentro de una condicion de reserva. Va como boton
+   porque lleva fuera del sitio y conviene que se vea que lo hace. */
+.condicion__enlace { margin-top: var(--esp-2); }
+
+/* Nota de facturacion electronica. Discreta a proposito: no compite
+   con el boton de WhatsApp, pero responde la pregunta que siempre
+   hace quien reserva a nombre de una empresa. */
+.nota-factura {
+  margin-top: var(--esp-3);
+  padding: var(--esp-2) var(--esp-3);
+  border-left: 3px solid var(--borde);
+  font-size: .9rem;
+  color: var(--texto-suave);
+}
+.nota-factura strong { display: block; color: var(--color-gris-700); }
