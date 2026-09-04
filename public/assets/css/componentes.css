@@ -324,6 +324,23 @@
 .tarjeta:hover { transform: translateY(-4px); box-shadow: var(--sombra-md); }
 
 .tarjeta__media { position: relative; }
+.tarjeta__imagen-enlace {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.tarjeta__imagen-enlace:focus-visible {
+  outline: 3px solid var(--acento);
+  outline-offset: -3px;
+}
+.tarjeta__imagen-enlace .foto,
+.tarjeta__imagen-enlace .placeholder {
+  transition: transform var(--transicion), filter var(--transicion);
+}
+.tarjeta__imagen-enlace:hover .foto {
+  transform: scale(1.015);
+  filter: brightness(.94);
+}
 .tarjeta__media .placeholder { border-radius: 0; }
 
 .tarjeta__insignia {
