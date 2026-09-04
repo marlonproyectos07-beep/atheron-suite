@@ -74,7 +74,7 @@ habitaciones:
     banos: Bano privado
     descripcion: La opcion de mayor capacidad, para hasta cuatro huespedes adultos, con agua caliente, television y wifi.
     precio: $ 65.000 por persona
-    pendiente:: false
+    pendiente: false
 notaHabitaciones: El hotel tiene doce habitaciones con una cama doble y una habitacion con dos camas dobles. No se admiten menores de edad.
 heroFoto: false
 tarifas:
