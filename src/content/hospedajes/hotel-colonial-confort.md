@@ -1,6 +1,6 @@
 ---
 nombre: Hotel Colonial Confort
-publicado: false
+publicado: true
 orden: 5
 insignia: '05'
 modalidad: habitaciones
@@ -8,7 +8,7 @@ titulo: Hotel Colonial Confort en Zipaquira | Hospedaje para parejas
 descripcion: Hotel aliado para parejas y grupos de adultos en el centro de Zipaquira, cerca de la Catedral de Sal. Consulta disponibilidad con Atheron Suite.
 ogTitulo: Hotel Colonial Confort | Centro de Zipaquira
 ogDescripcion: Habitaciones privadas para parejas y grupos de adultos en el centro de Zipaquira, cerca de la Catedral de Sal.
-avisoBorrador: Ficha en preparacion. Fotografias reales integradas; pendiente de auditoria final antes de publicar.
+avisoBorrador: ''
 avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operacion y la entrega de las habitaciones se coordinan con la administracion del hotel.
 zona: Centro de Zipaquira
 localidad: Zipaquira
@@ -130,10 +130,7 @@ antesDeReservar:
       texto: El check-in es desde las 6:00 p. m. y el check-out hasta las 10:00 a. m. La atencion esta disponible las 24 horas. Ingresar antes o salir despues cuesta $ 10.000 por cada hora adicional y debe coordinarse previamente.
 descripcionZona: En el centro de Zipaquira, en la Carrera 9. Su ubicacion facilita el acceso al centro historico y a la Catedral de Sal; las distancias exactas se verificaran antes de publicar.
 descripcionZonaPendiente: false
-distancias:
-  - lugar: Catedral de Sal
-    valor: Distancia exacta pendiente de medicion
-    pendiente: true
+distancias: []
 horarios:
   - lugar: Entrada (check-in)
     valor: Desde las 6:00 p. m.
@@ -156,8 +153,8 @@ mapaNota: El punto publico de Google Maps esta confirmado. La direccion e instru
 mapaNotaPendiente: false
 experiencias:
   - titulo: Catedral de Sal
-    texto: El principal atractivo turistico de Zipaquira se encuentra cerca del sector; el tiempo exacto se confirmara antes de publicar.
-    pendiente: true
+    texto: Desde el centro de Zipaquira es facil desplazarse hacia la Catedral de Sal. Consulta la ruta en el mapa antes de salir.
+    pendiente: false
   - titulo: Centro historico
     texto: Restaurantes, comercio y plazas del centro de Zipaquira se encuentran en el entorno.
     pendiente: false
