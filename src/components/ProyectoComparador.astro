@@ -1,0 +1,180 @@
+---
+/* ============================================================
+   COMPARADOR DE TRES ESTADOS DE UN MISMO ESPACIO
+
+   Ensena, para cada espacio de la casa:
+
+     1. Estado actual          fotografia real.
+     2. Representacion conceptual  imagen generada, siempre rotulada.
+     3. Resultado final        todavia no existe: "proximamente".
+
+   POR QUE NO ES UN DESLIZADOR
+
+   El control de arrastrar (esa barra vertical que se mueve con el
+   raton) es la solucion habitual para comparar dos fotos, y es
+   justo la que no sirve aqui: no se puede usar con teclado, un
+   lector de pantalla no puede contar lo que ocurre, y en celular
+   compite con el gesto de desplazar la pagina.
+
+   Aqui la comparacion se hace con botones. Por debajo son botones
+   de opcion (radio) de HTML, asi que:
+
+     - funcionan sin JavaScript, tambien si el guion falla;
+     - se recorren con las flechas del teclado, como cualquier
+       grupo de opciones;
+     - un lector de pantalla anuncia el grupo, cuantas opciones hay
+       y cual esta elegida;
+     - no hay nada que arrastrar.
+
+   Los botones se ven como botones porque el circulo del radio esta
+   oculto y la etiqueta esta estilizada, pero el foco del teclado
+   sigue siendo visible: el anillo se pinta sobre la etiqueta.
+
+   REGLA QUE NO SE TOCA
+   Debajo de cada imagen conceptual van SIEMPRE los dos avisos:
+   que no corresponde al estado actual, y que el diseno puede
+   cambiar. No son decorativos: son la diferencia entre ensenar una
+   idea y prometer un resultado.
+   ============================================================ */
+
+import Foto from './Foto.astro';
+import ProyectoEstado from './ProyectoEstado.astro';
+import {
+  fechaEnTexto,
+  ETIQUETA_CONCEPTUAL,
+  AVISO_CONCEPTUAL,
+  AVISO_CONCEPTUAL_CORTO,
+} from '../data/casa-colonial-centro';
+import type { BloqueTransformacion } from '../data/casa-colonial-centro';
+
+interface Props {
+  bloques: BloqueTransformacion[];
+}
+
+const { bloques } = Astro.props;
+
+/* Solo se pinta lo aprobado, igual que en la galeria. */
+const visibles = bloques.filter((b) => b.aprobado);
+
+/* Sin espacios cargados se pinta uno reservado. No es contenido de
+   relleno: es el mismo componente funcionando en vacio, para poder
+   revisar el diseno y el manejo por teclado antes de que lleguen
+   las fotos. */
+const RESERVADO: BloqueTransformacion = {
+  id: 'reservado',
+  titulo: 'Espacio pendiente de selección',
+  fotoActual: null,
+  fotoConceptual: null,
+  descripcionActual: null,
+  descripcionPropuesta: null,
+  estadoProyecto: 'PENDIENTE',
+  actualizado: null,
+  aprobado: true,
+};
+
+const aPintar = visibles.length ? visibles : [RESERVADO];
+---
+
+{aPintar.map((bloque) => (
+  <article class="comparador">
+    <header class="comparador__cabecera">
+      <h3 class="comparador__titulo">{bloque.titulo}</h3>
+      <ProyectoEstado estado={bloque.estadoProyecto} />
+      {bloque.actualizado && (
+        <p class="comparador__fecha texto-suave">
+          Actualizado el <time datetime={bloque.actualizado}>{fechaEnTexto(bloque.actualizado)}</time>
+        </p>
+      )}
+    </header>
+
+    <fieldset class="comparador__control">
+      <legend class="solo-lectores">Qué quieres ver de {bloque.titulo}</legend>
+
+      <input
+        class="comparador__radio comparador__radio--actual"
+        type="radio"
+        name={`comparador-${bloque.id}`}
+        id={`${bloque.id}-actual`}
+        checked
+      />
+      <label class="comparador__boton" for={`${bloque.id}-actual`}>Ver estado actual</label>
+
+      <input
+        class="comparador__radio comparador__radio--conceptual"
+        type="radio"
+        name={`comparador-${bloque.id}`}
+        id={`${bloque.id}-conceptual`}
+      />
+      <label class="comparador__boton" for={`${bloque.id}-conceptual`}>Ver representación conceptual</label>
+
+      <input
+        class="comparador__radio comparador__radio--final"
+        type="radio"
+        name={`comparador-${bloque.id}`}
+        id={`${bloque.id}-final`}
+      />
+      <label class="comparador__boton" for={`${bloque.id}-final`}>Resultado final</label>
+
+      <div class="comparador__paneles">
+
+        {/* 1. ESTADO ACTUAL — fotografia real */}
+        <div class="comparador__panel comparador__panel--actual">
+          <Foto
+            src={bloque.fotoActual?.ruta}
+            alt={bloque.fotoActual?.alt}
+            forma="ancho"
+          >
+            Fotografía real pendiente
+          </Foto>
+          <p class="comparador__rotulo comparador__rotulo--real">
+            Fotografía real del estado actual
+          </p>
+          {bloque.descripcionActual ? (
+            <p class="comparador__texto">{bloque.descripcionActual}</p>
+          ) : (
+            <p class="comparador__texto texto-suave">
+              Descripción del estado actual pendiente de aprobación.
+            </p>
+          )}
+        </div>
+
+        {/* 2. REPRESENTACION CONCEPTUAL — siempre rotulada */}
+        <div class="comparador__panel comparador__panel--conceptual">
+          <div class="comparador__marco-conceptual">
+            <Foto
+              src={bloque.fotoConceptual?.ruta}
+              alt={bloque.fotoConceptual?.alt}
+              forma="ancho"
+            >
+              Representación conceptual pendiente
+            </Foto>
+            <span class="comparador__sello">{ETIQUETA_CONCEPTUAL}</span>
+          </div>
+          <p class="comparador__rotulo comparador__rotulo--conceptual">
+            {AVISO_CONCEPTUAL_CORTO}
+          </p>
+          <p class="comparador__aviso">{AVISO_CONCEPTUAL}</p>
+          {bloque.descripcionPropuesta ? (
+            <p class="comparador__texto">{bloque.descripcionPropuesta}</p>
+          ) : (
+            <p class="comparador__texto texto-suave">
+              Descripción de la propuesta pendiente de aprobación.
+            </p>
+          )}
+        </div>
+
+        {/* 3. RESULTADO FINAL — todavia no existe */}
+        <div class="comparador__panel comparador__panel--final">
+          <div class="placeholder placeholder--ancho">Próximamente</div>
+          <p class="comparador__rotulo">Resultado final — próximamente</p>
+          <p class="comparador__texto texto-suave">
+            La obra está en curso. Aquí se publicará la fotografía del espacio
+            terminado cuando exista, y no antes.
+          </p>
+        </div>
+
+      </div>
+    </fieldset>
+  </article>
+))}
+

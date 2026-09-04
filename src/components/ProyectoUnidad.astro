@@ -1,0 +1,62 @@
+---
+/* ============================================================
+   TARJETA DE UNA UNIDAD DEL PROYECTO
+
+   Hotel, restaurante, cafeteria y gastrobar. Cada una se presenta
+   con una frase y un boton que despliega su detalle.
+
+   POR QUE EL DETALLE SE ABRE CON <details> Y NO CON UNA VENTANA
+
+   Una ventana emergente hay que construirla entera: abrir, cerrar
+   con Escape, atrapar el foco dentro, devolverlo al boton al salir
+   y avisar al lector de pantalla. Todo eso con JavaScript, y con
+   JavaScript que puede no cargar.
+
+   <details> hace exactamente lo mismo sin una linea de guion: el
+   navegador ya sabe abrirlo, cerrarlo, enfocarlo y anunciarlo. Es
+   ademas la unica version que funciona si el visitante llega con
+   el buscador del navegador (Ctrl+F encuentra el texto cerrado).
+
+   NOMBRE DE LA CUARTA UNIDAD
+   En pantalla pone "Gastrobar". El nombre administrativo,
+   "Restaurante gastrobar", viaja en el atributo data-unidad y en
+   los datos estructurados. Nunca "bar" a secas.
+   ============================================================ */
+
+import ProyectoEstado from './ProyectoEstado.astro';
+import type { Unidad } from '../data/casa-colonial-centro';
+
+interface Props {
+  unidad: Unidad;
+}
+
+const { unidad } = Astro.props;
+---
+
+<article class="unidad" id={`unidad-${unidad.id}`} data-unidad={unidad.nombreAdministrativo}>
+  <h3 class="unidad__titulo">{unidad.titulo}</h3>
+  <ProyectoEstado estado={unidad.estado} />
+  <p class="unidad__texto">{unidad.texto}</p>
+
+  <details class="unidad__detalle">
+    <summary class="unidad__boton">{unidad.ctaTexto}</summary>
+
+    <div class="unidad__contenido">
+      {unidad.titulo !== unidad.nombreAdministrativo && (
+        <p class="unidad__nombre-formal texto-suave">
+          Denominación en trámites y documentos: {unidad.nombreAdministrativo}.
+        </p>
+      )}
+
+      {unidad.detalle ? (
+        <p>{unidad.detalle}</p>
+      ) : (
+        <p class="texto-suave">
+          La visión ampliada de esta unidad está en preparación. No se publican
+          capacidades, tarifas, aforos ni fechas mientras no estén confirmadas.
+        </p>
+      )}
+    </div>
+  </details>
+</article>
+

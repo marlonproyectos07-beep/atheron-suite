@@ -12,12 +12,17 @@ import fs from 'node:fs';
      editan alli como siempre: aqui solo se copian, sin comentarios
      y sin sangrado, que no le sirven de nada al navegador.
      ============================================================ */
-const estilos = ['base', 'componentes', 'paginas', 'hotel-selector']
-  .map((hoja) => fs.readFileSync('public/assets/css/' + hoja + '.css', 'utf8'))
-  .join('\n')
-  .replace(/\/\*[\s\S]*?\*\//g, '')
-  .replace(/\s+/g, ' ')
-  .trim();
+const HOJAS_DE_TODAS = ['base', 'componentes', 'paginas', 'hotel-selector'];
+
+/* Lee hojas de public/assets/css/ y las deja listas para incrustar:
+   sin comentarios y sin sangrado, que al navegador no le sirven. */
+const leeHojas = (nombres: string[]) =>
+  nombres
+    .map((hoja) => fs.readFileSync('public/assets/css/' + hoja + '.css', 'utf8'))
+    .join('\n')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 /* ============================================================
    BASE.ASTRO — el <head> de TODO el sitio en un solo archivo
@@ -59,6 +64,14 @@ interface Props {
   ogDescripcion?: string;
   /** false => se pide a Google que NO indexe la pagina (fichas en obra). */
   indexable?: boolean;
+  /** Solo cuenta si indexable es false.
+      true  (por defecto) => "noindex, follow": no la indexes, pero
+            sigue los enlaces que salen de ella. Es lo que quiere una
+            ficha en obra, que ya enlaza a paginas que si se indexan.
+      false => "noindex, nofollow": ademas, no sigas ningun enlace.
+            Es lo que quiere un borrador privado que todavia no
+            deberia existir para el buscador. */
+  seguirEnlaces?: boolean;
   /** Ficha de datos estructurados. null = esta pagina no lleva. */
   jsonLd?: Record<string, unknown> | null;
   /** Texto de la banda amarilla superior. null = no se muestra. */
@@ -67,6 +80,20 @@ interface Props {
   imagen?: string;
   /** Que se ve en esa foto. */
   imagenAlt?: string;
+  /* ------------------------------------------------------------
+     HOJAS DE ESTILO PROPIAS DE UNA SOLA PAGINA
+
+     Nombre de archivo dentro de public/assets/css/, sin extension.
+     Se incrusta detras de las cuatro de siempre, y SOLO en la
+     pagina que la pide: asi una pagina con estilos propios no le
+     anade peso a la portada.
+
+     Se hace desde aqui, y no con un <style> dentro de la pagina,
+     porque Astro saca los bloques grandes como archivo aparte, y
+     eso es una peticion que bloquea el pintado. Todo el sitio
+     evita justamente eso incrustando su CSS.
+     ------------------------------------------------------------ */
+  hojasExtra?: string[];
 }
 
 const {
@@ -77,15 +104,28 @@ const {
   ogTitulo,
   ogDescripcion,
   indexable = true,
+  seguirEnlaces = true,
   jsonLd = null,
   avisoBorrador = null,
   imagen,
   imagenAlt,
+  hojasExtra = [],
 } = Astro.props;
+
+const estilos = leeHojas([...HOJAS_DE_TODAS, ...hojasExtra]);
 
 // new URL() une el dominio de astro.config.mjs con la ruta de la pagina.
 // De aqui salen la canonica y og:url, siempre iguales entre si.
 const urlCanonica = new URL(ruta, Astro.site).href;
+
+/* La instruccion para los buscadores. null = no se escribe la
+   etiqueta, que es como se pide que SI se indexe: no existe un
+   "index, follow" que haga falta declarar. */
+const robots = indexable
+  ? null
+  : seguirEnlaces
+    ? 'noindex, follow'
+    : 'noindex, nofollow';
 /* og:image tiene que ser una direccion absoluta: WhatsApp y Facebook la
    piden desde fuera y una ruta relativa no les sirve de nada. */
 const urlImagen = imagen ? new URL(imagen, Astro.site).href : null;
@@ -110,7 +150,7 @@ const urlImagen = imagen ? new URL(imagen, Astro.site).href : null;
        castiga a nivel de todo el dominio. Es mejor 1 pagina buena
        indexada que 7 flojas.
        ============================================================ */}
-  {!indexable && <meta name="robots" content="noindex, follow" />}
+  {robots && <meta name="robots" content={robots} />}
 
   {/* ============================================================
        SEO

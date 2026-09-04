@@ -1,0 +1,415 @@
+/* ============================================================
+ PROYECTO-CASA-COLONIAL.CSS
+
+ Estilos de /proyectos/casa-colonial-centro y de los cuatro
+ componentes que solo usa esa pagina (ProyectoEstado,
+ ProyectoGaleria, ProyectoComparador y ProyectoUnidad).
+
+ POR QUE ESTA HOJA EXISTE Y NO ESTA EN COMPONENTES.CSS
+
+ Las cuatro hojas de siempre -base, componentes, paginas y
+ hotel-selector- se incrustan en TODAS las paginas del sitio.
+ Meter aqui el borrador de un proyecto haria que la portada
+ descargase estilos que no usa.
+
+ POR QUE TAMPOCO VA EN UN <style> DENTRO DE LA PAGINA
+
+ Se probo, y Astro la saco como archivo aparte por tamano: una
+ peticion mas que BLOQUEA el pintado, justo lo que el sitio evita
+ incrustando el CSS. Declarada como hoja extra, Base.astro la
+ incrusta igual que las otras cuatro, pero solo en la pagina que
+ la pide.
+
+ Se edita aqui como cualquier otra hoja del sitio.
+ ============================================================ */
+
+/* ------------------------------------------------------------
+ ESTADO DE UN BLOQUE DE CONTENIDO
+ ------------------------------------------------------------ */
+
+.estado-dato {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: var(--esp-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.estado-dato__punto {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.estado-dato[data-estado='VERIFICADO'] { color: var(--color-verde); }
+.estado-dato[data-estado='PENDIENTE']  { color: #a16207; }
+.estado-dato[data-estado='PROPUESTA']  { color: var(--color-marca); }
+
+.estado-dato__nota {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--texto-suave);
+}
+
+/* En fondo oscuro el gris de la nota no contrasta lo suficiente. */
+.seccion--oscura .estado-dato,
+.seccion--oscura .estado-dato__nota {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* ------------------------------------------------------------
+ GALERIA DEL PROYECTO
+ ------------------------------------------------------------ */
+
+.galeria-proyecto__rotulo {
+  margin-bottom: var(--esp-3);
+  font-weight: 600;
+}
+
+.galeria-proyecto {
+  display: grid;
+  gap: var(--esp-2);
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 900px) {
+  .galeria-proyecto { grid-template-columns: repeat(3, 1fr); }
+}
+
+.galeria-proyecto__item {
+  overflow: hidden;
+  border-radius: var(--radio-md);
+  background: var(--fondo);
+  box-shadow: var(--sombra-sm);
+}
+
+.galeria-proyecto__pie {
+  display: grid;
+  gap: 0.15rem;
+  padding: var(--esp-2);
+  font-size: 0.85rem;
+}
+
+.galeria-proyecto__tipo {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--acento);
+}
+
+.galeria-proyecto__dato { color: var(--texto-suave); }
+.galeria-proyecto__texto { color: var(--texto-suave); }
+
+.galeria-proyecto__espera {
+  margin-top: var(--esp-3);
+  font-size: 0.9rem;
+}
+
+/* ------------------------------------------------------------
+ COMPARADOR DE TRES ESTADOS
+ ------------------------------------------------------------ */
+
+.comparador {
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-lg);
+  background: var(--fondo);
+}
+
+.comparador + .comparador { margin-top: var(--esp-4); }
+
+.comparador__cabecera { margin-bottom: var(--esp-3); }
+.comparador__titulo { margin-bottom: var(--esp-1); }
+.comparador__fecha { font-size: 0.85rem; }
+
+/* El fieldset se usa por lo que significa -un grupo de opciones-,
+   no por como se ve: su borde y su margen de serie sobran. */
+.comparador__control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* El circulo del radio se oculta, pero el control sigue existiendo
+   y recibiendo el foco: por eso no se usa display:none. */
+.comparador__radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.comparador__boton {
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--texto);
+  background: var(--fondo);
+  cursor: pointer;
+  transition: background var(--transicion), color var(--transicion);
+}
+
+.comparador__radio:checked + .comparador__boton {
+  color: var(--color-blanco);
+  background: var(--color-noche);
+  border-color: var(--color-noche);
+}
+
+/* El foco del teclado se pinta sobre la etiqueta, que es lo que se
+   ve. Sin esto, quien navega con tabulador no sabria donde esta. */
+.comparador__radio:focus-visible + .comparador__boton {
+  outline: 3px solid var(--color-sal);
+  outline-offset: 2px;
+}
+
+.comparador__paneles {
+  /* El ancho completo de la fila: los botones quedan encima. */
+  flex-basis: 100%;
+  margin-top: var(--esp-3);
+}
+
+.comparador__panel { display: none; }
+
+/* Que panel se ve lo decide el radio marcado. Sin JavaScript. */
+.comparador__radio--actual:checked ~ .comparador__paneles .comparador__panel--actual,
+.comparador__radio--conceptual:checked ~ .comparador__paneles .comparador__panel--conceptual,
+.comparador__radio--final:checked ~ .comparador__paneles .comparador__panel--final {
+  display: block;
+}
+
+.comparador__marco-conceptual { position: relative; }
+
+/* Rotulo permanente sobre la imagen conceptual. Va encima de la
+   foto a proposito: si alguien recorta o comparte la imagen, el
+   rotulo viaja con ella. */
+.comparador__sello {
+  position: absolute;
+  inset-block-start: var(--esp-2);
+  inset-inline-start: var(--esp-2);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-blanco);
+  background: rgba(15, 23, 42, 0.88);
+}
+
+.comparador__rotulo {
+  margin-top: var(--esp-2);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.comparador__rotulo--real { color: var(--color-verde); }
+.comparador__rotulo--conceptual { color: #a16207; }
+
+.comparador__aviso {
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+}
+
+.comparador__texto { margin-top: var(--esp-2); }
+
+@media (max-width: 560px) {
+  .comparador__control { flex-direction: column; align-items: stretch; }
+  .comparador__boton { text-align: center; }
+}
+
+/* ------------------------------------------------------------
+ TARJETAS DE LAS CUATRO UNIDADES
+ ------------------------------------------------------------ */
+
+.unidad {
+  display: flex;
+  flex-direction: column;
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-lg);
+  background: var(--fondo);
+  box-shadow: var(--sombra-sm);
+}
+
+.unidad__titulo { margin-bottom: var(--esp-1); }
+.unidad__texto { color: var(--texto-suave); }
+
+.unidad__detalle { margin-top: auto; padding-top: var(--esp-3); }
+
+/* El triangulo de serie del navegador se quita y se pinta uno
+   propio, que gira al abrir. list-style va con ::-webkit-details
+   -marker para cubrir tambien Safari. */
+.unidad__boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--color-marca);
+  cursor: pointer;
+  list-style: none;
+}
+
+.unidad__boton::-webkit-details-marker { display: none; }
+
+.unidad__boton::after {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform var(--transicion);
+}
+
+.unidad__detalle[open] .unidad__boton::after {
+  transform: rotate(-135deg) translate(-2px, -2px);
+}
+
+.unidad__contenido {
+  margin-top: var(--esp-2);
+  padding-top: var(--esp-2);
+  border-top: 1px solid var(--borde);
+  font-size: 0.95rem;
+}
+
+.unidad__nombre-formal {
+  margin-bottom: var(--esp-1);
+  font-size: 0.85rem;
+}
+
+/* ------------------------------------------------------------
+ LA PAGINA
+ ------------------------------------------------------------ */
+
+/* Nota interna del hero. Solo existe mientras BORRADOR es true. */
+.hueco-hero {
+  max-width: 56ch;
+  margin-top: var(--esp-4);
+  padding: var(--esp-2);
+  border: 1px dashed rgba(255, 255, 255, 0.45);
+  border-radius: var(--radio-md);
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.columna-texto { max-width: 68ch; display: grid; gap: var(--esp-2); }
+
+.destacado {
+  max-width: 68ch;
+  margin-top: var(--esp-4);
+  padding-left: var(--esp-3);
+  border-left: 4px solid var(--acento);
+  font-family: var(--fuente-titulo);
+  font-size: clamp(1.15rem, 2.2vw, 1.5rem);
+  line-height: 1.35;
+}
+
+/* ---------- Modelo: lo que se ve fuera y lo que hay dentro ---------- */
+.modelo { display: grid; gap: var(--esp-3); }
+
+@media (min-width: 800px) {
+  .modelo { grid-template-columns: 1fr 1.4fr; align-items: start; }
+}
+
+.modelo__cara {
+  padding: var(--esp-3);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radio-lg);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.modelo__titulo { margin-bottom: var(--esp-2); }
+
+.modelo__lista { display: grid; gap: 0.4rem; }
+
+.modelo__lista li {
+  padding-left: 1.2rem;
+  position: relative;
+}
+
+.modelo__lista li::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0.6rem;
+  inset-inline-start: 0;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--color-sal);
+}
+
+.modelo__unidades {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: var(--esp-3);
+  padding-top: var(--esp-3);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+@media (min-width: 560px) {
+  .modelo__unidades { grid-template-columns: repeat(2, 1fr); }
+}
+
+.modelo__unidades li {
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radio-sm);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+/* ---------- Alianzas ---------- */
+.tarjeta-alianza {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-lg);
+  background: var(--fondo);
+  box-shadow: var(--sombra-sm);
+}
+
+.tarjeta-alianza .boton { margin-top: auto; }
+
+/* ---------- Aviso informativo ---------- */
+.nota-legal {
+  max-width: 68ch;
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-lg);
+  background: var(--fondo-alterno);
+}
+
+.nota-legal__titulo { font-size: 1.2rem; margin-bottom: var(--esp-1); }
+
+.nota-legal__lista { display: grid; gap: var(--esp-2); font-size: 0.92rem; }
+
+.nota-legal__lista li { padding-left: 1.2rem; position: relative; }
+
+.nota-legal__lista li::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0.6rem;
+  inset-inline-start: 0;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--texto-suave);
+}

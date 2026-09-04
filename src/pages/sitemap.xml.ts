@@ -33,7 +33,16 @@ interface Entrada {
 }
 
 /* Las paginas fijas del sitio. Las fichas y los articulos se
-   anaden solos mas abajo. */
+   anaden solos mas abajo.
+
+   NO ESTA AQUI, Y ES A PROPOSITO:
+   /proyectos/casa-colonial-centro es un borrador privado. Sale con
+   noindex y nofollow, sin enlace desde ninguna parte del sitio, y
+   por eso tampoco entra en el sitemap: pedirle a Google que visite
+   una pagina a la que le estamos diciendo que no la indexe es
+   contradictorio. Se anadira cuando el proyecto se apruebe para
+   publicacion, junto con el interruptor BORRADOR de
+   src/data/casa-colonial-centro.ts. */
 const paginasFijas: Entrada[] = [
   { ruta: '/', prioridad: '1.0' },
   { ruta: '/landing/hospedaje-en-zipaquira', prioridad: '0.9' },

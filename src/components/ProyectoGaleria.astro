@@ -1,0 +1,104 @@
+---
+/* ============================================================
+   GALERIA DE UN PROYECTO EN OBRA
+
+   Muestra fotografias REALES: el estado actual y el proceso de
+   recuperacion. Nada mas.
+
+   TRES REGLAS QUE ESTE COMPONENTE HACE CUMPLIR SOLO:
+
+   1. Solo entra lo aprobado. Una foto con "aprobada: false" no se
+      pinta, aunque su archivo exista. El manifiesto fotografico
+      manda, no la carpeta.
+
+   2. Aqui no caben las representaciones conceptuales. Si alguna se
+      cuela en los datos, se descarta y se avisa por consola al
+      construir. Poner una imagen generada bajo el rotulo
+      "fotografias reales del estado actual" seria exactamente la
+      mentira que el proyecto no puede permitirse.
+
+   3. Sin fotos aprobadas, se pintan huecos reservados. La pagina se
+      ve entera y se puede revisar el diseno, pero nadie puede
+      confundir un hueco con una foto.
+   ============================================================ */
+
+import Foto from './Foto.astro';
+import { fechaEnTexto } from '../data/casa-colonial-centro';
+import type { FotoProyecto } from '../data/casa-colonial-centro';
+
+interface Props {
+  fotos: FotoProyecto[];
+  /** Rotulo obligatorio que acompana a la galeria. */
+  etiqueta: string;
+  /** Cuantos huecos se pintan mientras no haya fotos aprobadas. */
+  huecos?: number;
+}
+
+const { fotos, etiqueta, huecos = 6 } = Astro.props;
+
+const conceptuales = fotos.filter((f) => f.tipo === 'CONCEPTUAL');
+if (conceptuales.length) {
+  console.warn(
+    '[ProyectoGaleria] Se han descartado ' + conceptuales.length +
+    ' imagenes conceptuales: esta galeria es solo de fotografias reales. ' +
+    'Las conceptuales van en el comparador, siempre rotuladas.',
+  );
+}
+
+const visibles = fotos.filter((f) => f.aprobada && f.tipo !== 'CONCEPTUAL');
+
+/* La orientacion del archivo decide la forma del hueco, para que la
+   pagina no de un salto cuando la foto llegue de verdad. */
+const FORMA = {
+  vertical: 'alto',
+  horizontal: 'ancho',
+  cuadrada: 'cuadrado',
+} as const;
+
+const TIPO = { REAL: 'Estado actual', OBRA: 'Proceso de obra' } as const;
+---
+
+<p class="galeria-proyecto__rotulo">{etiqueta}</p>
+
+{visibles.length > 0 ? (
+  <ul class="galeria-proyecto">
+    {visibles.map((foto) => (
+      <li class="galeria-proyecto__item">
+        <figure>
+          <Foto
+            src={foto.ruta}
+            alt={foto.alt}
+            forma={foto.orientacion ? FORMA[foto.orientacion] : undefined}
+          />
+          <figcaption class="galeria-proyecto__pie">
+            <span class="galeria-proyecto__tipo">{TIPO[foto.tipo as 'REAL' | 'OBRA']}</span>
+            <strong>{foto.espacio}</strong>
+            {foto.planta && <span class="galeria-proyecto__dato">{foto.planta}</span>}
+            {foto.fecha && (
+              <span class="galeria-proyecto__dato">
+                <time datetime={foto.fecha}>{fechaEnTexto(foto.fecha)}</time>
+              </span>
+            )}
+            {foto.descripcion && <span class="galeria-proyecto__texto">{foto.descripcion}</span>}
+            {foto.credito && <span class="galeria-proyecto__dato">Foto: {foto.credito}</span>}
+          </figcaption>
+        </figure>
+      </li>
+    ))}
+  </ul>
+) : (
+  <>
+    <ul class="galeria-proyecto">
+      {Array.from({ length: huecos }).map(() => (
+        <li class="galeria-proyecto__item">
+          <div class="placeholder">Espacio reservado</div>
+        </li>
+      ))}
+    </ul>
+    <p class="galeria-proyecto__espera texto-suave">
+      Las fotografías se integrarán cuando llegue el manifiesto aprobado.
+      Hasta entonces esta galería muestra huecos reservados, no imágenes.
+    </p>
+  </>
+)}
+
