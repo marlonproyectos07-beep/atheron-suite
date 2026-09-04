@@ -54,6 +54,62 @@ se muestra en ninguna página.
 - Las camas dobles miden 1,40 m.
 - Los apartamentos conservan, en términos generales, el mismo diseño, estructura y acabados.
 
+## Google Drive: bloqueado desde el entorno de trabajo
+
+La carpeta de Drive con los 48 JPEG originales, el vídeo del 402 y los
+archivos de inventario **no se puede descargar desde el entorno de Claude
+Code**. No es el enlace ni los permisos: el proxy de salida deniega la
+conexión por política de la organización.
+
+```
+curl https://drive.google.com/...
+curl: (56) CONNECT tunnel failed, response 403
+```
+
+`www.googleapis.com` responde 403. Queda anotado para que nadie vuelva a
+intentarlo por ahí. Las dos vías que sí funcionan:
+
+1. Subir el paquete como **adjunto a la conversación**, igual que se hizo con
+   los ZIP de la 301, la 302, la 201, las 202/203, Casa Algarra y Casa Neusa.
+2. Habilitar `drive.google.com` en la política de salida del entorno.
+
+Cuando llegue el material por adjunto, verificar **SHA256SUMS.txt** antes de
+tocar nada.
+
+## ⚠️ Contradicción de datos sobre el parqueadero — SIN RESOLVER
+
+Hay dos versiones del mismo dato y **no se ha elegido ninguna por cuenta
+propia**. Esto lo tiene que zanjar la administración:
+
+| Fuente | Qué dice |
+|---|---|
+| Dato que Marlon confirmó por escrito | **2 puestos** para vehículos de tamaño normal, **dentro del edificio y detrás del portón**. Sin mención de motos. Costo adicional en reservas individuales; incluibles sin costo en reservas del grupo completo |
+| Lo que la ficha publica hoy | **2 espacios cubiertos para carros y 3 para motos**, con tarifa publicada de **$ 20.000 por carro y $ 10.000 por moto**, pagados en las instalaciones |
+
+Las diferencias no son de matiz: aparecen tres puestos de moto que el dato
+confirmado no menciona, y se publican tarifas concretas cuando la instrucción
+decía no publicar costos de parqueadero. Puede que Edwin haya confirmado esto
+después y sea correcto; pero mientras las dos versiones convivan, la ficha
+está afirmando algo que no coincide con el último dato entregado por escrito.
+
+**Hasta que se aclare, no se toca ninguna de las dos.** Cambiarlo por
+inferencia sería elegir qué versión contarle al cliente.
+
+## Pendiente de decisión sobre lo ya publicado en la rama
+
+Tres cosas están hechas en la rama pero cruzan instrucciones expresas del
+encargo. No se revierten sin decisión de Marlon y ChatGPT:
+
+1. **El vídeo del 402 está conectado** a la ficha maestra. La instrucción era
+   dejar la estructura preparada y **no publicarlo todavía**.
+2. **Las galerías están conectadas** al contenido público. La instrucción era
+   no conectarlas hasta la revisión de ChatGPT y Marlon.
+3. **Dos páginas publicadas cambian**: la portada y el listado. Las imágenes
+   de las tarjetas pasan a ser clicables y la rejilla de la portada pasa de 3
+   a 4 columnas. Eso alcanza a Hotel Atheron Suite, Casa Algarra y Casa
+   Neusa, y el encargo anterior pedía expresamente no hacer las tarjetas
+   clicables todavía.
+
 ## Datos pendientes de confirmar
 
 1. **Nombre comercial del edificio.** Las fichas usan «Apartamentos en
