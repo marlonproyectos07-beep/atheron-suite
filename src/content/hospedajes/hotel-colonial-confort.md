@@ -123,7 +123,7 @@ antesDeReservar:
     - titulo: Capacidad grupal
       texto: Las camas fijas permiten alojar hasta 28 adultos. Para grupos de 29 o 30 se agrega una colchoneta adicional, informada y confirmada antes de reservar.
     - titulo: Horarios y horas adicionales
-      texto: El check-in es desde las 6:00 p. m. y el check-out hasta las 10:00 a. m. La atencion esta disponible las 24 horas. Cada hora adicional cuesta $ 10.000 y debe coordinarse previamente.
+      texto: El check-in es desde las 6:00 p. m. y el check-out hasta las 10:00 a. m. La atencion esta disponible las 24 horas. Ingresar antes o salir despues cuesta $ 10.000 por cada hora adicional y debe coordinarse previamente.
 descripcionZona: En el centro de Zipaquira, en la Carrera 9. Su ubicacion facilita el acceso al centro historico y a la Catedral de Sal; las distancias exactas se verificaran antes de publicar.
 descripcionZonaPendiente: false
 distancias:
@@ -140,8 +140,8 @@ horarios:
   - lugar: Atencion
     valor: Disponible las 24 horas
     pendiente: false
-  - lugar: Hora adicional
-    valor: $ 10.000 por hora, con coordinacion previa
+  - lugar: Ingreso anticipado o salida posterior
+    valor: $ 10.000 por cada hora adicional, con coordinacion previa
     pendiente: false
 direccionPublica: false
 mapaBbox: ''
