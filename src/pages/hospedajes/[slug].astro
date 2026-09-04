@@ -21,6 +21,7 @@ export async function getStaticPaths() {
 const { ficha } = Astro.props;
 const d = ficha.data;
 const ruta = `/hospedajes/${ficha.id}`;
+const heroConVariantes = !d.fotoPrincipal?.startsWith('/assets/edificio-algarra/');
 /* La presentacion comercial la manda el contenido, no el nombre del
    hospedaje. Antes esto era ficha.id === 'hotel-atheron-suite' y toda
    la seccion estaba escrita a medida de esa ficha: para montar la
@@ -49,6 +50,7 @@ const tarifas = d.tarifas ?? null;
 const espacios = d.espacios?.lista.length ? d.espacios : null;
 const opiniones = d.pruebaSocial ?? null;
 const condiciones = d.antesDeReservar ?? null;
+const faq = d.faq?.preguntas.length ? d.faq : null;
 const videos = d.habitaciones
   .map((h, i) => (h.video ? { ...h.video, id: `visor-video-${i + 1}` } : null))
   .filter((v) => v !== null);
@@ -63,6 +65,7 @@ const enlacesMovil = menuFichaMovil.filter((e) => {
   if (e.href === '#tarifas') return Boolean(tarifas);
   if (e.href === '#espacios') return Boolean(espacios);
   if (e.href === '#opiniones') return Boolean(opiniones);
+  if (e.href === '#faq') return Boolean(faq);
   return true;
 });
 
@@ -180,10 +183,10 @@ function idHabitacion(nombre) {
             d.heroEncuadreMovil && `--encuadre-movil: ${d.heroEncuadreMovil}`,
           ].filter(Boolean).join('; ') || undefined}
         >
-          <source media="(max-width: 700px)" type="image/avif" srcset={`${baseHero}-700.avif`} />
-          <source media="(max-width: 700px)" type="image/webp" srcset={`${baseHero}-700.webp`} />
-          <source type="image/avif" srcset={`${baseHero}-900.avif`} />
-          <source type="image/webp" srcset={`${baseHero}-900.webp`} />
+          {heroConVariantes && <source media="(max-width: 700px)" type="image/avif" srcset={`${baseHero}-700.avif`} />}
+          {heroConVariantes && <source media="(max-width: 700px)" type="image/webp" srcset={`${baseHero}-700.webp`} />}
+          {heroConVariantes && <source type="image/avif" srcset={`${baseHero}-900.avif`} />}
+          {heroConVariantes && <source type="image/webp" srcset={`${baseHero}-900.webp`} />}
           <img
             src={d.fotoPrincipal}
             alt=""
@@ -338,6 +341,56 @@ function idHabitacion(nombre) {
       </section>
     )}
 
+    {d.videoPrincipal && (
+      <section class="seccion video-principal" id="video">
+        <div class="contenedor video-principal__interior aparecer">
+          <div class="video-principal__texto">
+            <span class="etiqueta">Recorrido en video</span>
+            <h2>{d.videoPrincipal.titulo}</h2>
+            {d.videoPrincipal.descripcion && <p class="texto-suave">{d.videoPrincipal.descripcion}</p>}
+            {d.videoPrincipal.duracion && <span class="video-principal__duracion">{d.videoPrincipal.duracion}</span>}
+          </div>
+          {d.videoPrincipal.capitulos.length > 0 ? (
+            <div class="video-capitulos">
+              {d.videoPrincipal.capitulos.map((capitulo, i) => (
+                <article class="video-capitulo">
+                  <h3>{i + 1}. {capitulo.titulo}</h3>
+                  <video
+                    class="video-principal__reproductor"
+                    controls
+                    playsinline
+                    preload="none"
+                    poster={capitulo.poster}
+                    width={d.videoPrincipal.ancho}
+                    height={d.videoPrincipal.alto}
+                    aria-label={capitulo.titulo}
+                  >
+                    <source src={capitulo.src} type="video/mp4" />
+                    Tu navegador no puede reproducir este video.
+                  </video>
+                  {capitulo.duracion && <span class="video-principal__duracion">{capitulo.duracion}</span>}
+                </article>
+              ))}
+            </div>
+          ) : d.videoPrincipal.src ? (
+            <video
+              class="video-principal__reproductor"
+              controls
+              playsinline
+              preload="none"
+              poster={d.videoPrincipal.poster}
+              width={d.videoPrincipal.ancho}
+              height={d.videoPrincipal.alto}
+              aria-label={d.videoPrincipal.titulo}
+            >
+              <source src={d.videoPrincipal.src} type="video/mp4" />
+              Tu navegador no puede reproducir este video.
+            </video>
+          ) : null}
+        </div>
+      </section>
+    )}
+
     {hayHabitaciones && (
       <section class:list={['seccion', 'seccion--alterna', casa && 'hotel-selector-seccion']} id="habitaciones">
         <div class="contenedor">
@@ -402,6 +455,9 @@ function idHabitacion(nombre) {
               <div class="hotel-habitaciones-grid">
                 {d.habitaciones.map((h) => {
                   const id = idHabitacion(h.nombre);
+                  /* Si la unidad tiene ficha propia, los enlaces van
+                     alli en vez de al bloque de detalle de esta pagina. */
+                  const destino = h.enlace ?? `#detalle-${id}`;
                   const datos = [
                     dato(h.huespedes, 'huesped', 'huespedes'),
                     dato(h.camas, 'cama', 'camas'),
@@ -410,7 +466,7 @@ function idHabitacion(nombre) {
 
                   return (
                     <article class="hotel-mini" data-destacada={h.destacada ? '' : undefined}>
-                      <a class="hotel-mini__foto" href={`#detalle-${id}`} aria-label={`Ver fotos y detalles de ${h.nombre}`}>
+                      <a class="hotel-mini__foto" href={destino} aria-label={`Ver fotos y detalles de ${h.nombre}`}>
                         {/* El distintivo va en el DOM y no como contenido de
                              CSS: dice algo que el visitante necesita saber
                              -si el bano es suyo o compartido- y eso tiene que
@@ -439,7 +495,7 @@ function idHabitacion(nombre) {
                         <div class="hotel-mini__acciones">
                           <a
                             class="boton boton--contorno"
-                            href={`#detalle-${id}`}
+                            href={destino}
                             data-etiqueta-ver={h.etiquetaVer ?? undefined}
                           >Ver fotos y detalles</a>
                           <a
@@ -619,7 +675,7 @@ function idHabitacion(nombre) {
         <div class="contenedor">
           <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
             <span class="etiqueta">Galeria</span>
-            <h2>Fotos del hospedaje</h2>
+            <h2>{d.videoPrincipal ? 'Fotos y video del hospedaje' : 'Fotos del hospedaje'}</h2>
           </div>
           {/* Cada foto va dentro de un boton, igual que en las galerias de
                las habitaciones. Antes eran <div> sueltos: se veian, pero
@@ -643,6 +699,28 @@ function idHabitacion(nombre) {
                   <Foto src={f.imagen} alt={f.alt} forma="cuadrado" />
                 </button>
               ))}
+              {d.videoPrincipal && (
+                <a
+                  class="galeria__video"
+                  href="#video"
+                  aria-label={`Reproducir: ${d.videoPrincipal.titulo}`}
+                >
+                  <img
+                    class="foto foto--cuadrado"
+                    src={d.videoPrincipal.poster}
+                    alt=""
+                    width={d.videoPrincipal.ancho}
+                    height={d.videoPrincipal.alto}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span class="galeria__video-capa">
+                    <span class="galeria__video-play" aria-hidden="true"></span>
+                    <span class="galeria__video-texto">Ver recorrido en video</span>
+                    {d.videoPrincipal.duracion && <span class="galeria__video-duracion">{d.videoPrincipal.duracion}</span>}
+                  </span>
+                </a>
+              )}
             </div>
           ) : (
             <div class="galeria aparecer">
@@ -833,6 +911,32 @@ function idHabitacion(nombre) {
       </div>
     </section>
 
+    {/* PREGUNTAS FRECUENTES
+         Lo que la gente pregunta por WhatsApp antes de decidirse.
+         Cada respuesta aqui es una conversacion menos que atender y
+         una duda menos que frene la reserva. Se usa <details> nativo:
+         funciona con teclado y con lector de pantalla sin una linea
+         de JavaScript. */}
+    {faq && (
+      <section class="seccion seccion--alterna" id="faq">
+        <div class="contenedor">
+          <div class="encabezado-seccion aparecer">
+            <span class="etiqueta">{faq.etiqueta}</span>
+            <h2>{faq.titulo}</h2>
+            {faq.intro && <p class="texto-suave" style="margin-top: var(--esp-2);">{faq.intro}</p>}
+          </div>
+          <div class="faq aparecer">
+            {faq.preguntas.map((p) => (
+              <details class="faq__item">
+                <summary class="faq__pregunta">{p.pregunta}</summary>
+                <p class="faq__respuesta texto-suave">{p.respuesta}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
     {/* ANTES DE RESERVAR
          Lo que hay que saber para no llevarse una sorpresa: que pasa
          con las mascotas, que esta sujeto a consulta, y que dice el
@@ -992,6 +1096,17 @@ function idHabitacion(nombre) {
         </div>
       </div>
     </section>
+    {/* Quien opera el alojamiento. El huesped tiene derecho a saber
+         donde va a dormir y con quien se coordina la entrega; no es un
+         aviso de alarma, asi que va discreto y al final, no en una
+         banda roja arriba. Nada del acuerdo comercial se publica. */}
+    {d.avisoAliado && (
+      <section class="seccion seccion--estrecha">
+        <div class="contenedor">
+          <p class="nota-aliado">{d.avisoAliado}</p>
+        </div>
+      </section>
+    )}
   </main>
 
   <Pie textoVuelta="Ver todos los hospedajes" hrefVuelta="/hospedajes" />

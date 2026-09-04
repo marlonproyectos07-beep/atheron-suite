@@ -103,6 +103,7 @@ export const menuFichaMovil: Enlace[] = [
   { texto: 'Galeria', href: '#galeria' },
   { texto: 'Opiniones', href: '#opiniones' },
   { texto: 'Ubicacion', href: '#ubicacion' },
+  { texto: 'Preguntas', href: '#faq' },
   { texto: 'Blog', href: '/blog' },
 ];
 
