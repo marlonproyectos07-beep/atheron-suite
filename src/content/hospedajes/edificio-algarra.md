@@ -116,13 +116,33 @@ casaCompleta:
   tituloHabitaciones: Los apartamentos, uno a uno
   introHabitaciones: Cada apartamento se reserva por separado. Las fotografias corresponden a la unidad indicada; las del apartamento 201 siguen pendientes de validacion.
 videoPrincipal:
-  src: /assets/edificio-algarra/video/apto-402-recorrido.mp4
-  poster: /assets/edificio-algarra/video/apto-402-poster.webp
-  titulo: Recorrido en video del apartamento 402
-  descripcion: Conoce en video la distribucion, los acabados, la cocina equipada y los espacios reales de una de las unidades del edificio.
-  ancho: 720
-  alto: 1280
-  duracion: '0:50'
+  poster: /assets/edificio-algarra/video/parte-01-poster.webp
+  titulo: Recorrido del edificio y del apartamento 402
+  descripcion: Recorre la fachada, el acceso por escaleras y los espacios reales del apartamento 402. El video esta dividido para que cargue mejor en celular.
+  ancho: 360
+  alto: 640
+  duracion: '0:50 en total'
+  capitulos:
+    - src: /assets/edificio-algarra/video/parte-01.mp4
+      poster: /assets/edificio-algarra/video/parte-01-poster.webp
+      titulo: Fachada, parqueadero y acceso
+      duracion: '0:10'
+    - src: /assets/edificio-algarra/video/parte-02.mp4
+      poster: /assets/edificio-algarra/video/parte-02-poster.webp
+      titulo: Escaleras y entrada al apartamento
+      duracion: '0:10'
+    - src: /assets/edificio-algarra/video/parte-03.mp4
+      poster: /assets/edificio-algarra/video/parte-03-poster.webp
+      titulo: Sala, comedor y balcon
+      duracion: '0:10'
+    - src: /assets/edificio-algarra/video/parte-04.mp4
+      poster: /assets/edificio-algarra/video/parte-04-poster.webp
+      titulo: Cocina, bano y zona de descanso
+      duracion: '0:10'
+    - src: /assets/edificio-algarra/video/parte-05.mp4
+      poster: /assets/edificio-algarra/video/parte-05-poster.webp
+      titulo: Habitacion y vista final
+      duracion: '0:10'
 habitaciones:
   - nombre: Apartamento 201
     huespedes: Hasta 6
@@ -187,14 +207,6 @@ habitaciones:
     pendiente: false
     foto: /assets/edificio-algarra/apto-402/01.webp
     fotoAlt: Cocina equipada, comedor y sala del apartamento 402
-    video:
-      src: /assets/edificio-algarra/video/apto-402-recorrido.mp4
-      poster: /assets/edificio-algarra/video/apto-402-poster.webp
-      titulo: Recorrido en video por el apartamento 402 del edificio de Algarra
-      etiqueta: Ver recorrido del apartamento 402
-      ancho: 720
-      alto: 1280
-      duracion: '0:50'
     enlace: /hospedajes/algarra-402
     etiquetaVer: Ver apartamento
   - nombre: Duplex
