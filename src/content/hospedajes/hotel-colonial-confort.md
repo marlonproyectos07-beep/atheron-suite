@@ -8,12 +8,12 @@ titulo: Hotel Colonial Confort en Zipaquira | Hospedaje para parejas
 descripcion: Hotel aliado para parejas y grupos de adultos en el centro de Zipaquira, cerca de la Catedral de Sal. Consulta disponibilidad con Atheron Suite.
 ogTitulo: Hotel Colonial Confort | Centro de Zipaquira
 ogDescripcion: Habitaciones privadas para parejas y grupos de adultos en el centro de Zipaquira, cerca de la Catedral de Sal.
-avisoBorrador: Ficha en preparacion. Faltan las fotografias optimizadas, los horarios y la verificacion final antes de publicar.
+avisoBorrador: Ficha en preparacion. Faltan las fotografias optimizadas y la verificacion final antes de publicar.
 avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operacion y la entrega de las habitaciones se coordinan con la administracion del hotel.
 zona: Centro de Zipaquira
 localidad: Zipaquira
 departamento: Cundinamarca
-presentacion: Trece habitaciones privadas para parejas y grupos de adultos en el centro de Zipaquira, con capacidad fija para 28 personas y opcion grupal cercana a 30 bajo consulta.
+presentacion: Trece habitaciones privadas para parejas y grupos de adultos en el centro de Zipaquira, con capacidad para 28 personas en camas fijas y hasta 30 con una colchoneta adicional.
 presentacionPendiente: false
 fotoTarjeta: ''
 fotoTarjetaAlt: ''
@@ -89,7 +89,7 @@ tarifas:
     - huespedes: 2 personas
       precio: $ 130.000
   regla: $ 65.000 por cada huesped adulto.
-  nota: Los grupos cercanos a 30 personas requieren confirmacion previa de la acomodacion adicional.
+  nota: Para 29 o 30 adultos se agrega una colchoneta adicional. Esta acomodacion debe confirmarse antes de reservar.
   cta: Cotizar alojamiento
   mensaje: Hola, quiero cotizar Hotel Colonial Confort en Zipaquira. Somos [numero] adultos y estas son mis fechas:
 pruebaSocial:
@@ -121,14 +121,28 @@ antesDeReservar:
     - titulo: Parqueadero externo
       texto: El hotel no tiene parqueadero propio. A unas dos cuadras y media se encuentra el parqueadero independiente Armoniaz; su disponibilidad, horarios y tarifas deben confirmarse directamente con el establecimiento.
     - titulo: Capacidad grupal
-      texto: Las camas fijas permiten alojar hasta 28 adultos. Los grupos cercanos a 30 personas se reciben bajo consulta y con acomodacion adicional previamente confirmada.
+      texto: Las camas fijas permiten alojar hasta 28 adultos. Para grupos de 29 o 30 se agrega una colchoneta adicional, informada y confirmada antes de reservar.
+    - titulo: Horarios y horas adicionales
+      texto: El check-in es desde las 6:00 p. m. y el check-out hasta las 10:00 a. m. La atencion esta disponible las 24 horas. Cada hora adicional cuesta $ 10.000 y debe coordinarse previamente.
 descripcionZona: En el centro de Zipaquira, en la Carrera 9. Su ubicacion facilita el acceso al centro historico y a la Catedral de Sal; las distancias exactas se verificaran antes de publicar.
 descripcionZonaPendiente: false
 distancias:
   - lugar: Catedral de Sal
     valor: Distancia exacta pendiente de medicion
     pendiente: true
-horarios: []
+horarios:
+  - lugar: Entrada (check-in)
+    valor: Desde las 6:00 p. m.
+    pendiente: false
+  - lugar: Salida (check-out)
+    valor: Hasta las 10:00 a. m.
+    pendiente: false
+  - lugar: Atencion
+    valor: Disponible las 24 horas
+    pendiente: false
+  - lugar: Hora adicional
+    valor: $ 10.000 por hora, con coordinacion previa
+    pendiente: false
 direccionPublica: false
 mapaBbox: ''
 mapaTitulo: ''
@@ -146,14 +160,14 @@ experiencias:
 tituloContacto: Consulta una habitacion en Hotel Colonial Confort
 datosContacto:
   - Centro de Zipaquira, Cundinamarca
-  - 13 habitaciones · hasta 28 adultos en camas fijas
+  - 13 habitaciones · hasta 30 adultos con acomodacion adicional
   - Alojamiento aliado para parejas y grupos de adultos
   - Reservas gestionadas por Atheron Suite
 calle: ''
 latitud: null
 longitud: null
-checkin: ''
-checkout: ''
+checkin: '18:00'
+checkout: '10:00'
 mascotas: false
 comodidades:
   - Wifi
@@ -173,6 +187,6 @@ tranquilidad del lugar. La cifra se presenta como referencia de una fuente
 externa y puede cambiar.
 
 El hotel cuenta con doce habitaciones de una cama doble y una habitacion con
-dos camas dobles. Esto permite alojar hasta 28 adultos en camas fijas; los
-grupos cercanos a 30 personas se coordinan previamente segun la acomodacion
-adicional disponible.
+dos camas dobles. Esto permite alojar hasta 28 adultos en camas fijas. Para
+grupos de 29 o 30 personas se agrega una colchoneta adicional, condición que
+se informa y confirma antes de reservar.
