@@ -151,10 +151,15 @@ export type Evento =
 /* ------------------------------------------------------------
    FOTOGRAFIAS
 
-   NINGUNA foto entra todavia. El material esta en la carpeta de
-   Drive del proyecto (169 imagenes: 146 reales o de proceso y 23
+   NINGUNA foto entra todavia. El material esta en una carpeta
+   privada de Google Drive aprobada por Marlon y administrada fuera
+   del repositorio (169 imagenes: 146 reales o de proceso y 23
    representaciones conceptuales), y solo se integrara la seleccion
    que llegue en el manifiesto aprobado por Marlon y ChatGPT.
+
+   El identificador de esa carpeta NO se escribe aqui: vive en el
+   canal interno entre Marlon y ChatGPT. Lo que se escriba en este
+   archivo termina en el HTML que se publica.
 
    Existe otra carpeta de nombre parecido que mezcla fotos de otras
    propiedades. Esa NO se usa.

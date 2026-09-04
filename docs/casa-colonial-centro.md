@@ -26,8 +26,11 @@ promete rentabilidad y no declara ningún servicio como existente.
 `/proyectos/casa-colonial-centro`
 
 No existe una página índice en `/proyectos`. La miga de pan muestra ese escalón
-**sin enlace**, a propósito: crear una página pública vacía solo para que la miga
-tenga a dónde apuntar sería peor. Ver §17.
+**como texto no enlazado**, a propósito: crear una página pública vacía solo para
+que la miga tenga a dónde apuntar sería peor que dejar el escalón sin enlace.
+
+**Decisión tomada:** la página índice `/proyectos` se evaluará antes de la
+publicación pública o cuando exista un portafolio suficiente de proyectos.
 
 ---
 
@@ -61,11 +64,12 @@ de ejecución en la nube impone el sufijo `-p24amq` y no permite crear la rama s
 
 - La instrucción maestra del proyecto y su continuación (apartados 1–41).
 - Los archivos que Marlon y ChatGPT aprueben expresamente más adelante.
-- La carpeta de Drive de fotografías del proyecto, **solo** a través del
-  manifiesto aprobado.
+- Carpeta privada de Google Drive aprobada por Marlon y administrada fuera del
+  repositorio. Su contenido entra **solo** a través del manifiesto aprobado.
 
 El identificador de esa carpeta **no se escribe en el repositorio**, ni siquiera
-en esta documentación: vive en el canal interno del proyecto (ver §16).
+en esta documentación: permanece únicamente en el canal interno entre Marlon y
+ChatGPT (ver §16).
 
 ## 6. Fuentes prohibidas
 
@@ -74,7 +78,7 @@ en esta documentación: vive en el canal interno del proyecto (ver §16).
 - Casa Neusa.
 - Hotel Colonial Confort — **ojo con el nombre parecido: no es este proyecto.**
 - Habitaciones 201, 202, 203, 301 y 302 de otras propiedades.
-- La segunda carpeta de Drive de nombre similar, que mezcla propiedades.
+- La segunda carpeta de nombre similar, que mezcla varias propiedades.
 - Bancos de imágenes y cualquier imagen externa.
 
 ---
@@ -185,6 +189,15 @@ cada botón. El día que se conecte una plataforma, **un solo** escucha delegado
 `main.js` lee ese atributo y envía el evento: ni se duplican escuchas ni hay que
 volver a tocar esta página. Los eventos no llevan información personal.
 
+**Plataforma de analítica pendiente de decisión. Los nombres de eventos ya están
+definidos.** No se instaló Google Analytics, Meta Pixel, Vercel Analytics, Tag
+Manager ni ninguna otra.
+
+Mientras no haya plataforma, los eventos son **inertes**: `data-evento` es un
+atributo del HTML, sin escuchas, sin variables globales simuladas, sin peticiones
+y sin dependencias nuevas. La auditoría de consola de Lighthouse lo confirma: el
+único mensaje es el de la tipografía bloqueada por este entorno.
+
 Los doce declarados: `ccc_hero_conocer_click`, `ccc_transformacion_click`,
 `ccc_aliado_operador_click`, `ccc_aliado_estrategico_click`,
 `ccc_informacion_hotel_click`, `ccc_proponer_alianza_click`,
@@ -235,11 +248,17 @@ contratos, nombres de propietarios, dirección exacta, matrícula inmobiliaria,
 datos bancarios, presupuestos, datos de terceros, metadatos GPS de fotografías ni
 información de Planeación o del Ministerio que no esté aprobada.
 
-**El identificador de la carpeta de Drive no está en este archivo.** La
-instrucción permite conservarlo en documentación interna no publicada, pero
-`docs/` vive en el repositorio: cualquiera con acceso al repositorio lo leería.
-Se queda en el canal interno del proyecto. Si dirección prefiere lo contrario, se
-añade.
+**El identificador de la carpeta de Drive no está en este archivo, y así se
+queda.** Decisión de dirección del 4 de septiembre de 2026: el identificador
+permanece únicamente en el canal interno entre Marlon y ChatGPT. En el
+repositorio, la fuente se nombra así y nada más:
+
+> Carpeta privada de Google Drive aprobada por Marlon y administrada fuera del repositorio.
+
+Se verificó que ese identificador no aparece en ningún archivo rastreado, ni en
+el HTML construido, ni en el JavaScript del cliente, ni en los datos
+estructurados, ni en ningún comentario, ni en ningún commit de la historia del
+repositorio.
 
 ---
 
@@ -268,12 +287,21 @@ añade.
 
 **Técnicos**
 
-- [ ] Página índice `/proyectos`, o decisión de no tenerla. Mientras no exista, la
-      miga muestra el escalón sin enlace.
-- [ ] Plataforma de analítica y el escucha delegado de `data-evento` en `main.js`.
-- [ ] `tsconfig.json`: el repositorio no tiene ninguno, así que `astro check`
-      marca ~64 errores de «tipo implícito» en archivos que llevan meses
-      publicados. No es un fallo de esta página; se propone resolverlo aparte.
+- [ ] Página índice `/proyectos`: **se evaluará antes de la publicación pública o
+      cuando exista un portafolio suficiente de proyectos.** Mientras no exista, la
+      miga muestra «Proyectos» como texto no enlazado.
+- [ ] **Plataforma de analítica pendiente de decisión. Los nombres de eventos ya
+      están definidos.** Falta elegir plataforma y añadir el escucha delegado de
+      `data-evento` en `main.js`.
+- [ ] `tsconfig.json` y linter: **el repositorio no tiene ninguno de los dos.**
+      `package.json` no define `lint` ni `test`. Sin `tsconfig.json`, `astro check`
+      no puede inferir los tipos de `Astro.props` y marca **64 errores
+      preexistentes** repartidos en archivos que llevan meses publicados
+      (`[slug].astro` 48, `hospedajes/index.astro` 7, `index.astro` 5,
+      `Cabecera.astro` 2, `Base.astro` 1, `Foto.astro` 1). **No los produjo esta
+      página y no se corrigen en esta rama:** arreglarlos toca a todo el
+      repositorio y necesita su propia autorización. Tampoco se modifica ningún
+      archivo ajeno para ocultarlos.
 
 Ninguno de estos pendientes se muestra al visitante como un error.
 
@@ -309,8 +337,9 @@ Y entonces, en el mismo repaso y no por separado:
 |---|---|
 | Construcción del sitio | Pasa. 18 páginas |
 | Comprobador de contenido (`npm run comprueba`) | Pasa |
-| Lighthouse móvil y escritorio | Rendimiento 100, accesibilidad 100 |
-| Buenas prácticas | 96 en este entorno, por la tipografía de Google bloqueada. Una página ya publicada, medida como control, da el mismo 96 |
-| SEO | 69, por el `noindex` deliberado. Las otras nueve auditorías SEO pasan |
+| Rendimiento | **100** en móvil y escritorio |
+| Accesibilidad | **100** en móvil y escritorio |
+| Buenas prácticas | **96**, por una condición global relacionada con la tipografía. No se corrige en esta rama. Una página ya publicada, medida como control, da el mismo 96 |
+| SEO | **69**, por el `noindex` deliberado. Las otras nueve verificaciones SEO pasan. El `noindex` no se retira para subir la nota |
 | Revisión de dirección | **Pendiente** |
 | Revisión jurídica | **Pendiente** |
