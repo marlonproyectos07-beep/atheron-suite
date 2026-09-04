@@ -241,14 +241,15 @@ faq:
         concreta se confirma antes de reservar.
     - pregunta: '¿Hay estacionamiento?'
       respuesta: >-
-        El edificio tiene dos espacios para vehiculos de tamano normal, sujetos
-        a disponibilidad. En reservas individuales tienen costo adicional; para
-        reservas grupales del conjunto completo pueden estar incluidos, previa
-        confirmacion.
+        Si. Hay dos espacios cubiertos para carros y tres para motos, todos
+        sujetos a disponibilidad. La tarifa es de $ 20.000 por carro y
+        $ 10.000 por moto, por noche, y se paga directamente en las
+        instalaciones. Recomendamos solicitar el cupo antes de llegar.
     - pregunta: '¿Se aceptan mascotas?'
       respuesta: >-
-        La administracion las acepta segun el caso. Las condiciones y el costo
-        se confirman antes de reservar, asi que consultanos con la solicitud.
+        Si, las mascotas son bienvenidas y deben reportarse antes de la llegada.
+        El aseo del apartamento tiene un recargo adicional, cuyo valor se
+        confirma antes de reservar.
     - pregunta: '¿Emiten factura electronica?'
       respuesta: >-
         Si, para reservas directas. Solicitala al momento de reservar y te
@@ -265,20 +266,19 @@ antesDeReservar:
   condiciones:
     - titulo: Estacionamiento
       texto: >-
-        Dos espacios de estacionamiento para vehiculos de tamano normal,
-        ubicados dentro del edificio y detras del porton, sujetos a disponibilidad. En reservas individuales tienen costo
-        adicional; para reservas grupales del conjunto completo pueden estar
-        incluidos, previa confirmacion.
+        Hay dos espacios cubiertos para carros y tres para motos, sujetos a
+        disponibilidad. El valor por noche es de $ 20.000 por carro y
+        $ 10.000 por moto, pagados directamente en las instalaciones. Solicita
+        el cupo antes de llegar.
     - titulo: Acceso por escaleras
       texto: >-
         El edificio no tiene ascensor. El acceso a los apartamentos es por
         escaleras y no se ofrece como alojamiento adaptado para personas con
         movilidad reducida.
-    - titulo: Mascotas, bajo consulta previa
+    - titulo: Mascotas bienvenidas
       texto: >-
-        La administracion del edificio las acepta segun el caso. Las
-        condiciones y el costo se confirman antes de reservar; consultanos con
-        la solicitud y te damos la respuesta por escrito.
+        Deben reportarse antes de la llegada. El aseo del apartamento tiene un
+        recargo adicional; confirmamos su valor antes de reservar.
     - titulo: Capacidad grupal
       texto: >-
         Capacidad grupal de hasta 35 huespedes, sujeta a disponibilidad y
@@ -289,18 +289,24 @@ antesDeReservar:
         La tarifa de grupo se cotiza a la medida. Necesitamos fechas y numero
         de personas para confirmar disponibilidad y darte un precio en firme.
 descripcionZona: >-
-  En el sector de Algarra, en Zipaquira. Las distancias exactas y las
-  referencias del entorno se publican en cuanto esten confirmadas con la
-  administracion del edificio. La direccion se entrega al confirmar la reserva.
+  En el barrio Algarra III, en Zipaquira. Puedes consultar el punto exacto en
+  Google Maps; las instrucciones de ingreso se coordinan al confirmar la
+  reserva.
 descripcionZonaPendiente: false
 distancias: []
-horarios: []
+horarios:
+  - lugar: Entrada (check-in)
+    valor: De 3:00 p. m. a 5:00 p. m.; si llegas en otro horario, avisanos con anticipacion
+    pendiente: false
+  - lugar: Salida (check-out)
+    valor: Antes de las 11:00 a. m.
+    pendiente: false
 direccionPublica: false
 mapaBbox: ''
 mapaTitulo: ''
-enlaceMapa: ''
+enlaceMapa: https://g.co/kgs/xdC5aPt
 nombreAnterior: ''
-mapaNota: ''
+mapaNota: Consulta el punto exacto en Google Maps y coordina con nosotros las instrucciones de ingreso.
 mapaNotaPendiente: false
 experiencias: []
 tituloContacto: Solicita una cotizacion para tu grupo
@@ -311,8 +317,8 @@ datosContacto:
 calle: ''
 latitud: null
 longitud: null
-checkin: ''
-checkout: ''
+checkin: '15:00'
+checkout: '11:00'
 comodidades:
   - Wifi
   - Cocina equipada
@@ -321,7 +327,7 @@ comodidades:
   - Zona de trabajo
   - Television
   - Refrigerador
-actualizado: ''
+actualizado: '2026-09-04'
 ---
 
 Seis apartamentos independientes en el mismo edificio, en el sector de
