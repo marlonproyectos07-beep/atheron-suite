@@ -108,7 +108,17 @@ const hospedajes = (await getCollection('hospedajes'))
             return (
               <article class="tarjeta aparecer">
                 <div class="tarjeta__media">
-                  <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                  {mostrarEnlace ? (
+                    <a
+                      class="tarjeta__imagen-enlace"
+                      href={enlace}
+                      aria-label={`Explorar ${data.nombre}`}
+                    >
+                      <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                    </a>
+                  ) : (
+                    <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                  )}
                   <span class="tarjeta__insignia">{data.insignia}</span>
                 </div>
                 <div class="tarjeta__cuerpo">
