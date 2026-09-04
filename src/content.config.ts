@@ -368,13 +368,19 @@ const hospedajes = defineCollection({
        habitacion. Es opcional y no altera las fichas existentes. */
     videoPrincipal: z
       .object({
-        src: z.string(),
+        src: textoOpcional,
         poster: z.string(),
         titulo: z.string(),
         descripcion: textoOpcional,
         ancho: z.number(),
         alto: z.number(),
         duracion: textoOpcional,
+        capitulos: z.array(z.object({
+          src: z.string(),
+          poster: z.string(),
+          titulo: z.string(),
+          duracion: textoOpcional,
+        })).default([]),
       })
       .optional(),
 
