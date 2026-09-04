@@ -24,6 +24,7 @@
    ============================================================ */
 
 import ProyectoEstado from './ProyectoEstado.astro';
+import { fechaEnTexto } from '../data/casa-colonial-centro';
 import type { Unidad } from '../data/casa-colonial-centro';
 
 interface Props {
@@ -34,17 +35,28 @@ const { unidad } = Astro.props;
 ---
 
 <article class="unidad" id={`unidad-${unidad.id}`} data-unidad={unidad.nombreAdministrativo}>
+  {/* Recurso visual: la inicial de la unidad, dibujada con CSS. No
+      es una imagen, asi que no anade peticiones y nadie puede
+      confundirla con una fotografia del sitio. Se oculta al lector
+      de pantalla porque el titulo dice lo mismo, y mejor. */}
+  <p class="unidad__icono" aria-hidden="true">{unidad.icono}</p>
   <h3 class="unidad__titulo">{unidad.titulo}</h3>
   <ProyectoEstado estado={unidad.estado} />
   <p class="unidad__texto">{unidad.texto}</p>
 
   <details class="unidad__detalle">
-    <summary class="unidad__boton">{unidad.ctaTexto}</summary>
+    <summary class="unidad__boton" data-evento={unidad.evento}>{unidad.ctaTexto}</summary>
 
     <div class="unidad__contenido">
       {unidad.titulo !== unidad.nombreAdministrativo && (
         <p class="unidad__nombre-formal texto-suave">
           Denominación en trámites y documentos: {unidad.nombreAdministrativo}.
+        </p>
+      )}
+
+      {unidad.actualizado && (
+        <p class="unidad__nombre-formal texto-suave">
+          Actualizado el <time datetime={unidad.actualizado}>{fechaEnTexto(unidad.actualizado)}</time>.
         </p>
       )}
 

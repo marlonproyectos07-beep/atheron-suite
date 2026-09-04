@@ -45,7 +45,11 @@ if (conceptuales.length) {
   );
 }
 
-const visibles = fotos.filter((f) => f.aprobada && f.tipo !== 'CONCEPTUAL');
+/* Solo lo aprobado, y en el orden que marque el manifiesto. Sin
+   prioridad, una foto se va al final en vez de colarse la primera. */
+const visibles = fotos
+  .filter((f) => f.aprobada && f.tipo !== 'CONCEPTUAL')
+  .sort((a, b) => (a.prioridad ?? 99) - (b.prioridad ?? 99));
 
 /* La orientacion del archivo decide la forma del hueco, para que la
    pagina no de un salto cuando la foto llegue de verdad. */

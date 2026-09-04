@@ -247,6 +247,24 @@
   box-shadow: var(--sombra-sm);
 }
 
+/* La inicial de la unidad. No es una imagen: es texto dibujado con
+   CSS, para no meter ningun archivo sin aprobar ni una peticion mas. */
+.unidad__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  margin-bottom: var(--esp-2);
+  border-radius: 50%;
+  background: var(--color-crema);
+  border: 1px solid var(--borde);
+  font-family: var(--fuente-titulo);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-marca);
+}
+
 .unidad__titulo { margin-bottom: var(--esp-1); }
 .unidad__texto { color: var(--texto-suave); }
 
@@ -412,4 +430,94 @@
   height: 0.45rem;
   border-radius: 50%;
   background: var(--texto-suave);
+}
+
+/* ------------------------------------------------------------
+   MIGA DE PAN
+
+   El escalon del medio no es un enlace porque su pagina no existe.
+   Se distingue del enlace por color Y por subrayado: quien no
+   percibe bien el color tiene que poder verlo igual.
+   ------------------------------------------------------------ */
+.miga {
+  padding-block: var(--esp-2);
+  border-bottom: 1px solid var(--borde);
+  font-size: 0.85rem;
+}
+
+.miga__lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  color: var(--texto-suave);
+}
+
+.miga__lista li + li::before {
+  content: '›';
+  margin-right: 0.5rem;
+  color: var(--texto-suave);
+}
+
+.miga__lista a {
+  color: var(--color-marca);
+  text-decoration: underline;
+}
+
+/* ------------------------------------------------------------
+   AVISO INFORMATIVO
+
+   Sobrio a proposito: es una aclaracion, no una alarma. Nada de
+   rojos ni de iconos de peligro. El tamano de letra no baja de
+   0.95rem y el color es el texto normal sobre crema, muy por
+   encima del 4.5:1 que pide WCAG AA.
+   ------------------------------------------------------------ */
+.aviso-informativo {
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--color-marca);
+  border-radius: var(--radio-md);
+  background: var(--fondo-alterno);
+}
+
+.aviso-informativo__titulo {
+  margin-bottom: var(--esp-1);
+  font-size: 1.15rem;
+}
+
+.aviso-informativo__texto {
+  max-width: 72ch;
+  font-size: 0.95rem;
+  color: var(--texto);
+}
+
+/* Dentro de una tarjeta: mismo contraste, menos caja. */
+.aviso-informativo--encajado {
+  padding: var(--esp-2);
+  border-radius: var(--radio-sm);
+  background: var(--color-gris-100);
+}
+
+.aviso-informativo--encajado .aviso-informativo__texto { font-size: 0.85rem; }
+
+/* ------------------------------------------------------------
+   BITACORA
+   ------------------------------------------------------------ */
+.bitacora__vacio {
+  max-width: 60ch;
+  padding: var(--esp-3);
+  border: 1px dashed var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--fondo);
+  font-size: 1.05rem;
+}
+
+/* ------------------------------------------------------------
+   CIERRE
+   ------------------------------------------------------------ */
+.cierre__firma {
+  margin-top: var(--esp-4);
+  text-align: center;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }

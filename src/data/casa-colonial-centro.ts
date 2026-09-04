@@ -30,6 +30,16 @@
    apertura, distancias no medidas, condiciones de inversion y
    socios o aliados no formalizados.
 
+   TAMPOCO ENTRAN LAS EXPRESIONES PROHIBIDAS (apartado 22)
+   "Invertir ahora", "compra tu participacion", "reservar
+   participacion", "asegurar inversion", "obten rentabilidad",
+   "ganancia garantizada", "retorno asegurado", "recupera tu
+   dinero", "comprar acciones", "separar cupo", "financiar ahora",
+   "aportar dinero", "cupos limitados", "rentabilidad mensual" e
+   "ingreso pasivo garantizado". Ni aqui ni en la maqueta. La
+   pagina no pide dinero, no calcula retornos y no lleva pasarela
+   de pago, checkout ni formulario de aportes.
+
    PENDIENTE JURIDICO — NO PUBLICAR TODAVIA
    La opcion o derecho preferente de compra a siete anos, el canon,
    la identidad de los propietarios, las condiciones contractuales
@@ -37,6 +47,14 @@
    montos requeridos y los porcentajes de participacion NO estan en
    este archivo a proposito. No se anaden hasta recibir el texto
    aprobado por los abogados.
+
+   PRIVACIDAD (apartado 34)
+   Aqui no se escriben cedulas, firmas, poderes, contratos, nombres
+   de propietarios, direccion exacta, matricula inmobiliaria, datos
+   bancarios, presupuestos ni identificadores privados de Drive. El
+   identificador de la carpeta de fotografias vive en el canal
+   interno del proyecto, no en el repositorio: cualquier cosa que se
+   escriba en este archivo termina en el HTML que se publica.
    ============================================================ */
 
 /** Estado de cada dato que se publica. */
@@ -82,24 +100,11 @@ export const DEPARTAMENTO = 'Cundinamarca';
    cualquier cosa relacionada con permisos, el nombre es
    "Restaurante gastrobar".
 
-   Nunca, en ningun sitio, "bar" a secas.
+   Nunca, en ningun sitio, "bar" a secas. Tampoco el tipo
+   "BarOrPub" de los datos estructurados.
    ------------------------------------------------------------ */
 export const CUARTA_UNIDAD_COMERCIAL = 'Gastrobar';
 export const CUARTA_UNIDAD_ADMINISTRATIVA = 'Restaurante gastrobar';
-
-/* ------------------------------------------------------------
-   BLOG — PREPARADO, TODAVIA VACIO
-
-   La bitacora del proyecto se publicara como articulos del blog
-   agrupados por esta categoria. Aqui solo queda declarada para que
-   la pagina y los futuros articulos usen la misma cadena y no se
-   desincronicen.
-
-   Cuando se escriba el primer articulo: se crea en src/pages/blog/
-   como los que ya existen, y se anade su entrada al array
-   "bitacora" de mas abajo. La seccion de la pagina lo listara sola.
-   ------------------------------------------------------------ */
-export const CATEGORIA_BLOG = 'casa-colonial-centro';
 
 /* ------------------------------------------------------------
    WHATSAPP
@@ -110,13 +115,44 @@ export const CATEGORIA_BLOG = 'casa-colonial-centro';
    solo van los mensajes que llegan ya escritos.
    ------------------------------------------------------------ */
 export const MENSAJE_GENERAL =
-  'Hola, quiero información sobre el proyecto Casa Colonial Centro by Atheron en Zipaquirá.';
+  'Hola, Atheron. Conocí el proyecto Casa Colonial Centro y quisiera recibir más información.';
+
+/* ------------------------------------------------------------
+   ANALITICA
+
+   El repositorio NO tiene ninguna plataforma de analitica
+   instalada: ni Google Analytics, ni Tag Manager, ni Plausible, ni
+   la de Vercel. Se comprobo antes de escribir esto.
+
+   La instruccion pide usar el sistema existente y no instalar uno
+   nuevo, asi que aqui NO se instala nada. Lo que se hace es dejar
+   el evento declarado en el HTML, en el atributo data-evento de
+   cada boton. El dia que se conecte una plataforma, un unico
+   escucha delegado en main.js -uno, no doce- lee ese atributo y
+   envia el evento. Ni se duplican escuchas ni hay que volver a
+   tocar esta pagina.
+
+   Los eventos NO llevan informacion personal: solo el nombre.
+   ------------------------------------------------------------ */
+export type Evento =
+  | 'ccc_hero_conocer_click'
+  | 'ccc_transformacion_click'
+  | 'ccc_aliado_operador_click'
+  | 'ccc_aliado_estrategico_click'
+  | 'ccc_informacion_hotel_click'
+  | 'ccc_proponer_alianza_click'
+  | 'ccc_whatsapp_click'
+  | 'ccc_bitacora_click'
+  | 'ccc_unidad_hotel_click'
+  | 'ccc_unidad_restaurante_click'
+  | 'ccc_unidad_cafeteria_click'
+  | 'ccc_unidad_gastrobar_click';
 
 /* ------------------------------------------------------------
    FOTOGRAFIAS
 
    NINGUNA foto entra todavia. El material esta en la carpeta de
-   Drive "Fotos hotel" (169 imagenes: 146 reales o de proceso y 23
+   Drive del proyecto (169 imagenes: 146 reales o de proceso y 23
    representaciones conceptuales), y solo se integrara la seleccion
    que llegue en el manifiesto aprobado por Marlon y ChatGPT.
 
@@ -138,27 +174,46 @@ export type TipoFoto =
   /** Imagen generada. Siempre rotulada, nunca como estado actual. */
   | 'CONCEPTUAL';
 
+/** A que unidad pertenece la imagen. */
+export type UnidadFoto =
+  | 'GENERAL'
+  | 'HOTEL'
+  | 'RESTAURANTE'
+  | 'CAFETERIA'
+  | 'RESTAURANTE_GASTROBAR';
+
 export interface FotoProyecto {
-  /** Ruta dentro del sitio. Ej: /assets/img/proyectos/casa-colonial-centro/... */
-  ruta: string;
+  /** Identificador corto y estable. Ej: "patio-01". */
+  id: string;
   tipo: TipoFoto;
+  unidad: UnidadFoto;
   /** Que espacio se ve. Ej: "Patio central". */
   espacio: string;
   /** Planta o nivel, si consta. */
   planta?: string;
   /** Fecha de la toma, AAAA-MM-DD, si consta. */
   fecha?: string;
+  /** Nombre del archivo tal y como venia del origen. Sirve para
+      rastrear una foto hasta el manifiesto sin abrirla. */
+  archivoOriginal?: string;
+  /** Ruta dentro del sitio. Ej: /assets/img/proyectos/casa-colonial-centro/... */
+  ruta: string;
   /** Que se ve, en una frase. Obligatorio: sin esto la foto no sirve. */
   alt: string;
   /** Pie de foto, si aporta algo que el alt no dice. */
   descripcion?: string;
-  /** "alta" solo para la primera imagen visible. El resto, perezosa. */
-  prioridad?: 'alta' | 'normal';
-  orientacion?: 'vertical' | 'horizontal' | 'cuadrada';
   /** Autoria, si hay que darla. */
   credito?: string;
-  /** false = no se pinta. La pagina solo muestra lo aprobado. */
+  orientacion?: 'vertical' | 'horizontal' | 'cuadrada';
+  estado: Estado;
+  /** false = NO se pinta, aunque el archivo exista. */
   aprobada: boolean;
+  /** La destacada de su bloque. */
+  destacada?: boolean;
+  /* Orden dentro de su bloque, de menor a mayor. El 0 es la
+     primera, y es la unica que se carga con prioridad: el resto
+     va en carga diferida. */
+  prioridad?: number;
 }
 
 /** Cuantos huecos reservados se pintan mientras no haya manifiesto. */
@@ -216,9 +271,9 @@ export const hero = {
   texto:
     'Atheron está restaurando una casa con historia para convertirla en un destino integrado de hospitalidad, gastronomía y experiencias: hotel, restaurante, cafetería y restaurante gastrobar bajo una sola visión.',
   botones: [
-    { texto: 'Conocer el proyecto', href: '#historia' },
-    { texto: 'Ver la transformación', href: '#transformacion' },
-    { texto: 'Quiero ser aliado estratégico', href: '#alianzas' },
+    { texto: 'Conocer el proyecto', href: '#historia', evento: 'ccc_hero_conocer_click' as Evento },
+    { texto: 'Ver la transformación', href: '#transformacion', evento: 'ccc_transformacion_click' as Evento },
+    { texto: 'Quiero ser aliado estratégico', href: '#alianzas', evento: 'ccc_proponer_alianza_click' as Evento },
   ],
   /* La foto del hero sera una interior real con vista hacia la
      Catedral, y solo cuando venga elegida en el manifiesto. Mientras
@@ -303,21 +358,41 @@ export const transformacion = {
 
 /* ============================================================
    5. CUATRO EXPERIENCIAS
+
+   Configuracion central de las unidades. Cualquier sitio del sitio
+   que hable de ellas -la seccion, el modelo interno, los datos
+   estructurados del dia que abran- lee de aqui.
    ============================================================ */
 
 export interface Unidad {
-  id: string;
+  id: 'hotel' | 'restaurante' | 'cafeteria' | 'restaurante-gastrobar';
   /** Como se llama de cara al publico. */
   titulo: string;
   /** Como se llama en documentos, permisos y datos estructurados.
       Coincide con el titulo salvo en el gastrobar. */
   nombreAdministrativo: string;
+  estado: Estado;
   texto: string;
+  /* Recurso visual. No es una foto ni un icono descargado: es la
+     inicial de la unidad dibujada con CSS. Asi no entra ninguna
+     imagen sin aprobar, no se anade ninguna peticion y nadie puede
+     confundirlo con una fotografia del sitio. */
+  icono: string;
   /** Texto del boton que abre el detalle. */
   ctaTexto: string;
+  /** Mensaje con el que se abriria WhatsApp desde esta unidad. */
+  mensaje: string;
+  evento: Evento;
+  /** A donde llevara cuando tenga pagina propia. null = todavia no
+      existe, y por eso NO se pinta ningun enlace: un enlace roto es
+      peor que la ausencia de enlace. */
+  enlaceFuturo: string | null;
+  /** false = la unidad no se muestra en la pagina. */
+  visible: boolean;
+  /** AAAA-MM-DD del ultimo cambio real de esta ficha. */
+  actualizado: string | null;
   /** Detalle ampliado. null = todavia no hay texto aprobado. */
   detalle: string | null;
-  estado: Estado;
 }
 
 export const unidades = {
@@ -332,45 +407,73 @@ export const unidades = {
       id: 'hotel',
       titulo: 'Hotel',
       nombreAdministrativo: 'Hotel',
+      estado: 'PROPUESTA',
       texto:
         'Un hospedaje conectado con la historia, la arquitectura y el centro turístico de Zipaquirá.',
+      icono: 'H',
       ctaTexto: 'Conocer la visión del hotel',
+      mensaje:
+        'Hola, Atheron. Conocí el proyecto Casa Colonial Centro y quisiera conocer la visión del componente hotelero.',
+      evento: 'ccc_unidad_hotel_click',
+      enlaceFuturo: null,
+      visible: true,
+      actualizado: null,
       /* Sin ficha comercial hotelera todavia: no hay capacidad,
          habitaciones ni tarifas confirmadas, y no se inventan. */
       detalle: null,
-      estado: 'PROPUESTA',
     },
     {
       id: 'restaurante',
       titulo: 'Restaurante',
       nombreAdministrativo: 'Restaurante',
+      estado: 'PROPUESTA',
       texto:
         'Una propuesta gastronómica para huéspedes, visitantes y comunidad local.',
+      icono: 'R',
       ctaTexto: 'Explorar la oportunidad gastronómica',
+      mensaje:
+        'Hola, Atheron. Conocí el proyecto Casa Colonial Centro y quisiera conversar sobre la propuesta del restaurante.',
+      evento: 'ccc_unidad_restaurante_click',
+      enlaceFuturo: null,
+      visible: true,
+      actualizado: null,
       detalle: null,
-      estado: 'PROPUESTA',
     },
     {
       id: 'cafeteria',
       titulo: 'Cafetería',
       nombreAdministrativo: 'Cafetería',
+      estado: 'PROPUESTA',
       texto:
         'Un espacio de encuentro durante el día, conectado con el movimiento cultural y turístico del centro.',
+      icono: 'C',
       ctaTexto: 'Conocer el concepto',
+      mensaje:
+        'Hola, Atheron. Conocí el proyecto Casa Colonial Centro y quisiera conocer el concepto de la cafetería.',
+      evento: 'ccc_unidad_cafeteria_click',
+      enlaceFuturo: null,
+      visible: true,
+      actualizado: null,
       detalle: null,
-      estado: 'PROPUESTA',
     },
     {
-      id: 'gastrobar',
+      id: 'restaurante-gastrobar',
       /* Visible al publico: "Gastrobar". */
       titulo: CUARTA_UNIDAD_COMERCIAL,
       /* Administrativo, juridico y de permisos: "Restaurante gastrobar". */
       nombreAdministrativo: CUARTA_UNIDAD_ADMINISTRATIVA,
+      estado: 'PROPUESTA',
       texto:
         'Una experiencia gastronómica y nocturna pensada para compartir bebidas, alimentos y encuentros en un ambiente colonial renovado.',
+      icono: 'G',
       ctaTexto: 'Conocer la visión',
+      mensaje:
+        'Hola, Atheron. Conocí el proyecto Casa Colonial Centro y quisiera conocer la visión del restaurante gastrobar.',
+      evento: 'ccc_unidad_gastrobar_click',
+      enlaceFuturo: null,
+      visible: true,
+      actualizado: null,
       detalle: null,
-      estado: 'PROPUESTA',
     },
   ] as Unidad[],
 };
@@ -402,19 +505,25 @@ export const modelo = {
 /* ============================================================
    7. ALIANZAS
 
-   Los textos de las tres tarjetas llegaron cortados en la
-   instruccion maestra. Se dejan en null: la pagina marca el hueco
-   en vez de rellenarlo con un texto que nadie ha aprobado.
+   Tres puertas de entrada, ninguna de ellas financiera. La tercera
+   habla del componente hotelero y por eso lleva el aviso
+   informativo pegado: no es captacion de inversion, no pide
+   monto disponible, patrimonio, ingresos, datos bancarios, numero
+   de identificacion, compromiso economico ni reserva de
+   participacion, y no recibe pagos ni transferencias.
    ============================================================ */
 
 export interface Alianza {
   id: string;
   titulo: string;
-  descripcion: string | null;
+  descripcion: string;
   ctaTexto: string;
   /** Mensaje con el que se abre WhatsApp. */
   mensaje: string;
+  evento: Evento;
   estado: Estado;
+  /** true = ademas del texto, lleva el aviso informativo al lado. */
+  llevaAviso?: boolean;
 }
 
 export const alianzas = {
@@ -423,34 +532,41 @@ export const alianzas = {
   titulo: 'Estamos buscando aliados que compartan la visión',
   texto:
     'Casa Colonial Centro está siendo estructurada para integrar experiencia, conocimiento, operación y tecnología. Buscamos conversar con personas y organizaciones capaces de aportar valor real al proyecto.',
-  estado: 'PENDIENTE' as Estado,
+  estado: 'VERIFICADO' as Estado,
   lista: [
     {
       id: 'operador',
       titulo: 'Aliado operador',
-      descripcion: null,
-      ctaTexto: 'Conversar como aliado operador',
+      descripcion:
+        'Para empresas o emprendedores con experiencia interesados en operar el restaurante, la cafetería o el restaurante gastrobar.',
+      ctaTexto: 'Quiero operar una unidad',
       mensaje:
-        'Hola, me interesa el proyecto Casa Colonial Centro by Atheron. Quiero conversar como aliado operador.',
-      estado: 'PENDIENTE',
-    },
-    {
-      id: 'tecnico',
-      titulo: 'Aliado técnico',
-      descripcion: null,
-      ctaTexto: 'Conversar como aliado técnico',
-      mensaje:
-        'Hola, me interesa el proyecto Casa Colonial Centro by Atheron. Quiero conversar como aliado técnico.',
-      estado: 'PENDIENTE',
+        'Hola, Atheron. Conocí el proyecto Casa Colonial Centro y quisiera conversar sobre la posibilidad de operar una de sus unidades gastronómicas.',
+      evento: 'ccc_aliado_operador_click',
+      estado: 'VERIFICADO',
     },
     {
       id: 'estrategico',
-      titulo: 'Aliado estratégico',
-      descripcion: null,
-      ctaTexto: 'Conversar como aliado estratégico',
+      titulo: 'Aliado estratégico o técnico',
+      descripcion:
+        'Para proveedores y especialistas en arquitectura, restauración, obra, mobiliario, dotación, tecnología, turismo o experiencias.',
+      ctaTexto: 'Quiero aportar al proyecto',
       mensaje:
-        'Hola, me interesa el proyecto Casa Colonial Centro by Atheron. Quiero conversar como aliado estratégico.',
-      estado: 'PENDIENTE',
+        'Hola, Atheron. Conocí Casa Colonial Centro y quisiera presentar una propuesta como aliado, proveedor o colaborador del proyecto.',
+      evento: 'ccc_aliado_estrategico_click',
+      estado: 'VERIFICADO',
+    },
+    {
+      id: 'componente-hotelero',
+      titulo: 'Componente hotelero',
+      descripcion:
+        'Para personas interesadas en conocer el desarrollo del componente de hospedaje cuando su documentación jurídica y financiera esté aprobada.',
+      ctaTexto: 'Solicitar información preliminar',
+      mensaje:
+        'Hola, Atheron. Conocí el proyecto Casa Colonial Centro y quisiera recibir información preliminar sobre el componente hotelero cuando esté disponible.',
+      evento: 'ccc_informacion_hotel_click',
+      estado: 'VERIFICADO',
+      llevaAviso: true,
     },
   ] as Alianza[],
 };
@@ -458,10 +574,16 @@ export const alianzas = {
 /* ============================================================
    8. BITACORA
 
-   Se alimentara de los articulos del blog marcados con la
-   categoria CATEGORIA_BLOG. Vacia hasta que se escriba el primero:
-   la seccion lo dice y no pinta tarjetas de ejemplo.
+   Se alimentara de los articulos del blog agrupados por la
+   categoria de mas abajo. Vacia hasta que se escriba el primero:
+   la seccion lo dice y no pinta tarjetas de ejemplo, ni fechas, ni
+   autores, ni avances que no han ocurrido.
    ============================================================ */
+
+/* La categoria que agrupara los articulos del proyecto. Declarada
+   aqui para que la pagina y los futuros articulos usen la misma
+   cadena y no se desincronicen. */
+export const CATEGORIA_BLOG = 'casa-colonial-centro';
 
 export interface EntradaBitacora {
   titulo: string;
@@ -472,62 +594,129 @@ export interface EntradaBitacora {
   href: string;
 }
 
+/* ------------------------------------------------------------
+   ARTICULOS PREVISTOS
+
+   La lista de direcciones que tendra la bitacora cuando se
+   escriban. NO se publican todavia y NO se enlazan: ninguna de
+   estas paginas existe, y enlazar a una direccion que devuelve un
+   404 es peor que no enlazar nada.
+
+   Estan aqui para que el dia que se escriba un articulo baste con
+   crearlo en src/pages/blog/ con la misma direccion y anadir su
+   entrada al array "entradas". El listado sale solo.
+   ------------------------------------------------------------ */
+export const ARTICULOS_PREVISTOS = [
+  '/blog/como-encontramos-casa-colonial-centro',
+  '/blog/por-que-decidimos-restaurarla',
+  '/blog/la-vista-hacia-la-catedral',
+  '/blog/primer-levantamiento-de-los-espacios',
+  '/blog/lo-que-queremos-conservar',
+  '/blog/vision-del-hotel-casa-colonial',
+  '/blog/vision-gastronomica-casa-colonial',
+  '/blog/avances-remodelacion-casa-colonial',
+  '/blog/aliados-casa-colonial-centro',
+];
+
 export const bitacora = {
   id: 'bitacora',
-  /* Titulo tomado de la propia estructura pedida. La ceja y el
-     texto de entrada todavia no han llegado. */
-  ceja: null as string | null,
-  titulo: 'Bitácora del proyecto',
-  texto: null as string | null,
+  ceja: 'BITÁCORA DE TRANSFORMACIÓN',
+  titulo: 'Sigue la evolución de Casa Colonial Centro',
+  texto:
+    'El proyecto será documentado paso a paso para mostrar sus avances, aprendizajes y decisiones con transparencia.',
+  /* Lo que se ve mientras no haya ni un articulo publicado. */
+  textoVacio: 'Próximamente compartiremos los primeros avances de esta transformación.',
+  ctaTexto: 'Seguir la transformación',
+  evento: 'ccc_bitacora_click' as Evento,
   entradas: [] as EntradaBitacora[],
   estado: 'PENDIENTE' as Estado,
 };
 
 /* ============================================================
-   9. AVISO INFORMATIVO
+   9. AVISO INFORMATIVO OBLIGATORIO
 
-   Redactado unicamente con hechos declarados en la instruccion
-   maestra. Queda en PENDIENTE porque la redaccion final tiene que
-   revisarse antes de cualquier publicacion publica.
+   Texto exacto, entregado por direccion. No se resume, no se
+   reescribe y no se abrevia.
+
+   Va en el HTML inicial, sin interaccion, con contraste suficiente
+   y con letra de tamano normal: ni en el pie, ni en un globo de
+   ayuda, ni dentro de una ventana, ni como casilla de aceptacion.
+
+   Aparece dos veces a proposito: junto a la tarjeta del componente
+   hotelero -que es el unico bloque que alguien podria confundir con
+   una captacion- y antes del cierre de la pagina.
    ============================================================ */
+
+export const AVISO_INFORMATIVO =
+  'Esta página tiene carácter exclusivamente informativo y presenta un proyecto actualmente en desarrollo. No constituye una oferta pública o privada de inversión, una promesa de rentabilidad ni una solicitud de recursos. Cualquier eventual vinculación estará sujeta a validación jurídica, financiera, operativa y contractual.';
 
 export const aviso = {
   id: 'aviso',
   titulo: 'Aviso informativo',
-  puntos: [
-    'Esta página es informativa sobre un proyecto en desarrollo y no constituye una oferta de inversión.',
-    'El inmueble se encuentra en restauración y remodelación. Las unidades descritas son unidades proyectadas y todavía no están en operación.',
-    'Las representaciones conceptuales no corresponden al estado actual del inmueble. El diseño, mobiliario, distribución y acabados pueden cambiar durante el desarrollo del proyecto.',
-    'Está pendiente el concepto del Ministerio de Cultura o autoridad competente. No se afirma que el proyecto cuente ya con todos los permisos.',
-    'No se publican capacidades, tarifas, aforos, fechas de apertura ni condiciones económicas mientras no estén confirmadas.',
-  ],
-  estado: 'PENDIENTE' as Estado,
+  texto: AVISO_INFORMATIVO,
+  estado: 'VERIFICADO' as Estado,
 };
 
 /* ============================================================
    10. CIERRE
-
-   Usa el bloque de WhatsApp que ya existe en el sitio, con sus
-   textos por defecto, y solo cambia el mensaje.
    ============================================================ */
 
 export const cierre = {
   id: 'contacto',
-  mensaje: MENSAJE_GENERAL,
+  titulo: 'La próxima historia de esta casa apenas está comenzando',
+  texto:
+    'Estamos construyendo este proyecto paso a paso, con información real, visión de largo plazo y aliados que compartan el propósito de recuperar espacios con valor para Zipaquirá.',
+  botones: [
+    {
+      texto: 'Seguir la transformación',
+      href: '#bitacora',
+      evento: 'ccc_bitacora_click' as Evento,
+      whatsapp: null as string | null,
+    },
+    {
+      texto: 'Proponer una alianza',
+      href: '#alianzas',
+      evento: 'ccc_proponer_alianza_click' as Evento,
+      whatsapp: null as string | null,
+    },
+    {
+      texto: 'Hablar con Atheron',
+      /* href de respaldo; main.js lo reescribe a wa.me con el
+         mensaje. Igual que en el resto del sitio. */
+      href: null as string | null,
+      evento: 'ccc_whatsapp_click' as Evento,
+      whatsapp: MENSAJE_GENERAL,
+    },
+  ],
   estado: 'VERIFICADO' as Estado,
 };
 
 /* ============================================================
    SEO — SOLO PARA EL BORRADOR
 
-   La pagina sale con noindex, nofollow, fuera del sitemap y sin
-   enlace desde ninguna parte del sitio. Estos textos existen para
-   que la pestana y las vistas previas internas digan algo util, no
-   para posicionar.
+   Titulo y descripcion exactos, entregados por direccion.
+
+   La canonica NO se escribe aqui: la construye Base.astro a partir
+   de la ruta y del dominio de astro.config.mjs. Escribir el dominio
+   a mano es justo lo que ese diseno evita.
+
+   Open Graph: esta pagina NO manda imagen. Las unicas candidatas
+   serian la fachada (prohibida), una conceptual (no puede ir sin
+   rotulo, y una vista previa no admite rotulos) o una foto de otra
+   propiedad (prohibida). El logo institucional tampoco: no dice
+   nada de este proyecto y las redes lo recortan. Sin imagen, la
+   vista previa sale como enlace de texto, que en una pagina que
+   nadie debe compartir todavia es exactamente lo que se quiere.
+   Queda pendiente de sustitucion cuando llegue la fotografia
+   interior real aprobada.
    ============================================================ */
 
 export const seo = {
-  titulo: 'Casa Colonial Centro by Atheron | Proyecto en desarrollo',
+  titulo: 'Casa Colonial Centro | Proyecto Atheron en Zipaquirá',
   descripcion:
-    'Borrador privado del proyecto Casa Colonial Centro by Atheron en Zipaquirá: recuperación de una casa colonial para integrar hotel, restaurante, cafetería y restaurante gastrobar.',
+    'Conoce la recuperación de Casa Colonial Centro, un proyecto de Atheron que integrará hotel, restaurante, cafetería y restaurante gastrobar en el corazón de Zipaquirá.',
+  /* Ruta de la futura foto de Open Graph. null mientras no exista
+     una fotografia interior real aprobada. */
+  imagen: null as string | null,
+  imagenAlt: null as string | null,
 };

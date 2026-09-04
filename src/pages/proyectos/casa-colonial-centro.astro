@@ -25,18 +25,18 @@
    textos de Hotel Atheron Suite, Casa Algarra, Casa Neusa ni de
    ningun otro hospedaje.
 
-   DATOS ESTRUCTURADOS
-   Esta pagina NO lleva JSON-LD, y es deliberado. Marcar un negocio
-   que todavia no opera -sin capacidad, sin tarifas, sin fecha de
-   apertura y sin permisos resueltos- seria declarar a Google algo
-   que no se puede sostener. Se anadira cuando el proyecto abra.
+   LO QUE ESTA PAGINA NO HACE
+   No pide dinero. No lleva formulario de aportes, pasarela de pago,
+   checkout, suscripcion, transferencia, reserva de participacion,
+   calculo de rentabilidad ni simulador de retorno. No promete
+   retornos. La unica accion posible es escribir por WhatsApp.
    ============================================================ */
 
 import Base from '../../layouts/Base.astro';
 import Cabecera from '../../components/Cabecera.astro';
 import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
-import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
+import AvisoInformativo from '../../components/AvisoInformativo.astro';
 import ProyectoEstado from '../../components/ProyectoEstado.astro';
 import ProyectoGaleria from '../../components/ProyectoGaleria.astro';
 import ProyectoComparador from '../../components/ProyectoComparador.astro';
@@ -48,8 +48,10 @@ import {
   BORRADOR,
   RUTA,
   NOMBRE,
+  NOMBRE_CORTO,
   UBICACION_PUBLICA,
   MENSAJE_GENERAL,
+  AVISO_INFORMATIVO,
   ETIQUETA_GALERIA_REAL,
   HUECOS_GALERIA,
   fechaEnTexto,
@@ -79,6 +81,63 @@ const ctaCabecera = {
 const avisoBorrador = BORRADOR
   ? 'Borrador privado del proyecto Casa Colonial Centro. No indexado, sin enlazar y sin publicar. Pendiente de aprobación de Marlon y ChatGPT.'
   : null;
+
+/* ============================================================
+   DATOS ESTRUCTURADOS
+
+   Solo tres tipos, y ninguno de ellos declara un negocio abierto:
+   WebPage (esto es una pagina), Organization (quien la publica) y
+   BreadcrumbList (donde esta dentro del sitio).
+
+   LO QUE NO SE MARCA, Y POR QUE:
+   Hotel, LodgingBusiness, Restaurant, FoodEstablishment, Offer,
+   Product, AggregateRating, Review, PriceSpecification, Event y
+   OpeningHoursSpecification describirian servicios que todavia no
+   existen. Marcar como existente algo que es una propuesta es
+   declararle a Google un negocio que no puede visitar. BarOrPub no
+   se usa nunca: la cuarta unidad es un restaurante gastrobar.
+
+   El dominio no se escribe a mano: sale de astro.config.mjs, igual
+   que la canonica.
+
+   MIGA DE PAN: "Proyectos" va SIN direccion a proposito. La ruta
+   /proyectos no existe como pagina, y crear una pagina publica
+   vacia solo para que la miga tenga a donde apuntar seria peor
+   que dejar el escalon sin enlace. Queda como pendiente.
+   ============================================================ */
+const urlPagina = new URL(RUTA, Astro.site).href;
+const urlSitio = new URL('/', Astro.site).href;
+
+const fichaPagina = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${urlPagina}#pagina`,
+      url: urlPagina,
+      name: seo.titulo,
+      description: seo.descripcion,
+      inLanguage: 'es-CO',
+      isPartOf: { '@id': `${urlSitio}#organizacion` },
+      breadcrumb: { '@id': `${urlPagina}#miga` },
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${urlSitio}#organizacion`,
+      name: 'Atheron Suite',
+      url: urlSitio,
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': `${urlPagina}#miga`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: urlSitio },
+        { '@type': 'ListItem', position: 2, name: 'Proyectos' },
+        { '@type': 'ListItem', position: 3, name: NOMBRE_CORTO, item: urlPagina },
+      ],
+    },
+  ],
+};
 ---
 
 <Base
@@ -88,12 +147,27 @@ const avisoBorrador = BORRADOR
   indexable={false}
   seguirEnlaces={false}
   avisoBorrador={avisoBorrador}
-  jsonLd={null}
+  jsonLd={fichaPagina}
   hojasExtra={['proyecto-casa-colonial']}
 >
   <Cabecera enlaces={menuHospedajes} cta={ctaCabecera} />
 
   <main id="contenido">
+
+    {/* ============================================================
+         MIGA DE PAN
+         El escalon "Proyectos" no es un enlace porque esa pagina no
+         existe. Se ve, dice donde estamos, y no lleva a un 404.
+         ============================================================ */}
+    <nav class="miga" aria-label="Ruta de navegación">
+      <div class="contenedor">
+        <ol class="miga__lista">
+          <li><a href="/">Inicio</a></li>
+          <li><span>Proyectos</span></li>
+          <li><span aria-current="page">{NOMBRE_CORTO}</span></li>
+        </ol>
+      </div>
+    </nav>
 
     {/* ============================================================
          1. HERO
@@ -114,6 +188,7 @@ const avisoBorrador = BORRADOR
             <a
               class:list={['boton', 'boton--grande', indice === 0 ? 'boton--primario' : 'boton--claro']}
               href={boton.href}
+              data-evento={boton.evento}
             >{boton.texto}</a>
           ))}
         </div>
@@ -222,7 +297,9 @@ const avisoBorrador = BORRADOR
         </div>
 
         <div class="grid grid--4">
-          {unidades.lista.map((unidad) => <ProyectoUnidad unidad={unidad} />)}
+          {unidades.lista
+            .filter((unidad) => unidad.visible)
+            .map((unidad) => <ProyectoUnidad unidad={unidad} />)}
         </div>
       </div>
     </section>
@@ -270,8 +347,15 @@ const avisoBorrador = BORRADOR
 
     {/* ============================================================
          7. ALIANZAS
-         Los textos de las tres tarjetas llegaron cortados en la
-         instruccion maestra. Se marca el hueco en vez de rellenarlo.
+
+         Tres puertas de entrada, ninguna financiera. La del
+         componente hotelero lleva el aviso informativo pegado, como
+         exige la instruccion: es el unico bloque que alguien podria
+         leer como captacion, y no lo es.
+
+         Ningun boton pide dinero, monto disponible, patrimonio,
+         ingresos, datos bancarios ni numero de identificacion: todos
+         abren una conversacion de WhatsApp con un texto ya escrito.
          ============================================================ */}
     <section class="seccion" id={alianzas.id}>
       <div class="contenedor aparecer">
@@ -287,19 +371,18 @@ const avisoBorrador = BORRADOR
           {alianzas.lista.map((alianza) => (
             <article class="tarjeta-alianza">
               <h3>{alianza.titulo}</h3>
-              <ProyectoEstado estado={alianza.estado} />
-              {alianza.descripcion ? (
-                <p>{alianza.descripcion}</p>
-              ) : (
-                <p class="texto-suave">
-                  Descripción pendiente de entrega. No se publica un texto
-                  provisional en su lugar.
-                </p>
+              <p>{alianza.descripcion}</p>
+
+              {alianza.llevaAviso && (
+                <AvisoInformativo texto={AVISO_INFORMATIVO} variante="encajado" />
               )}
+
               <a
                 class="boton boton--whatsapp"
                 href={whatsappRespaldo}
+                rel="noopener"
                 data-whatsapp={alianza.mensaje}
+                data-evento={alianza.evento}
               >{alianza.ctaTexto}</a>
             </article>
           ))}
@@ -309,19 +392,24 @@ const avisoBorrador = BORRADOR
 
     {/* ============================================================
          8. BITACORA
+
          Preparada para los articulos del blog de la categoria
-         casa-colonial-centro. Vacia hasta que se escriba el primero.
+         casa-colonial-centro. Vacia hasta que se escriba el primero:
+         sin tarjetas de ejemplo, sin fechas inventadas y sin autores
+         que no han escrito nada.
+
+         El boton lleva a esta misma seccion mientras la categoria
+         del blog no exista. Es lo que permite la instruccion, y
+         evita el unico resultado inaceptable: un enlace roto.
          ============================================================ */}
     <section class="seccion seccion--alterna" id={bitacora.id}>
       <div class="contenedor aparecer">
         <div class="encabezado-seccion">
-          {bitacora.ceja && <span class="etiqueta">{bitacora.ceja}</span>}
+          <span class="etiqueta">{bitacora.ceja}</span>
           <h2>{bitacora.titulo}</h2>
-          {bitacora.texto && (
-            <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
-              {bitacora.texto}
-            </p>
-          )}
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+            {bitacora.texto}
+          </p>
         </div>
 
         <ProyectoEstado
@@ -342,46 +430,63 @@ const avisoBorrador = BORRADOR
             ))}
           </ul>
         ) : (
-          <p class="texto-suave">
-            La bitácora recogerá el avance de la obra en el blog del sitio. Aún no
-            hay entradas publicadas: cuando exista la primera, aparecerá aquí sola.
-          </p>
+          <p class="bitacora__vacio">{bitacora.textoVacio}</p>
         )}
+
+        <p style="margin-top: var(--esp-3);">
+          <a
+            class="boton boton--contorno"
+            href={`#${bitacora.id}`}
+            data-evento={bitacora.evento}
+          >{bitacora.ctaTexto}</a>
+        </p>
       </div>
     </section>
 
     {/* ============================================================
          9. AVISO INFORMATIVO
-         Redactado solo con hechos declarados por direccion. La
-         redaccion final tiene que revisarse antes de publicar.
+         Texto exacto, en el HTML inicial, legible sin interaccion y
+         antes del cierre de la pagina.
          ============================================================ */}
     <section class="seccion" id={aviso.id}>
       <div class="contenedor aparecer">
-        <div class="nota-legal">
-          <h2 class="nota-legal__titulo">{aviso.titulo}</h2>
-          <ProyectoEstado
-            estado={aviso.estado}
-            nota="Redacción sujeta a revisión antes de la publicación pública."
-          />
-          <ul class="nota-legal__lista">
-            {aviso.puntos.map((punto) => <li>{punto}</li>)}
-          </ul>
-        </div>
+        <AvisoInformativo texto={aviso.texto} titulo={aviso.titulo} />
       </div>
     </section>
 
     {/* ============================================================
-         10. CIERRE Y WHATSAPP
-         El bloque de contacto del sitio, con el mensaje del
-         proyecto. El numero no se escribe aqui: lo pone main.js.
+         10. CIERRE
+         Tres salidas: la bitacora, las alianzas y WhatsApp. El
+         numero no se escribe aqui: el href es el respaldo de
+         ajustes.ts y main.js lo reescribe con el mensaje.
          ============================================================ */}
     <section class="seccion seccion--alterna" id={cierre.id}>
-      <div class="contenedor aparecer" style="max-width: 640px;">
+      <div class="contenedor aparecer" style="max-width: 720px;">
         <div class="encabezado-seccion encabezado-seccion--centrado">
           <span class="etiqueta">{UBICACION_PUBLICA}</span>
-          <h2>{NOMBRE}</h2>
+          <h2>{cierre.titulo}</h2>
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+            {cierre.texto}
+          </p>
         </div>
-        <ContactoWhatsApp mensaje={cierre.mensaje} />
+
+        <div class="grupo-botones grupo-botones--centrado">
+          {cierre.botones.map((boton, indice) => (
+            <a
+              class:list={[
+                'boton',
+                'boton--grande',
+                boton.whatsapp ? 'boton--whatsapp' : indice === 0 ? 'boton--primario' : 'boton--contorno',
+              ]}
+              href={boton.whatsapp ? whatsappRespaldo : boton.href}
+              rel={boton.whatsapp ? 'noopener' : undefined}
+              data-whatsapp={boton.whatsapp ?? undefined}
+              data-evento={boton.evento}
+            >{boton.texto}</a>
+          ))}
+        </div>
+
+        <p class="cierre__firma texto-suave">{NOMBRE}</p>
       </div>
     </section>
 
@@ -391,4 +496,3 @@ const avisoBorrador = BORRADOR
 
   <BotonFlotante href={whatsappRespaldo} mensaje={MENSAJE_GENERAL} />
 </Base>
-
