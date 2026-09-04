@@ -91,7 +91,7 @@ tarifas:
   regla: $ 65.000 por cada huesped adulto.
   nota: Para 29 o 30 adultos se agrega una colchoneta adicional. Esta acomodacion debe confirmarse antes de reservar.
   cta: Cotizar alojamiento
-  mensaje: Hola, quiero cotizar Hotel Colonial Confort en Zipaquira. Somos [numero] adultos y estas son mis fechas:
+  mensaje: 'Hola, quiero cotizar Hotel Colonial Confort en Zipaquira. Somos [numero] adultos y estas son mis fechas:'
 pruebaSocial:
   fuente: Google
   etiqueta: Opiniones verificadas
