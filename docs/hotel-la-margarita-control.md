@@ -1,5 +1,21 @@
 # Hotel La Margarita — trazabilidad de datos y pendientes
 
+## Actualizacion de auditoria — 4 de septiembre de 2026
+
+La limitacion descrita mas abajo fue superada mediante navegacion publica en
+Google. Se verificaron directamente la ficha de Hotel La Margarita y su
+galeria: categoria Hotel, direccion Cl. 12 #9-31, calificacion 3,8/5 con 25
+opiniones y ocho fotografias reales disponibles en la ficha. Las ocho imagenes
+fueron optimizadas para web sin generar ni modificar elementos del inmueble y
+quedaron integradas en portada y galeria. El telefono del establecimiento no se
+publica; las solicitudes siguen llegando al canal de Atheron Suite.
+
+La ficha permanece en borrador porque aun faltan el inventario completo de
+habitaciones, horarios y condiciones operativas confirmadas por la
+administracion. Todo texto posterior que diga que Google o las fotografias no
+pudieron consultarse debe leerse como registro historico del primer intento,
+no como estado actual.
+
 > Documento **interno**. No se publica: vive en `docs/`, que no entra en el
 > sitio construido.
 >

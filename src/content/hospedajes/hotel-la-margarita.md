@@ -8,18 +8,34 @@ titulo: Hotel La Margarita en Zipaquira | Hospedaje aliado para grupos
 descripcion: Hotel aliado en Zipaquira, Cundinamarca, cerca del centro historico y de la Catedral de Sal. Alojamiento para grupos gestionado por Atheron Suite.
 ogTitulo: Hotel La Margarita | Zipaquira
 ogDescripcion: Hotel aliado en Zipaquira, cerca del centro historico y de la Catedral de Sal. Consulta disponibilidad con Atheron Suite.
-avisoBorrador: Ficha en preparacion. Faltan fotografias autorizadas, el inventario de habitaciones y los horarios confirmados por el hotel.
+avisoBorrador: Ficha en preparacion. La galeria real ya esta integrada; faltan confirmar el inventario completo de habitaciones, los horarios y las condiciones operativas del hotel.
 avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operacion y la entrega de las habitaciones se coordinan con la administracion del hotel.
 zona: Barrio La Esmeralda
 localidad: Zipaquira
 departamento: Cundinamarca
 presentacion: Hotel aliado en Zipaquira, cerca del centro historico y de la Catedral de Sal, con capacidad para acoger grupos grandes.
 presentacionPendiente: false
-fotoTarjeta: ''
-fotoTarjetaAlt: ''
-fotoPrincipal: ''
-fotoPrincipalAlt: ''
-galeria: []
+fotoTarjeta: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-01-habitacion.webp
+fotoTarjetaAlt: Habitacion de Hotel La Margarita con cama doble y camarote
+fotoPrincipal: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-01-habitacion.webp
+fotoPrincipalAlt: Habitacion de Hotel La Margarita en Zipaquira con cama doble, camarote y television
+galeria:
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-01-habitacion.webp
+    alt: Habitacion de Hotel La Margarita con cama doble, camarote y television
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-02-zona-comun.webp
+    alt: Zona comun interior de Hotel La Margarita con plantas y television
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-03-pasillo-superior.webp
+    alt: Pasillo del nivel superior de Hotel La Margarita
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-04-acceso-interior.webp
+    alt: Acceso interior y zona de circulacion de Hotel La Margarita
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-05-escaleras.webp
+    alt: Escaleras interiores de Hotel La Margarita decoradas con plantas y cuadros
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-06-recepcion.webp
+    alt: Mostrador de recepcion de Hotel La Margarita
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-07-pasillo-habitaciones.webp
+    alt: Pasillo de acceso a las habitaciones de Hotel La Margarita
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-08-acceso-recepcion.webp
+    alt: Acceso a la recepcion y zonas interiores de Hotel La Margarita
 datos:
   - numero: Hasta 40
     texto: Huespedes en grupo
@@ -48,16 +64,17 @@ resumen: Hotel aliado en Zipaquira, cerca del centro historico, con capacidad pa
 precio: Desde $ 65.000 por persona
 precioPendiente: false
 habitaciones:
-  - nombre: Habitacion privada
-    huespedes: 'N'
-    camas: 'N'
-    banos: 'N'
+  - nombre: Habitacion familiar fotografiada
+    huespedes: Por confirmar
+    camas: 1 cama doble y 1 camarote visibles
+    banos: Por confirmar
     descripcion: >-
-      Habitacion privada con television por cable y wifi. El numero de
-      habitaciones, su capacidad y el tipo de cama se publican cuando el hotel
-      los confirme por escrito.
-    pendiente: true
-heroFoto: false
+      Habitacion con cama doble, camarote y television, tal como aparece en la
+      galeria publica del hotel. La capacidad exacta y el inventario completo
+      de habitaciones quedan sujetos a confirmacion de la administracion.
+    pendiente: false
+heroFoto: true
+heroEncuadre: center 43%
 tarifas:
   etiqueta: Tarifas
   titulo: Una tarifa clara por persona
@@ -79,6 +96,8 @@ antesDeReservar:
       texto: Hemos alojado grupos de hasta 40 personas. La disponibilidad para un grupo completo se confirma antes de reservar.
     - titulo: Registro Nacional de Turismo
       texto: El establecimiento figura en el Registro Nacional de Turismo con el numero 29756.
+    - titulo: Inventario sujeto a confirmacion
+      texto: La distribucion de camas y habitaciones disponibles para cada grupo se confirma antes de reservar. No asumimos que toda la capacidad este disponible para todas las fechas.
 descripcionZona: En Zipaquira, cerca del centro historico y de la Catedral de Sal. La direccion exacta y las instrucciones de llegada se entregan al confirmar la reserva.
 descripcionZonaPendiente: false
 distancias: []
@@ -123,5 +142,6 @@ estancias de hasta 40 personas. La tarifa parte de $ 65.000 por persona por
 noche y se confirma segun el numero de huespedes y las fechas.
 
 El establecimiento figura en el Registro Nacional de Turismo con el numero
-29756. El inventario de habitaciones, los horarios de entrada y salida y las
-demas condiciones se publican en esta ficha cuando el hotel los confirme.
+29756. La galeria muestra fotografias reales de la ficha publica del hotel. El
+inventario completo de habitaciones, los horarios de entrada y salida y las
+demas condiciones se publican cuando la administracion los confirme.
