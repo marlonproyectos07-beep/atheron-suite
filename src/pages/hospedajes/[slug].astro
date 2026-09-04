@@ -350,19 +350,43 @@ function idHabitacion(nombre) {
             {d.videoPrincipal.descripcion && <p class="texto-suave">{d.videoPrincipal.descripcion}</p>}
             {d.videoPrincipal.duracion && <span class="video-principal__duracion">{d.videoPrincipal.duracion}</span>}
           </div>
-          <video
-            class="video-principal__reproductor"
-            controls
-            playsinline
-            preload="none"
-            poster={d.videoPrincipal.poster}
-            width={d.videoPrincipal.ancho}
-            height={d.videoPrincipal.alto}
-            aria-label={d.videoPrincipal.titulo}
-          >
-            <source src={d.videoPrincipal.src} type="video/mp4" />
-            Tu navegador no puede reproducir este video.
-          </video>
+          {d.videoPrincipal.capitulos.length > 0 ? (
+            <div class="video-capitulos">
+              {d.videoPrincipal.capitulos.map((capitulo, i) => (
+                <article class="video-capitulo">
+                  <h3>{i + 1}. {capitulo.titulo}</h3>
+                  <video
+                    class="video-principal__reproductor"
+                    controls
+                    playsinline
+                    preload="none"
+                    poster={capitulo.poster}
+                    width={d.videoPrincipal.ancho}
+                    height={d.videoPrincipal.alto}
+                    aria-label={capitulo.titulo}
+                  >
+                    <source src={capitulo.src} type="video/mp4" />
+                    Tu navegador no puede reproducir este video.
+                  </video>
+                  {capitulo.duracion && <span class="video-principal__duracion">{capitulo.duracion}</span>}
+                </article>
+              ))}
+            </div>
+          ) : d.videoPrincipal.src ? (
+            <video
+              class="video-principal__reproductor"
+              controls
+              playsinline
+              preload="none"
+              poster={d.videoPrincipal.poster}
+              width={d.videoPrincipal.ancho}
+              height={d.videoPrincipal.alto}
+              aria-label={d.videoPrincipal.titulo}
+            >
+              <source src={d.videoPrincipal.src} type="video/mp4" />
+              Tu navegador no puede reproducir este video.
+            </video>
+          ) : null}
         </div>
       </section>
     )}
