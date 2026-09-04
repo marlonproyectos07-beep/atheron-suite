@@ -79,28 +79,37 @@ antesDeReservar:
   condiciones:
     - titulo: Estacionamiento
       texto: >-
-        El edificio tiene dos espacios para vehiculos de tamano normal, dentro
-        del edificio y detras del porton, sujetos a disponibilidad y con costo adicional en reservas individuales.
+        Hay dos espacios cubiertos para carros y tres para motos, sujetos a
+        disponibilidad. El valor por noche es de $ 20.000 por carro y
+        $ 10.000 por moto, pagados directamente en las instalaciones. Solicita
+        el cupo antes de llegar.
     - titulo: Acceso por escaleras
       texto: >-
         El edificio no tiene ascensor. El acceso es por escaleras y el
         apartamento no se ofrece como adaptado para movilidad reducida.
-    - titulo: Mascotas, bajo consulta previa
+    - titulo: Mascotas bienvenidas
       texto: >-
-        La administracion del edificio las acepta segun el caso. Las
-        condiciones y el costo se confirman antes de reservar.
+        Deben reportarse antes de la llegada. El aseo del apartamento tiene un
+        recargo adicional; confirmamos su valor antes de reservar.
 descripcionZona: >-
-  En el sector de Algarra, en Zipaquira. Las distancias exactas se publican en
-  cuanto esten confirmadas. La direccion se entrega al confirmar la reserva.
+  En el barrio Algarra III, en Zipaquira. Puedes consultar el punto exacto en
+  Google Maps; las instrucciones de ingreso se coordinan al confirmar la
+  reserva.
 descripcionZonaPendiente: false
 distancias: []
-horarios: []
+horarios:
+  - lugar: Entrada (check-in)
+    valor: De 3:00 p. m. a 5:00 p. m.; si llegas en otro horario, avisanos con anticipacion
+    pendiente: false
+  - lugar: Salida (check-out)
+    valor: Antes de las 11:00 a. m.
+    pendiente: false
 direccionPublica: false
 mapaBbox: ''
 mapaTitulo: ''
-enlaceMapa: ''
+enlaceMapa: https://g.co/kgs/xdC5aPt
 nombreAnterior: ''
-mapaNota: ''
+mapaNota: Consulta el punto exacto en Google Maps y coordina con nosotros las instrucciones de ingreso.
 mapaNotaPendiente: false
 experiencias: []
 tituloContacto: Consulta disponibilidad de este apartamento
@@ -111,8 +120,8 @@ datosContacto:
 calle: ''
 latitud: null
 longitud: null
-checkin: ''
-checkout: ''
+checkin: '15:00'
+checkout: '11:00'
 comodidades:
   - Wifi
   - Cocina equipada
@@ -121,7 +130,7 @@ comodidades:
   - Refrigerador
   - Agua caliente
   - Lavadora
-actualizado: ''
+actualizado: '2026-09-04'
 ---
 
 Apartamento 302 independiente en el sector de Algarra, en Zipaquira. Tiene una
