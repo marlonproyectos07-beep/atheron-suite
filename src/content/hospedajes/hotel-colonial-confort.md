@@ -8,18 +8,22 @@ titulo: Hotel Colonial Confort en Zipaquira | Hospedaje para parejas
 descripcion: Hotel aliado para parejas y grupos de adultos en el centro de Zipaquira, cerca de la Catedral de Sal. Consulta disponibilidad con Atheron Suite.
 ogTitulo: Hotel Colonial Confort | Centro de Zipaquira
 ogDescripcion: Habitaciones privadas para parejas y grupos de adultos en el centro de Zipaquira, cerca de la Catedral de Sal.
-avisoBorrador: Ficha en preparacion. Faltan las fotografias optimizadas y la verificacion final antes de publicar.
+avisoBorrador: Ficha en preparacion. Fotografias reales integradas; pendiente de auditoria final antes de publicar.
 avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operacion y la entrega de las habitaciones se coordinan con la administracion del hotel.
 zona: Centro de Zipaquira
 localidad: Zipaquira
 departamento: Cundinamarca
 presentacion: Trece habitaciones privadas para parejas y grupos de adultos en el centro de Zipaquira, con capacidad para 28 personas en camas fijas y hasta 30 con una colchoneta adicional.
 presentacionPendiente: false
-fotoTarjeta: ''
-fotoTarjetaAlt: ''
-fotoPrincipal: ''
-fotoPrincipalAlt: ''
-galeria: []
+fotoTarjeta: /assets/img/hospedajes/hotel-colonial-confort/colonial-confort-01-patio.webp
+fotoTarjetaAlt: Patio interior de Hotel Colonial Confort con arcos de madera y zona de descanso
+fotoPrincipal: /assets/img/hospedajes/hotel-colonial-confort/colonial-confort-01-patio.webp
+fotoPrincipalAlt: Patio interior de Hotel Colonial Confort con estructura de madera, plantas y sillas de descanso
+galeria:
+  - imagen: /assets/img/hospedajes/hotel-colonial-confort/colonial-confort-01-patio.webp
+    alt: Patio interior de Hotel Colonial Confort con estructura de madera, plantas y sillas de descanso
+  - imagen: /assets/img/hospedajes/hotel-colonial-confort/colonial-confort-02-habitacion-doble.webp
+    alt: Habitacion doble de Hotel Colonial Confort con ropa de cama blanca y detalle azul
 datos:
   - numero: '13'
     texto: Habitaciones privadas
@@ -76,7 +80,7 @@ habitaciones:
     precio: $ 65.000 por persona
     pendiente: false
 notaHabitaciones: El hotel tiene doce habitaciones con una cama doble y una habitacion con dos camas dobles. No se admiten menores de edad.
-heroFoto: false
+heroFoto: true
 tarifas:
   etiqueta: Tarifas
   titulo: Una tarifa clara por persona
