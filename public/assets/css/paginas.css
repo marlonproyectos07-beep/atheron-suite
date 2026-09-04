@@ -654,3 +654,24 @@
   .video-principal__interior { grid-template-columns: 1fr; }
   .video-principal__reproductor { max-width: 340px; }
 }
+
+.video-capitulos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--esp-3);
+  align-items: start;
+}
+.video-capitulo {
+  padding: var(--esp-2);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--fondo);
+}
+.video-capitulo h3 {
+  margin-bottom: var(--esp-2);
+  font-size: 1rem;
+}
+.video-capitulo .video-principal__reproductor { max-height: 360px; }
+@media (max-width: 520px) {
+  .video-capitulos { grid-template-columns: 1fr; }
+}
