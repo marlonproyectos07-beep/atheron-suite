@@ -31,10 +31,10 @@ mala en una ficha nuestra la paga la marca, no el aliado.
 | Polvo bajo camas y muebles | Checklist de aseo profundo, no solo superficies visibles |
 | Apartamentos aún en aseo al llegar | Hora de corte de limpieza frente a la hora de entrada |
 | Dotación limitada de ollas y utensilios | La cocina equipada está confirmada; falta inventario detallado por apartamento |
-| Parqueadero no disponible a veces | Hay dos cupos tras el portón; falta definir el protocolo de asignación cuando haya varias reservas |
+| Parqueadero no disponible a veces | Hay dos cupos cubiertos para carros y tres para motos; deben solicitarse antes de llegar y siguen sujetos a disponibilidad |
 | Ruido entre pisos | Qué se puede mitigar y qué hay que advertir por escrito |
 | Internet inestable en el dúplex | Medición real antes de publicar la ficha del dúplex |
-| Cobro por mascotas poco claro | Condición y monto por escrito antes de anunciarlo |
+| Recargo de aseo por mascotas | Se confirmó que son bienvenidas y deben reportarse; falta definir el valor exacto del recargo antes de publicar una cifra |
 | Comunicación y entrega de llaves | Protocolo de entrega y tiempos de respuesta |
 | Base de cama desajustada (401) | Reparación verificada |
 
@@ -45,7 +45,11 @@ se muestra en ninguna página.
 ## Datos ya confirmados
 
 - No hay ascensor: el acceso es por escaleras y no se ofrece accesibilidad para movilidad reducida.
-- Hay dos espacios para carros normales dentro del edificio, detrás del portón.
+- Hay dos espacios cubiertos para carros ($20.000 por noche) y tres para motos ($10.000 por noche), sujetos a disponibilidad y pagados en las instalaciones.
+- La llegada habitual es de 3:00 p. m. a 5:00 p. m.; fuera de ese horario el huésped debe avisar su hora estimada.
+- La salida es antes de las 11:00 a. m.
+- El edificio está en el barrio Algarra III y ya se verificó el enlace oficial de Google Maps.
+- Las mascotas son bienvenidas, deben reportarse y generan un recargo adicional de aseo todavía sin cifra confirmada.
 - Cada apartamento tiene cocina equipada, agua caliente y lavadora.
 - Las camas dobles miden 1,40 m.
 - Los apartamentos conservan, en términos generales, el mismo diseño, estructura y acabados.
@@ -62,11 +66,11 @@ se muestra en ninguna página.
    otros cinco.
 5. **Qué cinco unidades** componen la capacidad grupal de 35. Edwin debe
    identificarlas; la ficha habla de la capacidad sin nombrar unidades.
-6. **Ubicación exacta, distancias y entorno.** Hoy la ficha solo dice
-   «sector de Algarra, Zipaquirá».
-7. **Horarios de entrada y salida.**
-8. **Tarifa pública aprobada** por unidad y para grupo.
-9. **Condiciones y costo de mascotas**, por escrito.
+6. **Distancias y entorno.** La ubicación y el enlace de Maps ya están
+   confirmados; faltan tiempos reales hacia puntos de interés.
+7. **Tarifa pública aprobada** por unidad y para grupo.
+8. **Valor exacto del recargo de aseo por mascotas.** La aceptación y el
+   deber de reportarlas ya están confirmados.
 
 ## Fotografías
 
