@@ -41,6 +41,7 @@ import ProyectoEstado from '../../components/ProyectoEstado.astro';
 import ProyectoGaleria from '../../components/ProyectoGaleria.astro';
 import ProyectoComparador from '../../components/ProyectoComparador.astro';
 import ProyectoUnidad from '../../components/ProyectoUnidad.astro';
+import ProyectoFoto from '../../components/ProyectoFoto.astro';
 
 import { menuHospedajes } from '../../data/navegacion';
 import { whatsappRespaldo } from '../../data/ajustes';
@@ -54,6 +55,7 @@ import {
   AVISO_INFORMATIVO,
   ETIQUETA_GALERIA_REAL,
   HUECOS_GALERIA,
+  GRUPOS_GALERIA,
   fechaEnTexto,
   seo,
   hero,
@@ -146,6 +148,8 @@ const fichaPagina = {
   ruta={RUTA}
   indexable={false}
   seguirEnlaces={false}
+  imagen={seo.imagen}
+  imagenAlt={seo.imagenAlt}
   avisoBorrador={avisoBorrador}
   jsonLd={fichaPagina}
   hojasExtra={['proyecto-casa-colonial']}
@@ -172,12 +176,15 @@ const fichaPagina = {
     {/* ============================================================
          1. HERO
 
-         La foto sera una interior real con vista hacia la Catedral,
-         y solo cuando venga elegida en el manifiesto aprobado. La
-         fachada no se usa en ningun sitio: ni aqui, ni en la
-         galeria, ni al compartir el enlace.
+         Fotografia interior real, con el balcon hacia el centro
+         historico. La fachada no se usa en ningun sitio: ni aqui,
+         ni en la galeria, ni al compartir el enlace.
+
+         Es la unica imagen de la pagina que se pide con prioridad
+         (prioritaria), porque es la primera que se ve y la que
+         Lighthouse mide como LCP. Todas las demas van diferidas.
          ============================================================ */}
-    <section class="hero hero--interior">
+    <section class="hero hero--interior hero--proyecto">
       <div class="contenedor hero__contenido">
         <span class="hero__etiqueta">{hero.ceja}</span>
         <h1 class="hero__titulo">{hero.titulo}</h1>
@@ -201,6 +208,12 @@ const fichaPagina = {
           </p>
         )}
       </div>
+
+      {hero.foto && (
+        <div class="contenedor hero__foto">
+          <ProyectoFoto foto={hero.foto} prioritaria medidas="(min-width: 1100px) 68rem, 100vw" />
+        </div>
+      )}
     </section>
 
     {/* ============================================================
@@ -231,6 +244,17 @@ const fichaPagina = {
         </div>
 
         <blockquote class="destacado">{historia.destacado}</blockquote>
+
+        {/* Historia y ubicacion. La ubicacion se ensena desde
+            dentro hacia el centro historico: la direccion exacta
+            no se publica todavia. */}
+        {historia.fotos.length > 0 && (
+          <div class="pareja-fotos">
+            {historia.fotos.map((foto) => (
+              <ProyectoFoto foto={foto} medidas="(min-width: 900px) 33rem, 100vw" />
+            ))}
+          </div>
+        )}
       </div>
     </section>
 
@@ -255,6 +279,7 @@ const fichaPagina = {
           fotos={galeriaEstadoActual}
           etiqueta={ETIQUETA_GALERIA_REAL}
           huecos={HUECOS_GALERIA}
+          grupos={GRUPOS_GALERIA}
         />
       </div>
     </section>
@@ -342,6 +367,16 @@ const fichaPagina = {
         <div class="columna-texto" style="margin-top: var(--esp-4);">
           {modelo.parrafos.map((parrafo) => <p>{parrafo}</p>)}
         </div>
+
+        {/* La vision integrada: por donde se entra a las cuatro
+            unidades. Representacion conceptual, rotulada. */}
+        {modelo.foto && (
+          <ProyectoFoto
+            foto={modelo.foto}
+            clase="foto-proyecto--centrada"
+            medidas="(min-width: 900px) 28rem, 100vw"
+          />
+        )}
       </div>
     </section>
 
@@ -485,6 +520,16 @@ const fichaPagina = {
             >{boton.texto}</a>
           ))}
         </div>
+
+        {/* Experiencia y bienvenida. Si la imagen no esta
+            aprobada, el componente pinta el hueco y dice por que:
+            no se sustituye por otra. */}
+        <ProyectoFoto
+          foto={cierre.foto}
+          clase="foto-proyecto--centrada"
+          textoHueco="Imagen de bienvenida pendiente"
+          medidas="(min-width: 900px) 28rem, 100vw"
+        />
 
         <p class="cierre__firma texto-suave">{NOMBRE}</p>
       </div>

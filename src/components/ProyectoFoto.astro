@@ -1,0 +1,124 @@
+---
+/* ============================================================
+   UNA IMAGEN DEL PROYECTO, CON SU ROTULO PEGADO
+
+   POR QUE EXISTE ESTE COMPONENTE
+
+   En esta pagina conviven fotografias de una casa real con
+   representaciones conceptuales de una casa que todavia no existe.
+   Confundirlas no es un fallo de diseno: es prometer algo que no
+   se ha hecho.
+
+   La forma barata de evitarlo seria escribir el rotulo a mano
+   debajo de cada imagen. Funciona el primer dia y falla el sexto,
+   cuando alguien copia un bloque, cambia la imagen y se olvida del
+   texto de abajo.
+
+   Aqui el rotulo NO se escribe: se deduce del campo "tipo" de la
+   imagen, con rotuloDe(). Cambiar la imagen cambia el rotulo. Es
+   imposible poner una representacion conceptual bajo el rotulo de
+   una fotografia real, porque nadie escribe ninguno de los dos.
+
+     REAL        "Fotografia real - estado actual."
+     OBRA        "Fotografia real - proceso de remodelacion."
+     CONCEPTUAL  "Representacion conceptual - no corresponde al
+                  estado actual." + el aviso de que el diseno puede
+                  cambiar + el sello sobre la propia imagen.
+
+   LAS CONCEPTUALES LLEVAN TRES AVISOS, Y NO SOBRA NINGUNO
+   El sello va encima de la imagen, para quien solo mira. El rotulo
+   va debajo, para quien lee. Y el aviso largo explica que lo que
+   se ve puede cambiar. Un pantallazo recortado de la imagen sigue
+   llevando el sello encima.
+
+   SI LA IMAGEN NO ESTA APROBADA
+   No se pinta. Se deja el hueco reservado, con su motivo visible
+   solo en el borrador. No se sustituye por otra imagen: rellenar
+   un hueco con la foto que haya a mano es como se acaba enseñando
+   una propiedad distinta.
+   ============================================================ */
+
+import Foto from './Foto.astro';
+import {
+  rotuloDe,
+  ETIQUETA_CONCEPTUAL,
+  AVISO_CONCEPTUAL,
+  BORRADOR,
+} from '../data/casa-colonial-centro';
+import type { FotoProyecto } from '../data/casa-colonial-centro';
+
+interface Props {
+  foto: FotoProyecto | null;
+  /** Texto del hueco cuando no hay imagen que pintar. */
+  textoHueco?: string;
+  /** La unica imagen de la pagina que se carga con prioridad. */
+  prioritaria?: boolean;
+  /** Que ancho ocupa la imagen, para que el navegador elija tamano. */
+  medidas?: string;
+  /** Clase extra del <figure>, para colocarlo desde fuera. */
+  clase?: string;
+}
+
+const { foto, textoHueco = 'Imagen pendiente', prioritaria, medidas, clase } = Astro.props;
+
+/* La orientacion del archivo decide la proporcion del hueco. Asi la
+   pagina reserva el sitio exacto y no da el salto cuando la imagen
+   termina de bajar. */
+const FORMA = {
+  vertical: 'alto',
+  horizontal: undefined,
+  cuadrada: 'cuadrado',
+} as const;
+
+const visible = Boolean(foto && foto.aprobada);
+const esConceptual = foto?.tipo === 'CONCEPTUAL';
+---
+
+<figure class:list={['foto-proyecto', clase, esConceptual && 'foto-proyecto--conceptual']}>
+  {visible && foto ? (
+    <div class="foto-proyecto__marco">
+      <Foto
+        src={foto.ruta}
+        alt={foto.alt}
+        forma={foto.orientacion ? FORMA[foto.orientacion] : undefined}
+        ancho={foto.ancho}
+        alto={foto.alto}
+        medidas={medidas}
+        prioritaria={prioritaria}
+      />
+      {esConceptual && (
+        <span class="foto-proyecto__sello">{ETIQUETA_CONCEPTUAL}</span>
+      )}
+    </div>
+  ) : (
+    <div class="placeholder">{textoHueco}</div>
+  )}
+
+  <figcaption class="foto-proyecto__pie">
+    {visible && foto ? (
+      <>
+        <p
+          class:list={[
+            'foto-proyecto__rotulo',
+            esConceptual ? 'foto-proyecto__rotulo--conceptual' : 'foto-proyecto__rotulo--real',
+          ]}
+        >{rotuloDe(foto.tipo)}</p>
+
+        {esConceptual && <p class="foto-proyecto__aviso">{AVISO_CONCEPTUAL}</p>}
+
+        {foto.descripcion && (
+          <p class="foto-proyecto__texto texto-suave">{foto.descripcion}</p>
+        )}
+      </>
+    ) : (
+      <>
+        <p class="foto-proyecto__rotulo texto-suave">Imagen pendiente de integración.</p>
+        {/* El motivo es informacion de trabajo: se ve mientras la
+            pagina es borrador y desaparece en la version publica. */}
+        {BORRADOR && foto?.motivoNoAprobada && (
+          <p class="foto-proyecto__texto texto-suave">{foto.motivoNoAprobada}</p>
+        )}
+      </>
+    )}
+  </figcaption>
+</figure>

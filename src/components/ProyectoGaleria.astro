@@ -20,10 +20,25 @@
    3. Sin fotos aprobadas, se pintan huecos reservados. La pagina se
       ve entera y se puede revisar el diseno, pero nadie puede
       confundir un hueco con una foto.
+
+   POR QUE VA EN GRUPOS Y NO EN UN MURO DE FOTOS
+
+   Doce fotos seguidas no cuentan nada: hay que mirarlas una a una
+   para entender que se esta viendo. En grupos con titulo, la
+   galeria dice primero que conserva la casa y despues que esta
+   cambiando la obra, y cada foto se lee dentro de esa frase.
+
+   Los grupos son opcionales. Si ninguna foto trae "grupo", la
+   galeria sale como una lista unica, igual que antes.
+
+   EL ROTULO DE CADA FOTO NO SE ESCRIBE AQUI
+   Sale de rotuloDe(), a partir del tipo. Una foto de obra dice
+   "proceso de remodelacion" y una del estado actual dice "estado
+   actual", sin que esta maqueta tenga que acordarse.
    ============================================================ */
 
 import Foto from './Foto.astro';
-import { fechaEnTexto } from '../data/casa-colonial-centro';
+import { fechaEnTexto, rotuloDe } from '../data/casa-colonial-centro';
 import type { FotoProyecto } from '../data/casa-colonial-centro';
 
 interface Props {
@@ -32,9 +47,11 @@ interface Props {
   etiqueta: string;
   /** Cuantos huecos se pintan mientras no haya fotos aprobadas. */
   huecos?: number;
+  /** Grupos narrativos, en orden. Sin esto, sale una lista unica. */
+  grupos?: { id: string; titulo: string; texto: string }[];
 }
 
-const { fotos, etiqueta, huecos = 6 } = Astro.props;
+const { fotos, etiqueta, huecos = 6, grupos = [] } = Astro.props;
 
 const conceptuales = fotos.filter((f) => f.tipo === 'CONCEPTUAL');
 if (conceptuales.length) {
@@ -59,37 +76,69 @@ const FORMA = {
   cuadrada: 'cuadrado',
 } as const;
 
-const TIPO = { REAL: 'Estado actual', OBRA: 'Proceso de obra' } as const;
+/* Cada grupo con sus fotos. Un grupo sin fotos aprobadas no se
+   pinta: un titulo sobre un vacio solo explica lo que falta. */
+const bloques = grupos
+  .map((grupo) => ({ ...grupo, fotos: visibles.filter((f) => f.grupo === grupo.id) }))
+  .filter((grupo) => grupo.fotos.length > 0);
+
+/* Lo que no cae en ningun grupo declarado sigue saliendo, al final:
+   una foto no se pierde por un identificador mal escrito. */
+const sueltas = visibles.filter((f) => !bloques.some((g) => g.fotos.includes(f)));
+
+const listas = bloques.length
+  ? [...bloques, ...(sueltas.length ? [{ id: 'otras', titulo: '', texto: '', fotos: sueltas }] : [])]
+  : [{ id: 'todas', titulo: '', texto: '', fotos: visibles }];
 ---
 
 <p class="galeria-proyecto__rotulo">{etiqueta}</p>
 
 {visibles.length > 0 ? (
-  <ul class="galeria-proyecto">
-    {visibles.map((foto) => (
-      <li class="galeria-proyecto__item">
-        <figure>
-          <Foto
-            src={foto.ruta}
-            alt={foto.alt}
-            forma={foto.orientacion ? FORMA[foto.orientacion] : undefined}
-          />
-          <figcaption class="galeria-proyecto__pie">
-            <span class="galeria-proyecto__tipo">{TIPO[foto.tipo as 'REAL' | 'OBRA']}</span>
-            <strong>{foto.espacio}</strong>
-            {foto.planta && <span class="galeria-proyecto__dato">{foto.planta}</span>}
-            {foto.fecha && (
-              <span class="galeria-proyecto__dato">
-                <time datetime={foto.fecha}>{fechaEnTexto(foto.fecha)}</time>
-              </span>
-            )}
-            {foto.descripcion && <span class="galeria-proyecto__texto">{foto.descripcion}</span>}
-            {foto.credito && <span class="galeria-proyecto__dato">Foto: {foto.credito}</span>}
-          </figcaption>
-        </figure>
-      </li>
-    ))}
-  </ul>
+  listas.map((grupo) => (
+    <section class="galeria-proyecto__grupo">
+      {grupo.titulo && (
+        <header class="galeria-proyecto__cabecera">
+          <h3 class="galeria-proyecto__titulo">{grupo.titulo}</h3>
+          {grupo.texto && <p class="texto-suave">{grupo.texto}</p>}
+        </header>
+      )}
+
+      <ul class="galeria-proyecto">
+        {grupo.fotos.map((foto) => (
+          <li class="galeria-proyecto__item">
+            <figure>
+              <Foto
+                src={foto.ruta}
+                alt={foto.alt}
+                forma={foto.orientacion ? FORMA[foto.orientacion] : undefined}
+                ancho={foto.ancho}
+                alto={foto.alto}
+                medidas="(min-width: 900px) 22rem, 100vw"
+              />
+              <figcaption class="galeria-proyecto__pie">
+                <strong>{foto.espacio}</strong>
+                {/* El rotulo obligatorio, con el texto exacto y
+                    deducido del tipo. Sustituye a la etiqueta corta
+                    que habia antes ("Estado actual" / "Proceso de
+                    obra"): decia lo mismo con otras palabras, y dos
+                    rotulos distintos sobre la misma foto se acaban
+                    contradiciendo. */}
+                <span class="galeria-proyecto__rotulo-foto">{rotuloDe(foto.tipo)}</span>
+                {foto.planta && <span class="galeria-proyecto__dato">{foto.planta}</span>}
+                {foto.fecha && (
+                  <span class="galeria-proyecto__dato">
+                    <time datetime={foto.fecha}>{fechaEnTexto(foto.fecha)}</time>
+                  </span>
+                )}
+                {foto.descripcion && <span class="galeria-proyecto__texto">{foto.descripcion}</span>}
+                {foto.credito && <span class="galeria-proyecto__dato">Foto: {foto.credito}</span>}
+              </figcaption>
+            </figure>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))
 ) : (
   <>
     <ul class="galeria-proyecto">
@@ -105,4 +154,3 @@ const TIPO = { REAL: 'Estado actual', OBRA: 'Proceso de obra' } as const;
     </p>
   </>
 )}
-

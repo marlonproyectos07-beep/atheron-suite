@@ -35,16 +35,19 @@
    que no corresponde al estado actual, y que el diseno puede
    cambiar. No son decorativos: son la diferencia entre ensenar una
    idea y prometer un resultado.
+
+   DE DONDE SALEN ESOS ROTULOS
+   No de aqui. Los pone ProyectoFoto a partir del tipo de cada
+   imagen, y por eso el primer panel no dice siempre "estado
+   actual": cuando la fotografia es de obra -como la cubierta- el
+   rotulo cambia solo a "proceso de remodelacion". Escribirlo a
+   mano en este componente seria rotular seis espacios iguales
+   cuando uno no lo es.
    ============================================================ */
 
-import Foto from './Foto.astro';
+import ProyectoFoto from './ProyectoFoto.astro';
 import ProyectoEstado from './ProyectoEstado.astro';
-import {
-  fechaEnTexto,
-  ETIQUETA_CONCEPTUAL,
-  AVISO_CONCEPTUAL,
-  AVISO_CONCEPTUAL_CORTO,
-} from '../data/casa-colonial-centro';
+import { fechaEnTexto } from '../data/casa-colonial-centro';
 import type { BloqueTransformacion } from '../data/casa-colonial-centro';
 
 interface Props {
@@ -117,18 +120,15 @@ const aPintar = visibles.length ? visibles : [RESERVADO];
 
       <div class="comparador__paneles">
 
-        {/* 1. ESTADO ACTUAL — fotografia real */}
+        {/* 1. FOTOGRAFIA REAL — del estado actual o de la obra.
+             Cual de las dos cosas lo dice el rotulo, y el rotulo
+             lo decide el tipo de la imagen. */}
         <div class="comparador__panel comparador__panel--actual">
-          <Foto
-            src={bloque.fotoActual?.ruta}
-            alt={bloque.fotoActual?.alt}
-            forma="ancho"
-          >
-            Fotografía real pendiente
-          </Foto>
-          <p class="comparador__rotulo comparador__rotulo--real">
-            Fotografía real del estado actual
-          </p>
+          <ProyectoFoto
+            foto={bloque.fotoActual}
+            textoHueco="Fotografía real pendiente"
+            medidas="(min-width: 900px) 46rem, 100vw"
+          />
           {bloque.descripcionActual ? (
             <p class="comparador__texto">{bloque.descripcionActual}</p>
           ) : (
@@ -140,20 +140,11 @@ const aPintar = visibles.length ? visibles : [RESERVADO];
 
         {/* 2. REPRESENTACION CONCEPTUAL — siempre rotulada */}
         <div class="comparador__panel comparador__panel--conceptual">
-          <div class="comparador__marco-conceptual">
-            <Foto
-              src={bloque.fotoConceptual?.ruta}
-              alt={bloque.fotoConceptual?.alt}
-              forma="ancho"
-            >
-              Representación conceptual pendiente
-            </Foto>
-            <span class="comparador__sello">{ETIQUETA_CONCEPTUAL}</span>
-          </div>
-          <p class="comparador__rotulo comparador__rotulo--conceptual">
-            {AVISO_CONCEPTUAL_CORTO}
-          </p>
-          <p class="comparador__aviso">{AVISO_CONCEPTUAL}</p>
+          <ProyectoFoto
+            foto={bloque.fotoConceptual}
+            textoHueco="Representación conceptual pendiente"
+            medidas="(min-width: 900px) 46rem, 100vw"
+          />
           {bloque.descripcionPropuesta ? (
             <p class="comparador__texto">{bloque.descripcionPropuesta}</p>
           ) : (

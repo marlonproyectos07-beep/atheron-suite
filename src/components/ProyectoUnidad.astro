@@ -21,9 +21,24 @@
    En pantalla pone "Gastrobar". El nombre administrativo,
    "Restaurante gastrobar", viaja en el atributo data-unidad y en
    los datos estructurados. Nunca "bar" a secas.
+
+   POR QUE LA IMAGEN VA DENTRO DEL DESPLEGABLE Y NO EN LA TARJETA
+
+   Tres razones, y ninguna es estetica. Las cuatro tarjetas comparten
+   fila: si dos llevan imagen y dos no, la rejilla se descuadra y
+   parece que a dos unidades les falta algo. Dentro del <details>
+   la imagen no se descarga hasta que alguien lo abre, asi que
+   cuatro representaciones conceptuales no cuestan nada al cargar
+   la pagina. Y el rotulo obligatorio se lee junto a la imagen, en
+   su contexto, en vez de suelto en un mosaico.
+
+   Una unidad sin imagen propia no lleva un hueco: lleva un enlace
+   al espacio del comparador donde ya se ensena. Es la diferencia
+   entre "falta algo" y "esta en otra parte".
    ============================================================ */
 
 import ProyectoEstado from './ProyectoEstado.astro';
+import ProyectoFoto from './ProyectoFoto.astro';
 import { fechaEnTexto } from '../data/casa-colonial-centro';
 import type { Unidad } from '../data/casa-colonial-centro';
 
@@ -66,6 +81,20 @@ const { unidad } = Astro.props;
         <p class="texto-suave">
           La visión ampliada de esta unidad está en preparación. No se publican
           capacidades, tarifas, aforos ni fechas mientras no estén confirmadas.
+        </p>
+      )}
+
+      {unidad.foto && (
+        <ProyectoFoto
+          foto={unidad.foto}
+          clase="unidad__foto"
+          medidas="(min-width: 900px) 20rem, 100vw"
+        />
+      )}
+
+      {unidad.remiteA && (
+        <p class="unidad__remite">
+          <a href={unidad.remiteA.href}>{unidad.remiteA.texto}</a>
         </p>
       )}
     </div>

@@ -151,24 +151,37 @@ export type Evento =
 /* ------------------------------------------------------------
    FOTOGRAFIAS
 
-   NINGUNA foto entra todavia. El material esta en una carpeta
-   privada de Google Drive aprobada por Marlon y administrada fuera
-   del repositorio (169 imagenes: 146 reales o de proceso y 23
-   representaciones conceptuales), y solo se integrara la seleccion
-   que llegue en el manifiesto aprobado por Marlon y ChatGPT.
-
-   El identificador de esa carpeta NO se escribe aqui: vive en el
-   canal interno entre Marlon y ChatGPT. Lo que se escriba en este
+   DE DONDE SALEN
+   Del paquete aprobado por Marlon: 22 imagenes web optimizadas que
+   viven en public/assets/img/proyectos/casa-colonial-centro/. Al
+   repositorio entran SOLO los derivados web. El paquete original,
+   el manifiesto y los identificadores de la carpeta privada NO se
+   versionan y NO se escriben aqui: lo que se escribe en este
    archivo termina en el HTML que se publica.
 
-   Existe otra carpeta de nombre parecido que mezcla fotos de otras
-   propiedades. Esa NO se usa.
+   COMO SE REPARTEN
+     12 fotografias reales  ->  9 del estado actual (REAL)
+                                3 del proceso de remodelacion (OBRA)
+     10 representaciones conceptuales (CONCEPTUAL)
 
-   Hasta entonces, la pagina pinta huecos reservados. Prohibido:
-   fotos de otras propiedades, la fachada, bancos de imagenes,
-   imagenes externas, y usar una representacion conceptual para
-   mostrar el estado actual.
+   NO HAY FOTOGRAFIA DE FACHADA, y no se usa ninguna imagen que no
+   este en esta lista. La fachada sigue prohibida en todo el sitio.
+
+   LA REGLA QUE SOSTIENE TODO ESTO
+   Cada imagen se pinta SIEMPRE con su rotulo visible, y el rotulo
+   sale del tipo, no de quien escribe la maqueta:
+
+     REAL        "Fotografia real - estado actual."
+     OBRA        "Fotografia real - proceso de remodelacion."
+     CONCEPTUAL  "Representacion conceptual - no corresponde al
+                  estado actual."
+
+   Asi es imposible colocar una imagen generada bajo el rotulo de
+   una fotografia: el rotulo viaja pegado al dato.
    ------------------------------------------------------------ */
+
+/** Carpeta unica de las imagenes del proyecto dentro del sitio. */
+export const CARPETA_FOTOS = '/assets/img/proyectos/casa-colonial-centro/';
 
 /** Que es la imagen. Decide como se rotula y donde puede salir. */
 export type TipoFoto =
@@ -210,24 +223,432 @@ export interface FotoProyecto {
   /** Autoria, si hay que darla. */
   credito?: string;
   orientacion?: 'vertical' | 'horizontal' | 'cuadrada';
+  /* Medidas reales del archivo. Van al atributo width/height de la
+     imagen para que el navegador reserve el hueco antes de
+     descargarla y la pagina no de el salto (CLS). */
+  ancho: number;
+  alto: number;
   estado: Estado;
   /** false = NO se pinta, aunque el archivo exista. */
   aprobada: boolean;
+  /** Por que no esta aprobada. Solo para el borrador. */
+  motivoNoAprobada?: string;
   /** La destacada de su bloque. */
   destacada?: boolean;
   /* Orden dentro de su bloque, de menor a mayor. El 0 es la
      primera, y es la unica que se carga con prioridad: el resto
      va en carga diferida. */
   prioridad?: number;
+  /** Agrupador narrativo dentro de una galeria. */
+  grupo?: string;
 }
 
-/** Cuantos huecos reservados se pintan mientras no haya manifiesto. */
+/* ------------------------------------------------------------
+   ROTULOS OBLIGATORIOS
+
+   Texto exacto. No se resume, no se reescribe y no se traduce.
+   Se define una sola vez para que ninguna maqueta pueda inventarse
+   una variante mas suave.
+   ------------------------------------------------------------ */
+export const ETIQUETA_REAL_ACTUAL = 'Fotografía real — estado actual.';
+export const ETIQUETA_REAL_PROCESO = 'Fotografía real — proceso de remodelación.';
+export const ETIQUETA_CONCEPTUAL_LARGA =
+  'Representación conceptual — no corresponde al estado actual.';
+
+/** El rotulo que le toca a una imagen por su tipo. Sin excepciones. */
+export function rotuloDe(tipo: TipoFoto): string {
+  if (tipo === 'REAL') return ETIQUETA_REAL_ACTUAL;
+  if (tipo === 'OBRA') return ETIQUETA_REAL_PROCESO;
+  return ETIQUETA_CONCEPTUAL_LARGA;
+}
+
+/* Atajo para no repetir la carpeta 22 veces. Recibe el nombre del
+   archivo y devuelve la ficha completa. */
+function ficha(
+  archivo: string,
+  datos: Omit<FotoProyecto, 'id' | 'ruta'> & { id?: string },
+): FotoProyecto {
+  return {
+    id: datos.id ?? archivo.replace(/^casa-colonial-/, '').replace(/\.webp$/, ''),
+    ruta: CARPETA_FOTOS + archivo,
+    ...datos,
+  };
+}
+
+/* ============================================================
+   CATALOGO DE LAS 22 IMAGENES APROBADAS
+
+   Aprobadas por Marlon. Cada una se usa UNA sola vez en la pagina,
+   salvo la del hero, que ademas abre el primer comparador porque
+   es el mismo espacio y asi lo pide la seleccion.
+   ============================================================ */
+
+/* --- 1. FOTOGRAFIAS REALES DEL ESTADO ACTUAL (9) --- */
+
+export const fotoHero = ficha('casa-colonial-hero-interior-balcon.webp', {
+  tipo: 'REAL',
+  unidad: 'GENERAL',
+  espacio: 'Interior con balcón hacia el centro histórico',
+  alt: 'Interior de la Casa Colonial Centro con balcón hacia el centro histórico de Zipaquirá',
+  orientacion: 'horizontal',
+  ancho: 1600,
+  alto: 1200,
+  estado: 'VERIFICADO',
+  aprobada: true,
+  destacada: true,
+  prioridad: 0,
+});
+
+export const fotoHistoriaBalcon = ficha('casa-colonial-historia-interior-balcon.webp', {
+  tipo: 'REAL',
+  unidad: 'GENERAL',
+  espacio: 'Habitación con salida al balcón',
+  alt: 'Interior de la casa con las puertas del balcón abiertas hacia la plaza del centro histórico, en estado actual',
+  orientacion: 'vertical',
+  ancho: 1200,
+  alto: 1600,
+  estado: 'VERIFICADO',
+  aprobada: true,
+  prioridad: 1,
+});
+
+export const fotoVistaCentro = ficha('casa-colonial-vista-centro-desde-interior.webp', {
+  tipo: 'REAL',
+  unidad: 'GENERAL',
+  espacio: 'Vista hacia el centro histórico',
+  alt: 'Torre de una iglesia del centro histórico de Zipaquirá, vista desde una ventana de la casa',
+  orientacion: 'vertical',
+  ancho: 1200,
+  alto: 1600,
+  estado: 'VERIFICADO',
+  aprobada: true,
+  prioridad: 2,
+});
+
+export const fotoCorredorMosaico = ficha('casa-colonial-corredor-mosaico-estado-actual.webp', {
+  tipo: 'REAL',
+  unidad: 'GENERAL',
+  espacio: 'Corredor con piso de mosaico',
+  alt: 'Corredor de la casa con su piso de mosaico original, en estado actual',
+  descripcion: 'El mosaico del piso es una de las huellas que el proyecto quiere conservar.',
+  orientacion: 'vertical',
+  ancho: 1200,
+  alto: 1600,
+  estado: 'VERIFICADO',
+  aprobada: true,
+  prioridad: 0,
+  grupo: 'arquitectura',
+});
+
+export const fotoGaleriaAlta = ficha('casa-colonial-galeria-alta-cubierta-actual.webp', {
+  tipo: 'REAL',
+  unidad: 'GENERAL',
+  espacio: 'Galería alta bajo la cubierta',
+  alt: 'Galería alta de la casa bajo su cubierta de madera, en estado actual',
+  descripcion: 'La estructura de madera de la cubierta se conserva a la vista.',
+  orientacion: 'horizontal',
+  ancho: 1600,
+  alto: 1200,
+  estado: 'VERIFICADO',
+  aprobada: true,
+  prioridad: 1,
+  grupo: 'arquitectura',
+});
+
+export const fotoPasillo = ficha('casa-colonial-pasillo-habitaciones-actual.webp', {
+  tipo: 'REAL',
+  unidad: 'HOTEL',
+  espacio: 'Pasillo de habitaciones',
+  alt: 'Pasillo de acceso a las habitaciones de la casa, en estado actual',
+  orientacion: 'vertical',
+  ancho: 1200,
+  alto: 1600,
+  estado: 'VERIFICADO',
+  aprobada: true,
+});
+
+export const fotoEscalera = ficha('casa-colonial-escalera-madera-estado-actual.webp', {
+  tipo: 'REAL',
+  unidad: 'GENERAL',
+  espacio: 'Escalera de madera',
+  alt: 'Escalera de madera que comunica los niveles de la casa, en estado actual',
+  orientacion: 'vertical',
+  ancho: 1200,
+  alto: 1600,
+  estado: 'VERIFICADO',
+  aprobada: true,
+});
+
+export const fotoPatioArcos = ficha('casa-colonial-patio-arcos-estado-actual.webp', {
+  tipo: 'REAL',
+  unidad: 'GENERAL',
+  espacio: 'Patio central con arcos',
+  alt: 'Patio central de la casa rodeado de arcos, en estado actual',
+  orientacion: 'horizontal',
+  ancho: 1600,
+  alto: 1200,
+  estado: 'VERIFICADO',
+  aprobada: true,
+});
+
+export const fotoGaleriaAcristalada = ficha('casa-colonial-galeria-acristalada-actual.webp', {
+  tipo: 'REAL',
+  unidad: 'CAFETERIA',
+  espacio: 'Galería acristalada',
+  alt: 'Galería acristalada de la casa colonial, en estado actual',
+  orientacion: 'horizontal',
+  ancho: 1600,
+  alto: 1200,
+  estado: 'VERIFICADO',
+  aprobada: true,
+});
+
+/* --- 2. FOTOGRAFIAS REALES DEL PROCESO DE REMODELACION (3) --- */
+
+export const fotoAreaPosterior = ficha('casa-colonial-area-posterior-proceso.webp', {
+  tipo: 'OBRA',
+  unidad: 'GENERAL',
+  espacio: 'Área posterior de la casa',
+  alt: 'Área posterior de la casa durante el proceso de remodelación',
+  orientacion: 'horizontal',
+  ancho: 1600,
+  alto: 1200,
+  estado: 'VERIFICADO',
+  aprobada: true,
+  prioridad: 0,
+  grupo: 'proceso',
+});
+
+export const fotoIntervencionInterior = ficha('casa-colonial-intervencion-interior-proceso.webp', {
+  tipo: 'OBRA',
+  unidad: 'GENERAL',
+  espacio: 'Intervención de un espacio interior',
+  alt: 'Intervención de un espacio interior de la casa durante el proceso de remodelación',
+  orientacion: 'vertical',
+  ancho: 1200,
+  alto: 1600,
+  estado: 'VERIFICADO',
+  aprobada: true,
+  prioridad: 1,
+  grupo: 'proceso',
+});
+
+export const fotoCubiertaProceso = ficha('casa-colonial-cubierta-interior-proceso.webp', {
+  tipo: 'OBRA',
+  unidad: 'RESTAURANTE',
+  espacio: 'Cubierta interior en obra',
+  alt: 'Cubierta interior de la casa durante el proceso de remodelación',
+  orientacion: 'vertical',
+  ancho: 1200,
+  alto: 1600,
+  estado: 'VERIFICADO',
+  aprobada: true,
+});
+
+/* --- 3. REPRESENTACIONES CONCEPTUALES (10) ---
+
+   Ninguna de estas imagenes muestra la casa como esta hoy. Todas
+   salen rotuladas, siempre, tambien dentro del comparador. */
+
+export const conceptoHabitacionPrivada = ficha('casa-colonial-concepto-habitacion-privada.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'HOTEL',
+  espacio: 'Habitación privada',
+  alt: 'Representación conceptual de una habitación privada en la casa restaurada',
+  orientacion: 'vertical',
+  ancho: 1086,
+  alto: 1448,
+  estado: 'PROPUESTA',
+  aprobada: true,
+});
+
+export const conceptoPasillo = ficha('casa-colonial-concepto-pasillo.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'HOTEL',
+  espacio: 'Pasillo de habitaciones',
+  alt: 'Representación conceptual del pasillo de habitaciones restaurado',
+  orientacion: 'vertical',
+  ancho: 1086,
+  alto: 1448,
+  estado: 'PROPUESTA',
+  aprobada: true,
+});
+
+export const conceptoEscalera = ficha('casa-colonial-concepto-escalera.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'GENERAL',
+  espacio: 'Escalera de madera',
+  alt: 'Representación conceptual de la escalera de madera restaurada',
+  orientacion: 'horizontal',
+  ancho: 1448,
+  alto: 1086,
+  estado: 'PROPUESTA',
+  aprobada: true,
+});
+
+export const conceptoPatioGastronomico = ficha('casa-colonial-concepto-patio-gastronomico.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'RESTAURANTE',
+  espacio: 'Patio central con uso gastronómico',
+  alt: 'Representación conceptual del patio central de la casa con uso gastronómico',
+  orientacion: 'horizontal',
+  ancho: 1448,
+  alto: 1086,
+  estado: 'PROPUESTA',
+  aprobada: true,
+});
+
+export const conceptoRestauranteInterior = ficha('casa-colonial-concepto-restaurante-interior.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'RESTAURANTE',
+  espacio: 'Salón interior del restaurante',
+  alt: 'Representación conceptual del salón interior del restaurante de la casa',
+  orientacion: 'horizontal',
+  ancho: 1468,
+  alto: 1071,
+  estado: 'PROPUESTA',
+  aprobada: true,
+});
+
+export const conceptoCafeteriaTerraza = ficha('casa-colonial-concepto-cafeteria-terraza.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'CAFETERIA',
+  espacio: 'Cafetería en la terraza',
+  alt: 'Representación conceptual de la cafetería en la terraza de la casa',
+  orientacion: 'horizontal',
+  ancho: 1448,
+  alto: 1086,
+  estado: 'PROPUESTA',
+  aprobada: true,
+});
+
+/* Indice 017 del manifiesto. La denominacion es la administrativa,
+   "restaurante gastrobar", tambien en el texto alternativo: nunca
+   "bar" a secas. El texto alternativo es literal y no se reescribe. */
+export const conceptoRestauranteGastrobar = ficha('casa-colonial-concepto-restaurante-gastrobar.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'RESTAURANTE_GASTROBAR',
+  espacio: 'Restaurante gastrobar en el patio',
+  alt: 'Representación conceptual de un posible restaurante gastrobar nocturno en el patio',
+  orientacion: 'horizontal',
+  ancho: 1448,
+  alto: 1086,
+  estado: 'PROPUESTA',
+  aprobada: true,
+});
+
+export const conceptoHospedajeCompartido = ficha('casa-colonial-concepto-hospedaje-compartido.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'HOTEL',
+  espacio: 'Hospedaje compartido',
+  alt: 'Representación conceptual de un espacio de hospedaje compartido en la casa',
+  orientacion: 'horizontal',
+  ancho: 1448,
+  alto: 1086,
+  estado: 'PROPUESTA',
+  aprobada: true,
+});
+
+export const conceptoGaleriaAcceso = ficha('casa-colonial-concepto-galeria-acceso.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'GENERAL',
+  espacio: 'Galería de acceso',
+  alt: 'Representación conceptual de la galería de acceso a la casa restaurada',
+  orientacion: 'vertical',
+  ancho: 1086,
+  alto: 1448,
+  estado: 'PROPUESTA',
+  aprobada: true,
+});
+
+/* ARCHIVO VACIO EN ORIGEN — NO SE PINTA.
+
+   El archivo entro en el repositorio con 0 bytes: existe el nombre
+   pero no la imagen. Servirlo daria un icono roto en el navegador y
+   un error 200 con cuerpo vacio, que es peor que no ponerla.
+
+   Se deja declarada, con aprobada: false, para que el dia que
+   llegue el archivo bueno baste con reemplazarlo en la carpeta y
+   poner aprobada: true. No se sustituye por otra imagen: la seccion
+   de bienvenida ensena su hueco reservado mientras tanto. */
+export const conceptoGaleriaBienvenida = ficha('casa-colonial-concepto-galeria-bienvenida.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'GENERAL',
+  espacio: 'Galería de bienvenida',
+  alt: 'Representación conceptual de la galería de bienvenida a la casa restaurada',
+  orientacion: 'vertical',
+  ancho: 1086,
+  alto: 1448,
+  estado: 'PROPUESTA',
+  aprobada: false,
+  motivoNoAprobada:
+    'El archivo llegó vacío (0 bytes). No se publica hasta recibir la imagen. ' +
+    'No se reemplaza por ninguna otra.',
+});
+
+/** Las 22 del paquete, para poder contarlas y comprobarlas. */
+export const CATALOGO_FOTOS: FotoProyecto[] = [
+  fotoHero,
+  fotoHistoriaBalcon,
+  fotoVistaCentro,
+  fotoCorredorMosaico,
+  fotoGaleriaAlta,
+  fotoPasillo,
+  fotoEscalera,
+  fotoPatioArcos,
+  fotoGaleriaAcristalada,
+  fotoAreaPosterior,
+  fotoIntervencionInterior,
+  fotoCubiertaProceso,
+  conceptoHabitacionPrivada,
+  conceptoPasillo,
+  conceptoEscalera,
+  conceptoPatioGastronomico,
+  conceptoRestauranteInterior,
+  conceptoCafeteriaTerraza,
+  conceptoRestauranteGastrobar,
+  conceptoHospedajeCompartido,
+  conceptoGaleriaAcceso,
+  conceptoGaleriaBienvenida,
+];
+
+/** Cuantos huecos reservados se pintan si una galeria se queda sin fotos. */
 export const HUECOS_GALERIA = 6;
 
-/* Galeria de "La casa hoy". Solo fotografias REALES o de OBRA:
-   una representacion conceptual aqui seria presentar un diseno como
-   estado actual, que es justo lo que no se hace. */
-export const galeriaEstadoActual: FotoProyecto[] = [];
+/* ------------------------------------------------------------
+   GALERIA DE "LA CASA HOY"
+
+   Solo fotografias REALES o de OBRA: una representacion conceptual
+   aqui seria presentar un diseno como estado actual, que es justo
+   lo que no se hace. El componente ademas lo impide por su cuenta.
+
+   Va en dos grupos con nombre, y no como un muro de fotos: primero
+   lo que la casa conserva, despues lo que la obra esta cambiando.
+   El recorrido por los espacios completos vive en el comparador de
+   la seccion siguiente, para no ensenar dos veces lo mismo.
+   ------------------------------------------------------------ */
+
+export const GRUPOS_GALERIA: { id: string; titulo: string; texto: string }[] = [
+  {
+    id: 'arquitectura',
+    titulo: 'Arquitectura existente y huellas de la casa',
+    texto:
+      'Lo que la casa conserva y el proyecto quiere mantener: la madera de la cubierta y el mosaico de los pisos.',
+  },
+  {
+    id: 'proceso',
+    titulo: 'Proceso de remodelación',
+    texto:
+      'La obra en curso, fotografiada tal y como está. Ningún espacio se muestra terminado, porque todavía no lo está.',
+  },
+];
+
+export const galeriaEstadoActual: FotoProyecto[] = [
+  fotoCorredorMosaico,
+  fotoGaleriaAlta,
+  fotoAreaPosterior,
+  fotoIntervencionInterior,
+];
 
 /* ------------------------------------------------------------
    FECHAS
@@ -261,8 +682,11 @@ export function fechaEnTexto(fecha?: string | null): string {
 export const ETIQUETA_CONCEPTUAL = 'Representación conceptual';
 export const AVISO_CONCEPTUAL =
   'El diseño, mobiliario, distribución y acabados pueden cambiar durante el desarrollo del proyecto.';
-export const AVISO_CONCEPTUAL_CORTO =
-  'Representación conceptual — no corresponde al estado actual.';
+/* Es el mismo rotulo obligatorio que reparte rotuloDe() para las
+   imagenes CONCEPTUAL. Se deja como alias y no como segunda copia
+   del texto: dos cadenas iguales escritas a mano acaban
+   separandose, y este es justo el texto que no puede variar. */
+export const AVISO_CONCEPTUAL_CORTO = ETIQUETA_CONCEPTUAL_LARGA;
 export const ETIQUETA_GALERIA_REAL =
   'Fotografías reales del estado actual y del proceso de recuperación.';
 
@@ -280,10 +704,12 @@ export const hero = {
     { texto: 'Ver la transformación', href: '#transformacion', evento: 'ccc_transformacion_click' as Evento },
     { texto: 'Quiero ser aliado estratégico', href: '#alianzas', evento: 'ccc_proponer_alianza_click' as Evento },
   ],
-  /* La foto del hero sera una interior real con vista hacia la
-     Catedral, y solo cuando venga elegida en el manifiesto. Mientras
-     tanto, hueco reservado. La fachada no se usa. */
-  foto: null as FotoProyecto | null,
+  /* Fotografia interior real, con el balcon hacia el centro
+     historico. Es la unica imagen de la pagina que se carga con
+     prioridad: es la primera que ve el visitante y la que mide
+     Lighthouse como LCP. La fachada no se usa aqui ni en ningun
+     otro sitio. */
+  foto: fotoHero as FotoProyecto | null,
   estado: 'VERIFICADO' as Estado,
 };
 
@@ -306,6 +732,11 @@ export const historia = {
   ],
   destacado:
     'Recuperar una casa con historia para construir una nueva oportunidad para Zipaquirá.',
+  /* Historia y ubicacion, con dos fotografias reales: la casa por
+     dentro y lo que se ve desde ella. La ubicacion se ensena asi,
+     desde el interior hacia el centro historico, porque la
+     direccion exacta no se publica todavia. */
+  fotos: [fotoHistoriaBalcon, fotoVistaCentro] as FotoProyecto[],
   estado: 'PENDIENTE' as Estado,
 };
 
@@ -329,9 +760,16 @@ export const estadoActual = {
    actual (foto real), conceptual (imagen rotulada) y resultado
    final, que todavia no existe y se anuncia como proximamente.
 
-   Vacio a proposito: los espacios se cargan cuando llegue el
-   manifiesto. Mientras tanto se pinta un bloque reservado que
-   demuestra que el componente funciona.
+   ORDEN DE LOS SEIS ESPACIOS
+   No es arbitrario: es el recorrido interior de la casa. Se entra
+   por el interior con balcon, se sube por el pasillo y la escalera,
+   se sale al patio, se pasa por el area en obra y se termina en la
+   galeria acristalada. Quien lo lea de arriba abajo recorre la casa.
+
+   El primer panel de cada bloque es SIEMPRE una fotografia real:
+   cinco del estado actual y una del proceso de remodelacion. Cada
+   una sale con el rotulo que le corresponde por su tipo, que lo
+   pone el componente y no este archivo.
    ============================================================ */
 
 export interface BloqueTransformacion {
@@ -356,8 +794,91 @@ export const transformacion = {
   ceja: 'LA VISIÓN',
   titulo: 'Del estado actual a una nueva experiencia',
   texto:
-    'No queremos borrar la historia de la casa. Queremos recuperar su esencia y prepararla para recibir nuevas experiencias.',
-  bloques: [] as BloqueTransformacion[],
+    'No queremos borrar la historia de la casa. Queremos recuperar su esencia y prepararla para recibir nuevas experiencias. Cada espacio se muestra como está hoy y, al lado, cómo se ha imaginado: nunca como si ya estuviera terminado.',
+  bloques: [
+    {
+      id: 'interior-balcon',
+      titulo: 'El interior con balcón',
+      fotoActual: fotoHero,
+      fotoConceptual: conceptoHabitacionPrivada,
+      descripcionActual:
+        'El balcón interior se abre hacia el centro histórico. Es el punto de entrada del recorrido y lo primero que se ve al llegar.',
+      descripcionPropuesta:
+        'La propuesta estudia aprovechar estos espacios con vista para habitaciones privadas del componente hotelero.',
+      estadoProyecto: 'PROPUESTA',
+      actualizado: null,
+      aprobado: true,
+    },
+    {
+      id: 'pasillo',
+      titulo: 'El pasillo de habitaciones',
+      fotoActual: fotoPasillo,
+      fotoConceptual: conceptoPasillo,
+      descripcionActual:
+        'El pasillo que reparte hacia las habitaciones, tal y como está hoy, antes de intervenirlo.',
+      descripcionPropuesta:
+        'La propuesta conserva el trazado del pasillo y trabaja sobre la luz, los acabados y el paso.',
+      estadoProyecto: 'PROPUESTA',
+      actualizado: null,
+      aprobado: true,
+    },
+    {
+      id: 'escalera',
+      titulo: 'La escalera de madera',
+      fotoActual: fotoEscalera,
+      fotoConceptual: conceptoEscalera,
+      descripcionActual:
+        'La escalera de madera que comunica los dos niveles de la casa. Es una de las piezas que el proyecto quiere conservar.',
+      descripcionPropuesta:
+        'La propuesta mantiene la escalera como elemento central y estudia su recuperación, no su sustitución.',
+      estadoProyecto: 'PROPUESTA',
+      actualizado: null,
+      aprobado: true,
+    },
+    {
+      id: 'patio',
+      titulo: 'El patio central',
+      fotoActual: fotoPatioArcos,
+      fotoConceptual: conceptoPatioGastronomico,
+      descripcionActual:
+        'El patio rodeado de arcos, el corazón de la casa y el espacio que ordena todo lo demás.',
+      descripcionPropuesta:
+        'La propuesta imagina el patio como espacio gastronómico al aire libre, compartido por las unidades de la casa.',
+      estadoProyecto: 'PROPUESTA',
+      actualizado: null,
+      aprobado: true,
+    },
+    {
+      id: 'cubierta',
+      titulo: 'La cubierta interior, en obra',
+      /* La unica fotografia de OBRA del comparador. El componente
+         la rotula como proceso de remodelacion, no como estado
+         actual: es la diferencia entre una casa detenida y una casa
+         en la que se esta trabajando. */
+      fotoActual: fotoCubiertaProceso,
+      fotoConceptual: conceptoRestauranteInterior,
+      descripcionActual:
+        'La cubierta interior durante los trabajos de remodelación. La obra está en curso y así se fotografía.',
+      descripcionPropuesta:
+        'La propuesta estudia este volumen como salón interior del restaurante.',
+      estadoProyecto: 'PROPUESTA',
+      actualizado: null,
+      aprobado: true,
+    },
+    {
+      id: 'galeria-acristalada',
+      titulo: 'La galería acristalada',
+      fotoActual: fotoGaleriaAcristalada,
+      fotoConceptual: conceptoCafeteriaTerraza,
+      descripcionActual:
+        'La galería acristalada cierra el recorrido. Recibe luz durante buena parte del día.',
+      descripcionPropuesta:
+        'La propuesta estudia este espacio para la cafetería, con uso de día y conexión con la terraza.',
+      estadoProyecto: 'PROPUESTA',
+      actualizado: null,
+      aprobado: true,
+    },
+  ] as BloqueTransformacion[],
   estado: 'PROPUESTA' as Estado,
 };
 
@@ -398,6 +919,19 @@ export interface Unidad {
   actualizado: string | null;
   /** Detalle ampliado. null = todavia no hay texto aprobado. */
   detalle: string | null;
+  /* Representacion conceptual propia de la unidad. Va DENTRO del
+     desplegable, no en la tarjeta: asi las cuatro tarjetas siguen
+     midiendo lo mismo en la rejilla, la imagen no se descarga hasta
+     que alguien la abre, y el rotulo aparece junto a ella y no
+     suelto en el mosaico.
+
+     null no es un descuido: significa que esa unidad se ensena en
+     el comparador de la seccion anterior y que no se le pone otra
+     imagen por rellenar. */
+  foto?: FotoProyecto | null;
+  /* A que espacio del comparador remite la unidad cuando su vision
+     ya se ensena alli. Evita repetir la misma imagen dos veces. */
+  remiteA?: { href: string; texto: string } | null;
 }
 
 export const unidades = {
@@ -426,6 +960,8 @@ export const unidades = {
       /* Sin ficha comercial hotelera todavia: no hay capacidad,
          habitaciones ni tarifas confirmadas, y no se inventan. */
       detalle: null,
+      foto: conceptoHospedajeCompartido,
+      remiteA: null,
     },
     {
       id: 'restaurante',
@@ -443,6 +979,14 @@ export const unidades = {
       visible: true,
       actualizado: null,
       detalle: null,
+      /* Su vision ya se ensena en el comparador de la cubierta y en
+         el del patio. Repetir aqui las mismas imagenes seria un
+         mosaico sin narrativa, asi que se remite al espacio. */
+      foto: null,
+      remiteA: {
+        href: '#transformacion',
+        texto: 'Ver la cubierta interior y el patio en la sección de transformación',
+      },
     },
     {
       id: 'cafeteria',
@@ -460,6 +1004,13 @@ export const unidades = {
       visible: true,
       actualizado: null,
       detalle: null,
+      /* Igual que el restaurante: su espacio es la galeria
+         acristalada, que ya tiene su propio comparador. */
+      foto: null,
+      remiteA: {
+        href: '#transformacion',
+        texto: 'Ver la galería acristalada en la sección de transformación',
+      },
     },
     {
       id: 'restaurante-gastrobar',
@@ -479,6 +1030,11 @@ export const unidades = {
       visible: true,
       actualizado: null,
       detalle: null,
+      /* Indice 017 del manifiesto. En pantalla la unidad se llama
+         "Gastrobar"; la imagen y su texto alternativo usan la
+         denominacion administrativa, "restaurante gastrobar". */
+      foto: conceptoRestauranteGastrobar,
+      remiteA: null,
     },
   ] as Unidad[],
 };
@@ -504,6 +1060,10 @@ export const modelo = {
     'Responsabilidades independientes',
     'Administración integrada',
   ],
+  /* La vision integrada: la galeria de acceso, que es por donde se
+     entra a las cuatro unidades. Es representacion conceptual y
+     sale rotulada como tal, igual que todas. */
+  foto: conceptoGaleriaAcceso as FotoProyecto | null,
   estado: 'VERIFICADO' as Estado,
 };
 
@@ -693,6 +1253,12 @@ export const cierre = {
       whatsapp: MENSAJE_GENERAL,
     },
   ],
+  /* Experiencia y bienvenida. La imagen prevista para este bloque
+     es la galeria de bienvenida, pero su archivo llego vacio: ver
+     conceptoGaleriaBienvenida. Se declara igual, y el componente
+     no la pinta mientras aprobada siga en false. El hueco es
+     visible a proposito: no se rellena con otra imagen. */
+  foto: conceptoGaleriaBienvenida as FotoProyecto | null,
   estado: 'VERIFICADO' as Estado,
 };
 
@@ -705,23 +1271,25 @@ export const cierre = {
    de la ruta y del dominio de astro.config.mjs. Escribir el dominio
    a mano es justo lo que ese diseno evita.
 
-   Open Graph: esta pagina NO manda imagen. Las unicas candidatas
-   serian la fachada (prohibida), una conceptual (no puede ir sin
-   rotulo, y una vista previa no admite rotulos) o una foto de otra
-   propiedad (prohibida). El logo institucional tampoco: no dice
-   nada de este proyecto y las redes lo recortan. Sin imagen, la
-   vista previa sale como enlace de texto, que en una pagina que
-   nadie debe compartir todavia es exactamente lo que se quiere.
-   Queda pendiente de sustitucion cuando llegue la fotografia
-   interior real aprobada.
+   Open Graph: ya hay imagen, y es la que faltaba. Es una
+   fotografia interior REAL aprobada, no una representacion
+   conceptual: una vista previa de WhatsApp o Facebook no admite
+   rotulos, asi que una imagen generada nunca puede ir ahi -saldria
+   sin poder advertir que no corresponde al estado actual-. La
+   fachada sigue prohibida, y una foto de otra propiedad tambien.
+
+   Que la pagina tenga imagen para compartir NO la publica: sigue
+   con noindex, nofollow, fuera del sitemap y sin un solo enlace
+   que lleve hasta ella.
    ============================================================ */
 
 export const seo = {
   titulo: 'Casa Colonial Centro | Proyecto Atheron en Zipaquirá',
   descripcion:
     'Conoce la recuperación de Casa Colonial Centro, un proyecto de Atheron que integrará hotel, restaurante, cafetería y restaurante gastrobar en el corazón de Zipaquirá.',
-  /* Ruta de la futura foto de Open Graph. null mientras no exista
-     una fotografia interior real aprobada. */
-  imagen: null as string | null,
-  imagenAlt: null as string | null,
+  /* Misma fotografia que el hero: interior real con el balcon
+     hacia el centro historico. Se lee del catalogo y no se escribe
+     la ruta a mano, para que no puedan desincronizarse. */
+  imagen: fotoHero.ruta as string | null,
+  imagenAlt: fotoHero.alt as string | null,
 };

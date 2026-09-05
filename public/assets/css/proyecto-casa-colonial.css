@@ -97,16 +97,26 @@
   font-size: 0.85rem;
 }
 
-.galeria-proyecto__tipo {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--acento);
-}
-
 .galeria-proyecto__dato { color: var(--texto-suave); }
 .galeria-proyecto__texto { color: var(--texto-suave); }
+
+/* El rotulo obligatorio de cada foto. No es un dato mas: dice si lo
+   que se ve es el estado actual o la obra en curso, asi que se
+   distingue del resto del pie. */
+.galeria-proyecto__rotulo-foto {
+  font-weight: 600;
+  color: var(--color-verde);
+}
+
+/* Los grupos narrativos de la galeria. */
+.galeria-proyecto__grupo + .galeria-proyecto__grupo { margin-top: var(--esp-5); }
+
+.galeria-proyecto__cabecera { margin-bottom: var(--esp-3); }
+
+.galeria-proyecto__titulo {
+  margin-bottom: var(--esp-1);
+  font-size: 1.15rem;
+}
 
 .galeria-proyecto__espera {
   margin-top: var(--esp-3);
@@ -192,39 +202,10 @@
   display: block;
 }
 
-.comparador__marco-conceptual { position: relative; }
-
-/* Rotulo permanente sobre la imagen conceptual. Va encima de la
-   foto a proposito: si alguien recorta o comparte la imagen, el
-   rotulo viaja con ella. */
-.comparador__sello {
-  position: absolute;
-  inset-block-start: var(--esp-2);
-  inset-inline-start: var(--esp-2);
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-blanco);
-  background: rgba(15, 23, 42, 0.88);
-}
-
-.comparador__rotulo {
-  margin-top: var(--esp-2);
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.comparador__rotulo--real { color: var(--color-verde); }
-.comparador__rotulo--conceptual { color: #a16207; }
-
-.comparador__aviso {
-  margin-top: 0.25rem;
-  font-size: 0.82rem;
-  color: var(--texto-suave);
-}
+/* El sello, el rotulo y el aviso de las imagenes ya no viven aqui:
+   los pinta ProyectoFoto, que es el mismo componente en las seis
+   comparaciones, en las unidades, en la historia y en el cierre.
+   Ver el bloque "IMAGEN DEL PROYECTO" mas abajo. */
 
 .comparador__texto { margin-top: var(--esp-2); }
 
@@ -520,4 +501,133 @@
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------
+   IMAGEN DEL PROYECTO (ProyectoFoto)
+
+   Una sola pieza para las 21 imagenes de la pagina: las seis
+   comparaciones, la historia, las unidades, la vision integrada y
+   el cierre. Antes cada bloque pintaba su propio rotulo; ahora
+   todos comparten estas reglas, asi que el aviso de una
+   representacion conceptual se ve igual en todas partes y no puede
+   quedarse mas discreto en un sitio que en otro.
+
+   CONTRASTE
+   El verde y el ambar de los rotulos son los mismos que ya usan los
+   distintivos de estado, que estan elegidos para pasar AA sobre el
+   fondo claro. En fondo oscuro se sustituyen mas abajo.
+   ------------------------------------------------------------ */
+
+.foto-proyecto {
+  margin: 0;
+  margin-top: var(--esp-3);
+}
+
+.foto-proyecto__marco { position: relative; }
+
+/* Sello permanente sobre la imagen conceptual. Va encima de la
+   propia foto a proposito: si alguien recorta la imagen o la
+   comparte suelta, el aviso viaja con ella. */
+.foto-proyecto__sello {
+  position: absolute;
+  inset-block-start: var(--esp-2);
+  inset-inline-start: var(--esp-2);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-blanco);
+  background: rgba(15, 23, 42, 0.88);
+}
+
+.foto-proyecto__pie { margin-top: var(--esp-2); }
+
+.foto-proyecto__rotulo {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.foto-proyecto__rotulo--real { color: var(--color-verde); }
+.foto-proyecto__rotulo--conceptual { color: #a16207; }
+
+.foto-proyecto__aviso,
+.foto-proyecto__texto {
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+}
+
+/* Centrada y con ancho de lectura: para las imagenes sueltas que
+   cierran una seccion, que si ocupan todo el ancho compiten con el
+   texto en vez de acompanarlo. */
+.foto-proyecto--centrada {
+  max-width: 28rem;
+  margin-inline: auto;
+  margin-top: var(--esp-4);
+}
+
+/* En fondo oscuro los dos colores del rotulo pierden contraste. */
+.seccion--oscura .foto-proyecto__rotulo--real,
+.seccion--oscura .foto-proyecto__rotulo--conceptual { color: var(--color-blanco); }
+
+.seccion--oscura .foto-proyecto__aviso,
+.seccion--oscura .foto-proyecto__texto { color: rgba(255, 255, 255, 0.82); }
+
+/* ------------------------------------------------------------
+   PAREJA DE FOTOS (historia y ubicacion)
+
+   Dos imagenes que se leen juntas: la casa por dentro y lo que se
+   ve desde ella. En movil se apilan, que es como se miran de todos
+   modos.
+   ------------------------------------------------------------ */
+.pareja-fotos {
+  display: grid;
+  gap: var(--esp-3);
+  margin-top: var(--esp-4);
+}
+
+@media (min-width: 800px) {
+  .pareja-fotos { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ------------------------------------------------------------
+   FOTO DEL HERO
+
+   .hero es un contenedor flexible pensado para un solo hijo: al
+   anadirle la foto, texto e imagen se ponian uno al lado del otro
+   y el titulo se quedaba sin sitio. Se apila con una clase propia
+   de esta pagina, y no tocando .hero--interior, que la comparten
+   el blog y las fichas de hospedaje.
+   ------------------------------------------------------------ */
+.hero--proyecto {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.hero__foto {
+  max-width: 46rem;
+  margin-top: var(--esp-5);
+}
+
+/* El fondo del hero es oscuro: el verde y el ambar de los rotulos
+   no contrastan lo suficiente ahi, igual que pasaba en las
+   secciones oscuras. */
+.hero .foto-proyecto__rotulo--real,
+.hero .foto-proyecto__rotulo--conceptual { color: var(--color-blanco); }
+
+.hero .foto-proyecto__aviso,
+.hero .foto-proyecto__texto { color: rgba(255, 255, 255, 0.82); }
+
+/* ------------------------------------------------------------
+   IMAGEN Y REENVIO DENTRO DE UNA UNIDAD
+   ------------------------------------------------------------ */
+.unidad__foto { margin-top: var(--esp-3); }
+
+.unidad__remite {
+  margin-top: var(--esp-3);
+  font-size: 0.9rem;
 }

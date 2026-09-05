@@ -36,9 +36,24 @@ interface Props {
   /** Medidas reales del archivo, para reservar el hueco (evita CLS). */
   ancho?: number;
   alto?: number;
+  /* true = esta imagen es la que el visitante ve primero, sin
+     desplazar la pagina. Se carga de inmediato y con prioridad
+     alta, porque es la que Lighthouse mide como LCP.
+
+     Solo puede haber UNA por pagina. Diferirla la retrasa; pero
+     marcar varias tambien, porque compiten entre si y el navegador
+     deja de saber cual importa. Por eso es una excepcion explicita
+     y no el valor por defecto. */
+  prioritaria?: boolean;
 }
 
-const { src, alt, forma, anchos, medidas, ancho, alto } = Astro.props;
+const { src, alt, forma, anchos, medidas, ancho, alto, prioritaria } = Astro.props;
+
+/* Carga: la prioritaria se pide ya; todas las demas esperan a estar
+   cerca de la pantalla. Es la regla de rendimiento del sitio y vive
+   aqui, en un solo sitio, y no repetida en cada maqueta. */
+const carga = prioritaria ? 'eager' : 'lazy';
+const prioridadRed = prioritaria ? 'high' : undefined;
 
 /* Las variantes se nombran a partir del propio src: se le quita la
    extension y se le pega "-<ancho>.<formato>". Asi no hay una segunda
@@ -70,7 +85,8 @@ if (src && !alt) {
       alt={alt ?? ''}
       width={ancho}
       height={alto}
-      loading="lazy"
+      loading={carga}
+      fetchpriority={prioridadRed}
       decoding="async"
     />
   </picture>
@@ -79,7 +95,10 @@ if (src && !alt) {
     class={claseFoto}
     src={src}
     alt={alt ?? ''}
-    loading="lazy"
+    width={ancho}
+    height={alto}
+    loading={carga}
+    fetchpriority={prioridadRed}
     decoding="async"
   />
 ) : (
