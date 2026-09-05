@@ -231,8 +231,6 @@ export interface FotoProyecto {
   estado: Estado;
   /** false = NO se pinta, aunque el archivo exista. */
   aprobada: boolean;
-  /** Por que no esta aprobada. Solo para el borrador. */
-  motivoNoAprobada?: string;
   /** La destacada de su bloque. */
   destacada?: boolean;
   /* Orden dentro de su bloque, de menor a mayor. El 0 es la
@@ -561,29 +559,18 @@ export const conceptoGaleriaAcceso = ficha('casa-colonial-concepto-galeria-acces
   aprobada: true,
 });
 
-/* ARCHIVO VACIO EN ORIGEN — NO SE PINTA.
-
-   El archivo entro en el repositorio con 0 bytes: existe el nombre
-   pero no la imagen. Servirlo daria un icono roto en el navegador y
-   un error 200 con cuerpo vacio, que es peor que no ponerla.
-
-   Se deja declarada, con aprobada: false, para que el dia que
-   llegue el archivo bueno baste con reemplazarlo en la carpeta y
-   poner aprobada: true. No se sustituye por otra imagen: la seccion
-   de bienvenida ensena su hueco reservado mientras tanto. */
+/* Cierra la pagina: la galeria por la que se recibe a quien llega.
+   Medidas reales del archivo, 1467 x 1072. */
 export const conceptoGaleriaBienvenida = ficha('casa-colonial-concepto-galeria-bienvenida.webp', {
   tipo: 'CONCEPTUAL',
   unidad: 'GENERAL',
   espacio: 'Galería de bienvenida',
-  alt: 'Representación conceptual de la galería de bienvenida a la casa restaurada',
-  orientacion: 'vertical',
-  ancho: 1086,
-  alto: 1448,
+  alt: 'Representación conceptual de una posible galería de bienvenida',
+  orientacion: 'horizontal',
+  ancho: 1467,
+  alto: 1072,
   estado: 'PROPUESTA',
-  aprobada: false,
-  motivoNoAprobada:
-    'El archivo llegó vacío (0 bytes). No se publica hasta recibir la imagen. ' +
-    'No se reemplaza por ninguna otra.',
+  aprobada: true,
 });
 
 /** Las 22 del paquete, para poder contarlas y comprobarlas. */
@@ -1253,11 +1240,8 @@ export const cierre = {
       whatsapp: MENSAJE_GENERAL,
     },
   ],
-  /* Experiencia y bienvenida. La imagen prevista para este bloque
-     es la galeria de bienvenida, pero su archivo llego vacio: ver
-     conceptoGaleriaBienvenida. Se declara igual, y el componente
-     no la pinta mientras aprobada siga en false. El hueco es
-     visible a proposito: no se rellena con otra imagen. */
+  /* Experiencia y bienvenida: la galeria de acogida, en
+     representacion conceptual y rotulada como tal. */
   foto: conceptoGaleriaBienvenida as FotoProyecto | null,
   estado: 'VERIFICADO' as Estado,
 };

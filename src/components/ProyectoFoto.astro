@@ -31,11 +31,11 @@
    se ve puede cambiar. Un pantallazo recortado de la imagen sigue
    llevando el sello encima.
 
-   SI LA IMAGEN NO ESTA APROBADA
-   No se pinta. Se deja el hueco reservado, con su motivo visible
-   solo en el borrador. No se sustituye por otra imagen: rellenar
-   un hueco con la foto que haya a mano es como se acaba enseñando
-   una propiedad distinta.
+   SI TODAVIA NO HAY IMAGEN
+   Se pinta el rectangulo rayado del sitio y nada mas. Nunca se
+   rellena con otra fotografia: sustituir una imagen que falta por
+   la que haya a mano es como se acaba ensenando una propiedad
+   distinta.
    ============================================================ */
 
 import Foto from './Foto.astro';
@@ -43,13 +43,12 @@ import {
   rotuloDe,
   ETIQUETA_CONCEPTUAL,
   AVISO_CONCEPTUAL,
-  BORRADOR,
 } from '../data/casa-colonial-centro';
 import type { FotoProyecto } from '../data/casa-colonial-centro';
 
 interface Props {
   foto: FotoProyecto | null;
-  /** Texto del hueco cuando no hay imagen que pintar. */
+  /** Texto del rectangulo cuando todavia no hay imagen. */
   textoHueco?: string;
   /** La unica imagen de la pagina que se carga con prioridad. */
   prioritaria?: boolean;
@@ -59,7 +58,7 @@ interface Props {
   clase?: string;
 }
 
-const { foto, textoHueco = 'Imagen pendiente', prioritaria, medidas, clase } = Astro.props;
+const { foto, textoHueco = 'Imagen por definir', prioritaria, medidas, clase } = Astro.props;
 
 /* La orientacion del archivo decide la proporcion del hueco. Asi la
    pagina reserva el sitio exacto y no da el salto cuando la imagen
@@ -94,31 +93,20 @@ const esConceptual = foto?.tipo === 'CONCEPTUAL';
     <div class="placeholder">{textoHueco}</div>
   )}
 
-  <figcaption class="foto-proyecto__pie">
-    {visible && foto ? (
-      <>
-        <p
-          class:list={[
-            'foto-proyecto__rotulo',
-            esConceptual ? 'foto-proyecto__rotulo--conceptual' : 'foto-proyecto__rotulo--real',
-          ]}
-        >{rotuloDe(foto.tipo)}</p>
+  {visible && foto && (
+    <figcaption class="foto-proyecto__pie">
+      <p
+        class:list={[
+          'foto-proyecto__rotulo',
+          esConceptual ? 'foto-proyecto__rotulo--conceptual' : 'foto-proyecto__rotulo--real',
+        ]}
+      >{rotuloDe(foto.tipo)}</p>
 
-        {esConceptual && <p class="foto-proyecto__aviso">{AVISO_CONCEPTUAL}</p>}
+      {esConceptual && <p class="foto-proyecto__aviso">{AVISO_CONCEPTUAL}</p>}
 
-        {foto.descripcion && (
-          <p class="foto-proyecto__texto texto-suave">{foto.descripcion}</p>
-        )}
-      </>
-    ) : (
-      <>
-        <p class="foto-proyecto__rotulo texto-suave">Imagen pendiente de integración.</p>
-        {/* El motivo es informacion de trabajo: se ve mientras la
-            pagina es borrador y desaparece en la version publica. */}
-        {BORRADOR && foto?.motivoNoAprobada && (
-          <p class="foto-proyecto__texto texto-suave">{foto.motivoNoAprobada}</p>
-        )}
-      </>
-    )}
-  </figcaption>
+      {foto.descripcion && (
+        <p class="foto-proyecto__texto texto-suave">{foto.descripcion}</p>
+      )}
+    </figcaption>
+  )}
 </figure>
