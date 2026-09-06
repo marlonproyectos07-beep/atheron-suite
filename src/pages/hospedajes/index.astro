@@ -1,6 +1,6 @@
 ---
 /* ============================================================
-   LISTADO DE LOS 7 HOSPEDAJES
+   CATALOGO INTEGRADO DE HOSPEDAJES Y PROYECTOS
 
    Antes: siete bloques de HTML casi identicos, copiados a mano.
    Cambiar el texto del boton de WhatsApp obligaba a editarlo
@@ -21,27 +21,21 @@ import Marca from '../../components/Marca.astro';
 import Foto from '../../components/Foto.astro';
 import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
 
-/* ------------------------------------------------------------
-   RECOMENDACION PENDIENTE DE TU DECISION
-
-   Hoy las tarjetas de las fichas en obra llevan boton "Ver ficha".
-   Quien lo pulsa aterriza en una pagina que dice "Nombre del
-   hospedaje 2" y "$ ---". Eso es peor que no tener el enlace: el
-   visitante ya estaba interesado y le ensenamos que no hay nada.
-
-   Poniendo esto en true, la tarjeta se queda (comunica que hay
-   siete propiedades) pero el enlace desaparece hasta que la ficha
-   tenga contenido real. El boton de WhatsApp se queda siempre,
-   que es el que convierte de verdad.
-
-   Lo dejo en false para que la migracion no cambie nada todavia.
-   ------------------------------------------------------------ */
 const OCULTAR_ENLACE_DE_FICHAS_EN_OBRA = false;
+
+/* Estas dos fichas tienen contenido e imagenes reales, pero siguen
+   deliberadamente marcadas como borrador y noindex mientras se
+   completan sus datos operativos. Se muestran en esta vista previa
+   para que direccion pueda revisarlas sin declararlas publicadas. */
+const BORRADORES_VISIBLES = new Set([
+  'edificio-algarra',
+  'hotel-la-margarita',
+]);
 
 /* Ordenados por el campo "orden" del contenido, no por el nombre
    del archivo: asi renombrar un hospedaje no reordena el listado. */
 const hospedajes = (await getCollection('hospedajes'))
-  .filter((f) => f.data.publicado)
+  .filter((f) => f.data.publicado || BORRADORES_VISIBLES.has(f.id))
   .sort((a, b) => a.data.orden - b.data.orden);
 ---
 
@@ -90,7 +84,7 @@ const hospedajes = (await getCollection('hospedajes'))
         </div>
 
         {/* ==========================================================
-             GRILLA DE LOS 7 HOSPEDAJES
+             GRILLA DEL PORTAFOLIO DE HOSPEDAJES
              La maqueta se escribe una vez y se repite por cada
              hospedaje de la coleccion.
 
@@ -108,24 +102,36 @@ const hospedajes = (await getCollection('hospedajes'))
             return (
               <article class="tarjeta aparecer">
                 <div class="tarjeta__media">
-                  <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                  {mostrarEnlace ? (
+                    <a
+                      class="tarjeta__imagen-enlace"
+                      href={enlace}
+                      aria-label={`Explorar ${data.nombre}`}
+                    >
+                      <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                    </a>
+                  ) : (
+                    <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                  )}
                   <span class="tarjeta__insignia">{data.insignia}</span>
                 </div>
                 <div class="tarjeta__cuerpo">
 
+                  {enObra && <span class="etiqueta">Ficha en preparacion</span>}
+
                   <h2 class="tarjeta__titulo">
                     {mostrarEnlace
-                      ? <a href={enlace}><Marca texto={data.nombre} pendiente={enObra} /></a>
-                      : <Marca texto={data.nombre} pendiente={enObra} />}
+                      ? <a href={enlace}><Marca texto={data.nombre} /></a>
+                      : <Marca texto={data.nombre} />}
                   </h2>
 
                   <p class="tarjeta__meta">
-                    <span><Marca texto={data.listadoSector} pendiente={enObra} /></span>
-                    <span><Marca texto={data.listadoSegundoDato} pendiente={enObra} />{data.listadoSegundoDatoSufijo}</span>
+                    <span><Marca texto={data.listadoSector} /></span>
+                    <span><Marca texto={data.listadoSegundoDato} />{data.listadoSegundoDatoSufijo}</span>
                   </p>
 
                   <p class="texto-suave">
-                    <Marca texto={data.resumen} pendiente={enObra} />
+                    <Marca texto={data.resumen} />
                   </p>
 
                   <div class="tarjeta__pie">
@@ -135,7 +141,9 @@ const hospedajes = (await getCollection('hospedajes'))
                     </span>
                     )}
                     {mostrarEnlace && (
-                      <a class="boton boton--contorno" href={enlace}>Ver ficha</a>
+                      <a class="boton boton--contorno" href={enlace}>
+                        {enObra ? 'Revisar ficha' : 'Ver ficha'}
+                      </a>
                     )}
                   </div>
 
@@ -158,6 +166,30 @@ const hospedajes = (await getCollection('hospedajes'))
           })}
 
         </div>
+
+        <section class="bloque-doble aparecer" style="margin-top: var(--esp-6);" aria-labelledby="proyecto-casa-colonial">
+          <div class="bloque-doble__media">
+            <a href="/proyectos/casa-colonial-centro" aria-label="Conocer el proyecto Casa Colonial Centro">
+              <Foto
+                src="/assets/img/proyectos/casa-colonial-centro/casa-colonial-hero-interior-balcon.webp"
+                alt="Interior de la Casa Colonial Centro con balcon hacia el centro historico de Zipaquira"
+              >Imagen del proyecto pendiente</Foto>
+            </a>
+          </div>
+          <div class="bloque-doble__texto">
+            <span class="etiqueta">Proyecto en desarrollo</span>
+            <h2 id="proyecto-casa-colonial">Casa Colonial Centro by Atheron</h2>
+            <p>
+              Un destino integrado de hotel, restaurante, cafeteria y restaurante gastrobar
+              en el corazon de Zipaquira. Conoce el estado actual de la casa y la vision del proyecto.
+            </p>
+            <p class="texto-suave">
+              No esta disponible para reservas. Esta ficha privada presenta el proceso y las
+              representaciones conceptuales claramente identificadas.
+            </p>
+            <a class="boton boton--contorno" href="/proyectos/casa-colonial-centro">Ver proyecto</a>
+          </div>
+        </section>
 
         <div class="cta-final aparecer" style="margin-top: var(--esp-6);">
           <h2>No sabes cual elegir?</h2>

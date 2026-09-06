@@ -59,7 +59,17 @@
   max-width: 670px;
   border-top-color: rgba(255,255,255,.34);
 }
-.hero--foto + .seccion .bloque-doble__texto > .etiqueta { color: #856a10; }
+/* La etiqueta dorada de esta seccion cae sobre blanco, y el dorado de
+   marca (#c9a227) da 2,41 de contraste donde hacen falta 4,5. Se oscurece
+   solo aqui: el dorado sigue igual en el resto del sitio.
+
+   Habia que cubrir los dos casos, no solo el primero. Una ficha SIN
+   portada fotografica pinta "hero--interior" a secas, no entraba por la
+   primera regla y se quedaba con el dorado ilegible; asi perdia cinco
+   puntos de accesibilidad en escritorio. Hoy solo alcanza a las fichas sin
+   foto de portada: las cuatro publicadas la llevan. */
+.hero--foto + .seccion .bloque-doble__texto > .etiqueta,
+.hero--interior:not(.hero--foto) + .seccion .bloque-doble__texto > .etiqueta { color: #856a10; }
 
 /* La eleccion de Casa completa debe aparecer rapido al llegar a la
    seccion, sin tanto aire vertical antes del producto principal. */

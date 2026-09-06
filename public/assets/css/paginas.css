@@ -572,3 +572,106 @@
   color: var(--texto-suave);
 }
 .nota-factura strong { display: block; color: var(--color-gris-700); }
+
+/* ============================================================
+   PREGUNTAS FRECUENTES
+
+   <details> nativo: abre con teclado y lo anuncia el lector de
+   pantalla sin una linea de JavaScript. El triangulo por defecto se
+   sustituye por un signo propio que gira al abrir.
+   ============================================================ */
+.faq { max-width: 46rem; display: grid; gap: .6rem; }
+.faq__item {
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--fondo);
+}
+.faq__pregunta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--esp-2);
+  padding: var(--esp-3);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.faq__pregunta::-webkit-details-marker { display: none; }
+.faq__pregunta::after {
+  content: "+";
+  flex: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--acento);
+  transition: transform var(--transicion);
+}
+.faq__item[open] .faq__pregunta::after { transform: rotate(45deg); }
+.faq__pregunta:focus-visible { outline: 2px solid var(--color-marca); outline-offset: -2px; }
+.faq__respuesta { padding: 0 var(--esp-3) var(--esp-3); margin: 0; }
+
+/* Nota de alojamiento aliado: discreta, centrada y al final. */
+.seccion--estrecha { padding-block: var(--esp-4); }
+.nota-aliado {
+  max-width: 52rem;
+  margin-inline: auto;
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--borde);
+  font-size: .88rem;
+  color: var(--texto-suave);
+  text-align: center;
+}
+
+
+/* Recorrido principal del alojamiento aliado. El video vertical conserva
+   su proporcion real y no fuerza saltos de diseno mientras carga. */
+.video-principal { background: var(--fondo-alterno); }
+.video-principal__interior {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 390px);
+  gap: var(--esp-5);
+  align-items: center;
+}
+.video-principal__texto h2 { margin-block: var(--esp-2); }
+.video-principal__duracion {
+  display: inline-block;
+  margin-top: var(--esp-2);
+  padding: .35rem .7rem;
+  border-radius: 999px;
+  background: var(--fondo);
+  font-size: .85rem;
+  font-weight: 600;
+}
+.video-principal__reproductor {
+  display: block;
+  width: 100%;
+  max-height: 72vh;
+  margin-inline: auto;
+  border-radius: var(--radio-md);
+  background: #000;
+  box-shadow: var(--sombra-md);
+}
+@media (max-width: 760px) {
+  .video-principal__interior { grid-template-columns: 1fr; }
+  .video-principal__reproductor { max-width: 340px; }
+}
+
+.video-capitulos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--esp-3);
+  align-items: start;
+}
+.video-capitulo {
+  padding: var(--esp-2);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--fondo);
+}
+.video-capitulo h3 {
+  margin-bottom: var(--esp-2);
+  font-size: 1rem;
+}
+.video-capitulo .video-principal__reproductor { max-height: 360px; }
+@media (max-width: 520px) {
+  .video-capitulos { grid-template-columns: 1fr; }
+}
