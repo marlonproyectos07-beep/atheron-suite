@@ -35,7 +35,7 @@ galeria:
   - imagen: /assets/edificio-algarra/apto-402/01.webp
     alt: Cocina equipada, comedor y sala del apartamento 402
   - imagen: /assets/edificio-algarra/apto-402/06.webp
-    alt: Balcon del apartamento 402 con vista al sector
+    alt: Balcón del apartamento 402 con vista al sector
   - imagen: /assets/edificio-algarra/duplex/07.webp
     alt: Cocina equipada del duplex
   - imagen: /assets/edificio-algarra/duplex/05.webp
@@ -64,7 +64,7 @@ caracteristicas:
     pendiente: false
   - texto: Zona de trabajo
     pendiente: false
-  - texto: Television
+  - texto: Televisión
     pendiente: false
   - texto: Refrigerador
     pendiente: false
@@ -103,7 +103,7 @@ casaCompleta:
   detalleTexto: >-
     Capacidad grupal de hasta 35 huéspedes, sujeta a disponibilidad y
     confirmacion previa. La acomodacion maxima puede incluir sofa-camas y dos
-    colchonetas adicionales, asi que no equivale a 35 camas convencionales.
+    colchonetas adicionales, así que no equivale a 35 camas convencionales.
     Escribenos con las fechas y el numero de personas y armamos la propuesta
     con las unidades que esten libres.
   detalleDatos:
@@ -134,7 +134,7 @@ videoPrincipal:
       duracion: '0:10'
     - src: /assets/edificio-algarra/video/parte-03.mp4
       poster: /assets/edificio-algarra/video/parte-03-poster.webp
-      titulo: Sala, comedor y balcon
+      titulo: Sala, comedor y balcón
       duracion: '0:10'
     - src: /assets/edificio-algarra/video/parte-04.mp4
       poster: /assets/edificio-algarra/video/parte-04-poster.webp
@@ -151,7 +151,7 @@ habitaciones:
     banos: '1'
     descripcion: >-
       Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
-      television y refrigerador.
+      televisión y refrigerador.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/duplex/01.webp
@@ -164,7 +164,7 @@ habitaciones:
     banos: '1'
     descripcion: >-
       Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
-      television y refrigerador.
+      televisión y refrigerador.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/apto-301/01.webp
@@ -177,7 +177,7 @@ habitaciones:
     banos: '1'
     descripcion: >-
       Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
-      television y refrigerador. Llegada autonoma con cerradura de teclado.
+      televisión y refrigerador. Llegada autonoma con cerradura de teclado.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/apto-302/01.webp
@@ -190,7 +190,7 @@ habitaciones:
     banos: '1'
     descripcion: >-
       El de mayor capacidad publicada. Una habitación, con cocina equipada, wifi, zona
-      de trabajo, television y refrigerador.
+      de trabajo, televisión y refrigerador.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/apto-401/02.webp
@@ -202,7 +202,7 @@ habitaciones:
     banos: '1'
     descripcion: >-
       Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
-      television y refrigerador. La capacidad exacta esta por confirmar con la
+      televisión y refrigerador. La capacidad exacta esta por confirmar con la
       administracion.
     precio: Consultar
     pendiente: false
@@ -214,7 +214,7 @@ habitaciones:
     huespedes: Hasta 6
     banos: '1'
     descripcion: >-
-      Apartamento duplex con cocina equipada, wifi, zona de trabajo y television. La
+      Apartamento duplex con cocina equipada, wifi, zona de trabajo y televisión. La
       distribucion exacta esta por confirmar con la administracion.
     precio: Consultar
     pendiente: false
@@ -238,7 +238,7 @@ faq:
       respuesta: >-
         En modalidad grupal, hasta 35 huéspedes, sujeto a disponibilidad y
         confirmacion previa. Esa cifra incluye sofa-camas y dos colchonetas
-        adicionales, asi que no son 35 camas convencionales. La acomodacion
+        adicionales, así que no son 35 camas convencionales. La acomodacion
         concreta se confirma antes de reservar.
     - pregunta: '¿Hay estacionamiento?'
       respuesta: >-
@@ -263,7 +263,7 @@ faq:
 antesDeReservar:
   etiqueta: Antes de reservar
   titulo: Lo que conviene saber
-  intro: Preferimos decirlo antes que despues. Si algo de esto te afecta, escribenos y lo miramos.
+  intro: Preferimos decirlo antes que después. Si algo de esto te afecta, escribenos y lo miramos.
   condiciones:
     - titulo: Estacionamiento
       texto: >-
@@ -326,14 +326,14 @@ comodidades:
   - Agua caliente
   - Lavadora
   - Zona de trabajo
-  - Television
+  - Televisión
   - Refrigerador
 actualizado: '2026-09-04'
 ---
 
 Seis apartamentos independientes en el mismo edificio, en el sector de
 Algarra, en Zipaquirá. Cada uno tiene su cocina, su bano y su zona de
-trabajo, asi que un grupo puede repartirse por unidades sin salir del
+trabajo, así que un grupo puede repartirse por unidades sin salir del
 edificio ni renunciar a la independencia de cada familia.
 
 Es la opcion para grupos que hoy no caben en una sola casa: delegaciones,

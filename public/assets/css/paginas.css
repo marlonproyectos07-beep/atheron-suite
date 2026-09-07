@@ -148,7 +148,24 @@
 }
 .lista-distancias span:last-child {
   color: var(--texto-suave);
-  white-space: nowrap;
+  text-align: right;
+  /* Aqui habia un white-space: nowrap. Estaba pensado para los
+     valores cortos de esta lista -"1,4 km", "8 min"-, que quedan
+     feos partidos en dos lineas. El problema es que la misma lista
+     tambien lleva horarios, y el del check-in de Algarra es una
+     frase de ochenta caracteres: sin poder ajustarse imponia 551px
+     de ancho minimo y arrastraba la columna entera fuera de la
+     pantalla, 257px de desplazamiento horizontal en un movil de
+     390px.
+
+     Un texto que no cabe tiene que poder ajustarse. Los valores
+     cortos siguen entrando en una sola linea de sobra -la mediana
+     de esta lista son 24 caracteres-, asi que se pierde muy poco y
+     se gana que la ficha quepa en la pantalla.
+
+     min-width: 0 es lo que permite encogerse a una casilla de un
+     contenedor flexible; sin el, el ajuste de linea no basta. */
+  min-width: 0;
 }
 
 /* ------------------------------------------------------------

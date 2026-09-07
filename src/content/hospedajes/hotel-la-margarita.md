@@ -18,12 +18,12 @@ presentacionPendiente: false
 fotoTarjeta: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-01-habitacion.webp
 fotoTarjetaAlt: Habitación de Hotel La Margarita con cama doble y camarote
 fotoPrincipal: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-01-habitacion.webp
-fotoPrincipalAlt: Habitación de Hotel La Margarita en Zipaquirá con cama doble, camarote y television
+fotoPrincipalAlt: Habitación de Hotel La Margarita en Zipaquirá con cama doble, camarote y televisión
 galeria:
   - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-01-habitacion.webp
-    alt: Habitación de Hotel La Margarita con cama doble, camarote y television
+    alt: Habitación de Hotel La Margarita con cama doble, camarote y televisión
   - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-02-zona-comun.webp
-    alt: Zona comun interior de Hotel La Margarita con plantas y television
+    alt: Zona comun interior de Hotel La Margarita con plantas y televisión
   - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-03-pasillo-superior.webp
     alt: Pasillo del nivel superior de Hotel La Margarita
   - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-04-acceso-interior.webp
@@ -51,7 +51,7 @@ tituloDescripcionPendiente: false
 caracteristicas:
   - texto: Wifi
     pendiente: false
-  - texto: Television por cable en las habitaciones
+  - texto: Televisión por cable en las habitaciones
     pendiente: false
   - texto: Cerca del centro histórico y de la Catedral de Sal
     pendiente: false
@@ -70,7 +70,7 @@ habitaciones:
     camas: 1 cama doble y 1 camarote visibles
     banos: Por confirmar
     descripcion: >-
-      Habitación con cama doble, camarote y television, tal como aparece en la
+      Habitación con cama doble, camarote y televisión, tal como aparece en la
       galeria publica del hotel. La capacidad exacta y el inventario completo
       de habitaciones quedan sujetos a confirmacion de la administracion.
     pendiente: false
@@ -130,7 +130,7 @@ checkin: ''
 checkout: ''
 comodidades:
   - Wifi
-  - Television por cable
+  - Televisión por cable
 actualizado: '2026-09-04'
 ---
 

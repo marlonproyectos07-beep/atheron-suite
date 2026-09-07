@@ -55,6 +55,36 @@
   height: 40px;
   width: auto;
 }
+
+/* El simbolo no cede espacio cuando la cabecera va justa.
+
+   El logo es un contenedor flexible y el <picture> que envuelve al
+   simbolo es una de sus casillas: por defecto una casilla puede
+   encogerse. En las dos landings la cabecera no lleva menu pero si
+   un boton largo, y en movil ese boton comprimia el <picture> hasta
+   19px -o hasta 0- mientras la imagen conservaba sus 34px de alto.
+   El resultado era el logo estirado en vertical.
+
+   flex-shrink: 0 le dice que no ceda. La proporcion la siguen
+   dando height y width: auto, que ya eran correctos, y el archivo
+   no se toca. */
+.logo picture,
+.logo__simbolo { flex-shrink: 0; }
+
+/* En pantallas de 320px la cabecera de las landings no cabe: el
+   simbolo, el nombre y un boton de "Consultar disponibilidad"
+   suman veinte pixeles mas de los que hay. Hasta ahora eso no se
+   veia porque lo absorbia el logo deformandose; al dejar de
+   deformarse, el hueco que faltaba aparece como desplazamiento
+   horizontal.
+
+   Se recorta el relleno lateral del boton, que es de donde se
+   puede sacar sitio sin tocar el texto ni el tamano de letra. Solo
+   por debajo de 22rem: a partir de ahi la cabecera cabe de sobra y
+   el boton se queda como estaba. */
+@media (max-width: 22rem) {
+  .header__interior .boton { padding-inline: .9rem; }
+}
 /* El nombre conserva la alineacion por linea base que tenia antes
    entre "Atheron" y "SUITE". */
 .logo__nombre {

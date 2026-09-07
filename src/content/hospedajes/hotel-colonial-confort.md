@@ -46,7 +46,7 @@ caracteristicas:
     pendiente: false
   - texto: Agua caliente
     pendiente: false
-  - texto: Television
+  - texto: Televisión
     pendiente: false
   - texto: Wifi
     pendiente: false
@@ -69,7 +69,7 @@ habitaciones:
     huespedes: Hasta 2
     camas: 1 cama doble
     banos: Bano privado
-    descripcion: Habitación para una persona o una pareja adulta, con agua caliente, television y wifi.
+    descripcion: Habitación para una persona o una pareja adulta, con agua caliente, televisión y wifi.
     precio: $ 65.000 por persona · $ 130.000 por pareja
     pendiente: false
   - nombre: Habitación familiar para adultos
@@ -77,7 +77,7 @@ habitaciones:
     huespedes: Hasta 4
     camas: 2 camas dobles
     banos: Bano privado
-    descripcion: La opcion de mayor capacidad, para hasta cuatro huéspedes adultos, con agua caliente, television y wifi.
+    descripcion: La opcion de mayor capacidad, para hasta cuatro huéspedes adultos, con agua caliente, televisión y wifi.
     precio: $ 65.000 por persona
     pendiente: false
 notaHabitaciones: El hotel tiene doce habitaciones con una cama doble y una habitación con dos camas dobles. No se admiten menores de edad.
@@ -128,7 +128,7 @@ antesDeReservar:
     - titulo: Capacidad grupal
       texto: Las camas fijas permiten alojar hasta 28 adultos. Para grupos de 29 o 30 se agrega una colchoneta adicional, informada y confirmada antes de reservar.
     - titulo: Horarios y horas adicionales
-      texto: El check-in es desde las 6:00 p. m. y el check-out hasta las 10:00 a. m. La atencion esta disponible las 24 horas. Ingresar antes o salir despues cuesta $ 10.000 por cada hora adicional y debe coordinarse previamente.
+      texto: El check-in es desde las 6:00 p. m. y el check-out hasta las 10:00 a. m. La atención esta disponible las 24 horas. Ingresar antes o salir después cuesta $ 10.000 por cada hora adicional y debe coordinarse previamente.
 descripcionZona: En el centro de Zipaquirá, en la Carrera 9. Su ubicación facilita el acceso al centro histórico y a la Catedral de Sal; las distancias exactas se verificaran antes de publicar.
 descripcionZonaPendiente: false
 distancias: []
@@ -139,7 +139,7 @@ horarios:
   - lugar: Salida (check-out)
     valor: Hasta las 10:00 a. m.
     pendiente: false
-  - lugar: Atencion
+  - lugar: Atención
     valor: Disponible las 24 horas
     pendiente: false
   - lugar: Ingreso anticipado o salida posterior
@@ -154,7 +154,7 @@ mapaNota: El punto publico de Google Maps esta confirmado. La direccion e instru
 mapaNotaPendiente: false
 experiencias:
   - titulo: Catedral de Sal
-    texto: Desde el centro de Zipaquirá es facil desplazarse hacia la Catedral de Sal. Consulta la ruta en el mapa antes de salir.
+    texto: Desde el centro de Zipaquirá es fácil desplazarse hacia la Catedral de Sal. Consulta la ruta en el mapa antes de salir.
     pendiente: false
   - titulo: Centro histórico
     texto: Restaurantes, comercio y plazas del centro de Zipaquirá se encuentran en el entorno.
@@ -173,7 +173,7 @@ checkout: '10:00'
 mascotas: false
 comodidades:
   - Wifi
-  - Television
+  - Televisión
   - Agua caliente
   - Bano privado
 actualizado: '2026-09-04'

@@ -30,7 +30,7 @@ galeria:
   - imagen: /assets/edificio-algarra/apto-402/05.webp
     alt: Acceso al apartamento 402 desde las escaleras
   - imagen: /assets/edificio-algarra/apto-402/06.webp
-    alt: Balcon del apartamento 402 con vista al sector de Algarra
+    alt: Balcón del apartamento 402 con vista al sector de Algarra
   - imagen: /assets/edificio-algarra/apto-402/07.webp
     alt: Cocina equipada y comedor del apartamento 402
   - imagen: /assets/edificio-algarra/apto-402/08.webp
@@ -53,7 +53,7 @@ caracteristicas:
     pendiente: false
   - texto: Zona de trabajo
     pendiente: false
-  - texto: Television
+  - texto: Televisión
     pendiente: false
   - texto: Refrigerador
     pendiente: false
@@ -123,7 +123,7 @@ comodidades:
   - Wifi
   - Cocina equipada
   - Zona de trabajo
-  - Television
+  - Televisión
   - Refrigerador
   - Agua caliente
   - Lavadora
@@ -132,10 +132,10 @@ actualizado: '2026-09-04'
 
 Apartamento 402 independiente en el sector de Algarra, en Zipaquirá. Tiene una
 habitación, un bano y cocina propia equipada, ademas de wifi y zona de trabajo,
-asi que sirve tanto para una escapada corta como para quedarse a
+así que sirve tanto para una escapada corta como para quedarse a
 trabajar unos dias.
 
-Forma parte de un edificio de seis apartamentos que tambien se puede
+Forma parte de un edificio de seis apartamentos que también se puede
 reservar en conjunto para grupos. Si vienen varios, mira la
 [pagina del edificio](/hospedajes/edificio-algarra).
 

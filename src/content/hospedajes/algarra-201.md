@@ -40,7 +40,7 @@ caracteristicas:
     pendiente: false
   - texto: Zona de trabajo
     pendiente: false
-  - texto: Television
+  - texto: Televisión
     pendiente: false
   - texto: Refrigerador
     pendiente: false
@@ -108,7 +108,7 @@ comodidades:
   - Wifi
   - Cocina equipada
   - Zona de trabajo
-  - Television
+  - Televisión
   - Refrigerador
   - Agua caliente
   - Lavadora
@@ -117,9 +117,9 @@ actualizado: '2026-09-04'
 
 Apartamento 201 independiente en el sector de Algarra, en Zipaquirá. Tiene una
 habitación, un bano y cocina propia equipada, ademas de wifi y zona de trabajo,
-asi que sirve tanto para una escapada corta como para quedarse a
+así que sirve tanto para una escapada corta como para quedarse a
 trabajar unos dias.
 
-Forma parte de un edificio de seis apartamentos que tambien se puede
+Forma parte de un edificio de seis apartamentos que también se puede
 reservar en conjunto para grupos. Si vienen varios, mira la
 [pagina del edificio](/hospedajes/edificio-algarra).

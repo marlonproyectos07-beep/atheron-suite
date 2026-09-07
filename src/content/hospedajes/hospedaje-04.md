@@ -87,8 +87,8 @@ experiencias:
 tituloContacto: Consulta disponibilidad
 datosContacto:
   - "Oficina: Cra. 9 #10-32, Zipaquirá"
-  - Atencion directa, sin intermediarios
+  - Atención directa, sin intermediarios
 ---
 
 Parrafo pendiente: como es el lugar, que se
-siente al llegar y que tipo de viajero disfruta mas quedarse aqui.
+siente al llegar y que tipo de viajero disfruta mas quedarse aquí.

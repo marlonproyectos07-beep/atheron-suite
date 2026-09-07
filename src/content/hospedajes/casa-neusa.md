@@ -5,15 +5,15 @@ orden: 3
 insignia: '03'
 modalidad: casa-completa
 titulo: Casa Neusa | Casa de campo en Cogua, Cundinamarca
-descripcion: Casa de campo entera en el sector de Neusa, Cogua, Cundinamarca. Desde $ 300.000 por noche para hasta 4 huéspedes, y hasta 8 comodos. Chimenea, balcon panoramico y zona de BBQ.
+descripcion: Casa de campo entera en el sector de Neusa, Cogua, Cundinamarca. Desde $ 300.000 por noche para hasta 4 huéspedes, y hasta 8 comodos. Chimenea, balcón panorámico y zona de BBQ.
 ogTitulo: Casa Neusa | Casa de campo entera en Cogua
-ogDescripcion: Una casa de campo entera rodeada de naturaleza en el sector de Neusa, Cogua. Hasta 8 huéspedes, chimenea, balcon y zona exterior de BBQ.
+ogDescripcion: Una casa de campo entera rodeada de naturaleza en el sector de Neusa, Cogua. Hasta 8 huéspedes, chimenea, balcón y zona exterior de BBQ.
 avisoBorrador: ''
 nombreAnterior: Casa de campo en Neusa
 zona: 'Neusa, Cogua, Cundinamarca'
 localidad: Cogua
 departamento: Cundinamarca
-presentacion: Una casa de campo entera para desconectar, rodeada de zonas verdes y paisaje rural. Chimenea adentro, balcon con vista panoramica y zona de BBQ afuera.
+presentacion: Una casa de campo entera para desconectar, rodeada de zonas verdes y paisaje rural. Chimenea adentro, balcón con vista panoramica y zona de BBQ afuera.
 presentacionPendiente: false
 fotoTarjeta: /assets/img/hospedajes/casa-neusa/casa-neusa-01-portada-sala-chimenea.webp
 fotoTarjetaAlt: Sala de Casa Neusa con techo de madera y ventanales al campo
@@ -25,7 +25,7 @@ galeria:
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-02-exterior-principal.webp
     alt: Exterior de Casa Neusa, casa de tejado a dos aguas con fachada blanca y vigas de madera, rodeada de cesped
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-09-balcon-panoramico.webp
-    alt: Balcon de madera de Casa Neusa con baranda metalica, abierto al paisaje verde y a las montanas
+    alt: Balcón de madera de Casa Neusa con baranda metalica, abierto al paisaje verde y a las montanas
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-10-zona-bbq.webp
     alt: Zona exterior de BBQ de Casa Neusa, con estructura de madera techada sobre el cesped y una gran roca al frente
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-06-cocina.webp
@@ -35,9 +35,9 @@ galeria:
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-03-habitacion-uno.webp
     alt: Primera habitación de Casa Neusa, bajo el techo de madera inclinado y con ventana al campo
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-04-habitacion-dos.webp
-    alt: Segunda habitación de Casa Neusa, bajo el techo de madera inclinado y con salida al balcon
+    alt: Segunda habitación de Casa Neusa, bajo el techo de madera inclinado y con salida al balcón
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-05-sala-auxiliar-balcon.webp
-    alt: Sala auxiliar del segundo piso de Casa Neusa, con sofa bajo el techo de madera y salida al balcon
+    alt: Sala auxiliar del segundo piso de Casa Neusa, con sofa bajo el techo de madera y salida al balcón
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-08-bano.webp
     alt: Bano completo de Casa Neusa, con ducha de vidrio, lavamanos y espejo
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-11-acceso-los-laureles.webp
@@ -74,7 +74,7 @@ caracteristicas:
     pendiente: false
   - texto: Chimenea interior
     pendiente: false
-  - texto: Balcon con vista panoramica
+  - texto: Balcón con vista panoramica
     pendiente: false
   - texto: Zona exterior de BBQ
     pendiente: false
@@ -84,7 +84,7 @@ caracteristicas:
     pendiente: false
   - texto: Zona de trabajo privada
     pendiente: false
-  - texto: Television
+  - texto: Televisión
     pendiente: false
   - texto: Estacionamiento gratuito en las instalaciones
     pendiente: false
@@ -92,7 +92,7 @@ listadoSector: Cogua
 listadoSegundoDato: '8'
 listadoSegundoDatoSufijo: ' huéspedes'
 listadoEnlaceTexto: Ver Casa Neusa
-resumen: Casa de campo entera en el sector de Neusa, en Cogua, para hasta 8 huéspedes. Chimenea, balcon panoramico y zona de BBQ.
+resumen: Casa de campo entera en el sector de Neusa, en Cogua, para hasta 8 huéspedes. Chimenea, balcón panorámico y zona de BBQ.
 precio: Desde $ 300.000
 precioPendiente: false
 tarifas:
@@ -149,12 +149,12 @@ espacios:
         y no por turnos.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-07-comedor.webp
       fotoAlt: Comedor de Casa Neusa con mesa de madera para seis personas
-    - titulo: Balcon con vista panoramica
+    - titulo: Balcón con vista panoramica
       texto: >-
-        Balcon de madera abierto al paisaje rural, con vista a las
+        Balcón de madera abierto al paisaje rural, con vista a las
         montanas y a las zonas verdes que rodean la casa.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-09-balcon-panoramico.webp
-      fotoAlt: Balcon de madera de Casa Neusa con vista al paisaje verde y a las montanas
+      fotoAlt: Balcón de madera de Casa Neusa con vista al paisaje verde y a las montanas
     - titulo: Zona exterior de BBQ
       texto: >-
         Asador al aire libre bajo su propia estructura de madera, en el
@@ -163,10 +163,10 @@ espacios:
       fotoAlt: Zona de BBQ de Casa Neusa, con estructura de madera techada sobre el cesped
     - titulo: Sala auxiliar del segundo piso
       texto: >-
-        Un segundo lugar de estar arriba, con salida al balcon, para
+        Un segundo lugar de estar arriba, con salida al balcón, para
         cuando el grupo se reparte.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-05-sala-auxiliar-balcon.webp
-      fotoAlt: Sala auxiliar del segundo piso de Casa Neusa, con sofa y salida al balcon
+      fotoAlt: Sala auxiliar del segundo piso de Casa Neusa, con sofa y salida al balcón
     - titulo: Primera habitación
       texto: >-
         Habitación bajo el techo de madera inclinado, con ventana al
@@ -175,19 +175,19 @@ espacios:
       fotoAlt: Primera habitación de Casa Neusa, bajo el techo de madera inclinado
     - titulo: Segunda habitación
       texto: >-
-        La segunda habitación, tambien bajo el techo de madera, con
-        salida al balcon y cama doble de 1,40 m.
+        La segunda habitación, también bajo el techo de madera, con
+        salida al balcón y cama doble de 1,40 m.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-04-habitacion-dos.webp
-      fotoAlt: Segunda habitación de Casa Neusa, con salida al balcon
+      fotoAlt: Segunda habitación de Casa Neusa, con salida al balcón
     - titulo: Como se acomodan ocho
       texto: >-
         Dos habitaciones con cama doble de 1,40 m y dos sofa-camas para
         dos personas cada uno. Con esa distribucion ocho personas duermen
-        comodas. Para nueve o diez preparamos una acomodacion adicional
+        cómodas. Para nueve o diez preparamos una acomodacion adicional
         en sofa o colchoneta, siempre sujeta a consulta y coordinacion
         previa.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-05-sala-auxiliar-balcon.webp
-      fotoAlt: Sala auxiliar de Casa Neusa con el sofa que tambien sirve de cama
+      fotoAlt: Sala auxiliar de Casa Neusa con el sofa que también sirve de cama
     - titulo: Un bano completo
       texto: >-
         La casa tiene un bano, con ducha, lavamanos y espejo. Es el
@@ -219,7 +219,7 @@ pruebaSocial:
 antesDeReservar:
   etiqueta: Antes de reservar
   titulo: Lo que conviene saber
-  intro: Preferimos decirlo antes que despues. Si algo de esto te afecta, escribenos y lo miramos.
+  intro: Preferimos decirlo antes que después. Si algo de esto te afecta, escribenos y lo miramos.
   condiciones:
     - titulo: Mascotas, bajo consulta previa
       texto: >-
@@ -299,9 +299,9 @@ comodidades:
   - Wifi
   - Cocina
   - Comedor
-  - Television
+  - Televisión
   - Chimenea interior
-  - Balcon
+  - Balcón
   - Zona exterior de BBQ
   - Zona de trabajo privada
   - Estacionamiento gratuito en las instalaciones
@@ -315,11 +315,11 @@ la casa y el terreno para si.
 
 Es una alternativa para salir de la rutina de Bogotá sin hacer un viaje
 largo: aproximadamente a una hora de camino, aunque eso depende del
-trafico y del punto desde el que salgas, asi que tomalo como referencia
+trafico y del punto desde el que salgas, así que tomalo como referencia
 y no como garantia.
 
 La propiedad esta rodeada de naturaleza y de amplias zonas verdes.
-Adentro hay chimenea, cocina y comedor; afuera, balcon con vista
+Adentro hay chimenea, cocina y comedor; afuera, balcón con vista
 panoramica y zona de BBQ.
 
 Son dos habitaciones, cada una con una cama doble de 1,40 m, y dos

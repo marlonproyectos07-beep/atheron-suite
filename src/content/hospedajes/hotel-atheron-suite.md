@@ -94,10 +94,10 @@ habitaciones:
     precio: Precio a consultar
     pendiente: false
     foto: /assets/img/hospedajes/hotel-atheron-suite-201-vista-general.jpg
-    fotoAlt: Habitación 201 con cama doble, television en la pared de listones y ventana a la calle
+    fotoAlt: Habitación 201 con cama doble, televisión en la pared de listones y ventana a la calle
     galeria:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-vista-general.jpg
-        alt: Habitación 201 del Hotel Atheron Suite en Zipaquirá, con cama doble, television en la pared de listones y ventana a la calle
+        alt: Habitación 201 del Hotel Atheron Suite en Zipaquirá, con cama doble, televisión en la pared de listones y ventana a la calle
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-cama.jpg
         alt: Cama doble de la habitación 201 con cabecero gris capitone, ropa de cama blanca y pie de cama azul
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-entrada-tv.jpg
@@ -117,10 +117,10 @@ habitaciones:
     precio: Precio a consultar
     pendiente: false
     foto: /assets/img/hospedajes/hotel-atheron-suite-202-vista-general.jpg
-    fotoAlt: Habitación 202 con cama doble y camarote, mural de bosque y television en la pared
+    fotoAlt: Habitación 202 con cama doble y camarote, mural de bosque y televisión en la pared
     galeria:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-202-vista-general.jpg
-        alt: Habitación 202 del Hotel Atheron Suite en Zipaquirá, con cama doble, camarote, television y ventana a la calle
+        alt: Habitación 202 del Hotel Atheron Suite en Zipaquirá, con cama doble, camarote, televisión y ventana a la calle
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-202-cama-doble.jpg
         alt: Cama doble de la habitación 202 con ropa de cama azul y gris, frente al mural de bosque
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-202-camarote.jpg
@@ -128,7 +128,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-202-camas.jpg
         alt: Vista de la habitación 202 con la cama doble y el camarote juntos
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-202-tv.jpg
-        alt: Television de la habitación 202 frente a la cama doble y el camarote
+        alt: Televisión de la habitación 202 frente a la cama doble y el camarote
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-bano.jpg
         alt: Bano compartido del segundo piso, con ducha de vidrio, sanitario y lavamanos
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-cocina-compartida.jpg
@@ -149,7 +149,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-203-cama.jpg
         alt: Habitación 203 del Hotel Atheron Suite en Zipaquirá, con cama de cabecero azul y mural de atardecer en la playa
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-203-cama-nido.jpg
-        alt: Cama nido de la habitación 203 desplegada junto a la cama principal, con la television al fondo
+        alt: Cama nido de la habitación 203 desplegada junto a la cama principal, con la televisión al fondo
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-203-entrada.jpg
         alt: Puerta de madera de la habitación 203 con la placa del numero
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-203-entrada-bano.jpg

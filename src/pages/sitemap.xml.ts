@@ -98,7 +98,7 @@ export const GET: APIRoute = async () => {
   SITEMAP generado automaticamente por src/pages/sitemap.xml.ts
   No editar a mano: los cambios se pierden en la siguiente publicacion.
 
-  Las fichas de hospedaje entran aqui solas cuando se marcan como
+  Las fichas de hospedaje entran aquí solas cuando se marcan como
   publicadas. Las paginas fijas estan listadas en ese mismo archivo.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

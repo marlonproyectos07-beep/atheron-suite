@@ -86,7 +86,7 @@ heroEncuadre: center 30%
 casaCompleta:
   etiquetaSeccion: Como hospedarse
   tituloSeccion: Tu grupo bajo el mismo techo
-  introSeccion: Casa Algarra se reserva entera. Si son pocos, tambien podemos mirar habitaciones sueltas.
+  introSeccion: Casa Algarra se reserva entera. Si son pocos, también podemos mirar habitaciones sueltas.
   ceja: '¿Vienen en grupo?'
   titulo: La casa entera para ustedes
   insignia: La forma de reservar Casa Algarra
@@ -111,7 +111,7 @@ casaCompleta:
   ctaCotizar: Cotizar casa completa
   mensaje: Hola, quiero cotizar Casa Algarra completa en Zipaquirá. Somos un grupo y quiero consultar disponibilidad y precio.
   cejaHabitaciones: '¿Son pocos?'
-  tituloHabitaciones: Tambien por habitaciones
+  tituloHabitaciones: También por habitaciones
   introHabitaciones: Cuando la casa no esta reservada entera, podemos alquilar habitaciones sueltas. Escribenos y lo miramos.
 habitaciones:
   - nombre: Habitación 201
@@ -191,7 +191,7 @@ habitaciones:
 antesDeReservar:
   etiqueta: Antes de reservar
   titulo: Lo que conviene saber
-  intro: Preferimos decirlo antes que despues. Si algo de esto te afecta, escribenos y lo miramos.
+  intro: Preferimos decirlo antes que después. Si algo de esto te afecta, escribenos y lo miramos.
   condiciones:
     - titulo: Parqueadero incluido
       texto: >-
@@ -247,7 +247,7 @@ verdad: sala, comedor y una cocina equipada donde caben todos.
 
 Es la opcion para familias grandes, grupos de amigos, equipos de
 trabajo y celebraciones. En vez de repartirse en habitaciones de hotel
-que no se comunican, el grupo cocina, come y se reune en la misma casa,
+que no se comunican, el grupo cocina, come y se reúne en la misma casa,
 y cada quien tiene donde dormir.
 
 Para grupos desde ocho personas aplica la tarifa especial de $50.000
