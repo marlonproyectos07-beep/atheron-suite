@@ -336,7 +336,9 @@
   font-size: .82rem;
   letter-spacing: .06em;
   text-transform: uppercase;
-  color: var(--acento);
+  /* Texto pequeno sobre la tarjeta blanca: el dorado de marca no
+     llega al contraste minimo. Ver --acento-texto en base.css. */
+  color: var(--acento-texto);
   font-weight: 600;
 }
 

@@ -4,14 +4,14 @@ publicado: false
 orden: 4
 insignia: '04'
 modalidad: casa-completa
-titulo: Apartamentos en Algarra, Zipaquira | Alojamiento para grupos
-descripcion: Seis apartamentos independientes en el sector de Algarra, Zipaquira, comercializados por Atheron Suite. Cocina equipada, wifi y zona de trabajo en cada uno, y capacidad grupal bajo confirmacion.
-ogTitulo: Apartamentos en Algarra | Alojamiento para grupos en Zipaquira
-ogDescripcion: Seis apartamentos independientes en Algarra, Zipaquira. Para familias, delegaciones y equipos que necesitan varias unidades a la vez.
+titulo: Apartamentos en Algarra, Zipaquirá | Alojamiento para grupos
+descripcion: Seis apartamentos independientes en el sector de Algarra, Zipaquirá, comercializados por Atheron Suite. Cocina equipada, wifi y zona de trabajo en cada uno, y capacidad grupal bajo confirmacion.
+ogTitulo: Apartamentos en Algarra | Alojamiento para grupos en Zipaquirá
+ogDescripcion: Seis apartamentos independientes en Algarra, Zipaquirá. Para familias, delegaciones y equipos que necesitan varias unidades a la vez.
 avisoBorrador: Ficha en preparacion. Faltan el nombre comercial definitivo, las fotografias autorizadas y varios datos por confirmar con la administracion.
 avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operacion y la entrega de los apartamentos se coordinan con la administracion del edificio.
-zona: 'Algarra, Zipaquira'
-localidad: Zipaquira
+zona: 'Algarra, Zipaquirá'
+localidad: Zipaquirá
 departamento: Cundinamarca
 presentacion: Seis apartamentos independientes en el mismo edificio, cada uno con cocina equipada, wifi y zona de trabajo. Pensado para grupos que necesitan varias unidades a la vez sin repartirse por la ciudad.
 presentacionPendiente: false
@@ -39,13 +39,13 @@ galeria:
   - imagen: /assets/edificio-algarra/duplex/07.webp
     alt: Cocina equipada del duplex
   - imagen: /assets/edificio-algarra/duplex/05.webp
-    alt: Habitacion del duplex con cama doble
+    alt: Habitación del duplex con cama doble
 datos:
   - numero: '6'
     texto: Apartamentos
     pendiente: false
   - numero: '6 a 7'
-    texto: Huespedes por apartamento
+    texto: Huéspedes por apartamento
     pendiente: false
   - numero: '1'
     texto: Bano por apartamento
@@ -75,19 +75,20 @@ caracteristicas:
 listadoSector: Algarra
 listadoSegundoDato: '6'
 listadoSegundoDatoSufijo: ' apartamentos'
-resumen: Seis apartamentos independientes en Algarra, Zipaquira, para grupos que necesitan varias unidades a la vez.
+listadoEnlaceTexto: Revisar información de Apartamentos en Algarra
+resumen: Seis apartamentos independientes en Algarra, Zipaquirá, para grupos que necesitan varias unidades a la vez.
 precio: Consultar
 precioPendiente: true
 casaCompleta:
   etiquetaSeccion: Como hospedarse
-  tituloSeccion: Una solucion para grupos en Zipaquira
+  tituloSeccion: Una solucion para grupos en Zipaquirá
   introSeccion: Se puede reservar un apartamento suelto o varias unidades del edificio a la vez. Para grupos grandes coordinamos el conjunto.
   ceja: '¿Vienen muchos?'
   titulo: El edificio para tu grupo
   insignia: Para grupos y delegaciones
   nombre: Varias unidades a la vez
   datos:
-    - Hasta 35 huespedes en modalidad grupal
+    - Hasta 35 huéspedes en modalidad grupal
     - 6 apartamentos independientes
     - Cocina equipada en cada unidad
     - 2 parqueaderos
@@ -98,20 +99,20 @@ casaCompleta:
   precio: 'Tarifa de referencia: desde $ 65.000 por persona por noche'
   precioNota: 'Para grupos la tarifa se cotiza a la medida, segun fechas, numero de personas y unidades disponibles.'
   detalleCeja: Para grupos y delegaciones
-  detalleTitulo: Capacidad grupal de hasta 35 huespedes
+  detalleTitulo: Capacidad grupal de hasta 35 huéspedes
   detalleTexto: >-
-    Capacidad grupal de hasta 35 huespedes, sujeta a disponibilidad y
+    Capacidad grupal de hasta 35 huéspedes, sujeta a disponibilidad y
     confirmacion previa. La acomodacion maxima puede incluir sofa-camas y dos
     colchonetas adicionales, asi que no equivale a 35 camas convencionales.
     Escribenos con las fechas y el numero de personas y armamos la propuesta
     con las unidades que esten libres.
   detalleDatos:
-    - Hasta 35 huespedes, bajo confirmacion
+    - Hasta 35 huéspedes, bajo confirmacion
     - Varias unidades del mismo edificio
     - Cocina equipada y bano en cada apartamento
   ctaVer: Ver la propuesta para grupos
   ctaCotizar: Solicitar cotizacion para grupos
-  mensaje: 'Hola, quiero cotizar los apartamentos de Algarra en Zipaquira para un grupo. Somos [numero] personas y estas son mis fechas:'
+  mensaje: 'Hola, quiero cotizar los apartamentos de Algarra en Zipaquirá para un grupo. Somos [numero] personas y estas son mis fechas:'
   cejaHabitaciones: '¿Vienen pocos?'
   tituloHabitaciones: Los apartamentos, uno a uno
   introHabitaciones: Cada apartamento se reserva por separado. Las fotografias corresponden a la unidad indicada; las del apartamento 201 siguen pendientes de validacion.
@@ -141,15 +142,15 @@ videoPrincipal:
       duracion: '0:10'
     - src: /assets/edificio-algarra/video/parte-05.mp4
       poster: /assets/edificio-algarra/video/parte-05-poster.webp
-      titulo: Habitacion y vista final
+      titulo: Habitación y vista final
       duracion: '0:10'
 habitaciones:
   - nombre: Apartamento 201
-    huespedes: Hasta 6
+    huéspedes: Hasta 6
     camas: 2 camas dobles de 1,40 m y 1 sofa cama
     banos: '1'
     descripcion: >-
-      Apartamento de una habitacion con cocina equipada, wifi, zona de trabajo,
+      Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
       television y refrigerador.
     precio: Consultar
     pendiente: false
@@ -158,11 +159,11 @@ habitaciones:
     enlace: /hospedajes/algarra-201
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 301
-    huespedes: Hasta 6
+    huéspedes: Hasta 6
     camas: 3 camas dobles de 1,40 m y 1 sofa cama
     banos: '1'
     descripcion: >-
-      Apartamento de una habitacion con cocina equipada, wifi, zona de trabajo,
+      Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
       television y refrigerador.
     precio: Consultar
     pendiente: false
@@ -171,11 +172,11 @@ habitaciones:
     enlace: /hospedajes/algarra-301
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 302
-    huespedes: Hasta 6
+    huéspedes: Hasta 6
     camas: 3 camas dobles de 1,40 m y 1 sofa cama
     banos: '1'
     descripcion: >-
-      Apartamento de una habitacion con cocina equipada, wifi, zona de trabajo,
+      Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
       television y refrigerador. Llegada autonoma con cerradura de teclado.
     precio: Consultar
     pendiente: false
@@ -184,11 +185,11 @@ habitaciones:
     enlace: /hospedajes/algarra-302
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 401
-    huespedes: Hasta 7
+    huéspedes: Hasta 7
     camas: 3 camas dobles de 1,40 m y 1 sofa cama
     banos: '1'
     descripcion: >-
-      El de mayor capacidad publicada. Una habitacion, con cocina equipada, wifi, zona
+      El de mayor capacidad publicada. Una habitación, con cocina equipada, wifi, zona
       de trabajo, television y refrigerador.
     precio: Consultar
     pendiente: false
@@ -200,7 +201,7 @@ habitaciones:
     camas: 3 camas dobles de 1,40 m
     banos: '1'
     descripcion: >-
-      Apartamento de una habitacion con cocina equipada, wifi, zona de trabajo,
+      Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
       television y refrigerador. La capacidad exacta esta por confirmar con la
       administracion.
     precio: Consultar
@@ -210,7 +211,7 @@ habitaciones:
     enlace: /hospedajes/algarra-402
     etiquetaVer: Ver apartamento
   - nombre: Duplex
-    huespedes: Hasta 6
+    huéspedes: Hasta 6
     banos: '1'
     descripcion: >-
       Apartamento duplex con cocina equipada, wifi, zona de trabajo y television. La
@@ -235,7 +236,7 @@ faq:
         su propio bano. La modalidad grupal es una opcion, no una condicion.
     - pregunta: '¿Cuantas personas caben en total?'
       respuesta: >-
-        En modalidad grupal, hasta 35 huespedes, sujeto a disponibilidad y
+        En modalidad grupal, hasta 35 huéspedes, sujeto a disponibilidad y
         confirmacion previa. Esa cifra incluye sofa-camas y dos colchonetas
         adicionales, asi que no son 35 camas convencionales. La acomodacion
         concreta se confirma antes de reservar.
@@ -281,7 +282,7 @@ antesDeReservar:
         recargo adicional; confirmamos su valor antes de reservar.
     - titulo: Capacidad grupal
       texto: >-
-        Capacidad grupal de hasta 35 huespedes, sujeta a disponibilidad y
+        Capacidad grupal de hasta 35 huéspedes, sujeta a disponibilidad y
         confirmacion previa. La acomodacion maxima puede incluir sofa-camas y
         dos colchonetas adicionales.
     - titulo: Tarifa de grupo
@@ -289,7 +290,7 @@ antesDeReservar:
         La tarifa de grupo se cotiza a la medida. Necesitamos fechas y numero
         de personas para confirmar disponibilidad y darte un precio en firme.
 descripcionZona: >-
-  En el barrio Algarra III, en Zipaquira. Puedes consultar el punto exacto en
+  En el barrio Algarra III, en Zipaquirá. Puedes consultar el punto exacto en
   Google Maps; las instrucciones de ingreso se coordinan al confirmar la
   reserva.
 descripcionZonaPendiente: false
@@ -311,7 +312,7 @@ mapaNotaPendiente: false
 experiencias: []
 tituloContacto: Solicita una cotizacion para tu grupo
 datosContacto:
-  - Algarra, Zipaquira, Cundinamarca
+  - Algarra, Zipaquirá, Cundinamarca
   - Seis apartamentos independientes
   - Alojamiento aliado comercializado por Atheron Suite
 calle: ''
@@ -331,7 +332,7 @@ actualizado: '2026-09-04'
 ---
 
 Seis apartamentos independientes en el mismo edificio, en el sector de
-Algarra, en Zipaquira. Cada uno tiene su cocina, su bano y su zona de
+Algarra, en Zipaquirá. Cada uno tiene su cocina, su bano y su zona de
 trabajo, asi que un grupo puede repartirse por unidades sin salir del
 edificio ni renunciar a la independencia de cada familia.
 

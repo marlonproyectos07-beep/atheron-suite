@@ -75,10 +75,17 @@ export function cifrasDe(frontmatter) {
   return cifras;
 }
 
+/* Quita tildes y la virgulilla de la ene para comparar. El texto de
+   una cifra lo escribe una persona, y "huespedes" y "huespedes" con
+   tilde son la misma palabra: sin esto, poner bien una tilde tumbaba
+   la publicacion de la ficha. */
+const sinTildes = (t) =>
+  String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
 /* Una cifra existe si esta, si su texto la nombra y si el numero es
    un numero de verdad mayor que cero. Un "N" de plantilla no cuenta. */
 function tieneCifra(frontmatter, patron) {
-  const c = cifrasDe(frontmatter).find((x) => patron.test(x.texto));
+  const c = cifrasDe(frontmatter).find((x) => patron.test(sinTildes(x.texto)));
   if (!c) return false;
   const n = Number(String(c.numero).replace(',', '.'));
   return Number.isFinite(n) && n > 0;

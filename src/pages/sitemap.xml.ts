@@ -19,6 +19,7 @@
 
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
+import { articulosPublicados } from '../data/blog';
 
 const DOMINIO = 'https://hotelesatheron.com';
 
@@ -49,9 +50,22 @@ const paginasFijas: Entrada[] = [
   { ruta: '/landing/casas-para-grupos-en-zipaquira', prioridad: '0.9' },
   { ruta: '/hospedajes', prioridad: '0.8' },
   { ruta: '/blog', prioridad: '0.7' },
-  { ruta: '/blog/guia-de-zipaquira', prioridad: '0.9' },
-  { ruta: '/blog/como-nacio-atheron-suite', prioridad: '0.7' },
 ];
+
+/* Los articulos salen del modelo de datos del blog, con SU fecha de
+   ultima modificacion real. Antes estaban en la lista de arriba y
+   heredaban la fecha de referencia, la misma para todos: un sitemap
+   que le dice a Google que siete paginas distintas se modificaron el
+   mismo dia no le esta diciendo nada.
+
+   Lo que NO se usa aqui, y es deliberado, es la fecha de hoy: un
+   lastmod que se pone al dia solo con cada despliegue afirma que el
+   contenido cambio cuando lo unico que cambio fue la publicacion. */
+const articulosDelSitemap: Entrada[] = articulosPublicados().map((a) => ({
+  ruta: a.ruta,
+  prioridad: '0.9',
+  fecha: a.modificado,
+}));
 
 const comoFecha = (f?: Date) =>
   f ? f.toISOString().slice(0, 10) : FECHA_BASE;
@@ -69,7 +83,7 @@ export const GET: APIRoute = async () => {
       fecha: comoFecha(f.data.actualizado),
     }));
 
-  const entradas = [...paginasFijas, ...fichas];
+  const entradas = [...paginasFijas, ...articulosDelSitemap, ...fichas];
 
   const cuerpo = entradas
     .map(({ ruta, prioridad, fecha }) => `  <url>

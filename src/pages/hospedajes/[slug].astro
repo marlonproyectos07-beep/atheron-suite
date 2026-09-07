@@ -9,6 +9,7 @@ import Foto from '../../components/Foto.astro';
 import { menuFicha, menuFichaMovil, ctaConsultar } from '../../data/navegacion';
 import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
 import { formularioContactoActivo } from '../../data/ajustes';
+import { migaDePan, url } from '../../data/seo';
 
 export async function getStaticPaths() {
   const fichas = await getCollection('hospedajes');
@@ -106,24 +107,58 @@ if (d.latitud != null && d.longitud != null) {
     longitude: d.longitud,
   };
 }
-if (d.mascotas !== undefined) fichaNegocio.petsAllowed = d.mascotas;
-/* El rango de tarifa, solo si la pagina lo muestra. No se marca
-   disponibilidad ni una oferta con fechas: lo unico verificado es
-   cuanto cuesta la noche segun cuantos vengan. */
-if (d.rangoPrecio) fichaNegocio.priceRange = d.rangoPrecio;
-if (d.checkin) fichaNegocio.checkinTime = d.checkin;
-if (d.checkout) fichaNegocio.checkoutTime = d.checkout;
-if (d.comodidades.length) {
-  fichaNegocio.amenityFeature = d.comodidades.map((nombre) => ({
-    '@type': 'LocationFeatureSpecification',
-    name: nombre,
-    value: true,
-  }));
+/* --- LO QUE SOLO SE DECLARA SI LA FICHA ESTA PUBLICADA ---
+
+   Una ficha sin publicar sale con noindex porque sus datos
+   operativos todavia no estan confirmados. Marcar ahi las tarifas,
+   los horarios de entrada y salida y la lista de comodidades es
+   describir un alojamiento en funcionamiento: son justo los campos
+   que un buscador lee como "esto se puede contratar hoy".
+
+   El bloque no desaparece -la propiedad existe y la pagina es
+   suya-, pero se queda en lo que si esta comprobado: como se llama,
+   donde esta y quien la gestiona. Cuando la ficha se publique,
+   estos campos entran solos. */
+if (d.publicado) {
+  if (d.mascotas !== undefined) fichaNegocio.petsAllowed = d.mascotas;
+  /* El rango de tarifa, solo si la pagina lo muestra. No se marca
+     disponibilidad ni una oferta con fechas: lo unico verificado es
+     cuanto cuesta la noche segun cuantos vengan. */
+  if (d.rangoPrecio) fichaNegocio.priceRange = d.rangoPrecio;
+  if (d.checkin) fichaNegocio.checkinTime = d.checkin;
+  if (d.checkout) fichaNegocio.checkoutTime = d.checkout;
+  if (d.comodidades.length) {
+    fichaNegocio.amenityFeature = d.comodidades.map((nombre) => ({
+      '@type': 'LocationFeatureSpecification',
+      name: nombre,
+      value: true,
+    }));
+  }
+} else {
+  /* Y se dice, en el propio dato, por que falta lo demas. */
+  fichaNegocio.disambiguatingDescription =
+    'Ficha en preparación. Sus datos operativos no están confirmados y el alojamiento no se ofrece como disponible.';
 }
 fichaNegocio.parentOrganization = {
   '@type': 'Organization',
   name: 'Atheron Suite',
   url: 'https://hotelesatheron.com/',
+};
+
+/* La ficha declara ademas donde esta dentro del sitio. Es lo que
+   permite a un buscador enseñar "Inicio > Hospedajes > Casa Algarra"
+   en vez de la direccion pelada, y es un dato que no hay que
+   verificar con nadie: sale de la propia estructura de rutas. */
+const fichaPagina = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    fichaNegocio,
+    migaDePan([
+      { nombre: 'Inicio', ruta: '/' },
+      { nombre: 'Hospedajes', ruta: '/hospedajes' },
+      { nombre: d.nombre, ruta },
+    ], `${url(ruta)}#miga`),
+  ],
 };
 
 function dato(valor, singular, plural) {
@@ -165,7 +200,7 @@ function idHabitacion(nombre) {
   ogTitulo={d.ogTitulo}
   ogDescripcion={d.ogDescripcion}
   indexable={d.publicado}
-  jsonLd={fichaNegocio}
+  jsonLd={fichaPagina}
   avisoBorrador={d.avisoBorrador}
   imagen={d.fotoPrincipal}
   imagenAlt={d.fotoPrincipalAlt}
@@ -283,7 +318,7 @@ function idHabitacion(nombre) {
               <ul class="tarifas__lista">
                 {tarifas.filas.map((f) => (
                   <li class="tarifas__fila">
-                    <span class="tarifas__huespedes">{f.huespedes}</span>
+                    <span class="tarifas__huespedes">{f.huéspedes}</span>
                     <span class="tarifas__precio">{f.precio}</span>
                   </li>
                 ))}
@@ -459,7 +494,7 @@ function idHabitacion(nombre) {
                      alli en vez de al bloque de detalle de esta pagina. */
                   const destino = h.enlace ?? `#detalle-${id}`;
                   const datos = [
-                    dato(h.huespedes, 'huesped', 'huespedes'),
+                    dato(h.huéspedes, 'huésped', 'huéspedes'),
                     dato(h.camas, 'cama', 'camas'),
                     dato(h.banos, 'bano', 'banos'),
                   ].filter(Boolean).slice(0, 2);
@@ -587,7 +622,7 @@ function idHabitacion(nombre) {
                     <h3><Marca texto={h.nombre} pendiente={h.pendiente} /></h3>
                     <div class="habitacion__datos">
                       {[
-                        dato(h.huespedes, 'huesped', 'huespedes'),
+                        dato(h.huéspedes, 'huésped', 'huéspedes'),
                         dato(h.camas, 'cama', 'camas'),
                         dato(h.banos, 'bano', 'banos'),
                       ]
@@ -780,7 +815,7 @@ function idHabitacion(nombre) {
                   <blockquote class="opinion__texto">{r.texto}</blockquote>
                   <figcaption class="opinion__firma">
                     <strong>{r.autor}</strong>
-                    <span>{r.fecha} &middot; huesped de {opiniones.fuente}</span>
+                    <span>{r.fecha} &middot; huésped de {opiniones.fuente}</span>
                   </figcaption>
                 </figure>
               ))}
@@ -807,7 +842,7 @@ function idHabitacion(nombre) {
     <section class="seccion seccion--alterna" id="ubicacion">
       <div class="contenedor bloque-doble aparecer">
         <div class="bloque-doble__texto">
-          <span class="etiqueta">Ubicacion</span>
+          <span class="etiqueta">Ubicación</span>
           <h2>{d.zona}</h2>
           <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
             <Marca texto={d.descripcionZona} pendiente={d.descripcionZonaPendiente} />
@@ -836,7 +871,7 @@ function idHabitacion(nombre) {
               <div>
                 <strong>La direccion exacta se entrega al confirmar</strong>
                 Coordinamos la llegada contigo una vez la reserva esta confirmada.
-                Asi protegemos la tranquilidad de los huespedes que ya estan alojados y nos aseguramos de recibirte bien el dia de tu llegada.
+                Asi protegemos la tranquilidad de los huéspedes que ya estan alojados y nos aseguramos de recibirte bien el dia de tu llegada.
               </div>
             </div>
           )}
@@ -846,7 +881,7 @@ function idHabitacion(nombre) {
           {d.mapaBbox ? (
             <iframe
               class="mapa"
-              title={d.mapaTitulo ?? `Mapa con la ubicacion de ${d.nombre}`}
+              title={d.mapaTitulo ?? `Mapa con la ubicación de ${d.nombre}`}
               src={`https://www.openstreetmap.org/export/embed.html?bbox=${d.mapaBbox}&layer=mapnik${
                 d.latitud != null && d.longitud != null
                   ? `&marker=${d.latitud}%2C${d.longitud}`
@@ -860,13 +895,13 @@ function idHabitacion(nombre) {
             <div class="nota-reserva">
               <span class="nota-reserva__icono" aria-hidden="true">&#128205;</span>
               <div>
-                <strong>Ubicacion exacta al confirmar</strong>
+                <strong>Ubicación exacta al confirmar</strong>
                 {/* Con enlace de Google Maps el texto NO puede seguir diciendo
                      que falta el mapa: justo debajo hay un boton que abre la
                      ubicacion, y decir las dos cosas a la vez confunde. Lo que
                      falta es el mapa incrustado, que necesita coordenadas. */}
                 {d.enlaceMapa
-                  ? <>Abajo puedes abrir la ubicacion en Google Maps. El mapa
+                  ? <>Abajo puedes abrir la ubicación en Google Maps. El mapa
                       dentro de la pagina llegara en cuanto confirmemos las
                       coordenadas exactas.</>
                   : <>Estamos terminando de publicar el mapa. Escribenos por WhatsApp y te
@@ -882,7 +917,7 @@ function idHabitacion(nombre) {
                necesitan coordenadas y solo salen si las hay. */}
           {(coordenadas || d.enlaceMapa) && (
             <nav class="botones-mapa" aria-label={`Como llegar a ${d.nombre}`}>
-              <a class="boton boton--primario" target="_blank" rel="noopener" href={d.enlaceMapa ?? `https://www.google.com/maps/search/?api=1&query=${coordenadas}`}>Ver ubicacion en Google Maps</a>
+              <a class="boton boton--primario" target="_blank" rel="noopener" href={d.enlaceMapa ?? `https://www.google.com/maps/search/?api=1&query=${coordenadas}`}>Ver ubicación en Google Maps</a>
               {coordenadas && (<>
               <a class="boton boton--contorno" target="_blank" rel="noopener" href={`https://waze.com/ul?ll=${coordenadas}&navigate=yes`}>Abrir en Waze</a>
               <a class="boton boton--contorno" target="_blank" rel="noopener" href={`https://www.google.com/maps/dir/?api=1&destination=${coordenadas}&travelmode=walking`}>Como llegar caminando</a>
@@ -1015,7 +1050,7 @@ function idHabitacion(nombre) {
             ))}
           </div>
           <div style="margin-top: var(--esp-4);">
-            <p class="texto-suave">Te contamos mas en nuestra <a href="/blog/guia-de-zipaquira">guia de Zipaquira</a>.</p>
+            <p class="texto-suave">Te contamos mas en nuestra <a href="/blog/guia-de-zipaquira">guía de Zipaquirá</a>.</p>
           </div>
         </div>
       </section>
@@ -1027,16 +1062,26 @@ function idHabitacion(nombre) {
           <span class="etiqueta">Consulta</span>
           <h2>{d.tituloContacto}</h2>
           <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
-            La forma mas rapida es WhatsApp: te respondemos con disponibilidad y precio para tus fechas.
+            {d.publicado
+              ? 'La forma mas rapida es WhatsApp: te respondemos con disponibilidad y precio para tus fechas.'
+              : 'La forma mas rapida es WhatsApp: te contamos en que estado esta este alojamiento y que podemos ofrecerte.'}
           </p>
 
+          {/* Una ficha sin publicar no ofrece reservar. Su
+              disponibilidad no esta confirmada, y un mensaje que
+              empieza por "quiero reservar" da por hecho que si lo
+              esta. Se consulta el estado del alojamiento, que es lo
+              que de verdad se puede hacer hoy; el mensaje nombra la
+              propiedad para que la conversacion llegue identificada. */}
           <div class="grupo-botones" style="margin-bottom: var(--esp-3);">
             <a
               class="boton boton--whatsapp boton--grande"
               href="tel:+573188983167"
-              data-whatsapp={`Hola, quiero reservar en ${d.nombre} de Atheron Suite. Estas son mis fechas:`}
+              data-whatsapp={d.publicado
+                ? `Hola, quiero reservar en ${d.nombre} de Atheron Suite. Estas son mis fechas:`
+                : `Hola, quisiera consultar el estado del alojamiento ${d.nombre} de Atheron Suite.`}
             >
-              Escribir por WhatsApp
+              {d.publicado ? 'Escribir por WhatsApp' : 'Consultar estado del alojamiento'}
             </a>
           </div>
 
@@ -1350,12 +1395,12 @@ function idHabitacion(nombre) {
     margin-top: 1.5rem;
   }
 
-  .hotel-selector-seccion .hotel-detalles > .habitacion {
+  .hotel-selector-seccion .hotel-detalles > .habitación {
     display: none;
     scroll-margin-top: 6.5rem;
   }
 
-  .hotel-selector-seccion .hotel-detalles > .habitacion:target {
+  .hotel-selector-seccion .hotel-detalles > .habitación:target {
     display: grid;
   }
 

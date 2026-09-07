@@ -4,13 +4,13 @@ orden: 6
 publicado: false
 insignia: "06"
 
-titulo: Hospedaje 06 | Atheron Suite Zipaquira
-descripcion: Hospedaje 06, hospedaje de Atheron Suite en Zipaquira, Cundinamarca. Consulta disponibilidad por WhatsApp.
+titulo: Hospedaje 06 | Atheron Suite Zipaquirá
+descripcion: Hospedaje 06, hospedaje de Atheron Suite en Zipaquirá, Cundinamarca. Consulta disponibilidad por WhatsApp.
 ogTitulo: Hospedaje 06 | Atheron Suite
-ogDescripcion: Hospedaje en Zipaquira, Cundinamarca.
+ogDescripcion: Hospedaje en Zipaquirá, Cundinamarca.
 avisoBorrador: Ficha en preparacion. Faltan nombre definitivo, fotos, habitaciones y precios.
 
-zona: Zipaquira, Cundinamarca
+zona: Zipaquirá, Cundinamarca
 presentacion: >-
   Frase de presentacion pendiente: que lo hace
   especial y para quien es ideal.
@@ -18,7 +18,7 @@ presentacionPendiente: true
 
 datos:
   - numero: "N"
-    texto: Huespedes
+    texto: Huéspedes
     pendiente: true
   - numero: "N"
     texto: Habitaciones
@@ -45,8 +45,8 @@ listadoSegundoDatoSufijo: " habitaciones"
 resumen: Descripcion corta pendiente.
 
 habitaciones:
-  - nombre: Nombre de la habitacion
-    huespedes: "N"
+  - nombre: Nombre de la habitación
+    huéspedes: "N"
     camas: "N"
     banos: "N"
     descripcion: Descripcion pendiente.
@@ -63,12 +63,12 @@ distancias:
   - lugar: Plaza principal
     valor: pendiente
     pendiente: true
-  - lugar: Desde Bogota
+  - lugar: Desde Bogotá
     valor: ~50 km
 
 mapaBbox: "-74.02%2C5.00%2C-73.97%2C5.05"
-mapaTitulo: Zona de Zipaquira donde se encuentra el hospedaje
-mapaNota: Mapa de referencia de la zona. La ubicacion precisa se comparte al confirmar la reserva.
+mapaTitulo: Zona de Zipaquirá donde se encuentra el hospedaje
+mapaNota: Mapa de referencia de la zona. La ubicación precisa se comparte al confirmar la reserva.
 
 # Hospedaje aliado: NO se publica su direccion exacta.
 # La ubicacion precisa se entrega al huesped cuando la reserva
@@ -78,7 +78,7 @@ direccionPublica: false
 experiencias:
   - titulo: Catedral de Sal
     texto: El recorrido subterraneo mas visitado del municipio.
-  - titulo: Centro historico
+  - titulo: Centro histórico
     texto: Plaza principal, catedral diocesana y calles coloniales.
   - titulo: Por definir
     texto: Pendiente.
@@ -86,7 +86,7 @@ experiencias:
 
 tituloContacto: Consulta disponibilidad
 datosContacto:
-  - "Oficina: Cra. 9 #10-32, Zipaquira"
+  - "Oficina: Cra. 9 #10-32, Zipaquirá"
   - Atencion directa, sin intermediarios
 ---
 

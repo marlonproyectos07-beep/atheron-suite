@@ -34,6 +34,14 @@
   --texto-suave:        var(--color-gris-500);
   --borde:              var(--color-gris-200);
   --acento:             var(--color-sal);
+  /* El mismo dorado, oscurecido para TEXTO sobre fondo claro. El de
+     marca (#c9a227) da 2,4:1 sobre blanco y la norma pide 4,5:1 en
+     texto pequeno: se lee mal, y no solo con poca vista. Este da
+     5,2:1 sobre blanco y 4,9:1 sobre el crema del sitio.
+
+     Para rellenos, bordes y anillos de foco se sigue usando el
+     dorado de marca: ahi no hay texto que leer. */
+  --acento-texto:       #856a10;
 
   /* Tipografías: títulos conservan Fraunces; texto usa la pila nativa
      del sistema para evitar descargar otra fuente de ~48 KB en móvil. */
@@ -151,9 +159,15 @@ strong { font-weight: 600; }
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--acento);
+  color: var(--acento-texto);
   margin-bottom: var(--esp-1);
 }
+
+/* Sobre fondo oscuro el problema es el contrario: el dorado
+   oscurecido se apaga. Ahi vuelve el de marca, que sobre el azul
+   noche contrasta de sobra. */
+.seccion--oscura .etiqueta,
+.hero .etiqueta { color: var(--acento); }
 
 .texto-suave { color: var(--texto-suave); }
 .texto-grande { font-size: 1.09rem; }

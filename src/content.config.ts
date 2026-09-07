@@ -116,14 +116,14 @@ const fotoGaleria = z.object({
 
 /* Una habitacion del hospedaje. Los campos numericos son texto
    a proposito: mientras no haya dato real llevan "N". */
-const habitacion = z.object({
+const habitación = z.object({
   nombre: z.string(),
   /* Los tres datos de la cabecera pueden faltar. No es lo normal, pero
      una habitacion recien cargada puede tener confirmada la cama y
      todavia no cuantas personas admite. Antes que poner un numero
      supuesto, el dato no sale: la ficha se ve igual, con una etiqueta
      menos. Cuando llegue el dato se rellena y aparece. */
-  huespedes: textoOpcionalPanel,
+  huéspedes: textoOpcionalPanel,
   camas: textoOpcionalPanel,
   banos: textoOpcionalPanel,
   descripcion: z.string(),
@@ -288,7 +288,7 @@ const hospedajes = defineCollection({
 
        El valor por defecto es Zipaquira, asi que las fichas que ya
        existen no cambian ni una letra. */
-    localidad: z.string().default('Zipaquira'),
+    localidad: z.string().default('Zipaquirá'),
     /* Departamento, por si algun dia hay algo fuera de Cundinamarca. */
     departamento: z.string().default('Cundinamarca'),
 
@@ -356,6 +356,19 @@ const hospedajes = defineCollection({
     /* Texto que acompana al segundo dato y que NO va en amarillo.
        Ej: dato "N" + sufijo " habitaciones". */
     listadoSegundoDatoSufijo: z.string().default(''),
+
+    /* Texto del boton que lleva del listado a la ficha.
+
+       POR QUE NO SE DEJA EN "VER FICHA"
+       Seis tarjetas con el mismo enlace generico obligan al visitante
+       a mirar arriba para saber a donde va cada uno, y a un buscador
+       no le dicen nada: "ver ficha" no es una descripcion de destino.
+       Con el nombre del hospedaje dentro, el enlace se entiende solo,
+       tambien leido en voz alta por un lector de pantalla.
+
+       Vacio = la maqueta lo compone con el nombre del hospedaje. Se
+       rellena a mano cuando una propiedad pide otro verbo. */
+    listadoEnlaceTexto: textoOpcionalPanel,
     /* Descripcion de dos lineas de la tarjeta (pendiente 4). */
     resumen: z.string(),
     /* Precio por noche (pendiente 5). Sigue en amarillo aunque la
@@ -388,7 +401,7 @@ const hospedajes = defineCollection({
        HABITACIONES
        ---------------------------------------------------------- */
 
-    habitaciones: z.array(habitacion),
+    habitaciones: z.array(habitación),
     /* Aviso opcional bajo el titulo del apartado. */
     notaHabitaciones: textoOpcional,
 
@@ -450,7 +463,7 @@ const hospedajes = defineCollection({
         mensaje: z.string(),
 
         /* Cabecera del listado de habitaciones */
-        cejaHabitaciones: z.string().default('¿Prefieres una habitacion?'),
+        cejaHabitaciones: z.string().default('¿Prefieres una habitación?'),
         tituloHabitaciones: z.string().default('Conoce las opciones'),
         introHabitaciones: textoOpcional,
       })
@@ -479,7 +492,7 @@ const hospedajes = defineCollection({
         intro: textoOpcional,
         /* El desglose. Cada fila es un numero de huespedes y su precio. */
         filas: z
-          .array(z.object({ huespedes: z.string(), precio: z.string() }))
+          .array(z.object({ huéspedes: z.string(), precio: z.string() }))
           .default([]),
         /* La regla en una linea, para quien quiera calcularlo. */
         regla: textoOpcional,

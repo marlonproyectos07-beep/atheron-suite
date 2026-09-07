@@ -448,7 +448,7 @@ export const fotoCubiertaProceso = ficha('casa-colonial-cubierta-interior-proces
    Ninguna de estas imagenes muestra la casa como esta hoy. Todas
    salen rotuladas, siempre, tambien dentro del comparador. */
 
-export const conceptoHabitacionPrivada = ficha('casa-colonial-concepto-habitacion-privada.webp', {
+export const conceptoHabitacionPrivada = ficha('casa-colonial-concepto-habitación-privada.webp', {
   tipo: 'CONCEPTUAL',
   unidad: 'HOTEL',
   espacio: 'Habitación privada',

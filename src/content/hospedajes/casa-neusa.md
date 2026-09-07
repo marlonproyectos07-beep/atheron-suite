@@ -5,9 +5,9 @@ orden: 3
 insignia: '03'
 modalidad: casa-completa
 titulo: Casa Neusa | Casa de campo en Cogua, Cundinamarca
-descripcion: Casa de campo entera en el sector de Neusa, Cogua, Cundinamarca. Desde $ 300.000 por noche para hasta 4 huespedes, y hasta 8 comodos. Chimenea, balcon panoramico y zona de BBQ.
+descripcion: Casa de campo entera en el sector de Neusa, Cogua, Cundinamarca. Desde $ 300.000 por noche para hasta 4 huéspedes, y hasta 8 comodos. Chimenea, balcon panoramico y zona de BBQ.
 ogTitulo: Casa Neusa | Casa de campo entera en Cogua
-ogDescripcion: Una casa de campo entera rodeada de naturaleza en el sector de Neusa, Cogua. Hasta 8 huespedes, chimenea, balcon y zona exterior de BBQ.
+ogDescripcion: Una casa de campo entera rodeada de naturaleza en el sector de Neusa, Cogua. Hasta 8 huéspedes, chimenea, balcon y zona exterior de BBQ.
 avisoBorrador: ''
 nombreAnterior: Casa de campo en Neusa
 zona: 'Neusa, Cogua, Cundinamarca'
@@ -33,9 +33,9 @@ galeria:
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-07-comedor.webp
     alt: Comedor de Casa Neusa con mesa de madera para seis, techo de madera y la escalera al fondo
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-03-habitacion-uno.webp
-    alt: Primera habitacion de Casa Neusa, bajo el techo de madera inclinado y con ventana al campo
+    alt: Primera habitación de Casa Neusa, bajo el techo de madera inclinado y con ventana al campo
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-04-habitacion-dos.webp
-    alt: Segunda habitacion de Casa Neusa, bajo el techo de madera inclinado y con salida al balcon
+    alt: Segunda habitación de Casa Neusa, bajo el techo de madera inclinado y con salida al balcon
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-05-sala-auxiliar-balcon.webp
     alt: Sala auxiliar del segundo piso de Casa Neusa, con sofa bajo el techo de madera y salida al balcon
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-08-bano.webp
@@ -44,7 +44,7 @@ galeria:
     alt: Acceso a Casa Neusa de noche, con el muro iluminado y el letrero Los Laureles
 datos:
   - numero: '8'
-    texto: Huespedes
+    texto: Huéspedes
     pendiente: false
   - numero: '2'
     texto: Habitaciones
@@ -55,16 +55,16 @@ datos:
   - numero: '1'
     texto: Bano
     pendiente: false
-tituloDescripcion: Campo de verdad, a un rato de Bogota
+tituloDescripcion: Campo de verdad, a un rato de Bogotá
 tituloDescripcionPendiente: false
 caracteristicas:
-  - texto: Casa de campo entera, hasta 8 huespedes
+  - texto: Casa de campo entera, hasta 8 huéspedes
     pendiente: false
   - texto: Dos habitaciones, cada una con cama doble de 1,40 m
     pendiente: false
   - texto: Dos sofa-camas, para dos personas cada uno
     pendiente: false
-  - texto: Hasta 8 huespedes comodos; 9 o 10 bajo consulta previa
+  - texto: Hasta 8 huéspedes comodos; 9 o 10 bajo consulta previa
     pendiente: false
   - texto: Un bano
     pendiente: false
@@ -90,32 +90,33 @@ caracteristicas:
     pendiente: false
 listadoSector: Cogua
 listadoSegundoDato: '8'
-listadoSegundoDatoSufijo: ' huespedes'
-resumen: Casa de campo entera en el sector de Neusa, en Cogua, para hasta 8 huespedes. Chimenea, balcon panoramico y zona de BBQ.
+listadoSegundoDatoSufijo: ' huéspedes'
+listadoEnlaceTexto: Ver Casa Neusa
+resumen: Casa de campo entera en el sector de Neusa, en Cogua, para hasta 8 huéspedes. Chimenea, balcon panoramico y zona de BBQ.
 precio: Desde $ 300.000
 precioPendiente: false
 tarifas:
   etiqueta: Tarifas
   titulo: Cuanto cuesta la noche
   desde: Desde $ 300.000 por noche
-  cubre: para hasta 4 huespedes
-  intro: La casa se alquila entera. La tarifa base cubre hasta cuatro personas y sube por cada huesped adicional.
+  cubre: para hasta 4 huéspedes
+  intro: La casa se alquila entera. La tarifa base cubre hasta cuatro personas y sube por cada huésped adicional.
   filas:
-    - huespedes: Hasta 4 huespedes
+    - huéspedes: Hasta 4 huéspedes
       precio: $ 300.000
-    - huespedes: 5 huespedes
+    - huéspedes: 5 huéspedes
       precio: $ 360.000
-    - huespedes: 6 huespedes
+    - huéspedes: 6 huéspedes
       precio: $ 420.000
-    - huespedes: 7 huespedes
+    - huéspedes: 7 huéspedes
       precio: $ 480.000
-    - huespedes: 8 huespedes
+    - huéspedes: 8 huéspedes
       precio: $ 540.000
-    - huespedes: 9 huespedes (bajo consulta)
+    - huéspedes: 9 huéspedes (bajo consulta)
       precio: $ 600.000
-    - huespedes: 10 huespedes (bajo consulta)
+    - huéspedes: 10 huéspedes (bajo consulta)
       precio: $ 660.000
-  regla: Cada persona a partir de la cuarta suma $ 60.000. Nueve y diez huespedes requieren consulta previa, porque necesitan acomodacion adicional.
+  regla: Cada persona a partir de la cuarta suma $ 60.000. Nueve y diez huéspedes requieren consulta previa, porque necesitan acomodacion adicional.
   nota: Precios por noche en pesos colombianos. La tarifa es la misma entre semana y en fin de semana. Escribenos con tus fechas y cuantos vienen, y te confirmamos disponibilidad y el total.
   cta: Consultar disponibilidad
   mensaje: 'Hola, quiero consultar disponibilidad y tarifa de Casa Neusa en Cogua. Somos [numero] personas y estas son mis fechas:'
@@ -166,18 +167,18 @@ espacios:
         cuando el grupo se reparte.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-05-sala-auxiliar-balcon.webp
       fotoAlt: Sala auxiliar del segundo piso de Casa Neusa, con sofa y salida al balcon
-    - titulo: Primera habitacion
+    - titulo: Primera habitación
       texto: >-
-        Habitacion bajo el techo de madera inclinado, con ventana al
+        Habitación bajo el techo de madera inclinado, con ventana al
         campo y cama doble de 1,40 m.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-03-habitacion-uno.webp
-      fotoAlt: Primera habitacion de Casa Neusa, bajo el techo de madera inclinado
-    - titulo: Segunda habitacion
+      fotoAlt: Primera habitación de Casa Neusa, bajo el techo de madera inclinado
+    - titulo: Segunda habitación
       texto: >-
-        La segunda habitacion, tambien bajo el techo de madera, con
+        La segunda habitación, tambien bajo el techo de madera, con
         salida al balcon y cama doble de 1,40 m.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-04-habitacion-dos.webp
-      fotoAlt: Segunda habitacion de Casa Neusa, con salida al balcon
+      fotoAlt: Segunda habitación de Casa Neusa, con salida al balcon
     - titulo: Como se acomodan ocho
       texto: >-
         Dos habitaciones con cama doble de 1,40 m y dos sofa-camas para
@@ -197,11 +198,11 @@ pruebaSocial:
   fuente: Airbnb
   etiqueta: Opiniones
   titulo: Lo que dicen quienes ya estuvieron
-  intro: Casa Neusa lleva tres anos recibiendo huespedes a traves de Airbnb. Estas son sus valoraciones alli.
+  intro: Casa Neusa lleva tres anos recibiendo huéspedes a traves de Airbnb. Estas son sus valoraciones alli.
   puntuacion: '4,92'
   sobre: '5'
   resenas: 13
-  distintivo: Favorito entre huespedes
+  distintivo: Favorito entre huéspedes
   nota: Datos y opiniones consultados del anuncio de Airbnb. Pueden cambiar con nuevas evaluaciones.
   enlace: https://www.airbnb.cl/rooms/1391384242432444637
   enlaceTexto: Ver el anuncio en Airbnb
@@ -238,13 +239,13 @@ antesDeReservar:
         reservar.
     - titulo: Capacidad
       texto: >-
-        Ocho huespedes se acomodan comodamente con las camas y los
+        Ocho huéspedes se acomodan comodamente con las camas y los
         sofa-camas de la casa. Nueve o diez es posible bajo consulta
         previa, con una acomodacion adicional en sofa o colchoneta que
         hay que coordinar antes de reservar.
     - titulo: Trae el mercado
       texto: >-
-        Hasta la casa no llegan domicilios. Conviene comprar en Zipaquira
+        Hasta la casa no llegan domicilios. Conviene comprar en Zipaquirá
         o en Cogua antes de subir, sobre todo si la estadia es larga.
   seguridadTitulo: Seguridad
   seguridadNota: Tomado del anuncio publicado. Que un elemento no conste no significa que no exista, sino que no esta verificado en la ficha; si necesitas confirmarlo antes de viajar, escribenos y lo comprobamos.
@@ -257,7 +258,7 @@ descripcionZona: >-
   Entorno campestre de Cogua, rodeado de naturaleza. A unos 5 minutos en
   carro hay restaurantes, una tienda para compras basicas y espacios
   naturales de la zona; el Embalse del Neusa queda aproximadamente a 20
-  minutos. Desde Bogota es mas o menos una hora de camino, aunque el
+  minutos. Desde Bogotá es mas o menos una hora de camino, aunque el
   tiempo real depende del trafico y del punto desde el que salgas. En
   Google Maps la casa aparece como Cabana los Laureles. La direccion
   exacta se entrega al confirmar la reserva.
@@ -286,12 +287,12 @@ experiencias: []
 tituloContacto: Consulta disponibilidad y tarifa de Casa Neusa
 datosContacto:
   - Neusa, Cogua, Cundinamarca
-  - Casa entera hasta 8 huespedes
+  - Casa entera hasta 8 huéspedes
   - Registro nacional de turismo 235267
 calle: ''
 latitud: 5.107200
 longitud: -73.971018
-rangoPrecio: COP $300.000-$660.000 por noche segun numero de huespedes
+rangoPrecio: COP $300.000-$660.000 por noche segun numero de huéspedes
 checkin: '15:00'
 checkout: '11:00'
 comodidades:
@@ -312,7 +313,7 @@ Casa Neusa es una casa de campo en el sector de Neusa, en Cogua,
 Cundinamarca. Se alquila entera, para que un grupo o una familia tenga
 la casa y el terreno para si.
 
-Es una alternativa para salir de la rutina de Bogota sin hacer un viaje
+Es una alternativa para salir de la rutina de Bogotá sin hacer un viaje
 largo: aproximadamente a una hora de camino, aunque eso depende del
 trafico y del punto desde el que salgas, asi que tomalo como referencia
 y no como garantia.
@@ -323,11 +324,11 @@ panoramica y zona de BBQ.
 
 Son dos habitaciones, cada una con una cama doble de 1,40 m, y dos
 sofa-camas con capacidad para dos personas cada uno. Esa distribucion
-permite alojar comodamente hasta 8 huespedes. Para grupos de 9 o 10
+permite alojar comodamente hasta 8 huéspedes. Para grupos de 9 o 10
 personas podemos preparar una acomodacion adicional en sofa o
 colchoneta, sujeta a consulta y coordinacion previa.
 
 A unos 5 minutos en carro hay restaurantes, una tienda para compras
 basicas y espacios naturales de la zona; el Embalse del Neusa queda
 aproximadamente a 20 minutos. Conviene traer el mercado desde
-Zipaquira o Cogua, porque hasta la casa no llegan domicilios.
+Zipaquirá o Cogua, porque hasta la casa no llegan domicilios.

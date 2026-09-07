@@ -44,7 +44,7 @@ export const ctaDisponibilidad: Cta = {
 export const menuHome: Enlace[] = [
   { texto: 'Inicio', href: '/' },
   { texto: 'Hospedajes', href: '/hospedajes' },
-  { texto: 'Zipaquira', href: '#zipaquira' },
+  { texto: 'Zipaquirá', href: '#zipaquira' },
   { texto: 'Experiencias', href: '#experiencias' },
   { texto: 'Grupos', href: '/landing/casas-para-grupos-en-zipaquira' },
   { texto: 'Blog', href: '/blog' },
@@ -63,7 +63,7 @@ export const menuHomeMovil: Enlace[] = menuHome.map((enlace) =>
 export const menuHospedajes: Enlace[] = [
   { texto: 'Inicio', href: '/' },
   { texto: 'Hospedajes', href: '/hospedajes' },
-  { texto: 'Zipaquira', href: '/#zipaquira' },
+  { texto: 'Zipaquirá', href: '/#zipaquira' },
   { texto: 'Blog', href: '/blog' },
   { texto: 'Contacto', href: '/#contacto' },
 ];
@@ -86,7 +86,7 @@ export const menuBlog: Enlace[] = [
 export const menuFicha: Enlace[] = [
   { texto: 'Inicio', href: '/' },
   { texto: 'Hospedajes', href: '/hospedajes' },
-  { texto: 'Ubicacion', href: '#ubicacion' },
+  { texto: 'Ubicación', href: '#ubicacion' },
   { texto: 'Blog', href: '/blog' },
 ];
 
@@ -102,7 +102,7 @@ export const menuFichaMovil: Enlace[] = [
   { texto: 'Habitaciones', href: '#habitaciones' },
   { texto: 'Galeria', href: '#galeria' },
   { texto: 'Opiniones', href: '#opiniones' },
-  { texto: 'Ubicacion', href: '#ubicacion' },
+  { texto: 'Ubicación', href: '#ubicacion' },
   { texto: 'Preguntas', href: '#faq' },
   { texto: 'Blog', href: '/blog' },
 ];
@@ -130,5 +130,5 @@ export const ctaLandingGrupos: Cta = {
   texto: 'Cotizar grupo',
   href: '#cotizar',
   clase: 'boton--whatsapp',
-  whatsapp: 'Hola, necesito alojamiento para un grupo en Zipaquira. Somos [numero] personas.',
+  whatsapp: 'Hola, necesito alojamiento para un grupo en Zipaquirá. Somos [numero] personas.',
 };

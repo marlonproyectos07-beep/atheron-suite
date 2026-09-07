@@ -15,6 +15,8 @@
    durante el desarrollo en vez de dejarlo pasar en silencio.
    ============================================================ */
 
+import { medidasDe } from '../data/medidas-imagen';
+
 interface Props {
   /** Direccion de la imagen. Si no hay, se pinta el rectangulo. */
   src?: string;
@@ -33,7 +35,10 @@ interface Props {
   anchos?: number[];
   /** Que espacio ocupa la foto, para que el navegador elija tamano. */
   medidas?: string;
-  /** Medidas reales del archivo, para reservar el hueco (evita CLS). */
+  /* Medidas reales del archivo, para reservar el hueco (evita CLS).
+     Si no se pasan, se leen del propio archivo al construir: ver
+     src/data/medidas-imagen.ts. Pasarlas a mano solo hace falta
+     cuando la imagen se recorta y las del archivo no sirven. */
   ancho?: number;
   alto?: number;
   /* true = esta imagen es la que el visitante ve primero, sin
@@ -48,6 +53,14 @@ interface Props {
 }
 
 const { src, alt, forma, anchos, medidas, ancho, alto, prioritaria } = Astro.props;
+
+/* Si quien llama no da las medidas, se leen del propio archivo. Es
+   lo que reserva el hueco de la imagen antes de que baje y evita que
+   la pagina de el salto (CLS). Un ancho o alto pasado a mano manda
+   sobre esto: puede haber un recorte que el archivo no sabe. */
+const propias = ancho && alto ? null : medidasDe(src);
+const anchoFinal = ancho ?? propias?.ancho;
+const altoFinal = alto ?? propias?.alto;
 
 /* Carga: la prioritaria se pide ya; todas las demas esperan a estar
    cerca de la pantalla. Es la regla de rendimiento del sitio y vive
@@ -87,8 +100,8 @@ if (src && !alt) {
       class={claseFoto}
       src={src}
       alt={alt ?? ''}
-      width={ancho}
-      height={alto}
+      width={anchoFinal}
+      height={altoFinal}
       loading={carga}
       fetchpriority={prioridadRed}
       decoding="async"
@@ -99,8 +112,8 @@ if (src && !alt) {
     class={claseFoto}
     src={src}
     alt={alt ?? ''}
-    width={ancho}
-    height={alto}
+    width={anchoFinal}
+    height={altoFinal}
     loading={carga}
     fetchpriority={prioridadRed}
     decoding="async"
