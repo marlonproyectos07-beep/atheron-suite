@@ -296,17 +296,6 @@
  LA PAGINA
  ------------------------------------------------------------ */
 
-/* Nota interna del hero. Solo existe mientras BORRADOR es true. */
-.hueco-hero {
-  max-width: 56ch;
-  margin-top: var(--esp-4);
-  padding: var(--esp-2);
-  border: 1px dashed rgba(255, 255, 255, 0.45);
-  border-radius: var(--radio-md);
-  font-size: 0.88rem;
-  color: rgba(255, 255, 255, 0.85);
-}
-
 .columna-texto { max-width: 68ch; display: grid; gap: var(--esp-2); }
 
 .destacado {
