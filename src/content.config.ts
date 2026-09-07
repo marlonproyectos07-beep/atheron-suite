@@ -123,7 +123,7 @@ const habitación = z.object({
      todavia no cuantas personas admite. Antes que poner un numero
      supuesto, el dato no sale: la ficha se ve igual, con una etiqueta
      menos. Cuando llegue el dato se rellena y aparece. */
-  huéspedes: textoOpcionalPanel,
+  huespedes: textoOpcionalPanel,
   camas: textoOpcionalPanel,
   banos: textoOpcionalPanel,
   descripcion: z.string(),
@@ -492,7 +492,7 @@ const hospedajes = defineCollection({
         intro: textoOpcional,
         /* El desglose. Cada fila es un numero de huespedes y su precio. */
         filas: z
-          .array(z.object({ huéspedes: z.string(), precio: z.string() }))
+          .array(z.object({ huespedes: z.string(), precio: z.string() }))
           .default([]),
         /* La regla en una linea, para quien quiera calcularlo. */
         regla: textoOpcional,

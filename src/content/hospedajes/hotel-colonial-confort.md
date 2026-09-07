@@ -66,7 +66,7 @@ precioPendiente: false
 habitaciones:
   - nombre: Habitación doble
     tipoBano: privado
-    huéspedes: Hasta 2
+    huespedes: Hasta 2
     camas: 1 cama doble
     banos: Bano privado
     descripcion: Habitación para una persona o una pareja adulta, con agua caliente, television y wifi.
@@ -74,7 +74,7 @@ habitaciones:
     pendiente: false
   - nombre: Habitación familiar para adultos
     tipoBano: privado
-    huéspedes: Hasta 4
+    huespedes: Hasta 4
     camas: 2 camas dobles
     banos: Bano privado
     descripcion: La opcion de mayor capacidad, para hasta cuatro huéspedes adultos, con agua caliente, television y wifi.
@@ -89,9 +89,9 @@ tarifas:
   cubre: Una persona adulta
   intro: La habitación para pareja cuesta $ 130.000 por noche. Para grupos, cotizamos segun el numero de adultos y las habitaciones disponibles.
   filas:
-    - huéspedes: 1 persona
+    - huespedes: 1 persona
       precio: $ 65.000
-    - huéspedes: 2 personas
+    - huespedes: 2 personas
       precio: $ 130.000
   regla: $ 65.000 por cada huésped adulto.
   nota: Para 29 o 30 adultos se agrega una colchoneta adicional. Esta acomodacion debe confirmarse antes de reservar.

@@ -66,7 +66,7 @@ precio: Desde $ 65.000 por persona
 precioPendiente: false
 habitaciones:
   - nombre: Habitación familiar fotografiada
-    huéspedes: Por confirmar
+    huespedes: Por confirmar
     camas: 1 cama doble y 1 camarote visibles
     banos: Por confirmar
     descripcion: >-

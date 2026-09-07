@@ -193,6 +193,13 @@
   background: var(--color-blanco);
   border: 1px solid var(--borde);
   border-radius: var(--radio-md);
+  /* Una tarjeta de habitacion es a su vez casilla de la rejilla de
+     arriba, y una casilla no se encoge por debajo de su contenido
+     salvo que se le diga. Con las fotos declarando su ancho real
+     -900px, 1088px- ese contenido pasa a medir mas que la pantalla
+     del movil, y la ficha entera se desplazaba en horizontal.
+     min-width: 0 le devuelve el permiso para encogerse. */
+  min-width: 0;
 }
 @media (min-width: 800px) {
   .habitacion { grid-template-columns: 320px 1fr; align-items: center; gap: var(--esp-4); }

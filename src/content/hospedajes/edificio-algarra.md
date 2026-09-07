@@ -146,7 +146,7 @@ videoPrincipal:
       duracion: '0:10'
 habitaciones:
   - nombre: Apartamento 201
-    huéspedes: Hasta 6
+    huespedes: Hasta 6
     camas: 2 camas dobles de 1,40 m y 1 sofa cama
     banos: '1'
     descripcion: >-
@@ -159,7 +159,7 @@ habitaciones:
     enlace: /hospedajes/algarra-201
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 301
-    huéspedes: Hasta 6
+    huespedes: Hasta 6
     camas: 3 camas dobles de 1,40 m y 1 sofa cama
     banos: '1'
     descripcion: >-
@@ -172,7 +172,7 @@ habitaciones:
     enlace: /hospedajes/algarra-301
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 302
-    huéspedes: Hasta 6
+    huespedes: Hasta 6
     camas: 3 camas dobles de 1,40 m y 1 sofa cama
     banos: '1'
     descripcion: >-
@@ -185,7 +185,7 @@ habitaciones:
     enlace: /hospedajes/algarra-302
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 401
-    huéspedes: Hasta 7
+    huespedes: Hasta 7
     camas: 3 camas dobles de 1,40 m y 1 sofa cama
     banos: '1'
     descripcion: >-
@@ -211,7 +211,7 @@ habitaciones:
     enlace: /hospedajes/algarra-402
     etiquetaVer: Ver apartamento
   - nombre: Duplex
-    huéspedes: Hasta 6
+    huespedes: Hasta 6
     banos: '1'
     descripcion: >-
       Apartamento duplex con cocina equipada, wifi, zona de trabajo y television. La

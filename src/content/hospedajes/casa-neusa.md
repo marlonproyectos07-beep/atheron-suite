@@ -102,19 +102,19 @@ tarifas:
   cubre: para hasta 4 huéspedes
   intro: La casa se alquila entera. La tarifa base cubre hasta cuatro personas y sube por cada huésped adicional.
   filas:
-    - huéspedes: Hasta 4 huéspedes
+    - huespedes: Hasta 4 huéspedes
       precio: $ 300.000
-    - huéspedes: 5 huéspedes
+    - huespedes: 5 huéspedes
       precio: $ 360.000
-    - huéspedes: 6 huéspedes
+    - huespedes: 6 huéspedes
       precio: $ 420.000
-    - huéspedes: 7 huéspedes
+    - huespedes: 7 huéspedes
       precio: $ 480.000
-    - huéspedes: 8 huéspedes
+    - huespedes: 8 huéspedes
       precio: $ 540.000
-    - huéspedes: 9 huéspedes (bajo consulta)
+    - huespedes: 9 huéspedes (bajo consulta)
       precio: $ 600.000
-    - huéspedes: 10 huéspedes (bajo consulta)
+    - huespedes: 10 huéspedes (bajo consulta)
       precio: $ 660.000
   regla: Cada persona a partir de la cuarta suma $ 60.000. Nueve y diez huéspedes requieren consulta previa, porque necesitan acomodacion adicional.
   nota: Precios por noche en pesos colombianos. La tarifa es la misma entre semana y en fin de semana. Escribenos con tus fechas y cuantos vienen, y te confirmamos disponibilidad y el total.

@@ -46,7 +46,7 @@ resumen: Descripcion corta pendiente.
 
 habitaciones:
   - nombre: Nombre de la habitación
-    huéspedes: "N"
+    huespedes: "N"
     camas: "N"
     banos: "N"
     descripcion: Descripcion pendiente.

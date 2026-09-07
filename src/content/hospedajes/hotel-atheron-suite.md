@@ -165,7 +165,7 @@ habitaciones:
     insignia: ★ Premium · Alexa
     destacada: true
     etiquetaVer: Ver suite
-    huéspedes: Hasta 7
+    huespedes: Hasta 7
     camas: 1 cama doble con cama nido debajo, 1 camarote y 1 sofa cama
     banos: '1'
     descripcion: >-
@@ -207,7 +207,7 @@ habitaciones:
         alt: Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera
   - nombre: Habitación 302
     tipoBano: privado
-    huéspedes: Hasta 3
+    huespedes: Hasta 3
     camas: 1 cama doble y 1 sofa cama
     banos: '1'
     descripcion: >-
