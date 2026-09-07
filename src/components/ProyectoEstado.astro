@@ -1,0 +1,48 @@
+---
+/* ============================================================
+   ESTADO DE UN BLOQUE DE CONTENIDO
+
+   Distintivo pequeno que dice de que tipo es la informacion que
+   hay debajo:
+
+     VERIFICADO  respaldado por Marlon, documentos o evidencia real.
+     PENDIENTE   todavia requiere confirmacion o soporte.
+     PROPUESTA   diseno, idea o representacion futura que aun no existe.
+
+   POR QUE SE VE EN PANTALLA Y NO SOLO EN EL CODIGO
+   La pagina de un proyecto en obra mezcla, por fuerza, lo que ya
+   existe con lo que todavia es una intencion. Si no se distingue,
+   el visitante entiende que todo esta hecho. Marcarlo es lo que
+   permite ensenar la vision sin prometerla.
+
+   MIENTRAS LA PAGINA ES BORRADOR, SE VEN TODOS.
+   Antes de la publicacion publica hay que decidir cuales siguen
+   visibles: los distintivos internos ("PENDIENTE" de un texto que
+   no ha llegado) sobran de cara al publico, pero el rotulo de las
+   representaciones conceptuales NO se quita nunca — ese vive en
+   ProyectoComparador y ProyectoGaleria, no aqui.
+   ============================================================ */
+
+import type { Estado } from '../data/casa-colonial-centro';
+
+interface Props {
+  estado: Estado;
+  /** Aclaracion opcional: que falta, o por que es una propuesta. */
+  nota?: string | null;
+}
+
+const { estado, nota } = Astro.props;
+
+const TEXTO: Record<Estado, string> = {
+  VERIFICADO: 'Verificado',
+  PENDIENTE: 'Pendiente de confirmación',
+  PROPUESTA: 'Propuesta',
+};
+---
+
+<p class="estado-dato" data-estado={estado}>
+  <span class="estado-dato__punto" aria-hidden="true"></span>
+  <span class="estado-dato__texto">{TEXTO[estado]}</span>
+  {nota && <span class="estado-dato__nota">{nota}</span>}
+</p>
+

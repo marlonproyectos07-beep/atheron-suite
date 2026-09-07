@@ -1,0 +1,541 @@
+---
+/* ============================================================
+   CASA COLONIAL CENTRO BY ATHERON — pagina de proyecto
+
+   BORRADOR PRIVADO. NO PUBLICAR SIN APROBACION ESCRITA.
+
+   Estado con el que sale a la calle esta pagina:
+
+     - noindex, nofollow  (Base.astro, indexable={false} y
+                           seguirEnlaces={false})
+     - FUERA del sitemap  (src/pages/sitemap.xml.ts no la lista)
+     - sin enlace desde la navegacion ni desde la portada
+     - accesible solo por la vista previa de Vercel
+
+   Los cuatro puntos van juntos a proposito. Quitar solo uno no
+   publica la pagina, pero deja el sitio en un estado incoherente:
+   una direccion indexable que nadie enlaza, o un sitemap que apunta
+   a una pagina con noindex. Cuando llegue la aprobacion se repasan
+   los cuatro de una vez, mas el interruptor BORRADOR de
+   src/data/casa-colonial-centro.ts.
+
+   DE DONDE SALE EL CONTENIDO
+   De src/data/casa-colonial-centro.ts, y de ningun otro sitio. Esta
+   pagina no reutiliza fotos, capacidades, tarifas, habitaciones ni
+   textos de Hotel Atheron Suite, Casa Algarra, Casa Neusa ni de
+   ningun otro hospedaje.
+
+   LO QUE ESTA PAGINA NO HACE
+   No pide dinero. No lleva formulario de aportes, pasarela de pago,
+   checkout, suscripcion, transferencia, reserva de participacion,
+   calculo de rentabilidad ni simulador de retorno. No promete
+   retornos. La unica accion posible es escribir por WhatsApp.
+   ============================================================ */
+
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import AvisoInformativo from '../../components/AvisoInformativo.astro';
+import ProyectoEstado from '../../components/ProyectoEstado.astro';
+import ProyectoGaleria from '../../components/ProyectoGaleria.astro';
+import ProyectoComparador from '../../components/ProyectoComparador.astro';
+import ProyectoUnidad from '../../components/ProyectoUnidad.astro';
+import ProyectoFoto from '../../components/ProyectoFoto.astro';
+
+import { menuHospedajes } from '../../data/navegacion';
+import { whatsappRespaldo } from '../../data/ajustes';
+import {
+  BORRADOR,
+  RUTA,
+  NOMBRE,
+  NOMBRE_CORTO,
+  UBICACION_PUBLICA,
+  MENSAJE_GENERAL,
+  AVISO_INFORMATIVO,
+  ETIQUETA_GALERIA_REAL,
+  HUECOS_GALERIA,
+  GRUPOS_GALERIA,
+  fechaEnTexto,
+  seo,
+  hero,
+  historia,
+  estadoActual,
+  galeriaEstadoActual,
+  transformacion,
+  unidades,
+  modelo,
+  alianzas,
+  bitacora,
+  aviso,
+  cierre,
+} from '../../data/casa-colonial-centro';
+
+/* La cabecera es la del sitio, con el menu del listado: esta pagina
+   no se anade al menu, pero si ofrece la salida hacia el sitio. */
+const ctaCabecera = {
+  texto: 'Conversar por WhatsApp',
+  href: whatsappRespaldo,
+  clase: 'boton--whatsapp',
+  whatsapp: MENSAJE_GENERAL,
+};
+
+const avisoBorrador = BORRADOR
+  ? 'Borrador privado del proyecto Casa Colonial Centro. No indexado, sin enlazar y sin publicar. Pendiente de aprobación de Marlon y ChatGPT.'
+  : null;
+
+/* ============================================================
+   DATOS ESTRUCTURADOS
+
+   Solo tres tipos, y ninguno de ellos declara un negocio abierto:
+   WebPage (esto es una pagina), Organization (quien la publica) y
+   BreadcrumbList (donde esta dentro del sitio).
+
+   LO QUE NO SE MARCA, Y POR QUE:
+   Hotel, LodgingBusiness, Restaurant, FoodEstablishment, Offer,
+   Product, AggregateRating, Review, PriceSpecification, Event y
+   OpeningHoursSpecification describirian servicios que todavia no
+   existen. Marcar como existente algo que es una propuesta es
+   declararle a Google un negocio que no puede visitar. BarOrPub no
+   se usa nunca: la cuarta unidad es un restaurante gastrobar.
+
+   El dominio no se escribe a mano: sale de astro.config.mjs, igual
+   que la canonica.
+
+   MIGA DE PAN: "Proyectos" va SIN direccion a proposito. La ruta
+   /proyectos no existe como pagina, y crear una pagina publica
+   vacia solo para que la miga tenga a donde apuntar seria peor
+   que dejar el escalon sin enlace. Queda como pendiente.
+   ============================================================ */
+const urlPagina = new URL(RUTA, Astro.site).href;
+const urlSitio = new URL('/', Astro.site).href;
+
+const fichaPagina = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${urlPagina}#pagina`,
+      url: urlPagina,
+      name: seo.titulo,
+      description: seo.descripcion,
+      inLanguage: 'es-CO',
+      isPartOf: { '@id': `${urlSitio}#organizacion` },
+      breadcrumb: { '@id': `${urlPagina}#miga` },
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${urlSitio}#organizacion`,
+      name: 'Atheron Suite',
+      url: urlSitio,
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': `${urlPagina}#miga`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: urlSitio },
+        { '@type': 'ListItem', position: 2, name: 'Proyectos' },
+        { '@type': 'ListItem', position: 3, name: NOMBRE_CORTO, item: urlPagina },
+      ],
+    },
+  ],
+};
+---
+
+<Base
+  titulo={seo.titulo}
+  descripcion={seo.descripcion}
+  ruta={RUTA}
+  indexable={false}
+  seguirEnlaces={false}
+  imagen={seo.imagen}
+  imagenAlt={seo.imagenAlt}
+  avisoBorrador={avisoBorrador}
+  jsonLd={fichaPagina}
+  hojasExtra={['proyecto-casa-colonial']}
+>
+  <Cabecera enlaces={menuHospedajes} cta={ctaCabecera} />
+
+  <main id="contenido">
+
+    {/* ============================================================
+         MIGA DE PAN
+         El escalon "Proyectos" no es un enlace porque esa pagina no
+         existe. Se ve, dice donde estamos, y no lleva a un 404.
+         ============================================================ */}
+    <nav class="miga" aria-label="Ruta de navegación">
+      <div class="contenedor">
+        <ol class="miga__lista">
+          <li><a href="/">Inicio</a></li>
+          <li><span>Proyectos</span></li>
+          <li><span aria-current="page">{NOMBRE_CORTO}</span></li>
+        </ol>
+      </div>
+    </nav>
+
+    {/* ============================================================
+         1. HERO
+
+         Fotografia interior real, con el balcon hacia el centro
+         historico. La fachada no se usa en ningun sitio: ni aqui,
+         ni en la galeria, ni al compartir el enlace.
+
+         Es la unica imagen de la pagina que se pide con prioridad
+         (prioritaria), porque es la primera que se ve y la que
+         Lighthouse mide como LCP. Todas las demas van diferidas.
+         ============================================================ */}
+    <section class="hero hero--interior hero--proyecto">
+      <div class="contenedor hero__contenido">
+        <span class="hero__etiqueta">{hero.ceja}</span>
+        <h1 class="hero__titulo">{hero.titulo}</h1>
+        <p class="hero__texto">{hero.texto}</p>
+
+        <div class="grupo-botones">
+          {hero.botones.map((boton, indice) => (
+            <a
+              class:list={['boton', 'boton--grande', indice === 0 ? 'boton--primario' : 'boton--claro']}
+              href={boton.href}
+              data-evento={boton.evento}
+            >{boton.texto}</a>
+          ))}
+        </div>
+
+        {BORRADOR && !hero.foto && (
+          <p class="hueco-hero">
+            <strong>Hueco reservado.</strong> Aquí irá una fotografía interior real
+            con vista hacia la Catedral, cuando llegue seleccionada en el manifiesto
+            fotográfico aprobado. Esta nota solo se ve en el borrador.
+          </p>
+        )}
+      </div>
+
+      {hero.foto && (
+        <div class="contenedor hero__foto">
+          <ProyectoFoto foto={hero.foto} prioritaria medidas="(min-width: 1100px) 68rem, 100vw" />
+        </div>
+      )}
+    </section>
+
+    {/* ============================================================
+         2. HISTORIA
+
+         PENDIENTE JURIDICO: los textos relacionados con contrato,
+         opcion preferente de compra, permisos y autoridades estan
+         pendientes de aprobacion juridica antes de publicacion
+         publica. Por eso aqui NO aparecen el canon, la identidad de
+         los propietarios, las condiciones contractuales privadas, el
+         precio futuro de compra, la inversion realizada, los montos
+         requeridos ni los porcentajes de participacion.
+         ============================================================ */}
+    <section class="seccion" id={historia.id}>
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">{historia.ceja}</span>
+          <h2>{historia.titulo}</h2>
+        </div>
+
+        <ProyectoEstado
+          estado={historia.estado}
+          nota="Redacción sujeta a revisión jurídica antes de publicarse."
+        />
+
+        <div class="columna-texto">
+          {historia.parrafos.map((parrafo) => <p>{parrafo}</p>)}
+        </div>
+
+        <blockquote class="destacado">{historia.destacado}</blockquote>
+
+        {/* Historia y ubicacion. La ubicacion se ensena desde
+            dentro hacia el centro historico: la direccion exacta
+            no se publica todavia. */}
+        {historia.fotos.length > 0 && (
+          <div class="pareja-fotos">
+            {historia.fotos.map((foto) => (
+              <ProyectoFoto foto={foto} medidas="(min-width: 900px) 33rem, 100vw" />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+
+    {/* ============================================================
+         3. LA CASA HOY
+         Solo fotografia real. El componente descarta cualquier
+         imagen conceptual que se cuele en los datos.
+         ============================================================ */}
+    <section class="seccion seccion--alterna" id={estadoActual.id}>
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">{estadoActual.ceja}</span>
+          <h2>{estadoActual.titulo}</h2>
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+            {estadoActual.texto}
+          </p>
+        </div>
+
+        <ProyectoEstado estado={estadoActual.estado} />
+
+        <ProyectoGaleria
+          fotos={galeriaEstadoActual}
+          etiqueta={ETIQUETA_GALERIA_REAL}
+          huecos={HUECOS_GALERIA}
+          grupos={GRUPOS_GALERIA}
+        />
+      </div>
+    </section>
+
+    {/* ============================================================
+         4. TRANSFORMACION
+         Tres estados por espacio, con botones y sin deslizador.
+         Ver el porque en src/components/ProyectoComparador.astro.
+         ============================================================ */}
+    <section class="seccion" id={transformacion.id}>
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">{transformacion.ceja}</span>
+          <h2>{transformacion.titulo}</h2>
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+            {transformacion.texto}
+          </p>
+        </div>
+
+        <ProyectoEstado
+          estado={transformacion.estado}
+          nota="Los espacios se cargarán con el manifiesto fotográfico aprobado."
+        />
+
+        <ProyectoComparador bloques={transformacion.bloques} />
+      </div>
+    </section>
+
+    {/* ============================================================
+         5. CUATRO EXPERIENCIAS
+         ============================================================ */}
+    <section class="seccion seccion--alterna" id={unidades.id}>
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">{unidades.ceja}</span>
+          <h2>{unidades.titulo}</h2>
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+            {unidades.intro}
+          </p>
+        </div>
+
+        <div class="grid grid--4">
+          {unidades.lista
+            .filter((unidad) => unidad.visible)
+            .map((unidad) => <ProyectoUnidad unidad={unidad} />)}
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         6. MODELO ATHERON
+         Sin cifras ni porcentajes, y sin dar por seleccionados
+         operadores ni inversionistas.
+         ============================================================ */}
+    <section class="seccion seccion--oscura" id={modelo.id}>
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">{modelo.ceja}</span>
+          <h2>{modelo.titulo}</h2>
+        </div>
+
+        <ProyectoEstado estado={modelo.estado} />
+
+        <div class="modelo">
+          <div class="modelo__cara">
+            <h3 class="modelo__titulo">Lo que ve el público</h3>
+            <ul class="modelo__lista">
+              {modelo.publico.map((punto) => <li>{punto}</li>)}
+            </ul>
+          </div>
+
+          <div class="modelo__cara">
+            <h3 class="modelo__titulo">Cómo funciona por dentro</h3>
+            <ul class="modelo__lista">
+              {modelo.interno.map((punto) => <li>{punto}</li>)}
+            </ul>
+            <ul class="modelo__unidades">
+              {unidades.lista.map((unidad) => (
+                <li>{unidad.nombreAdministrativo}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div class="columna-texto" style="margin-top: var(--esp-4);">
+          {modelo.parrafos.map((parrafo) => <p>{parrafo}</p>)}
+        </div>
+
+        {/* La vision integrada: por donde se entra a las cuatro
+            unidades. Representacion conceptual, rotulada. */}
+        {modelo.foto && (
+          <ProyectoFoto
+            foto={modelo.foto}
+            clase="foto-proyecto--centrada"
+            medidas="(min-width: 900px) 28rem, 100vw"
+          />
+        )}
+      </div>
+    </section>
+
+    {/* ============================================================
+         7. ALIANZAS
+
+         Tres puertas de entrada, ninguna financiera. La del
+         componente hotelero lleva el aviso informativo pegado, como
+         exige la instruccion: es el unico bloque que alguien podria
+         leer como captacion, y no lo es.
+
+         Ningun boton pide dinero, monto disponible, patrimonio,
+         ingresos, datos bancarios ni numero de identificacion: todos
+         abren una conversacion de WhatsApp con un texto ya escrito.
+         ============================================================ */}
+    <section class="seccion" id={alianzas.id}>
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">{alianzas.ceja}</span>
+          <h2>{alianzas.titulo}</h2>
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+            {alianzas.texto}
+          </p>
+        </div>
+
+        <div class="grid grid--3">
+          {alianzas.lista.map((alianza) => (
+            <article class="tarjeta-alianza">
+              <h3>{alianza.titulo}</h3>
+              <p>{alianza.descripcion}</p>
+
+              {alianza.llevaAviso && (
+                <AvisoInformativo texto={AVISO_INFORMATIVO} variante="encajado" />
+              )}
+
+              <a
+                class="boton boton--whatsapp"
+                href={whatsappRespaldo}
+                rel="noopener"
+                data-whatsapp={alianza.mensaje}
+                data-evento={alianza.evento}
+              >{alianza.ctaTexto}</a>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         8. BITACORA
+
+         Preparada para los articulos del blog de la categoria
+         casa-colonial-centro. Vacia hasta que se escriba el primero:
+         sin tarjetas de ejemplo, sin fechas inventadas y sin autores
+         que no han escrito nada.
+
+         El boton lleva a esta misma seccion mientras la categoria
+         del blog no exista. Es lo que permite la instruccion, y
+         evita el unico resultado inaceptable: un enlace roto.
+         ============================================================ */}
+    <section class="seccion seccion--alterna" id={bitacora.id}>
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">{bitacora.ceja}</span>
+          <h2>{bitacora.titulo}</h2>
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+            {bitacora.texto}
+          </p>
+        </div>
+
+        <ProyectoEstado
+          estado={bitacora.estado}
+          nota="Estructura lista. Sin entradas publicadas todavía."
+        />
+
+        {bitacora.entradas.length > 0 ? (
+          <ul class="grid grid--3">
+            {bitacora.entradas.map((entrada) => (
+              <li class="tarjeta">
+                <p class="texto-suave" style="font-size: .85rem;">
+                  <time datetime={entrada.fecha}>{fechaEnTexto(entrada.fecha)}</time>
+                </p>
+                <h3><a href={entrada.href}>{entrada.titulo}</a></h3>
+                <p class="texto-suave">{entrada.resumen}</p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="bitacora__vacio">{bitacora.textoVacio}</p>
+        )}
+
+        <p style="margin-top: var(--esp-3);">
+          <a
+            class="boton boton--contorno"
+            href={`#${bitacora.id}`}
+            data-evento={bitacora.evento}
+          >{bitacora.ctaTexto}</a>
+        </p>
+      </div>
+    </section>
+
+    {/* ============================================================
+         9. AVISO INFORMATIVO
+         Texto exacto, en el HTML inicial, legible sin interaccion y
+         antes del cierre de la pagina.
+         ============================================================ */}
+    <section class="seccion" id={aviso.id}>
+      <div class="contenedor aparecer">
+        <AvisoInformativo texto={aviso.texto} titulo={aviso.titulo} />
+      </div>
+    </section>
+
+    {/* ============================================================
+         10. CIERRE
+         Tres salidas: la bitacora, las alianzas y WhatsApp. El
+         numero no se escribe aqui: el href es el respaldo de
+         ajustes.ts y main.js lo reescribe con el mensaje.
+         ============================================================ */}
+    <section class="seccion seccion--alterna" id={cierre.id}>
+      <div class="contenedor aparecer" style="max-width: 720px;">
+        <div class="encabezado-seccion encabezado-seccion--centrado">
+          <span class="etiqueta">{UBICACION_PUBLICA}</span>
+          <h2>{cierre.titulo}</h2>
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+            {cierre.texto}
+          </p>
+        </div>
+
+        <div class="grupo-botones grupo-botones--centrado">
+          {cierre.botones.map((boton, indice) => (
+            <a
+              class:list={[
+                'boton',
+                'boton--grande',
+                boton.whatsapp ? 'boton--whatsapp' : indice === 0 ? 'boton--primario' : 'boton--contorno',
+              ]}
+              href={boton.whatsapp ? whatsappRespaldo : boton.href}
+              rel={boton.whatsapp ? 'noopener' : undefined}
+              data-whatsapp={boton.whatsapp ?? undefined}
+              data-evento={boton.evento}
+            >{boton.texto}</a>
+          ))}
+        </div>
+
+        {/* Experiencia y bienvenida: la galeria de acogida, en
+            representacion conceptual y rotulada como tal. */}
+        <ProyectoFoto
+          foto={cierre.foto}
+          clase="foto-proyecto--centrada"
+          medidas="(min-width: 900px) 28rem, 100vw"
+        />
+
+        <p class="cierre__firma texto-suave">{NOMBRE}</p>
+      </div>
+    </section>
+
+  </main>
+
+  <Pie variante="simple" />
+
+  <BotonFlotante href={whatsappRespaldo} mensaje={MENSAJE_GENERAL} />
+</Base>

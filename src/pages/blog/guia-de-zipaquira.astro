@@ -16,15 +16,61 @@ import Cabecera from '../../components/Cabecera.astro';
 import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
+import { migaDePan, url, ORGANIZACION } from '../../data/seo';
+import { articuloDe } from '../../data/blog';
+
+/* La ficha del articulo se construye con el modelo de datos del
+   blog: titulo, autor y fechas salen de ahi y no escritos aqui, para
+   que el articulo, el listado y el sitemap no puedan contradecirse.
+   BlogPosting en vez de Article porque esto es una entrada de blog,
+   y ese es el tipo que le corresponde.
+
+   Solo se declara lo que existe: si el articulo no tiene imagen de
+   portada, la ficha no lleva "image". Un campo vacio ahi no es
+   neutro, es un dato falso. */
+const articulo = articuloDe('/blog/guia-de-zipaquira')!;
+
+const fichaArticulo = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BlogPosting',
+      '@id': `${url(articulo.ruta)}#articulo`,
+      headline: articulo.titulo,
+      description: articulo.descripcion,
+      url: url(articulo.ruta),
+      datePublished: articulo.publicado,
+      dateModified: articulo.modificado,
+      inLanguage: 'es-CO',
+      articleSection: articulo.categoria,
+      author: { '@type': 'Organization', name: articulo.autor },
+      publisher: { '@id': ORGANIZACION['@id'] },
+      isPartOf: { '@id': `${url('/blog')}#blog` },
+      mainEntityOfPage: url(articulo.ruta),
+      breadcrumb: { '@id': `${url(articulo.ruta)}#miga` },
+      ...(articulo.imagen ? { image: url(articulo.imagen) } : {}),
+      ...(articulo.fuentes.length
+        ? { citation: articulo.fuentes.map((f) => f.url ?? f.titulo) }
+        : {}),
+    },
+    ORGANIZACION,
+    migaDePan([
+      { nombre: 'Inicio', ruta: '/' },
+      { nombre: 'Blog', ruta: '/blog' },
+      { nombre: articulo.titulo, ruta: articulo.ruta },
+    ], `${url(articulo.ruta)}#miga`),
+  ],
+};
 ---
 
 <Base
-  titulo="Guia de Zipaquira 2026: que hacer, como llegar y donde dormir"
-  descripcion="Guia practica de Zipaquira, Cundinamarca: como llegar desde Bogota, que visitar, cuantos dias quedarse y donde alojarse cerca de la Catedral de Sal."
+  titulo="Guía de Zipaquirá 2026: que hacer, como llegar y donde dormir"
+  descripcion="Guía practica de Zipaquirá, Cundinamarca: como llegar desde Bogotá, que visitar, cuantos dias quedarse y donde alojarse cerca de la Catedral de Sal."
   ruta="/blog/guia-de-zipaquira"
+  jsonLd={fichaArticulo}
   ogTipo="article"
-  ogTitulo="Guia de Zipaquira: que hacer, como llegar y donde dormir"
-  ogDescripcion="Todo lo practico para planear tu visita a Zipaquira, Cundinamarca."
+  ogTitulo="Guía de Zipaquirá: que hacer, como llegar y donde dormir"
+  ogDescripcion="Todo lo practico para planear tu visita a Zipaquirá, Cundinamarca."
 >
 
   <Cabecera enlaces={menuBlog} cta={ctaDisponibilidad} actual="/blog" />
@@ -36,10 +82,10 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
         <article class="articulo">
 
           <p class="articulo__meta">
-            <span>Guia completa</span>
+            <span>Guía completa</span>
           </p>
 
-          <h1>Guia de Zipaquira: que hacer, como llegar y donde dormir</h1>
+          <h1>Guía de Zipaquirá: que hacer, como llegar y donde dormir</h1>
 
           {/* ==========================================================
                RESPUESTA RAPIDA
@@ -53,39 +99,39 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
                ========================================================== */}
           <div class="respuesta-rapida">
             <strong>En corto</strong>
-            Zipaquira es un municipio de Cundinamarca situado a unos 50 km al
-            norte de Bogota. Su atractivo principal es la Catedral de Sal, un
+            Zipaquirá es un municipio de Cundinamarca situado a unos 50 km al
+            norte de Bogotá. Su atractivo principal es la Catedral de Sal, un
             templo construido dentro de una mina de sal en funcionamiento. Se
             llega en bus, en carro o en el Tren de la Sabana. La mayoria de
             visitantes la recorre en un dia, pero quedarse una noche permite
-            ver el centro historico sin prisa y evitar el trayecto de regreso
+            ver el centro histórico sin prisa y evitar el trayecto de regreso
             de noche.
           </div>
 
           <p>
-            Esta guia reune lo practico: como llegar, cuanto tiempo dedicarle,
+            Esta guía reúne lo practico: como llegar, cuanto tiempo dedicarle,
             que ver mas alla de la Catedral y donde alojarse. La escribimos
-            desde Zipaquira, donde administramos siete hospedajes.
+            desde Zipaquirá, donde administramos siete hospedajes.
           </p>
 
           {/* ==========================================================
                INDICE
                Ayuda al lector y le da a Google la estructura del tema.
                ========================================================== */}
-          <h2>Que encontraras aqui</h2>
+          <h2>Que encontraras aquí</h2>
           <ul>
-            <li><a href="#como-llegar">Como llegar desde Bogota</a></li>
-            <li><a href="#que-hacer">Que hacer en Zipaquira</a></li>
+            <li><a href="#como-llegar">Como llegar desde Bogotá</a></li>
+            <li><a href="#que-hacer">Que hacer en Zipaquirá</a></li>
             <li><a href="#cuantos-dias">Cuantos dias dedicarle</a></li>
             <li><a href="#donde-dormir">Donde dormir</a></li>
             <li><a href="#clima">Clima y que empacar</a></li>
           </ul>
 
 
-          <h2 id="como-llegar">Como llegar desde Bogota</h2>
+          <h2 id="como-llegar">Como llegar desde Bogotá</h2>
 
           <p>
-            Zipaquira esta a unos 50 km al norte de Bogota. Hay tres formas
+            Zipaquirá esta a unos 50 km al norte de Bogotá. Hay tres formas
             de llegar, y la eleccion cambia bastante la experiencia.
           </p>
 
@@ -96,11 +142,11 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
               igual que los demas del grupo tematico de mas abajo. */}
           <p>
             <span class="pendiente">Cubriremos cada opcion en detalle en el
-            articulo "Como llegar de Bogota a Zipaquira".</span>
+            articulo "Como llegar de Bogotá a Zipaquirá".</span>
           </p>
 
 
-          <h2 id="que-hacer">Que hacer en Zipaquira</h2>
+          <h2 id="que-hacer">Que hacer en Zipaquirá</h2>
 
           <h3>La Catedral de Sal</h3>
           <p>
@@ -109,7 +155,7 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
             metros bajo tierra.
           </p>
 
-          <h3>El centro historico</h3>
+          <h3>El centro histórico</h3>
           <p>
             La plaza principal y la catedral diocesana concentran la parte
             colonial del municipio. Es una zona caminable, con cafes y
@@ -120,7 +166,7 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
 
           <p>
             La Catedral de Sal se puede visitar en medio dia, y por eso mucha
-            gente va y vuelve desde Bogota el mismo dia. Funciona, pero implica
+            gente va y vuelve desde Bogotá el mismo dia. Funciona, pero implica
             dos trayectos y llegar de noche.
           </p>
 
@@ -131,10 +177,10 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
           </p>
 
 
-          <h2 id="donde-dormir">Donde dormir en Zipaquira</h2>
+          <h2 id="donde-dormir">Donde dormir en Zipaquirá</h2>
 
           <p>
-            Lo que mas influye es la distancia al centro historico y a la
+            Lo que mas influye es la distancia al centro histórico y a la
             Catedral de Sal: si te alojas cerca, te ahorras transporte y puedes
             hacer los recorridos caminando.
           </p>
@@ -143,7 +189,7 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
             En Atheron Suite administramos siete hospedajes en el municipio.
             Puedes verlos todos en
             <a href="/hospedajes">nuestra pagina de hospedajes</a>,
-            con habitaciones, fotos y ubicacion de cada uno.
+            con habitaciones, fotos y ubicación de cada uno.
           </p>
 
           <div class="grupo-botones" style="margin-top: var(--esp-3);">
@@ -157,7 +203,7 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
           <h2 id="clima">Clima y que empacar</h2>
 
           <p>
-            Zipaquira esta en la sabana de Cundinamarca, a mas de 2.600 metros
+            Zipaquirá esta en la sabana de Cundinamarca, a mas de 2.600 metros
             sobre el nivel del mar, con clima frio durante todo el ano y
             diferencia notable entre el dia y la noche. Dentro de la Catedral
             de Sal la temperatura es aun mas baja.
@@ -170,13 +216,13 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
                "cluster". Cada articulo nuevo se anade aqui.
                ========================================================== */}
           <div class="cluster">
-            <h3>Sigue leyendo sobre Zipaquira</h3>
+            <h3>Sigue leyendo sobre Zipaquirá</h3>
             <ul>
-              <li><span class="pendiente">Como llegar de Bogota a Zipaquira</span></li>
+              <li><span class="pendiente">Como llegar de Bogotá a Zipaquirá</span></li>
               <li><span class="pendiente">Catedral de Sal: horarios, precios y que esperar</span></li>
-              <li><span class="pendiente">Que hacer en Zipaquira en un fin de semana</span></li>
-              <li><span class="pendiente">Donde comer en Zipaquira</span></li>
-              <li><span class="pendiente">Zipaquira con ninos</span></li>
+              <li><span class="pendiente">Que hacer en Zipaquirá en un fin de semana</span></li>
+              <li><span class="pendiente">Donde comer en Zipaquirá</span></li>
+              <li><span class="pendiente">Zipaquirá con ninos</span></li>
               <li><span class="pendiente">Donde dormir cerca de la Catedral de Sal</span></li>
             </ul>
           </div>
@@ -191,7 +237,7 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
 
   <BotonFlotante
     href="/#contacto"
-    mensaje="Hola, lei la guia de Zipaquira y quiero informacion sobre los hospedajes."
+    mensaje="Hola, lei la guía de Zipaquirá y quiero información sobre los hospedajes."
   />
 
 </Base>

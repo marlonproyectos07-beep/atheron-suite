@@ -1,6 +1,6 @@
 ---
 /* ============================================================
-   LISTADO DE LOS 7 HOSPEDAJES
+   CATALOGO INTEGRADO DE HOSPEDAJES Y PROYECTOS
 
    Antes: siete bloques de HTML casi identicos, copiados a mano.
    Cambiar el texto del boton de WhatsApp obligaba a editarlo
@@ -20,38 +20,89 @@ import BotonFlotante from '../../components/BotonFlotante.astro';
 import Marca from '../../components/Marca.astro';
 import Foto from '../../components/Foto.astro';
 import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
+import { migaDePan, url, ORGANIZACION } from '../../data/seo';
 
-/* ------------------------------------------------------------
-   RECOMENDACION PENDIENTE DE TU DECISION
-
-   Hoy las tarjetas de las fichas en obra llevan boton "Ver ficha".
-   Quien lo pulsa aterriza en una pagina que dice "Nombre del
-   hospedaje 2" y "$ ---". Eso es peor que no tener el enlace: el
-   visitante ya estaba interesado y le ensenamos que no hay nada.
-
-   Poniendo esto en true, la tarjeta se queda (comunica que hay
-   siete propiedades) pero el enlace desaparece hasta que la ficha
-   tenga contenido real. El boton de WhatsApp se queda siempre,
-   que es el que convierte de verdad.
-
-   Lo dejo en false para que la migracion no cambie nada todavia.
-   ------------------------------------------------------------ */
 const OCULTAR_ENLACE_DE_FICHAS_EN_OBRA = false;
+
+/* Estas dos fichas tienen contenido e imagenes reales, pero siguen
+   deliberadamente marcadas como borrador y noindex mientras se
+   completan sus datos operativos. Se muestran en esta vista previa
+   para que direccion pueda revisarlas sin declararlas publicadas. */
+const BORRADORES_VISIBLES = new Set([
+  'edificio-algarra',
+  'hotel-la-margarita',
+]);
 
 /* Ordenados por el campo "orden" del contenido, no por el nombre
    del archivo: asi renombrar un hospedaje no reordena el listado. */
 const hospedajes = (await getCollection('hospedajes'))
-  .filter((f) => f.data.publicado)
+  .filter((f) => f.data.publicado || BORRADORES_VISIBLES.has(f.id))
   .sort((a, b) => a.data.orden - b.data.orden);
+
+/* ============================================================
+   DATOS ESTRUCTURADOS DEL CATALOGO
+
+   Tres piezas, y ninguna dice nada que la pagina no enseñe:
+   CollectionPage (esto es un listado), ItemList (que hay en el
+   listado, y en que orden) y BreadcrumbList (donde esta el listado
+   dentro del sitio).
+
+   EL ITEMLIST SOLO LISTA LAS FICHAS PUBLICADAS
+   Las que estan en preparacion salen en la pagina para que
+   direccion pueda revisarlas, pero llevan noindex. Meterlas en la
+   lista que lee un buscador seria presentar como parte del catalogo
+   unas propiedades cuyos datos operativos todavia no estan
+   confirmados, que es justo lo que el noindex evita.
+
+   Cada elemento lleva nombre y direccion, nada mas. Sin precio, sin
+   valoraciones y sin disponibilidad: eso serian datos de oferta, y
+   una oferta se declara cuando existe. */
+const listables = hospedajes.filter((f) => f.data.publicado);
+
+const fichaCatalogo = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      '@id': `${url('/hospedajes')}#pagina`,
+      url: url('/hospedajes'),
+      name: 'Hoteles y hospedajes en Zipaquirá | Atheron Suite',
+      description:
+        'Encuentra hoteles, casas y alojamientos para parejas, familias y grupos en Zipaquirá y Neusa. Conoce fotos, ubicación y disponibilidad con Atheron Suite.',
+      inLanguage: 'es-CO',
+      isPartOf: { '@id': ORGANIZACION['@id'] },
+      breadcrumb: { '@id': `${url('/hospedajes')}#miga` },
+      mainEntity: { '@id': `${url('/hospedajes')}#lista` },
+    },
+    {
+      '@type': 'ItemList',
+      '@id': `${url('/hospedajes')}#lista`,
+      name: 'Hospedajes de Atheron Suite',
+      numberOfItems: listables.length,
+      itemListElement: listables.map((f, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: f.data.nombre,
+        url: url(`/hospedajes/${f.id}`),
+      })),
+    },
+    ORGANIZACION,
+    migaDePan([
+      { nombre: 'Inicio', ruta: '/' },
+      { nombre: 'Hospedajes', ruta: '/hospedajes' },
+    ], `${url('/hospedajes')}#miga`),
+  ],
+};
 ---
 
 <Base
-  titulo="Nuestros hospedajes en Zipaquira | Atheron Suite"
-  descripcion="Conoce nuestros hospedajes en Zipaquira, Cundinamarca. Habitaciones, fotos, servicios y ubicacion de cada uno."
+  titulo="Hoteles y hospedajes en Zipaquirá | Atheron Suite"
+  descripcion="Encuentra hoteles, casas y alojamientos para parejas, familias y grupos en Zipaquirá y Neusa. Conoce fotos, ubicación y disponibilidad con Atheron Suite."
   ruta="/hospedajes"
-  ogTitulo="Hospedajes en Zipaquira | Atheron Suite"
-  ogDescripcion="Hospedajes seleccionados en Zipaquira, Cundinamarca. Mira habitaciones, fotos y ubicacion."
-  avisoBorrador="Version de trabajo. Estamos completando la informacion de cada hospedaje."
+  ogTitulo="Hospedajes en Zipaquirá | Atheron Suite"
+  ogDescripcion="Hospedajes seleccionados en Zipaquirá, Cundinamarca. Mira habitaciones, fotos y ubicación."
+  avisoBorrador="Version de trabajo. Estamos completando la información de cada hospedaje."
+  jsonLd={fichaCatalogo}
 >
 
   <Cabecera enlaces={menuHospedajes} cta={ctaDisponibilidad} actual="/hospedajes" />
@@ -61,11 +112,11 @@ const hospedajes = (await getCollection('hospedajes'))
     {/* Hero corto: en paginas internas no hace falta pantalla completa */}
     <section class="hero hero--interior">
       <div class="contenedor hero__contenido">
-        <span class="hero__etiqueta">Zipaquira, Cundinamarca</span>
+        <span class="hero__etiqueta">Zipaquirá, Cundinamarca</span>
         <h1 class="hero__titulo">Nuestros hospedajes</h1>
         <p class="hero__texto">
-          Cada uno tiene su caracter. Entra a la ficha que te llame la atencion
-          para ver habitaciones, fotos y ubicacion.
+          Cada uno tiene su caracter. Entra a la ficha que te llame la atención
+          para ver habitaciones, fotos y ubicación.
         </p>
       </div>
     </section>
@@ -83,14 +134,14 @@ const hospedajes = (await getCollection('hospedajes'))
           <div>
             <strong>Como funciona</strong>
             Coordinamos todos los hospedajes desde nuestra oficina en la
-            Cra. 9 #10-32 de Zipaquira. Escribenos por WhatsApp, te confirmamos
+            Cra. 9 #10-32 de Zipaquirá. Escribenos por WhatsApp, te confirmamos
             disponibilidad y precio, y al confirmar la reserva te damos la
             direccion exacta y coordinamos tu llegada.
           </div>
         </div>
 
         {/* ==========================================================
-             GRILLA DE LOS 7 HOSPEDAJES
+             GRILLA DEL PORTAFOLIO DE HOSPEDAJES
              La maqueta se escribe una vez y se repite por cada
              hospedaje de la coleccion.
 
@@ -108,24 +159,36 @@ const hospedajes = (await getCollection('hospedajes'))
             return (
               <article class="tarjeta aparecer">
                 <div class="tarjeta__media">
-                  <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                  {mostrarEnlace ? (
+                    <a
+                      class="tarjeta__imagen-enlace"
+                      href={enlace}
+                      aria-label={`Explorar ${data.nombre}`}
+                    >
+                      <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                    </a>
+                  ) : (
+                    <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                  )}
                   <span class="tarjeta__insignia">{data.insignia}</span>
                 </div>
                 <div class="tarjeta__cuerpo">
 
+                  {enObra && <span class="etiqueta">Ficha en preparación</span>}
+
                   <h2 class="tarjeta__titulo">
                     {mostrarEnlace
-                      ? <a href={enlace}><Marca texto={data.nombre} pendiente={enObra} /></a>
-                      : <Marca texto={data.nombre} pendiente={enObra} />}
+                      ? <a href={enlace}><Marca texto={data.nombre} /></a>
+                      : <Marca texto={data.nombre} />}
                   </h2>
 
                   <p class="tarjeta__meta">
-                    <span><Marca texto={data.listadoSector} pendiente={enObra} /></span>
-                    <span><Marca texto={data.listadoSegundoDato} pendiente={enObra} />{data.listadoSegundoDatoSufijo}</span>
+                    <span><Marca texto={data.listadoSector} /></span>
+                    <span><Marca texto={data.listadoSegundoDato} />{data.listadoSegundoDatoSufijo}</span>
                   </p>
 
                   <p class="texto-suave">
-                    <Marca texto={data.resumen} pendiente={enObra} />
+                    <Marca texto={data.resumen} />
                   </p>
 
                   <div class="tarjeta__pie">
@@ -134,22 +197,41 @@ const hospedajes = (await getCollection('hospedajes'))
                       {data.precio} <span>/ noche</span>
                     </span>
                     )}
+                    {/* El texto del enlace nombra su destino. "Ver
+                        ficha" repetido seis veces no distingue una
+                        tarjeta de otra ni para el visitante ni para un
+                        lector de pantalla, que los lee fuera de
+                        contexto uno detras de otro. Sale del contenido;
+                        si una ficha no lo trae, se compone con su
+                        nombre, que sigue siendo mejor que "ver ficha". */}
                     {mostrarEnlace && (
-                      <a class="boton boton--contorno" href={enlace}>Ver ficha</a>
+                      <a class="boton boton--contorno" href={enlace}>
+                        {data.listadoEnlaceTexto
+                          ? data.listadoEnlaceTexto
+                          : enObra
+                            ? `Revisar información de ${data.nombre}`
+                            : `Ver ${data.nombre}`}
+                      </a>
                     )}
                   </div>
 
+                  {/* Una ficha en preparacion NO ofrece reservar.
+                      Todavia no se ha confirmado que este disponible, y
+                      un boton que dice "Reservar" lo afirma antes de
+                      que nadie lo haya comprobado. Consulta el estado,
+                      que es lo que de verdad se puede hacer hoy.
+
+                      El municipio sale de la ficha. Se quedo escrito a
+                      mano cuando se saco de la plantilla de ficha, y en
+                      cuanto Casa Neusa aparecio en este listado su boton
+                      mandaba al cliente a consultar por una casa "en
+                      Zipaquira" que esta en Cogua. */}
                   <a class="boton boton--whatsapp boton--bloque"
                      href="/#contacto"
-                     {/* El municipio sale de la ficha. Se quedo escrito a
-                          mano cuando se saco de la plantilla de ficha, y
-                          en cuanto Casa Neusa aparecio en este listado su
-                          boton mandaba al cliente a consultar por una casa
-                          "en Zipaquira" que esta en Cogua. Por defecto
-                          sigue siendo Zipaquira, asi que el resto de
-                          tarjetas no cambia. */}
-                     data-whatsapp={`Hola, me interesa ${data.nombre} de Atheron Suite en ${data.localidad}. Quiero consultar disponibilidad.`}>
-                    Reservar por WhatsApp
+                     data-whatsapp={enObra
+                       ? `Hola, quisiera consultar el estado del alojamiento ${data.nombre} de Atheron Suite en ${data.localidad}.`
+                       : `Hola, me interesa ${data.nombre} de Atheron Suite en ${data.localidad}. Quiero consultar disponibilidad.`}>
+                    {enObra ? 'Consultar estado del alojamiento' : 'Consultar disponibilidad por WhatsApp'}
                   </a>
 
                 </div>
@@ -158,6 +240,34 @@ const hospedajes = (await getCollection('hospedajes'))
           })}
 
         </div>
+
+        <section class="bloque-doble aparecer" style="margin-top: var(--esp-6);" aria-labelledby="proyecto-casa-colonial">
+          <div class="bloque-doble__media">
+            {/* rel="nofollow": la pagina de destino es un borrador
+                privado con noindex y nofollow. El enlace existe para
+                que direccion llegue a el desde esta vista previa, no
+                para que un buscador lo siga. */}
+            <a href="/proyectos/casa-colonial-centro" rel="nofollow" aria-label="Conocer el proyecto Casa Colonial Centro">
+              <Foto
+                src="/assets/img/proyectos/casa-colonial-centro/casa-colonial-hero-interior-balcon.webp"
+                alt="Interior de la Casa Colonial Centro con balcón hacia el centro histórico de Zipaquirá"
+              >Imagen del proyecto pendiente</Foto>
+            </a>
+          </div>
+          <div class="bloque-doble__texto">
+            <span class="etiqueta">Proyecto en desarrollo</span>
+            <h2 id="proyecto-casa-colonial">Casa Colonial Centro by Atheron</h2>
+            <p>
+              Un destino integrado de hotel, restaurante, cafeteria y restaurante gastrobar
+              en el corazon de Zipaquirá. Conoce el estado actual de la casa y la visión del proyecto.
+            </p>
+            <p class="texto-suave">
+              No esta disponible para reservas. Esta ficha privada presenta el proceso y las
+              representaciones conceptuales claramente identificadas.
+            </p>
+            <a class="boton boton--contorno" href="/proyectos/casa-colonial-centro" rel="nofollow">Ver el proyecto Casa Colonial Centro</a>
+          </div>
+        </section>
 
         <div class="cta-final aparecer" style="margin-top: var(--esp-6);">
           <h2>No sabes cual elegir?</h2>
@@ -176,7 +286,7 @@ const hospedajes = (await getCollection('hospedajes'))
 
   <BotonFlotante
     href="/#contacto"
-    mensaje="Hola, estoy viendo los hospedajes de Atheron Suite en Zipaquira."
+    mensaje="Hola, estoy viendo los hospedajes de Atheron Suite en Zipaquirá."
   />
 
 </Base>

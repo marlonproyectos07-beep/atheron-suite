@@ -116,7 +116,7 @@ const fotoGaleria = z.object({
 
 /* Una habitacion del hospedaje. Los campos numericos son texto
    a proposito: mientras no haya dato real llevan "N". */
-const habitacion = z.object({
+const habitación = z.object({
   nombre: z.string(),
   /* Los tres datos de la cabecera pueden faltar. No es lo normal, pero
      una habitacion recien cargada puede tener confirmada la cama y
@@ -153,6 +153,12 @@ const habitacion = z.object({
   /* Texto corto del boton en la tarjeta compacta, si el generico no
      encaja. Ej: "Ver suite". */
   etiquetaVer: textoOpcionalPanel,
+  /* Ficha propia de la unidad, cuando tiene pagina aparte en vez de
+     un bloque de detalle dentro de la misma ficha. Un edificio con
+     seis apartamentos no cabe en una sola pagina sin que ninguno se
+     pueda enlazar ni posicionar por su cuenta. Vacio = el
+     comportamiento de siempre, con ancla interna. */
+  enlace: textoOpcionalPanel,
 
   /* Galeria propia de la habitacion. Opcional y aditiva: una
      habitacion sin fotos sigue funcionando igual, solo que no
@@ -255,6 +261,12 @@ const hospedajes = defineCollection({
     /* Banda amarilla superior. Se quita poniendo null. */
     avisoBorrador: textoOpcional,
 
+    /* Nota de alojamiento aliado. Va discreta y al pie del contenido,
+       no como banda de alarma: el visitante tiene derecho a saber
+       quien opera donde va a dormir, pero no es un aviso de peligro.
+       Vacio = el hospedaje es propio y no se pinta nada. */
+    avisoAliado: textoOpcional,
+
     /* ----------------------------------------------------------
        PORTADA DE LA FICHA
        ---------------------------------------------------------- */
@@ -276,7 +288,7 @@ const hospedajes = defineCollection({
 
        El valor por defecto es Zipaquira, asi que las fichas que ya
        existen no cambian ni una letra. */
-    localidad: z.string().default('Zipaquira'),
+    localidad: z.string().default('Zipaquirá'),
     /* Departamento, por si algun dia hay algo fuera de Cundinamarca. */
     departamento: z.string().default('Cundinamarca'),
 
@@ -344,6 +356,19 @@ const hospedajes = defineCollection({
     /* Texto que acompana al segundo dato y que NO va en amarillo.
        Ej: dato "N" + sufijo " habitaciones". */
     listadoSegundoDatoSufijo: z.string().default(''),
+
+    /* Texto del boton que lleva del listado a la ficha.
+
+       POR QUE NO SE DEJA EN "VER FICHA"
+       Seis tarjetas con el mismo enlace generico obligan al visitante
+       a mirar arriba para saber a donde va cada uno, y a un buscador
+       no le dicen nada: "ver ficha" no es una descripcion de destino.
+       Con el nombre del hospedaje dentro, el enlace se entiende solo,
+       tambien leido en voz alta por un lector de pantalla.
+
+       Vacio = la maqueta lo compone con el nombre del hospedaje. Se
+       rellena a mano cuando una propiedad pide otro verbo. */
+    listadoEnlaceTexto: textoOpcionalPanel,
     /* Descripcion de dos lineas de la tarjeta (pendiente 4). */
     resumen: z.string(),
     /* Precio por noche (pendiente 5). Sigue en amarillo aunque la
@@ -351,11 +376,32 @@ const hospedajes = defineCollection({
     precio: z.string().default('$ ---'),
     precioPendiente: z.boolean().default(true),
 
+    /* Video principal del hospedaje. Se usa cuando el recorrido debe
+       quedar visible en la ficha general y no escondido dentro de una
+       habitacion. Es opcional y no altera las fichas existentes. */
+    videoPrincipal: z
+      .object({
+        src: textoOpcional,
+        poster: z.string(),
+        titulo: z.string(),
+        descripcion: textoOpcional,
+        ancho: z.number(),
+        alto: z.number(),
+        duracion: textoOpcional,
+        capitulos: z.array(z.object({
+          src: z.string(),
+          poster: z.string(),
+          titulo: z.string(),
+          duracion: textoOpcional,
+        })).default([]),
+      })
+      .optional(),
+
     /* ----------------------------------------------------------
        HABITACIONES
        ---------------------------------------------------------- */
 
-    habitaciones: z.array(habitacion),
+    habitaciones: z.array(habitación),
     /* Aviso opcional bajo el titulo del apartado. */
     notaHabitaciones: textoOpcional,
 
@@ -417,9 +463,43 @@ const hospedajes = defineCollection({
         mensaje: z.string(),
 
         /* Cabecera del listado de habitaciones */
-        cejaHabitaciones: z.string().default('¿Prefieres una habitacion?'),
+        cejaHabitaciones: z.string().default('¿Prefieres una habitación?'),
         tituloHabitaciones: z.string().default('Conoce las opciones'),
         introHabitaciones: textoOpcional,
+      })
+      .optional(),
+
+    /* ----------------------------------------------------------
+       TARIFA POR NUMERO DE HUESPEDES
+
+       Un alojamiento entero no tiene "un" precio: tiene una tarifa
+       base y un incremento por persona. Poner solo la cifra baja es
+       publicidad enganosa, y poner solo la alta espanta. Se publican
+       las dos y el desglose completo, para que nadie descubra el
+       precio real al escribir por WhatsApp.
+
+       Aditivo: sin este bloque la ficha se pinta como antes.
+       ---------------------------------------------------------- */
+    tarifas: z
+      .object({
+        etiqueta: z.string().default('Tarifas'),
+        titulo: z.string(),
+        /* La cifra grande. Ej: "Desde $300.000 por noche". */
+        desde: z.string(),
+        /* Que cubre esa cifra. NO es opcional: una tarifa "desde"
+           sin decir hasta cuantas personas cubre no informa de nada. */
+        cubre: z.string(),
+        intro: textoOpcional,
+        /* El desglose. Cada fila es un numero de huespedes y su precio. */
+        filas: z
+          .array(z.object({ huespedes: z.string(), precio: z.string() }))
+          .default([]),
+        /* La regla en una linea, para quien quiera calcularlo. */
+        regla: textoOpcional,
+        nota: textoOpcional,
+        cta: z.string().default('Consultar disponibilidad'),
+        /* Mensaje de WhatsApp propio del bloque. */
+        mensaje: textoOpcional,
       })
       .optional(),
 
@@ -500,6 +580,28 @@ const hospedajes = defineCollection({
       .optional(),
 
     /* ----------------------------------------------------------
+       PREGUNTAS FRECUENTES
+
+       Lo que la gente pregunta por WhatsApp antes de decidirse. Cada
+       respuesta contestada en la pagina es una conversacion menos que
+       atender y una duda menos que frene la reserva.
+
+       NO se marca FAQPage en el JSON-LD: Google restringio ese
+       resultado enriquecido a sitios de sanidad y gobierno, y marcarlo
+       aqui no aporta nada y anade superficie que mantener.
+       ---------------------------------------------------------- */
+    faq: z
+      .object({
+        etiqueta: z.string().default('Preguntas frecuentes'),
+        titulo: z.string(),
+        intro: textoOpcional,
+        preguntas: z
+          .array(z.object({ pregunta: z.string(), respuesta: z.string() }))
+          .default([]),
+      })
+      .optional(),
+
+    /* ----------------------------------------------------------
        ANTES DE RESERVAR
 
        Las condiciones que el huesped necesita saber ANTES de
@@ -519,7 +621,18 @@ const hospedajes = defineCollection({
         titulo: z.string(),
         intro: textoOpcional,
         condiciones: z
-          .array(z.object({ titulo: z.string(), texto: z.string() }))
+          .array(
+            z.object({
+              titulo: z.string(),
+              texto: z.string(),
+              /* Enlace externo opcional de la condicion. Sirve para lo
+                 que el huesped tiene que mirar por su cuenta: un
+                 parqueadero publico que no es nuestro, por ejemplo.
+                 Abre en pestana nueva y con noopener. */
+              enlace: textoOpcional,
+              enlaceTexto: textoOpcional,
+            }),
+          )
           .default([]),
         seguridadTitulo: textoOpcional,
         seguridadNota: textoOpcional,
@@ -622,6 +735,10 @@ const hospedajes = defineCollection({
     checkin: textoOpcionalPanel,
     checkout: textoOpcionalPanel,
     mascotas: siNoOpcionalPanel,
+    /* Rango de tarifa para el JSON-LD ("priceRange"). Solo se rellena
+       si las dos cifras se muestran en la pagina: marcar un rango que
+       el visitante no puede ver es exactamente lo que no se hace. */
+    rangoPrecio: textoOpcionalPanel,
     /* Fecha del ultimo cambio real de la ficha. Va al sitemap.
        Si no se pone, se usa la fecha en que se publico el sitio. */
     actualizado: fechaOpcionalPanel,

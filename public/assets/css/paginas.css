@@ -148,7 +148,24 @@
 }
 .lista-distancias span:last-child {
   color: var(--texto-suave);
-  white-space: nowrap;
+  text-align: right;
+  /* Aqui habia un white-space: nowrap. Estaba pensado para los
+     valores cortos de esta lista -"1,4 km", "8 min"-, que quedan
+     feos partidos en dos lineas. El problema es que la misma lista
+     tambien lleva horarios, y el del check-in de Algarra es una
+     frase de ochenta caracteres: sin poder ajustarse imponia 551px
+     de ancho minimo y arrastraba la columna entera fuera de la
+     pantalla, 257px de desplazamiento horizontal en un movil de
+     390px.
+
+     Un texto que no cabe tiene que poder ajustarse. Los valores
+     cortos siguen entrando en una sola linea de sobra -la mediana
+     de esta lista son 24 caracteres-, asi que se pierde muy poco y
+     se gana que la ficha quepa en la pantalla.
+
+     min-width: 0 es lo que permite encogerse a una casilla de un
+     contenedor flexible; sin el, el ajuste de linea no basta. */
+  min-width: 0;
 }
 
 /* ------------------------------------------------------------
@@ -193,6 +210,13 @@
   background: var(--color-blanco);
   border: 1px solid var(--borde);
   border-radius: var(--radio-md);
+  /* Una tarjeta de habitacion es a su vez casilla de la rejilla de
+     arriba, y una casilla no se encoge por debajo de su contenido
+     salvo que se le diga. Con las fotos declarando su ancho real
+     -900px, 1088px- ese contenido pasa a medir mas que la pantalla
+     del movil, y la ficha entera se desplazaba en horizontal.
+     min-width: 0 le devuelve el permiso para encogerse. */
+  min-width: 0;
 }
 @media (min-width: 800px) {
   .habitacion { grid-template-columns: 320px 1fr; align-items: center; gap: var(--esp-4); }
@@ -336,7 +360,9 @@
   font-size: .82rem;
   letter-spacing: .06em;
   text-transform: uppercase;
-  color: var(--acento);
+  /* Texto pequeno sobre la tarjeta blanca: el dorado de marca no
+     llega al contraste minimo. Ver --acento-texto en base.css. */
+  color: var(--acento-texto);
   font-weight: 600;
 }
 
@@ -490,3 +516,188 @@
 }
 .seguridad__punto[data-consta] { color: var(--color-gris-700); }
 .seguridad__punto[data-consta] .seguridad__marca { color: var(--color-verde); }
+
+/* ============================================================
+   TARIFAS POR NUMERO DE HUESPEDES
+
+   Una caja, no una tabla suelta: la cifra base manda y el desglose
+   la acompana. El borde superior de la seccion la separa de la
+   descripcion cuando las dos van sobre fondo blanco.
+   ============================================================ */
+.tarifas { border-top: 1px solid var(--borde); }
+
+.tarifas__caja {
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: var(--esp-4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-lg);
+  background: var(--fondo);
+  box-shadow: var(--sombra-md);
+}
+
+.tarifas__cabeza {
+  padding-bottom: var(--esp-3);
+  margin-bottom: var(--esp-3);
+  border-bottom: 1px solid var(--borde);
+  text-align: center;
+}
+.tarifas__desde {
+  display: block;
+  font-family: var(--fuente-titulo);
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  line-height: 1.15;
+  color: var(--color-noche);
+}
+/* Lo que cubre la tarifa va pegado a la cifra y no en letra pequena
+   al final: una tarifa "desde" sin su condicion al lado es media
+   verdad, y media verdad en un precio es un problema. */
+.tarifas__cubre {
+  display: block;
+  margin-top: var(--esp-1);
+  font-size: .95rem;
+  color: var(--texto-suave);
+}
+
+.tarifas__lista { display: grid; gap: .1rem; list-style: none; padding: 0; }
+.tarifas__fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--esp-2);
+  padding: .6rem .2rem;
+  border-bottom: 1px dashed var(--borde);
+}
+.tarifas__fila:last-child { border-bottom: 0; }
+.tarifas__huespedes { color: var(--color-gris-700); }
+.tarifas__precio { font-weight: 600; color: var(--color-noche); white-space: nowrap; }
+
+.tarifas__regla {
+  margin-top: var(--esp-3);
+  padding: var(--esp-2) var(--esp-3);
+  border-radius: var(--radio-sm);
+  background: var(--color-crema);
+  font-size: .95rem;
+  color: var(--color-gris-700);
+}
+.tarifas__nota { margin-top: var(--esp-2); }
+.tarifas__cta { width: 100%; margin-top: var(--esp-3); justify-content: center; }
+
+/* Enlace externo dentro de una condicion de reserva. Va como boton
+   porque lleva fuera del sitio y conviene que se vea que lo hace. */
+.condicion__enlace { margin-top: var(--esp-2); }
+
+/* Nota de facturacion electronica. Discreta a proposito: no compite
+   con el boton de WhatsApp, pero responde la pregunta que siempre
+   hace quien reserva a nombre de una empresa. */
+.nota-factura {
+  margin-top: var(--esp-3);
+  padding: var(--esp-2) var(--esp-3);
+  border-left: 3px solid var(--borde);
+  font-size: .9rem;
+  color: var(--texto-suave);
+}
+.nota-factura strong { display: block; color: var(--color-gris-700); }
+
+/* ============================================================
+   PREGUNTAS FRECUENTES
+
+   <details> nativo: abre con teclado y lo anuncia el lector de
+   pantalla sin una linea de JavaScript. El triangulo por defecto se
+   sustituye por un signo propio que gira al abrir.
+   ============================================================ */
+.faq { max-width: 46rem; display: grid; gap: .6rem; }
+.faq__item {
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--fondo);
+}
+.faq__pregunta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--esp-2);
+  padding: var(--esp-3);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.faq__pregunta::-webkit-details-marker { display: none; }
+.faq__pregunta::after {
+  content: "+";
+  flex: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--acento);
+  transition: transform var(--transicion);
+}
+.faq__item[open] .faq__pregunta::after { transform: rotate(45deg); }
+.faq__pregunta:focus-visible { outline: 2px solid var(--color-marca); outline-offset: -2px; }
+.faq__respuesta { padding: 0 var(--esp-3) var(--esp-3); margin: 0; }
+
+/* Nota de alojamiento aliado: discreta, centrada y al final. */
+.seccion--estrecha { padding-block: var(--esp-4); }
+.nota-aliado {
+  max-width: 52rem;
+  margin-inline: auto;
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--borde);
+  font-size: .88rem;
+  color: var(--texto-suave);
+  text-align: center;
+}
+
+
+/* Recorrido principal del alojamiento aliado. El video vertical conserva
+   su proporcion real y no fuerza saltos de diseno mientras carga. */
+.video-principal { background: var(--fondo-alterno); }
+.video-principal__interior {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 390px);
+  gap: var(--esp-5);
+  align-items: center;
+}
+.video-principal__texto h2 { margin-block: var(--esp-2); }
+.video-principal__duracion {
+  display: inline-block;
+  margin-top: var(--esp-2);
+  padding: .35rem .7rem;
+  border-radius: 999px;
+  background: var(--fondo);
+  font-size: .85rem;
+  font-weight: 600;
+}
+.video-principal__reproductor {
+  display: block;
+  width: 100%;
+  max-height: 72vh;
+  margin-inline: auto;
+  border-radius: var(--radio-md);
+  background: #000;
+  box-shadow: var(--sombra-md);
+}
+@media (max-width: 760px) {
+  .video-principal__interior { grid-template-columns: 1fr; }
+  .video-principal__reproductor { max-width: 340px; }
+}
+
+.video-capitulos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--esp-3);
+  align-items: start;
+}
+.video-capitulo {
+  padding: var(--esp-2);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--fondo);
+}
+.video-capitulo h3 {
+  margin-bottom: var(--esp-2);
+  font-size: 1rem;
+}
+.video-capitulo .video-principal__reproductor { max-height: 360px; }
+@media (max-width: 520px) {
+  .video-capitulos { grid-template-columns: 1fr; }
+}

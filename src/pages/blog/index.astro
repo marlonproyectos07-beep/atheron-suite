@@ -10,14 +10,51 @@ import Cabecera from '../../components/Cabecera.astro';
 import Pie from '../../components/Pie.astro';
 
 import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
+import { migaDePan, url, ORGANIZACION } from '../../data/seo';
+import { articulosPublicados } from '../../data/blog';
+
+/* El listado declara que es un blog y que articulos lo componen.
+   Las fechas y los titulos salen del modelo de datos del blog, no
+   escritos aqui: si un articulo cambia de fecha, cambia en el
+   listado, en su propia ficha y en el sitemap a la vez. */
+const fichaBlog = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Blog',
+      '@id': `${url('/blog')}#blog`,
+      url: url('/blog'),
+      name: 'Blog sobre Zipaquirá | Atheron Suite',
+      description:
+        'Guías prácticas sobre Zipaquirá, Cundinamarca: como llegar, que visitar, donde comer y donde alojarse.',
+      inLanguage: 'es-CO',
+      publisher: { '@id': ORGANIZACION['@id'] },
+      breadcrumb: { '@id': `${url('/blog')}#miga` },
+      blogPost: articulosPublicados().map((a) => ({
+        '@type': 'BlogPosting',
+        '@id': `${url(a.ruta)}#articulo`,
+        headline: a.titulo,
+        url: url(a.ruta),
+        datePublished: a.publicado,
+        dateModified: a.modificado,
+      })),
+    },
+    ORGANIZACION,
+    migaDePan([
+      { nombre: 'Inicio', ruta: '/' },
+      { nombre: 'Blog', ruta: '/blog' },
+    ], `${url('/blog')}#miga`),
+  ],
+};
 ---
 
 <Base
-  titulo="Blog sobre Zipaquira | Atheron Suite"
-  descripcion="Guias practicas sobre Zipaquira, Cundinamarca: como llegar, que visitar, donde comer y donde alojarse."
+  titulo="Blog sobre Zipaquirá | Atheron Suite"
+  descripcion="Guías prácticas sobre Zipaquirá, Cundinamarca: como llegar, que visitar, donde comer y donde alojarse."
   ruta="/blog"
-  ogDescripcion="Guias practicas para planear tu visita a Zipaquira."
+  ogDescripcion="Guías prácticas para planear tu visita a Zipaquirá."
   avisoBorrador="Version de trabajo. Los articulos marcados todavia no estan publicados."
+  jsonLd={fichaBlog}
 >
 
   <Cabecera enlaces={menuBlog} cta={ctaDisponibilidad} actual="/blog" />
@@ -27,9 +64,9 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
     <section class="hero hero--interior">
       <div class="contenedor hero__contenido">
         <span class="hero__etiqueta">Blog</span>
-        <h1 class="hero__titulo">Todo sobre Zipaquira</h1>
+        <h1 class="hero__titulo">Todo sobre Zipaquirá</h1>
         <p class="hero__texto">
-          Guias practicas escritas desde el municipio. Sin relleno:
+          Guías prácticas escritas desde el municipio. Sin relleno:
           horarios, distancias y precios concretos.
         </p>
       </div>
@@ -45,19 +82,19 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
         <article class="tarjeta aparecer" style="margin-bottom: var(--esp-5);">
           <div class="tarjeta__media">
             <div class="placeholder placeholder--ancho">Foto pendiente</div>
-            <span class="tarjeta__insignia">Guia principal</span>
+            <span class="tarjeta__insignia">Guía principal</span>
           </div>
           <div class="tarjeta__cuerpo">
-            <p class="tarjeta-articulo__meta">Guia completa</p>
+            <p class="tarjeta-articulo__meta">Guía completa</p>
             <h2 class="tarjeta__titulo">
-              <a href="/blog/guia-de-zipaquira">Guia de Zipaquira: que hacer, como llegar y donde dormir</a>
+              <a href="/blog/guia-de-zipaquira">Guía de Zipaquirá: que hacer, como llegar y donde dormir</a>
             </h2>
             <p class="texto-suave">
-              Como llegar desde Bogota, cuanto tiempo dedicarle, que ver mas alla
+              Como llegar desde Bogotá, cuanto tiempo dedicarle, que ver mas alla
               de la Catedral de Sal y donde alojarse.
             </p>
             <div class="tarjeta__pie">
-              <a class="boton boton--primario" href="/blog/guia-de-zipaquira">Leer la guia</a>
+              <a class="boton boton--primario" href="/blog/guia-de-zipaquira">Leer la guía</a>
             </div>
           </div>
         </article>
@@ -65,7 +102,7 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
         {/* Articulos publicados */}
         <div class="encabezado-seccion">
           <span class="etiqueta">Publicados</span>
-          <h2>Ultimos articulos</h2>
+          <h2>Últimos artículos</h2>
         </div>
 
         <div class="grid grid--3" style="margin-bottom: var(--esp-6);">
@@ -77,10 +114,10 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
             <div class="tarjeta__cuerpo">
               <p class="tarjeta-articulo__meta">Sobre nosotros</p>
               <h3 class="tarjeta__titulo">
-                <a href="/blog/como-nacio-atheron-suite">Como nacio Atheron Suite</a>
+                <a href="/blog/como-nacio-atheron-suite">Como nació Atheron Suite</a>
               </h3>
               <p class="texto-suave">
-                De una necesidad de alojamiento en Zipaquira a un proyecto de
+                De una necesidad de alojamiento en Zipaquirá a un proyecto de
                 hospedaje para familias y grupos.
               </p>
               <div class="tarjeta__pie">
@@ -91,10 +128,10 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
         </div>
 
         <div class="encabezado-seccion">
-          <span class="etiqueta">Proximos articulos</span>
-          <h2>En preparacion</h2>
+          <span class="etiqueta">Proximos artículos</span>
+          <h2>En preparación</h2>
           <p class="texto-suave" style="margin-top: var(--esp-2);">
-            Estos son los articulos planeados. El orden esta en
+            Estos son los artículos planeados. El orden esta en
             <code>docs/estrategia-seo.md</code>.
           </p>
         </div>
@@ -108,7 +145,7 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
 
           <article class="tarjeta-simple">
             <p class="tarjeta-articulo__meta">Como llegar</p>
-            <h3><span class="pendiente">Como llegar de Bogota a Zipaquira</span></h3>
+            <h3><span class="pendiente">Como llegar de Bogotá a Zipaquirá</span></h3>
             <p class="texto-suave">Bus, carro y Tren de la Sabana comparados.</p>
           </article>
 
@@ -120,19 +157,19 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
 
           <article class="tarjeta-simple">
             <p class="tarjeta-articulo__meta">Planes</p>
-            <h3><span class="pendiente">Zipaquira en un fin de semana</span></h3>
+            <h3><span class="pendiente">Zipaquirá en un fin de semana</span></h3>
             <p class="texto-suave">Itinerario de dos dias sin correr.</p>
           </article>
 
           <article class="tarjeta-simple">
             <p class="tarjeta-articulo__meta">Comer</p>
-            <h3><span class="pendiente">Donde comer en Zipaquira</span></h3>
+            <h3><span class="pendiente">Donde comer en Zipaquirá</span></h3>
             <p class="texto-suave">Opciones por zona y tipo de plan.</p>
           </article>
 
           <article class="tarjeta-simple">
             <p class="tarjeta-articulo__meta">Familia</p>
-            <h3><span class="pendiente">Zipaquira con ninos</span></h3>
+            <h3><span class="pendiente">Zipaquirá con ninos</span></h3>
             <p class="texto-suave">Que funciona y que no con los mas pequenos.</p>
           </article>
 
@@ -145,7 +182,7 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
         </div>
 
         <div class="cta-final aparecer" style="margin-top: var(--esp-6);">
-          <h2>Vienes a Zipaquira?</h2>
+          <h2>Vienes a Zipaquirá?</h2>
           <p>Administramos siete hospedajes en el municipio. Escribenos y te ayudamos a elegir.</p>
           <div class="grupo-botones grupo-botones--centrado">
             <a class="boton boton--whatsapp boton--grande" href="/#contacto"

@@ -1,0 +1,156 @@
+---
+/* ============================================================
+   GALERIA DE UN PROYECTO EN OBRA
+
+   Muestra fotografias REALES: el estado actual y el proceso de
+   recuperacion. Nada mas.
+
+   TRES REGLAS QUE ESTE COMPONENTE HACE CUMPLIR SOLO:
+
+   1. Solo entra lo aprobado. Una foto con "aprobada: false" no se
+      pinta, aunque su archivo exista. El manifiesto fotografico
+      manda, no la carpeta.
+
+   2. Aqui no caben las representaciones conceptuales. Si alguna se
+      cuela en los datos, se descarta y se avisa por consola al
+      construir. Poner una imagen generada bajo el rotulo
+      "fotografias reales del estado actual" seria exactamente la
+      mentira que el proyecto no puede permitirse.
+
+   3. Sin fotos aprobadas, se pintan huecos reservados. La pagina se
+      ve entera y se puede revisar el diseno, pero nadie puede
+      confundir un hueco con una foto.
+
+   POR QUE VA EN GRUPOS Y NO EN UN MURO DE FOTOS
+
+   Doce fotos seguidas no cuentan nada: hay que mirarlas una a una
+   para entender que se esta viendo. En grupos con titulo, la
+   galeria dice primero que conserva la casa y despues que esta
+   cambiando la obra, y cada foto se lee dentro de esa frase.
+
+   Los grupos son opcionales. Si ninguna foto trae "grupo", la
+   galeria sale como una lista unica, igual que antes.
+
+   EL ROTULO DE CADA FOTO NO SE ESCRIBE AQUI
+   Sale de rotuloDe(), a partir del tipo. Una foto de obra dice
+   "proceso de remodelacion" y una del estado actual dice "estado
+   actual", sin que esta maqueta tenga que acordarse.
+   ============================================================ */
+
+import Foto from './Foto.astro';
+import { fechaEnTexto, rotuloDe } from '../data/casa-colonial-centro';
+import type { FotoProyecto } from '../data/casa-colonial-centro';
+
+interface Props {
+  fotos: FotoProyecto[];
+  /** Rotulo obligatorio que acompana a la galeria. */
+  etiqueta: string;
+  /** Cuantos huecos se pintan mientras no haya fotos aprobadas. */
+  huecos?: number;
+  /** Grupos narrativos, en orden. Sin esto, sale una lista unica. */
+  grupos?: { id: string; titulo: string; texto: string }[];
+}
+
+const { fotos, etiqueta, huecos = 6, grupos = [] } = Astro.props;
+
+const conceptuales = fotos.filter((f) => f.tipo === 'CONCEPTUAL');
+if (conceptuales.length) {
+  console.warn(
+    '[ProyectoGaleria] Se han descartado ' + conceptuales.length +
+    ' imagenes conceptuales: esta galeria es solo de fotografias reales. ' +
+    'Las conceptuales van en el comparador, siempre rotuladas.',
+  );
+}
+
+/* Solo lo aprobado, y en el orden que marque el manifiesto. Sin
+   prioridad, una foto se va al final en vez de colarse la primera. */
+const visibles = fotos
+  .filter((f) => f.aprobada && f.tipo !== 'CONCEPTUAL')
+  .sort((a, b) => (a.prioridad ?? 99) - (b.prioridad ?? 99));
+
+/* La orientacion del archivo decide la forma del hueco, para que la
+   pagina no de un salto cuando la foto llegue de verdad. */
+const FORMA = {
+  vertical: 'alto',
+  horizontal: 'ancho',
+  cuadrada: 'cuadrado',
+} as const;
+
+/* Cada grupo con sus fotos. Un grupo sin fotos aprobadas no se
+   pinta: un titulo sobre un vacio solo explica lo que falta. */
+const bloques = grupos
+  .map((grupo) => ({ ...grupo, fotos: visibles.filter((f) => f.grupo === grupo.id) }))
+  .filter((grupo) => grupo.fotos.length > 0);
+
+/* Lo que no cae en ningun grupo declarado sigue saliendo, al final:
+   una foto no se pierde por un identificador mal escrito. */
+const sueltas = visibles.filter((f) => !bloques.some((g) => g.fotos.includes(f)));
+
+const listas = bloques.length
+  ? [...bloques, ...(sueltas.length ? [{ id: 'otras', titulo: '', texto: '', fotos: sueltas }] : [])]
+  : [{ id: 'todas', titulo: '', texto: '', fotos: visibles }];
+---
+
+<p class="galeria-proyecto__rotulo">{etiqueta}</p>
+
+{visibles.length > 0 ? (
+  listas.map((grupo) => (
+    <section class="galeria-proyecto__grupo">
+      {grupo.titulo && (
+        <header class="galeria-proyecto__cabecera">
+          <h3 class="galeria-proyecto__titulo">{grupo.titulo}</h3>
+          {grupo.texto && <p class="texto-suave">{grupo.texto}</p>}
+        </header>
+      )}
+
+      <ul class="galeria-proyecto">
+        {grupo.fotos.map((foto) => (
+          <li class="galeria-proyecto__item">
+            <figure>
+              <Foto
+                src={foto.ruta}
+                alt={foto.alt}
+                forma={foto.orientacion ? FORMA[foto.orientacion] : undefined}
+                ancho={foto.ancho}
+                alto={foto.alto}
+                medidas="(min-width: 900px) 22rem, 100vw"
+              />
+              <figcaption class="galeria-proyecto__pie">
+                <strong>{foto.espacio}</strong>
+                {/* El rotulo obligatorio, con el texto exacto y
+                    deducido del tipo. Sustituye a la etiqueta corta
+                    que habia antes ("Estado actual" / "Proceso de
+                    obra"): decia lo mismo con otras palabras, y dos
+                    rotulos distintos sobre la misma foto se acaban
+                    contradiciendo. */}
+                <span class="galeria-proyecto__rotulo-foto">{rotuloDe(foto.tipo)}</span>
+                {foto.planta && <span class="galeria-proyecto__dato">{foto.planta}</span>}
+                {foto.fecha && (
+                  <span class="galeria-proyecto__dato">
+                    <time datetime={foto.fecha}>{fechaEnTexto(foto.fecha)}</time>
+                  </span>
+                )}
+                {foto.descripcion && <span class="galeria-proyecto__texto">{foto.descripcion}</span>}
+                {foto.credito && <span class="galeria-proyecto__dato">Foto: {foto.credito}</span>}
+              </figcaption>
+            </figure>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))
+) : (
+  <>
+    <ul class="galeria-proyecto">
+      {Array.from({ length: huecos }).map(() => (
+        <li class="galeria-proyecto__item">
+          <div class="placeholder">Espacio reservado</div>
+        </li>
+      ))}
+    </ul>
+    <p class="galeria-proyecto__espera texto-suave">
+      Las fotografías se integrarán cuando llegue el manifiesto aprobado.
+      Hasta entonces esta galería muestra huecos reservados, no imágenes.
+    </p>
+  </>
+)}

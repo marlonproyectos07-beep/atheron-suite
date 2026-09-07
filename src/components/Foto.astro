@@ -15,6 +15,8 @@
    durante el desarrollo en vez de dejarlo pasar en silencio.
    ============================================================ */
 
+import { medidasDe } from '../data/medidas-imagen';
+
 interface Props {
   /** Direccion de la imagen. Si no hay, se pinta el rectangulo. */
   src?: string;
@@ -33,12 +35,38 @@ interface Props {
   anchos?: number[];
   /** Que espacio ocupa la foto, para que el navegador elija tamano. */
   medidas?: string;
-  /** Medidas reales del archivo, para reservar el hueco (evita CLS). */
+  /* Medidas reales del archivo, para reservar el hueco (evita CLS).
+     Si no se pasan, se leen del propio archivo al construir: ver
+     src/data/medidas-imagen.ts. Pasarlas a mano solo hace falta
+     cuando la imagen se recorta y las del archivo no sirven. */
   ancho?: number;
   alto?: number;
+  /* true = esta imagen es la que el visitante ve primero, sin
+     desplazar la pagina. Se carga de inmediato y con prioridad
+     alta, porque es la que Lighthouse mide como LCP.
+
+     Solo puede haber UNA por pagina. Diferirla la retrasa; pero
+     marcar varias tambien, porque compiten entre si y el navegador
+     deja de saber cual importa. Por eso es una excepcion explicita
+     y no el valor por defecto. */
+  prioritaria?: boolean;
 }
 
-const { src, alt, forma, anchos, medidas, ancho, alto } = Astro.props;
+const { src, alt, forma, anchos, medidas, ancho, alto, prioritaria } = Astro.props;
+
+/* Si quien llama no da las medidas, se leen del propio archivo. Es
+   lo que reserva el hueco de la imagen antes de que baje y evita que
+   la pagina de el salto (CLS). Un ancho o alto pasado a mano manda
+   sobre esto: puede haber un recorte que el archivo no sabe. */
+const propias = ancho && alto ? null : medidasDe(src);
+const anchoFinal = ancho ?? propias?.ancho;
+const altoFinal = alto ?? propias?.alto;
+
+/* Carga: la prioritaria se pide ya; todas las demas esperan a estar
+   cerca de la pantalla. Es la regla de rendimiento del sitio y vive
+   aqui, en un solo sitio, y no repetida en cada maqueta. */
+const carga = prioritaria ? 'eager' : 'lazy';
+const prioridadRed = prioritaria ? 'high' : undefined;
 
 /* Las variantes se nombran a partir del propio src: se le quita la
    extension y se le pega "-<ancho>.<formato>". Asi no hay una segunda
@@ -46,7 +74,11 @@ const { src, alt, forma, anchos, medidas, ancho, alto } = Astro.props;
 const sinExtension = src ? src.replace(/\.[^.]+$/, '') : '';
 const juego = (formato: string) =>
   (anchos ?? []).map((w) => `${sinExtension}-${w}.${formato} ${w}w`).join(', ');
-const hayVariantes = Boolean(src && anchos && anchos.length);
+/* Las fotos ya optimizadas del edificio aliado se cargan directamente.
+   No tienen todavía el juego de derivados -240/-400/etc.; anunciar
+   variantes inexistentes en <source> hace que el navegador elija un 404. */
+const esFotoEdificioAlgarra = Boolean(src?.startsWith('/assets/edificio-algarra/'));
+const hayVariantes = Boolean(src && anchos && anchos.length && !esFotoEdificioAlgarra);
 
 const sufijo = forma ? `--${forma}` : '';
 const claseFoto = `foto${sufijo ? ` foto${sufijo}` : ''}`;
@@ -68,9 +100,10 @@ if (src && !alt) {
       class={claseFoto}
       src={src}
       alt={alt ?? ''}
-      width={ancho}
-      height={alto}
-      loading="lazy"
+      width={anchoFinal}
+      height={altoFinal}
+      loading={carga}
+      fetchpriority={prioridadRed}
       decoding="async"
     />
   </picture>
@@ -79,7 +112,10 @@ if (src && !alt) {
     class={claseFoto}
     src={src}
     alt={alt ?? ''}
-    loading="lazy"
+    width={anchoFinal}
+    height={altoFinal}
+    loading={carga}
+    fetchpriority={prioridadRed}
     decoding="async"
   />
 ) : (
