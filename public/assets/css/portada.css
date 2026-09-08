@@ -128,5 +128,108 @@
    escritorio, el hero se convierte en cielo y tejados. Se desplaza el
    recorte hacia la catedral, que es el punto de interes. */
 @media (max-width: 48rem) {
-  .hero__fondo img { object-position: var(--encuadre-movil, 73% 50%); }
+  .hero__fondo img,
+  .hero__video { object-position: var(--encuadre-movil, 73% 50%); }
+}
+
+/* ------------------------------------------------------------
+   PRECIO Y GRUPOS
+
+   El precio es lo segundo que se mira despues del titular, asi que
+   se compone como una cifra, no como una linea de texto mas.
+   ------------------------------------------------------------ */
+.hero__precio {
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+  margin-bottom: var(--esp-2);
+  color: var(--color-blanco);
+}
+
+.hero__precio strong {
+  font-family: var(--fuente-titulo);
+  font-size: clamp(2rem, 6vw, 2.9rem);
+  line-height: 1;
+  font-weight: 600;
+  color: var(--color-sal-claro);
+}
+
+.hero__precio span {
+  font-size: clamp(.95rem, 2.4vw, 1.05rem);
+  color: rgba(255, 255, 255, .92);
+}
+
+/* Insignia, no parrafo: es un beneficio, y se lee de un vistazo. */
+.hero__grupos {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: .34rem .8rem;
+  margin-bottom: var(--esp-3);
+  border: 1px solid rgba(227, 194, 92, .55);
+  border-radius: 999px;
+  background: rgba(7, 15, 27, .42);
+  font-size: .86rem;
+  font-weight: 500;
+  color: var(--color-sal-claro);
+}
+
+/* El contenido se apila, y asi la insignia puede alinearse sola. */
+.hero--portada .hero__contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* ------------------------------------------------------------
+   MOVIL — que se vea la fotografia
+
+   El problema no era el diseño sino cuanto alto se comia el texto:
+   el visitante llegaba y veia parrafo, no Zipaquira. Aqui se recorta
+   todo lo que no es prioridad -ubicacion, titular, precio, grupos,
+   botones- y se apoya el resto en la imagen.
+   ------------------------------------------------------------ */
+@media (max-width: 48rem) {
+  .hero--portada {
+    min-height: min(78vh, 620px);
+    padding-block: var(--esp-4);
+  }
+
+  .hero--portada .hero__etiqueta {
+    padding: .3rem .7rem;
+    margin-bottom: var(--esp-2);
+    font-size: .74rem;
+    letter-spacing: .02em;
+  }
+
+  .hero--portada .hero__titulo {
+    font-size: clamp(2rem, 9vw, 2.6rem);
+    line-height: 1.08;
+    margin-bottom: var(--esp-2);
+  }
+
+  .hero--portada .hero__precio { margin-bottom: .45rem; }
+  .hero--portada .hero__grupos {
+    margin-bottom: var(--esp-2);
+    font-size: .8rem;
+  }
+
+  .hero--portada .hero__texto {
+    font-size: .98rem;
+    line-height: 1.45;
+    max-width: 30ch;
+    margin-bottom: var(--esp-3);
+  }
+
+  /* Botones apilados y juntos: dos toques, no dos pantallas. */
+  .hero--portada .grupo-botones {
+    display: grid;
+    gap: .6rem;
+    width: 100%;
+  }
+  .hero--portada .grupo-botones .boton { width: 100%; }
+
+  /* Los tres datos son credibilidad, no conversion. En escritorio
+     suman; en movil solo empujan la imagen fuera de la pantalla. */
+  .hero--portada .hero__datos { display: none; }
 }

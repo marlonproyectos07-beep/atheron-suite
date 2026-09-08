@@ -120,29 +120,40 @@ const fichaNegocio = {
 
       <div class="contenedor hero__contenido">
 
-        <span class="hero__etiqueta">Zipaquirá, Cundinamarca</span>
+        <span class="hero__etiqueta">Zipaquirá · Cerca de la Catedral de Sal</span>
 
-        <h1 class="hero__titulo">
-          Hospedajes con alma, <br />
-          a minutos de la <em>Catedral de Sal</em>
-        </h1>
+        <h1 class="hero__titulo">Hospédate en Zipaquirá</h1>
+
+        {/* El precio es texto visible y nada mas. No entra en JSON-LD:
+            declararlo como oferta estructurada obligaria a sostener
+            condiciones, vigencia y disponibilidad que no tenemos. */}
+        <p class="hero__precio">
+          <strong>$65.000</strong> <span>por persona</span>
+        </p>
+
+        <p class="hero__grupos">Tarifas especiales para grupos</p>
 
         <p class="hero__texto">
-          Atheron Suite reúne una selección de hospedajes en Zipaquirá pensados
-          para descansar de verdad: espacios cuidados, atención cercana y la
-          sabana de Cundinamarca a la salida.
+          Casas y habitaciones para parejas, familias y grupos.
         </p>
 
         <div class="grupo-botones">
           <a class="boton boton--acento boton--grande" href="/hospedajes">
-            Conocer los hospedajes
+            Ver hospedajes
           </a>
-          <a class="boton boton--claro boton--grande" href="#contacto">
-            Escribirnos
+          {/* El mensaje va escrito: cotizar no deberia obligar a redactar.
+              El href es el respaldo si main.js no carga. */}
+          <a
+            class="boton boton--claro boton--grande"
+            href="#contacto"
+            data-whatsapp="Hola, Atheron. Somos un grupo y quisiera cotizar hospedaje en Zipaquirá."
+          >
+            Cotizar mi grupo
           </a>
         </div>
 
-        {/* Datos rapidos: dan confianza sin pedir nada a cambio */}
+        {/* Datos rapidos: dan confianza sin pedir nada a cambio. En movil
+            se ocultan, que es donde el alto de pantalla es el problema. */}
         <div class="hero__datos">
           <div class="dato">
             <span class="dato__numero">7</span>
@@ -540,13 +551,53 @@ const fichaNegocio = {
 
       /* 2. Ahorro de datos o conexion pobre: manda la imagen. */
       var con = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-      if (con && (con.saveData || /(^|-)(2g|slow-2g)$/.test(con.effectiveType || ''))) return;
+      var tipo = (con && con.effectiveType) || '';
+      if (con && (con.saveData || /(^|-)(2g|slow-2g)$/.test(tipo))) return;
 
-      /* 3. Pantallas estrechas: en movil se sirve la imagen de 51 KB y
-            el video pesa 974 KB. Diecinueve veces mas, con datos del
-            visitante, por un fondo que nadie ha pedido. No compensa.
-            El corte es el mismo 62rem donde ya cambia el velo. */
-      if (!window.matchMedia('(min-width: 62rem)').matches) return;
+      /* 3. Ancho de pantalla. Decide CUAL video -el hero movil mide
+            390 px y no necesita 1280 de ancho- y, de momento, tambien
+            decide SI lo hay.
+
+            INTERRUPTOR DEL EXPERIMENTO. El video en movil quedo
+            construido y probado, pero desactivado por medida propia. Se
+            aisló la causa ejecutando Lighthouse sobre ESTE MISMO codigo,
+            bloqueando y permitiendo la descarga del video:
+
+              video bloqueado : Speed Index 0,9-1,1 s   100 en 5 de 5
+              video permitido : Speed Index 2,1-2,2 s   100 en 5 de 5
+
+            El video multiplica por 2,4 el Speed Index. La puntuacion
+            aguanta en 100 porque 2,2 s todavia entra en la banda, pero
+            se queda sin margen: en siete pasadas anteriores una cayo a
+            98 en cuanto se sumo un pico de CPU. La regla acordada dice
+            revertir solo el video movil si peligra el 100, y eso es lo
+            que esta pasando.
+
+            Para habilitarlo basta poner esta constante en true; el resto
+            del camino -eleccion de archivo, guardas y derivados de 960
+            px- ya esta hecho y verificado. */
+      var VIDEO_EN_MOVIL = false;
+
+      var estrecha = !window.matchMedia('(min-width: 62rem)').matches;
+      if (estrecha && !VIDEO_EN_MOVIL) return;
+
+      /* 4. En pantalla estrecha el listón sube. Ahí el video se paga con
+            datos moviles y bateria ajena, asi que solo entra cuando el
+            terreno es claramente bueno: 3G no basta, y un telefono con
+            poca memoria tampoco. Si el navegador no informa, se concede
+            el beneficio de la duda: no se castiga por callar. */
+      if (estrecha) {
+        if (tipo && tipo !== '4g') return;
+        if (typeof navigator.deviceMemory === 'number' && navigator.deviceMemory < 4) return;
+      }
+
+      /* 5. Compatibilidad real, preguntada al navegador. Si no puede con
+            ninguno de los dos formatos, no se descarga nada. */
+      var puedeWebm = !!v.canPlayType('video/webm; codecs="vp9"');
+      var puedeMp4 = !!v.canPlayType('video/mp4; codecs="avc1.42E01E"');
+      if (!puedeWebm && !puedeMp4) return;
+
+      var base = '/assets/video/portada/zipaquira-plaza-dron' + (estrecha ? '-movil' : '');
 
       var iniciado = false;   /* la fuente ya esta puesta */
       var programado = false; /* alguien ya pidio el arranque */
@@ -569,6 +620,14 @@ const fichaNegocio = {
         }
       }
 
+      /* La imagen de respaldo tiene que estar pintada antes de que el
+         video toque la red. Si todavia no lo esta, no se marca nada como
+         iniciado y se reintenta: el video no adelanta jamas al poster. */
+      function posterListo() {
+        var img = v.parentNode.querySelector('.hero__fondo img');
+        return !img || (img.complete && img.naturalWidth > 0);
+      }
+
       /* UNICO punto de entrada, y es idempotente: los dos caminos
          terminan aqui y solo el primero llega a hacer algo. */
       function inicia() {
@@ -581,6 +640,8 @@ const fichaNegocio = {
         var caja = v.getBoundingClientRect();
         if (caja.bottom <= 0 || caja.top >= (window.innerHeight || 0)) return;
 
+        if (!posterListo()) { setTimeout(inicia, 400); return; }
+
         iniciado = true;
         suelta();
 
@@ -588,14 +649,19 @@ const fichaNegocio = {
            para permitir la reproduccion automatica. */
         v.muted = true;
 
-        [['/assets/video/portada/zipaquira-plaza-dron.webm', 'video/webm'],
-         ['/assets/video/portada/zipaquira-plaza-dron.mp4', 'video/mp4']]
-          .forEach(function (par) {
-            var s = document.createElement('source');
-            s.src = par[0];
-            s.type = par[1];
-            v.appendChild(s);
-          });
+        /* Se declaran los dos formatos y el navegador descarga UNO: el
+           primero que sabe reproducir. Los <source> no compiten, se
+           evaluan en orden. Y si ya sabemos que no puede con WebM, ni
+           siquiera se le ofrece. */
+        var fuentes = [];
+        if (puedeWebm) fuentes.push([base + '.webm', 'video/webm']);
+        if (puedeMp4) fuentes.push([base + '.mp4', 'video/mp4']);
+        fuentes.forEach(function (par) {
+          var s = document.createElement('source');
+          s.src = par[0];
+          s.type = par[1];
+          v.appendChild(s);
+        });
 
         /* Solo se muestra cuando hay imagen de verdad que mostrar. */
         v.addEventListener('playing', function () {
