@@ -1,0 +1,94 @@
+/* ============================================================
+   PORTADA.CSS — estilos que SOLO usa la pagina de inicio
+
+   Vive aparte y no dentro de paginas.css porque el sitio incrusta
+   su CSS en el HTML: lo que se meta en una hoja comun viaja en las
+   26 paginas, aunque solo lo use una. Esta la pide la portada con
+   hojasExtra y no le anade un byte al resto.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   HERO DE PORTADA CON IMAGEN — prueba visual
+
+   PROCEDENCIA: la imagen es una RECREACION VISUAL GENERADA POR IA a
+   partir de referencias de Zipaquira. No es una fotografia. Esta
+   aprobada solo como prueba en preview; antes de produccion aplica la
+   regla 5 del proyecto y hace falta la autorizacion expresa de Marlon.
+
+   La imagen va en el HTML, no en background-image de CSS: asi el
+   navegador la descubre en el primer analisis y puede tratarla como
+   recurso LCP con prioridad alta. Es el mismo mecanismo que ya usan
+   las fichas de hospedaje (.hero--foto), no una arquitectura nueva.
+   ------------------------------------------------------------ */
+.hero--portada {
+  isolation: isolate;
+  /* Sustituye al degradado provisional; el color de noche queda
+     debajo por si la imagen tarda o falla. */
+  background: var(--color-noche);
+}
+
+.hero__fondo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+}
+
+.hero__fondo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* En escritorio la banda es mas ancha que alta: se baja el recorte
+     para que la plaza y la catedral no queden fuera por arriba. */
+  object-position: var(--encuadre, center 58%);
+}
+
+/* Velo de legibilidad. Mas denso a la izquierda, que es donde cae el
+   texto, y mas claro a la derecha para no apagar la catedral
+   iluminada ni el atardecer. */
+.hero--portada::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(95deg, rgba(7, 15, 27, .88) 0%, rgba(7, 15, 27, .80) 46%, rgba(7, 15, 27, .50) 72%, rgba(7, 15, 27, .26) 100%),
+    linear-gradient(180deg, rgba(7, 15, 27, .30) 0%, rgba(7, 15, 27, .08) 45%, rgba(7, 15, 27, .40) 100%);
+  pointer-events: none;
+}
+
+/* Por debajo de escritorio el texto deja de ocupar solo la mitad
+   izquierda y se extiende sobre el cielo del atardecer, que es la zona
+   mas luminosa de la imagen. El velo horizontal ya no basta: se cierra
+   de forma casi uniforme. Medido, no estimado: sin esto el parrafo baja
+   a 3,7:1 y el minimo para texto normal es 4,5:1. */
+@media (max-width: 62rem) {
+  .hero--portada::after {
+    background:
+      linear-gradient(95deg, rgba(7, 15, 27, .80) 0%, rgba(7, 15, 27, .72) 55%, rgba(7, 15, 27, .62) 100%),
+      linear-gradient(180deg, rgba(7, 15, 27, .30) 0%, rgba(7, 15, 27, .14) 50%, rgba(7, 15, 27, .38) 100%);
+  }
+}
+
+.hero--portada .hero__contenido {
+  position: relative;
+  z-index: 2;
+}
+
+/* Sombras suaves: sostienen el contraste en los pocos pixeles donde el
+   cielo del atardecer sube de luminancia, sin ensuciar la tipografia. */
+.hero--portada .hero__titulo { text-shadow: 0 2px 22px rgba(0, 0, 0, .38); }
+.hero--portada .hero__texto { text-shadow: 0 1px 10px rgba(0, 0, 0, .42); }
+.hero--portada .hero__etiqueta {
+  background: rgba(7, 15, 27, .42);
+  backdrop-filter: blur(5px);
+}
+.hero--portada .hero__datos { border-top-color: rgba(255, 255, 255, .34); }
+
+/* En movil la banda es mas alta que ancha: si se deja el encuadre de
+   escritorio, el hero se convierte en cielo y tejados. Se desplaza el
+   recorte hacia la catedral, que es el punto de interes. */
+@media (max-width: 48rem) {
+  .hero__fondo img { object-position: var(--encuadre-movil, 61% 50%); }
+}
