@@ -100,6 +100,24 @@ const fichaNegocio = {
         />
       </picture>
 
+      {/* Video de fondo. Nace SIN fuente y SIN autoplay, a proposito: con
+          autoplay el navegador antepone la intencion de reproducir a
+          preload="none" y empieza a descargar durante la carga inicial,
+          que es justo el momento que hay que proteger. La fuente se la
+          adjunta el guion de abajo cuando ya no puede estorbar. */}
+      <video
+        id="video-portada"
+        class="hero__video"
+        muted
+        loop
+        playsinline
+        preload="none"
+        aria-hidden="true"
+        tabindex="-1"
+        width="1280"
+        height="720"
+      ></video>
+
       <div class="contenedor hero__contenido">
 
         <span class="hero__etiqueta">Zipaquirá, Cundinamarca</span>
@@ -497,5 +515,111 @@ const fichaNegocio = {
     href="#contacto"
     mensaje="Hola, quiero información sobre los hospedajes de Atheron Suite en Zipaquirá."
   />
+
+
+  {/* ============================================================
+       VIDEO DE FONDO DEL HERO — mejora progresiva
+
+       Va en linea y no en un archivo de public/assets/js/ como el resto
+       del sitio: es un kilobyte, y una peticion mas, aunque sea
+       diferida, sigue siendo una peticion en la ruta que precisamente
+       hay que proteger.
+
+       Sin este guion la portada funciona exactamente igual que antes:
+       el <video> se queda vacio e invisible y lo que se ve es la
+       imagen. Ese es el criterio de que la mejora es progresiva de
+       verdad y no un adorno que se cae con estilo.
+       ============================================================ */}
+  <script is:inline>
+    (function () {
+      var v = document.getElementById('video-portada');
+      if (!v || typeof v.canPlayType !== 'function') return;
+
+      /* 1. Movimiento reducido: no se pausa, no se descarga. */
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      /* 2. Ahorro de datos o conexion pobre: manda la imagen. */
+      var con = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (con && (con.saveData || /(^|-)(2g|slow-2g)$/.test(con.effectiveType || ''))) return;
+
+      /* 3. Pantallas estrechas: en movil se sirve la imagen de 51 KB y
+            el video pesa 974 KB. Diecinueve veces mas, con datos del
+            visitante, por un fondo que nadie ha pedido. No compensa.
+            El corte es el mismo 62rem donde ya cambia el velo. */
+      if (!window.matchMedia('(min-width: 62rem)').matches) return;
+
+      var arrancado = false;
+
+      function arranca() {
+        if (arrancado) return;
+        arrancado = true;
+
+        /* El hero esta arriba del todo, pero el navegador puede
+           restaurar la posicion de lectura al recargar. Si no se ve,
+           no se descarga nada. */
+        var caja = v.getBoundingClientRect();
+        if (caja.bottom <= 0) return;
+
+        /* Algunos navegadores exigen la propiedad, no solo el atributo,
+           para permitir la reproduccion automatica. */
+        v.muted = true;
+
+        [['/assets/video/portada/zipaquira-plaza-dron.webm', 'video/webm'],
+         ['/assets/video/portada/zipaquira-plaza-dron.mp4', 'video/mp4']]
+          .forEach(function (par) {
+            var s = document.createElement('source');
+            s.src = par[0];
+            s.type = par[1];
+            v.appendChild(s);
+          });
+
+        /* Solo se muestra cuando hay imagen de verdad que mostrar. */
+        v.addEventListener('playing', function () {
+          v.setAttribute('data-visible', 'si');
+        }, { once: true });
+
+        v.load();
+
+        var p = v.play();
+        if (p && typeof p.catch === 'function') {
+          p.catch(function () {
+            /* Reproduccion automatica denegada. No se hace nada: la
+               imagen ya esta debajo y nadie nota que faltaba algo. */
+          });
+        }
+      }
+
+      /* Se espera a que la pagina termine y el hilo principal respire.
+         Antes de eso el video competiria por el ancho de banda con el
+         recurso LCP, que es exactamente lo que no puede pasar. */
+      function programa() {
+        if (window.requestIdleCallback) {
+          window.requestIdleCallback(arranca, { timeout: 3000 });
+        } else {
+          setTimeout(arranca, 1200);
+        }
+      }
+
+      if (document.readyState === 'complete') programa();
+      else window.addEventListener('load', programa, { once: true });
+
+      /* Fuera de pantalla o pestaña de fondo, no se gasta bateria. */
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entradas) {
+          entradas.forEach(function (e) {
+            if (!arrancado) return;
+            if (e.isIntersecting) { var q = v.play(); if (q && q.catch) q.catch(function () {}); }
+            else v.pause();
+          });
+        }, { threshold: 0 }).observe(v);
+      }
+
+      document.addEventListener('visibilitychange', function () {
+        if (!arrancado) return;
+        if (document.hidden) v.pause();
+        else { var q = v.play(); if (q && q.catch) q.catch(function () {}); }
+      });
+    })();
+  </script>
 
 </Base>

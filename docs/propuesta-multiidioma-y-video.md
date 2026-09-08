@@ -273,11 +273,11 @@ nueva superficie de fallo. La aproximación por idioma es una heurística imperf
 **No se implementa ahora.** Solo se dejan los campos previstos para que añadirlo
 después no obligue a rehacer nada.
 
-### B.6 Video de fondo del hero — arquitectura preparada, sin implementar
+### B.6 Video de fondo del hero — implementado
 
-**Nada de esto está construido.** Es el contrato acordado para la fase 2, escrito
-antes de tocar código para que la discusión de diseño no ocurra a mitad de la
-implementación.
+**Construido el 8 de septiembre de 2026.** Este apartado se escribió antes como
+contrato y se conserva porque la implementación lo siguió punto por punto. Lo que
+cambió sobre la marcha está anotado al final, en «Lo que se decidió al construirlo».
 
 **No es el patrón fachada de B.1.** Aquel resuelve un video que el visitante
 *decide* ver y pulsa. Este es un fondo decorativo que nadie pide y que, si se hace
@@ -339,20 +339,54 @@ Un único hermano dentro de `<section class="hero hero--portada">`, después del
 texto en `z-index: 2`, así que el video entra en `z-index: 0` sin tocar ninguna de
 las dos capas. El CSS vive en `portada.css`, que solo se incrusta en la portada.
 
-**No se añade ni una línea de CSS ni de marcado hasta que la fase 2 se autorice.**
-Dejar reglas preparadas para algo que no existe es exactamente el error que se
-corrigió al retirar `.hueco-hero`: CSS muerto viajando en cada página.
+El `<video>` vive en `src/pages/index.astro` y sus estilos en `portada.css`. El
+guion va **en línea**, no en `public/assets/js/` como el resto del sitio: es un
+kilobyte, y una petición más, aunque sea diferida, sigue siendo una petición en la
+ruta que precisamente hay que proteger.
 
-#### Lo que hay que decidir antes de empezar
+#### Lo que se decidió al construirlo
 
-- **Procedencia.** Animar el activo actual produce un video generado por IA de un
-  lugar real e identificable. El movimiento refuerza la lectura de metraje real
-  mucho más que una imagen fija. Aplica el registro del apartado 8 de
-  [fotografias.md](fotografias.md) y conviene resolver cómo se declara **antes**
-  de generarlo, no después.
-- **Rendimiento.** Hoy la portada da 100 en móvil con 78 KB transferidos. Hay que
-  fijar de antemano qué caída es aceptable, si la hay, y volver a medir con el
-  video puesto.
+**En móvil no hay video.** El corte está en 62rem, el mismo donde ya cambia el
+velo. Razón: en móvil se sirve la imagen de 51 KB y el video pesa 974 KB.
+Diecinueve veces más, con datos del visitante, por un fondo que nadie ha pedido.
+La orden pedía priorizar velocidad y esto es lo que sale de aplicarla.
+
+**El material se recortó para que el ciclo cerrara.** El maestro dura 8 segundos y
+la cámara avanza, así que el último fotograma no se parece al primero: en bucle
+eso es un corte visible cada 8 segundos. El derivado dura 6,5 segundos y su último
+segundo y medio disuelve hacia el primero, de modo que el fotograma final coincide
+con el inicial. Medido: la diferencia entre ambos baja de 30,2 a 1,6 sobre 255.
+
+**El contraste se volvió a medir con el video en marcha, no con la imagen.** Con
+un fondo que cambia, el contraste cambia fotograma a fotograma y medir un instante
+no dice nada. Se recorre el ciclo entero: el peor caso da 5,75:1 en el titular y
+6,02:1 en el párrafo, por encima de lo que daba la imagen sola.
+
+#### Lo medido, línea base contra implementación
+
+| | Línea base `87d3b92` | Con video |
+|---|---|---|
+| Bytes hasta `load`, escritorio | 212,0 KB | 213,3 KB |
+| Bytes tras cargar el video | 212,0 KB | 1.171 KB |
+| Rendimiento móvil | 100 | 100 |
+| LCP móvil | 1,3 / 1,3 / 1,4 s | 1,4 / 1,4 / 1,4 s |
+| Peso móvil | 74 KiB | 75 KiB |
+| Escritorio | 100 / 100 / 100 | 100 / 100 / 100 |
+| CLS | 0 | 0 |
+
+El video empieza a descargarse **después** del evento `load`, nunca antes.
+
+#### Lo que queda pendiente de decidir
+
+- **Procedencia.** El video es una recreación generada por IA de un lugar real e
+  identificable, y el movimiento refuerza la lectura de metraje real mucho más que
+  una imagen fija. Registrado en el apartado 8 de [fotografias.md](fotografias.md).
+- **Una fragilidad conocida.** El guion arranca en el evento `load`. Si un recurso
+  de terceros se cuelga, `load` se retrasa y el video no arranca. En este
+  contenedor pasa: la hoja de Google Fonts no es alcanzable y `load` se va a 12,7
+  segundos. En producción la fuente carga con normalidad, pero la dependencia
+  existe. Si molesta, la solución es arrancar con `load` **o** un temporizador
+  desde `DOMContentLoaded`, lo que ocurra primero.
 
 ---
 

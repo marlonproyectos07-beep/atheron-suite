@@ -212,7 +212,26 @@ exista: no se describe en público como fotografía real, ni como toma real de
 dron, ni se le atribuye autoría fotográfica. Si algún día se le pone pie de
 foto, texto alternativo o mención en redes, tiene que decir lo que es.
 
-### 8.2 Relación con la regla del apartado 7
+### 8.2 Video de fondo del hero
+
+| | |
+|---|---|
+| **Archivo** | `public/assets/video/portada/zipaquira-plaza-dron.{webm,mp4}` |
+| **Procedencia** | Recreación audiovisual generada con inteligencia artificial a partir de un activo visual conceptual de Zipaquirá. **No constituye grabación documental ni toma real de dron.** |
+| **Herramienta** | Higgsfield |
+| **Aprobado por** | Marlon, el 8 de septiembre de 2026 |
+| **Alcance** | Prueba en la rama `astro`. **No autorizado para producción todavía.** |
+| **Cómo se presenta** | Fondo decorativo: `aria-hidden`, sin controles, sin pista de audio en el archivo, fuera del orden de tabulación. No se describe en ningún texto visible. |
+
+Se descartó un segundo material generado con Gemini: perdía el encuadre aprobado a
+los tres segundos y llevaba la marca de agua del generador visible sobre el
+empedrado.
+
+Vale aquí lo mismo que para la imagen, y con más motivo: **el movimiento refuerza
+la lectura de metraje real** mucho más que una fotografía fija. No se describe como
+grabación real, ni como toma de dron, ni se le atribuye autoría.
+
+### 8.3 Relación con la regla del apartado 7
 
 El apartado 7 registra una decisión que sigue vigente: **no se usan fotografías
 generadas por IA**. Esa regla habla de las **fichas de hospedaje**, donde una

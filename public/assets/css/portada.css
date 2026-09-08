@@ -75,6 +75,40 @@
   }
 }
 
+/* ------------------------------------------------------------
+   VIDEO DE FONDO — mejora progresiva
+
+   Va encima del <picture> y debajo del velo, en la misma capa cero.
+   Nace invisible y solo aparece cuando de verdad esta reproduciendo:
+   asi, si la reproduccion se rechaza o el archivo no llega, lo que se
+   ve sigue siendo la imagen y el visitante no percibe ningun fallo.
+
+   No lleva atributo poster a proposito. El poster lo hace el <picture>
+   de debajo, que es el elemento LCP ya medido; darle uno al video
+   crearia un segundo candidato y habria que volver a validarlo todo.
+   ------------------------------------------------------------ */
+.hero__video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* El mismo encuadre que la imagen, para que el relevo no salte. */
+  object-position: var(--encuadre, center 50%);
+  opacity: 0;
+  transition: opacity .9s ease;
+  pointer-events: none;
+}
+
+.hero__video[data-visible="si"] { opacity: 1; }
+
+/* Cinturon y tirantes. El guion ya se abstiene de cargar el video con
+   movimiento reducido; esto lo garantiza aunque el guion falle. */
+@media (prefers-reduced-motion: reduce) {
+  .hero__video { display: none; }
+}
+
 .hero--portada .hero__contenido {
   position: relative;
   z-index: 2;
