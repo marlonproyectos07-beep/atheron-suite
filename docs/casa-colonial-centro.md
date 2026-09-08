@@ -343,3 +343,31 @@ Y entonces, en el mismo repaso y no por separado:
 | SEO | **69**, por el `noindex` deliberado. Las otras nueve verificaciones SEO pasan. El `noindex` no se retira para subir la nota |
 | Revisión de dirección | **Pendiente** |
 | Revisión jurídica | **Pendiente** |
+
+---
+
+## Capacidad proyectada de 80 personas — requisito de Dirección, sin validar
+
+**No se publica, y es deliberado.** Dirección planteó el 8 de septiembre de 2026
+evaluar grupos y eventos de hasta 80 personas. La cifra **no está en la
+interfaz pública** y no debe entrar hasta que se resuelva qué significa.
+
+Hoy no existe documentación que permita distinguir entre:
+
+- huéspedes alojados a la vez,
+- aforo del inmueble,
+- comensales del restaurante,
+- asistentes a un evento,
+- suma de espacios usados a la vez.
+
+Son cinco cifras distintas y publicar la mayor como si fuera capacidad
+hotelera sería exactamente el tipo de dato inventado que este proyecto no se
+permite.
+
+**Registro literal del requisito:** «Objetivo/proyección Dirección: evaluar
+grupos/eventos hasta 80 personas. Pendiente validación técnica, operativa y de
+aforo.»
+
+Cuando exista la definición, la arquitectura ya permite mostrarla sin rediseño:
+entra como un dato más de `src/data/casa-colonial-centro.ts`, con su etiqueta
+de proyección, igual que el resto del contenido de la página.

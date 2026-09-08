@@ -245,3 +245,42 @@
      suman; en movil solo empujan la imagen fuera de la pantalla. */
   .hero--portada .hero__datos { display: none; }
 }
+
+
+/* ------------------------------------------------------------
+   FRANJA DE OFERTA — que hay, en una linea
+
+   Una fila que se envuelve, no una rejilla de tarjetas: son cuatro
+   palabras, y montarles una tarjeta a cada una las convertiria en
+   otra pantalla que hay que atravesar antes de llegar al producto.
+   ------------------------------------------------------------ */
+.oferta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem .6rem;
+  list-style: none;
+  padding: 0;
+  margin: var(--esp-4) 0 var(--esp-1);
+}
+
+.oferta__tipo {
+  padding: .42rem .85rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  font-size: .9rem;
+  color: var(--texto-suave);
+}
+
+.oferta__tipo strong { color: var(--color-marca); font-weight: 600; }
+
+.oferta__para {
+  margin-bottom: var(--esp-4);
+  font-size: .92rem;
+  color: var(--texto-suave);
+}
+
+@media (max-width: 48rem) {
+  .oferta { gap: .4rem .45rem; margin-top: var(--esp-3); }
+  .oferta__tipo { padding: .34rem .7rem; font-size: .82rem; }
+  .oferta__para { font-size: .86rem; margin-bottom: var(--esp-3); }
+}

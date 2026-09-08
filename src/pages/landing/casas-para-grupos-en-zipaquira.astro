@@ -42,7 +42,7 @@ const fichaServicio = {
 
 <Base
   titulo="Casas para grupos en Zipaquirá | Alojamiento para empresas y grupos grandes"
-  descripcion="Casas completas para grupos en Zipaquirá: empresas, constructoras, equipos deportivos, clubes de ciclismo y moteros. Hemos alojado grupos de hasta 60 personas. Sin estancia minima y con factura electronica."
+  descripcion="Casas completas para grupos en Zipaquirá: empresas, constructoras, equipos deportivos, clubes de ciclismo y moteros. Casa Algarra admite 22 huéspedes, y repartimos los grupos mayores entre varias propiedades."
   ruta="/landing/casas-para-grupos-en-zipaquira"
   ogTitulo="Casas para grupos en Zipaquirá | Atheron Suite"
   ogDescripcion="Alojamiento para empresas, constructoras y grupos grandes en Zipaquirá. Casas completas, tarifa por volumen y facturacion."
@@ -82,17 +82,18 @@ const fichaServicio = {
         </div>
 
         <div class="hero__datos">
+          {/* Las dos cifras salen de datos validados en las fichas. Antes
+              habia tres -60 personas alojadas, 7 propiedades y 2 años
+              recibiendo grupos- y ninguna tenia respaldo comprobable:
+              publicadas eran cuatro, no siete. Se retiran en vez de
+              redondearlas. */}
           <div class="dato">
-            <span class="dato__numero">60</span>
-            <span class="dato__texto">Personas alojadas en un solo grupo</span>
+            <span class="dato__numero">22</span>
+            <span class="dato__texto">Huéspedes en Casa Algarra</span>
           </div>
           <div class="dato">
-            <span class="dato__numero">7</span>
-            <span class="dato__texto">Propiedades disponibles</span>
-          </div>
-          <div class="dato">
-            <span class="dato__numero">2 anos</span>
-            <span class="dato__texto">Recibiendo grupos</span>
+            <span class="dato__numero">4</span>
+            <span class="dato__texto">Propiedades publicadas</span>
           </div>
         </div>
 
@@ -120,7 +121,8 @@ const fichaServicio = {
             <h3>Empresas y constructoras</h3>
             <p class="texto-suave">
               Personal de obra o equipos de proyecto que necesitan alojamiento
-              por semanas o meses. <strong>Emitimos factura electronica.</strong>
+              por semanas o meses. <strong>Confirmamos la facturación al
+              cotizar</strong>, con los datos que necesite la empresa.
             </p>
           </article>
 
@@ -162,10 +164,10 @@ const fichaServicio = {
 
           <article class="tarjeta-simple">
             <div class="tarjeta-simple__icono" aria-hidden="true">&#127895;</div>
-            <h3>Grupos recurrentes</h3>
+            <h3>Grupos que repiten</h3>
             <p class="texto-suave">
-              Varios de nuestros clientes vuelven cada temporada. Si es su caso,
-              hablemos de condiciones fijas.
+              Si vuelven cada temporada, hablemos de condiciones fijas para no
+              renegociar cada vez.
             </p>
           </article>
 
@@ -175,36 +177,32 @@ const fichaServicio = {
 
 
     {/* ==========================================================
-         3. PRUEBA REAL
-         Un caso concreto convence mas que diez adjetivos.
-         Sin cifras de facturacion: eso es informacion interna.
+         3. QUE INCLUYE
+
+         AQUI HABIA UN "CASO REAL": 60 personas, dos casas, diez noches,
+         un grupo mexicano. Se retiro entero el 8 de septiembre de 2026
+         porque no existe en el repositorio ni un documento ni un dato
+         que lo respalde, y un caso de exito inventado es lo peor que
+         puede llevar una landing comercial. No se sustituye por otro
+         caso: se sustituye por lo que si podemos sostener.
          ========================================================== */}
     <section class="seccion seccion--oscura">
       <div class="contenedor">
         <div class="bloque-doble aparecer">
 
           <div class="bloque-doble__texto">
-            <span class="etiqueta">Un caso real</span>
-            <h2>60 personas, 2 casas, 10 noches</h2>
+            <span class="etiqueta">Como trabajamos un grupo</span>
+            <h2>Una casa entera y un solo interlocutor</h2>
             <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
-              Un grupo mexicano de sesenta personas vino a conocer la Catedral de
-              Sal y la region. Los alojamos en dos casas completas durante diez
-              noches, coordinando llegadas, distribucion por habitaciones y
-              logistica del grupo desde un solo canal.
+              Casa Algarra admite 22 huéspedes en cinco habitaciones. Cuando el
+              grupo no cabe en una sola propiedad, lo repartimos entre varias y
+              coordinamos llegadas y distribución desde un mismo canal.
             </p>
             <p class="texto-suave">
-              Ese es el tipo de operacion que sabemos manejar. No es lo mismo
-              recibir a dos personas un fin de semana que coordinar un grupo
-              grande durante una semana y media.
+              No es lo mismo recibir a dos personas un fin de semana que
+              coordinar un grupo grande durante varios dias.
             </p>
           </div>
-
-          <div class="bloque-doble__media">
-            <div class="placeholder placeholder--ancho">
-              Foto pendiente<br />Casa completa o grupo
-            </div>
-          </div>
-
         </div>
       </div>
     </section>
@@ -226,16 +224,17 @@ const fichaServicio = {
             <li><strong>Casa completa</strong>, no habitaciones sueltas repartidas</li>
             <li><strong>Tarifa por volumen</strong>: a mas noches y mas personas, mejor precio</li>
             <li><strong>Un solo interlocutor</strong> para toda la coordinacion</li>
-            <li><strong>Cocina equipada</strong>: el grupo no depende de restaurantes</li>
-            <li><strong>Parqueadero</strong> para vehiculos, bicicletas o motos</li>
-            <li><strong>Factura electronica</strong>: emitimos factura, como necesita cualquier empresa</li>
-            <li><strong>Sin estancia minima</strong>: desde una noche</li>
-            <li><strong>Descuentos por recurrencia</strong> para grupos que vuelven cada temporada</li>
+            {/* Antes esta lista afirmaba como universales cinco cosas que
+                no constan en ninguna ficha: cocina equipada, parqueadero,
+                factura electronica, sin estancia minima y descuentos por
+                recurrencia. Las que dependen de la propiedad se dicen con
+                su propiedad delante; las que dependen de la reserva se
+                dicen como lo que son, algo que se confirma al cotizar. */}
+            <li><strong>Cocina</strong> en las casas completas, para no depender de restaurantes</li>
+            <li><strong>Parqueadero</strong> en Casa Algarra, para dos vehiculos</li>
+            <li><strong>Facturación</strong>: dinos que necesita tu empresa y lo confirmamos al cotizar</li>
+            <li><strong>Estancia</strong>: dinos cuantas noches y te decimos si hay minimo en esas fechas</li>
           </ul>
-        </div>
-
-        <div class="bloque-doble__media">
-          <div class="placeholder placeholder--alto">Foto pendiente<br />Zona comun o comedor</div>
         </div>
 
       </div>
@@ -311,16 +310,17 @@ const fichaServicio = {
           <details style="border-bottom:1px solid var(--borde); padding: var(--esp-2) 0;">
             <summary style="cursor:pointer; font-weight:600;">Cuantas personas podemos alojar?</summary>
             <p class="texto-suave" style="margin-top: var(--esp-1);">
-              Hemos alojado grupos de hasta 60 personas usando dos casas completas.
-              La capacidad depende de las fechas y de que propiedades esten libres.
-              Escribenos con el numero exacto y te confirmamos.
+              Casa Algarra admite 22 huéspedes. Si el grupo es mayor, lo
+              repartimos entre varias propiedades: la capacidad final depende de
+              las fechas y de cuales esten libres. Escribenos con el numero
+              exacto y te confirmamos.
             </p>
           </details>
 
           <details style="border-bottom:1px solid var(--borde); padding: var(--esp-2) 0;">
             <summary style="cursor:pointer; font-weight:600;">Emiten factura electronica?</summary>
             <p class="texto-suave" style="margin-top: var(--esp-1);">
-              Si. Emitimos factura electronica, que es lo que necesita cualquier
+              Dinos que necesita tu empresa y lo confirmamos al cotizar, que es lo que necesita cualquier
               empresa o constructora para poder cargar el gasto. Solo tienes que
               pasarnos los datos de facturacion al confirmar la reserva.
             </p>
@@ -329,7 +329,8 @@ const fichaServicio = {
           <details style="border-bottom:1px solid var(--borde); padding: var(--esp-2) 0;">
             <summary style="cursor:pointer; font-weight:600;">Cual es la estancia minima?</summary>
             <p class="texto-suave" style="margin-top: var(--esp-1);">
-              No hay estancia minima: pueden reservar desde una sola noche.
+              Depende de las fechas y de la propiedad. Dinos cuantas noches
+              necesitan y te confirmamos si hay minimo en ese periodo.
               Si son varias noches, estudiamos la tarifa segun el volumen del
               grupo y la duracion.
             </p>
@@ -338,23 +339,24 @@ const fichaServicio = {
           <details style="border-bottom:1px solid var(--borde); padding: var(--esp-2) 0;">
             <summary style="cursor:pointer; font-weight:600;">Manejan descuentos para estancias largas o grupos recurrentes?</summary>
             <p class="texto-suave" style="margin-top: var(--esp-1);">
-              Si. A mayor numero de noches y de personas, mejor tarifa. Y con los
-              grupos que vuelven cada temporada acordamos condiciones
-              recurrentes, para que no tengan que renegociar cada vez.
+              Trabajamos tarifa por volumen: a mas noches y mas personas,
+              mejor precio. Las condiciones fijas para quien vuelve se acuerdan
+              caso por caso, no hay una tabla publicada.
             </p>
           </details>
 
           <details style="border-bottom:1px solid var(--borde); padding: var(--esp-2) 0;">
             <summary style="cursor:pointer; font-weight:600;">Hay parqueadero para bicicletas o motos?</summary>
             <p class="texto-suave" style="margin-top: var(--esp-1);">
-              Si, contamos con parqueadero.
+              Casa Algarra tiene parqueadero para dos vehiculos. En las demas
+              propiedades, consultanos por las fechas concretas.
             </p>
           </details>
 
           <details style="border-bottom:1px solid var(--borde); padding: var(--esp-2) 0;">
             <summary style="cursor:pointer; font-weight:600;">Se puede reservar con anticipacion para varias temporadas?</summary>
             <p class="texto-suave" style="margin-top: var(--esp-1);">
-              Si, y es lo que hacen varios de nuestros grupos recurrentes.
+              Si, es una de las formas en que solemos resolver un grupo grande.
               Escribenos y acordamos condiciones fijas.
             </p>
           </details>

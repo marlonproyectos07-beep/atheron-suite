@@ -174,13 +174,58 @@ const fichaPagina = {
           ))}
         </div>
 
+        {/* Estas SI pueden servir para un grupo; lo que todavia no existe
+            es su cifra total validada. Excluirlas seria esconder una
+            opcion real, e inventarles un total seria peor. Se muestran
+            con lo que su ficha declara y sin total. */}
         {sinCifraDePersonas.length > 0 && (
-          <p class="texto-suave" style="margin-top: var(--esp-4); max-width: 62ch;">
-            Hay más propiedades publicadas en el
-            <a href="/hospedajes"> catálogo completo</a>. No aparecen en esta
-            lista porque su ficha todavía no declara una capacidad total de
-            personas, no porque no puedan recibir un grupo.
-          </p>
+          <div style="margin-top: var(--esp-5);">
+            <h3>También pueden servir para un grupo</h3>
+            <p class="texto-suave" style="max-width: 62ch; margin-block: var(--esp-2) var(--esp-3);">
+              Su ficha todavía no declara una capacidad total de personas, así
+              que no publicamos una cifra. Escríbenos con el número exacto y te
+              confirmamos qué cabe en cada fecha.
+            </p>
+
+            <div class="grid grid--3">
+              {sinCifraDePersonas.map((f) => (
+                <article class="tarjeta aparecer">
+                  <div class="tarjeta__media">
+                    <a class="tarjeta__imagen-enlace" href={`/hospedajes/${f.id}`} aria-label={`Ver ${f.data.nombre}`}>
+                      <Foto src={f.data.fotoTarjeta} alt={f.data.fotoTarjetaAlt} />
+                    </a>
+                  </div>
+                  <div class="tarjeta__cuerpo">
+                    <h4 class="tarjeta__titulo">
+                      <a href={`/hospedajes/${f.id}`}>{f.data.nombre}</a>
+                    </h4>
+                    <p class="tarjeta__meta">
+                      {(f.data.datos ?? [])
+                        .filter((d: { pendiente?: boolean }) => !d.pendiente)
+                        .slice(0, 3)
+                        .map((d: { numero: string; texto: string }) => (
+                          <span><strong>{d.numero}</strong> {d.texto.toLowerCase()}</span>
+                        ))}
+                    </p>
+                    <div class="tarjeta__pie">
+                      <div class="tarjeta__acciones">
+                        <a class="boton boton--contorno" href={`/hospedajes/${f.id}`}>
+                          Ver alojamiento
+                        </a>
+                        <a
+                          class="boton boton--whatsapp"
+                          href="#cotizar"
+                          data-whatsapp={`Hola, Atheron. Quisiera saber si ${f.data.nombre} sirve para un grupo. Somos [numero] personas.`}
+                        >
+                          Consultar
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </section>

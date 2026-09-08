@@ -181,3 +181,27 @@ Si solo puedes hacer tres cosas esta semana:
 1. **El 28** — corregir Cogua → Zipaquirá. Sin esto, nada de lo construido sale en las búsquedas del municipio.
 2. **El 9** — una foto principal por hospedaje. Es lo que separa un sitio en obra de uno terminado.
 3. **El 1** — los nombres reales, para poder cerrar las URLs antes de que Google indexe.
+
+---
+
+## Material fotográfico que falta (retirado de la interfaz el 8 sep 2026)
+
+Dirección decidió que los rectángulos con el texto «Foto pendiente» no son
+aceptables de cara al huésped: le cuentan que la casa no está terminada. Se
+retiraron todos. **El material sigue faltando**, y es esto:
+
+| Dónde | Qué falta |
+|---|---|
+| Portada · sección Zipaquirá | Foto de Zipaquirá o la sabana de Cundinamarca |
+| Portada · bloque de experiencias | Fachada o interior representativo |
+| Blog · índice | Portada de la guía de Zipaquirá y del artículo de historia |
+| Landing de grupos | Zona común o comedor de una casa completa |
+| Landing de hospedaje | Zona común o habitación |
+| Fichas: La Margarita, Colonial Confort | Fotos que la ficha declara y aún no existen |
+
+Mientras no lleguen, `src/components/Foto.astro` **no pinta nada** si no hay
+imagen, y los bloques que quedaban vacíos se retiraron del marcado. En cuanto
+se suba la foto desde el panel, aparece sola.
+
+Reglas al reponerlas: nada generado por IA presentado como fotografía real,
+nada de fotos de otra propiedad, y ningún render pasando por estado actual.

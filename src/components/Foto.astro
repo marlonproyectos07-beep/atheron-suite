@@ -4,9 +4,15 @@
 
    Es la pieza que convierte "foto pendiente" en una foto de verdad
    sin tocar ni una linea de codigo: en cuanto subes la imagen desde
-   el panel, este componente deja de pintar el rectangulo y pinta la
-   foto. Las proporciones son las mismas, asi que el diseno no se
-   mueve.
+   el panel, este componente la pinta.
+
+   SIN IMAGEN NO PINTA NADA, Y ES DELIBERADO. Antes dibujaba un
+   rectangulo rayado con el texto "Foto pendiente". Eso servia mientras
+   el sitio era un borrador interno, pero al huesped le dice que la casa
+   no esta terminada. Direccion lo retiro el 8 de septiembre de 2026: lo
+   que falta se documenta dentro, no se le enseña al visitante. El
+   <slot> se conserva en la firma para no romper las llamadas que ya
+   pasan un texto, pero ese texto ya no se pinta.
 
    Sobre el texto alternativo (alt):
    es lo que lee un buscador y lo que oye alguien que usa lector de
@@ -118,6 +124,4 @@ if (src && !alt) {
     fetchpriority={prioridadRed}
     decoding="async"
   />
-) : (
-  <div class={clasePlaceholder}><slot /></div>
-)}
+) : null}
