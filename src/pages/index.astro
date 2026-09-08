@@ -548,17 +548,41 @@ const fichaNegocio = {
             El corte es el mismo 62rem donde ya cambia el velo. */
       if (!window.matchMedia('(min-width: 62rem)').matches) return;
 
-      var arrancado = false;
+      var iniciado = false;   /* la fuente ya esta puesta */
+      var programado = false; /* alguien ya pidio el arranque */
+      var reloj = null;
 
-      function arranca() {
-        if (arrancado) return;
-        arrancado = true;
+      /* Ni un temporizador ni un oyente sobreviven al arranque. */
+      function suelta() {
+        window.removeEventListener('load', programa);
+        document.removeEventListener('DOMContentLoaded', desdeDom);
+        if (reloj) { clearTimeout(reloj); reloj = null; }
+      }
 
-        /* El hero esta arriba del todo, pero el navegador puede
-           restaurar la posicion de lectura al recargar. Si no se ve,
-           no se descarga nada. */
+      function reproduce() {
+        var p = v.play();
+        if (p && typeof p.catch === 'function') {
+          p.catch(function () {
+            /* Reproduccion automatica denegada. No se hace nada: la
+               imagen ya esta debajo y nadie nota que faltaba algo. */
+          });
+        }
+      }
+
+      /* UNICO punto de entrada, y es idempotente: los dos caminos
+         terminan aqui y solo el primero llega a hacer algo. */
+      function inicia() {
+        if (iniciado) return;
+
+        /* Si el hero no se ve -el navegador puede restaurar la posicion
+           de lectura al recargar- no se descarga nada todavia. No se
+           marca como iniciado: el observador reintentara si el visitante
+           sube. Marcarlo aqui gastaria el unico intento sin hacer nada. */
         var caja = v.getBoundingClientRect();
-        if (caja.bottom <= 0) return;
+        if (caja.bottom <= 0 || caja.top >= (window.innerHeight || 0)) return;
+
+        iniciado = true;
+        suelta();
 
         /* Algunos navegadores exigen la propiedad, no solo el atributo,
            para permitir la reproduccion automatica. */
@@ -579,45 +603,60 @@ const fichaNegocio = {
         }, { once: true });
 
         v.load();
-
-        var p = v.play();
-        if (p && typeof p.catch === 'function') {
-          p.catch(function () {
-            /* Reproduccion automatica denegada. No se hace nada: la
-               imagen ya esta debajo y nadie nota que faltaba algo. */
-          });
-        }
+        reproduce();
       }
 
-      /* Se espera a que la pagina termine y el hilo principal respire.
-         Antes de eso el video competiria por el ancho de banda con el
-         recurso LCP, que es exactamente lo que no puede pasar. */
+      /* Se cede el paso al hilo principal antes de tocar la red, para no
+         competir nunca con el recurso LCP. */
       function programa() {
+        if (programado || iniciado) return;
+        programado = true;
+        suelta();
         if (window.requestIdleCallback) {
-          window.requestIdleCallback(arranca, { timeout: 3000 });
+          window.requestIdleCallback(inicia, { timeout: 3000 });
         } else {
-          setTimeout(arranca, 1200);
+          setTimeout(inicia, 300);
         }
       }
 
-      if (document.readyState === 'complete') programa();
-      else window.addEventListener('load', programa, { once: true });
+      /* Red de seguridad. "load" espera a TODOS los recursos, incluidos
+         los de terceros: si una hoja externa se cuelga, load se retrasa
+         y sin esto el video no arrancaria nunca. El margen se cuenta
+         desde que el documento esta listo, muy por detras del LCP, asi
+         que no adelanta ninguna descarga. Gana el que llegue primero y
+         el otro camino se desactiva solo. */
+      function desdeDom() {
+        reloj = setTimeout(programa, 2500);
+      }
 
-      /* Fuera de pantalla o pestaña de fondo, no se gasta bateria. */
+      if (document.readyState === 'complete') {
+        programa();
+      } else {
+        window.addEventListener('load', programa, { once: true });
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', desdeDom, { once: true });
+        } else {
+          desdeDom();
+        }
+      }
+
+      /* Fuera de pantalla o pestaña de fondo, no se gasta bateria. Y si
+         el hero no estaba a la vista cuando tocaba arrancar, este es el
+         que lo reintenta. */
       if ('IntersectionObserver' in window) {
         new IntersectionObserver(function (entradas) {
           entradas.forEach(function (e) {
-            if (!arrancado) return;
-            if (e.isIntersecting) { var q = v.play(); if (q && q.catch) q.catch(function () {}); }
-            else v.pause();
+            if (!e.isIntersecting) { if (iniciado) v.pause(); return; }
+            if (iniciado) reproduce();
+            else if (programado) inicia();
           });
         }, { threshold: 0 }).observe(v);
       }
 
       document.addEventListener('visibilitychange', function () {
-        if (!arrancado) return;
+        if (!iniciado) return;
         if (document.hidden) v.pause();
-        else { var q = v.play(); if (q && q.catch) q.catch(function () {}); }
+        else reproduce();
       });
     })();
   </script>

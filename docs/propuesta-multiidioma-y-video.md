@@ -381,12 +381,37 @@ El video empieza a descargarse **después** del evento `load`, nunca antes.
 - **Procedencia.** El video es una recreación generada por IA de un lugar real e
   identificable, y el movimiento refuerza la lectura de metraje real mucho más que
   una imagen fija. Registrado en el apartado 8 de [fotografias.md](fotografias.md).
-- **Una fragilidad conocida.** El guion arranca en el evento `load`. Si un recurso
-  de terceros se cuelga, `load` se retrasa y el video no arranca. En este
-  contenedor pasa: la hoja de Google Fonts no es alcanzable y `load` se va a 12,7
-  segundos. En producción la fuente carga con normalidad, pero la dependencia
-  existe. Si molesta, la solución es arrancar con `load` **o** un temporizador
-  desde `DOMContentLoaded`, lo que ocurra primero.
+#### El arranque: dos caminos, una sola puerta
+
+Resuelto el 8 de septiembre de 2026, sobre `aaccb55`. El guion arrancaba solo con
+`load`, y `load` espera a **todos** los recursos, incluidos los de terceros: si una
+hoja externa se cuelga, el video no arranca nunca. No es hipotético — pasa en el
+contenedor donde se prueba esto, donde Google Fonts no es alcanzable y `load` se va
+a 12,7 segundos.
+
+Ahora hay dos disparadores y una sola función de entrada, idempotente:
+
+1. **`load`**, el camino normal.
+2. **`DOMContentLoaded` + 2,5 s**, la red de seguridad.
+
+Gana el que llegue primero; el otro se desactiva solo, y con él su temporizador y
+sus oyentes. El margen se cuenta desde que el documento está listo, muy por detrás
+del LCP, así que no adelanta ninguna descarga.
+
+La función de inicio no se limita a comprobar un booleano: **si el hero no está a
+la vista, no se marca como iniciada**. Antes consumía el único intento sin hacer
+nada, y quien recargara con la página desplazada se quedaba sin video para
+siempre. Ahora el `IntersectionObserver` lo reintenta si el visitante sube.
+
+Medido, con la hoja externa cortada al instante y colgada a propósito:
+
+| | `load` normal | `load` colgado por un tercero |
+|---|---|---|
+| DOM listo | 214 ms | 139 ms |
+| `load` | 229 ms | no llegó a ocurrir |
+| Empieza la descarga | **292 ms** (por `load`) | **2.628 ms** (por la red de seguridad) |
+
+Antes del cambio, la segunda columna era 12,7 segundos.
 
 ---
 
