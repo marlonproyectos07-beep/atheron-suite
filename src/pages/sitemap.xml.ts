@@ -49,6 +49,7 @@ const paginasFijas: Entrada[] = [
   { ruta: '/landing/hospedaje-en-zipaquira', prioridad: '0.9' },
   { ruta: '/landing/casas-para-grupos-en-zipaquira', prioridad: '0.9' },
   { ruta: '/hospedajes', prioridad: '0.8' },
+  { ruta: '/grupos', prioridad: '0.8' },
   { ruta: '/blog', prioridad: '0.7' },
 ];
 

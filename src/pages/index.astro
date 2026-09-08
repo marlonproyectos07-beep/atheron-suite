@@ -126,12 +126,21 @@ const fichaNegocio = {
 
         {/* El precio es texto visible y nada mas. No entra en JSON-LD:
             declararlo como oferta estructurada obligaria a sostener
-            condiciones, vigencia y disponibilidad que no tenemos. */}
+            condiciones, vigencia y disponibilidad que no tenemos.
+
+            "Tarifa de referencia" y no una cifra a secas: un grupo de
+            diez multiplica mentalmente por diez, le sale seiscientos
+            cincuenta mil y se va antes de enterarse de que existe otra
+            tarifa. La linea de grupos va pegada al precio, no tres
+            bloques mas abajo, porque ahi es donde se toma esa decision. */}
         <p class="hero__precio">
-          <strong>$65.000</strong> <span>por persona</span>
+          <span class="hero__precio-rotulo">Tarifa de referencia</span>
+          <span class="hero__precio-cifra"><strong>$65.000</strong> por persona</span>
         </p>
 
-        <p class="hero__grupos">Tarifas especiales para grupos</p>
+        <p class="hero__grupos">
+          ¿Viajan en grupo? Cotizamos una tarifa especial.
+        </p>
 
         <p class="hero__texto">
           Casas y habitaciones para parejas, familias y grupos.
@@ -255,10 +264,14 @@ const fichaNegocio = {
           <p class="texto-suave" style="margin-bottom: var(--esp-3);">
             Ahi entendimos dos cosas. Que el turismo en Zipaquirá crecia mas
             rapido que su capacidad de atenderlo, y que buena parte del valor que
-            ese turismo genera se estaba yendo de la region. Empezamos con
-            recursos limitados y unos pocos hospedajes, aprendiendo de cada
-            huésped y mejorando cada propiedad con lo que ese mismo trabajo iba
-            dejando.
+            ese turismo genera se estaba yendo de la region.
+          </p>
+
+          <p class="texto-suave" style="margin-bottom: var(--esp-3);">
+            Todo comenzó con una habitación: la Suite 301. Despues fueron
+            naciendo otras habitaciones, otras propiedades y las alianzas que hoy
+            nos permiten recibir grupos. Cada una se levanto aprendiendo del
+            huésped anterior y con lo que ese mismo trabajo iba dejando.
           </p>
 
           <p class="texto-suave" style="margin-bottom: var(--esp-3);">
@@ -283,10 +296,13 @@ const fichaNegocio = {
           </div>
         </div>
 
+        {/* La primera habitación, la que empezo todo. Es la fotografia
+            que le corresponde al texto: no un paisaje generico. */}
         <div class="bloque-doble__media">
-          <div class="placeholder placeholder--alto">
-            Foto pendiente<br />Zipaquirá o primera propiedad
-          </div>
+          <Foto
+            src="/assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg"
+            alt="Suite 301, la primera habitación de Atheron en Zipaquirá, con cama doble y camarote"
+          />
         </div>
 
       </div>
@@ -352,6 +368,50 @@ const fichaNegocio = {
           </a>
         </div>
 
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         4.bis PROYECTOS ATHERON — CASA COLONIAL CENTRO
+
+         Va en su PROPIA seccion y no mezclada entre los hospedajes,
+         a proposito: lo que se puede reservar hoy y lo que todavia
+         es un proyecto no pueden compartir rejilla, o el visitante
+         intentara reservar algo que no existe.
+
+         El enlace lleva rel="nofollow" y la pagina sigue en noindex.
+         Que se pueda descubrir navegando no es lo mismo que pedirle
+         a Google que la indexe.
+         ============================================================ */}
+    <section class="seccion" id="proyectos">
+      <div class="contenedor">
+        <span class="etiqueta">Próximamente · Proyectos Atheron</span>
+        <h2>Casa Colonial Centro</h2>
+
+        <p class="texto-grande texto-suave" style="max-width: 60ch; margin-block: var(--esp-2) var(--esp-2);">
+          Un nuevo proyecto en el corazón de Zipaquirá.
+        </p>
+
+        <p class="texto-suave" style="max-width: 62ch; margin-bottom: var(--esp-3);">
+          Una casa colonial en transformación para integrar alojamiento,
+          gastronomía, experiencias y encuentros en el centro de Zipaquirá.
+        </p>
+
+        <p class="tarjeta__meta" style="margin-bottom: var(--esp-3);">
+          <span>Hotel</span><span>Restaurante</span><span>Cafetería</span>
+          <span>Gastrobar</span><span>Eventos</span>
+        </p>
+
+        <div class="grupo-botones">
+          <a
+            class="boton boton--contorno boton--grande"
+            href="/proyectos/casa-colonial-centro"
+            rel="nofollow"
+          >
+            Conocer el proyecto
+          </a>
+        </div>
       </div>
     </section>
 

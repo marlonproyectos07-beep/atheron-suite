@@ -1,0 +1,215 @@
+---
+/* ============================================================
+   GRUPOS — pagina exploratoria, no landing de campaña
+
+   POR QUE EXISTE, Y POR QUE NO BASTABA LA LANDING
+
+   El menu "Grupos" llevaba a /landing/casas-para-grupos-en-zipaquira,
+   que esta hecha a proposito SIN menu: una landing de campaña tiene un
+   solo objetivo y cada enlace es una puerta para distraerse. Eso esta
+   bien para quien llega desde un anuncio con la intencion ya formada.
+
+   Pero la intencion cambia. "Eramos quince, al final somos cuatro" es
+   una frase normal, y quien la dice necesita volver a hospedajes sin
+   depender del boton atras del navegador. Esta pagina es ese camino:
+   misma informacion de grupos, con navegacion completa.
+
+   La landing NO se toca ni se retira. Cada una sirve a un trafico
+   distinto.
+
+   DE DONDE SALEN LAS PROPIEDADES
+
+   De la misma coleccion que alimenta las fichas, nunca de datos
+   escritos aqui. Y solo entran las que declaran en su propia ficha una
+   cifra validada de personas: si una propiedad no dice cuanta gente
+   admite, no aparece como opcion para grupos. Preferimos una lista
+   corta y cierta a una larga y supuesta.
+   ============================================================ */
+
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Cabecera from '../components/Cabecera.astro';
+import Pie from '../components/Pie.astro';
+import BotonFlotante from '../components/BotonFlotante.astro';
+import Foto from '../components/Foto.astro';
+import { menuHospedajes } from '../data/navegacion';
+import { migaDePan, url, ORGANIZACION } from '../data/seo';
+
+/* Una cifra sirve para grupos cuando habla de PERSONAS y esta
+   validada en la ficha. "13 habitaciones" no dice cuanta gente cabe;
+   "28 personas en camas fijas" si. */
+const HABLA_DE_PERSONAS = /hu[eé]sped|persona/i;
+
+const capacidadDe = (datos: { numero: string; texto: string; pendiente?: boolean }[] = []) =>
+  datos.find((d) => !d.pendiente && HABLA_DE_PERSONAS.test(d.texto));
+
+const todos = (await getCollection('hospedajes'))
+  .filter((f) => f.data.publicado)
+  .sort((a, b) => a.data.orden - b.data.orden);
+
+const paraGrupos = todos
+  .map((f) => ({ f, capacidad: capacidadDe(f.data.datos as never) }))
+  .filter((x) => x.capacidad);
+
+/* Las publicadas que NO declaran una cifra de personas. No se ocultan
+   del sitio -tienen su ficha- pero tampoco se presentan aqui como
+   opcion de grupo mientras el dato no exista. */
+const sinCifraDePersonas = todos.filter((f) => !capacidadDe(f.data.datos as never));
+
+const WA_GRUPO =
+  'Hola, Atheron. Somos un grupo y quisiera cotizar hospedaje en Zipaquirá. Somos [numero] personas y viajamos el [fecha].';
+
+const fichaPagina = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      '@id': url('/grupos') + '#pagina',
+      url: url('/grupos'),
+      name: 'Alojamiento para grupos en Zipaquirá',
+      description:
+        'Casas, apartamentos y habitaciones de Atheron para familias, empresas, delegaciones y grupos que visitan Zipaquirá.',
+      isPartOf: { '@id': ORGANIZACION['@id'] },
+      inLanguage: 'es-CO',
+    },
+    migaDePan([
+      { nombre: 'Inicio', ruta: '/' },
+      { nombre: 'Grupos', ruta: '/grupos' },
+    ]),
+  ],
+};
+---
+
+<Base
+  titulo="Alojamiento para grupos en Zipaquirá | Atheron Suite"
+  descripcion="Casas, apartamentos y habitaciones en Zipaquirá para familias, empresas, delegaciones y grupos. Cotizamos una tarifa especial según el número de personas."
+  ruta="/grupos"
+  ogTitulo="Alojamiento para grupos en Zipaquirá | Atheron Suite"
+  ogDescripcion="Opciones para familias, empresas y grupos que visitan Zipaquirá y la Catedral de Sal."
+  jsonLd={fichaPagina}
+>
+
+  <Cabecera enlaces={menuHospedajes} cta={{ texto: 'Cotizar mi grupo', href: '#cotizar', clase: 'boton--whatsapp', whatsapp: WA_GRUPO }} actual="/grupos" />
+
+  <main id="contenido">
+
+    <section class="hero hero--interior">
+      <div class="contenedor hero__contenido">
+        <span class="hero__etiqueta">Alojamiento para grupos · Zipaquirá</span>
+
+        <h1 class="hero__titulo">¿Viajan en grupo? Encontramos la mejor combinación.</h1>
+
+        <p class="hero__texto">
+          Casas, apartamentos y habitaciones para familias, empresas,
+          delegaciones y grupos que visitan Zipaquirá.
+        </p>
+
+        <div class="grupo-botones">
+          <a class="boton boton--acento boton--grande" href="#cotizar" data-whatsapp={WA_GRUPO}>
+            Cotizar mi grupo
+          </a>
+          <a class="boton boton--claro boton--grande" href="/hospedajes">
+            Ver hospedajes
+          </a>
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         OPCIONES CON CAPACIDAD CONFIRMADA
+         ============================================================ */}
+    <section class="seccion" id="opciones">
+      <div class="contenedor">
+        <span class="etiqueta">Opciones para grupos</span>
+        <h2>Lo que hoy podemos confirmar</h2>
+        <p class="texto-suave" style="max-width: 62ch; margin-block: var(--esp-2) var(--esp-4);">
+          Cada capacidad de esta lista sale de la ficha de la propiedad, no de
+          una estimación. Si una combinación necesita más personas de las que
+          ves aquí, escríbenos: solemos resolverlo repartiendo el grupo entre
+          varias propiedades.
+        </p>
+
+        <div class="grid grid--3">
+          {paraGrupos.map(({ f, capacidad }) => (
+            <article class="tarjeta aparecer">
+              <div class="tarjeta__media">
+                <a class="tarjeta__imagen-enlace" href={`/hospedajes/${f.id}`} aria-label={`Ver ${f.data.nombre}`}>
+                  <Foto src={f.data.fotoTarjeta} alt={f.data.fotoTarjetaAlt} />
+                </a>
+                <span class="tarjeta__insignia">{capacidad!.numero} {capacidad!.texto.toLowerCase()}</span>
+              </div>
+
+              <div class="tarjeta__cuerpo">
+                <h3 class="tarjeta__titulo">
+                  <a href={`/hospedajes/${f.id}`}>{f.data.nombre}</a>
+                </h3>
+
+                {/* Solo se pintan los datos que la ficha declara validados.
+                    Nada de esta linea lo escribe esta pagina. */}
+                <p class="tarjeta__meta">
+                  {(f.data.datos ?? [])
+                    .filter((d: { pendiente?: boolean }) => !d.pendiente)
+                    .slice(0, 3)
+                    .map((d: { numero: string; texto: string }) => (
+                      <span><strong>{d.numero}</strong> {d.texto.toLowerCase()}</span>
+                    ))}
+                </p>
+
+                <div class="tarjeta__pie">
+                  <div class="tarjeta__acciones">
+                    <a class="boton boton--contorno" href={`/hospedajes/${f.id}`}>
+                      Ver alojamiento
+                    </a>
+                    <a
+                      class="boton boton--whatsapp"
+                      href="#cotizar"
+                      data-whatsapp={`Hola, Atheron. Quisiera cotizar ${f.data.nombre} para un grupo. Somos [numero] personas.`}
+                    >
+                      Cotizar grupo
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        {sinCifraDePersonas.length > 0 && (
+          <p class="texto-suave" style="margin-top: var(--esp-4); max-width: 62ch;">
+            Hay más propiedades publicadas en el
+            <a href="/hospedajes"> catálogo completo</a>. No aparecen en esta
+            lista porque su ficha todavía no declara una capacidad total de
+            personas, no porque no puedan recibir un grupo.
+          </p>
+        )}
+      </div>
+    </section>
+
+    {/* ============================================================
+         COTIZAR
+         ============================================================ */}
+    <section class="seccion seccion--oscura" id="cotizar">
+      <div class="contenedor" style="max-width: 62ch;">
+        <span class="etiqueta">Cotizar</span>
+        <h2>Cuéntanos el grupo y te devolvemos una propuesta</h2>
+        <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+          Con el número de personas, las fechas y cuántas noches, te decimos qué
+          combinación funciona y con qué tarifa. Si el grupo no cabe en una sola
+          propiedad, lo repartimos.
+        </p>
+        <div class="grupo-botones">
+          <a class="boton boton--whatsapp boton--grande" href="#cotizar" data-whatsapp={WA_GRUPO}>
+            Cotizar mi grupo
+          </a>
+          <a class="boton boton--claro boton--grande" href="/landing/casas-para-grupos-en-zipaquira">
+            Ver casas completas para grupos
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <Pie />
+  <BotonFlotante href="#cotizar" mensaje={WA_GRUPO} />
+</Base>

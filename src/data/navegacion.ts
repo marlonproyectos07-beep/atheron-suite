@@ -46,7 +46,10 @@ export const menuHome: Enlace[] = [
   { texto: 'Hospedajes', href: '/hospedajes' },
   { texto: 'Zipaquirá', href: '#zipaquira' },
   { texto: 'Experiencias', href: '#experiencias' },
-  { texto: 'Grupos', href: '/landing/casas-para-grupos-en-zipaquira' },
+  /* Apunta a la pagina exploratoria, no a la landing de campaña: desde
+     el menu se llega curioseando, y hay que poder cambiar de idea. La
+     landing sigue existiendo para el trafico de anuncios. */
+  { texto: 'Grupos', href: '/grupos' },
   { texto: 'Blog', href: '/blog' },
   { texto: 'Contacto', href: '#contacto' },
 ];
@@ -63,6 +66,7 @@ export const menuHomeMovil: Enlace[] = menuHome.map((enlace) =>
 export const menuHospedajes: Enlace[] = [
   { texto: 'Inicio', href: '/' },
   { texto: 'Hospedajes', href: '/hospedajes' },
+  { texto: 'Grupos', href: '/grupos' },
   { texto: 'Zipaquirá', href: '/#zipaquira' },
   { texto: 'Blog', href: '/blog' },
   { texto: 'Contacto', href: '/#contacto' },
