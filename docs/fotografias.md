@@ -186,3 +186,44 @@ oculto: es la regla fijada el 21 de agosto y está descrita en §21.9 de
 > iluminación, exposición, balance de blancos, perspectiva, ruido, nitidez, color
 > y pequeñas distracciones visuales. El resultado debe parecer una fotografía
 > hotelera profesional **del mismo lugar**, nunca un render.
+
+---
+
+## 8. Registro de procedencia de activos visuales
+
+Aquí queda constancia de cada imagen del sitio cuyo origen **no** sea una
+fotografía tomada del lugar. La lista existe para que nadie tenga que
+deducirlo mirando el archivo: los ficheros llegan sin EXIF, sin XMP y sin
+C2PA, así que la procedencia no se puede comprobar desde el repositorio.
+Si no está escrita, se pierde.
+
+### 8.1 Hero de la portada
+
+| | |
+|---|---|
+| **Archivo** | `public/assets/img/portada/zipaquira-centro-historico-atardecer-*.{avif,webp}` |
+| **Procedencia** | Activo visual generado con inteligencia artificial para Atheron. Recreación visual conceptual de Zipaquirá. **No constituye fotografía documental del lugar.** |
+| **Aprobado por** | Marlon, sobre el commit `c42d78f`, el 8 de septiembre de 2026 |
+| **Alcance** | Prueba en la rama `astro`. **No autorizado para producción todavía.** |
+| **Cómo se presenta** | Imagen decorativa: `alt` vacío y `aria-hidden`. No se describe en ningún texto visible, ni en `alt`, ni en Open Graph, ni en JSON-LD. |
+
+**Lo que no se puede hacer con este activo**, y es el motivo de que el registro
+exista: no se describe en público como fotografía real, ni como toma real de
+dron, ni se le atribuye autoría fotográfica. Si algún día se le pone pie de
+foto, texto alternativo o mención en redes, tiene que decir lo que es.
+
+### 8.2 Relación con la regla del apartado 7
+
+El apartado 7 registra una decisión que sigue vigente: **no se usan fotografías
+generadas por IA**. Esa regla habla de las **fichas de hospedaje**, donde una
+imagen generada engañaría sobre lo que el huésped va a encontrarse: el tamaño de
+la habitación, las camas, el baño, los acabados.
+
+El hero de la portada es un caso distinto y una **excepción explícita**: no
+muestra ningún alojamiento, no promete nada verificable sobre una estancia y
+funciona como fondo del titular. Aun así es una excepción, no una puerta abierta:
+está aquí escrita, con fecha y con quien la aprobó, igual que la de las siete
+imágenes de la Suite 301 recogida en §23.1 de
+[CONTINUIDAD-PROYECTO.md](CONTINUIDAD-PROYECTO.md).
+
+Toda excepción nueva se registra en este apartado antes de entrar en el sitio.

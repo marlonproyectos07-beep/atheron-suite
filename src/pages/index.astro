@@ -73,13 +73,18 @@ const fichaNegocio = {
          ============================================================ */}
     <section class="hero hero--portada">
 
-      {/* PRUEBA VISUAL. El archivo llega sin metadatos de procedencia,
-          asi que no consta si es fotografia o imagen generada: ver la
-          nota de portada.css antes de publicar. Va sin texto alternativo
-          y oculta a los lectores de pantalla porque es decorativa: todo
-          lo que dice la portada esta en el H1 y en el parrafo. Se carga
-          con prioridad alta y sin diferir, porque es el elemento LCP;
-          las medidas van declaradas para que no desplace nada. */}
+      {/* Activo generado con inteligencia artificial: recreacion visual
+          conceptual de Zipaquira, no fotografia documental. Registro en
+          docs/fotografias.md. Por eso es decorativa, sin texto
+          alternativo y oculta a los lectores de pantalla: lo que dice la
+          portada esta en el H1 y en el parrafo, y asi no se afirma en
+          ningun sitio que sea una toma real. Se carga con prioridad alta
+          y sin diferir, porque es el elemento LCP; las medidas van
+          declaradas para que no desplace nada.
+
+          Fase 2 previstas: este <picture> pasara a ser el poster y el
+          fallback del video de fondo, y seguira siendo el LCP. El
+          contrato esta en docs/propuesta-multiidioma-y-video.md, B.6. */}
       <picture class="hero__fondo" aria-hidden="true">
         <source media="(max-width: 700px)" type="image/avif" srcset="/assets/img/portada/zipaquira-centro-historico-atardecer-700.avif" />
         <source media="(max-width: 700px)" type="image/webp" srcset="/assets/img/portada/zipaquira-centro-historico-atardecer-700.webp" />

@@ -10,11 +10,13 @@
 /* ------------------------------------------------------------
    HERO DE PORTADA CON IMAGEN — prueba visual
 
-   PROCEDENCIA SIN VERIFICAR. El archivo llega sin EXIF, sin XMP y sin
-   C2PA, asi que no hay forma de comprobar desde aqui si es una
-   fotografia o una imagen generada. Aprobada solo como prueba en
-   preview; antes de produccion aplica la regla 5 del proyecto y hace
-   falta la autorizacion expresa de Marlon.
+   PROCEDENCIA REGISTRADA: activo visual generado con inteligencia
+   artificial para Atheron. Recreacion visual conceptual de Zipaquira.
+   No constituye fotografia documental del lugar.
+
+   De ahi que la imagen sea decorativa y no lleve texto alternativo:
+   nunca debe describirse en publico como fotografia real ni como toma
+   real de dron. El registro esta en docs/fotografias.md.
 
    La imagen va en el HTML, no en background-image de CSS: asi el
    navegador la descubre en el primer analisis y puede tratarla como

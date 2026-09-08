@@ -273,6 +273,87 @@ nueva superficie de fallo. La aproximación por idioma es una heurística imperf
 **No se implementa ahora.** Solo se dejan los campos previstos para que añadirlo
 después no obligue a rehacer nada.
 
+### B.6 Video de fondo del hero — arquitectura preparada, sin implementar
+
+**Nada de esto está construido.** Es el contrato acordado para la fase 2, escrito
+antes de tocar código para que la discusión de diseño no ocurra a mitad de la
+implementación.
+
+**No es el patrón fachada de B.1.** Aquel resuelve un video que el visitante
+*decide* ver y pulsa. Este es un fondo decorativo que nadie pide y que, si se hace
+mal, cobra megabytes a quien solo venía a leer el titular. Las decisiones son casi
+opuestas y por eso va aparte.
+
+#### El punto de partida que no se toca
+
+El hero estático del commit `c42d78f` es la línea base. El `<picture>` actual
+—portada, `hero__fondo`— **sigue siendo el elemento LCP y el fallback**. Todo lo
+que se añada va por encima y solo cuando ya no pueda estropear esa medida.
+
+#### Las cinco reglas
+
+| Regla | Cómo se cumple |
+|---|---|
+| **El poster manda** | El `<video>` **no lleva atributo `poster`**. La imagen que se ve antes, durante y después es el `<picture>` que ya existe debajo. Así el candidato a LCP sigue siendo exactamente el mismo que hoy y no hay que volver a medirlo |
+| **Cero bytes por defecto** | `preload="none"` **y sin atributo `autoplay`**. Ver abajo: los dos juntos no bastan |
+| **Cero desplazamiento** | `position: absolute; inset: 0; object-fit: cover`, igual que la imagen. El video no participa del flujo, así que no puede mover nada |
+| **Decorativo** | `aria-hidden="true"`, sin pista de audio, sin controles, sin subtítulos. No comunica nada que no diga ya el H1 |
+| **Movimiento reducido** | Con `prefers-reduced-motion: reduce` **no se adjunta la fuente**. No es pausarlo: es no descargarlo |
+
+#### El detalle que se suele equivocar
+
+`preload="none"` **no impide la descarga si el elemento lleva `autoplay`**. El
+navegador respeta la intención de reproducir por encima de la de no precargar, y
+el video empieza a bajar durante la carga inicial, que es justo el momento que hay
+que proteger.
+
+La forma correcta es no declarar `autoplay` en el marcado. El `<video>` nace vacío
+—sin `<source>`— y un guion breve le adjunta la fuente y llama a `play()` cuando
+se cumplen a la vez estas condiciones:
+
+1. la página ya terminó de cargar y el hilo principal está libre;
+2. `prefers-reduced-motion` no está en `reduce`;
+3. `navigator.connection` no indica `saveData` ni una conexión lenta;
+4. el hero está en pantalla.
+
+`play()` devuelve una promesa que **puede rechazarse** —hay políticas de
+reproducción automática que ni el silencio salva—. Ese rechazo se captura y no se
+hace nada: la imagen estática ya está debajo y el visitante no percibe fallo
+alguno. Esa es la prueba de que el diseño es correcto: si todo lo nuevo falla, la
+portada queda exactamente como está hoy.
+
+#### Presupuesto y formatos
+
+| | |
+|---|---|
+| **Duración** | 6-10 segundos, en bucle |
+| **Formatos** | WebM (AV1 o VP9) como primera opción y MP4 (H.264) como respaldo |
+| **Peso** | Techo de 1,5 MB para el WebM. Un fondo decorativo que pese más que el resto de la página no se publica |
+| **Sonido** | Ninguna pista de audio en el archivo, no solo `muted` en el marcado |
+| **Resolución** | La misma altura útil que el hero. No tiene sentido servir 1080p para una banda recortada |
+
+#### Dónde encaja en el código
+
+Un único hermano dentro de `<section class="hero hero--portada">`, después del
+`<picture>` y antes del contenido. El velo de `::after` va en `z-index: 1` y el
+texto en `z-index: 2`, así que el video entra en `z-index: 0` sin tocar ninguna de
+las dos capas. El CSS vive en `portada.css`, que solo se incrusta en la portada.
+
+**No se añade ni una línea de CSS ni de marcado hasta que la fase 2 se autorice.**
+Dejar reglas preparadas para algo que no existe es exactamente el error que se
+corrigió al retirar `.hueco-hero`: CSS muerto viajando en cada página.
+
+#### Lo que hay que decidir antes de empezar
+
+- **Procedencia.** Animar el activo actual produce un video generado por IA de un
+  lugar real e identificable. El movimiento refuerza la lectura de metraje real
+  mucho más que una imagen fija. Aplica el registro del apartado 8 de
+  [fotografias.md](fotografias.md) y conviene resolver cómo se declara **antes**
+  de generarlo, no después.
+- **Rendimiento.** Hoy la portada da 100 en móvil con 78 KB transferidos. Hay que
+  fijar de antemano qué caída es aceptable, si la hay, y volver a medir con el
+  video puesto.
+
 ---
 
 ## C. Estructura de datos y CMS
