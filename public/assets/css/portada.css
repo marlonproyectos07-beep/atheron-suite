@@ -10,10 +10,11 @@
 /* ------------------------------------------------------------
    HERO DE PORTADA CON IMAGEN — prueba visual
 
-   PROCEDENCIA: la imagen es una RECREACION VISUAL GENERADA POR IA a
-   partir de referencias de Zipaquira. No es una fotografia. Esta
-   aprobada solo como prueba en preview; antes de produccion aplica la
-   regla 5 del proyecto y hace falta la autorizacion expresa de Marlon.
+   PROCEDENCIA SIN VERIFICAR. El archivo llega sin EXIF, sin XMP y sin
+   C2PA, asi que no hay forma de comprobar desde aqui si es una
+   fotografia o una imagen generada. Aprobada solo como prueba en
+   preview; antes de produccion aplica la regla 5 del proyecto y hace
+   falta la autorizacion expresa de Marlon.
 
    La imagen va en el HTML, no en background-image de CSS: asi el
    navegador la descubre en el primer analisis y puede tratarla como
@@ -39,9 +40,10 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* En escritorio la banda es mas ancha que alta: se baja el recorte
-     para que la plaza y la catedral no queden fuera por arriba. */
-  object-position: var(--encuadre, center 58%);
+  /* En escritorio la banda y la imagen tienen casi la misma relacion
+     -1,85 frente a 1,91-, asi que apenas se recorta y el centro es el
+     encuadre correcto: deja el cielo arriba y la plaza abajo. */
+  object-position: var(--encuadre, center 50%);
 }
 
 /* Velo de legibilidad. Mas denso a la izquierda, que es donde cae el
@@ -53,8 +55,8 @@
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(95deg, rgba(7, 15, 27, .88) 0%, rgba(7, 15, 27, .80) 46%, rgba(7, 15, 27, .50) 72%, rgba(7, 15, 27, .26) 100%),
-    linear-gradient(180deg, rgba(7, 15, 27, .30) 0%, rgba(7, 15, 27, .08) 45%, rgba(7, 15, 27, .40) 100%);
+    linear-gradient(95deg, rgba(7, 15, 27, .84) 0%, rgba(7, 15, 27, .75) 46%, rgba(7, 15, 27, .44) 72%, rgba(7, 15, 27, .18) 100%),
+    linear-gradient(180deg, rgba(7, 15, 27, .26) 0%, rgba(7, 15, 27, .08) 45%, rgba(7, 15, 27, .36) 100%);
   pointer-events: none;
 }
 
@@ -66,8 +68,8 @@
 @media (max-width: 62rem) {
   .hero--portada::after {
     background:
-      linear-gradient(95deg, rgba(7, 15, 27, .80) 0%, rgba(7, 15, 27, .72) 55%, rgba(7, 15, 27, .62) 100%),
-      linear-gradient(180deg, rgba(7, 15, 27, .30) 0%, rgba(7, 15, 27, .14) 50%, rgba(7, 15, 27, .38) 100%);
+      linear-gradient(95deg, rgba(7, 15, 27, .72) 0%, rgba(7, 15, 27, .64) 55%, rgba(7, 15, 27, .54) 100%),
+      linear-gradient(180deg, rgba(7, 15, 27, .26) 0%, rgba(7, 15, 27, .12) 50%, rgba(7, 15, 27, .34) 100%);
   }
 }
 
@@ -90,5 +92,5 @@
    escritorio, el hero se convierte en cielo y tejados. Se desplaza el
    recorte hacia la catedral, que es el punto de interes. */
 @media (max-width: 48rem) {
-  .hero__fondo img { object-position: var(--encuadre-movil, 61% 50%); }
+  .hero__fondo img { object-position: var(--encuadre-movil, 73% 50%); }
 }

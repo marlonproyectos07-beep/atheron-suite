@@ -73,13 +73,13 @@ const fichaNegocio = {
          ============================================================ */}
     <section class="hero hero--portada">
 
-      {/* PRUEBA VISUAL. La imagen es una recreacion generada por IA a
-          partir de referencias de Zipaquira, no una fotografia. Va sin
-          texto alternativo y oculta a los lectores de pantalla porque es
-          decorativa: todo lo que dice la portada esta en el H1 y en el
-          parrafo. Se carga con prioridad alta y sin diferir, porque es
-          el elemento LCP; las medidas van declaradas para que no
-          desplace nada al llegar. */}
+      {/* PRUEBA VISUAL. El archivo llega sin metadatos de procedencia,
+          asi que no consta si es fotografia o imagen generada: ver la
+          nota de portada.css antes de publicar. Va sin texto alternativo
+          y oculta a los lectores de pantalla porque es decorativa: todo
+          lo que dice la portada esta en el H1 y en el parrafo. Se carga
+          con prioridad alta y sin diferir, porque es el elemento LCP;
+          las medidas van declaradas para que no desplace nada. */}
       <picture class="hero__fondo" aria-hidden="true">
         <source media="(max-width: 700px)" type="image/avif" srcset="/assets/img/portada/zipaquira-centro-historico-atardecer-700.avif" />
         <source media="(max-width: 700px)" type="image/webp" srcset="/assets/img/portada/zipaquira-centro-historico-atardecer-700.webp" />
@@ -88,7 +88,7 @@ const fichaNegocio = {
           src="/assets/img/portada/zipaquira-centro-historico-atardecer-1600.webp"
           alt=""
           width="1600"
-          height="900"
+          height="837"
           loading="eager"
           fetchpriority="high"
           decoding="async"
