@@ -632,11 +632,53 @@ function idHabitacion(nombre) {
                         ))}
                     </div>
                     <p class="texto-suave"><Marca texto={h.descripcion} pendiente={h.pendiente} /></p>
+
+                    {/* Piso y acceso van juntos y antes del precio: para
+                        quien sube con maleta, con un niño o con movilidad
+                        reducida, "solo escaleras" decide la reserva, y
+                        enterarse al llegar es la peor forma de saberlo. */}
+                    {(h.piso || h.acceso) && (
+                      <p class="habitacion__acceso">
+                        {[h.piso, h.acceso].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+
+                    {/* TARIFA POR OCUPACION
+
+                        Una lista, no una tabla: en un movil de 360 px una
+                        tabla de siete filas y dos columnas se sale o se
+                        encoge hasta no leerse. Cada linea se lee sola y el
+                        precio queda alineado a la derecha.
+
+                        Solo se pinta lo que la ficha declara. No se
+                        interpola ni se deduce ninguna ocupacion que no
+                        este en la matriz validada. */}
+                    {h.tarifas.length > 0 && (
+                      <div class="tarifas">
+                        <p class="tarifas__titulo">Tarifa por noche, según cuántos duerman</p>
+                        <ul class="tarifas__lista">
+                          {h.tarifas.map((t) => (
+                            <li>
+                              <span>{t.huespedes} {t.huespedes === 1 ? 'huésped' : 'huéspedes'}</span>
+                              <strong>{t.precio}</strong>
+                            </li>
+                          ))}
+                        </ul>
+                        {h.notaTarifas && <p class="tarifas__nota">{h.notaTarifas}</p>}
+                      </div>
+                    )}
+
                     <div class="tarjeta__pie">
+                      {/* Si la habitacion ya publica su matriz por
+                          ocupacion, esta linea repetiria lo que la tabla
+                          acaba de decir, y encima peor: "Segun ocupacion"
+                          justo debajo de la ocupacion no informa de nada. */}
+                      {h.tarifas.length === 0 && (
                       <span class="tarjeta__precio">
                         <Marca texto={h.precio} pendiente={h.pendiente} />
                         {/\d/.test(h.precio) && <span> / noche</span>}
                       </span>
+                      )}
                       <div class="tarjeta__acciones">
                         {h.galeria.length > 0 && (
                           <button

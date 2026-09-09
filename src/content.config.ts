@@ -129,6 +129,43 @@ const habitación = z.object({
   descripcion: z.string(),
   precio: z.string().default('$ ---'),
   pendiente: z.boolean().default(false),
+
+  /* ----------------------------------------------------------
+     TARIFA POR OCUPACION
+
+     El precio de arriba es una linea de texto para la tarjeta. Esto
+     es el dato de verdad: cuanto cuesta la noche segun cuanta gente
+     duerme. Va estructurado y no en prosa porque manana lo tiene que
+     leer un cotizador, el concierge, Odoo o un canal externo, y una
+     frase no se consulta.
+
+     Vacio = esta habitacion todavia no tiene matriz validada, y
+     entonces no se pinta ninguna tabla. Nunca se interpola ni se
+     deduce un precio que no este en esta lista.
+     ---------------------------------------------------------- */
+  tarifas: z
+    .array(
+      z.object({
+        huespedes: z.number().int().positive(),
+        precio: z.string(),
+      }),
+    )
+    .default([]),
+  /* Aviso corto bajo la tabla: acomodaciones extraordinarias, minimos
+     de temporada, lo que sea que la tabla no pueda decir sola. */
+  notaTarifas: textoOpcionalPanel,
+
+  /* Donde esta y como se llega. "solo escaleras" no es un detalle:
+     para quien va con equipaje pesado, con un niño o con movilidad
+     reducida es la diferencia entre reservar y no reservar, y
+     enterarse al llegar es la peor forma de saberlo. */
+  piso: textoOpcionalPanel,
+  acceso: textoOpcionalPanel,
+
+  /* Capacidad comoda frente a capacidad maxima. No son lo mismo y
+     confundirlas produce huespedes decepcionados: cuatro personas
+     caben, pero puede que solo tres duerman bien. */
+  capacidadComoda: textoOpcionalPanel,
   foto: textoOpcionalPanel,
   fotoAlt: textoOpcionalPanel,
 

@@ -4,12 +4,12 @@ publicado: true
 orden: 1
 insignia: '01'
 titulo: Hotel Atheron Suite | Hospedaje a 16 min de la Catedral de Sal
-descripcion: Hospedaje en Zipaquirá a 1,4 km de la Catedral de Sal. Wifi, Netflix, cocina compartida, parqueadero y vistas a la montana. Consulta disponibilidad por WhatsApp.
+descripcion: Hospedaje en Zipaquirá a 1,4 km de la Catedral de Sal. Wifi, Netflix, cocina compartida y baño privado en tres de sus cinco unidades. Consulta disponibilidad por WhatsApp.
 ogTitulo: Hotel Atheron Suite | Zipaquirá, Cundinamarca
 ogDescripcion: Hospedaje en Zipaquirá a 16 minutos a pie de la Catedral de Sal. Wifi, Netflix, cocina y parqueadero.
 avisoBorrador: ''
 zona: 'Cra. 9 #10-32, Zipaquirá'
-presentacion: A 16 minutos caminando de la Catedral de Sal, con minicocina en la habitación, cocina compartida con estufa, wifi, Netflix y vistas a la montana. Pensado para quedarse mas de una noche sin sentir que estas en un hotel de paso.
+presentacion: A 16 minutos caminando de la Catedral de Sal, con cocina compartida con estufa, wifi y Netflix. Pensado para quedarse mas de una noche sin sentir que estas en un hotel de paso.
 presentacionPendiente: false
 fotoTarjeta: /assets/img/hospedajes/la-magia-de-zipaquira-sala.jpg
 fotoTarjetaAlt: Sala principal del Hotel Atheron Suite con televisor y barra
@@ -41,7 +41,7 @@ caracteristicas:
     pendiente: false
   - texto: Parqueadero
     pendiente: false
-  - texto: Vistas a la montana
+  - texto: Cocina compartida con estufa
     pendiente: false
   - texto: Televisor de pantalla plana
     pendiente: false
@@ -52,7 +52,7 @@ listadoSegundoDato: 1,4 km a la Catedral de Sal
 listadoSegundoDatoSufijo: ''
 listadoEnlaceTexto: Ver Hotel Atheron Suite
 resumen: Apartamentos con minicocina y cocina compartida con estufa, wifi y Netflix, a 16 minutos caminando de la Catedral de Sal.
-precio: Desde $ 150.000
+precio: Desde $ 50.000
 precioPendiente: false
 notaHabitaciones: 'Hasta 7 huéspedes con las camas fijas. Para grupos de 8 a 10 anadimos camas adicionales: escribenos y lo coordinamos directamente.'
 heroFoto: true
@@ -85,13 +85,26 @@ casaCompleta:
 habitaciones:
   - nombre: Habitación 201
     tipoBano: compartido
-    camas: 1 cama doble
-    banos: Bano compartido
+    huespedes: Hasta 2
+    camas: 1 cama doble de 1,40 m
+    banos: Baño compartido solo con la 202
+    piso: 'Piso 2'
+    acceso: Solo escaleras, sin ascensor
+    capacidadComoda: Hasta 2 huéspedes
+    tarifas:
+      - huespedes: 1
+        precio: $ 50.000
+      - huespedes: 2
+        precio: $ 80.000
     descripcion: >-
-      Una opcion comoda en el segundo piso de Atheron Suite, con cama doble,
-      TV, Wi-Fi y Netflix. Los huéspedes cuentan ademas con acceso a la
-      cocina compartida del segundo piso.
-    precio: Precio a consultar
+      Habitación para dos en el segundo piso, con cama doble de 1,40 m,
+      TV con Netflix, Wi-Fi y ventana al exterior. El baño se comparte
+      únicamente con la 202, con ducha eléctrica, y la cocina del segundo
+      piso es de uso compartido: tiene estufa, nevera, cafetera, platos,
+      ollas y utensilios. Lleva perchero, mesa de noche y cajón; no tiene
+      clóset ni aire acondicionado. Se entra con llave, y el edificio tiene
+      control de acceso.
+    precio: Según ocupación
     pendiente: false
     foto: /assets/img/hospedajes/hotel-atheron-suite-201-vista-general.jpg
     fotoAlt: Habitación 201 con cama doble, televisión en la pared de listones y ventana a la calle
@@ -108,13 +121,29 @@ habitaciones:
         alt: Cocina compartida del segundo piso del Hotel Atheron Suite en Zipaquirá, con estufa a gas, horno, nevera y mesa
   - nombre: Habitación 202
     tipoBano: compartido
-    camas: 1 cama doble y 1 camarote
-    banos: Bano compartido
+    huespedes: Hasta 4
+    camas: 1 cama doble de 1,40 m y 1 camarote
+    banos: Baño compartido solo con la 201
+    piso: 'Piso 2'
+    acceso: Solo escaleras, sin ascensor
+    capacidadComoda: Hasta 4 huéspedes
+    tarifas:
+      - huespedes: 1
+        precio: $ 50.000
+      - huespedes: 2
+        precio: $ 80.000
+      - huespedes: 3
+        precio: $ 110.000
+      - huespedes: 4
+        precio: $ 140.000
     descripcion: >-
-      Una habitación comoda en el segundo piso, con cama doble, camarote, TV,
-      Wi-Fi y Netflix. Cuenta con acceso al bano y a la cocina compartidos del
-      segundo piso.
-    precio: Precio a consultar
+      Habitación para hasta cuatro en el segundo piso, con cama doble de
+      1,40 m y camarote, TV con Netflix, Wi-Fi y ventana al exterior. El
+      baño se comparte únicamente con la 201, con ducha eléctrica, y la
+      cocina del segundo piso es de uso compartido. Lleva perchero y
+      repisa; no tiene clóset. Acceso individual con llave y control de
+      acceso en el edificio.
+    precio: Según ocupación
     pendiente: false
     foto: /assets/img/hospedajes/hotel-atheron-suite-202-vista-general.jpg
     fotoAlt: Habitación 202 con cama doble y camarote, mural de bosque y televisión en la pared
@@ -135,13 +164,29 @@ habitaciones:
         alt: Cocina compartida del segundo piso del Hotel Atheron Suite en Zipaquirá, con estufa a gas, horno, nevera y mesa
   - nombre: Habitación 203
     tipoBano: privado
-    camas: 1 cama nido
-    banos: Bano privado
+    huespedes: Hasta 4
+    camas: 1 cama doble y 1 cama nido extraíble
+    banos: Baño privado
+    piso: 'Piso 2'
+    acceso: Solo escaleras, sin ascensor
+    capacidadComoda: Hasta 4 huéspedes
+    tarifas:
+      - huespedes: 1
+        precio: $ 65.000
+      - huespedes: 2
+        precio: $ 120.000
+      - huespedes: 3
+        precio: $ 140.000
+      - huespedes: 4
+        precio: $ 160.000
     descripcion: >-
-      Una opcion comoda en el segundo piso de Atheron Suite, con cama nido, TV,
-      Wi-Fi y bano privado. Los huéspedes cuentan ademas con acceso a la cocina
-      compartida del segundo piso.
-    precio: Precio a consultar
+      Habitación con baño privado en el segundo piso, para hasta cuatro:
+      cama principal doble y cama nido extraíble con ruedas. Agua caliente
+      con calentador a gas, TV con Netflix, Wi-Fi, perchero y dos repisas,
+      además de la cocina compartida del segundo piso. No tiene ventana al
+      exterior, lo que la convierte en una de las opciones más tranquilas
+      para quien prioriza el descanso.
+    precio: Según ocupación
     pendiente: false
     foto: /assets/img/hospedajes/hotel-atheron-suite-203-cama.jpg
     fotoAlt: Habitación 203 con cama de cabecero azul capitone y mural de atardecer en la playa
@@ -166,19 +211,40 @@ habitaciones:
     destacada: true
     etiquetaVer: Ver suite
     huespedes: Hasta 7
-    camas: 1 cama doble con cama nido debajo, 1 camarote y 1 sofa cama
-    banos: '1'
+    camas: 1 cama doble, 1 camarote amplio y 1 sofá cama
+    banos: Baño privado
+    piso: 'Piso 3'
+    acceso: Solo escaleras, sin ascensor
+    capacidadComoda: Ideal para 4 a 6 huéspedes
+    notaTarifas: Para grupos de más de 7 personas, consúltanos. Son acomodaciones extraordinarias y se confirman caso por caso.
+    tarifas:
+      - huespedes: 1
+        precio: $ 80.000
+      - huespedes: 2
+        precio: $ 150.000
+      - huespedes: 3
+        precio: $ 175.000
+      - huespedes: 4
+        precio: $ 200.000
+      - huespedes: 5
+        precio: $ 250.000
+      - huespedes: 6
+        precio: $ 300.000
+      - huespedes: 7
+        precio: $ 350.000
     descripcion: >-
-      Suite amplia y elegante, automatizada con Alexa: enciendes luces,
-      televisor y musica con la voz. Se entra por puerta inteligente con clave
-      digital, y la barra es el punto de reunion. Tiene una practica estacion
-      para bebidas y alimentos ligeros, con nevera, cafetera, hervidor, platos,
-      copas y utensilios basicos; no hay estufa dentro de la habitación, y para
-      cocinar de verdad esta la cocina compartida del segundo piso, con estufa a
-      gas, nevera, ollas y utensilios, de libre uso. A una cuadra tienes
-      supermercados, droguerias, panaderias y restaurantes, y en quince minutos
-      caminando estas en el centro histórico y la Catedral de Sal.
-    precio: Desde $ 150.000
+      Suite de un solo ambiente en el tercer piso, amplia y automatizada
+      con Alexa: enciendes luces, televisor y música con la voz, y se entra
+      con código. Tiene cama doble, camarote amplio y sofá cama, baño
+      privado con agua caliente, barra con dos puestos, escritorio, silla
+      de oficina y perchero; no tiene clóset. Las ventanas dan al exterior
+      y entra luz natural. La zona de preparación es una minicocina:
+      mininevera tipo bar, cafetera, hervidor, platos y algunos utensilios.
+      No tiene estufa propia, así que para cocinar está la cocina
+      compartida del segundo piso. El tercer piso cuenta con su propia red
+      Wi-Fi. Es ideal para cuatro a seis huéspedes; para grupos mayores,
+      consúltanos.
+    precio: Según ocupación
     pendiente: false
     foto: /assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg
     fotoAlt: Habitación de la Suite 301 con cama doble, camarote de dos camas y ropa de cama azul y blanca
@@ -207,14 +273,29 @@ habitaciones:
         alt: Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera
   - nombre: Habitación 302
     tipoBano: privado
-    huespedes: Hasta 3
-    camas: 1 cama doble y 1 sofa cama
-    banos: '1'
+    huespedes: Hasta 4
+    camas: 1 cama doble de 1,40 m y 1 sofá cama de 1,20 m
+    banos: Baño privado
+    piso: 'Piso 3'
+    acceso: Solo escaleras, sin ascensor
+    capacidadComoda: Ideal para hasta 3 huéspedes; acomodación para 4 bajo consulta
+    tarifas:
+      - huespedes: 1
+        precio: $ 65.000
+      - huespedes: 2
+        precio: $ 120.000
+      - huespedes: 3
+        precio: $ 140.000
+      - huespedes: 4
+        precio: $ 160.000
     descripcion: >-
-      Habitación 302 de Atheron Suite, comoda y funcional, con cama doble,
-      sofa cama, bano privado, ducha con agua caliente, TV con Netflix y
-      Wi-Fi. Ideal para hasta 3 huéspedes.
-    precio: Precio a consultar
+      Habitación con baño privado en el tercer piso, con cama doble de
+      1,40 m y sofá cama que abre a 1,20 m. Ideal para hasta tres
+      huéspedes; la acomodación para cuatro se consulta. Agua caliente con
+      calentador a gas, TV con Netflix, Wi-Fi, mesa de noche, dos repisas y
+      perchero, y acceso a la cocina compartida del segundo piso. No tiene
+      ventana al exterior.
+    precio: Según ocupación
     pendiente: false
     foto: /assets/img/hospedajes/hotel-atheron-suite-302-habitacion.jpg
     fotoAlt: Habitación 302 con cama doble de cabecero capitone gris y sofa cama al lado
@@ -295,14 +376,16 @@ checkout: 11:00
 comodidades:
   - Wifi gratis
   - Netflix
-  - Cocina equipada
-  - Parqueadero
-  - Vistas a la montana
+  - Cocina compartida con estufa en el piso 2
+  - Baño privado en 203, 301 y 302
+  - Agua caliente
+  - Parqueadero aliado por $ 15.000 la noche
+  - Custodia de equipaje en la oficina principal
 actualizado: ''
 ---
 
-El Hotel Atheron Suite ofrece apartamentos con cocina equipada y vistas
-a la montana, en la Carrera 9 del centro de Zipaquirá. La Catedral de
+El Hotel Atheron Suite ofrece habitaciones y una suite con acceso a
+cocina compartida, en la Carrera 9 del centro de Zipaquirá. La Catedral de
 Sal queda a 1,4 kilometros: se llega caminando en unos 16 minutos,
 sin necesidad de transporte.
 

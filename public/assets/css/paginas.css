@@ -775,3 +775,58 @@
 @media (max-width: 22rem) {
   .header__interior .boton { font-size: .78rem; max-width: 44vw; }
 }
+
+
+/* ------------------------------------------------------------
+   TARIFA POR OCUPACION
+
+   Lista y no tabla: a 360 px una tabla de siete filas se encoge
+   hasta no leerse. Cada linea es "N huespedes ....... $X", con el
+   precio anclado a la derecha, que es como se compara de un vistazo.
+   ------------------------------------------------------------ */
+.habitacion__acceso {
+  margin-bottom: var(--esp-2);
+  font-size: .86rem;
+  color: var(--texto-suave);
+}
+
+.tarifas {
+  margin-block: var(--esp-2) var(--esp-3);
+  padding: var(--esp-2);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--fondo-suave, #f7f8fa);
+}
+
+.tarifas__titulo {
+  margin-bottom: .5rem;
+  font-size: .8rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.tarifas__lista { list-style: none; padding: 0; margin: 0; }
+
+.tarifas__lista li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: .3rem 0;
+  font-size: .93rem;
+}
+
+.tarifas__lista li + li { border-top: 1px solid var(--borde); }
+.tarifas__lista strong { white-space: nowrap; }
+
+.tarifas__nota {
+  margin-top: .6rem;
+  font-size: .82rem;
+  color: var(--texto-suave);
+}
+
+@media (max-width: 30rem) {
+  .tarifas { padding: .7rem .8rem; }
+  .tarifas__lista li { font-size: .88rem; }
+}
