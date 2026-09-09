@@ -368,7 +368,10 @@ const fichaNegocio = {
                   <div class="tarjeta__pie">
                     {!data.precioPendiente && (
                     <span class="tarjeta__precio">
-                      {data.precio} <span>/ noche</span>
+                      {data.precio}
+                      {/* "/ noche" solo si hay cifra: pegarselo a "Tarifas
+                          segun habitacion y ocupacion" no dice nada. */}
+                      {/\d/.test(data.precio) && <span> / noche</span>}
                     </span>
                     )}
                     <a class="boton boton--contorno" href={`/hospedajes/${id}`}>Ver ficha</a>

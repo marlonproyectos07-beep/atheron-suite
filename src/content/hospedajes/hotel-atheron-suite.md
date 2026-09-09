@@ -6,7 +6,7 @@ insignia: '01'
 titulo: Hotel Atheron Suite | Hospedaje a 16 min de la Catedral de Sal
 descripcion: Hospedaje en Zipaquirá a 1,4 km de la Catedral de Sal. Wifi, Netflix, cocina compartida y baño privado en tres de sus cinco unidades. Consulta disponibilidad por WhatsApp.
 ogTitulo: Hotel Atheron Suite | Zipaquirá, Cundinamarca
-ogDescripcion: Hospedaje en Zipaquirá a 16 minutos a pie de la Catedral de Sal. Wifi, Netflix, cocina y parqueadero.
+ogDescripcion: Hospedaje en Zipaquirá a 16 minutos a pie de la Catedral de Sal. Wifi, Netflix y cocina compartida.
 avisoBorrador: ''
 zona: 'Cra. 9 #10-32, Zipaquirá'
 presentacion: A 16 minutos caminando de la Catedral de Sal, con cocina compartida con estufa, wifi y Netflix. Pensado para quedarse mas de una noche sin sentir que estas en un hotel de paso.
@@ -39,9 +39,7 @@ caracteristicas:
     pendiente: false
   - texto: Cocina compartida con estufa
     pendiente: false
-  - texto: Parqueadero
-    pendiente: false
-  - texto: Cocina compartida con estufa
+  - texto: Parqueadero aliado, $ 15.000 la noche
     pendiente: false
   - texto: Televisor de pantalla plana
     pendiente: false
@@ -52,10 +50,33 @@ listadoSegundoDato: 1,4 km a la Catedral de Sal
 listadoSegundoDatoSufijo: ''
 listadoEnlaceTexto: Ver Hotel Atheron Suite
 resumen: Apartamentos con minicocina y cocina compartida con estufa, wifi y Netflix, a 16 minutos caminando de la Catedral de Sal.
-precio: Desde $ 50.000
+precio: Tarifas según habitación y ocupación
 precioPendiente: false
 notaHabitaciones: 'Hasta 7 huéspedes con las camas fijas. Para grupos de 8 a 10 anadimos camas adicionales: escribenos y lo coordinamos directamente.'
 heroFoto: true
+antesDeReservar:
+  etiqueta: Antes de reservar
+  titulo: Lo que conviene saber
+  condiciones:
+    - titulo: Estacionamiento
+      texto: >-
+        No hay parqueadero propio. Para carro trabajamos con un parqueadero
+        aliado, con un valor aproximado de $ 15.000 por noche. Para moto suele
+        haber cupo sin costo, sujeto a disponibilidad. En ambos casos conviene
+        consultarlo antes de llegar.
+    - titulo: Custodia de equipaje
+      texto: >-
+        Cuando el servicio esta disponible, puedes dejar tu equipaje sin costo
+        en la recepcion de la propiedad antes del check-in. Los domingos
+        depende de la operacion del dia: consultalo antes por WhatsApp, no es
+        un servicio garantizado.
+    - titulo: Aseo y ropa de cama
+      texto: >-
+        El aseo y la ropa de cama estan incluidos en la tarifa. En estadias
+        prolongadas hacemos un servicio periodico aproximadamente cada tres
+        dias, con renovacion de sabanas y toallas.
+    - titulo: No se fuma
+      texto: No se permite fumar dentro del establecimiento.
 casaCompleta:
   etiquetaSeccion: Opciones de alojamiento
   tituloSeccion: Elige como quieres hospedarte
@@ -379,8 +400,9 @@ comodidades:
   - Cocina compartida con estufa en el piso 2
   - Baño privado en 203, 301 y 302
   - Agua caliente
-  - Parqueadero aliado por $ 15.000 la noche
-  - Custodia de equipaje en la oficina principal
+  - Parqueadero aliado para carro por $ 15.000 la noche
+  - Parqueadero de moto sin costo, según disponibilidad
+  - Custodia de equipaje antes del check-in, según disponibilidad
 actualizado: ''
 ---
 
