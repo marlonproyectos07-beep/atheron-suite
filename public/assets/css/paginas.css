@@ -256,13 +256,27 @@
    AVISO DE CONTENIDO PENDIENTE (banda superior de trabajo)
    Se quita cuando el sitio tenga contenido real.
    ------------------------------------------------------------ */
+/* El aviso tiene que verse, pero no ser lo primero que se mira. En la
+   auditoria movil competia con la marca y con el hero: franja amarilla a
+   todo lo ancho, del mismo peso visual que el titular. Ahora es una
+   linea fina y sobria; sigue ahi, y sigue diciendo que esto es una
+   version de trabajo, pero deja de disputarle la pantalla al producto. */
 .aviso-borrador {
-  background: #fff4cc;
-  border-bottom: 1px solid #e6cf80;
-  color: #6b5500;
-  font-size: .82rem;
+  background: #fdf7e6;
+  border-bottom: 1px solid #efe3c2;
+  color: #7a6320;
+  font-size: .74rem;
+  line-height: 1.35;
   text-align: center;
-  padding: .55rem var(--esp-2);
+  padding: .34rem var(--esp-2);
+  letter-spacing: .01em;
+}
+
+@media (max-width: 48rem) {
+  .aviso-borrador {
+    font-size: .68rem;
+    padding: .3rem .7rem;
+  }
 }
 
 /* ------------------------------------------------------------
@@ -700,4 +714,64 @@
 .video-capitulo .video-principal__reproductor { max-height: 360px; }
 @media (max-width: 520px) {
   .video-capitulos { grid-template-columns: 1fr; }
+}
+
+
+/* ------------------------------------------------------------
+   HERO DEL CATALOGO
+
+   Quien llega aqui pulso "Ver hospedajes": ya decidio. El hero se
+   comprime para que las propiedades entren en pantalla antes, y
+   hereda el lenguaje de la portada -etiqueta en pastilla, titular
+   grande, una sola linea de texto- sin copiarla.
+   ------------------------------------------------------------ */
+.hero--catalogo {
+  min-height: auto;
+  padding-block: var(--esp-5) var(--esp-4);
+}
+
+.hero--catalogo .hero__texto { max-width: 46ch; margin-bottom: 0; }
+
+@media (max-width: 48rem) {
+  .hero--catalogo {
+    padding-block: var(--esp-4) var(--esp-3);
+  }
+  .hero--catalogo .hero__etiqueta {
+    padding: .3rem .7rem;
+    margin-bottom: var(--esp-2);
+    font-size: .74rem;
+  }
+  .hero--catalogo .hero__titulo {
+    font-size: clamp(1.9rem, 8vw, 2.4rem);
+    line-height: 1.1;
+    margin-bottom: var(--esp-2);
+  }
+  .hero--catalogo .hero__texto { font-size: .95rem; max-width: 32ch; }
+}
+
+/* ------------------------------------------------------------
+   CABECERA EN CELULAR
+
+   El CTA competia con el logo y daba sensacion de elemento gigante.
+   Se acorta el relleno y se limita su ancho para que el logo se lea
+   entero y el menu siga siendo alcanzable. El boton no se retira:
+   es la conversion.
+   ------------------------------------------------------------ */
+@media (max-width: 48rem) {
+  .header__interior { gap: var(--esp-2); }
+  .header__interior .boton {
+    padding-inline: 1rem;
+    font-size: .84rem;
+    /* SIN nowrap. Se probo y desbordaba 47 px a 320 px en la landing de
+       hospedaje, cuyo CTA es "Consultar disponibilidad": si no puede
+       partirse, empuja la pagina entera. Se le deja partir y se limita
+       el ancho, que es lo que evita que compita con el logo. */
+    max-width: 46vw;
+    text-align: center;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 22rem) {
+  .header__interior .boton { font-size: .78rem; max-width: 44vw; }
 }

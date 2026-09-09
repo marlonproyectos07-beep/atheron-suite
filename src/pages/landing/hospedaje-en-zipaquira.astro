@@ -206,16 +206,25 @@ import { formularioContactoActivo } from '../../data/ajustes';
           <span class="etiqueta">Caracteristicas</span>
           <h2>Que incluye tu estancia</h2>
           <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
-            Lista base comun a los hospedajes. Cada ficha individual detallara
-            lo que tiene de particular.
+            Solo dos cosas son comunes a todos los hospedajes. El resto cambia
+            de una propiedad a otra, y por eso lo dice cada ficha en vez de esta
+            lista.
           </p>
+          {/* AQUI HABIA CINCO. Se comprobaron una a una contra las cuatro
+              fichas publicadas el 9 de septiembre de 2026: agua caliente
+              aparece en tres, cocina en tres, ropa de cama en dos y
+              parqueadero en tres -y ademas hay propiedades que usan
+              parqueadero aliado o que exigen confirmar-. Prometer las cinco
+              como incluidas era falso para alguna propiedad en cada caso. */}
           <ul class="lista-check">
-            <li>Wifi en todo el hospedaje</li>
-            <li>Agua caliente y ropa de cama incluida</li>
-            <li>Cocina o zona de preparación</li>
-            <li>Parqueadero</li>
+            <li>Wi-Fi</li>
             <li>Check-in coordinado con el anfitrion</li>
           </ul>
+          <p class="texto-suave" style="margin-top: var(--esp-2);">
+            Cocina, parqueadero, agua caliente y demas servicios dependen de la
+            propiedad: los encuentras en la ficha de cada
+            <a href="/hospedajes">hospedaje</a>.
+          </p>
         </div>
 
       </div>

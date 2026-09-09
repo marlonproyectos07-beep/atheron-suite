@@ -599,6 +599,43 @@
 }
 
 /* ------------------------------------------------------------
+   EL FLOTANTE EN CELULAR
+
+   En la auditoria movil tapaba texto y se solapaba con los botones
+   verdes de WhatsApp de las tarjetas: dos llamadas identicas, una
+   encima de otra, compitiendo. Aqui se encoge a una pastilla
+   pequena, se separa del borde respetando el area segura del
+   telefono, y no baja de 44 px de lado para seguir siendo un blanco
+   tactil accesible.
+
+   No se oculta nunca: es el canal comercial del negocio.
+   ------------------------------------------------------------ */
+@media (max-width: 48rem) {
+  .flotante {
+    right: max(.7rem, env(safe-area-inset-right));
+    bottom: max(.7rem, env(safe-area-inset-bottom));
+    padding: .6rem .9rem;
+    min-height: 44px;
+    font-size: .86rem;
+    gap: .4rem;
+  }
+  .flotante svg,
+  .flotante img { width: 1.05rem; height: 1.05rem; }
+}
+
+/* SE PROBO dejarlo solo con el icono en pantallas estrechas y se
+   descarto: este boton no tiene icono, su contenido es literalmente la
+   palabra "WhatsApp". Ocultar el texto lo dejaba como un circulo verde
+   vacio, sin decirle a nadie que era. Se queda como pastilla pequena
+   con su texto, que es lo que se entiende sin explicacion. */
+@media (max-width: 26rem) {
+  .flotante {
+    padding: .5rem .75rem;
+    font-size: .8rem;
+  }
+}
+
+/* ------------------------------------------------------------
    ANIMACION DE APARICION (la activa main.js al hacer scroll)
    ------------------------------------------------------------ */
 /* La animacion solo esconde el bloque si <html> lleva "anima", y esa

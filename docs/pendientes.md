@@ -205,3 +205,55 @@ se suba la foto desde el panel, aparece sola.
 
 Reglas al reponerlas: nada generado por IA presentado como fotografía real,
 nada de fotos de otra propiedad, y ningún render pasando por estado actual.
+
+---
+
+## Pendientes operativos (no son tareas de desarrollo)
+
+| Qué | Estado | Registrado |
+|---|---|---|
+| Evaluar compra de horno microondas para la Suite 301 | Dirección lo está evaluando. **No existe hoy, no se anuncia** | 9 sep 2026 |
+
+---
+
+## Backlog editorial del blog
+
+Dirección identificó seis temas que **sí** queremos cubrir. Hoy no existe
+ninguno, y **no hay ningún enlace apuntando a ellos**: no hay enlaces rotos.
+Se escribirán en el sprint de SEO, con información real y verificada, no para
+rellenar.
+
+| Tema | Estado |
+|---|---|
+| Cómo llegar de Bogotá a Zipaquirá | Pendiente |
+| Catedral de Sal: horarios, precios y qué esperar | Pendiente — requiere datos actualizados de la fuente oficial |
+| Qué hacer en Zipaquirá en un fin de semana | Pendiente |
+| Dónde comer en Zipaquirá | Pendiente |
+| Zipaquirá con niños | Pendiente |
+| Dónde dormir cerca de la Catedral de Sal | Pendiente |
+
+Publicados hoy: **`/blog/guia-de-zipaquira`** y
+**`/blog/como-nacio-atheron-suite`**. Nada más.
+
+Regla para cuando se escriban: horarios y precios de terceros se verifican
+contra la fuente el día de publicación y se fecha el dato. Un horario
+desactualizado en nuestro blog es un huésped que llega y se encuentra cerrado.
+
+---
+
+## Servicios: qué puede decirse de forma global
+
+Comprobado el 9 de septiembre de 2026 contra las cuatro fichas publicadas:
+
+| Servicio | En cuántas fichas | ¿Global? |
+|---|---|---|
+| Wi-Fi | 4 de 4 | **Sí** |
+| Check-in coordinado | 4 de 4 | **Sí** |
+| Agua caliente | 3 de 4 | No |
+| Cocina | 3 de 4 | No |
+| Parqueadero | 3 de 4, y hay propiedades con parqueadero aliado o a confirmar | No |
+| Ropa de cama | 2 de 4 | No |
+| Netflix | 2 de 4 | No |
+
+Regla fijada por Dirección: **global = solo lo universalmente confirmado**.
+Todo lo demás se declara por propiedad, en su ficha.

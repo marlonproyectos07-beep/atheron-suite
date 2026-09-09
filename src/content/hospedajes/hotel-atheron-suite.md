@@ -4,12 +4,12 @@ publicado: true
 orden: 1
 insignia: '01'
 titulo: Hotel Atheron Suite | Hospedaje a 16 min de la Catedral de Sal
-descripcion: Hospedaje en Zipaquirá a 1,4 km de la Catedral de Sal. Wifi, Netflix, cocina equipada, parqueadero y vistas a la montana. Consulta disponibilidad por WhatsApp.
+descripcion: Hospedaje en Zipaquirá a 1,4 km de la Catedral de Sal. Wifi, Netflix, cocina compartida, parqueadero y vistas a la montana. Consulta disponibilidad por WhatsApp.
 ogTitulo: Hotel Atheron Suite | Zipaquirá, Cundinamarca
 ogDescripcion: Hospedaje en Zipaquirá a 16 minutos a pie de la Catedral de Sal. Wifi, Netflix, cocina y parqueadero.
 avisoBorrador: ''
 zona: 'Cra. 9 #10-32, Zipaquirá'
-presentacion: A 16 minutos caminando de la Catedral de Sal, con cocina equipada, wifi, Netflix y vistas a la montana. Pensado para quedarse mas de una noche sin sentir que estas en un hotel de paso.
+presentacion: A 16 minutos caminando de la Catedral de Sal, con minicocina en la habitación, cocina compartida con estufa, wifi, Netflix y vistas a la montana. Pensado para quedarse mas de una noche sin sentir que estas en un hotel de paso.
 presentacionPendiente: false
 fotoTarjeta: /assets/img/hospedajes/la-magia-de-zipaquira-sala.jpg
 fotoTarjetaAlt: Sala principal del Hotel Atheron Suite con televisor y barra
@@ -26,7 +26,7 @@ datos:
   - numero: 15:00
     texto: Hora de entrada
     pendiente: false
-tituloDescripcion: Apartamentos con cocina, a un paseo del centro histórico
+tituloDescripcion: Apartamentos con minicocina, a un paseo del centro histórico
 tituloDescripcionPendiente: false
 caracteristicas:
   - texto: Wifi gratis en toda la propiedad
@@ -37,7 +37,7 @@ caracteristicas:
     pendiente: false
   - texto: Netflix incluido
     pendiente: false
-  - texto: Cocina equipada
+  - texto: Cocina compartida con estufa
     pendiente: false
   - texto: Parqueadero
     pendiente: false
@@ -45,13 +45,13 @@ caracteristicas:
     pendiente: false
   - texto: Televisor de pantalla plana
     pendiente: false
-  - texto: No se admiten mascotas
+  - texto: Mascotas bajo consulta
     pendiente: false
 listadoSector: Cra. 9, centro
 listadoSegundoDato: 1,4 km a la Catedral de Sal
 listadoSegundoDatoSufijo: ''
 listadoEnlaceTexto: Ver Hotel Atheron Suite
-resumen: Apartamentos con cocina equipada, wifi y Netflix, a 16 minutos caminando de la Catedral de Sal.
+resumen: Apartamentos con minicocina y cocina compartida con estufa, wifi y Netflix, a 16 minutos caminando de la Catedral de Sal.
 precio: Desde $ 150.000
 precioPendiente: false
 notaHabitaciones: 'Hasta 7 huéspedes con las camas fijas. Para grupos de 8 a 10 anadimos camas adicionales: escribenos y lo coordinamos directamente.'
@@ -289,7 +289,9 @@ latitud: 5.027763
 longitud: -74.000194
 checkin: 15:00
 checkout: 11:00
-mascotas: false
+# mascotas: se evalua caso por caso, asi que el campo queda sin declarar
+# a proposito. Poner false emitiria petsAllowed: false en JSON-LD, que es
+# justo lo que direccion corrigio el 9 de septiembre de 2026.
 comodidades:
   - Wifi gratis
   - Netflix

@@ -110,13 +110,17 @@ const fichaCatalogo = {
   <main id="contenido">
 
     {/* Hero corto: en paginas internas no hace falta pantalla completa */}
-    <section class="hero hero--interior">
+    {/* Quien pulsa "Ver hospedajes" ya decidio: no necesita otro
+        discurso, necesita llegar a las propiedades. El hero se acorta a
+        etiqueta, titular y una linea, y hereda el lenguaje de la portada
+        sin copiarla. La explicacion larga vive debajo, fuera del primer
+        vistazo, para no perder ni la intencion SEO ni el contexto. */}
+    <section class="hero hero--interior hero--catalogo">
       <div class="contenedor hero__contenido">
-        <span class="hero__etiqueta">Zipaquirá, Cundinamarca</span>
+        <span class="hero__etiqueta">Zipaquirá · Cerca de la Catedral de Sal</span>
         <h1 class="hero__titulo">Nuestros hospedajes</h1>
         <p class="hero__texto">
-          Cada uno tiene su caracter. Entra a la ficha que te llame la atención
-          para ver habitaciones, fotos y ubicación.
+          Casas, apartamentos y habitaciones. Entra en la que te llame.
         </p>
       </div>
     </section>
