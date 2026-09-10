@@ -344,3 +344,44 @@
 @media (max-width: 48rem) {
   .grupos__caja { padding: var(--esp-3); }
 }
+
+/* ------------------------------------------------------------
+   CIERRE COMERCIAL
+
+   La escena es conceptual y funciona como ambientacion: el texto no
+   identifica a la persona como empleada ni promete atencion 24 horas.
+   El degradado conserva el contraste y deja visible la escena a la
+   derecha sin competir con la llamada a la accion.
+   ------------------------------------------------------------ */
+.grupos__cierre {
+  position: relative;
+  min-height: 35rem;
+  display: flex;
+  align-items: center;
+  background:
+    linear-gradient(90deg, #0f172a 0%, #0f172a 39%, rgba(15, 23, 42, .92) 51%, rgba(15, 23, 42, .22) 78%),
+    url('/assets/img/grupos/atencion-grupos-atheron.webp') center / cover no-repeat;
+}
+
+.grupos__cierre .contenedor { position: relative; }
+
+.grupos__cierre-contenido { max-width: 34rem; }
+
+.grupos__cierre-atencion {
+  margin-top: var(--esp-3);
+  max-width: 45ch;
+  font-size: .82rem;
+  color: rgba(255, 255, 255, .7);
+}
+
+@media (max-width: 48rem) {
+  .grupos__cierre {
+    min-height: auto;
+    padding-top: 18rem;
+    align-items: flex-end;
+    background:
+      linear-gradient(180deg, rgba(15, 23, 42, .08) 0%, rgba(15, 23, 42, .52) 30%, #0f172a 53%, #0f172a 100%),
+      url('/assets/img/grupos/atencion-grupos-atheron.webp') 72% top / auto 23rem no-repeat,
+      #0f172a;
+  }
+}
