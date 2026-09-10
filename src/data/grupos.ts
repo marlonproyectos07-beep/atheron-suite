@@ -253,10 +253,15 @@ export function resumeCapacidadGrupos(fichas: FichaEntrada[]): ResumenCapacidad 
       localidad: f.data.localidad ?? 'Zipaquirá',
       capacidad: {
         numero: grupo.tipo === 'maxima' ? `Hasta ${grupo.capacidad}` : String(grupo.capacidad),
-        texto: grupo.tipo === 'maxima' ? 'huéspedes' : 'huéspedes',
+        texto: 'huéspedes',
       },
       suma: contenidaEnOtra ? null : grupo.capacidad,
       contenidaEnOtra,
+      /* Sin estos dos campos el desglose de /grupos pintaba "22" donde la
+         tarjeta de la misma ficha decia "Hasta 22": un maximo leido como
+         cifra fija. */
+      tipo: grupo.tipo,
+      nota: grupo.nota,
     };
   });
 

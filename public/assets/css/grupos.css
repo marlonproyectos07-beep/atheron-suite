@@ -230,7 +230,9 @@
   border-radius: 0 var(--radio-sm) var(--radio-sm) 0;
   background: rgba(201, 162, 39, .08);
   font-size: .9rem;
-  color: var(--texto-suave);
+  /* Gris 700 y no --texto-suave: sobre el dorado de este fondo el gris
+     500 daba 4,28:1 y Lighthouse lo marcaba por contraste. */
+  color: var(--color-gris-700);
 }
 
 .planificador__aviso strong { color: var(--texto); }
