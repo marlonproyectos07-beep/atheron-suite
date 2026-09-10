@@ -185,30 +185,34 @@ const fichaPagina = {
         <div class="capacidad">
           {resumen.total !== null ? (
             <>
-              <span class="etiqueta">Capacidad máxima de la red para grupos</span>
-              <p class="capacidad__cifra">
-                Hasta <strong>{resumen.total}</strong> huéspedes
-              </p>
-              {/* La frase nombra los municipios. Sin eso, la cifra
-                  miente por omision: esta pagina se titula "grupos en
-                  Zipaquira" y una de las propiedades que suma esta en
-                  Cogua. Los municipios se calculan desde las fichas, no
-                  se escriben aqui. */}
-              <p class="capacidad__nota">
-                Suma de las capacidades para grupos declaradas por {resumen.contadas}{' '}
-                alojamientos en {enumera(resumen.localidades)}. Incluye capacidades
-                máximas sujetas a confirmación; no significa que las {resumen.total} plazas estén
-                libres al mismo tiempo. Confirmamos el inventario para tus fechas
-                antes de reservar.
-              </p>
-              <ul class="capacidad__desglose" aria-label="Desglose de capacidad por alojamiento">
-                {resumen.alojamientos.map((alojamiento) => (
-                  <li>
-                    <span>{alojamiento.nombre}</span>
-                    <strong>{alojamiento.tipo === 'maxima' ? 'Hasta ' : ''}{alojamiento.suma}</strong>
-                  </li>
-                ))}
-              </ul>
+              <div class="capacidad__principal">
+                <span class="etiqueta">Red Atheron para grupos</span>
+                <p class="capacidad__cifra">
+                  Hasta <strong>{resumen.total}</strong> huéspedes
+                </p>
+                <a class="capacidad__enlace" href="#alojamientos">Ver los alojamientos</a>
+              </div>
+
+              <div class="capacidad__detalle">
+                <h2>Capacidad combinada</h2>
+                {/* La frase nombra los municipios. Sin eso, la cifra
+                    miente por omision: esta pagina se titula "grupos en
+                    Zipaquira" y una de las propiedades que suma esta en
+                    Cogua. Los municipios se calculan desde las fichas. */}
+                <p class="capacidad__nota">
+                  {resumen.contadas} alojamientos en {enumera(resumen.localidades)}.
+                  Las capacidades máximas y la disponibilidad se confirman para
+                  las fechas de cada grupo.
+                </p>
+                <ul class="capacidad__desglose" aria-label="Desglose de capacidad por alojamiento">
+                  {resumen.alojamientos.map((alojamiento) => (
+                    <li>
+                      <span>{alojamiento.nombre}</span>
+                      <strong>{alojamiento.tipo === 'maxima' ? 'Hasta ' : ''}{alojamiento.suma}</strong>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </>
           ) : (
             /* Sin cifra. Y se dice por que, no se disimula con una
@@ -248,7 +252,8 @@ const fichaPagina = {
           <h2>¿Cuántos son?</h2>
           <p class="texto-suave" style="margin-top: var(--esp-2);">
             Elige el tamaño aproximado del grupo y te escribimos con opciones
-            concretas. No hace falta que sea exacto.
+            concretas. También estudiamos operaciones de 100, 150, 200 o más
+            personas con nuestra red de alojamientos.
           </p>
         </div>
 
@@ -271,8 +276,9 @@ const fichaPagina = {
             cien camas, y tampoco cerramos la puerta a un grupo de
             cien: decimos exactamente lo que podemos estudiar. */}
         <p class="planificador__aviso">
-          Para grupos que superan nuestra capacidad propia, podemos estudiar una
-          solución combinada con alojamientos aliados.
+          <strong>¿Son más de 155?</strong> Ampliamos la búsqueda con alojamientos
+          aliados y coordinamos una propuesta conjunta. Todo cupo se confirma
+          según las fechas antes de cotizar.
         </p>
       </div>
     </section>

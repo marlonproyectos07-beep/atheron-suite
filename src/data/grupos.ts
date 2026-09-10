@@ -287,7 +287,7 @@ export function enumera(items: string[]): string {
    Los tramos NO afirman que tengamos esas camas libres. El texto de
    la pagina lo dice, y el mensaje habla de "aproximadamente".
    ------------------------------------------------------------ */
-export const TRAMOS = ['10', '20', '30', '50', '80', '100+'] as const;
+export const TRAMOS = ['10', '20', '30', '50', '80', '100', '150', '200+'] as const;
 
 /* ------------------------------------------------------------
    TIPOS DE GRUPO

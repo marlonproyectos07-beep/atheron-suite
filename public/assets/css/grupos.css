@@ -49,20 +49,45 @@
    poniendo un numero para "arreglarla".
    ------------------------------------------------------------ */
 .capacidad {
-  max-width: 62ch;
+  display: grid;
+  grid-template-columns: minmax(14rem, .72fr) minmax(0, 1.6fr);
+  max-width: 58rem;
   margin-inline: auto;
-  padding: var(--esp-5) var(--esp-4);
-  text-align: center;
+  padding: 0;
   border: 1px solid var(--borde);
   border-radius: var(--radio-lg);
   background: var(--color-crema);
+  overflow: hidden;
+}
+
+.capacidad__principal {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: var(--esp-4);
+  text-align: center;
+  color: var(--color-blanco);
+  background:
+    radial-gradient(110% 95% at 100% 0%, #315b83 0%, transparent 65%),
+    var(--color-noche);
+}
+
+.capacidad__principal .etiqueta { color: var(--color-sal-claro); }
+
+.capacidad__detalle {
+  padding: var(--esp-4);
+}
+
+.capacidad__detalle h2 {
+  font-size: 1.45rem;
 }
 
 .capacidad__cifra {
   margin-top: var(--esp-1);
   font-family: var(--fuente-titulo);
   font-size: 1.4rem;
-  color: var(--texto);
+  color: var(--color-blanco);
 }
 
 /* La cifra, grande. Es el dato que el visitante ha venido a buscar. */
@@ -71,7 +96,16 @@
   font-size: 3.6rem;
   line-height: 1;
   font-weight: 600;
-  color: var(--color-marca);
+  color: var(--color-blanco);
+}
+
+.capacidad__enlace {
+  margin-top: var(--esp-2);
+  padding-bottom: .1rem;
+  border-bottom: 1px solid rgba(255,255,255,.55);
+  font-size: .82rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.88);
 }
 
 /* La version sin cifra ocupa un sitio parecido y usa la misma
@@ -86,7 +120,7 @@
 }
 
 .capacidad__nota {
-  margin-top: var(--esp-3);
+  margin-top: .4rem;
   font-size: .9rem;
   color: var(--texto-suave);
 }
@@ -95,8 +129,8 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .55rem var(--esp-2);
-  margin-top: var(--esp-3);
-  padding-top: var(--esp-3);
+  margin-top: var(--esp-2);
+  padding-top: var(--esp-2);
   border-top: 1px solid var(--borde);
   text-align: left;
   font-size: .82rem;
@@ -114,7 +148,9 @@
 }
 
 @media (max-width: 48rem) {
-  .capacidad { padding: var(--esp-4) var(--esp-3); }
+  .capacidad { grid-template-columns: 1fr; }
+  .capacidad__principal,
+  .capacidad__detalle { padding: var(--esp-3); }
   .capacidad__cifra strong { font-size: 2.8rem; }
   .capacidad__consulta { font-size: 1.25rem; }
   .capacidad__desglose { grid-template-columns: 1fr; }
@@ -181,10 +217,16 @@
    de dar por hecho que tenemos cien camas. */
 .planificador__aviso {
   margin-top: var(--esp-3);
-  max-width: 62ch;
+  max-width: 72ch;
+  padding: var(--esp-2) var(--esp-3);
+  border-left: 3px solid var(--color-sal);
+  border-radius: 0 var(--radio-sm) var(--radio-sm) 0;
+  background: rgba(201, 162, 39, .08);
   font-size: .9rem;
   color: var(--texto-suave);
 }
+
+.planificador__aviso strong { color: var(--texto); }
 
 @media (prefers-reduced-motion: reduce) {
   .planificador__tramo { transition: none; }
