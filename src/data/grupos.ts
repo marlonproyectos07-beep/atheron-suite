@@ -128,6 +128,9 @@ export interface Alojamiento {
   suma: number | null;
   /** true = otra ficha publicada ya la incluye; no se suma. */
   contenidaEnOtra: boolean;
+  /** Naturaleza de la cifra comercial para explicarla sin ambiguedad. */
+  tipo?: 'fija' | 'maxima';
+  nota?: string;
 }
 
 export interface ResumenCapacidad {
@@ -165,6 +168,12 @@ interface FichaEntrada {
     localidad?: string;
     /** id de la ficha que contiene a esta, si la hay. */
     perteneceA?: string | null;
+    grupos?: {
+      visible: boolean;
+      capacidad: number;
+      tipo: 'fija' | 'maxima';
+      nota?: string;
+    };
   };
 }
 
@@ -196,6 +205,8 @@ export function resumeCapacidad(publicadas: FichaEntrada[]): ResumenCapacidad {
       capacidad,
       suma: contenidaEnOtra || !capacidad ? null : cifraExacta(capacidad.numero),
       contenidaEnOtra,
+      tipo: grupo.tipo,
+      nota: grupo.nota,
     };
   });
 
@@ -222,6 +233,41 @@ export function resumeCapacidad(publicadas: FichaEntrada[]): ResumenCapacidad {
   }
 
   return { alojamientos, total, contadas: sumables.length, localidades, motivo: null };
+}
+
+/* Capacidad comercial de la red para grupos. A diferencia del resumen
+   historico de cifras exactas, este cálculo admite máximos declarados porque
+   el resultado se comunica expresamente como "hasta" y nunca como camas
+   disponibles para una fecha. */
+export function resumeCapacidadGrupos(fichas: FichaEntrada[]): ResumenCapacidad {
+  const visibles = fichas.filter((f) => f.data.grupos?.visible);
+  const idsVisibles = new Set(visibles.map((f) => f.id));
+
+  const alojamientos: Alojamiento[] = visibles.map((f) => {
+    const grupo = f.data.grupos!;
+    const padre = f.data.perteneceA ?? null;
+    const contenidaEnOtra = Boolean(padre && idsVisibles.has(padre));
+    return {
+      id: f.id,
+      nombre: f.data.nombre,
+      localidad: f.data.localidad ?? 'Zipaquirá',
+      capacidad: {
+        numero: grupo.tipo === 'maxima' ? `Hasta ${grupo.capacidad}` : String(grupo.capacidad),
+        texto: grupo.tipo === 'maxima' ? 'huéspedes' : 'huéspedes',
+      },
+      suma: contenidaEnOtra ? null : grupo.capacidad,
+      contenidaEnOtra,
+    };
+  });
+
+  const sumables = alojamientos.filter((a) => a.suma !== null);
+  return {
+    alojamientos,
+    total: sumables.reduce((total, a) => total + (a.suma as number), 0),
+    contadas: sumables.length,
+    localidades: [...new Set(sumables.map((a) => a.localidad))].sort(),
+    motivo: null,
+  };
 }
 
 /** "Zipaquirá", "Zipaquirá y Cogua", "A, B y C". Para la frase de la cifra. */

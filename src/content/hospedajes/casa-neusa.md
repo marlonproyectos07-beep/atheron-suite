@@ -1,6 +1,11 @@
 ---
 nombre: Casa Neusa
 publicado: true
+grupos:
+  visible: true
+  capacidad: 8
+  tipo: fija
+  nota: Capacidad comoda declarada; 9 o 10 personas requieren consulta previa.
 orden: 3
 insignia: '03'
 modalidad: casa-completa

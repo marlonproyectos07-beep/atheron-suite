@@ -264,6 +264,20 @@ const hospedajes = defineCollection({
        Ahora son la misma casilla. */
     publicado: z.boolean().default(false),
 
+    /* Una ficha puede seguir en preparacion para SEO y, aun asi, ser una
+       opcion real que Atheron cotiza para grupos. Este bloque separa ambas
+       decisiones y deja trazable la capacidad comercial sin deducirla de
+       frases dispersas por la ficha. "maxima" siempre se presenta como
+       "hasta" y queda sujeta a disponibilidad. */
+    grupos: z
+      .object({
+        visible: z.boolean().default(true),
+        capacidad: z.number().int().positive(),
+        tipo: z.enum(['fija', 'maxima']),
+        nota: textoOpcionalPanel,
+      })
+      .optional(),
+
     /* Numero que se ve en la insignia de la tarjeta del listado. */
     insignia: z.string(),
 

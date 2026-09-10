@@ -1,6 +1,11 @@
 ---
 nombre: Hotel Atheron Suite
 publicado: true
+grupos:
+  visible: true
+  capacidad: 22
+  tipo: maxima
+  nota: Casa completa para hasta 22 huéspedes, bajo confirmacion de disponibilidad.
 orden: 1
 insignia: '01'
 titulo: Hotel Atheron Suite | Hospedaje a 16 min de la Catedral de Sal

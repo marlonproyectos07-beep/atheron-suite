@@ -47,7 +47,7 @@ import {
   EVENTO_GRUPO,
 } from '../data/whatsapp';
 import {
-  resumeCapacidad,
+  resumeCapacidadGrupos,
   TRAMOS,
   TIPOS_DE_GRUPO,
   PERFILES_RECIBIDOS,
@@ -55,20 +55,21 @@ import {
   testimonios,
 } from '../data/grupos';
 
-const publicadas = (await getCollection('hospedajes'))
-  .filter((f) => f.data.publicado)
+const disponiblesParaGrupos = (await getCollection('hospedajes'))
+  .filter((f) => f.data.grupos?.visible)
   .sort((a, b) => a.data.orden - b.data.orden);
 
 /* El resumen decide QUE se muestra y CUANTO se puede afirmar. La
    maqueta solo lo pinta. */
-const resumen = resumeCapacidad(
-  publicadas.map((f) => ({
+const resumen = resumeCapacidadGrupos(
+  disponiblesParaGrupos.map((f) => ({
     id: f.id,
     data: {
       nombre: f.data.nombre,
       datos: f.data.datos as never,
       localidad: f.data.localidad,
       perteneceA: f.data.perteneceA,
+      grupos: f.data.grupos,
     },
   })),
 );
@@ -76,14 +77,14 @@ const resumen = resumeCapacidad(
 /* Se indexa por id para poder emparejar cada alojamiento del
    resumen con su ficha completa -foto, sector, precio- sin volver a
    recorrer la coleccion dentro del bucle. */
-const porId = new Map(publicadas.map((f) => [f.id, f]));
+const porId = new Map(disponiblesParaGrupos.map((f) => [f.id, f]));
 
 
 /* Vista previa al compartir. Sale de la primera propiedad publicada con
    fotografia: real, y la misma que el visitante vera al abrir. Un enlace
    de grupos compartido por WhatsApp sin imagen sale pelado, y por ahi
    es por donde llegan los grupos. */
-const fotoCompartir = publicadas.find((f) => f.data.fotoTarjeta && f.data.fotoTarjetaAlt);
+const fotoCompartir = disponiblesParaGrupos.find((f) => f.data.fotoTarjeta && f.data.fotoTarjetaAlt);
 
 const fichaPagina = {
   '@context': 'https://schema.org',
@@ -184,9 +185,9 @@ const fichaPagina = {
         <div class="capacidad">
           {resumen.total !== null ? (
             <>
-              <span class="etiqueta">Capacidad Atheron actualmente verificada</span>
+              <span class="etiqueta">Capacidad máxima de la red para grupos</span>
               <p class="capacidad__cifra">
-                <strong>{resumen.total}</strong> huéspedes
+                Hasta <strong>{resumen.total}</strong> huéspedes
               </p>
               {/* La frase nombra los municipios. Sin eso, la cifra
                   miente por omision: esta pagina se titula "grupos en
@@ -194,12 +195,20 @@ const fichaPagina = {
                   Cogua. Los municipios se calculan desde las fichas, no
                   se escriben aqui. */}
               <p class="capacidad__nota">
-                Suma de las {resumen.contadas} propiedades publicadas que declaran
-                una capacidad exacta en su ficha, en {enumera(resumen.localidades)}.
-                No incluye las que hoy publican un rango ni las que están en
-                preparación, así que la capacidad real suele ser mayor. La
-                disponibilidad depende de las fechas: consúltanos.
+                Suma de las capacidades para grupos declaradas por {resumen.contadas}{' '}
+                alojamientos en {enumera(resumen.localidades)}. Incluye capacidades
+                máximas sujetas a confirmación; no significa que las {resumen.total} plazas estén
+                libres al mismo tiempo. Confirmamos el inventario para tus fechas
+                antes de reservar.
               </p>
+              <ul class="capacidad__desglose" aria-label="Desglose de capacidad por alojamiento">
+                {resumen.alojamientos.map((alojamiento) => (
+                  <li>
+                    <span>{alojamiento.nombre}</span>
+                    <strong>{alojamiento.tipo === 'maxima' ? 'Hasta ' : ''}{alojamiento.suma}</strong>
+                  </li>
+                ))}
+              </ul>
             </>
           ) : (
             /* Sin cifra. Y se dice por que, no se disimula con una
@@ -286,9 +295,9 @@ const fichaPagina = {
           <span class="etiqueta">Alojamientos</span>
           <h2>Dónde puede dormir tu grupo</h2>
           <p class="texto-suave" style="margin-top: var(--esp-2);">
-            Cada dato de esta lista sale de la ficha de la propiedad, no de una
-            estimación. Si el grupo no cabe en una sola, lo repartimos entre
-            varias: es lo que hacemos casi siempre.
+            Cada capacidad sale del dato comercial documentado de la propiedad.
+            Algunas son capacidades máximas y siempre dependen de disponibilidad.
+            Si el grupo no cabe en una sola, lo distribuimos entre varias.
           </p>
         </div>
 

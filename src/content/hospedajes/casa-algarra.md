@@ -1,6 +1,11 @@
 ---
 nombre: Casa Algarra
 publicado: true
+grupos:
+  visible: true
+  capacidad: 22
+  tipo: maxima
+  nota: Casa completa para hasta 22 huéspedes, bajo confirmacion de disponibilidad.
 orden: 2
 insignia: '02'
 titulo: Casa Algarra | Casa completa para grupos en Zipaquirá

@@ -1,6 +1,11 @@
 ---
 nombre: Hotel La Margarita
 publicado: false
+grupos:
+  visible: true
+  capacidad: 40
+  tipo: maxima
+  nota: Atheron ha alojado grupos de hasta 40 personas; inventario sujeto a confirmacion.
 orden: 6
 insignia: '06'
 modalidad: habitaciones

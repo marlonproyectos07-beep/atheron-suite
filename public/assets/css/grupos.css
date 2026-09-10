@@ -91,10 +91,33 @@
   color: var(--texto-suave);
 }
 
+.capacidad__desglose {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem var(--esp-2);
+  margin-top: var(--esp-3);
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--borde);
+  text-align: left;
+  font-size: .82rem;
+}
+
+.capacidad__desglose li {
+  display: flex;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.capacidad__desglose strong {
+  flex-shrink: 0;
+  color: var(--color-marca);
+}
+
 @media (max-width: 48rem) {
   .capacidad { padding: var(--esp-4) var(--esp-3); }
   .capacidad__cifra strong { font-size: 2.8rem; }
   .capacidad__consulta { font-size: 1.25rem; }
+  .capacidad__desglose { grid-template-columns: 1fr; }
 }
 
 /* ------------------------------------------------------------

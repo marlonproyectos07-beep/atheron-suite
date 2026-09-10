@@ -1,6 +1,11 @@
 ---
 nombre: Hotel Colonial Confort
 publicado: true
+grupos:
+  visible: true
+  capacidad: 28
+  tipo: fija
+  nota: Veintiocho personas en camas fijas; hasta 30 requiere colchoneta y confirmacion.
 orden: 5
 insignia: '05'
 modalidad: habitaciones

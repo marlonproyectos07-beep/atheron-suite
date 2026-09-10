@@ -1,6 +1,11 @@
 ---
 nombre: Apartamentos en Algarra
 publicado: false
+grupos:
+  visible: true
+  capacidad: 35
+  tipo: maxima
+  nota: Máximo grupal sujeto a disponibilidad; puede incluir sofa-camas y colchonetas.
 orden: 4
 insignia: '04'
 modalidad: casa-completa
