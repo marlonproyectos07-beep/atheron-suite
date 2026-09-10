@@ -17,7 +17,8 @@
    ------------------------------------------------------------ */
 .grupos__hero {
   background:
-    radial-gradient(120% 110% at 85% 0%, #24486f 0%, transparent 62%),
+    linear-gradient(90deg, #0f172a 0%, rgba(15, 23, 42, .98) 35%, rgba(15, 23, 42, .84) 52%, rgba(15, 23, 42, .28) 82%),
+    url('/assets/img/grupos/hero-grupos-atheron.webp') 62% center / cover no-repeat,
     var(--color-noche);
   color: var(--color-blanco);
 }
@@ -37,6 +38,12 @@
 .grupos__hero .hero__texto { max-width: 56ch; }
 
 @media (max-width: 48rem) {
+  .grupos__hero {
+    background:
+      linear-gradient(90deg, rgba(15, 23, 42, .96) 0%, rgba(15, 23, 42, .82) 100%),
+      url('/assets/img/grupos/hero-grupos-atheron.webp') 67% center / cover no-repeat,
+      var(--color-noche);
+  }
   .grupos__promesa { font-size: 1.12rem; }
 }
 
