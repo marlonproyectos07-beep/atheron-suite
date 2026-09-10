@@ -65,6 +65,8 @@ import {
   INDEPENDENCIA,
   WA_GUIA,
   WA_GUIA_GRUPO,
+  agenda,
+  agendaVigente,
 } from '../../data/guia-zipaquira';
 
 const RUTA = CIUDAD.ruta;
@@ -73,6 +75,9 @@ const RUTA = CIUDAD.ruta;
    correspondiente no se pinta: ver el encabezado de
    src/data/experiencias-locales.ts */
 const lugares = experienciasDe(CIUDAD.nombre);
+
+/* La agenda caduca sola al construir despues de la fecha del evento. */
+const mostrarAgenda = agendaVigente();
 
 /* ------------------------------------------------------------
    DATOS ESTRUCTURADOS
@@ -103,6 +108,22 @@ const fichaGuia = {
       isPartOf: { '@id': ORGANIZACION['@id'] },
       about: `${CIUDAD.nombre}, ${CIUDAD.departamento}`,
       breadcrumb: { '@id': `${url(RUTA)}#miga` },
+      /* Las dos piezas propias que el hub reparte: la guia de la
+         Catedral y el articulo practico. Declararlas como partes le
+         dice a Google que son una seccion, no tres paginas sueltas
+         compitiendo. */
+      hasPart: [
+        {
+          '@type': 'Article',
+          '@id': `${url('/zipaquira/catedral-de-sal')}#articulo`,
+          url: url('/zipaquira/catedral-de-sal'),
+        },
+        {
+          '@type': 'BlogPosting',
+          '@id': `${url('/blog/guia-de-zipaquira')}#articulo`,
+          url: url('/blog/guia-de-zipaquira'),
+        },
+      ],
     },
     ORGANIZACION,
     migaDePan(
@@ -117,8 +138,8 @@ const fichaGuia = {
 ---
 
 <Base
-  titulo="Descubre Zipaquirá: qué ver, alrededores y dónde hospedarse | Atheron Suite"
-  descripcion="Guía de Atheron para descubrir Zipaquirá: la Catedral de Sal, el centro histórico, el Embalse del Neusa, la Mina de Nemocón y cómo repartir la visita en dos días."
+  titulo="Qué ver en Zipaquirá y sus alrededores | Atheron Suite"
+  descripcion="Guía Atheron de Zipaquirá: la Catedral de Sal, el centro histórico, el Embalse del Neusa, la Mina de Nemocón y cómo repartir la visita en dos días."
   ruta={RUTA}
   ogTitulo="Descubre Zipaquirá · Guía Atheron"
   ogDescripcion="Catedral de Sal, centro histórico, naturaleza y alrededores. Todo lo que puedes vivir en Zipaquirá y cerca."
@@ -206,20 +227,24 @@ const fichaGuia = {
       </div>
     </section>
 
-    <section class="seccion hub__evento" id="eventos">
-      <div class="contenedor hub__evento-interior">
-        <div>
-          <span class="etiqueta">Agenda de la ciudad</span>
-          <p class="hub__evento-fecha">18 · OCT · 2026</p>
-          <h2>Trail Running de Colores</h2>
-          <p>La Catedral de Sal anunció una experiencia de carrera a 180 metros bajo tierra. Las inscripciones figuran cerradas en el canal oficial consultado; verifica allí cualquier actualización antes de desplazarte.</p>
+    {/* AGENDA — el texto sale de src/data/guia-zipaquira.ts y el
+         bloque deja de pintarse solo cuando el evento ya paso. */}
+    {mostrarAgenda && (
+      <section class="seccion hub__evento" id="eventos">
+        <div class="contenedor hub__evento-interior">
+          <div>
+            <span class="etiqueta">{agenda.ceja}</span>
+            <p class="hub__evento-fecha"><time datetime={agenda.fechaMaquina}>{agenda.fechaTexto}</time></p>
+            <h2>{agenda.titulo}</h2>
+            <p>{agenda.texto}</p>
+          </div>
+          <div class="hub__evento-acciones">
+            <a class="boton boton--acento boton--grande" href={agenda.enlace.href} target="_blank" rel="noopener noreferrer">{agenda.enlace.texto}</a>
+            <a class="boton boton--contorno boton--grande" href="/hospedajes">Ver dónde hospedarse</a>
+          </div>
         </div>
-        <div class="hub__evento-acciones">
-          <a class="boton boton--acento boton--grande" href="https://www.instagram.com/reel/DccE7AmOmbI/" target="_blank" rel="noopener noreferrer">Ver anuncio oficial</a>
-          <a class="boton boton--contorno boton--grande" href="/hospedajes">Ver dónde hospedarse</a>
-        </div>
-      </div>
-    </section>
+      </section>
+    )}
 
     {/* ============================================================
          CATEDRAL DE SAL — RESUMEN, NO COPIA
@@ -355,35 +380,25 @@ const fichaGuia = {
          DONDE COMER Y CAFES
 
          Esta seccion SOLO existe cuando haya lugares verificados.
-         Hoy la lista esta vacia, asi que en vez de una rejilla de
-         huecos se explica por que todavia no hay nada. Es mas
-         honesto y da mejor impresion que seis tarjetas de relleno.
-         ============================================================ */}
-    <section class="seccion" id="donde-comer">
-      <div class="contenedor guia__cuerpo">
-        <span class="etiqueta">Dónde comer</span>
-        <h2>Gastronomía y cafés</h2>
 
-        {lugares.length > 0 ? (
+         Hasta el 10 de septiembre de 2026, con la lista vacia, se
+         pintaba igual: dos parrafos explicando que todavia no habia
+         nada. Era un bloque de texto frio en mitad de la guia que
+         repetia lo que ya dice la tarjeta "Dónde comer y cafés" del
+         indice, marcada "En preparación". Ahora, sin lugares, no se
+         pinta; la tarjeta del indice sigue diciendo la verdad.
+         ============================================================ */}
+    {lugares.length > 0 && (
+      <section class="seccion" id="donde-comer">
+        <div class="contenedor guia__cuerpo">
+          <span class="etiqueta">Dónde comer</span>
+          <h2>Gastronomía y cafés</h2>
           <div class="grid grid--2" style="margin-top: var(--esp-4);">
             {lugares.map((l) => <ExperienciaLocal lugar={l} medidas="(min-width: 900px) 28rem, 92vw" />)}
           </div>
-        ) : (
-          <>
-            <p>
-              Todavía no hay ninguno publicado, y es a propósito. Estamos visitando
-              y verificando sitio por sitio: dirección, horario y qué se come de
-              verdad en cada uno.
-            </p>
-            <p>
-              Preferimos una lista corta en la que se pueda confiar antes que una
-              larga copiada de internet. Cuando un sitio entre aquí será porque
-              hemos estado.
-            </p>
-          </>
-        )}
-      </div>
-    </section>
+        </div>
+      </section>
+    )}
 
     {/* ============================================================
          ITINERARIO

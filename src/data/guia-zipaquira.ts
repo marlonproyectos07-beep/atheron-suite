@@ -116,6 +116,16 @@ export const categorias: Categoria[] = [
     texto: 'Una forma de repartir la visita sin correr.',
     href: '#itinerario',
   },
+  /* La logistica -transporte, tiempo, clima- no se cuenta aqui: la
+     cuenta el articulo practico del blog. El hub lo enlaza en vez de
+     repetirlo, y el articulo enlaza de vuelta al hub. */
+  {
+    id: 'como-llegar',
+    titulo: 'Cómo llegar y cuántos días',
+    texto: 'Transporte desde Bogotá, tiempo recomendado y clima, en nuestra guía práctica.',
+    href: '/blog/guia-de-zipaquira',
+    externa: true,
+  },
   {
     id: 'grupos',
     titulo: 'Viajes en grupo',
@@ -130,18 +140,17 @@ export const categorias: Categoria[] = [
     href: '/hospedajes',
     externa: true,
   },
-  /* Las dos de abajo NO llevan href. Cuando existan lugares
-     verificados en src/data/experiencias-locales.ts, se les pone el
-     destino y se encienden solas. */
+  /* La de abajo NO lleva href. Cuando existan lugares verificados en
+     src/data/experiencias-locales.ts, se le pone el destino y se
+     enciende sola.
+
+     Eran dos tarjetas -"Donde comer" y "Cafes y experiencias"- que
+     decian lo mismo. Juntas son una: con la del articulo practico
+     el indice queda en ocho, sin tarjeta huerfana en la ultima fila. */
   {
     id: 'donde-comer',
-    titulo: 'Dónde comer',
-    texto: 'Estamos verificando sitio por sitio antes de recomendar ninguno.',
-  },
-  {
-    id: 'cafes',
-    titulo: 'Cafés y experiencias',
-    texto: 'En preparación, con el mismo criterio: solo lo que hemos comprobado.',
+    titulo: 'Dónde comer y cafés',
+    texto: 'Estamos visitando y verificando sitio por sitio antes de recomendar ninguno.',
   },
 ];
 
@@ -295,6 +304,34 @@ export const itinerario = {
 };
 
 /* ------------------------------------------------------------
+   AGENDA DE LA CIUDAD
+
+   El texto es el que publico direccion el 10 de septiembre de 2026,
+   sin cambios. Lo que se anade es la caducidad: el bloque se deja de
+   pintar solo cuando la fecha pasa, para que el hub no anuncie en
+   noviembre una carrera de octubre.
+
+   OJO: la comprobacion se hace AL CONSTRUIR el sitio. Si despues del
+   18 de octubre no hay ningun despliegue, el bloque sigue visible
+   hasta el siguiente.
+   ------------------------------------------------------------ */
+export const agenda = {
+  ceja: 'Agenda de la ciudad',
+  fechaTexto: '18 · OCT · 2026',
+  fechaMaquina: '2026-10-18',
+  titulo: 'Trail Running de Colores',
+  texto:
+    'La Catedral de Sal anunció una experiencia de carrera a 180 metros bajo tierra. ' +
+    'Las inscripciones figuran cerradas en el canal oficial consultado; verifica allí ' +
+    'cualquier actualización antes de desplazarte.',
+  enlace: { texto: 'Ver anuncio oficial', href: 'https://www.instagram.com/reel/DccE7AmOmbI/' },
+};
+
+/** true mientras el evento no haya pasado (hora de Colombia). */
+export const agendaVigente = (hoy: Date = new Date()): boolean =>
+  hoy <= new Date(`${agenda.fechaMaquina}T23:59:59-05:00`);
+
+/* ------------------------------------------------------------
    MENSAJES DE WHATSAPP DE LA GUIA
 
    Salen del modulo central (src/data/whatsapp.ts). Aqui solo se
@@ -325,8 +362,12 @@ export const ENLACE_GENERICO = ENLACE_DISPONIBILIDAD;
    con nadie, decirlo en voz alta es lo que hace creible el dia que
    si los haya y se declaren.
    ------------------------------------------------------------ */
+/* Alineado con /grupos el 10 de septiembre de 2026: la gestion de
+   boletas para grupos alojados, con sus tres condiciones, es una
+   decision de direccion y no puede contradecirse entre paginas. */
 export const INDEPENDENCIA =
-  'Esta guía es independiente. Atheron no vende entradas de la Catedral de Sal ' +
-  'ni de la Mina de Sal de Nemocón, no es operador autorizado de ninguna de las ' +
-  'dos y no tiene convenio con los sitios que menciona. Lo que recomendamos, lo ' +
-  'recomendamos porque lo hemos comprobado.';
+  'Esta guía es independiente. Atheron no es operador autorizado ni tiene convenio ' +
+  'con la Catedral de Sal, la Mina de Sal de Nemocón ni los demás sitios que menciona, ' +
+  'y no vende entradas individuales. Para grupos alojados con nosotros podemos gestionar ' +
+  'las boletas de la Catedral dentro de la cotización, al valor oficial vigente y sujetas ' +
+  'a confirmación. Lo que recomendamos, lo recomendamos porque lo hemos comprobado.';

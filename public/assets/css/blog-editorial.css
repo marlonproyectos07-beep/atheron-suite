@@ -1,3 +1,15 @@
+/* ============================================================
+   BLOG-EDITORIAL.CSS — el listado de /blog
+
+   Va como hoja extra: solo la carga /blog.
+
+   10 de septiembre de 2026: la columna del hero deja de ser una
+   lista decorativa oculta en movil y pasa a ser el recorrido
+   enlazado (Guia -> Catedral -> Hospedajes -> WhatsApp), visible en
+   todos los tamanos. La tarjeta "guia principal" desaparece: las
+   tarjetas salen del modelo de datos y todas son iguales.
+   ============================================================ */
+
 .blog-portada {
   position: relative;
   overflow: hidden;
@@ -19,12 +31,13 @@
   grid-template-columns: minmax(0, 1.35fr) minmax(18rem, .65fr);
   gap: clamp(2rem, 6vw, 5rem);
   align-items: center;
-  padding-block: clamp(4rem, 9vw, 7rem);
+  padding-block: clamp(3rem, 8vw, 6.5rem);
 }
 .blog-portada__texto { padding: 0; }
 .blog-portada__texto .grupo-botones { margin-top: var(--esp-4); }
+
 .blog-portada__mapa {
-  padding: clamp(1.4rem, 3vw, 2.3rem);
+  padding: clamp(1.4rem, 3vw, 2.1rem);
   border: 1px solid rgba(255,255,255,.2);
   border-radius: var(--radio-lg);
   color: #fff;
@@ -32,19 +45,119 @@
   box-shadow: 0 24px 60px rgba(0,0,0,.22);
   backdrop-filter: blur(8px);
 }
-.blog-portada__sello { font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--color-sal-claro); }
-.blog-portada__nombre { margin: .4rem 0 1.2rem; font-family: var(--fuente-titulo); font-size: clamp(2rem, 4vw, 3.2rem); }
-.blog-portada__mapa ul { display: grid; gap: .7rem; }
-.blog-portada__mapa li { display: flex; gap: .8rem; padding-top: .7rem; border-top: 1px solid rgba(255,255,255,.13); font-size: .9rem; color: rgba(255,255,255,.82); }
-.blog-portada__mapa li span { color: var(--color-sal-claro); font-weight: 700; }
-.blog-destacada { display: grid; grid-template-columns: minmax(17rem, .8fr) minmax(0, 1.2fr); overflow: hidden; }
-.blog-destacada .tarjeta__media { min-height: 20rem; background: linear-gradient(150deg, #14243a, #315d4e); }
-.blog-destacada__grafico { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; color: white; }
-.blog-destacada__grafico span { font-family: var(--fuente-titulo); font-size: clamp(4rem, 9vw, 7rem); color: var(--color-sal-claro); line-height: .9; }
-.blog-destacada__grafico small { margin-top: .8rem; text-transform: uppercase; letter-spacing: .14em; }
-.blog-destacada .tarjeta__cuerpo { justify-content: center; padding: clamp(2rem, 5vw, 4rem); }
+.blog-portada__sello {
+  margin-bottom: var(--esp-2);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--color-sal-claro);
+}
+
+/* El recorrido. Cada paso es un enlace de bloque completo: se pulsa
+   comodo en el telefono y se tabula como lo que es. */
+.blog-ruta { display: grid; margin: 0; padding: 0; list-style: none; }
+.blog-ruta li + li { border-top: 1px solid rgba(255,255,255,.13); }
+.blog-ruta a {
+  display: flex;
+  align-items: flex-start;
+  gap: .9rem;
+  padding: .8rem .35rem;
+  border-radius: var(--radio-sm);
+  color: #fff;
+  text-decoration: none;
+  transition: background var(--transicion);
+}
+.blog-ruta a:hover { background: rgba(255,255,255,.07); }
+.blog-ruta a:focus-visible { outline: 3px solid var(--color-sal-claro); outline-offset: 2px; }
+.blog-ruta__paso { flex: none; min-width: 1.6rem; font-weight: 700; color: var(--color-sal-claro); }
+.blog-ruta__texto { display: flex; flex-direction: column; gap: .1rem; }
+.blog-ruta__texto strong { font-size: 1rem; }
+.blog-ruta__texto small { font-size: .86rem; color: rgba(255,255,255,.78); }
+
+/* ------------------------------------------------------------
+   ARTICULOS PUBLICADOS
+   Sin foto de portada -ningun articulo la tiene y no se inventa-:
+   la banda tipografica dice que clase de pieza es.
+   ------------------------------------------------------------ */
+.blog-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: var(--esp-4);
+}
+.blog-articulo { display: flex; flex-direction: column; overflow: hidden; }
+.blog-articulo__banda {
+  display: flex;
+  align-items: flex-end;
+  min-height: 8.5rem;
+  padding: var(--esp-3) var(--esp-4);
+  background:
+    radial-gradient(circle at 85% 20%, rgba(227, 194, 92, .22), transparent 14rem),
+    linear-gradient(140deg, #14243a, #315d4e);
+}
+.blog-articulo__banda span {
+  font-family: var(--fuente-titulo);
+  font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+  line-height: 1.05;
+  color: var(--color-sal-claro);
+}
+.blog-articulo .tarjeta__cuerpo { flex: 1; }
+
+.blog-enlace {
+  color: var(--acento-texto);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ------------------------------------------------------------
+   EN PREPARACION
+   Borde discontinuo gris, el mismo lenguaje que las tarjetas
+   pendientes del hub. Nada de marcador amarillo: eso era una marca
+   de trabajo que se veia como un error.
+   ------------------------------------------------------------ */
+.blog-proximos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: var(--esp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.blog-proximos li {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  padding: var(--esp-3);
+  border: 1px dashed var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-blanco);
+}
+.blog-proximos__tema {
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--acento-texto);
+}
+.blog-proximos__titulo {
+  font-family: var(--fuente-titulo);
+  font-size: 1.08rem;
+  line-height: 1.3;
+  color: var(--texto);
+}
+.blog-proximos__estado {
+  margin-top: auto;
+  padding-top: var(--esp-1);
+  font-size: .8rem;
+  color: var(--texto-suave);
+}
+
 @media (max-width: 48rem) {
-  .blog-portada__composicion, .blog-destacada { grid-template-columns: 1fr; }
-  .blog-portada__mapa { display: none; }
-  .blog-destacada .tarjeta__media { min-height: 13rem; }
+  .blog-portada__composicion { grid-template-columns: 1fr; gap: var(--esp-4); }
+  .blog-portada__mapa { padding: var(--esp-3); backdrop-filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-ruta a { transition: none; }
 }

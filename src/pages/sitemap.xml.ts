@@ -59,8 +59,8 @@ const paginasFijas: Entrada[] = [
      El hub va con prioridad 0.9, por encima de la guia suelta: es
      el nodo desde el que se reparte el destino entero. */
   { ruta: '/guia-zipaquira', prioridad: '0.9', fecha: '2026-09-10' },
-  { ruta: '/zipaquira/catedral-de-sal', prioridad: '0.8', fecha: '2026-09-09' },
-  { ruta: '/blog', prioridad: '0.7' },
+  { ruta: '/zipaquira/catedral-de-sal', prioridad: '0.8', fecha: '2026-09-10' },
+  { ruta: '/blog', prioridad: '0.7', fecha: '2026-09-10' },
 ];
 
 /* Los articulos salen del modelo de datos del blog, con SU fecha de

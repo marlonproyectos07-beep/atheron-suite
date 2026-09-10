@@ -12,15 +12,20 @@
 
    LO QUE ATHERON NO PUEDE DECIR TODAVIA, Y AQUI NO SE DICE
 
-   No vendemos boletas. No somos operador autorizado. No tenemos
-   convenio ni comision. No hay descuento de Atheron en la Catedral.
-   Mientras no exista un acuerdo firmado, cualquier frase que lo
-   insinue es publicidad enganosa, y ademas nos deja sin margen para
-   negociar ese acuerdo despues.
+   No somos operador autorizado. No tenemos convenio ni comision. No
+   hay descuento de Atheron en la Catedral. No vendemos entradas
+   individuales. Nada de acceso preferencial, filas evitadas ni QR
+   directo. Mientras no exista un acuerdo firmado, cualquier frase
+   que lo insinue es publicidad enganosa, y ademas nos deja sin
+   margen para negociar ese acuerdo despues.
 
    Lo que si podemos ofrecer, y es real: ayudar a planear la visita
-   de un grupo que se hospeda con nosotros, y coordinar horarios y
-   traslados desde el alojamiento.
+   de un grupo que se hospeda con nosotros, coordinar horarios y
+   traslados desde el alojamiento y -desde el 10 de septiembre de
+   2026, por decision de direccion- gestionar las boletas del grupo
+   dentro de la cotizacion, al valor oficial vigente y sujetas a
+   confirmacion. Es la misma frase que publica /grupos: si una
+   cambia, cambian las dos.
 
    POR QUE NO SE PUBLICAN PRECIOS
 
@@ -173,18 +178,21 @@ export const recomendaciones: { titulo: string; texto: string }[] = [
    GRUPOS
 
    Aqui es donde hay que tener mas cuidado. La Catedral TIENE un
-   canal propio para boleteria de grupos grandes, y es el que hay
-   que usar: nosotros no vendemos, no reservamos y no cobramos por
-   ello. Lo que hacemos es lo de la lista, que es real y es lo que
-   nos piden los grupos que se hospedan aqui.
+   canal propio para boleteria de grupos grandes. Lo que hacemos
+   nosotros es lo de la lista: es real y es lo que nos piden los
+   grupos que se hospedan aqui. La gestion de boletas va con sus tres
+   condiciones -solo grupos, valor oficial vigente, sujeta a
+   confirmacion- y sin ninguna promesa de descuento, prioridad ni
+   acceso sin fila.
    ------------------------------------------------------------ */
 export const loQueHacemosPorUnGrupo: string[] = [
   'Alojamos al grupo completo, repartido entre nuestros hospedajes si hace falta.',
   'Ayudamos a cuadrar el horario de la visita con el check-in, el check-out y las comidas.',
   'Contamos cómo se llega desde cada alojamiento y cuánto se tarda.',
   'Guardamos el equipaje sin costo en la oficina si el grupo llega antes o sale después.',
+  'Si el grupo lo pide, gestionamos las boletas dentro de la cotización, al valor oficial vigente y sujetas a confirmación.',
 ];
 
-/** Lo que NO hacemos. Se publica en la pagina, no solo aqui. */
+/** El limite, dicho sin letra pequena. Se publica en la pagina. */
 export const loQueNoHacemos =
-  'No vendemos boletas de la Catedral de Sal ni somos operador autorizado. La compra se hace por los canales oficiales de la Catedral, y para grupos grandes tienen su propio canal de boletería.';
+  'No somos operador autorizado de la Catedral de Sal, no tenemos convenio con ella, no ofrecemos descuentos y no vendemos entradas individuales. Quien viaja por su cuenta compra en los canales oficiales de la Catedral, que también tiene un canal propio para grupos grandes.';

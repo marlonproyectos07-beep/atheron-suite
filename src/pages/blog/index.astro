@@ -1,8 +1,22 @@
 ---
 /* ============================================================
    BLOG — listado de articulos
-   Su funcion es doble: que el visitante encuentre los articulos
-   y que Google vea la estructura del grupo tematico.
+
+   QUE ES /blog Y QUE NO ES
+   El blog resuelve: como llegar, cuanto tiempo quedarse, donde
+   dormir, y la historia de Atheron. Descubrir la ciudad es trabajo
+   de /guia-zipaquira, y la Catedral tiene su propia pagina. Por eso
+   el H1 ya no es "Descubre Zipaquira" -competia con el del hub- y
+   ninguna tarjeta se presenta como "guia principal".
+
+   EL RECORRIDO DEL HERO
+   Blog -> Guia Atheron -> Catedral -> Hospedajes -> WhatsApp. Son
+   enlaces reales y se ven tambien en el telefono: antes la columna
+   del hero se ocultaba en movil y era texto sin enlace.
+
+   LAS TARJETAS SALEN DEL MODELO DE DATOS
+   Titulo, rotulo y fecha vienen de src/data/blog.ts: un articulo
+   nuevo aparece aqui, en su ficha y en el sitemap a la vez.
    ============================================================ */
 
 import Base from '../../layouts/Base.astro';
@@ -12,13 +26,25 @@ import BotonFlotante from '../../components/BotonFlotante.astro';
 
 import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
 import { migaDePan, url, ORGANIZACION } from '../../data/seo';
-import { articulosPublicados } from '../../data/blog';
+import { articulosPublicados, proximosArticulos, fechaLarga } from '../../data/blog';
 import { atributosWhatsApp } from '../../data/whatsapp';
 
-/* El listado declara que es un blog y que articulos lo componen.
-   Las fechas y los titulos salen del modelo de datos del blog, no
-   escritos aqui: si un articulo cambia de fecha, cambia en el
-   listado, en su propia ficha y en el sitemap a la vez. */
+const publicados = articulosPublicados();
+
+const WA_BLOG =
+  'Hola, vengo del blog de Atheron y quiero información para planear mi estadía en Zipaquirá.\n\n' +
+  'Fecha de llegada:\n' +
+  'Fecha de salida:\n' +
+  'Número de huéspedes:';
+
+/* El recorrido sugerido. El cuarto paso -WhatsApp- se pinta aparte
+   porque su destino se construye con el mensaje. */
+const recorrido = [
+  { paso: '01', titulo: 'Guía Atheron', texto: 'Qué ver en la ciudad y sus alrededores', href: '/guia-zipaquira' },
+  { paso: '02', titulo: 'Catedral de Sal', texto: 'Horario, pasaportes y cómo planear la visita', href: '/zipaquira/catedral-de-sal' },
+  { paso: '03', titulo: 'Hospedajes', texto: 'Dónde quedarte en Zipaquirá', href: '/hospedajes' },
+];
+
 const fichaBlog = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -28,17 +54,19 @@ const fichaBlog = {
       url: url('/blog'),
       name: 'Blog sobre Zipaquirá | Atheron Suite',
       description:
-        'Guías prácticas sobre Zipaquirá, Cundinamarca: como llegar, que visitar, donde comer y donde alojarse.',
+        'Artículos prácticos de Atheron sobre Zipaquirá: cómo llegar desde Bogotá, cuántos días quedarse y la historia de nuestros hospedajes.',
       inLanguage: 'es-CO',
       publisher: { '@id': ORGANIZACION['@id'] },
       breadcrumb: { '@id': `${url('/blog')}#miga` },
-      blogPost: articulosPublicados().map((a) => ({
+      blogPost: publicados.map((a) => ({
         '@type': 'BlogPosting',
         '@id': `${url(a.ruta)}#articulo`,
         headline: a.titulo,
+        description: a.descripcion,
         url: url(a.ruta),
         datePublished: a.publicado,
         dateModified: a.modificado,
+        author: { '@type': 'Organization', name: a.autor },
       })),
     },
     ORGANIZACION,
@@ -52,173 +80,132 @@ const fichaBlog = {
 
 <Base
   titulo="Blog sobre Zipaquirá | Atheron Suite"
-  descripcion="Guías prácticas sobre Zipaquirá, Cundinamarca: como llegar, que visitar, donde comer y donde alojarse."
+  descripcion="Artículos prácticos de Atheron sobre Zipaquirá: cómo llegar desde Bogotá, cuántos días quedarse y la historia de nuestros hospedajes."
   ruta="/blog"
-  ogDescripcion="Guías prácticas para planear tu visita a Zipaquirá."
-  avisoBorrador="Version de trabajo. Los articulos marcados todavia no estan publicados."
+  ogDescripcion="Artículos prácticos para planear tu viaje a Zipaquirá."
   jsonLd={fichaBlog}
   hojasExtra={['blog-editorial']}
 >
 
-  <Cabecera enlaces={menuBlog} cta={ctaDisponibilidad} actual="/blog" />
+  <Cabecera enlaces={menuBlog} cta={{ ...ctaDisponibilidad, origen: 'blog' }} actual="/blog" />
 
   <main id="contenido">
 
     <section class="hero hero--interior blog-portada">
       <div class="contenedor blog-portada__composicion">
         <div class="hero__contenido blog-portada__texto">
-          <span class="hero__etiqueta">Historias y guías locales</span>
-          <h1 class="hero__titulo">Descubre Zipaquirá con Atheron</h1>
+          <span class="hero__etiqueta">Blog de Atheron</span>
+          <h1 class="hero__titulo">Historias y guías prácticas desde Zipaquirá</h1>
           <p class="hero__texto">
-            Rutas, experiencias y recomendaciones verificadas para ayudarte a
-            recorrer la ciudad y aprovechar mejor tu estadía.
+            Respuestas concretas para planear el viaje —cómo llegar, cuánto tiempo
+            quedarse, dónde dormir— y la historia de cómo trabajamos. Para descubrir
+            qué ver en la ciudad, entra a la Guía Atheron.
           </p>
           <div class="grupo-botones">
             <a class="boton boton--acento boton--grande" href="/guia-zipaquira">Explorar la Guía Atheron</a>
             <a class="boton boton--claro boton--grande" href="/hospedajes">Ver hospedajes</a>
           </div>
         </div>
-        <aside class="blog-portada__mapa" aria-label="Temas de la Guía Atheron">
-          <span class="blog-portada__sello">Guía local</span>
-          <p class="blog-portada__nombre">Zipaquirá</p>
-          <ul>
-            <li><span>01</span>Catedral de Sal</li>
-            <li><span>02</span>Centro histórico</li>
-            <li><span>03</span>Naturaleza y alrededores</li>
-            <li><span>04</span>Estadías con calma</li>
-          </ul>
-        </aside>
+
+        <nav class="blog-portada__mapa" aria-label="Recorrido sugerido">
+          <p class="blog-portada__sello">Recorrido sugerido</p>
+          <ol class="blog-ruta">
+            {recorrido.map((r) => (
+              <li>
+                <a href={r.href}>
+                  <span class="blog-ruta__paso">{r.paso}</span>
+                  <span class="blog-ruta__texto"><strong>{r.titulo}</strong><small>{r.texto}</small></span>
+                </a>
+              </li>
+            ))}
+            <li>
+              <a {...atributosWhatsApp(WA_BLOG, { origen: 'blog_indice_recorrido' })}>
+                <span class="blog-ruta__paso">04</span>
+                <span class="blog-ruta__texto"><strong>WhatsApp</strong><small>Consulta disponibilidad para tus fechas</small></span>
+              </a>
+            </li>
+          </ol>
+        </nav>
+      </div>
+    </section>
+
+    <section class="seccion" id="articulos">
+      <div class="contenedor">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">Publicados</span>
+          <h2>Artículos del blog</h2>
+        </div>
+
+        <div class="blog-lista">
+          {publicados.map((a) => (
+            <article class="tarjeta blog-articulo aparecer">
+              <div class="blog-articulo__banda" aria-hidden="true">
+                <span>{a.rotulo}</span>
+              </div>
+              <div class="tarjeta__cuerpo">
+                <p class="tarjeta-articulo__meta">
+                  Actualizado el <time datetime={a.modificado}>{fechaLarga(a.modificado)}</time>
+                </p>
+                <h3 class="tarjeta__titulo"><a href={a.ruta}>{a.tituloCorto}</a></h3>
+                <p class="texto-suave">{a.descripcion}</p>
+                <div class="tarjeta__pie">
+                  <a class="boton boton--contorno" href={a.ruta}>Leer el artículo</a>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ==========================================================
+         EN PREPARACION
+         Sin enlaces: no existen. La lista vive en src/data/blog.ts
+         y es la misma que cierra la guia practica.
+         ========================================================== */}
+    <section class="seccion seccion--alterna" id="proximos">
+      <div class="contenedor">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">Próximamente</span>
+          <h2>En preparación</h2>
+          <p class="texto-suave" style="margin-top: var(--esp-2);">
+            Los publicamos cuando cada dato esté verificado. Mientras tanto, ya
+            están disponibles la <a class="blog-enlace" href="/guia-zipaquira">Guía Atheron de Zipaquirá</a>
+            {' '}y la <a class="blog-enlace" href="/zipaquira/catedral-de-sal">guía de la Catedral de Sal</a>.
+          </p>
+        </div>
+
+        <ul class="blog-proximos">
+          {proximosArticulos.map((p) => (
+            <li>
+              <span class="blog-proximos__tema">{p.tema}</span>
+              <span class="blog-proximos__titulo">{p.titulo}</span>
+              <span class="blog-proximos__estado">En preparación</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
 
     <section class="seccion">
       <div class="contenedor">
-
-        {/* ==========================================================
-             ARTICULO DESTACADO: la pagina pilar
-             Va sola y arriba porque es la mas importante del grupo.
-             ========================================================== */}
-        <article class="tarjeta blog-destacada aparecer" style="margin-bottom: var(--esp-5);">
-          <div class="tarjeta__media">
-            <span class="tarjeta__insignia">Guía principal</span>
-            <div class="blog-destacada__grafico" aria-hidden="true">
-              <span>48 h</span>
-              <small>para vivir la ciudad</small>
-            </div>
-          </div>
-          <div class="tarjeta__cuerpo">
-            <p class="tarjeta-articulo__meta">Guía completa</p>
-            <h2 class="tarjeta__titulo">
-              <a href="/blog/guia-de-zipaquira">Guía de Zipaquirá: qué hacer, cómo llegar y dónde dormir</a>
-            </h2>
-            <p class="texto-suave">
-              Cómo llegar desde Bogotá, cuánto tiempo dedicarle, qué ver más allá
-              de la Catedral de Sal y dónde alojarse.
-            </p>
-            <div class="tarjeta__pie">
-              <a class="boton boton--primario" href="/blog/guia-de-zipaquira">Leer la guía</a>
-            </div>
-          </div>
-        </article>
-
-        {/* Articulos publicados */}
-        <div class="encabezado-seccion">
-          <span class="etiqueta">Publicados</span>
-          <h2>Últimos artículos</h2>
-        </div>
-
-        <div class="grid grid--3" style="margin-bottom: var(--esp-6);">
-          <article class="tarjeta aparecer">
-            <div class="tarjeta__media">
-              <span class="tarjeta__insignia">Historia</span>
-            </div>
-            <div class="tarjeta__cuerpo">
-              <p class="tarjeta-articulo__meta">Sobre nosotros</p>
-              <h3 class="tarjeta__titulo">
-                <a href="/blog/como-nacio-atheron-suite">Cómo nació Atheron Suite</a>
-              </h3>
-              <p class="texto-suave">
-                De una necesidad de alojamiento en Zipaquirá a un proyecto de
-                hospedaje para familias y grupos.
-              </p>
-              <div class="tarjeta__pie">
-                <a class="boton boton--contorno" href="/blog/como-nacio-atheron-suite">Leer</a>
-              </div>
-            </div>
-          </article>
-        </div>
-
-        <div class="encabezado-seccion">
-          <span class="etiqueta">Próximos artículos</span>
-          <h2>En preparación</h2>
-          <p class="texto-suave" style="margin-top: var(--esp-2);">
-            Estamos verificando fuentes y datos locales antes de publicar cada guía.
-          </p>
-        </div>
-
-        {/* ==========================================================
-             ARTICULOS PENDIENTES
-             Cuando escribas uno, convierte su tarjeta en un enlace
-             real (como la de arriba) y anadelo al sitemap.xml.
-             ========================================================== */}
-        <div class="grid grid--3">
-
-          <article class="tarjeta-simple">
-            <p class="tarjeta-articulo__meta">Cómo llegar</p>
-            <h3><span class="pendiente">Cómo llegar de Bogotá a Zipaquirá</span></h3>
-            <p class="texto-suave">Bus, carro y Tren de la Sabana comparados.</p>
-          </article>
-
-          <article class="tarjeta-simple">
-            <p class="tarjeta-articulo__meta">Qué visitar</p>
-            <h3><span class="pendiente">Catedral de Sal: horarios y precios</span></h3>
-            <p class="texto-suave">Qué esperar del recorrido y cuánto dura.</p>
-          </article>
-
-          <article class="tarjeta-simple">
-            <p class="tarjeta-articulo__meta">Planes</p>
-            <h3><span class="pendiente">Zipaquirá en un fin de semana</span></h3>
-            <p class="texto-suave">Itinerario de dos días sin correr.</p>
-          </article>
-
-          <article class="tarjeta-simple">
-            <p class="tarjeta-articulo__meta">Comer</p>
-            <h3><span class="pendiente">Dónde comer en Zipaquirá</span></h3>
-            <p class="texto-suave">Opciones por zona y tipo de plan.</p>
-          </article>
-
-          <article class="tarjeta-simple">
-            <p class="tarjeta-articulo__meta">Familia</p>
-            <h3><span class="pendiente">Zipaquirá con ninos</span></h3>
-            <p class="texto-suave">Qué funciona y qué no con los más pequeños.</p>
-          </article>
-
-          <article class="tarjeta-simple">
-            <p class="tarjeta-articulo__meta">Alojamiento</p>
-            <h3><span class="pendiente">Dónde dormir cerca de la Catedral de Sal</span></h3>
-            <p class="texto-suave">Qué tener en cuenta al elegir zona.</p>
-          </article>
-
-        </div>
-
-        <div class="cta-final aparecer" style="margin-top: var(--esp-6);">
+        <div class="cta-final aparecer">
           <h2>¿Vienes a Zipaquirá?</h2>
-          <p>Cuéntanos cómo viajas y te ayudamos a encontrar un hospedaje acorde con tu plan.</p>
+          <p>Cuéntanos fechas y número de huéspedes, y te ayudamos a elegir el hospedaje que encaja con tu plan.</p>
           <div class="grupo-botones grupo-botones--centrado">
             <a class="boton boton--whatsapp boton--grande"
-               {...atributosWhatsApp('Hola, vengo del blog y quiero información sobre los hospedajes de Atheron Suite.', { origen: 'blog_indice' })}>
+               {...atributosWhatsApp(WA_BLOG, { origen: 'blog_indice' })}>
               Escribir por WhatsApp
             </a>
             <a class="boton boton--claro boton--grande" href="/hospedajes">Ver los hospedajes</a>
           </div>
         </div>
-
       </div>
     </section>
 
   </main>
 
   <Pie />
-  <BotonFlotante mensaje="Hola, vengo del blog de Atheron y quiero información para planear mi estadía en Zipaquirá." />
+  <BotonFlotante mensaje={WA_BLOG} origen="blog_flotante" />
 
 </Base>

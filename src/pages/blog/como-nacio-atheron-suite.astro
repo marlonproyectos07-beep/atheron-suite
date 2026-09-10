@@ -9,6 +9,12 @@
    NOTA: en la Etapa 3 este archivo se convierte en un texto en
    Markdown dentro de src/content/blog/, y sera editable desde el
    panel. La maqueta pasa a una unica plantilla compartida.
+
+   10 DE SEPTIEMBRE DE 2026: correccion ortografica (tildes) del
+   titular y del cuerpo. No se cambio ninguna afirmacion. Las cifras
+   del relato -siete propiedades, el grupo de mil turistas, el grupo
+   de sesenta personas- son de direccion y siguen pendientes de su
+   confirmacion expresa.
    ============================================================ */
 
 import Base from '../../layouts/Base.astro';
@@ -17,7 +23,7 @@ import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
 import { migaDePan, url, ORGANIZACION } from '../../data/seo';
-import { articuloDe } from '../../data/blog';
+import { articuloDe, fechaLarga } from '../../data/blog';
 import { atributosWhatsApp } from '../../data/whatsapp';
 
 
@@ -59,22 +65,23 @@ const fichaArticulo = {
     migaDePan([
       { nombre: 'Inicio', ruta: '/' },
       { nombre: 'Blog', ruta: '/blog' },
-      { nombre: articulo.titulo, ruta: articulo.ruta },
+      { nombre: articulo.tituloCorto, ruta: articulo.ruta },
     ], `${url(articulo.ruta)}#miga`),
   ],
 };
 ---
 
 <Base
-  titulo="Como nació Atheron Suite: de una oportunidad en Zipaquirá a un destino inteligente"
-  descripcion="La historia de Atheron Suite: como una necesidad de alojamiento en Zipaquirá dio origen a un proyecto de hospedaje para familias y grupos, y a una visión de destinos inteligentes en Cundinamarca."
-  ruta="/blog/como-nacio-atheron-suite"
+  titulo="Cómo nació Atheron Suite | Historia de un hospedaje en Zipaquirá"
+  descripcion={articulo.descripcion}
+  ruta={articulo.ruta}
   ogTipo="article"
-  ogDescripcion="Empezamos pequenos, pero pensamos en grande. La historia real del proyecto."
+  ogTitulo={articulo.tituloCorto}
+  ogDescripcion="Empezamos pequeños, pero pensamos en grande. La historia real del proyecto."
   jsonLd={fichaArticulo}
 >
 
-  <Cabecera enlaces={menuBlog} cta={ctaDisponibilidad} actual="/blog" />
+  <Cabecera enlaces={menuBlog} cta={{ ...ctaDisponibilidad, origen: 'blog_historia' }} actual="/blog" />
 
   <main id="contenido">
 
@@ -84,62 +91,62 @@ const fichaArticulo = {
 
           <p class="articulo__meta">
             <span><a href="/blog">Blog</a></span>
-            <span>18 de agosto de 2026</span>
+            <span><time datetime={articulo.publicado}>{fechaLarga(articulo.publicado)}</time></span>
             <span>4 min de lectura</span>
           </p>
 
-          <h1>Como nació Atheron Suite: de una oportunidad en Zipaquirá a la construccion de un destino inteligente</h1>
+          <h1>{articulo.titulo}</h1>
 
           <div class="respuesta-rapida">
             <strong>En corto</strong>
             Atheron Suite nació en Zipaquirá, Cundinamarca, cuando vimos que la
-            ciudad recibia mas visitantes de los que podia alojar. Empezamos con
+            ciudad recibía más visitantes de los que podía alojar. Empezamos con
             recursos limitados y unos pocos hospedajes cerca de la Catedral de
             Sal, aprendiendo de cada huésped. Hoy operamos siete propiedades y
             trabajamos para que el modelo se pueda llevar a otros destinos.
           </div>
 
 
-          <h2>El dia que Zipaquirá se quedo corta</h2>
+          <h2>El día que Zipaquirá se quedó corta</h2>
 
           <p>
-            Llegaron cerca de mil turistas de China. Venian a conocer la Catedral
-            de Sal, que es la razon por la que la mayoria de visitantes llega al
-            municipio, y querian recorrer la region.
+            Llegaron cerca de mil turistas de China. Venían a conocer la Catedral
+            de Sal, que es la razón por la que la mayoría de visitantes llega al
+            municipio, y querían recorrer la región.
           </p>
 
           <p>
-            Zipaquirá no tenia como recibirlos. No habia suficiente alojamiento
-            ni suficientes servicios turisticos para atender un flujo así. Los
-            visitantes llegaban, veian lo que habian venido a ver, y se iban a
+            Zipaquirá no tenía cómo recibirlos. No había suficiente alojamiento
+            ni suficientes servicios turísticos para atender un flujo así. Los
+            visitantes llegaban, veían lo que habían venido a ver, y se iban a
             dormir a Bogotá.
           </p>
 
           <p>
-            Verlo de cerca nos dejo dos conclusiones. La primera, que el turismo
-            en Zipaquirá estaba creciendo mas rapido que su capacidad de
-            atenderlo. La segunda, mas incomoda: que buena parte del valor
-            economico que ese turismo genera se estaba yendo de la region, porque
-            la gente dormia, comia y gastaba en otro lado.
+            Verlo de cerca nos dejó dos conclusiones. La primera, que el turismo
+            en Zipaquirá estaba creciendo más rápido que su capacidad de
+            atenderlo. La segunda, más incómoda: que buena parte del valor
+            económico que ese turismo genera se estaba yendo de la región, porque
+            la gente dormía, comía y gastaba en otro lado.
           </p>
 
 
           <h2>La oportunidad que encontramos</h2>
 
           <p>
-            Ahi vimos algo concreto que hacer: crear alojamiento de calidad en
+            Ahí vimos algo concreto que hacer: crear alojamiento de calidad en
             Zipaquirá, mejorar la experiencia de quien visita el municipio, y
             lograr que una parte mayor de lo que el turismo produce se quede
             aquí.
           </p>
 
           <p>
-            No era una idea abstracta. Era una necesidad que se podia contar con
-            numeros: visitantes que llegaban, camas que no existian.
+            No era una idea abstracta. Era una necesidad que se podía contar con
+            números: visitantes que llegaban, camas que no existían.
           </p>
 
 
-          <h2>Empezamos con lo que teniamos</h2>
+          <h2>Empezamos con lo que teníamos</h2>
 
           <p>
             Atheron Suite no nació con capital grande. Nació con la capacidad de
@@ -148,40 +155,40 @@ const fichaArticulo = {
 
           <p>
             Arrancamos con unos pocos hospedajes. Aprendimos directamente de los
-            clientes: que les molestaba, que valoraban, que preguntaban siempre
-            antes de reservar. Cada estancia nos enseno algo, y con lo que ese
+            clientes: qué les molestaba, qué valoraban, qué preguntaban siempre
+            antes de reservar. Cada estancia nos enseñó algo, y con lo que ese
             trabajo iba generando fuimos mejorando las propiedades una por una.
           </p>
 
           <p>
-            En estos dos anos descubrimos algo que no teniamos previsto: los
-            grupos. Un grupo mexicano de sesenta personas se quedo diez noches en
+            En estos dos años descubrimos algo que no teníamos previsto: los
+            grupos. Un grupo mexicano de sesenta personas se quedó diez noches en
             dos de nuestras casas. Empresas y constructoras nos empezaron a
             buscar para alojar personal por meses. Equipos deportivos, clubes de
             ciclismo, moteros. Varios vuelven cada temporada.
           </p>
 
           <p>
-            Ese aprendizaje cambio parte de nuestro enfoque, y hoy tenemos
+            Ese aprendizaje cambió parte de nuestro enfoque, y hoy tenemos
             <a href="/landing/casas-para-grupos-en-zipaquira">casas
-            completas para grupos</a> ademas del alojamiento para familias y
+            completas para grupos</a> además del alojamiento para familias y
             viajeros.
           </p>
 
 
-          <h2>Que estamos construyendo</h2>
+          <h2>Qué estamos construyendo</h2>
 
           <p>
-            Hoy operamos siete hospedajes en Zipaquirá. Pero seria incompleto
+            Hoy operamos siete hospedajes en Zipaquirá. Pero sería incompleto
             presentar Atheron Suite solo como una empresa que alquila casas y
             habitaciones.
           </p>
 
           <p>
             Lo que estamos haciendo aquí es una prueba piloto. Queremos demostrar
-            que se puede combinar hospitalidad, tecnologia, automatizacion y
+            que se puede combinar hospitalidad, tecnología, automatización y
             seguridad para construir lo que llamamos destinos inteligentes:
-            lugares donde la experiencia del visitante esta pensada de principio
+            lugares donde la experiencia del visitante está pensada de principio
             a fin, no improvisada.
           </p>
 
@@ -191,7 +198,7 @@ const fichaArticulo = {
           </p>
 
 
-          <h2>Como cada huésped hace crecer el proyecto</h2>
+          <h2>Cómo cada huésped hace crecer el proyecto</h2>
 
           <p>
             Esto no es una frase bonita, es como funciona el negocio.
@@ -199,24 +206,24 @@ const fichaArticulo = {
 
           <p>
             Cada reserva genera flujo de caja. Ese flujo permite mejorar una
-            propiedad, comprar lo que hacia falta, sostener empleo local y
+            propiedad, comprar lo que hacía falta, sostener empleo local y
             preparar la siguiente. Cada huésped que nos dice que algo no
             funcionaba nos ahorra repetir el error con el siguiente.
           </p>
 
           <p>
-            Crecemos al ritmo que el propio trabajo permite. Es mas lento que
-            levantar capital, pero es solido: cada paso esta pagado por el
+            Crecemos al ritmo que el propio trabajo permite. Es más lento que
+            levantar capital, pero es sólido: cada paso está pagado por el
             anterior.
           </p>
 
 
-          <h2>Hacia donde vamos</h2>
+          <h2>Hacia dónde vamos</h2>
 
           <p>
             El plan es seguir mejorando las propiedades actuales, incorporar
-            tecnologia que haga la experiencia mas simple para el huésped, y
-            ampliar poco a poco la operacion.
+            tecnología que haga la experiencia más simple para el huésped, y
+            ampliar poco a poco la operación.
           </p>
 
           <p>
@@ -227,22 +234,22 @@ const fichaArticulo = {
           </p>
 
           <p style="font-family: var(--fuente-titulo); font-size: 1.4rem; color: var(--color-verde);">
-            Empezamos pequenos, pero pensamos en grande.
+            Empezamos pequeños, pero pensamos en grande.
           </p>
 
           <p>
             Atheron Suite nació para resolver una necesidad real. Empezamos en
-            Zipaquirá con lo que teniamos, aprendiendo de cada huésped y
-            construyendo paso a paso una visión que algun dia queremos llevar
-            mucho mas lejos.
+            Zipaquirá con lo que teníamos, aprendiendo de cada huésped y
+            construyendo paso a paso una visión que algún día queremos llevar
+            mucho más lejos.
           </p>
 
 
           <div class="cluster">
             <h3>Ven a conocernos</h3>
             <p class="texto-suave">
-              Si vas a visitar la Catedral de Sal o te quedas unos dias en la
-              region, mira nuestros hospedajes. Y si vienen en grupo, escribenos:
+              Si vas a visitar la Catedral de Sal o te quedas unos días en la
+              región, mira nuestros hospedajes. Y si vienen en grupo, escríbenos:
               es lo que mejor sabemos hacer.
             </p>
             <div class="grupo-botones" style="margin-top: var(--esp-2);">
@@ -257,7 +264,8 @@ const fichaArticulo = {
           <div class="cluster" style="margin-top: var(--esp-3);">
             <h3>Relacionado</h3>
             <ul>
-              <li><a href="/blog/guia-de-zipaquira">Guía de Zipaquirá: que hacer, como llegar y donde dormir</a></li>
+              <li><a href="/guia-zipaquira">Guía Atheron: qué ver en Zipaquirá y sus alrededores</a></li>
+              <li><a href="/blog/guia-de-zipaquira">Guía práctica de Zipaquirá: cómo llegar y cuántos días quedarse</a></li>
               <li><a href="/landing/casas-para-grupos-en-zipaquira">Casas para grupos en Zipaquirá</a></li>
             </ul>
           </div>
@@ -271,7 +279,8 @@ const fichaArticulo = {
   <Pie textoVuelta="Volver al blog" hrefVuelta="/blog" />
 
   <BotonFlotante
-    mensaje="Hola, quiero información sobre los hospedajes de Atheron Suite."
+    mensaje="Hola, leí la historia de Atheron Suite y quiero información sobre los hospedajes."
+    origen="blog_historia_flotante"
   />
 
 </Base>

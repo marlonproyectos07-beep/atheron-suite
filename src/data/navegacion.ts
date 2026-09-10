@@ -130,10 +130,15 @@ export const menuHospedajes: Enlace[] = [
 /* ------------------------------------------------------------
    BLOG — menu corto a proposito: en un articulo, el visitante
    viene a leer. Cuantas menos salidas, mejor.
+
+   "Zipaquira" entra el 10 de septiembre de 2026: sin ella, desde
+   un articulo no habia forma de llegar al hub del destino, que es
+   justo lo que el lector del blog va a querer despues.
    ------------------------------------------------------------ */
 export const menuBlog: Enlace[] = [
   { texto: 'Inicio', href: '/' },
   { texto: 'Hospedajes', href: '/hospedajes' },
+  { texto: 'Zipaquirá', href: '/guia-zipaquira' },
   { texto: 'Blog', href: '/blog' },
 ];
 

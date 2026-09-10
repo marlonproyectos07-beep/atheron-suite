@@ -340,7 +340,9 @@
 .articulo__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--esp-2);
+  /* Poco espacio entre filas: en el telefono los datos saltan de
+     linea y con el hueco completo parecian tres parrafos sueltos. */
+  gap: .2rem var(--esp-2);
   font-size: .88rem;
   color: var(--texto-suave);
 }

@@ -16,10 +16,20 @@
 
    LO QUE ESTA PAGINA NO AFIRMA, Y ES LO IMPORTANTE
 
-   No vendemos boletas, no somos operador autorizado, no tenemos
-   convenio ni comision, y no hay ningun descuento de Atheron. Se
-   dice explicitamente en la seccion de grupos, en positivo y sin
-   letra pequeña. La razon esta en src/data/catedral-de-sal.ts.
+   No somos operador autorizado, no tenemos convenio ni comision, no
+   hay ningun descuento de Atheron y no vendemos entradas
+   individuales. Para grupos que se alojan con nosotros, las boletas
+   se pueden gestionar dentro de la cotizacion, al valor oficial
+   vigente y sujetas a confirmacion: la misma frase que publica
+   /grupos, por decision de direccion. Nada de acceso preferencial,
+   filas evitadas ni QR directo. Se dice en la seccion de grupos, sin
+   letra pequeña. El detalle esta en src/data/catedral-de-sal.ts.
+
+   10 DE SEPTIEMBRE DE 2026: el hero decia "a dieciseis minutos a pie
+   de nuestros hospedajes del centro". La cifra solo esta medida para
+   Hotel Atheron Suite, y direccion ya la habia retirado de los datos
+   practicos; se retira tambien de aqui. La distancia de cada
+   hospedaje esta en su ficha.
 
    Todos los datos duros salen de ese archivo, que lleva su registro
    de verificacion contra la fuente oficial y la fecha. Aqui no se
@@ -33,6 +43,7 @@ import BotonFlotante from '../../components/BotonFlotante.astro';
 import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
 import { migaDePan, url, ORGANIZACION } from '../../data/seo';
 import { atributosWhatsApp } from '../../data/whatsapp';
+import { fechaLarga } from '../../data/blog';
 import {
   SITIO_OFICIAL,
   TARIFAS_OFICIALES,
@@ -45,6 +56,12 @@ import {
 } from '../../data/catedral-de-sal';
 
 const RUTA = '/zipaquira/catedral-de-sal';
+
+/* Fechas de la pagina, sacadas de git: primer commit del archivo y
+   ultimo cambio de contenido. No son la fecha de verificacion de los
+   datos -esa es VERIFICADO_EL- sino la de la pagina. */
+const PUBLICADO = '2026-09-09';
+const MODIFICADO = '2026-09-10';
 
 /* Los dos mensajes de WhatsApp de esta pagina. El de grupo lleva ya
    las tres preguntas que siempre hay que hacer, tal y como pidio
@@ -83,20 +100,27 @@ const fichaGuia = {
       '@type': 'Article',
       '@id': `${url(RUTA)}#articulo`,
       url: url(RUTA),
-      headline: 'Catedral de Sal de Zipaquirá: cómo planear la visita',
+      headline: 'Catedral de Sal: cómo planear tu visita',
       description:
         'Guía de Atheron Suite para visitar la Catedral de Sal de Zipaquirá: horario, tipos de pasaporte, recomendaciones y cómo encaja con tu estancia.',
       inLanguage: 'es-CO',
-      isPartOf: { '@id': ORGANIZACION['@id'] },
+      author: { '@type': 'Organization', name: 'Atheron Suite' },
+      datePublished: PUBLICADO,
+      dateModified: MODIFICADO,
+      mainEntityOfPage: url(RUTA),
+      isPartOf: { '@id': `${url('/guia-zipaquira')}#pagina` },
       publisher: { '@id': ORGANIZACION['@id'] },
       about: 'Catedral de Sal de Zipaquirá',
       breadcrumb: { '@id': `${url(RUTA)}#miga` },
     },
     ORGANIZACION,
+    /* El escalon intermedio apunta al hub. Antes era "Zipaquirá" sin
+       direccion: un escalon sin "item" que no es el ultimo es un error
+       para Google, y el hub ya existe. */
     migaDePan(
       [
         { nombre: 'Inicio', ruta: '/' },
-        { nombre: 'Zipaquirá' },
+        { nombre: 'Guía de Zipaquirá', ruta: '/guia-zipaquira' },
         { nombre: 'Catedral de Sal', ruta: RUTA },
       ],
       `${url(RUTA)}#miga`,
@@ -106,7 +130,7 @@ const fichaGuia = {
 ---
 
 <Base
-  titulo="Catedral de Sal de Zipaquirá: horario y cómo planear la visita | Atheron Suite"
+  titulo="Catedral de Sal de Zipaquirá: horario y cómo planear la visita"
   descripcion="Guía práctica para visitar la Catedral de Sal de Zipaquirá: horario, los tres pasaportes, qué llevar y cómo organizar el día si te hospedas en el centro."
   ruta={RUTA}
   ogTipo="article"
@@ -133,12 +157,17 @@ const fichaGuia = {
          ============================================================ */}
     <section class="hero hero--interior guia__hero">
       <div class="contenedor hero__contenido">
-        <span class="hero__etiqueta">Guía de Zipaquirá</span>
+        <nav class="migas" aria-label="Ruta de navegación">
+          <ol>
+            <li><a href="/">Inicio</a></li>
+            <li><a href="/guia-zipaquira">Guía de Zipaquirá</a></li>
+            <li aria-current="page">Catedral de Sal</li>
+          </ol>
+        </nav>
         <h1 class="hero__titulo">Catedral de Sal: cómo planear tu visita</h1>
         <p class="hero__texto">
-          Una mina de sal convertida en templo, a 180 metros bajo tierra y a
-          dieciséis minutos a pie de nuestros hospedajes del centro. Esto es
-          lo que conviene saber antes de ir.
+          Una mina de sal convertida en templo, a 180 metros bajo tierra.
+          Horario, pasaportes y lo que conviene saber antes de ir.
         </p>
 
         <ul class="guia__datos">
@@ -153,10 +182,14 @@ const fichaGuia = {
         {/* La fecha va al lado del horario y no en el pie. Un horario
             sin fecha de comprobacion es un horario en el que nadie
             deberia confiar, y el nuestro puede quedarse viejo. */}
+        {/* Los espacios explicitos no son adorno: sin ellos Astro junta
+            el texto con el enlace y se leia "en elsitio oficial ... de
+            Salel 9". */}
         <p class="guia__fuente">
-          Horario y modalidades comprobados en el
-          <a href={SITIO_OFICIAL} target="_blank" rel="noopener noreferrer">sitio oficial de la Catedral de Sal</a>
-          el {VERIFICADO_EL}. Confirma siempre antes de ir.
+          Horario y modalidades comprobados en el{' '}
+          <a href={SITIO_OFICIAL} target="_blank" rel="noopener noreferrer">sitio oficial de la Catedral de Sal</a>{' '}
+          el {VERIFICADO_EL}. Confirma siempre antes de ir. Página actualizada el{' '}
+          <time datetime={MODIFICADO}>{fechaLarga(MODIFICADO)}</time>.
         </p>
       </div>
     </section>
@@ -180,9 +213,9 @@ const fichaGuia = {
           camina por dentro de una montaña.
         </p>
         <p>
-          Está dentro del Parque de la Sal, en el borde del casco urbano. Desde
-          el centro histórico se llega caminando, y desde nuestros hospedajes
-          del centro también.
+          Está dentro del Parque de la Sal, en el borde del casco urbano, y
+          desde el centro histórico se llega caminando. La ubicación de cada
+          uno de nuestros hospedajes está en su ficha.
         </p>
       </div>
     </section>
@@ -220,7 +253,7 @@ const fichaGuia = {
             publicarlas aqui es garantizar que algun dia esten mal. */}
         <p class="guia__aviso-tarifas">
           <strong>No publicamos precios.</strong> Las tarifas las fija la Catedral
-          de Sal y cambian con el tiempo. Consúltalas en su
+          de Sal y cambian con el tiempo. Consúltalas en su{' '}
           <a href={TARIFAS_OFICIALES} target="_blank" rel="noopener noreferrer">página oficial de tarifas</a>,
           que es donde están al día.
         </p>

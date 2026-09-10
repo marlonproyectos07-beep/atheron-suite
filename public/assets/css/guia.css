@@ -47,7 +47,7 @@
 .guia__datos li { display: flex; flex-direction: column; gap: .15rem; }
 
 .guia__dato-rotulo {
-  font-size: .74rem;
+  font-size: .78rem;
   letter-spacing: .12em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, .62);
@@ -164,6 +164,57 @@
 
 .guia__caja h3 { color: var(--color-blanco); margin-bottom: var(--esp-2); }
 .guia__caja .texto-suave { color: rgba(255, 255, 255, .78); }
+
+/* ------------------------------------------------------------
+   MIGA DE PAN VISIBLE
+
+   La misma ruta que declara el JSON-LD, a la vista: Google pide que
+   la miga marcada exista en la pagina, y al lector le dice donde
+   esta. Sobre fondo claro en el articulo del blog y sobre el hero
+   oscuro en la Catedral.
+   ------------------------------------------------------------ */
+.migas { max-width: 68ch; margin: 0 auto var(--esp-3); font-size: .86rem; }
+.migas ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 .5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--texto-suave);
+}
+.migas li + li::before { content: "/"; margin-right: .5rem; opacity: .55; }
+.migas a {
+  display: inline-block;
+  padding-block: .35rem;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.migas a:hover,
+.migas [aria-current] { color: var(--texto); }
+
+.guia__hero .migas { max-width: none; margin: 0 0 var(--esp-2); }
+.guia__hero .migas ol { color: rgba(255, 255, 255, .72); }
+.guia__hero .migas a:hover,
+.guia__hero .migas [aria-current] { color: var(--color-blanco); }
+
+/* ------------------------------------------------------------
+   CONSEJOS DENTRO DE UN ARTICULO DEL BLOG
+
+   La guia practica usa las mismas tarjetas que la Catedral. Dentro
+   de un articulo van en una columna -en tres, dentro de 68ch, cada
+   una quedaba de 220 px- y con el cuerpo de letra de la tarjeta, no
+   el del articulo.
+   ------------------------------------------------------------ */
+.guia-consejos { display: grid; gap: var(--esp-2); }
+.articulo .guia__consejo { font-size: 1rem; line-height: 1.6; }
+.articulo .guia__consejo h3 { margin-top: 0; }
+.articulo .guia__consejo p { color: var(--texto-suave); }
+.guia__consejo-accion { margin-top: var(--esp-2); }
+
+.cluster__proximos { margin-top: var(--esp-3); font-size: .92rem; color: var(--texto-suave); }
 
 @media (max-width: 48rem) {
   .guia__datos { gap: var(--esp-2) var(--esp-3); }
