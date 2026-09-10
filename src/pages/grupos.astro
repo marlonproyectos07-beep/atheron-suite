@@ -78,6 +78,13 @@ const resumen = resumeCapacidad(
    recorrer la coleccion dentro del bucle. */
 const porId = new Map(publicadas.map((f) => [f.id, f]));
 
+
+/* Vista previa al compartir. Sale de la primera propiedad publicada con
+   fotografia: real, y la misma que el visitante vera al abrir. Un enlace
+   de grupos compartido por WhatsApp sin imagen sale pelado, y por ahi
+   es por donde llegan los grupos. */
+const fotoCompartir = publicadas.find((f) => f.data.fotoTarjeta && f.data.fotoTarjetaAlt);
+
 const fichaPagina = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -110,6 +117,11 @@ const fichaPagina = {
   ruta="/grupos"
   ogTitulo="Alojamiento para grupos en Zipaquirá | Atheron Suite"
   ogDescripcion="Diseñamos la combinación de hospedajes para tu grupo en Zipaquirá. Empresas, delegaciones, eventos y familias numerosas."
+  {/* Vista previa al compartir. Un enlace de grupos compartido por
+      WhatsApp sin imagen sale pelado, y por ahi es por donde llegan
+      los grupos. */}
+  imagen={fotoCompartir?.data.fotoTarjeta}
+  imagenAlt={fotoCompartir?.data.fotoTarjetaAlt}
   jsonLd={fichaPagina}
   hojasExtra={['grupos']}
 >

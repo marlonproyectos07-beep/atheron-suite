@@ -96,6 +96,13 @@ const fichaNegocio = {
   ruta="/"
   ogTitulo="Atheron Suite | Hospedajes en Zipaquirá, Cundinamarca"
   ogDescripcion="Hospedajes seleccionados en Zipaquirá, a minutos de la Catedral de Sal y del centro histórico."
+  {/* Vista previa al compartir. Es la MISMA fotografia real que abre el
+      mosaico, no la imagen del hero: la del hero esta generada con IA y
+      su registro de procedencia -docs/fotografias.md, 8.1- prohibe
+      expresamente usarla en Open Graph. Un enlace compartido por
+      WhatsApp sin imagen sale pelado, y WhatsApp es nuestro canal. */}
+  imagen={mosaico[0]?.src}
+  imagenAlt={mosaico[0]?.alt}
   jsonLd={fichaNegocio}
   avisoBorrador="Version de trabajo. Faltan fotografias en algunas secciones."
   hojasExtra={['proyecto-foto', 'portada']}
