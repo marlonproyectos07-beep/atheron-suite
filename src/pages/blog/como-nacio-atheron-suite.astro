@@ -10,11 +10,37 @@
    Markdown dentro de src/content/blog/, y sera editable desde el
    panel. La maqueta pasa a una unica plantilla compartida.
 
-   10 DE SEPTIEMBRE DE 2026: correccion ortografica (tildes) del
-   titular y del cuerpo. No se cambio ninguna afirmacion. Las cifras
-   del relato -siete propiedades, el grupo de mil turistas, el grupo
-   de sesenta personas- son de direccion y siguen pendientes de su
-   confirmacion expresa.
+   ============================================================
+   FUENTE: TESTIMONIO DIRECTO DE MARLON PARRA
+   ============================================================
+
+   Director general de Atheron. Confirmacion directa del 10 de
+   septiembre de 2026. Es testimonio empresarial, NO una estadistica
+   oficial: el articulo lo dice en su nota final y el JSON-LD lo cita
+   como tal (src/data/blog.ts, "fuentes").
+
+   CONFIRMADO Y PUBLICADO
+   - Los turistas de China: redaccion autorizada por direccion, sin
+     cambiar una palabra. NO se afirma que fuera un evento oficial, que
+     Atheron alojara al grupo, que se fueran solo por falta de hoteles,
+     que hubiera contrato, ni que la Catedral o la Alcaldia
+     participaran en el proyecto.
+   - "Aproximadamente dos años" desarrollando el proyecto. Sin fecha
+     exacta: no hay documentacion para darla.
+   - "Opera y profesionaliza siete hospedajes": formulacion aprobada.
+     Operar no es ser propietario, y no todos estan publicados con
+     ficha propia; el texto lo explica sin inventar contratos.
+
+   PENDIENTE DE NUEVA CONFIRMACION (F3.2 en docs/pendientes.md)
+   - El grupo internacional: la experiencia es real, pero la
+     distribucion numerica quedo inconsistente. No se publica ninguna
+     cifra (personas, noches, reparto) ni la nacionalidad. Se usa la
+     redaccion sin numeros que dio direccion.
+
+   Retiradas el 10 de septiembre, por presentar como hecho algo que no
+   esta confirmado: "la ciudad recibia mas visitantes de los que podia
+   alojar", "Zipaquira no tenia como recibirlos... se iban a dormir a
+   Bogota" y "camas que no existian".
    ============================================================ */
 
 import Base from '../../layouts/Base.astro';
@@ -92,6 +118,7 @@ const fichaArticulo = {
           <p class="articulo__meta">
             <span><a href="/blog">Blog</a></span>
             <span><time datetime={articulo.publicado}>{fechaLarga(articulo.publicado)}</time></span>
+            <span>Actualizado el <time datetime={articulo.modificado}>{fechaLarga(articulo.modificado)}</time></span>
             <span>4 min de lectura</span>
           </p>
 
@@ -99,35 +126,28 @@ const fichaArticulo = {
 
           <div class="respuesta-rapida">
             <strong>En corto</strong>
-            Atheron Suite nació en Zipaquirá, Cundinamarca, cuando vimos que la
-            ciudad recibía más visitantes de los que podía alojar. Empezamos con
-            recursos limitados y unos pocos hospedajes cerca de la Catedral de
-            Sal, aprendiendo de cada huésped. Hoy operamos siete propiedades y
-            trabajamos para que el modelo se pueda llevar a otros destinos.
+            Atheron Suite nació en Zipaquirá, Cundinamarca, al ver que la ciudad
+            atraía grandes grupos de visitantes y todavía necesitaba fortalecer su
+            capacidad de alojamiento y la coordinación de su experiencia turística.
+            Llevamos aproximadamente dos años desarrollando el proyecto: empezamos
+            con recursos limitados y unos pocos hospedajes, aprendiendo de cada
+            huésped, y hoy operamos y profesionalizamos siete hospedajes.
           </div>
 
 
-          <h2>El día que Zipaquirá se quedó corta</h2>
+          <h2>El punto de partida</h2>
 
           <p>
-            Llegaron cerca de mil turistas de China. Venían a conocer la Catedral
-            de Sal, que es la razón por la que la mayoría de visitantes llega al
-            municipio, y querían recorrer la región.
+            Uno de los momentos que dio origen al proyecto ocurrió cuando cerca de
+            mil turistas procedentes de China llegaron a conocer la Catedral de Sal.
+            Después de la visita continuaron hacia Bogotá.
           </p>
 
           <p>
-            Zipaquirá no tenía cómo recibirlos. No había suficiente alojamiento
-            ni suficientes servicios turísticos para atender un flujo así. Los
-            visitantes llegaban, veían lo que habían venido a ver, y se iban a
-            dormir a Bogotá.
-          </p>
-
-          <p>
-            Verlo de cerca nos dejó dos conclusiones. La primera, que el turismo
-            en Zipaquirá estaba creciendo más rápido que su capacidad de
-            atenderlo. La segunda, más incómoda: que buena parte del valor
-            económico que ese turismo genera se estaba yendo de la región, porque
-            la gente dormía, comía y gastaba en otro lado.
+            Aquella experiencia nos permitió ver una oportunidad concreta: Zipaquirá
+            atraía grandes grupos, pero todavía necesitaba fortalecer su capacidad de
+            alojamiento y la coordinación de su experiencia turística. Ese fue uno de
+            los puntos de partida de Atheron en el sector de hospedajes.
           </p>
 
 
@@ -141,8 +161,8 @@ const fichaArticulo = {
           </p>
 
           <p>
-            No era una idea abstracta. Era una necesidad que se podía contar con
-            números: visitantes que llegaban, camas que no existían.
+            No era una idea abstracta: era una necesidad concreta que habíamos
+            visto de cerca.
           </p>
 
 
@@ -161,11 +181,21 @@ const fichaArticulo = {
           </p>
 
           <p>
-            En estos dos años descubrimos algo que no teníamos previsto: los
-            grupos. Un grupo mexicano de sesenta personas se quedó diez noches en
-            dos de nuestras casas. Empresas y constructoras nos empezaron a
-            buscar para alojar personal por meses. Equipos deportivos, clubes de
-            ciclismo, moteros. Varios vuelven cada temporada.
+            En los aproximadamente dos años que llevamos desarrollando el proyecto
+            descubrimos algo que no teníamos previsto: los grupos. Empresas y
+            constructoras nos empezaron a buscar para alojar personal por meses.
+            Equipos deportivos, clubes de ciclismo, moteros. Varios vuelven cada
+            temporada.
+          </p>
+
+          <p>
+            También aprendimos a atender grupos internacionales que necesitaron
+            combinar varias clases de alojamiento. En una de esas experiencias
+            distribuimos a los viajeros entre casas y uno de los apartamentos del
+            edificio de Algarra. Ese caso nos enseñó que un grupo grande no siempre
+            debe alojarse en un solo lugar:
+            {' '}<a href="/grupos">puede coordinarse entre varias propiedades</a>{' '}
+            manteniendo una misma atención.
           </p>
 
           <p>
@@ -179,17 +209,21 @@ const fichaArticulo = {
           <h2>Qué estamos construyendo</h2>
 
           <p>
-            Hoy operamos siete hospedajes en Zipaquirá. Pero sería incompleto
-            presentar Atheron Suite solo como una empresa que alquila casas y
-            habitaciones.
+            Hoy operamos y profesionalizamos siete hospedajes. Operar y
+            profesionalizar un hospedaje no siempre significa ser su propietario:
+            trabajamos también con propiedades administradas y con alojamientos
+            aliados, y no todos tienen todavía una ficha publicada en este sitio.
+            Los que ya la tienen están en
+            {' '}<a href="/hospedajes">nuestra página de hospedajes</a>.
           </p>
 
           <p>
-            Lo que estamos haciendo aquí es una prueba piloto. Queremos demostrar
-            que se puede combinar hospitalidad, tecnología, automatización y
-            seguridad para construir lo que llamamos destinos inteligentes:
-            lugares donde la experiencia del visitante está pensada de principio
-            a fin, no improvisada.
+            Pero sería incompleto presentar Atheron Suite solo como una empresa
+            que alquila casas y habitaciones. Lo que estamos haciendo aquí es una
+            prueba piloto. Queremos demostrar que se puede combinar hospitalidad,
+            tecnología, automatización y seguridad para construir lo que llamamos
+            destinos inteligentes: lugares donde la experiencia del visitante está
+            pensada de principio a fin, no improvisada.
           </p>
 
           <p>
@@ -266,9 +300,17 @@ const fichaArticulo = {
             <ul>
               <li><a href="/guia-zipaquira">Guía Atheron: qué ver en Zipaquirá y sus alrededores</a></li>
               <li><a href="/blog/guia-de-zipaquira">Guía práctica de Zipaquirá: cómo llegar y cuántos días quedarse</a></li>
+              <li><a href="/grupos">Alojamiento para grupos en Zipaquirá</a></li>
               <li><a href="/landing/casas-para-grupos-en-zipaquira">Casas para grupos en Zipaquirá</a></li>
             </ul>
           </div>
+
+          {/* Nota editorial: dice de donde sale la historia sin sonar a
+              advertencia. Es testimonio empresarial, no estadistica. */}
+          <p class="texto-suave" style="font-size: .92rem;">
+            Este artículo recoge la historia del proyecto a partir del testimonio
+            directo de Marlon Parra, director general de Atheron.
+          </p>
 
         </article>
       </div>

@@ -152,13 +152,17 @@ export const articulos: Articulo[] = [
     /* Esta fecha ya la declaraba el propio articulo en su ficha de
        datos estructurados. Se respeta la que estaba publicada. */
     publicado: '2026-08-18',
-    /* 10 de septiembre: correccion ortografica del texto y del
-       titular. El contenido no cambio. */
+    /* 10 de septiembre: tildes y, despues, los datos confirmados por
+       Marlon Parra (ver la cabecera del articulo). */
     modificado: '2026-09-10',
     categoria: CATEGORIA_ATHERON,
     imagen: null,
     imagenAlt: null,
-    fuentes: [],
+    /* Testimonio empresarial, no fuente oficial. Sin url: es una
+       confirmacion directa, y la ficha la cita por su titulo. */
+    fuentes: [
+      { titulo: 'Testimonio directo de Marlon Parra, director general de Atheron (10 de septiembre de 2026)' },
+    ],
     enlacesInternos: [
       { texto: 'Nuestros hospedajes', href: '/hospedajes' },
     ],

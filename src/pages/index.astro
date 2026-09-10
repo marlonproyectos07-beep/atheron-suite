@@ -216,9 +216,12 @@ const fichaNegocio = {
             <span class="dato__numero">1</span>
             <span class="dato__texto">Ciudad: Zipaquirá</span>
           </div>
+          {/* Antes decia "~50 km". Sin origen, destino, ruta ni fuente no
+              se sabe si es distancia lineal o por carretera, asi que no se
+              publica ninguna cifra: ver F3.1 en docs/pendientes.md. */}
           <div class="dato">
-            <span class="dato__numero">~50 km</span>
-            <span class="dato__texto">Desde Bogotá</span>
+            <span class="dato__numero">Al norte</span>
+            <span class="dato__texto">de Bogotá</span>
           </div>
         </div>
 
@@ -669,13 +672,14 @@ const fichaNegocio = {
           <span class="etiqueta">El destino</span>
           <h2>Zipaquirá, cerca de todo y lejos del ruido</h2>
           <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
-            A unos 50 km al norte de Bogotá, Zipaquirá combina patrimonio, clima frio
-            de sabana y una escala amable para caminar. Es un destino de fin de semana
-            y también una base tranquila para trabajar unos dias.
+            Zipaquirá, al norte de Bogotá, combina patrimonio, clima frío de sabana
+            y una escala amable para caminar. Es un destino de fin de semana y también
+            una base tranquila para trabajar unos días.
           </p>
 
+          {/* Sin cifra de distancia hasta cerrar F3.1 (docs/pendientes.md). */}
           <ul class="lista-distancias">
-            <li><span>Desde Bogotá</span> <span>~50 km</span></li>
+            <li><span>Ubicación</span> <span>Al norte de Bogotá, en Cundinamarca</span></li>
           </ul>
         </div>
 
