@@ -216,6 +216,9 @@
 
 .cluster__proximos { margin-top: var(--esp-3); font-size: .92rem; color: var(--texto-suave); }
 
+/* Fuente citada dentro de un articulo: discreta, pero legible. */
+.articulo__fuente { font-size: .9rem; color: var(--texto-suave); }
+
 @media (max-width: 48rem) {
   .guia__datos { gap: var(--esp-2) var(--esp-3); }
   .guia__dato-valor { font-size: 1rem; }

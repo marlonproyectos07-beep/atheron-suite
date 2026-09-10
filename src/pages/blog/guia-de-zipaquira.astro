@@ -17,11 +17,19 @@
    intencion. Ahora el bloque "que ver" es un resumen de dos parrafos
    que enlaza a las dos paginas que lo cuentan de verdad.
 
-   DATOS SIN FUENTE CITADA, PENDIENTES DE MARLON
-   "Unos 50 km al norte de Bogota" y "mas de 2.600 metros sobre el
-   nivel del mar" estaban publicados antes de esta revision y se
-   conservan: son de dominio publico, pero no llevan fuente. Si se
-   decide citarla o retirarlos, es aqui.
+   DATOS DEL MUNICIPIO (orden de direccion, 10 de septiembre de 2026)
+   - "Unos 50 km al norte de Bogota" se retira: no tenia fuente. Queda
+     "ubicado al norte de Bogota, en la provincia de Sabana Centro".
+   - "Mas de 2.600 metros" pasa a "2.650 metros sobre el nivel del
+     mar". VERIFICADO el 10 de septiembre de 2026 en la pagina oficial
+     "Nuestro municipio" de la Alcaldia, que dice textualmente "a una
+     altura de 2650 metros sobre el nivel del mar". Es la fuente que
+     lleva el articulo en src/data/blog.ts.
+   - OJO: esa misma pagina NO nombra "Sabana Centro". Dice que
+     Zipaquira es "cabecera de provincia" y que esta en "una bella
+     sabana del centro del Pais". La frase de la provincia es de
+     direccion; por eso la nota visible atribuye a la Alcaldia solo
+     la altitud.
 
    No se publican tarifas de bus, traslado ni entradas.
    ============================================================ */
@@ -128,8 +136,8 @@ const WA_ARTICULO =
                ========================================================== */}
           <div class="respuesta-rapida">
             <strong>En corto</strong>
-            Zipaquirá es un municipio de Cundinamarca situado a unos 50 km al
-            norte de Bogotá. Su atractivo principal es la Catedral de Sal, un
+            Zipaquirá es un municipio de Cundinamarca ubicado al norte de Bogotá,
+            en la provincia de Sabana Centro. Su atractivo principal es la Catedral de Sal, un
             templo construido dentro de una mina de sal. Se llega en bus, en
             carro o en el Tren de la Sabana. Quedarse una noche permite
             ver el centro histórico sin prisa y evitar el trayecto de regreso
@@ -246,10 +254,18 @@ const WA_ARTICULO =
           <h2 id="clima">Clima y qué empacar</h2>
 
           <p>
-            Zipaquirá está en la sabana de Cundinamarca, a más de 2.600 metros
+            Zipaquirá está en la sabana de Cundinamarca, a 2.650 metros
             sobre el nivel del mar, con clima frío durante todo el año y
             diferencia notable entre el día y la noche. Para el recorrido
             subterráneo conviene llevar una chaqueta ligera y calzado cómodo.
+          </p>
+
+          {/* La fuente, a la vista: el JSON-LD la declara como citation
+              y lo que se marca tiene que poder verse en la pagina. */}
+          <p class="articulo__fuente">
+            Altitud según la página oficial{' '}
+            <a href={articulo.fuentes[0].url} target="_blank" rel="noopener noreferrer">«Nuestro municipio» de la Alcaldía de Zipaquirá</a>,
+            consultada el 10 de septiembre de 2026.
           </p>
 
 

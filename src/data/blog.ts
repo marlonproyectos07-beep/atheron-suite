@@ -116,7 +116,15 @@ export const articulos: Articulo[] = [
     categoria: CATEGORIA_ZIPAQUIRA,
     imagen: null,
     imagenAlt: null,
-    fuentes: [],
+    /* Registrada por orden de direccion el 10 de septiembre de 2026.
+       Sostiene la altitud (2.650 m). Ver el encabezado del articulo
+       sobre lo que esa pagina NO dice. */
+    fuentes: [
+      {
+        titulo: 'Alcaldía de Zipaquirá, «Nuestro municipio»',
+        url: 'https://www.zipaquira-cundinamarca.gov.co/municipio/nuestro-municipio',
+      },
+    ],
     enlacesInternos: [
       { texto: 'Guía Atheron de Zipaquirá', href: '/guia-zipaquira' },
       { texto: 'Catedral de Sal', href: '/zipaquira/catedral-de-sal' },

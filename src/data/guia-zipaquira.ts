@@ -306,10 +306,14 @@ export const itinerario = {
 /* ------------------------------------------------------------
    AGENDA DE LA CIUDAD
 
-   El texto es el que publico direccion el 10 de septiembre de 2026,
-   sin cambios. Lo que se anade es la caducidad: el bloque se deja de
-   pintar solo cuando la fecha pasa, para que el hub no anuncie en
-   noviembre una carrera de octubre.
+   El bloque se deja de pintar solo cuando la fecha pasa, para que el
+   hub no anuncie en noviembre una carrera de octubre.
+
+   EL ESTADO DE LAS INSCRIPCIONES NO SE AFIRMA (orden de direccion,
+   10 de septiembre de 2026). Antes decia "figuran cerradas": es un
+   dato que cambia sin avisar, y la prensa y el sitio oficial ya se
+   contradijeron una vez. El texto manda a consultarlo en el anuncio
+   del organizador, que es cierto pase lo que pase.
 
    OJO: la comprobacion se hace AL CONSTRUIR el sitio. Si despues del
    18 de octubre no hay ningun despliegue, el bloque sigue visible
@@ -322,8 +326,8 @@ export const agenda = {
   titulo: 'Trail Running de Colores',
   texto:
     'La Catedral de Sal anunció una experiencia de carrera a 180 metros bajo tierra. ' +
-    'Las inscripciones figuran cerradas en el canal oficial consultado; verifica allí ' +
-    'cualquier actualización antes de desplazarte.',
+    'Consulta la fecha, condiciones y estado actual de las inscripciones en el anuncio ' +
+    'del organizador.',
   enlace: { texto: 'Ver anuncio oficial', href: 'https://www.instagram.com/reel/DccE7AmOmbI/' },
 };
 
