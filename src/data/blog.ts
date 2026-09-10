@@ -116,13 +116,21 @@ export const articulos: Articulo[] = [
     categoria: CATEGORIA_ZIPAQUIRA,
     imagen: null,
     imagenAlt: null,
-    /* Registrada por orden de direccion el 10 de septiembre de 2026.
-       Sostiene la altitud (2.650 m). Ver el encabezado del articulo
-       sobre lo que esa pagina NO dice. */
+    /* Registradas por orden de direccion el 10 de septiembre de 2026 y
+       verificadas ese dia. Cada una sostiene un dato:
+         - "Nuestro municipio": la altitud, 2.650 m.
+         - "Casa a Casa...": la provincia de Sabana Centro. Es un video
+           institucional de la Alcaldia (16 de enero de 2024) cuyo texto
+           dice "este municipio de la provincia de Sabana Centro".
+       El articulo las cita a la vista, bajo el clima. */
     fuentes: [
       {
         titulo: 'Alcaldía de Zipaquirá, «Nuestro municipio»',
         url: 'https://www.zipaquira-cundinamarca.gov.co/municipio/nuestro-municipio',
+      },
+      {
+        titulo: 'Alcaldía de Zipaquirá, «Casa a Casa, así inició estrategia de seguridad en Zipaquirá»',
+        url: 'https://www.zipaquira-cundinamarca.gov.co/videos-institucionales-962219/casa-a-casa-asi-inicio-estrategia-de-seguridad-en-zipaquira',
       },
     ],
     enlacesInternos: [

@@ -274,7 +274,7 @@ Todo lo demás se declara por propiedad, en su ficha.
 | S.5 | **Revisar los datos de la Catedral de Sal contra la fuente oficial.** Horario y modalidades comprobados el 9 de septiembre de 2026 en `catedraldesal.gov.co`. Revisar antes de cualquier campaña pagada que apunte a esa página, y como mínimo cada seis meses. Un horario viejo en nuestra guía es un huésped que llega y se encuentra cerrado | Claude | `src/data/catedral-de-sal.ts`, cabecera |
 | S.6 | **Testimonios de grupos.** La estructura está hecha y vacía a propósito: no hay ninguno con permiso escrito. Cuando llegue el primero se añade a `testimonios` en `src/data/grupos.ts` y aparece solo. Hasta entonces, únicamente la frase genérica | Marlon | `/grupos`, sección «Grupos que ya hemos recibido» |
 | S.7 | **Comprimir `casa-algarra-01-fachada-atardecer.webp`**, que pesa 326 KB y supera el límite recomendado de 300 KB. Lo avisa `npm run comprueba` en cada construcción. **Requiere autorización: sobrescribe un activo versionado** | Marlon autoriza | Aviso del guardián de contenido |
-| S.8 | **Convenio con la Catedral de Sal.** Mientras no exista, la guía dice explícitamente que **no** vendemos boletas y que **no** somos operador autorizado. El día que se firme, esa frase cambia y se abren los CTA de venta | Marlon | `src/data/catedral-de-sal.ts`, `loQueNoHacemos` |
+| S.8 | **Convenio con la Catedral de Sal.** Mientras no exista, la guía dice explícitamente que **no** somos operador autorizado, que **no** hay convenio ni descuento y que **no** vendemos entradas individuales. *Actualizado el 10 sep 2026:* por decisión de dirección, para grupos alojados sí se ofrece **gestionar las boletas dentro de la cotización, al valor oficial vigente y sujetas a confirmación**; la misma frase en `/grupos`, en la guía de la Catedral y en el hub. Sin acceso preferencial, filas evitadas ni QR. El día que se firme un convenio, estas frases cambian | Marlon | `src/data/catedral-de-sal.ts`, `loQueNoHacemos` y `loQueHacemosPorUnGrupo` |
 
 ### Lo que este sprint dejó cerrado y conviene no volver a romper
 
@@ -322,3 +322,36 @@ Todo lo demás se declara por propiedad, en su ficha.
 - **«Zipaquirá» en el menú ya no es un ancla**, es la guía. Se cambió el destino
   de una entrada existente en vez de añadir una octava: mismo recuento, sin
   apretar el móvil y sin duplicar el concepto.
+
+---
+
+## Bloque F3 — Blog y Guía Atheron (10 de septiembre de 2026)
+
+> Frente 3: cierre editorial de `/blog`, `/blog/guia-de-zipaquira`,
+> `/guia-zipaquira` y `/zipaquira/catedral-de-sal` (commits `a231243` y
+> siguientes, rama `astro`). Aquí queda lo que no se cerró y por qué.
+
+| # | Pendiente | Quién |
+|---|---|---|
+| **F3.1** | **Revisar «~50 km» antes de volver a publicarlo.** Sigue en `src/pages/index.astro` (tres veces: el dato del hero, el párrafo «A unos 50 km al norte de Bogotá» y la lista «Desde Bogotá · ~50 km»), en `src/pages/landing/hospedaje-en-zipaquira.astro` («Zipaquirá esta a unos 50 km al norte de Bogotá») y en las seis fichas borrador `src/content/hospedajes/hospedaje-02.md` a `hospedaje-07.md` (`valor: ~50 km`). **No se asume que sea distancia lineal ni vial.** Antes de publicarla hay que definir cuatro cosas: **origen** (qué punto de Bogotá: Portal Norte, centro, aeropuerto…), **destino** (centro de Zipaquirá, Catedral, cada hospedaje), **ruta** (qué vía, si es por carretera) y **fuente** (con fecha de consulta). Mientras tanto la guía práctica del blog ya no da la cifra: dice «al norte de Bogotá, en la provincia de Sabana Centro». Por orden de dirección, **las seis fichas borrador no se tocan todavía** | Marlon define origen, destino y ruta · Claude verifica y ejecuta |
+| **F3.2** | **Afirmaciones empresariales de «Cómo nació Atheron Suite»**, pendientes de confirmación de Marlon y **sin modificar** hasta entonces: «hoy operamos siete propiedades» (y «siete hospedajes»), «cerca de mil turistas de China», «un grupo mexicano de sesenta personas se quedó diez noches en dos de nuestras casas» y «en estos dos años». *Identificadas por Claude en el texto; confirmar que son las cuatro que dirección tiene señaladas.* El 10 de septiembre solo se corrigieron tildes, sin cambiar ninguna afirmación | Marlon confirma |
+| F3.3 | **Agenda del Trail Running (18 de octubre de 2026).** El bloque del hub se oculta solo, pero **la comprobación se hace al construir**: si no hay un despliegue después del 18 de octubre, sigue visible hasta el siguiente. El texto ya no afirma el estado de las inscripciones. El botón «Ver anuncio oficial» lleva a un reel de Instagram, que puede pedir iniciar sesión | Claude, en el primer despliegue tras el 18 oct |
+| F3.4 | **Sin `og:image` en las cuatro rutas.** Mismo motivo que G.3 y S.4: no hay una fotografía real y con licencia de Zipaquirá. Un enlace compartido sale sin miniatura | Marlon |
+
+### Lo que este frente dejó cerrado y conviene no romper
+
+- **Tres intenciones, tres páginas.** El hub descubre (qué ver), la Catedral
+  tiene la suya (horario y pasaportes) y el blog resuelve (cómo llegar, cuántos
+  días, dónde dormir). El artículo se llama «Guía práctica» y resume «qué ver»
+  en dos párrafos que enlazan; no se redirige.
+- **Datos geográficos con fuente, verificada el 10 sep 2026 y citada a la
+  vista y en el JSON-LD** (`src/data/blog.ts`): 2.650 m sobre el nivel del mar,
+  según «Nuestro municipio» de la Alcaldía; provincia de Sabana Centro, según la
+  publicación institucional «Casa a Casa, así inició estrategia de seguridad en
+  Zipaquirá», de la misma Alcaldía. «Nuestro municipio» **no** nombra Sabana
+  Centro: por eso cada dato cita su propia página.
+- **Los artículos en preparación no llevan enlace** y no repiten intenciones ya
+  cubiertas (nada de «Catedral de Sal: horarios y precios»). La lista está en
+  `proximosArticulos`, en `src/data/blog.ts`.
+- **«Dónde comer» y «Cafés» son una sola tarjeta** en el índice del hub, y la
+  sección de gastronomía no se pinta mientras no haya lugares verificados.

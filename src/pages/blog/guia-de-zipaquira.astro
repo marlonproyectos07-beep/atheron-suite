@@ -25,11 +25,16 @@
      "Nuestro municipio" de la Alcaldia, que dice textualmente "a una
      altura de 2650 metros sobre el nivel del mar". Es la fuente que
      lleva el articulo en src/data/blog.ts.
-   - OJO: esa misma pagina NO nombra "Sabana Centro". Dice que
-     Zipaquira es "cabecera de provincia" y que esta en "una bella
-     sabana del centro del Pais". La frase de la provincia es de
-     direccion; por eso la nota visible atribuye a la Alcaldia solo
-     la altitud.
+   - "Sabana Centro" no aparece en "Nuestro municipio" -que dice
+     "cabecera de provincia"-, asi que lleva su propia fuente:
+     el video institucional de la Alcaldia "Casa a Casa, asi inicio
+     estrategia de seguridad en Zipaquira" (16 de enero de 2024), que
+     dice "este municipio de la provincia de Sabana Centro".
+     VERIFICADO el 10 de septiembre de 2026.
+   - La distancia a Bogota NO se publica aqui. El "~50 km" que sigue
+     en la portada y en la landing esta abierto en docs/pendientes.md:
+     antes de volver a usarlo hay que definir origen, destino, ruta y
+     fuente.
 
    No se publican tarifas de bus, traslado ni entradas.
    ============================================================ */
@@ -263,9 +268,12 @@ const WA_ARTICULO =
           {/* La fuente, a la vista: el JSON-LD la declara como citation
               y lo que se marca tiene que poder verse en la pagina. */}
           <p class="articulo__fuente">
-            Altitud según la página oficial{' '}
-            <a href={articulo.fuentes[0].url} target="_blank" rel="noopener noreferrer">«Nuestro municipio» de la Alcaldía de Zipaquirá</a>,
-            consultada el 10 de septiembre de 2026.
+            Fuentes, consultadas el 10 de septiembre de 2026: la altitud, en la
+            página oficial{' '}
+            <a href={articulo.fuentes[0].url} target="_blank" rel="noopener noreferrer">«Nuestro municipio» de la Alcaldía de Zipaquirá</a>;
+            la provincia de Sabana Centro, en la publicación institucional{' '}
+            <a href={articulo.fuentes[1].url} target="_blank" rel="noopener noreferrer">«Casa a Casa, así inició estrategia de seguridad en Zipaquirá»</a>,
+            de la misma Alcaldía.
           </p>
 
 
