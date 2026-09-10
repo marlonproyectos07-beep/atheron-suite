@@ -246,3 +246,79 @@ imágenes de la Suite 301 recogida en §23.1 de
 [CONTINUIDAD-PROYECTO.md](CONTINUIDAD-PROYECTO.md).
 
 Toda excepción nueva se registra en este apartado antes de entrar en el sitio.
+
+---
+
+### 8.3 Recompresión del hero de portada (9 de septiembre de 2026)
+
+Autorizada por Dirección como pendiente S.2. **La imagen no cambia**: es la
+misma fotografía, sin añadir ni quitar nada, sin tocar arquitectura ni
+mobiliario. Solo cambia cómo está comprimida.
+
+| Archivo | Antes | Después | |
+|---|---|---|---|
+| `…-700.avif` | 51,3 KB | **42,8 KB** | −16 % |
+| `…-700.webp` | 73,1 KB | **58,4 KB** | −20 % |
+| `…-1600.avif` | 197,9 KB | **180,1 KB** | −9 % |
+| `…-1600.webp` | 286,2 KB | 286,2 KB | **sin tocar** |
+
+**El 1600.webp no se toca, y es deliberado:** es el archivo con más
+información del repositorio y la fuente de las otras tres conversiones.
+Recomprimirlo sería perder el original. Ningún ajuste probado lo mejoraba.
+
+#### Cómo se decidió que no hay degradación
+
+No a ojo. Cada candidato se comparó por **SSIM** contra una referencia de
+máxima fidelidad —el propio 1600.webp reducido con Lanczos— y el criterio
+de aceptación fue estricto:
+
+> se elige el ajuste **más ligero** cuyo SSIM sea **igual o mejor** que el
+> del archivo que ya estaba publicado. Si ninguno lo consigue, no se toca.
+
+Resultado: los cuatro archivos puntúan **igual o mejor** que antes, y tres
+pesan menos.
+
+| Archivo | SSIM antes | SSIM después |
+|---|---|---|
+| `…-700.avif` | 0,95914 | **0,96024** |
+| `…-700.webp` | 0,96886 | **0,97302** |
+| `…-1600.avif` | 0,97172 | **0,97560** |
+| `…-1600.webp` | 1,00000 | 1,00000 |
+
+> **Trampa ya pagada, para quien repita esto.** El primer intento midió el
+> archivo publicado con un `.resize()` y un `.toBuffer()` de más, que lo
+> vuelven a codificar y le añaden pérdida que el candidato no tenía. Con
+> esa medida, ajustes que en realidad empeoraban la imagen parecían
+> mejorarla, y se llegó a escribir en disco una versión peor. **Los dos
+> lados de la comparación tienen que decodificarse exactamente igual:**
+> a gris en crudo, sin reescalar y sin recodificar.
+
+#### Parámetros exactos, para poder reproducirlo
+
+Fuente: `…-1600.webp`. Reducción `lanczos3`.
+
+```
+700.avif    sharp.avif({ quality: 58, effort: 9, chromaSubsampling: '4:4:4' })
+700.webp    sharp.webp({ quality: 78, effort: 6 })
+1600.avif   sharp.avif({ quality: 58, effort: 9, chromaSubsampling: '4:4:4' })
+```
+
+`chromaSubsampling: '4:4:4'` conserva el color a plena resolución. En un
+atardecer con degradados amplios, el 4:2:0 por defecto es justo lo que se
+nota.
+
+**El original anterior sigue disponible** en el historial, en `ee3c6aa`:
+
+```bash
+git show ee3c6aa:public/assets/img/portada/zipaquira-centro-historico-atardecer-700.avif > /tmp/original.avif
+```
+
+---
+
+### 8.4 Tipografía Fraunces servida desde nuestro dominio
+
+Desde el 9 de septiembre de 2026 la tipografía de titulares ya no se pide a
+Google Fonts: vive en `public/assets/fuentes/`. Procedencia, licencia
+(SIL Open Font License 1.1), alcance del subconjunto y procedimiento de
+actualización, en
+[`public/assets/fuentes/PROCEDENCIA.md`](../public/assets/fuentes/PROCEDENCIA.md).

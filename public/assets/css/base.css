@@ -7,6 +7,66 @@
    ============================================================ */
 
 /* ------------------------------------------------------------
+   0. LA TIPOGRAFIA DE TITULOS, SERVIDA DESDE NUESTRO DOMINIO
+
+   Fraunces venia de Google Fonts. Se midio el 9 de septiembre de
+   2026 y era el freno de rendimiento de TODO el sitio: el elemento
+   LCP de casi todas las paginas es el <h1>, y su retraso de pintado
+   era de 1.283 ms esperando 65,8 KB desde un tercero, con dos
+   conexiones que montar antes (DNS y TLS a fonts.googleapis.com y a
+   fonts.gstatic.com).
+
+   Bloqueando solo esos dos dominios, con el mismo codigo, la portada
+   pasaba de 92-96 a 99, /hospedajes de 87 a 99 y la guia de la
+   Catedral de 93 a 100 con el CLS a cero. No era una hipotesis.
+
+   Ahora el archivo viaja por la conexion que ya esta abierta, con la
+   cache larga que vercel.json aplica a /assets/, y sin depender de
+   que un tercero responda.
+
+   ES EL MISMO ARCHIVO que el navegador venia descargando en cada
+   visita, tomado de la CDN oficial. Por eso la tipografia se ve
+   exactamente igual: no hay ninguna diferencia de renderizado.
+
+   DOS DECLARACIONES, UN SOLO ARCHIVO. Es una fuente variable y
+   cubre todo el rango de grosor, asi que los pesos 500 y 600 salen
+   del mismo woff2 y el navegador lo descarga una vez. Es como lo
+   declaraba Google, copiado tal cual para no cambiar nada.
+
+   font-display: swap, igual que antes: el titular se pinta de
+   inmediato con la pila del sistema y cambia a Fraunces cuando
+   llega. Nunca hay texto invisible.
+
+   Licencia SIL Open Font License 1.1. Procedencia, alcance del
+   subconjunto y como actualizarla, en
+   public/assets/fuentes/PROCEDENCIA.md
+   ------------------------------------------------------------ */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/assets/fuentes/fraunces-latin-var.woff2') format('woff2');
+  /* El mismo rango que declaraba Google para el subconjunto latin.
+     Se conserva para que el navegador sepa que NO tiene que bajar
+     esta fuente si la pagina no usa ninguno de estos caracteres. */
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/assets/fuentes/fraunces-latin-var.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ------------------------------------------------------------
    1. VARIABLES (design tokens)
    Se declaran en :root y se usan con var(--nombre)
    ------------------------------------------------------------ */
