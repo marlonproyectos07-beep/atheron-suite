@@ -490,10 +490,21 @@ const fichaPagina = {
             alojamiento.
           </p>
           <p class="grupos__limite">
-            No vendemos boletas de la Catedral de Sal ni somos operador
-            autorizado. La compra se hace por sus canales oficiales.
+            <strong>¿El grupo también necesita entradas?</strong> Podemos gestionar
+            las boletas de la Catedral de Sal como parte de la cotización grupal,
+            al valor oficial vigente y sujetas a confirmación. Este servicio se
+            coordina para grupos; todavía no ofrecemos venta individual diaria.
           </p>
           <div class="grupo-botones" style="margin-top: var(--esp-3);">
+            <a
+              class="boton boton--whatsapp"
+              {...atributosWhatsApp(
+                'Hola, quiero cotizar alojamiento y boletas para la Catedral de Sal para un grupo.\n\nNúmero de personas:\nFecha de visita:\nNoches de alojamiento:',
+                { origen: 'grupos_boletas', evento: EVENTO_GRUPO },
+              )}
+            >
+              Cotizar hospedaje + boletas
+            </a>
             <a class="boton boton--contorno" href="/zipaquira/catedral-de-sal">
               Leer la guía de la Catedral de Sal
             </a>
@@ -508,6 +519,7 @@ const fichaPagina = {
               <li>Horarios de llegada y salida del grupo.</li>
               <li>Equipaje guardado sin costo en la oficina, antes o después.</li>
               <li>Cómo se llega a la Catedral desde cada alojamiento.</li>
+              <li>Gestión de boletas para la Catedral de Sal, bajo confirmación.</li>
             </ul>
           </div>
         </div>
