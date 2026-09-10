@@ -140,19 +140,34 @@ const fichaGuia = {
          tipografia, como el de la guia de la Catedral.
          ============================================================ */}
     <section class="hero hero--interior guia__hero hub__hero">
-      <div class="contenedor hero__contenido">
-        <span class="hero__etiqueta">{hero.ceja}</span>
-        <h1 class="hero__titulo">{hero.titulo}</h1>
-        <p class="hero__texto">{hero.texto}</p>
+      <div class="contenedor hub__hero-composicion">
+        <div class="hero__contenido hub__hero-texto">
+          <span class="hero__etiqueta">{hero.ceja}</span>
+          <h1 class="hero__titulo">{hero.titulo}</h1>
+          <p class="hero__texto">{hero.texto}</p>
 
-        <div class="grupo-botones">
-          <a class="boton boton--acento boton--grande" href={hero.ctaPrimario.href}>
-            {hero.ctaPrimario.texto}
-          </a>
-          <a class="boton boton--claro boton--grande" href={hero.ctaSecundario.href}>
-            {hero.ctaSecundario.texto}
-          </a>
+          <div class="grupo-botones">
+            <a class="boton boton--acento boton--grande" href={hero.ctaPrimario.href}>
+              {hero.ctaPrimario.texto}
+            </a>
+            <a class="boton boton--claro boton--grande" href={hero.ctaSecundario.href}>
+              {hero.ctaSecundario.texto}
+            </a>
+            <a
+              class="boton boton--whatsapp boton--grande"
+              {...atributosWhatsApp(WA_GUIA, { origen: 'guia_hub_hero' })}
+            >Planear mi estadía</a>
+          </div>
         </div>
+
+        <aside class="hub__brujula" aria-label="Una guía para vivir Zipaquirá">
+          <span class="hub__brujula-sello">Atheron local</span>
+          <p class="hub__brujula-titulo">No vengas solo a verla.<br /><strong>Ven a vivirla.</strong></p>
+          <div class="hub__ruta" aria-hidden="true">
+            <span>Sal</span><i></i><span>Historia</span><i></i><span>Naturaleza</span><i></i><span>Descanso</span>
+          </div>
+          <p class="hub__brujula-nota">Una ciudad para recorrer con calma y convertir una visita en una estadía.</p>
+        </aside>
       </div>
     </section>
 
@@ -187,6 +202,21 @@ const fichaGuia = {
               </Envoltorio>
             );
           })}
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion hub__evento" id="eventos">
+      <div class="contenedor hub__evento-interior">
+        <div>
+          <span class="etiqueta">Agenda de la ciudad</span>
+          <p class="hub__evento-fecha">18 · OCT · 2026</p>
+          <h2>Trail Running de Colores</h2>
+          <p>La Catedral de Sal anunció una experiencia de carrera a 180 metros bajo tierra. Las inscripciones figuran cerradas en el canal oficial consultado; verifica allí cualquier actualización antes de desplazarte.</p>
+        </div>
+        <div class="hub__evento-acciones">
+          <a class="boton boton--acento boton--grande" href="https://www.instagram.com/reel/DccE7AmOmbI/" target="_blank" rel="noopener noreferrer">Ver anuncio oficial</a>
+          <a class="boton boton--contorno boton--grande" href="/hospedajes">Ver dónde hospedarse</a>
         </div>
       </div>
     </section>

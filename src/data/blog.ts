@@ -75,14 +75,14 @@ export const CATEGORIA_ATHERON = 'Atheron Suite';
 export const articulos: Articulo[] = [
   {
     ruta: '/blog/guia-de-zipaquira',
-    titulo: 'Guía de Zipaquirá 2026: que hacer, como llegar y donde dormir',
+    titulo: 'Guía de Zipaquirá 2026: qué hacer, cómo llegar y dónde dormir',
     descripcion:
       'Guía practica de Zipaquirá, Cundinamarca: como llegar desde Bogotá, que visitar, cuantos días quedarse y donde alojarse cerca de la Catedral de Sal.',
     autor: 'Atheron Suite',
     /* El articulo no declaraba fecha propia: se toma la de su primer
        commit en el repositorio, que es cuando existio por primera vez. */
     publicado: '2026-08-20',
-    modificado: '2026-08-21',
+    modificado: '2026-09-10',
     categoria: CATEGORIA_ZIPAQUIRA,
     imagen: null,
     imagenAlt: null,

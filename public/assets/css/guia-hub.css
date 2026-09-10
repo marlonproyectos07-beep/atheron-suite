@@ -17,8 +17,40 @@
 
 /* El hero del hub es el de las guias, un poco mas alto: es la
    portada de una seccion entera, no la de un articulo. */
-.hub__hero { padding-block: var(--esp-7) var(--esp-6); }
+.hub__hero {
+  position: relative;
+  overflow: hidden;
+  padding-block: clamp(4rem, 8vw, 7rem);
+  background:
+    radial-gradient(circle at 82% 22%, rgba(227, 194, 92, .23), transparent 22rem),
+    radial-gradient(circle at 10% 110%, rgba(47, 107, 86, .55), transparent 34rem),
+    linear-gradient(125deg, #0d1728 0%, #17334c 58%, #294f43 100%);
+}
+.hub__hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .16;
+  background-image: repeating-linear-gradient(125deg, transparent 0 23px, rgba(255,255,255,.09) 24px 25px);
+}
 .hub__hero .hero__texto { max-width: 58ch; }
+.hub__hero-composicion { position: relative; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(18rem, .7fr); gap: clamp(2rem, 6vw, 5rem); align-items: center; }
+.hub__hero-texto { padding: 0; }
+.hub__hero-texto .grupo-botones { margin-top: var(--esp-4); }
+.hub__brujula { padding: clamp(1.5rem, 3vw, 2.5rem); border: 1px solid rgba(255,255,255,.2); border-radius: var(--radio-lg); background: rgba(8,20,33,.42); box-shadow: 0 25px 65px rgba(0,0,0,.24); color: #fff; backdrop-filter: blur(8px); transform: rotate(1.4deg); }
+.hub__brujula-sello { font-size: .72rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--color-sal-claro); }
+.hub__brujula-titulo { margin-block: 1rem 1.5rem; font-family: var(--fuente-titulo); font-size: clamp(1.8rem, 3vw, 2.7rem); line-height: 1.08; }
+.hub__brujula-titulo strong { color: var(--color-sal-claro); }
+.hub__ruta { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: rgba(255,255,255,.72); }
+.hub__ruta i { width: 1rem; height: 1px; background: var(--color-sal-claro); }
+.hub__brujula-nota { margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px solid rgba(255,255,255,.14); font-size: .9rem; color: rgba(255,255,255,.76); }
+
+.hub__evento { padding-block: clamp(3rem, 7vw, 5.5rem); background: #f3ead6; }
+.hub__evento-interior { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(16rem, .65fr); gap: var(--esp-5); align-items: center; }
+.hub__evento-fecha { margin-block: .8rem .35rem; font-size: .78rem; font-weight: 800; letter-spacing: .18em; color: var(--color-verde); }
+.hub__evento h2 { margin-bottom: var(--esp-2); }
+.hub__evento p { max-width: 67ch; color: var(--texto-suave); }
+.hub__evento-acciones { display: flex; flex-direction: column; gap: var(--esp-2); align-items: stretch; }
 
 /* ------------------------------------------------------------
    ¿QUE QUIERES DESCUBRIR?
@@ -407,6 +439,8 @@ a.descubrir__item:focus-visible {
 .lugar__verificado { font-size: .78rem; color: var(--texto-suave); }
 
 @media (max-width: 48rem) {
+  .hub__hero-composicion, .hub__evento-interior { grid-template-columns: 1fr; }
+  .hub__brujula { transform: none; }
   .hub__descubrimiento,
   .hub__independencia,
   .hub__dia { padding: var(--esp-3); }

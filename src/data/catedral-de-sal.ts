@@ -82,7 +82,6 @@ export const VERIFICADO_EL = '9 de septiembre de 2026';
 export const datosPracticos: { dato: string; valor: string }[] = [
   { dato: 'Días de apertura', valor: 'Todos los días' },
   { dato: 'Horario de visita', valor: '9:00 a. m. – 4:40 p. m.' },
-  { dato: 'Desde Hotel Atheron Suite', valor: '1,4 km · 16 minutos a pie' },
 ];
 
 /* ------------------------------------------------------------

@@ -1,0 +1,50 @@
+.blog-portada {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 84% 18%, rgba(227, 194, 92, .2), transparent 22rem),
+    linear-gradient(125deg, #0f172a 0%, #18334b 58%, #315d4e 100%);
+}
+.blog-portada::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .18;
+  background-image: repeating-linear-gradient(125deg, transparent 0 22px, rgba(255,255,255,.08) 23px 24px);
+  pointer-events: none;
+}
+.blog-portada__composicion {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, .65fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: center;
+  padding-block: clamp(4rem, 9vw, 7rem);
+}
+.blog-portada__texto { padding: 0; }
+.blog-portada__texto .grupo-botones { margin-top: var(--esp-4); }
+.blog-portada__mapa {
+  padding: clamp(1.4rem, 3vw, 2.3rem);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: var(--radio-lg);
+  color: #fff;
+  background: rgba(8, 20, 33, .42);
+  box-shadow: 0 24px 60px rgba(0,0,0,.22);
+  backdrop-filter: blur(8px);
+}
+.blog-portada__sello { font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--color-sal-claro); }
+.blog-portada__nombre { margin: .4rem 0 1.2rem; font-family: var(--fuente-titulo); font-size: clamp(2rem, 4vw, 3.2rem); }
+.blog-portada__mapa ul { display: grid; gap: .7rem; }
+.blog-portada__mapa li { display: flex; gap: .8rem; padding-top: .7rem; border-top: 1px solid rgba(255,255,255,.13); font-size: .9rem; color: rgba(255,255,255,.82); }
+.blog-portada__mapa li span { color: var(--color-sal-claro); font-weight: 700; }
+.blog-destacada { display: grid; grid-template-columns: minmax(17rem, .8fr) minmax(0, 1.2fr); overflow: hidden; }
+.blog-destacada .tarjeta__media { min-height: 20rem; background: linear-gradient(150deg, #14243a, #315d4e); }
+.blog-destacada__grafico { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; color: white; }
+.blog-destacada__grafico span { font-family: var(--fuente-titulo); font-size: clamp(4rem, 9vw, 7rem); color: var(--color-sal-claro); line-height: .9; }
+.blog-destacada__grafico small { margin-top: .8rem; text-transform: uppercase; letter-spacing: .14em; }
+.blog-destacada .tarjeta__cuerpo { justify-content: center; padding: clamp(2rem, 5vw, 4rem); }
+@media (max-width: 48rem) {
+  .blog-portada__composicion, .blog-destacada { grid-template-columns: 1fr; }
+  .blog-portada__mapa { display: none; }
+  .blog-destacada .tarjeta__media { min-height: 13rem; }
+}
