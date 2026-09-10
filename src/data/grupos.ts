@@ -205,8 +205,6 @@ export function resumeCapacidad(publicadas: FichaEntrada[]): ResumenCapacidad {
       capacidad,
       suma: contenidaEnOtra || !capacidad ? null : cifraExacta(capacidad.numero),
       contenidaEnOtra,
-      tipo: grupo.tipo,
-      nota: grupo.nota,
     };
   });
 
