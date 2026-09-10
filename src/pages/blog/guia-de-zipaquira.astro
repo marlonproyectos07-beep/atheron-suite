@@ -17,7 +17,7 @@ import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
 import { migaDePan, url, ORGANIZACION } from '../../data/seo';
-import { articuloDe } from '../../data/blog';
+import { articuloDe } from '../../data/blog';
 import { atributosWhatsApp } from '../../data/whatsapp';
 
 /* La ficha del articulo se construye con el modelo de datos del
@@ -216,12 +216,24 @@ const fichaArticulo = {
                Esta caja es la que convierte articulos sueltos en un
                "cluster". Cada articulo nuevo se anade aqui.
                ========================================================== */}
+          {/* DOS DE ESTOS YA NO ESTAN PENDIENTES.
+
+              La guia de la Catedral se publico el 9 de septiembre de
+              2026 y la guia del destino el 10, pero aqui seguian
+              marcadas como "pendiente": el lector veia en gris algo
+              que ya existia y no podia llegar a ello. Es el mismo
+              descuido que este archivo documenta mas arriba con la
+              plantilla de articulo.
+
+              El titulo del enlace a la Catedral dice "pasaportes" y
+              no "precios" a proposito: no publicamos sus tarifas, y
+              el enlace no puede prometer algo que la pagina no da. */}
           <div class="cluster">
             <h3>Sigue leyendo sobre Zipaquirá</h3>
             <ul>
+              <li><a href="/guia-zipaquira">Qué ver en Zipaquirá y sus alrededores</a></li>
+              <li><a href="/zipaquira/catedral-de-sal">Catedral de Sal: horario, pasaportes y cómo planear la visita</a></li>
               <li><span class="pendiente">Como llegar de Bogotá a Zipaquirá</span></li>
-              <li><span class="pendiente">Catedral de Sal: horarios, precios y que esperar</span></li>
-              <li><span class="pendiente">Que hacer en Zipaquirá en un fin de semana</span></li>
               <li><span class="pendiente">Donde comer en Zipaquirá</span></li>
               <li><span class="pendiente">Zipaquirá con ninos</span></li>
               <li><span class="pendiente">Donde dormir cerca de la Catedral de Sal</span></li>

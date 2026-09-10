@@ -1,0 +1,430 @@
+---
+/* ============================================================
+   GUIA ATHERON — ZIPAQUIRA. El hub del destino.
+
+   POR QUE EXISTE
+
+   El sitio sabia vender hospedaje y no sabia vender Zipaquira. Y
+   son la misma venta: quien cree que la ciudad se agota en media
+   jornada no necesita dormir aqui.
+
+   Esta pagina es el nodo desde el que se reparte todo lo demas:
+   Catedral, centro, alrededores, itinerario, grupos y hospedaje.
+
+   ============================================================
+   LA URL, Y UNA DISCREPANCIA QUE HAY QUE DEJAR ESCRITA
+   ============================================================
+
+   La orden pedia como canonica
+   "https://www.hotelesatheron.com/guia-zipaquira/", con www y con
+   barra final. Las dos cosas contradicen lo que el proyecto ya
+   tiene decidido y verificado:
+
+     - el dominio oficial es hotelesatheron.com SIN www
+       (docs/pendientes.md, bloque 0);
+     - astro.config.mjs declara trailingSlash: 'never'.
+
+   Seguirla al pie de la letra habria metido en el sitio la unica
+   canonica distinta de las otras 28 paginas, que es exactamente el
+   descuadre que Base.astro existe para impedir. Se sigue la regla
+   del proyecto y la discrepancia se reporta. Canonica real:
+
+     https://hotelesatheron.com/guia-zipaquira
+
+   ============================================================
+   LA CATEDRAL NO SE DUPLICA
+   ============================================================
+
+   /zipaquira/catedral-de-sal ya existe, esta auditada y puntua 100.
+   Aqui NO se repite su contenido: se resume en un bloque y se
+   enlaza. Dos paginas compitiendo por la misma intencion se quitan
+   posiciones entre ellas.
+
+   El resumen se lee de src/data/catedral-de-sal.ts, la MISMA fuente
+   que alimenta esa pagina. No se copia ni un horario a mano: si
+   cambia alli, cambia aqui.
+   ============================================================ */
+
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import ExperienciaLocal from '../../components/ExperienciaLocal.astro';
+import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
+import { migaDePan, url, ORGANIZACION } from '../../data/seo';
+import { atributosWhatsApp, EVENTO_GRUPO } from '../../data/whatsapp';
+import { experienciasDe } from '../../data/experiencias-locales';
+import { datosPracticos, pasaportes, SITIO_OFICIAL, VERIFICADO_EL } from '../../data/catedral-de-sal';
+import {
+  CIUDAD,
+  hero,
+  categorias,
+  centroHistorico,
+  alrededores,
+  itinerario,
+  INDEPENDENCIA,
+  WA_GUIA,
+  WA_GUIA_GRUPO,
+} from '../../data/guia-zipaquira';
+
+const RUTA = CIUDAD.ruta;
+
+/* Los lugares verificados de la ciudad. Hoy son cero, y la seccion
+   correspondiente no se pinta: ver el encabezado de
+   src/data/experiencias-locales.ts */
+const lugares = experienciasDe(CIUDAD.nombre);
+
+/* ------------------------------------------------------------
+   DATOS ESTRUCTURADOS
+
+   CollectionPage: esto es un indice de contenidos propios.
+
+   LO QUE NO SE DECLARA, Y ES LO IMPORTANTE: ni TouristAttraction,
+   ni Place, ni LocalBusiness, ni TouristDestination sobre la
+   Catedral, la Mina de Nemocon o el Neusa. Ninguno es nuestro. Un
+   Schema que declare a Atheron como entidad de una atraccion ajena
+   le esta diciendo a Google que operamos algo que no operamos.
+
+   Tampoco Review ni AggregateRating: no hay reseñas reales, y
+   marcar valoraciones inventadas es motivo de penalizacion.
+   ------------------------------------------------------------ */
+const fichaGuia = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      '@id': `${url(RUTA)}#pagina`,
+      url: url(RUTA),
+      name: 'Guía de Zipaquirá: qué ver, alrededores y cómo organizar la visita',
+      description:
+        'Guía de Atheron para descubrir Zipaquirá: la Catedral de Sal, el centro histórico, ' +
+        'los alrededores y cómo repartir la visita en dos días.',
+      inLanguage: 'es-CO',
+      isPartOf: { '@id': ORGANIZACION['@id'] },
+      about: `${CIUDAD.nombre}, ${CIUDAD.departamento}`,
+      breadcrumb: { '@id': `${url(RUTA)}#miga` },
+    },
+    ORGANIZACION,
+    migaDePan(
+      [
+        { nombre: 'Inicio', ruta: '/' },
+        { nombre: 'Guía de Zipaquirá', ruta: RUTA },
+      ],
+      `${url(RUTA)}#miga`,
+    ),
+  ],
+};
+---
+
+<Base
+  titulo="Descubre Zipaquirá: qué ver, alrededores y dónde hospedarse | Atheron Suite"
+  descripcion="Guía de Atheron para descubrir Zipaquirá: la Catedral de Sal, el centro histórico, el Embalse del Neusa, la Mina de Nemocón y cómo repartir la visita en dos días."
+  ruta={RUTA}
+  ogTitulo="Descubre Zipaquirá · Guía Atheron"
+  ogDescripcion="Catedral de Sal, centro histórico, naturaleza y alrededores. Todo lo que puedes vivir en Zipaquirá y cerca."
+  jsonLd={fichaGuia}
+  hojasExtra={['guia', 'guia-hub']}
+>
+
+  <Cabecera enlaces={menuHospedajes} cta={{ ...ctaDisponibilidad, origen: 'guia_hub' }} actual={RUTA} />
+
+  <main id="contenido">
+
+    {/* ============================================================
+         HERO
+
+         Sin fotografia. No hay ni una imagen legitima de la ciudad
+         en el repositorio: la unica con ese motivo esta generada con
+         IA y su registro de procedencia -docs/fotografias.md 8.1-
+         prohibe describirla como el lugar. El hero se sostiene con
+         tipografia, como el de la guia de la Catedral.
+         ============================================================ */}
+    <section class="hero hero--interior guia__hero hub__hero">
+      <div class="contenedor hero__contenido">
+        <span class="hero__etiqueta">{hero.ceja}</span>
+        <h1 class="hero__titulo">{hero.titulo}</h1>
+        <p class="hero__texto">{hero.texto}</p>
+
+        <div class="grupo-botones">
+          <a class="boton boton--acento boton--grande" href={hero.ctaPrimario.href}>
+            {hero.ctaPrimario.texto}
+          </a>
+          <a class="boton boton--claro boton--grande" href={hero.ctaSecundario.href}>
+            {hero.ctaSecundario.texto}
+          </a>
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         ¿QUE QUIERES DESCUBRIR?
+
+         Las que tienen destino son enlaces; las que no, tarjetas
+         apagadas que dicen que estan en preparacion. No se enlaza a
+         una pagina que no existe ni se inventa contenido para
+         llenar el indice.
+         ============================================================ */}
+    <section class="seccion" id="descubrir">
+      <div class="contenedor">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">Por dónde empezar</span>
+          <h2>¿Qué quieres descubrir?</h2>
+        </div>
+
+        <div class="descubrir">
+          {categorias.map((c) => {
+            const Envoltorio = c.href ? 'a' : 'div';
+            return (
+              <Envoltorio
+                class:list={['descubrir__item', !c.href && 'descubrir__item--pendiente']}
+                href={c.href}
+              >
+                <h3>{c.titulo}</h3>
+                <p>{c.texto}</p>
+                {c.href
+                  ? <span class="descubrir__accion">Ver</span>
+                  : <span class="descubrir__pendiente">En preparación</span>}
+              </Envoltorio>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         CATEDRAL DE SAL — RESUMEN, NO COPIA
+
+         Los datos salen de la misma fuente que la pagina completa.
+         Aqui no hay ni un horario escrito a mano.
+         ============================================================ */}
+    <section class="seccion seccion--alterna" id="catedral">
+      <div class="contenedor bloque-doble">
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">El principal atractivo</span>
+          <h2>Catedral de Sal</h2>
+          <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            Un templo excavado dentro de una mina de sal en funcionamiento durante
+            siglos. Es la razón por la que la mayoría de visitantes llega al
+            municipio, y ocupa buena parte de una jornada.
+          </p>
+
+          <ul class="hub__datos">
+            {datosPracticos.map(({ dato, valor }) => (
+              <li><span>{dato}</span> <strong>{valor}</strong></li>
+            ))}
+          </ul>
+
+          <p class="hub__pasaportes">
+            La entrada se vende en tres modalidades:
+            {' '}{pasaportes.map((p) => p.nombre).join(', ')}.
+            La guía completa explica qué incluye cada una.
+          </p>
+
+          <p class="guia__fuente hub__fuente">
+            Comprobado en el
+            {' '}<a href={SITIO_OFICIAL} target="_blank" rel="noopener noreferrer">sitio oficial de la Catedral de Sal</a>
+            {' '}el {VERIFICADO_EL}.
+          </p>
+
+          <div class="grupo-botones" style="margin-top: var(--esp-3);">
+            <a class="boton boton--acento boton--grande" href="/zipaquira/catedral-de-sal">
+              Planear mi visita
+            </a>
+            <a
+              class="boton boton--whatsapp boton--grande"
+              {...atributosWhatsApp(WA_GUIA_GRUPO, { origen: 'guia_hub_catedral_grupo', evento: EVENTO_GRUPO })}
+            >
+              Consultar visita para mi grupo
+            </a>
+          </div>
+        </div>
+
+        <div class="bloque-doble__media">
+          {/* La independencia, dicha en voz alta y no en letra
+              pequeña. Mientras no haya convenio con nadie, decirlo
+              es lo que hara creible declararlo el dia que lo haya. */}
+          <aside class="hub__independencia">
+            <h3>Guía independiente</h3>
+            <p>{INDEPENDENCIA}</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         MAS ALLA DE LA CATEDRAL
+         ============================================================ */}
+    <section class="seccion" id={centroHistorico.id}>
+      <div class="contenedor guia__cuerpo">
+        <span class="etiqueta">{centroHistorico.ceja}</span>
+        <h2>{centroHistorico.titulo}</h2>
+        {centroHistorico.parrafos.map((p) => <p>{p}</p>)}
+
+        {/* Momento de alta intencion: acaba de leer que media jornada
+            no alcanza. Aqui el enlace a hospedaje no interrumpe, remata. */}
+        <p class="hub__puente">
+          ¿Vas a quedarte en Zipaquirá?
+          {' '}<a href="/hospedajes">Explora nuestros hospedajes</a>.
+        </p>
+      </div>
+    </section>
+
+    {/* ============================================================
+         ALREDEDORES
+
+         Cada uno con su municipio real, en grande. Es el error mas
+         caro de una guia: mandar a alguien al municipio equivocado.
+         ============================================================ */}
+    <section class="seccion seccion--alterna" id="alrededores">
+      <div class="contenedor">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">Alrededores</span>
+          <h2>A un rato en carro del centro</h2>
+          <p class="texto-suave" style="margin-top: var(--esp-2);">
+            Ninguno de los dos está en Zipaquirá. Son salidas propias, y por eso
+            se cuentan aparte.
+          </p>
+        </div>
+
+        <div class="grid grid--2">
+          {alrededores.map((d) => (
+            <article class="hub__descubrimiento" id={d.id}>
+              <p class="hub__municipio">{d.municipio}</p>
+              <h3>{d.nombre}</h3>
+              {d.parrafos.map((p) => <p class="texto-suave">{p}</p>)}
+
+              {d.datos && (
+                <ul class="hub__etiquetas">
+                  {d.datos.map((x) => <li>{x}</li>)}
+                </ul>
+              )}
+
+              {d.enlace && (
+                <div class="hub__enlace-propio">
+                  {d.enlace.nota && <p class="hub__nota">{d.enlace.nota}</p>}
+                  <a class="boton boton--contorno" href={d.enlace.href}>{d.enlace.texto}</a>
+                </div>
+              )}
+
+              <p class="hub__fuentes">
+                Comprobado el {d.fechaUltimaVerificacion} en
+                {' '}{d.fuentes.map((f, i) => (
+                  <>
+                    {i > 0 && ' y '}
+                    <a href={f.url} target="_blank" rel="noopener noreferrer">{f.nombre}</a>
+                  </>
+                ))}.
+              </p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         DONDE COMER Y CAFES
+
+         Esta seccion SOLO existe cuando haya lugares verificados.
+         Hoy la lista esta vacia, asi que en vez de una rejilla de
+         huecos se explica por que todavia no hay nada. Es mas
+         honesto y da mejor impresion que seis tarjetas de relleno.
+         ============================================================ */}
+    <section class="seccion" id="donde-comer">
+      <div class="contenedor guia__cuerpo">
+        <span class="etiqueta">Dónde comer</span>
+        <h2>Gastronomía y cafés</h2>
+
+        {lugares.length > 0 ? (
+          <div class="grid grid--2" style="margin-top: var(--esp-4);">
+            {lugares.map((l) => <ExperienciaLocal lugar={l} medidas="(min-width: 900px) 28rem, 92vw" />)}
+          </div>
+        ) : (
+          <>
+            <p>
+              Todavía no hay ninguno publicado, y es a propósito. Estamos visitando
+              y verificando sitio por sitio: dirección, horario y qué se come de
+              verdad en cada uno.
+            </p>
+            <p>
+              Preferimos una lista corta en la que se pueda confiar antes que una
+              larga copiada de internet. Cuando un sitio entre aquí será porque
+              hemos estado.
+            </p>
+          </>
+        )}
+      </div>
+    </section>
+
+    {/* ============================================================
+         ITINERARIO
+         ============================================================ */}
+    <section class="seccion seccion--oscura" id={itinerario.id}>
+      <div class="contenedor">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">{itinerario.ceja}</span>
+          <h2>{itinerario.titulo}</h2>
+          <p class="texto-suave" style="margin-top: var(--esp-2);">{itinerario.entrada}</p>
+        </div>
+
+        <div class="grid grid--2">
+          {itinerario.dias.map((d) => (
+            <article class="hub__dia">
+              <span class="hub__dia-rotulo">{d.rotulo}</span>
+              <h3>{d.titulo}</h3>
+              <ul class="lista-check">
+                {d.pasos.map((p) => <li>{p}</li>)}
+              </ul>
+            </article>
+          ))}
+        </div>
+
+        <p class="hub__aviso">{itinerario.aviso}</p>
+
+        <div class="grupo-botones" style="margin-top: var(--esp-4);">
+          <a class="boton boton--acento boton--grande" href="/hospedajes">
+            Encontrar dónde hospedarme
+          </a>
+          <a
+            class="boton boton--whatsapp boton--grande"
+            {...atributosWhatsApp(WA_GUIA, { origen: 'guia_hub_itinerario' })}
+          >
+            Consultar disponibilidad
+          </a>
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         GRUPOS
+
+         Enlaza a /grupos, que ya existe y esta trabajada. No se crea
+         una landing paralela: se canibalizarian.
+         ============================================================ */}
+    <section class="seccion" id="grupos">
+      <div class="contenedor guia__cuerpo">
+        <span class="etiqueta">Grupos</span>
+        <h2>¿Viajan en grupo?</h2>
+        <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+          Estudiamos una combinación de hospedajes según el número de personas, las
+          fechas y la disponibilidad. Si el grupo no cabe en una sola propiedad, lo
+          repartimos entre varias: es lo que hacemos casi siempre.
+        </p>
+        <div class="grupo-botones">
+          <a class="boton boton--contorno boton--grande" href="/grupos">
+            Ver alojamiento para grupos
+          </a>
+          <a
+            class="boton boton--whatsapp boton--grande"
+            {...atributosWhatsApp(WA_GUIA_GRUPO, { origen: 'guia_hub_grupos', evento: EVENTO_GRUPO })}
+          >
+            Cotizar mi grupo
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <Pie />
+  <BotonFlotante mensaje={WA_GUIA} origen="guia_hub_flotante" texto="Consultar" />
+</Base>

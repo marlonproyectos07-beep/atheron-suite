@@ -288,3 +288,37 @@ Todo lo demás se declara por propiedad, en su ficha.
   reglas en `src/data/grupos.ts`.
 - **`perteneceA`** en las fichas evita el doble conteo el día que se publiquen a
   la vez el edificio de Algarra y sus apartamentos.
+
+---
+
+## Bloque G — Guía Atheron Zipaquirá (10 de septiembre de 2026)
+
+> Frente 2. El hub `/guia-zipaquira` queda publicado con lo que se pudo
+> verificar. Aquí está lo que quedó preparado y esperando dato real.
+
+| # | Pendiente | Quién |
+|---|---|---|
+| **G.1** | **Canónica: la orden pedía `https://www.hotelesatheron.com/guia-zipaquira/`, con `www` y barra final.** Las dos cosas contradicen lo ya decidido: el dominio oficial es **sin `www`** (bloque 0 de este documento) y `astro.config.mjs` declara `trailingSlash: 'never'`. Se siguió la regla del proyecto —`https://hotelesatheron.com/guia-zipaquira`— porque lo contrario habría metido la única canónica distinta de las otras 28 páginas. **Confirmar que la regla del proyecto sigue siendo la buena** | ChatGPT confirma |
+| **G.2** | **Canibalización con `/blog/guia-de-zipaquira`.** Ese artículo ya existía, está indexado y apunta a la misma búsqueda («guía de Zipaquirá»). No se tocó su URL ni su canónica. Se separaron las intenciones: el hub es **descubrimiento** (qué ver, alrededores, itinerario) y el artículo es **logística** (cómo llegar, cuántos días, clima), y se enlazan entre sí con textos distintos. **Vigilar en Search Console si se quitan posiciones**; si ocurre, la salida es un 301 del artículo al hub, que hoy sería prematuro | ChatGPT vigila |
+| G.3 | **Sin fotografías del destino.** El hub y la guía de la Catedral no tienen ninguna: la única imagen con ese motivo está generada con IA y su registro (§8.1 de [fotografias.md](fotografias.md)) prohíbe describirla como el lugar. Por eso tampoco llevan `og:image`, y un enlace compartido por WhatsApp sale sin miniatura. Es el mismo pendiente S.4, ahora con una segunda página afectada | Marlon |
+| G.4 | **Ningún lugar en `src/data/experiencias-locales.ts`.** La lista está vacía a propósito: no hay ni un restaurante o café con dirección, horario, foto y permiso verificados. Las categorías «Dónde comer» y «Cafés» salen visibles y **no enlazables**. El primer lugar entra con estado `INFORMATIVO` | Marlon aporta datos |
+| G.5 | **Bagatela e Indulto: no publicados, y no por olvido.** Hay interés en conversar, pero conversar no es un convenio. Hasta que exista uno firmado no pueden aparecer como aliados, ni con beneficio, ni con porcentaje, ni con Atheron Pass; y hasta tener sus datos verificados y su permiso, tampoco como fichas informativas | Marlon |
+| G.6 | **Mina de Sal de Nemocón: sin horario ni tarifa.** El sitio del operador no se pudo leer (verificación anti-bot) y la orden ya advertía de inconsistencias entre fuentes. Se publica qué es y en qué municipio, con enlace a la Alcaldía de Nemocón. **Antes de publicar horario o precio hay que verificarlo contra el operador** | Claude, cuando se pueda |
+| G.7 | **Guías profundas de Neusa y Nemocón.** Hoy son tarjetas de descubrimiento dentro del hub. Merecen página propia cuando haya datos suficientes y, sobre todo, fotografías legítimas. La arquitectura ya los trata como `Descubrimiento`, con municipio, fuentes y fecha | Claude |
+| G.8 | **Atheron Pass, portal de aliados, atribución y Odoo: nada construido.** Y a propósito: no hay QR, ni códigos, ni redenciones, ni comisiones. El modelo de datos deja el gancho (`codigoPartner`, `beneficio.vigencia`) y el componente **no pinta ningún botón de canje**, porque un botón que promete lo que nadie puede cumplir hace más daño que no tenerlo | Otro frente |
+
+### Lo que este frente dejó cerrado y conviene no romper
+
+- **Una sola URL para la Catedral.** `/zipaquira/catedral-de-sal` sigue siendo
+  la única guía; el hub la resume y enlaza, leyendo el resumen de la **misma**
+  fuente de datos. No hay dos páginas compitiendo.
+- **Los distintivos comerciales se deducen, no se escriben.** «Recomendado por
+  Atheron» y «Aliado Atheron» salen del estado de la ficha, igual que
+  `ProyectoFoto` deduce el rótulo del tipo de imagen. Sin convenio no hay
+  insignia, y sin beneficio el bloque de beneficio **no existe en el DOM**.
+- **Cada lugar de los alrededores lleva su municipio en grande.** Es el error
+  más caro de una guía: mandar a alguien al municipio equivocado. Casa Neusa
+  está en Cogua, y la página lo dice antes del botón, no después.
+- **«Zipaquirá» en el menú ya no es un ancla**, es la guía. Se cambió el destino
+  de una entrada existente en vez de añadir una octava: mismo recuento, sin
+  apretar el móvil y sin duplicar el concepto.

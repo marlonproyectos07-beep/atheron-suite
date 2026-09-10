@@ -1,0 +1,413 @@
+/* ============================================================
+   GUIA-HUB.CSS — el hub del destino (/guia-zipaquira)
+
+   Carga junto a guia.css, que trae el hero y el cuerpo de lectura
+   compartidos con las guias sueltas. Aqui solo lo que es propio del
+   hub, para no repetir nada.
+
+   Va como hoja extra porque el sitio incrusta su CSS en el HTML: lo
+   que se meta en una hoja comun viaja en todas las paginas aunque
+   solo lo use una.
+
+   TONO: editorial y turistico, no directorio ni panel de control.
+   El dorado es acento, nunca fondo: en cuanto se usa para rellenar
+   superficies, la pagina deja de parecer una guia y empieza a
+   parecer un anuncio.
+   ============================================================ */
+
+/* El hero del hub es el de las guias, un poco mas alto: es la
+   portada de una seccion entera, no la de un articulo. */
+.hub__hero { padding-block: var(--esp-7) var(--esp-6); }
+.hub__hero .hero__texto { max-width: 58ch; }
+
+/* ------------------------------------------------------------
+   ¿QUE QUIERES DESCUBRIR?
+
+   auto-fit con minimo de 15rem: en un telefono cae a una columna y
+   en escritorio a tres o cuatro, sin numero fijo. Asi no hay ningun
+   ancho en el que quede una tarjeta huerfana en la ultima fila.
+   ------------------------------------------------------------ */
+.descubrir {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--esp-3);
+}
+
+.descubrir__item {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-blanco);
+  color: var(--texto);
+  text-decoration: none;
+  transition: transform var(--transicion), box-shadow var(--transicion), border-color var(--transicion);
+}
+
+.descubrir__item h3 { font-size: 1.06rem; }
+.descubrir__item p { font-size: .9rem; color: var(--texto-suave); }
+
+a.descubrir__item:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sombra-md);
+  border-color: var(--color-sal);
+}
+
+a.descubrir__item:focus-visible {
+  outline: 3px solid var(--color-sal);
+  outline-offset: 3px;
+}
+
+.descubrir__accion {
+  margin-top: auto;
+  padding-top: var(--esp-2);
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--acento-texto);
+}
+
+.descubrir__accion::after { content: " \2192"; }
+
+/* ------------------------------------------------------------
+   LAS QUE TODAVIA NO EXISTEN
+
+   No se ocultan: se enseñan apagadas y sin ser enlaces. Que se vea
+   que la guia esta creciendo es mejor que fingir que ya esta
+   terminada, y muchisimo mejor que una tarjeta que se puede pulsar
+   y no lleva a ninguna parte.
+
+   Sin cursor de mano, sin sombra al pasar y sin foco: no es
+   interactiva y no debe comportarse como si lo fuera.
+   ------------------------------------------------------------ */
+.descubrir__item--pendiente {
+  background: transparent;
+  border-style: dashed;
+}
+
+.descubrir__item--pendiente h3 { color: var(--texto-suave); }
+
+.descubrir__pendiente {
+  margin-top: auto;
+  padding-top: var(--esp-2);
+  font-size: .78rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .descubrir__item { transition: none; }
+  a.descubrir__item:hover { transform: none; }
+}
+
+/* ------------------------------------------------------------
+   BLOQUE DE LA CATEDRAL
+   ------------------------------------------------------------ */
+.hub__datos {
+  display: grid;
+  gap: .5rem;
+  padding: 0;
+  margin: 0 0 var(--esp-3);
+  list-style: none;
+  font-size: .92rem;
+}
+
+.hub__datos li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem var(--esp-2);
+  justify-content: space-between;
+  padding-bottom: .5rem;
+  border-bottom: 1px dashed var(--borde);
+  color: var(--texto-suave);
+}
+
+.hub__datos li:last-child { border-bottom: 0; }
+.hub__datos strong { color: var(--texto); font-weight: 600; }
+
+.hub__pasaportes { font-size: .93rem; color: var(--texto-suave); }
+
+.hub__fuente { color: var(--texto-suave); }
+.hub__fuente a { color: var(--acento-texto); }
+
+/* ------------------------------------------------------------
+   INDEPENDENCIA EDITORIAL
+
+   Con filo dorado y a tamano normal. Es de las cosas que separan
+   una guia de un folleto, asi que no va en letra pequeña al pie.
+   ------------------------------------------------------------ */
+.hub__independencia {
+  padding: var(--esp-4);
+  border: 1px solid var(--borde);
+  border-left: 3px solid var(--color-sal);
+  border-radius: var(--radio-md);
+  background: var(--color-blanco);
+}
+
+.hub__independencia h3 { font-size: 1.05rem; margin-bottom: var(--esp-2); }
+.hub__independencia p { font-size: .93rem; color: var(--texto-suave); }
+
+/* ------------------------------------------------------------
+   PUENTE A HOSPEDAJE
+
+   Aparece en momentos de alta intencion, no cada dos parrafos. Una
+   guia que vende en cada linea deja de ser una guia.
+   ------------------------------------------------------------ */
+.hub__puente {
+  margin-top: var(--esp-4);
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--borde);
+  font-size: .96rem;
+}
+
+.hub__puente a {
+  color: var(--acento-texto);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ------------------------------------------------------------
+   ALREDEDORES
+
+   El municipio va ARRIBA y destacado, no escondido en el cuerpo.
+   Es el dato que evita que alguien reserve creyendo que duerme en
+   Zipaquira cuando la casa esta en Cogua.
+   ------------------------------------------------------------ */
+.hub__descubrimiento {
+  display: flex;
+  flex-direction: column;
+  padding: var(--esp-4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-blanco);
+}
+
+.hub__municipio {
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--acento-texto);
+  margin-bottom: .35rem;
+}
+
+.hub__descubrimiento h3 { font-size: 1.3rem; margin-bottom: var(--esp-2); }
+.hub__descubrimiento p { font-size: .94rem; margin-bottom: var(--esp-2); }
+
+.hub__etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .5rem;
+  margin: var(--esp-2) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hub__etiquetas li {
+  padding: .3rem .7rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  font-size: .79rem;
+  color: var(--texto-suave);
+}
+
+.hub__enlace-propio {
+  margin-top: auto;
+  padding-top: var(--esp-3);
+}
+
+/* La aclaracion geografica antes del boton, no despues: quien pulsa
+   sin leer tiene que haberla visto de todas formas. */
+.hub__nota {
+  padding: var(--esp-2) var(--esp-3);
+  margin-bottom: var(--esp-3);
+  border-left: 3px solid var(--color-sal);
+  border-radius: var(--radio-sm);
+  background: var(--color-crema);
+  font-size: .87rem;
+  color: var(--texto-suave);
+}
+
+.hub__fuentes {
+  margin-top: var(--esp-3);
+  font-size: .8rem;
+  color: var(--texto-suave);
+}
+
+.hub__fuentes a { color: var(--acento-texto); }
+
+/* ------------------------------------------------------------
+   ITINERARIO
+   ------------------------------------------------------------ */
+.hub__dia {
+  padding: var(--esp-4);
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: var(--radio-md);
+  background: rgba(255, 255, 255, .05);
+}
+
+.hub__dia-rotulo {
+  display: inline-block;
+  padding: .28rem .75rem;
+  margin-bottom: var(--esp-2);
+  border-radius: 999px;
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--color-noche);
+  background: var(--color-sal-claro);
+}
+
+.hub__dia h3 { color: var(--color-blanco); margin-bottom: var(--esp-3); }
+
+.hub__aviso {
+  margin-top: var(--esp-4);
+  max-width: 62ch;
+  font-size: .88rem;
+  color: rgba(255, 255, 255, .72);
+}
+
+/* ------------------------------------------------------------
+   TARJETA DE LUGAR (componente ExperienciaLocal)
+
+   Las reglas existen y hoy no se usan: no hay ningun lugar
+   verificado. Se dejan hechas para que anadir el primero sea
+   rellenar un objeto en src/data/experiencias-locales.ts, y no
+   tener que decidir la maqueta con un dato real esperando.
+
+   Lo importante de aqui abajo: el bloque de beneficio y las
+   insignias SOLO se pintan si el componente los emite, y el
+   componente solo los emite si hay convenio real detras.
+   ------------------------------------------------------------ */
+.lugar {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-blanco);
+}
+
+.lugar__media .foto { border-radius: 0; }
+
+.lugar__cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+  padding: var(--esp-3);
+}
+
+.lugar__categoria {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .6rem;
+  font-size: .78rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.lugar__ciudad::before { content: "· "; }
+
+.lugar__nombre { font-size: 1.2rem; }
+
+.lugar__insignia {
+  align-self: flex-start;
+  padding: .3rem .7rem;
+  border-radius: 999px;
+  font-size: .76rem;
+  font-weight: 700;
+  color: var(--color-noche);
+  background: var(--color-sal-claro);
+}
+
+.lugar__insignia--aliado {
+  color: var(--color-blanco);
+  background: var(--color-verde);
+}
+
+.lugar__texto { font-size: .93rem; color: var(--texto-suave); }
+
+.lugar__motivo {
+  padding-left: var(--esp-2);
+  border-left: 2px solid var(--color-sal);
+  font-size: .89rem;
+  font-style: italic;
+  color: var(--texto-suave);
+}
+
+.lugar__ideal { font-size: .89rem; color: var(--texto-suave); }
+
+.lugar__lista,
+.lugar__horario {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  font-size: .88rem;
+  color: var(--texto-suave);
+}
+
+.lugar__lista li { padding-left: 1rem; position: relative; }
+.lugar__lista li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: .55em;
+  width: .35rem;
+  height: .35rem;
+  border-radius: 50%;
+  background: var(--color-sal);
+}
+
+.lugar__horario li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--esp-2);
+}
+
+.lugar__dato { font-size: .88rem; color: var(--texto-suave); }
+
+.lugar__beneficio {
+  padding: var(--esp-3);
+  border-radius: var(--radio-sm);
+  background: var(--color-crema);
+  border-left: 3px solid var(--color-verde);
+}
+
+.lugar__beneficio-titulo {
+  font-weight: 700;
+  font-size: .8rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--color-verde);
+  margin-bottom: .3rem;
+}
+
+.lugar__beneficio-texto { font-size: .92rem; }
+
+.lugar__beneficio-nota {
+  margin-top: .4rem;
+  font-size: .84rem;
+  color: var(--texto-suave);
+}
+
+.lugar__enlaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  font-size: .89rem;
+}
+
+.lugar__enlaces a { color: var(--acento-texto); font-weight: 600; }
+
+.lugar__verificado { font-size: .78rem; color: var(--texto-suave); }
+
+@media (max-width: 48rem) {
+  .hub__descubrimiento,
+  .hub__independencia,
+  .hub__dia { padding: var(--esp-3); }
+}
