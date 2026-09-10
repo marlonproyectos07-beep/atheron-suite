@@ -38,6 +38,29 @@ const llevaMenu = menuEscritorio.length > 0;
 // Astro no escribe los atributos que valen undefined, asi que
 // data-whatsapp solo aparece en los botones que lo necesitan.
 const claseCta = `boton ${cta.clase ?? 'boton--primario'}`;
+
+/* ------------------------------------------------------------
+   ATRIBUTOS DEL BOTON DESTACADO
+
+   El boton aparece TRES veces en esta cabecera: menu de escritorio,
+   cabecera de landing y menu de celular. Escribir los atributos en
+   los tres sitios es como se descoordinan: bastaria con anadir
+   target="_blank" en dos de ellos para que el tercero sacara al
+   visitante de la pagina sin que nadie lo notara. Se arman una vez
+   y se reparten.
+
+   El origen se marca distinto en escritorio y celular, para que el
+   dia que haya medicion se pueda ver cual de los dos convierte.
+   ------------------------------------------------------------ */
+const comunes = {
+  class: claseCta,
+  href: cta.href,
+  'data-whatsapp': cta.whatsapp,
+  'data-evento': cta.evento,
+  ...(cta.externo ? { target: '_blank', rel: 'noopener noreferrer' } : {}),
+};
+const attrEscritorio = { ...comunes, 'data-evento-origen': cta.origen ?? 'cabecera' };
+const attrMovil = { ...comunes, 'data-evento-origen': `${cta.origen ?? 'cabecera'}_movil` };
 ---
 
 <header class="header">
@@ -65,14 +88,14 @@ const claseCta = `boton ${cta.clase ?? 'boton--primario'}`;
             </li>
           ))}
           <li>
-            <a class={claseCta} href={cta.href} data-whatsapp={cta.whatsapp}>{cta.texto}</a>
+            <a {...attrEscritorio}>{cta.texto}</a>
           </li>
         </ul>
       </nav>
     )}
 
     {!llevaMenu && (
-      <a class={claseCta} href={cta.href} data-whatsapp={cta.whatsapp}>{cta.texto}</a>
+      <a {...attrEscritorio}>{cta.texto}</a>
     )}
 
     {llevaMenu && (
@@ -90,7 +113,7 @@ const claseCta = `boton ${cta.clase ?? 'boton--primario'}`;
   <div class="menu-movil" id="menu-movil" data-menu-movil data-abierto="false">
     <div class="contenedor">
       {menuCelular.map((enlace) => <a href={enlace.href}>{enlace.texto}</a>)}
-      <a class={claseCta} href={cta.href} data-whatsapp={cta.whatsapp}>{cta.texto}</a>
+      <a {...attrMovil}>{cta.texto}</a>
     </div>
   </div>
 )}

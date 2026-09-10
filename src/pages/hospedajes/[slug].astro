@@ -6,10 +6,11 @@ import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import Marca from '../../components/Marca.astro';
 import Foto from '../../components/Foto.astro';
-import { menuFicha, menuFichaMovil, ctaConsultar } from '../../data/navegacion';
+import { menuFicha, menuFichaMovil, ctaConsultarDe } from '../../data/navegacion';
 import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
 import { formularioContactoActivo } from '../../data/ajustes';
 import { migaDePan, url } from '../../data/seo';
+import { atributosWhatsApp } from '../../data/whatsapp';
 
 export async function getStaticPaths() {
   const fichas = await getCollection('hospedajes');
@@ -205,7 +206,7 @@ function idHabitacion(nombre) {
   imagen={d.fotoPrincipal}
   imagenAlt={d.fotoPrincipalAlt}
 >
-  <Cabecera enlaces={menuFicha} enlacesMovil={enlacesMovil} cta={ctaConsultar} />
+  <Cabecera enlaces={menuFicha} enlacesMovil={enlacesMovil} cta={ctaConsultarDe(d.nombre, d.localidad)} />
 
   <main id="contenido">
     <section class:list={['hero', 'hero--interior', heroFoto && 'hero--foto']}>
@@ -242,8 +243,7 @@ function idHabitacion(nombre) {
         <div class="grupo-botones">
           <a
             class="boton boton--whatsapp boton--grande"
-            href="#contacto"
-            data-whatsapp={`${mensajeInteres} Quiero consultar disponibilidad.`}
+            {...atributosWhatsApp(`${mensajeInteres} Quiero consultar disponibilidad.`, { origen: 'ficha_hero', propiedad: d.nombre })}
           >
             Consultar disponibilidad
           </a>
@@ -330,8 +330,7 @@ function idHabitacion(nombre) {
 
             <a
               class="boton boton--whatsapp boton--grande tarifas__cta"
-              href="#contacto"
-              data-whatsapp={tarifas.mensaje ?? mensajeInteres}
+              {...atributosWhatsApp(tarifas.mensaje ?? mensajeInteres, { origen: 'ficha_tarifas', propiedad: d.nombre })}
             >{tarifas.cta}</a>
           </div>
         </div>
@@ -474,8 +473,7 @@ function idHabitacion(nombre) {
                     <a class="boton boton--contorno" href="#detalle-casa-completa">{casa.ctaVer}</a>
                     <a
                       class="boton boton--whatsapp"
-                      href="#contacto"
-                      data-whatsapp={casa.mensaje}
+                      {...atributosWhatsApp(casa.mensaje, { origen: 'ficha_casa_completa', propiedad: d.nombre })}
                     >{casa.ctaCotizar}</a>
                   </div>
                 </div>
@@ -535,8 +533,7 @@ function idHabitacion(nombre) {
                           >Ver fotos y detalles</a>
                           <a
                             class="boton boton--whatsapp"
-                            href="#contacto"
-                            data-whatsapp={`Hola, quiero consultar disponibilidad y precio de ${h.nombre} en ${d.nombre}.`}
+                            {...atributosWhatsApp(`Hola, quiero consultar disponibilidad y precio de ${h.nombre} en ${d.nombre}.`, { origen: 'ficha_mini_habitacion', propiedad: d.nombre })}
                           >Consultar</a>
                         </div>
                       </div>
@@ -559,8 +556,7 @@ function idHabitacion(nombre) {
               {casa.precioNota && <p class="hotel-casa__precio-nota">{casa.precioNota}</p>}
               <a
                 class="boton boton--whatsapp"
-                href="#contacto"
-                data-whatsapp={casa.mensaje}
+                {...atributosWhatsApp(casa.mensaje, { origen: 'ficha_casa_detalle', propiedad: d.nombre })}
               >{casa.ctaCotizar}</a>
 
               <div class="hotel-casa-detalle__mini">
@@ -691,8 +687,7 @@ function idHabitacion(nombre) {
                         )}
                         <a
                           class="boton boton--whatsapp"
-                          href="#contacto"
-                          data-whatsapp={`Hola, quiero consultar por la ${h.nombre} en ${d.nombre}.`}
+                          {...atributosWhatsApp(`Hola, quiero consultar por la ${h.nombre} en ${d.nombre}.`, { origen: 'ficha_habitacion', propiedad: d.nombre })}
                         >
                           Consultar
                         </a>
@@ -1118,10 +1113,12 @@ function idHabitacion(nombre) {
           <div class="grupo-botones" style="margin-bottom: var(--esp-3);">
             <a
               class="boton boton--whatsapp boton--grande"
-              href="tel:+573188983167"
-              data-whatsapp={d.publicado
-                ? `Hola, quiero reservar en ${d.nombre} de Atheron Suite. Estas son mis fechas:`
-                : `Hola, quisiera consultar el estado del alojamiento ${d.nombre} de Atheron Suite.`}
+              {...atributosWhatsApp(
+                d.publicado
+                  ? `Hola, quiero reservar en ${d.nombre} de Atheron Suite.\n\nFecha de llegada:\nFecha de salida:\nNúmero de huéspedes:`
+                  : `Hola, quisiera consultar el estado del alojamiento ${d.nombre} de Atheron Suite.`,
+                { origen: 'ficha_contacto', propiedad: d.nombre },
+              )}
             >
               {d.publicado ? 'Escribir por WhatsApp' : 'Consultar estado del alojamiento'}
             </a>
@@ -1198,10 +1195,7 @@ function idHabitacion(nombre) {
 
   <Pie textoVuelta="Ver todos los hospedajes" hrefVuelta="/hospedajes" />
 
-  <BotonFlotante
-    href="#contacto"
-    mensaje={mensajeInteres}
-  />
+  <BotonFlotante mensaje={`${mensajeInteres} Quiero consultar disponibilidad.`} origen="ficha_flotante" />
 
   {/* El visor se monta si hay ALGO que ampliar: fotos de habitacion o
        de la galeria del hospedaje. Antes solo miraba las habitaciones, y

@@ -50,6 +50,12 @@ const paginasFijas: Entrada[] = [
   { ruta: '/landing/casas-para-grupos-en-zipaquira', prioridad: '0.9' },
   { ruta: '/hospedajes', prioridad: '0.8' },
   { ruta: '/grupos', prioridad: '0.8' },
+  /* Guias del destino. Son contenido propio e indexable, con su
+     propia fecha porque no se reescriben a la vez que el resto: la
+     de la Catedral lleva datos que hay que revisar contra la fuente
+     oficial, y su lastmod tiene que reflejar esa revision, no el
+     ultimo despliegue del sitio. */
+  { ruta: '/zipaquira/catedral-de-sal', prioridad: '0.8', fecha: '2026-09-09' },
   { ruta: '/blog', prioridad: '0.7' },
 ];
 

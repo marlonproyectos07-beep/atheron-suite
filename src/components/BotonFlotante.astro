@@ -8,21 +8,33 @@
    gusto, el mensaje ya llega escrito. Un mensaje generico
    obliga al cliente a redactar, y redactar es friccion.
 
-   El href es el destino de respaldo. Si el JavaScript falla,
-   el boton sigue llevando a algun sitio en vez de quedar muerto:
-   main.js lo reescribe a wa.me solo cuando ha cargado bien.
+   EL DESTINO YA VIENE ESCRITO EN EL HTML.
+   Antes el href era un ancla de la propia pagina -"#contacto"- y
+   quien lo convertia en wa.me era main.js al cargar. Un visitante
+   que pulsara antes de que el guion montara se quedaba dentro de
+   la pagina sin entender por que. Ahora el enlace correcto esta
+   desde el primer byte y main.js solo le anade el codigo
+   promocional si lo hay.
+
+   El parametro "href" se conserva en la firma pero ya no decide el
+   destino: existe para no romper las llamadas que todavia lo pasan.
    ============================================================ */
 
+import { atributosWhatsApp } from '../data/whatsapp';
+
 interface Props {
-  /** Destino de respaldo si el JavaScript no carga. */
-  href: string;
+  /** Destino antiguo. Ignorado: el enlace se construye del mensaje. */
+  href?: string;
   /** El mensaje que aparecera ya escrito en WhatsApp. */
   mensaje: string;
   /** Texto visible del boton. */
   texto?: string;
+  /** De donde sale el clic, para la analitica futura. */
+  origen?: string;
 }
 
-const { href, mensaje, texto = 'WhatsApp' } = Astro.props;
+const { mensaje, texto = 'WhatsApp', origen = 'boton_flotante' } = Astro.props;
+const atributos = atributosWhatsApp(mensaje, { origen });
 ---
 
-<a class="boton boton--whatsapp flotante" href={href} data-whatsapp={mensaje}>{texto}</a>
+<a class="boton boton--whatsapp flotante" {...atributos}>{texto}</a>

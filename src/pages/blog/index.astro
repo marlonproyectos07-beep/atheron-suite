@@ -11,7 +11,8 @@ import Pie from '../../components/Pie.astro';
 
 import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
 import { migaDePan, url, ORGANIZACION } from '../../data/seo';
-import { articulosPublicados } from '../../data/blog';
+import { articulosPublicados } from '../../data/blog';
+import { atributosWhatsApp } from '../../data/whatsapp';
 
 /* El listado declara que es un blog y que articulos lo componen.
    Las fechas y los titulos salen del modelo de datos del blog, no
@@ -183,8 +184,8 @@ const fichaBlog = {
           <h2>Vienes a Zipaquirá?</h2>
           <p>Administramos siete hospedajes en el municipio. Escribenos y te ayudamos a elegir.</p>
           <div class="grupo-botones grupo-botones--centrado">
-            <a class="boton boton--whatsapp boton--grande" href="/#contacto"
-               data-whatsapp="Hola, vengo del blog y quiero informacion sobre los hospedajes.">
+            <a class="boton boton--whatsapp boton--grande"
+               {...atributosWhatsApp('Hola, vengo del blog y quiero información sobre los hospedajes de Atheron Suite.', { origen: 'blog_indice' })}>
               Escribir por WhatsApp
             </a>
             <a class="boton boton--claro boton--grande" href="/hospedajes">Ver los hospedajes</a>

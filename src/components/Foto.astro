@@ -72,7 +72,20 @@ const altoFinal = alto ?? propias?.alto;
    cerca de la pantalla. Es la regla de rendimiento del sitio y vive
    aqui, en un solo sitio, y no repetida en cada maqueta. */
 const carga = prioritaria ? 'eager' : 'lazy';
-const prioridadRed = prioritaria ? 'high' : undefined;
+/* La prioritaria se pide con prioridad alta. Las demas, con
+   prioridad BAJA y no sin declarar.
+
+   Por que importa: loading="lazy" no siempre las deja fuera de la
+   carga inicial. Cuando el navegador estima que una imagen esta
+   cerca de la pantalla -y en una pagina larga y estrecha el margen
+   es generoso- se la descarga igual, y entonces compite por el
+   ancho de banda con la imagen que el visitante SI esta viendo.
+
+   Se midio en la portada: dos fotos de mas abajo se estaban
+   descargando durante la carga inicial, delante de la imagen que
+   Lighthouse mide como LCP. Con prioridad baja siguen llegando,
+   pero detras y sin robarle sitio. */
+const prioridadRed = prioritaria ? 'high' : 'low';
 
 /* Las variantes se nombran a partir del propio src: se le quita la
    extension y se le pega "-<ancho>.<formato>". Asi no hay una segunda

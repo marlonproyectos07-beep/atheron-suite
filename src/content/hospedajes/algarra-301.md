@@ -3,6 +3,10 @@ nombre: Apartamento 301
 publicado: false
 orden: 42
 insignia: '301'
+# Este apartamento forma parte del edificio de Algarra. Lo lee
+# src/data/grupos.ts: publicar el edificio y sus apartamentos a la vez
+# contaria las mismas camas dos veces en el total de la pagina de grupos.
+perteneceA: edificio-algarra
 titulo: Apartamento 301 en Algarra, Zipaquirá | Atheron Suite
 descripcion: Apartamento 301 en el sector de Algarra, Zipaquirá. Una habitación, un bano, cocina, wifi y zona de trabajo. Alojamiento aliado comercializado por Atheron Suite. Consulta disponibilidad por WhatsApp.
 ogTitulo: Apartamento 301 en Algarra, Zipaquirá

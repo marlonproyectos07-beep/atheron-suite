@@ -19,7 +19,8 @@ import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import { ctaLandingHospedaje } from '../../data/navegacion';
 import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
-import { formularioContactoActivo } from '../../data/ajustes';
+import { formularioContactoActivo } from '../../data/ajustes';
+import { atributosWhatsApp } from '../../data/whatsapp';
 ---
 
 <Base
@@ -183,8 +184,8 @@ import { formularioContactoActivo } from '../../data/ajustes';
             </div>
 
             <div class="grupo-botones" style="margin-top: var(--esp-2);">
-              <a class="boton boton--whatsapp" href="#consultar"
-                 data-whatsapp="Hola, quiero reservar directo un hospedaje en Zipaquira. Estas son mis fechas:">
+              <a class="boton boton--whatsapp"
+                 {...atributosWhatsApp('Hola, quiero reservar directo un hospedaje en Zipaquirá.\n\nFecha de llegada:\nFecha de salida:\nNúmero de huéspedes:', { origen: 'landing_hospedaje' })}>
                 Reservar directo
               </a>
             </div>
@@ -441,7 +442,6 @@ import { formularioContactoActivo } from '../../data/ajustes';
   <Pie textoVuelta="Ir al sitio principal" />
 
   <BotonFlotante
-    href="#consultar"
     mensaje="Hola, vi la pagina de hospedaje en Zipaquirá y quiero consultar disponibilidad."
   />
 

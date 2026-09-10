@@ -44,7 +44,7 @@ import ProyectoUnidad from '../../components/ProyectoUnidad.astro';
 import ProyectoFoto from '../../components/ProyectoFoto.astro';
 
 import { menuHospedajes } from '../../data/navegacion';
-import { whatsappRespaldo } from '../../data/ajustes';
+import { atributosWhatsApp, enlaceWhatsApp } from '../../data/whatsapp';
 import {
   BORRADOR,
   RUTA,
@@ -73,11 +73,16 @@ import {
 
 /* La cabecera es la del sitio, con el menu del listado: esta pagina
    no se anade al menu, pero si ofrece la salida hacia el sitio. */
+/* El href se construye con EL MISMO mensaje que lleva data-whatsapp.
+   Antes apuntaba al enlace de respaldo generico, asi que el boton
+   decia una cosa -conversar sobre el proyecto- y abria WhatsApp con
+   otra -consultar disponibilidad de un hospedaje-. */
 const ctaCabecera = {
   texto: 'Conversar por WhatsApp',
-  href: whatsappRespaldo,
+  href: enlaceWhatsApp(MENSAJE_GENERAL),
   clase: 'boton--whatsapp',
   whatsapp: MENSAJE_GENERAL,
+  externo: true,
 };
 
 const avisoBorrador = BORRADOR
@@ -152,7 +157,7 @@ const fichaPagina = {
   imagenAlt={seo.imagenAlt}
   avisoBorrador={avisoBorrador}
   jsonLd={fichaPagina}
-  hojasExtra={['proyecto-casa-colonial']}
+  hojasExtra={['proyecto-foto', 'proyecto-casa-colonial']}
 >
   <Cabecera enlaces={menuHospedajes} cta={ctaCabecera} />
 
@@ -406,10 +411,7 @@ const fichaPagina = {
 
               <a
                 class="boton boton--whatsapp"
-                href={whatsappRespaldo}
-                rel="noopener"
-                data-whatsapp={alianza.mensaje}
-                data-evento={alianza.evento}
+                {...atributosWhatsApp(alianza.mensaje, { origen: 'proyecto_alianza', evento: alianza.evento })}
               >{alianza.ctaTexto}</a>
             </article>
           ))}
@@ -505,10 +507,9 @@ const fichaPagina = {
                 'boton--grande',
                 boton.whatsapp ? 'boton--whatsapp' : indice === 0 ? 'boton--primario' : 'boton--contorno',
               ]}
-              href={boton.whatsapp ? whatsappRespaldo : boton.href}
-              rel={boton.whatsapp ? 'noopener' : undefined}
-              data-whatsapp={boton.whatsapp ?? undefined}
-              data-evento={boton.evento}
+              {...(boton.whatsapp
+                ? atributosWhatsApp(boton.whatsapp, { origen: 'proyecto_cierre', evento: boton.evento })
+                : { href: boton.href, 'data-evento': boton.evento })}
             >{boton.texto}</a>
           ))}
         </div>
@@ -529,5 +530,5 @@ const fichaPagina = {
 
   <Pie variante="simple" />
 
-  <BotonFlotante href={whatsappRespaldo} mensaje={MENSAJE_GENERAL} />
+  <BotonFlotante mensaje={MENSAJE_GENERAL} />
 </Base>

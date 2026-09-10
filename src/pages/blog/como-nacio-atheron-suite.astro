@@ -17,7 +17,8 @@ import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
 import { migaDePan, url, ORGANIZACION } from '../../data/seo';
-import { articuloDe } from '../../data/blog';
+import { articuloDe } from '../../data/blog';
+import { atributosWhatsApp } from '../../data/whatsapp';
 
 
 /* La ficha del articulo se construye con el modelo de datos del
@@ -246,8 +247,8 @@ const fichaArticulo = {
             </p>
             <div class="grupo-botones" style="margin-top: var(--esp-2);">
               <a class="boton boton--primario" href="/hospedajes">Ver los hospedajes</a>
-              <a class="boton boton--whatsapp" href="/#contacto"
-                 data-whatsapp="Hola, lei la historia de Atheron Suite y quiero consultar disponibilidad.">
+              <a class="boton boton--whatsapp"
+                 {...atributosWhatsApp('Hola, leí la historia de Atheron Suite y quiero consultar disponibilidad.', { origen: 'blog_historia' })}>
                 Escribir por WhatsApp
               </a>
             </div>
@@ -270,7 +271,6 @@ const fichaArticulo = {
   <Pie textoVuelta="Volver al blog" hrefVuelta="/blog" />
 
   <BotonFlotante
-    href="/#contacto"
     mensaje="Hola, quiero información sobre los hospedajes de Atheron Suite."
   />
 

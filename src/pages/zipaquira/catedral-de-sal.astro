@@ -1,0 +1,337 @@
+---
+/* ============================================================
+   GUIA DE LA CATEDRAL DE SAL
+
+   POR QUE ESTA PAGINA EXISTE Y POR QUE ESTA BAJO /zipaquira/
+
+   La tarjeta de "Catedral de Sal" de la portada no llevaba a
+   ninguna parte. Era el termino con mas busquedas de todo nuestro
+   contexto y lo estabamos gastando en un rectangulo decorativo.
+
+   La ruta abre una carpeta, /zipaquira/, que es donde van a vivir
+   las demas guias del destino: centro historico, Neusa,
+   gastronomia. Colgarla del blog la habria mezclado con articulos
+   de otra naturaleza; colgarla de la raiz habria dejado la misma
+   decision por tomar dentro de tres meses.
+
+   LO QUE ESTA PAGINA NO AFIRMA, Y ES LO IMPORTANTE
+
+   No vendemos boletas, no somos operador autorizado, no tenemos
+   convenio ni comision, y no hay ningun descuento de Atheron. Se
+   dice explicitamente en la seccion de grupos, en positivo y sin
+   letra pequeña. La razon esta en src/data/catedral-de-sal.ts.
+
+   Todos los datos duros salen de ese archivo, que lleva su registro
+   de verificacion contra la fuente oficial y la fecha. Aqui no se
+   escribe ni un horario a mano.
+   ============================================================ */
+
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
+import { migaDePan, url, ORGANIZACION } from '../../data/seo';
+import { atributosWhatsApp } from '../../data/whatsapp';
+import {
+  SITIO_OFICIAL,
+  TARIFAS_OFICIALES,
+  VERIFICADO_EL,
+  datosPracticos,
+  pasaportes,
+  recomendaciones,
+  loQueHacemosPorUnGrupo,
+  loQueNoHacemos,
+} from '../../data/catedral-de-sal';
+
+const RUTA = '/zipaquira/catedral-de-sal';
+
+/* Los dos mensajes de WhatsApp de esta pagina. El de grupo lleva ya
+   las tres preguntas que siempre hay que hacer, tal y como pidio
+   direccion: personas, catedral y hospedaje en la misma frase. */
+const WA_VISITA =
+  'Hola, quiero planear mi visita a la Catedral de Sal y hospedarme en Zipaquirá.\n\n' +
+  'Fecha de llegada:\n' +
+  'Fecha de salida:\n' +
+  'Número de huéspedes:';
+
+const WA_GRUPO_CATEDRAL =
+  'Hola, somos ___ personas y queremos información para visitar la ' +
+  'Catedral de Sal y hospedarnos en Zipaquirá.\n\n' +
+  'Fecha de llegada:\n' +
+  'Fecha de salida:\n' +
+  'Tipo de grupo:';
+
+/* ------------------------------------------------------------
+   DATOS ESTRUCTURADOS
+
+   Se declara un Article: es lo que esta pagina es, una guia escrita
+   por nosotros.
+
+   LO QUE NO SE DECLARA, Y ES DELIBERADO: ni TouristAttraction, ni
+   Place, ni LocalBusiness, ni OpeningHoursSpecification, ni Offer,
+   ni Product. Todos ellos describirian a la Catedral de Sal como si
+   fuera una entidad nuestra o una oferta que vendemos. No lo es. El
+   horario se publica como texto, citando la fuente y la fecha, que
+   es lo honesto y ademas lo que evita que Google nos atribuya un
+   negocio que no operamos.
+   ------------------------------------------------------------ */
+const fichaGuia = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Article',
+      '@id': `${url(RUTA)}#articulo`,
+      url: url(RUTA),
+      headline: 'Catedral de Sal de Zipaquirá: cómo planear la visita',
+      description:
+        'Guía de Atheron Suite para visitar la Catedral de Sal de Zipaquirá: horario, tipos de pasaporte, recomendaciones y cómo encaja con tu estancia.',
+      inLanguage: 'es-CO',
+      isPartOf: { '@id': ORGANIZACION['@id'] },
+      publisher: { '@id': ORGANIZACION['@id'] },
+      about: 'Catedral de Sal de Zipaquirá',
+      breadcrumb: { '@id': `${url(RUTA)}#miga` },
+    },
+    ORGANIZACION,
+    migaDePan(
+      [
+        { nombre: 'Inicio', ruta: '/' },
+        { nombre: 'Zipaquirá' },
+        { nombre: 'Catedral de Sal', ruta: RUTA },
+      ],
+      `${url(RUTA)}#miga`,
+    ),
+  ],
+};
+---
+
+<Base
+  titulo="Catedral de Sal de Zipaquirá: horario y cómo planear la visita | Atheron Suite"
+  descripcion="Guía práctica para visitar la Catedral de Sal de Zipaquirá: horario, los tres pasaportes, qué llevar y cómo organizar el día si te hospedas en el centro."
+  ruta={RUTA}
+  ogTipo="article"
+  ogTitulo="Catedral de Sal de Zipaquirá: cómo planear la visita"
+  ogDescripcion="Horario, pasaportes y recomendaciones para visitar la Catedral de Sal, a 16 minutos a pie de nuestros hospedajes del centro."
+  jsonLd={fichaGuia}
+  hojasExtra={['guia']}
+>
+
+  <Cabecera enlaces={menuHospedajes} cta={{ ...ctaDisponibilidad, origen: 'guia_catedral' }} />
+
+  <main id="contenido">
+
+    {/* ============================================================
+         HERO
+
+         Sin fotografia, y no por descuido: no tenemos ni una imagen
+         legitima de la Catedral de Sal. La generada con IA que hay en
+         el repositorio no puede describirse como el lugar -su
+         registro de procedencia lo prohibe- y bajar una de internet
+         no es una opcion. El hero se sostiene con tipografia y con
+         los tres datos verificados, que es lo que el visitante viene
+         buscando de todas formas.
+         ============================================================ */}
+    <section class="hero hero--interior guia__hero">
+      <div class="contenedor hero__contenido">
+        <span class="hero__etiqueta">Guía de Zipaquirá</span>
+        <h1 class="hero__titulo">Catedral de Sal: cómo planear tu visita</h1>
+        <p class="hero__texto">
+          Una mina de sal convertida en templo, a 180 metros bajo tierra y a
+          dieciséis minutos a pie de nuestros hospedajes del centro. Esto es
+          lo que conviene saber antes de ir.
+        </p>
+
+        <ul class="guia__datos">
+          {datosPracticos.map(({ dato, valor }) => (
+            <li>
+              <span class="guia__dato-rotulo">{dato}</span>
+              <span class="guia__dato-valor">{valor}</span>
+            </li>
+          ))}
+        </ul>
+
+        {/* La fecha va al lado del horario y no en el pie. Un horario
+            sin fecha de comprobacion es un horario en el que nadie
+            deberia confiar, y el nuestro puede quedarse viejo. */}
+        <p class="guia__fuente">
+          Horario y modalidades comprobados en el
+          <a href={SITIO_OFICIAL} target="_blank" rel="noopener noreferrer">sitio oficial de la Catedral de Sal</a>
+          el {VERIFICADO_EL}. Confirma siempre antes de ir.
+        </p>
+      </div>
+    </section>
+
+    {/* ============================================================
+         QUE ES
+         ============================================================ */}
+    <section class="seccion seccion--estrecha">
+      <div class="contenedor guia__cuerpo">
+        <h2>Qué es la Catedral de Sal</h2>
+        <p>
+          No es una iglesia construida bajo tierra: es una mina de sal en la que
+          se excavó un templo. Los mineros de Zipaquirá llevaban generaciones
+          tallando capillas en los túneles donde trabajaban, y de esa costumbre
+          salió el conjunto que hoy se visita.
+        </p>
+        <p>
+          El recorrido baja por un túnel jalonado por las estaciones del
+          viacrucis y desemboca en las naves principales, donde la iluminación
+          cambia de color sobre la roca. La escala es lo que sorprende: se
+          camina por dentro de una montaña.
+        </p>
+        <p>
+          Está dentro del Parque de la Sal, en el borde del casco urbano. Desde
+          el centro histórico se llega caminando, y desde nuestros hospedajes
+          del centro también.
+        </p>
+      </div>
+    </section>
+
+    {/* ============================================================
+         PASAPORTES
+         ============================================================ */}
+    <section class="seccion seccion--alterna" id="pasaportes">
+      <div class="contenedor">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">Antes de comprar</span>
+          <h2>Los tres pasaportes</h2>
+          <p class="texto-suave" style="margin-top: var(--esp-2);">
+            La entrada se vende por modalidades. El recorrido de la Catedral va
+            en las tres: lo que cambia es lo que se añade alrededor.
+          </p>
+        </div>
+
+        <div class="grid grid--3">
+          {pasaportes.map((p) => (
+            <article class="tarjeta guia__pasaporte">
+              <div class="tarjeta__cuerpo">
+                <h3 class="tarjeta__titulo">{p.nombre}</h3>
+                <p class="texto-suave">{p.resumen}</p>
+                <ul class="lista-check guia__incluye">
+                  {p.incluye.map((i) => <li>{i}</li>)}
+                </ul>
+                {p.nota && <p class="guia__nota">{p.nota}</p>}
+              </div>
+            </article>
+          ))}
+        </div>
+
+        {/* Ni una cifra. Las tarifas las fija la Catedral y cambian;
+            publicarlas aqui es garantizar que algun dia esten mal. */}
+        <p class="guia__aviso-tarifas">
+          <strong>No publicamos precios.</strong> Las tarifas las fija la Catedral
+          de Sal y cambian con el tiempo. Consúltalas en su
+          <a href={TARIFAS_OFICIALES} target="_blank" rel="noopener noreferrer">página oficial de tarifas</a>,
+          que es donde están al día.
+        </p>
+      </div>
+    </section>
+
+    {/* ============================================================
+         RECOMENDACIONES
+         ============================================================ */}
+    <section class="seccion" id="recomendaciones">
+      <div class="contenedor">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">Cómo planear la visita</span>
+          <h2>Cinco cosas que decimos siempre</h2>
+        </div>
+
+        <div class="grid grid--2">
+          {recomendaciones.map((r) => (
+            <article class="guia__consejo">
+              <h3>{r.titulo}</h3>
+              <p class="texto-suave">{r.texto}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         GRUPOS
+
+         La seccion que mas cuidado necesita. Se dice en positivo lo
+         que hacemos y, sin rodeos, lo que no. El boton dice "cotizar
+         alojamiento", no "cotizar la visita": lo que cotizamos es
+         nuestro alojamiento.
+         ============================================================ */}
+    <section class="seccion seccion--oscura" id="grupos">
+      <div class="contenedor bloque-doble">
+        <div class="bloque-doble__texto">
+          <span class="etiqueta">Grupos</span>
+          <h2>¿Vienen en grupo a conocer la Catedral?</h2>
+          <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
+            Recibimos grupos que vienen justamente a esto. Lo que hacemos por
+            ellos es concreto:
+          </p>
+
+          <ul class="lista-check">
+            {loQueHacemosPorUnGrupo.map((l) => <li>{l}</li>)}
+          </ul>
+
+          {/* Sin letra pequeña. Va con el mismo tamaño que el resto y
+              antes del boton, no después. */}
+          <p class="guia__limite">{loQueNoHacemos}</p>
+
+          <div class="grupo-botones" style="margin-top: var(--esp-3);">
+            <a
+              class="boton boton--whatsapp boton--grande"
+              {...atributosWhatsApp(WA_GRUPO_CATEDRAL, {
+                origen: 'guia_catedral_grupos',
+                evento: 'whatsapp_group_quote',
+              })}
+            >
+              Cotizar visita para mi grupo
+            </a>
+            <a class="boton boton--claro boton--grande" href="/grupos">
+              Ver alojamiento para grupos
+            </a>
+          </div>
+        </div>
+
+        <div class="bloque-doble__media">
+          <div class="guia__caja">
+            <h3>Dónde dormir cerca</h3>
+            <p class="texto-suave">
+              El Hotel Atheron Suite está a 1,4 km de la Catedral de Sal:
+              dieciséis minutos caminando, sin tomar transporte. El resto de
+              nuestros hospedajes del centro quedan a pocas cuadras de ahí.
+            </p>
+            <div class="grupo-botones" style="margin-top: var(--esp-3);">
+              <a class="boton boton--acento" href="/hospedajes/hotel-atheron-suite">
+                Ver Hotel Atheron Suite
+              </a>
+            </div>
+            <p class="texto-suave" style="margin-top: var(--esp-3); font-size: .88rem;">
+              ¿Prefieres que te ayudemos a cuadrarlo?{' '}
+              <a
+                class="guia__enlace"
+                {...atributosWhatsApp(WA_VISITA, { origen: 'guia_catedral_planear' })}
+              >Planear mi visita por WhatsApp</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         SEGUIR LEYENDO — enlaces internos naturales, no una nube de
+         palabras clave. Tres, y cada uno lleva a algo que existe.
+         ============================================================ */}
+    <section class="seccion seccion--estrecha">
+      <div class="contenedor guia__cuerpo">
+        <h2>Seguir leyendo</h2>
+        <ul class="lista-check">
+          <li><a href="/blog/guia-de-zipaquira">Qué más ver en Zipaquirá en un fin de semana</a></li>
+          <li><a href="/hospedajes">Todos nuestros hospedajes en Zipaquirá</a></li>
+          <li><a href="/grupos">Alojamiento para grupos en Zipaquirá</a></li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <Pie />
+  <BotonFlotante mensaje={WA_VISITA} origen="guia_catedral_flotante" texto="Planear mi visita" />
+</Base>

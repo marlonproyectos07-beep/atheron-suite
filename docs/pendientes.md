@@ -257,3 +257,34 @@ Comprobado el 9 de septiembre de 2026 contra las cuatro fichas publicadas:
 
 Regla fijada por Dirección: **global = solo lo universalmente confirmado**.
 Todo lo demás se declara por propiedad, en su ficha.
+
+---
+
+## Bloque S — Abiertos por el sprint UX/CRO/SEO del 9 de septiembre de 2026
+
+> Cada uno sale de una medición o de una comprobación hecha ese día, no de una
+> impresión. La evidencia está en el informe de la jornada.
+
+| # | Pendiente | Quién | Evidencia |
+|---|---|---|---|
+| **S.1** | **Servir la tipografía Fraunces desde nuestro dominio en vez de Google Fonts.** Es el único obstáculo que queda entre el sitio y el 100 de rendimiento en TODAS las rutas, y no es una hipótesis: midiendo con el mismo código y bloqueando solo `fonts.googleapis.com` y `fonts.gstatic.com`, la portada sube de 92-96 a **99**, `/hospedajes` de 87 a **99** y la guía de la Catedral de 93 a **100**, con el CLS de esa página cayendo de 0,029 a **0**. La causa es concreta: el LCP de casi todas las páginas es el `<h1>`, y su *element render delay* es de 1.283 ms esperando 65,8 KB de fuente servidos desde un tercero, con dos conexiones extra (DNS + TLS). Se decide con Marlon porque implica añadir el archivo de la fuente al repositorio y retirar una dependencia de terceros | Marlon decide · Claude ejecuta | Lighthouse 13.4.1, local, sitio construido y servido con gzip |
+| S.2 | **Aligerar la imagen del hero de la portada.** 51,5 KB en AVIF a 700 px para el elemento que Lighthouse mide como LCP. Ya está cargada de forma óptima (`fetchpriority=high`, `eager`, descubrible en el documento: las dos auditorías de descubrimiento del LCP puntúan 1), así que lo único que queda es el peso. **Requiere autorización: sobrescribir un activo versionado** | Marlon autoriza | LCP 2,8 s en portada |
+| S.3 | **Capacidad de Hotel Atheron Suite (P1 conocido).** Su ficha no declara ninguna cifra de personas en `datos`: las tres que trae son distancia, tiempo y hora de entrada. En el cuerpo sí aparece «hasta 7 huéspedes con las camas fijas» y «de 8 a 10 añadiendo camas», pero eso es texto libre, no un dato estructurado. Por eso la propiedad **no entra** en el total de `/grupos`. No se resuelve suponiendo: se añade la cifra validada a `datos` desde el panel y entra sola | Marlon | `/grupos` publica hoy 58 huéspedes, sin contarla |
+| S.4 | **Fotografías legítimas de la Catedral de Sal y del centro histórico.** No hay ninguna en el repositorio: lo único con ese motivo está generado con IA y su registro de procedencia (§8.1 de [fotografias.md](fotografias.md)) prohíbe describirlo como el lugar. Las tarjetas de experiencias y el hero de la guía están diseñados para funcionar **sin** foto; el día que exista una legítima se rellena `foto` en `src/data/experiencias.ts` y entra sola | Marlon | Tarjetas y guía publicadas sin imagen, a propósito |
+| S.5 | **Revisar los datos de la Catedral de Sal contra la fuente oficial.** Horario y modalidades comprobados el 9 de septiembre de 2026 en `catedraldesal.gov.co`. Revisar antes de cualquier campaña pagada que apunte a esa página, y como mínimo cada seis meses. Un horario viejo en nuestra guía es un huésped que llega y se encuentra cerrado | Claude | `src/data/catedral-de-sal.ts`, cabecera |
+| S.6 | **Testimonios de grupos.** La estructura está hecha y vacía a propósito: no hay ninguno con permiso escrito. Cuando llegue el primero se añade a `testimonios` en `src/data/grupos.ts` y aparece solo. Hasta entonces, únicamente la frase genérica | Marlon | `/grupos`, sección «Grupos que ya hemos recibido» |
+| S.7 | **Comprimir `casa-algarra-01-fachada-atardecer.webp`**, que pesa 326 KB y supera el límite recomendado de 300 KB. Lo avisa `npm run comprueba` en cada construcción. **Requiere autorización: sobrescribe un activo versionado** | Marlon autoriza | Aviso del guardián de contenido |
+| S.8 | **Convenio con la Catedral de Sal.** Mientras no exista, la guía dice explícitamente que **no** vendemos boletas y que **no** somos operador autorizado. El día que se firme, esa frase cambia y se abren los CTA de venta | Marlon | `src/data/catedral-de-sal.ts`, `loQueNoHacemos` |
+
+### Lo que este sprint dejó cerrado y conviene no volver a romper
+
+- **El destino de WhatsApp va escrito en el HTML**, no lo pone `main.js` al
+  cargar. 219 enlaces comprobados en el sitio construido: todos al número
+  oficial, todos con mensaje precargado, todos con `target="_blank"` y
+  `rel="noopener noreferrer"`. Si alguien vuelve a escribir un `href="#contacto"`
+  con `data-whatsapp`, reintroduce la fricción que costó el recorrido de cliente
+  del 9 de septiembre.
+- **El total de capacidad de `/grupos` se calcula**, no se escribe. Ver las tres
+  reglas en `src/data/grupos.ts`.
+- **`perteneceA`** en las fichas evita el doble conteo el día que se publiquen a
+  la vez el edificio de Algarra y sus apartamentos.

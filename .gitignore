@@ -52,3 +52,17 @@ public/assets/img/hospedajes/*/*-700.avif
 public/assets/img/hospedajes/*/*-700.webp
 public/assets/img/hospedajes/*/*-900.avif
 public/assets/img/hospedajes/*/*-900.webp
+
+# Variantes de la foto que usa la portada en "Como nacio Atheron Suite".
+# Las genera el prebuild igual que las de las fichas. Se nombran una a
+# una y no con un comodin porque en esta carpeta -sin subcarpeta- si hay
+# variantes versionadas a proposito: las del hero de Hotel Atheron Suite,
+# hechas a mano antes de que existiera el script.
+public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-400.avif
+public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-400.webp
+public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-600.avif
+public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-600.webp
+public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-700.avif
+public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-700.webp
+public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-900.avif
+public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-900.webp

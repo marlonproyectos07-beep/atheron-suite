@@ -284,3 +284,247 @@
   .oferta__tipo { padding: .34rem .7rem; font-size: .82rem; }
   .oferta__para { font-size: .86rem; margin-bottom: var(--esp-3); }
 }
+
+/* ------------------------------------------------------------
+   MOSAICO DE LA COLECCION  (seccion "Una coleccion, no un directorio")
+
+   El bloque tenia texto a la izquierda y medio ancho de pagina en
+   blanco a la derecha. Aqui van tres hospedajes distintos: una foto
+   ancha arriba y dos cuadradas debajo.
+
+   Tres y no uno, y de propiedades distintas, porque es lo que la
+   seccion afirma. Una sola foto grande diria "tenemos un hospedaje",
+   que es justo lo contrario.
+
+   Las medidas del hueco las reserva el propio componente Foto con
+   width, height y aspect-ratio, asi que el mosaico no da ningun
+   salto mientras las imagenes bajan.
+   ------------------------------------------------------------ */
+.mosaico {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--esp-2);
+}
+
+.mosaico__pieza {
+  display: block;
+  border-radius: var(--radio-md);
+  overflow: hidden;
+  /* La sombra crece en el hover: la pieza se comporta como las
+     tarjetas del resto del sitio, no como una imagen suelta. */
+  box-shadow: var(--sombra-sm);
+  transition: transform var(--transicion), box-shadow var(--transicion);
+}
+
+.mosaico__pieza--grande { grid-column: 1 / -1; }
+
+.mosaico__pieza .foto { border-radius: 0; }
+
+.mosaico__pieza:hover { transform: translateY(-3px); box-shadow: var(--sombra-md); }
+
+/* El foco tiene que verse: la pieza es un enlace y se llega a el
+   con el tabulador. Sin esto, quien navega con teclado no sabe
+   donde esta. */
+.mosaico__pieza:focus-visible {
+  outline: 3px solid var(--color-sal);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mosaico__pieza { transition: none; }
+  .mosaico__pieza:hover { transform: none; }
+}
+
+/* ------------------------------------------------------------
+   ATHERON SIGUE CRECIENDO  (Casa Colonial Centro en la portada)
+
+   Antes era una seccion clara con un titulo y un boton de contorno:
+   se leia como una nota al pie entre dos bloques mas fuertes, y lo
+   que anuncia -que la operacion crece- es justo lo que da confianza
+   a quien esta decidiendo si reservar.
+
+   Fondo azul noche y filo dorado arriba: el mismo lenguaje de marca,
+   sin estridencia y sin parecer un anuncio. Se distingue del
+   catalogo a simple vista, que es la condicion para que nadie
+   intente reservar algo que todavia no existe.
+   ------------------------------------------------------------ */
+.crece {
+  position: relative;
+  background: var(--color-noche);
+  color: var(--color-blanco);
+}
+
+/* Filo dorado superior. Marca el cambio de registro sin necesidad
+   de un separador que ocupe alto. */
+.crece::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-sal), var(--color-sal-claro), var(--color-sal));
+}
+
+.crece .etiqueta { color: var(--color-sal-claro); }
+.crece h2 { color: var(--color-blanco); }
+.crece .texto-grande { color: rgba(255, 255, 255, .88); }
+
+.crece__interior {
+  display: grid;
+  gap: var(--esp-4);
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  /* La imagen algo mas estrecha que el texto: es el apoyo, no el
+     argumento. El argumento es que hay un proyecto en marcha. */
+  .crece__interior { grid-template-columns: 1.15fr 1fr; gap: var(--esp-6); }
+}
+
+.crece__usos span {
+  color: rgba(255, 255, 255, .82);
+  border-color: rgba(255, 255, 255, .22);
+}
+
+/* La linea de alianza va separada y en tono menor, a proposito. Es
+   una segunda lectura para quien tenga una propiedad o un interes
+   distinto del hospedaje, y no puede competir con el boton de
+   arriba ni parecer una oferta. */
+.crece__alianza {
+  margin-top: var(--esp-4);
+  padding-top: var(--esp-3);
+  border-top: 1px solid rgba(255, 255, 255, .16);
+  font-size: .92rem;
+  color: rgba(255, 255, 255, .72);
+}
+
+.crece__enlace {
+  color: var(--color-sal-claro);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.crece__enlace:hover { color: var(--color-blanco); }
+
+.crece__media .foto-proyecto { margin-top: 0; }
+
+/* El rotulo de la foto pierde contraste sobre el azul noche: es el
+   mismo caso que .seccion--oscura, resuelto igual. */
+.crece .foto-proyecto__rotulo--real { color: var(--color-blanco); }
+.crece .foto-proyecto__aviso,
+.crece .foto-proyecto__texto { color: rgba(255, 255, 255, .82); }
+
+/* ------------------------------------------------------------
+   EXPERIENCIAS  (rediseno del 9 de septiembre de 2026)
+
+   Estas reglas SUSTITUYEN a las de paginas.css para la portada.
+   Las de alli pintaban una caja oscura con un rayado diagonal de
+   relleno -.experiencia__fondo-, que era el hueco de una foto que
+   nunca llego. Se le enseño al visitante durante meses.
+
+   La pieza de aqui no necesita fotografia: el numero grande, la
+   regla dorada y los datos verificados la sostienen. Cuando exista
+   una foto legitima del lugar -hoy no hay ninguna, ver
+   src/data/experiencias.ts- entrara como fondo sin rehacer esto.
+   ------------------------------------------------------------ */
+.seccion .experiencia {
+  position: relative;
+  display: block;
+  min-height: 0;
+  padding: var(--esp-4);
+  color: var(--texto);
+  background: var(--color-blanco);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  overflow: hidden;
+  transition: transform var(--transicion), box-shadow var(--transicion), border-color var(--transicion);
+}
+
+/* La capa oscura de paginas.css sobraba aqui: no hay foto debajo
+   que oscurecer, y sobre fondo blanco tapaba el texto. */
+.seccion .experiencia::after { content: none; }
+
+/* Filo dorado a la izquierda: liga la pieza con el resto de la
+   marca sin pedirle una imagen. */
+.seccion .experiencia::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--color-sal), var(--color-sal-claro));
+}
+
+.experiencia__numero {
+  display: block;
+  font-family: var(--fuente-titulo);
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--color-gris-200);
+  margin-bottom: var(--esp-2);
+}
+
+.seccion .experiencia .experiencia__texto p {
+  color: var(--texto-suave);
+  font-size: .95rem;
+  margin-top: var(--esp-1);
+}
+
+.experiencia__datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .5rem;
+  margin-top: var(--esp-3);
+  padding: 0;
+  list-style: none;
+}
+
+.experiencia__datos li {
+  padding: .3rem .7rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  font-size: .8rem;
+  color: var(--texto-suave);
+}
+
+/* Solo la que tiene guia propia es un enlace. La otra es un
+   <article>: no se le pone aspecto de boton a algo que no lleva a
+   ninguna parte. */
+.experiencia--enlace { text-decoration: none; }
+
+.experiencia--enlace:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sombra-md);
+  border-color: var(--color-sal);
+}
+
+.experiencia--enlace:focus-visible {
+  outline: 3px solid var(--color-sal);
+  outline-offset: 3px;
+}
+
+.experiencia--enlace:hover .experiencia__numero { color: var(--color-sal-claro); }
+
+.experiencia__accion {
+  display: inline-block;
+  margin-top: var(--esp-3);
+  font-weight: 600;
+  font-size: .92rem;
+  color: var(--acento-texto);
+}
+
+/* La flecha va en CSS y no en el texto: es decoracion, y un lector
+   de pantalla no tiene por que leer "flecha derecha". */
+.experiencia__accion::after {
+  content: " \2192";
+  transition: transform var(--transicion);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seccion .experiencia { transition: none; }
+  .experiencia--enlace:hover { transform: none; }
+}
+
+@media (max-width: 48rem) {
+  .seccion .experiencia { padding: var(--esp-3); }
+  .experiencia__numero { font-size: 1.9rem; }
+}

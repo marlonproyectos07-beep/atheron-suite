@@ -14,6 +14,16 @@
    existen. Y las landings no llevan menu a proposito (ver abajo).
    ============================================================ */
 
+import {
+  ENLACE_DISPONIBILIDAD,
+  ENLACE_GRUPO,
+  enlaceWhatsApp,
+  EVENTO_DISPONIBILIDAD,
+  EVENTO_GRUPO,
+  MENSAJE_DISPONIBILIDAD,
+  MENSAJE_GRUPO,
+} from './whatsapp';
+
 export interface Enlace {
   texto: string;
   href: string;
@@ -26,15 +36,41 @@ export interface Cta {
   clase?: string;
   /** Si lleva mensaje, el boton abre WhatsApp con ese texto ya escrito. */
   whatsapp?: string;
+  /** true = el enlace sale del sitio y se abre en otra pestana. */
+  externo?: boolean;
+  /** Nombre del evento para la analitica futura. Ver src/data/whatsapp.ts. */
+  evento?: string;
+  /** De donde sale el clic. Se completa en cada sitio donde se pinta. */
+  origen?: string;
 }
 
 /* ------------------------------------------------------------
-   Llamado a la accion por defecto: lleva a la landing comercial,
-   que es la pagina que mejor convierte.
+   LLAMADO A LA ACCION POR DEFECTO — ABRE WHATSAPP, EN UN CLIC
+
+   Antes llevaba a /landing/hospedaje-en-zipaquira. Sobre el papel
+   tenia sentido: es la pagina que mejor convierte. En el recorrido
+   real que hizo direccion el 9 de septiembre de 2026 no lo tenia.
+
+   El boton dice "Ver disponibilidad". Quien lo pulsa ya decidio
+   preguntar; lo que necesita es el canal donde se responde, no otra
+   pagina que se lo vuelva a proponer. Llevarlo a la landing le
+   costaba dos o tres clics mas, y cada uno pierde gente.
+
+   La landing NO desaparece: sigue publicada, sigue en el sitemap y
+   sigue recibiendo el trafico de anuncios, que llega en otro estado
+   de animo. Lo que sale del embudo de reserva es la obligacion de
+   pasar por ella.
+
+   El href ya viene resuelto desde src/data/whatsapp.ts, escrito en
+   el HTML al construir. No depende de que main.js cargue.
    ------------------------------------------------------------ */
 export const ctaDisponibilidad: Cta = {
   texto: 'Ver disponibilidad',
-  href: '/landing/hospedaje-en-zipaquira',
+  href: ENLACE_DISPONIBILIDAD,
+  clase: 'boton--whatsapp',
+  whatsapp: MENSAJE_DISPONIBILIDAD,
+  externo: true,
+  evento: EVENTO_DISPONIBILIDAD,
 };
 
 /* ------------------------------------------------------------
@@ -111,9 +147,29 @@ export const menuFichaMovil: Enlace[] = [
   { texto: 'Blog', href: '/blog' },
 ];
 
-export const ctaConsultar: Cta = {
-  texto: 'Consultar',
-  href: '#contacto',
+/* ------------------------------------------------------------
+   BOTON DE LA CABECERA DE UNA FICHA
+
+   Es una funcion y no una constante porque el mensaje nombra la
+   propiedad: quien escribe desde la ficha de Casa Neusa no deberia
+   tener que explicar cual le gusto.
+
+   Antes era un ancla a "#contacto" y solo main.js la convertia en
+   WhatsApp al cargar. Ahora el destino viene resuelto en el HTML.
+   ------------------------------------------------------------ */
+export const ctaConsultarDe = (propiedad: string, localidad: string): Cta => {
+  const mensaje =
+    `Hola, quiero consultar disponibilidad de ${propiedad}, en ${localidad}.\n\n` +
+    'Fecha de llegada:\nFecha de salida:\nNúmero de huéspedes:';
+  return {
+    texto: 'Consultar',
+    href: enlaceWhatsApp(mensaje),
+    clase: 'boton--whatsapp',
+    whatsapp: mensaje,
+    externo: true,
+    evento: EVENTO_DISPONIBILIDAD,
+    origen: 'ficha_cabecera',
+  };
 };
 
 /* ------------------------------------------------------------
@@ -132,7 +188,20 @@ export const ctaLandingHospedaje: Cta = {
 
 export const ctaLandingGrupos: Cta = {
   texto: 'Cotizar grupo',
-  href: '#cotizar',
+  href: ENLACE_GRUPO,
   clase: 'boton--whatsapp',
-  whatsapp: 'Hola, necesito alojamiento para un grupo en Zipaquirá. Somos [numero] personas.',
+  whatsapp: MENSAJE_GRUPO,
+  externo: true,
+  evento: EVENTO_GRUPO,
+};
+
+/* El de la pagina de grupos. Mismo canal, mismo mensaje, y el texto
+   nombra lo que hace: cotizar, no "consultar". */
+export const ctaCotizarGrupo: Cta = {
+  texto: 'Cotizar mi grupo',
+  href: ENLACE_GRUPO,
+  clase: 'boton--whatsapp',
+  whatsapp: MENSAJE_GRUPO,
+  externo: true,
+  evento: EVENTO_GRUPO,
 };

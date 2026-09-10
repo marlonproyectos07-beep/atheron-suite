@@ -1,0 +1,281 @@
+/* ============================================================
+   GRUPOS.CSS — estilos que SOLO usa /grupos
+
+   Va como hoja extra porque el sitio incrusta su CSS en el HTML:
+   lo que se meta en una hoja comun viaja en todas las paginas
+   aunque solo lo use una.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   HERO
+
+   Sin fotografia. No hay ninguna imagen real de un grupo alojado
+   con nosotros, y poner la foto de una casa vacia bajo el titular
+   "¿vienen 80 personas?" no dice nada. El hero se sostiene con la
+   pregunta y con la promesa, que es lo que el visitante viene
+   buscando.
+   ------------------------------------------------------------ */
+.grupos__hero {
+  background:
+    radial-gradient(120% 110% at 85% 0%, #24486f 0%, transparent 62%),
+    var(--color-noche);
+  color: var(--color-blanco);
+}
+
+/* La promesa va entre el titular y el texto, y con peso propio:
+   es la frase que responde a la pregunta del H1. Si se mezclara
+   con el parrafo se perderia. */
+.grupos__promesa {
+  margin-block: var(--esp-2) var(--esp-2);
+  max-width: 34ch;
+  font-family: var(--fuente-titulo);
+  font-size: 1.32rem;
+  line-height: 1.35;
+  color: var(--color-sal-claro);
+}
+
+.grupos__hero .hero__texto { max-width: 56ch; }
+
+@media (max-width: 48rem) {
+  .grupos__promesa { font-size: 1.12rem; }
+}
+
+/* ------------------------------------------------------------
+   CAPACIDAD
+
+   La pieza mas delicada de la pagina. Tiene dos formas -con cifra
+   y sin cifra- y las dos tienen que verse igual de intencionadas:
+   si la version sin cifra pareciera un error, alguien acabaria
+   poniendo un numero para "arreglarla".
+   ------------------------------------------------------------ */
+.capacidad {
+  max-width: 62ch;
+  margin-inline: auto;
+  padding: var(--esp-5) var(--esp-4);
+  text-align: center;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-lg);
+  background: var(--color-crema);
+}
+
+.capacidad__cifra {
+  margin-top: var(--esp-1);
+  font-family: var(--fuente-titulo);
+  font-size: 1.4rem;
+  color: var(--texto);
+}
+
+/* La cifra, grande. Es el dato que el visitante ha venido a buscar. */
+.capacidad__cifra strong {
+  display: block;
+  font-size: 3.6rem;
+  line-height: 1;
+  font-weight: 600;
+  color: var(--color-marca);
+}
+
+/* La version sin cifra ocupa un sitio parecido y usa la misma
+   tipografia de titulo: se lee como una respuesta, no como un
+   hueco. */
+.capacidad__consulta {
+  margin-top: var(--esp-2);
+  font-family: var(--fuente-titulo);
+  font-size: 1.6rem;
+  line-height: 1.3;
+  color: var(--color-marca);
+}
+
+.capacidad__nota {
+  margin-top: var(--esp-3);
+  font-size: .9rem;
+  color: var(--texto-suave);
+}
+
+@media (max-width: 48rem) {
+  .capacidad { padding: var(--esp-4) var(--esp-3); }
+  .capacidad__cifra strong { font-size: 2.8rem; }
+  .capacidad__consulta { font-size: 1.25rem; }
+}
+
+/* ------------------------------------------------------------
+   PLANIFICADOR
+
+   Seis enlaces, no botones con JavaScript: funcionan sin guion, se
+   pueden abrir en otra pestaña y se tabulan como lo que son.
+
+   auto-fit con minimo de 6rem: en un telefono de 360 px caben tres
+   por fila y en escritorio los seis. Sin numero fijo de columnas no
+   hay ancho en el que quede un huerfano solo en la ultima fila.
+   ------------------------------------------------------------ */
+.planificador {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+  gap: var(--esp-2);
+}
+
+.planificador__tramo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .1rem;
+  padding: var(--esp-3) var(--esp-1);
+  text-align: center;
+  text-decoration: none;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-blanco);
+  color: var(--texto);
+  transition: transform var(--transicion), border-color var(--transicion), box-shadow var(--transicion);
+}
+
+.planificador__tramo:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-sal);
+  box-shadow: var(--sombra-md);
+}
+
+.planificador__tramo:focus-visible {
+  outline: 3px solid var(--color-sal);
+  outline-offset: 3px;
+}
+
+.planificador__numero {
+  font-family: var(--fuente-titulo);
+  font-size: 1.7rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-marca);
+}
+
+.planificador__texto {
+  font-size: .78rem;
+  color: var(--texto-suave);
+}
+
+/* El aviso que evita la promesa. Va justo debajo de los tramos, no
+   al final de la seccion: quien pulsa "100+" tiene que leerlo antes
+   de dar por hecho que tenemos cien camas. */
+.planificador__aviso {
+  margin-top: var(--esp-3);
+  max-width: 62ch;
+  font-size: .9rem;
+  color: var(--texto-suave);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planificador__tramo { transition: none; }
+  .planificador__tramo:hover { transform: none; }
+}
+
+/* ------------------------------------------------------------
+   TARJETAS DE ALOJAMIENTO
+   ------------------------------------------------------------ */
+
+/* La disponibilidad es SIEMPRE bajo consulta: no hay calendario
+   detras de esta pagina. Se pinta como estado, no como promesa. */
+.tarjeta__disponibilidad {
+  margin-top: var(--esp-2);
+  font-size: .82rem;
+  color: var(--texto-suave);
+}
+
+.tarjeta__disponibilidad::before {
+  content: "";
+  display: inline-block;
+  width: .5rem;
+  height: .5rem;
+  margin-right: .45rem;
+  border-radius: 50%;
+  background: var(--color-sal);
+  vertical-align: middle;
+}
+
+/* ------------------------------------------------------------
+   TIPOS DE GRUPO
+   ------------------------------------------------------------ */
+.tipos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--esp-3);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.tipos__item {
+  padding: var(--esp-3);
+  border-radius: var(--radio-md);
+  background: var(--color-blanco);
+  border: 1px solid var(--borde);
+}
+
+.tipos__item h3 { font-size: 1.02rem; margin-bottom: var(--esp-1); }
+.tipos__item p { font-size: .9rem; }
+
+/* ------------------------------------------------------------
+   CUERPO DE LECTURA
+
+   Ancho de linea limitado. Un parrafo que cruza 1.180 px obliga al
+   ojo a buscar el principio de la siguiente linea y se abandona
+   antes.
+   ------------------------------------------------------------ */
+.grupos__cuerpo { max-width: 68ch; }
+
+/* ------------------------------------------------------------
+   TESTIMONIOS
+
+   Estas reglas existen y no se usan todavia: la lista de
+   testimonios esta vacia porque no hay ninguno con permiso
+   escrito. Se dejan hechas para que anadir el primero sea rellenar
+   src/data/grupos.ts y nada mas; asi nadie tendra que decidir
+   sobre la marcha, con un testimonio real esperando, si vale la
+   pena maquetarlo.
+   ------------------------------------------------------------ */
+.testimonios {
+  display: grid;
+  gap: var(--esp-3);
+  margin-top: var(--esp-4);
+  padding: 0;
+  list-style: none;
+}
+
+.testimonios__item {
+  padding: var(--esp-3);
+  border-left: 3px solid var(--color-sal);
+  border-radius: var(--radio-sm);
+  background: var(--color-crema);
+}
+
+.testimonios__item blockquote { margin: 0; font-size: 1rem; }
+.testimonios__autor { margin-top: var(--esp-1); font-size: .85rem; color: var(--texto-suave); }
+
+/* ------------------------------------------------------------
+   LIMITE DE LO QUE OFRECEMOS
+
+   Lo que NO hacemos, con el mismo tamano que el resto y con filo
+   dorado. Si alguien contrata creyendo que le vendemos la boleta
+   de la Catedral, el problema es nuestro: no puede ir en letra
+   pequena.
+   ------------------------------------------------------------ */
+.grupos__limite {
+  padding: var(--esp-3);
+  border-left: 3px solid var(--color-sal);
+  border-radius: var(--radio-sm);
+  background: var(--color-crema);
+  font-size: .93rem;
+  color: var(--texto-suave);
+}
+
+.grupos__caja {
+  padding: var(--esp-4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-blanco);
+}
+
+.grupos__caja h3 { margin-bottom: var(--esp-3); font-size: 1.1rem; }
+
+@media (max-width: 48rem) {
+  .grupos__caja { padding: var(--esp-3); }
+}

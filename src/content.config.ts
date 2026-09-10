@@ -287,6 +287,33 @@ const hospedajes = defineCollection({
     modalidad: z.enum(['habitaciones', 'casa-completa']).default('habitaciones'),
 
     /* ----------------------------------------------------------
+       A QUE FICHA PERTENECE ESTA, SI PERTENECE A ALGUNA
+
+       Aqui va el identificador de la ficha que CONTIENE a esta. El
+       archivo del apartamento 301 de Algarra lleva:
+
+           perteneceA: edificio-algarra
+
+       PARA QUE SIRVE, Y POR QUE NO ES UN ADORNO
+
+       La coleccion tiene fichas que se contienen unas a otras: el
+       edificio de Algarra y, aparte, cada uno de sus seis
+       apartamentos. La pagina de grupos suma la capacidad de las
+       fichas publicadas para anunciar un total, y si un dia se
+       publican el edificio Y sus apartamentos, las mismas camas se
+       contarian dos veces. El total se dispararia solo, sin que
+       nadie tocara una linea de codigo y sin ningun error visible:
+       la pagina simplemente anunciaria camas que no existen.
+
+       Con este campo, src/data/grupos.ts detecta la pareja, suma
+       solo la contenedora y avisa por consola al construir.
+
+       Vacio o ausente significa "no pertenece a ninguna", que es el
+       caso de la mayoria.
+       ---------------------------------------------------------- */
+    perteneceA: textoOpcionalPanel,
+
+    /* ----------------------------------------------------------
        SEO
        ---------------------------------------------------------- */
 

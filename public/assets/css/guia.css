@@ -1,0 +1,172 @@
+/* ============================================================
+   GUIA.CSS — guias del destino (/zipaquira/...)
+
+   Hoja compartida por las guias de Zipaquira. Hoy solo la usa la de
+   la Catedral de Sal; nace comun a proposito porque detras vienen el
+   centro historico, Neusa y las demas, y la alternativa era una hoja
+   por guia con las mismas reglas copiadas.
+
+   Va como hoja extra y no en paginas.css porque el sitio incrusta su
+   CSS en el HTML: lo que entre en una hoja comun viaja en todas las
+   paginas aunque solo lo use una.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   HERO DE GUIA
+
+   Sin fotografia. No hay ninguna imagen legitima de la Catedral de
+   Sal en el repositorio -la explicacion completa esta en
+   src/data/experiencias.ts- asi que el hero se sostiene con
+   tipografia y con los datos verificados.
+
+   El fondo es un degradado del azul de marca, no una foto
+   oscurecida: se distingue del hero de la portada, que si lleva
+   imagen, y no finge tener uno.
+   ------------------------------------------------------------ */
+.guia__hero {
+  background:
+    radial-gradient(120% 100% at 10% 0%, #24486f 0%, transparent 60%),
+    var(--color-noche);
+  color: var(--color-blanco);
+}
+
+.guia__hero .hero__texto { max-width: 56ch; }
+
+/* Los tres datos verificados, en linea bajo el titular. Es lo que
+   el visitante viene a buscar: si abre y a que hora. */
+.guia__datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2) var(--esp-4);
+  margin-top: var(--esp-4);
+  padding: var(--esp-3) 0 0;
+  border-top: 1px solid rgba(255, 255, 255, .18);
+  list-style: none;
+}
+
+.guia__datos li { display: flex; flex-direction: column; gap: .15rem; }
+
+.guia__dato-rotulo {
+  font-size: .74rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .62);
+}
+
+.guia__dato-valor {
+  font-family: var(--fuente-titulo);
+  font-size: 1.12rem;
+  font-weight: 600;
+  color: var(--color-blanco);
+}
+
+/* La fecha de comprobacion. Discreta pero legible: rgba .72 sobre
+   el azul noche pasa AA de sobra al tamano al que esta. */
+.guia__fuente {
+  margin-top: var(--esp-3);
+  font-size: .84rem;
+  color: rgba(255, 255, 255, .72);
+  max-width: 62ch;
+}
+
+.guia__fuente a,
+.guia__enlace {
+  color: var(--color-sal-claro);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.guia__fuente a:hover,
+.guia__enlace:hover { color: var(--color-blanco); }
+
+/* ------------------------------------------------------------
+   CUERPO DE LECTURA
+
+   Ancho de linea limitado. Un parrafo que cruza 1.180 px obliga al
+   ojo a buscar el principio de la siguiente linea y se abandona
+   antes; entre 60 y 70 caracteres es donde se lee sin esfuerzo.
+   ------------------------------------------------------------ */
+.guia__cuerpo { max-width: 68ch; }
+.guia__cuerpo p { margin-bottom: var(--esp-3); color: var(--texto-suave); }
+.guia__cuerpo h2 { margin-bottom: var(--esp-3); }
+.guia__cuerpo .lista-check a { color: var(--acento-texto); font-weight: 600; }
+
+/* ------------------------------------------------------------
+   PASAPORTES
+   ------------------------------------------------------------ */
+.guia__pasaporte .tarjeta__cuerpo { display: flex; flex-direction: column; gap: var(--esp-2); }
+
+.guia__incluye { margin-top: var(--esp-1); }
+.guia__incluye li { font-size: .92rem; }
+
+/* La restriccion oficial del Premium. Va marcada, no escondida:
+   enterarse en la taquilla de que un menor no puede entrar es el
+   tipo de sorpresa que arruina la visita de una familia. */
+.guia__nota {
+  margin-top: auto;
+  padding-top: var(--esp-2);
+  border-top: 1px solid var(--borde);
+  font-size: .84rem;
+  font-weight: 600;
+  color: var(--acento-texto);
+}
+
+.guia__aviso-tarifas {
+  margin-top: var(--esp-4);
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-left: 3px solid var(--color-sal);
+  border-radius: var(--radio-sm);
+  background: var(--color-blanco);
+  font-size: .92rem;
+  color: var(--texto-suave);
+}
+
+.guia__aviso-tarifas a { color: var(--acento-texto); font-weight: 600; }
+
+/* ------------------------------------------------------------
+   CONSEJOS
+   ------------------------------------------------------------ */
+.guia__consejo {
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-blanco);
+}
+
+.guia__consejo h3 { font-size: 1.05rem; margin-bottom: var(--esp-1); }
+
+/* ------------------------------------------------------------
+   GRUPOS
+
+   El limite -lo que NO hacemos- se pinta con el mismo tamano que el
+   resto y con un filo dorado que lo destaca en vez de disimularlo.
+   Una advertencia en letra pequena al pie es exactamente lo que no
+   queremos: si alguien contrata creyendo que le vendemos la boleta,
+   el problema es nuestro.
+   ------------------------------------------------------------ */
+.guia__limite {
+  margin-top: var(--esp-3);
+  padding: var(--esp-3);
+  border-left: 3px solid var(--color-sal);
+  border-radius: var(--radio-sm);
+  background: rgba(255, 255, 255, .07);
+  font-size: .95rem;
+  color: rgba(255, 255, 255, .86);
+}
+
+.guia__caja {
+  padding: var(--esp-4);
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: var(--radio-md);
+  background: rgba(255, 255, 255, .05);
+}
+
+.guia__caja h3 { color: var(--color-blanco); margin-bottom: var(--esp-2); }
+.guia__caja .texto-suave { color: rgba(255, 255, 255, .78); }
+
+@media (max-width: 48rem) {
+  .guia__datos { gap: var(--esp-2) var(--esp-3); }
+  .guia__dato-valor { font-size: 1rem; }
+  .guia__caja { padding: var(--esp-3); }
+}

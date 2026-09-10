@@ -11,8 +11,8 @@ avisoBorrador: ''
 zona: 'Cra. 9 #10-32, Zipaquirá'
 presentacion: A 16 minutos caminando de la Catedral de Sal, con cocina compartida con estufa, wifi y Netflix. Pensado para quedarse mas de una noche sin sentir que estas en un hotel de paso.
 presentacionPendiente: false
-fotoTarjeta: /assets/img/hospedajes/la-magia-de-zipaquira-sala.jpg
-fotoTarjetaAlt: Sala principal del Hotel Atheron Suite con televisor y barra
+fotoTarjeta: /assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg
+fotoTarjetaAlt: Sala del Hotel Atheron Suite con ventanal a Zipaquirá, sofá cama, escritorio, televisor y barra con taburetes
 fotoPrincipal: /assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg
 fotoPrincipalAlt: Sala del Hotel Atheron Suite con sofa cama, escritorio, televisor sobre pared de madera, barra con taburetes y ventanal con vista a Zipaquirá
 galeria: []

@@ -9,11 +9,10 @@
    abre WhatsApp con el mensaje ya escrito, y ahi si contesta una
    persona. El formulario, hoy, no llega a ninguna parte.
 
-   El href es el destino de respaldo, igual que en BotonFlotante:
-   si el JavaScript no carga, el boton sigue funcionando.
-   main.js lo reescribe con el mensaje cuando ha cargado bien.
+   El enlace se construye con el mensaje ya codificado y sale
+   escrito en el HTML: no depende de que main.js llegue a cargar.
    ============================================================ */
-import { whatsappRespaldo } from '../data/ajustes';
+import { atributosWhatsApp } from '../data/whatsapp';
 
 interface Props {
   /** El mensaje que aparecera ya escrito en WhatsApp. */
@@ -24,6 +23,8 @@ interface Props {
   texto?: string;
   /** Texto visible del boton. */
   textoBoton?: string;
+  /** De donde sale el clic, para la analitica futura. */
+  origen?: string;
 }
 
 const {
@@ -31,7 +32,10 @@ const {
   titulo = 'Escribenos por WhatsApp',
   texto = 'Es el canal por el que respondemos. Cuentanos las fechas y el numero de personas, y te contestamos con opciones concretas.',
   textoBoton = 'Escribir por WhatsApp',
+  origen = 'bloque_contacto',
 } = Astro.props;
+
+const atributos = atributosWhatsApp(mensaje, { origen });
 ---
 
 <div class="tarjeta">
@@ -39,8 +43,5 @@ const {
   <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
     {texto}
   </p>
-  <a
-    class="boton boton--whatsapp boton--grande"
-    href={whatsappRespaldo}
-    data-whatsapp={mensaje}>{textoBoton}</a>
+  <a class="boton boton--whatsapp boton--grande" {...atributos}>{textoBoton}</a>
 </div>

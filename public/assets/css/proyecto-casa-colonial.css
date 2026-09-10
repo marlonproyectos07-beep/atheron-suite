@@ -495,75 +495,17 @@
 /* ------------------------------------------------------------
    IMAGEN DEL PROYECTO (ProyectoFoto)
 
-   Una sola pieza para las 21 imagenes de la pagina: las seis
-   comparaciones, la historia, las unidades, la vision integrada y
-   el cierre. Antes cada bloque pintaba su propio rotulo; ahora
-   todos comparten estas reglas, asi que el aviso de una
-   representacion conceptual se ve igual en todas partes y no puede
-   quedarse mas discreto en un sitio que en otro.
+   Sus reglas se mudaron a public/assets/css/proyecto-foto.css el 9
+   de septiembre de 2026. La franja de proximo proyecto de
+   /hospedajes usa el MISMO componente ProyectoFoto -es el unico que
+   garantiza que una representacion conceptual no salga sin rotulo- y
+   necesitaba estas reglas sin arrastrar las 9,8 KB de esta hoja.
 
-   CONTRASTE
-   El verde y el ambar de los rotulos son los mismos que ya usan los
-   distintivos de estado, que estan elegidos para pasar AA sobre el
-   fondo claro. En fondo oscuro se sustituyen mas abajo.
+   Las dos paginas cargan ahora proyecto-foto.css como hoja extra.
+   Copiarlas en dos sitios era lo que habia que evitar: asi es como
+   el sello de -representacion conceptual- acaba viendose distinto
+   en una pagina y en otra.
    ------------------------------------------------------------ */
-
-.foto-proyecto {
-  margin: 0;
-  margin-top: var(--esp-3);
-}
-
-.foto-proyecto__marco { position: relative; }
-
-/* Sello permanente sobre la imagen conceptual. Va encima de la
-   propia foto a proposito: si alguien recorta la imagen o la
-   comparte suelta, el aviso viaja con ella. */
-.foto-proyecto__sello {
-  position: absolute;
-  inset-block-start: var(--esp-2);
-  inset-inline-start: var(--esp-2);
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-blanco);
-  background: rgba(15, 23, 42, 0.88);
-}
-
-.foto-proyecto__pie { margin-top: var(--esp-2); }
-
-.foto-proyecto__rotulo {
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.foto-proyecto__rotulo--real { color: var(--color-verde); }
-.foto-proyecto__rotulo--conceptual { color: #a16207; }
-
-.foto-proyecto__aviso,
-.foto-proyecto__texto {
-  margin-top: 0.25rem;
-  font-size: 0.82rem;
-  color: var(--texto-suave);
-}
-
-/* Centrada y con ancho de lectura: para las imagenes sueltas que
-   cierran una seccion, que si ocupan todo el ancho compiten con el
-   texto en vez de acompanarlo. */
-.foto-proyecto--centrada {
-  max-width: 28rem;
-  margin-inline: auto;
-  margin-top: var(--esp-4);
-}
-
-/* En fondo oscuro los dos colores del rotulo pierden contraste. */
-.seccion--oscura .foto-proyecto__rotulo--real,
-.seccion--oscura .foto-proyecto__rotulo--conceptual { color: var(--color-blanco); }
-
-.seccion--oscura .foto-proyecto__aviso,
-.seccion--oscura .foto-proyecto__texto { color: rgba(255, 255, 255, 0.82); }
 
 /* ------------------------------------------------------------
    PAREJA DE FOTOS (historia y ubicacion)
