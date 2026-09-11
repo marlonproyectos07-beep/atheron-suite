@@ -528,3 +528,99 @@
   .seccion .experiencia { padding: var(--esp-3); }
   .experiencia__numero { font-size: 1.9rem; }
 }
+
+
+/* Cierre CRO home — 11 sep 2026 */
+.hero__propuesta {
+  display: inline-flex;
+  flex-direction: column;
+  gap: .2rem;
+  margin-block: .75rem .65rem;
+  padding: .7rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-sal-claro) 70%, transparent);
+  border-radius: .8rem;
+  background: rgba(7, 24, 38, .62);
+  backdrop-filter: blur(5px);
+}
+.hero__propuesta-rotulo {
+  color: var(--color-sal-claro);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.hero__propuesta strong { color: #fff; font-size: 1rem; }
+
+.hero__grupos--cta {
+  display: inline-flex;
+  flex-direction: column;
+  gap: .15rem;
+  width: fit-content;
+  margin-bottom: .7rem;
+  padding: .65rem .9rem;
+  border-radius: .7rem;
+  background: var(--color-sal-claro);
+  color: var(--color-azul-profundo);
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.hero__grupos--cta:hover,
+.hero__grupos--cta:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0,0,0,.24);
+}
+.hero__grupos--cta strong { font-size: .94rem; }
+.hero__grupos--cta span { font-size: .86rem; }
+
+.oferta__para--destacada {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .35rem .75rem;
+  margin-top: .8rem;
+  padding: .55rem .8rem;
+  border: 1px solid color-mix(in srgb, var(--color-sal-claro) 72%, transparent);
+  border-radius: .65rem;
+  background: color-mix(in srgb, var(--color-sal-claro) 10%, transparent);
+}
+.oferta__para--destacada span {
+  color: var(--color-sal);
+  font-size: .74rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.oferta__para--destacada strong { font-weight: 750; }
+
+.tarjeta__precio--consulta {
+  max-width: 18ch;
+  font-size: .86rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.crece__etiqueta {
+  border: 1px solid color-mix(in srgb, var(--color-sal-claro) 70%, transparent);
+  border-radius: 999px;
+  padding: .42rem .75rem;
+  background: color-mix(in srgb, var(--color-sal-claro) 10%, transparent);
+}
+.crece__oportunidad {
+  display: inline-block;
+  margin: 0 0 .65rem;
+  padding: .5rem .75rem;
+  border: 1px solid var(--color-sal-claro);
+  border-radius: .55rem;
+  color: var(--color-sal-claro);
+  font-size: .82rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+  .hero__propuesta,
+  .hero__grupos--cta { width: 100%; }
+  .oferta__para--destacada { display: flex; }
+  .tarjeta__precio--consulta { max-width: none; }
+}
