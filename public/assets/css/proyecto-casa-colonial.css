@@ -608,17 +608,27 @@
 }
 
 @media (max-width: 700px) {
+  /* En móvil se muestra la pieza completa: no recortar texto ni CTA.
+     El hero deja de forzar altura vertical y respeta la proporción original. */
+  .proyecto-hero-aprobado {
+    background: #0b1628;
+  }
+
   .proyecto-hero-aprobado__imagen {
-    min-height: 74vh;
+    width: 100%;
+    height: auto;
+    min-height: 0;
     max-height: none;
-    object-fit: cover;
-    object-position: 39% center;
+    object-fit: contain;
+    object-position: center;
   }
 
   .proyecto-hero-aprobado__rotulo {
-    right: .7rem;
-    bottom: .6rem;
-    font-size: .6rem;
+    position: static;
+    display: block;
+    width: fit-content;
+    margin: .55rem .7rem .7rem auto;
+    font-size: .58rem;
   }
 }
 
