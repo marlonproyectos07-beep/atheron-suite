@@ -33,7 +33,14 @@ const publicados = (await getCollection('hospedajes'))
   .filter((f) => f.data.publicado)
   .sort((a, b) => a.data.orden - b.data.orden);
 
-const destacados = publicados.slice(0, 4);
+/* La Home muestra los seis alojamientos que Atheron comercializa para
+   grupos, aunque alguna ficha siga en preparación SEO. La capacidad ya
+   está validada en data.grupos; la ficha conserva su noindex mientras
+   no esté publicada. */
+const destacados = (await getCollection('hospedajes'))
+  .filter((f) => f.data.grupos?.visible)
+  .sort((a, b) => a.data.orden - b.data.orden)
+  .slice(0, 6);
 
 /* ------------------------------------------------------------
    MOSAICO DE "UNA COLECCION, NO UN DIRECTORIO"
@@ -443,7 +450,7 @@ const fichaNegocio = {
           <h2>Hospedajes para descubrir Zipaquirá</h2>
         </div>
 
-        <div class="grid grid--4 aparecer">
+        <div class="grid hospedajes-home__grid aparecer">
 
           {destacados.map(({ id, data }) => {
             const enObra = !data.publicado;
@@ -466,7 +473,9 @@ const fichaNegocio = {
                     {id === 'hotel-atheron-suite' ? 'Apartamentos' :
                      id === 'casa-algarra' ? 'Casa completa' :
                      id === 'casa-neusa' ? 'Casa campestre' :
+                     id === 'edificio-algarra' ? 'Apartamentos' :
                      id === 'hotel-colonial-confort' ? 'Hotel' :
+                     id === 'hotel-la-margarita' ? 'Hotel aliado' :
                      'Hospedaje'}
                   </span>
                 </div>
@@ -497,20 +506,6 @@ const fichaNegocio = {
             );
           })}
 
-        </div>
-        {/* La portada es un escaparate, no el catalogo. Aqui se enseñan
-            cuatro y el resto vive en /hospedajes; desplegarlos todos
-            debajo convertiria la portada en una lista y le quitaria a
-            /hospedajes la razon de existir.
-
-            El texto del boton lo dice: "Explorar TODOS los hospedajes".
-            "Ver los hospedajes" no distinguia entre lo que el visitante
-            ya tenia delante y lo que le faltaba por ver, asi que no
-            daba ninguna razon para pulsarlo. */}
-        <div class="grupo-botones grupo-botones--centrado" style="margin-top: var(--esp-4);">
-          <a class="boton boton--primario boton--grande" href="/hospedajes">
-            Explorar todos los hospedajes
-          </a>
         </div>
 
       </div>
