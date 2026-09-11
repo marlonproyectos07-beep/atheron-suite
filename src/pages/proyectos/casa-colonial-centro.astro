@@ -89,6 +89,11 @@ const avisoBorrador = BORRADOR
   ? 'Borrador privado del proyecto Casa Colonial Centro. No indexado, sin enlazar y sin publicar. Pendiente de aprobación de Marlon y ChatGPT.'
   : null;
 
+/* Hero conceptual aprobado por dirección el 11/09/2026.
+   Se sirve como representación conceptual, nunca como fotografía real. */
+const HERO_CONCEPTUAL_APROBADO =
+  'https://d2ol7oe51mr4n9.cloudfront.net/user_3IQy0aFmqi87opFPdFO6RSgr36u/d583d3ac-d9e2-4cae-a9cf-c32ae7b19129.png';
+
 /* ============================================================
    DATOS ESTRUCTURADOS
 
@@ -164,21 +169,6 @@ const fichaPagina = {
   <main id="contenido">
 
     {/* ============================================================
-         MIGA DE PAN
-         El escalon "Proyectos" no es un enlace porque esa pagina no
-         existe. Se ve, dice donde estamos, y no lleva a un 404.
-         ============================================================ */}
-    <nav class="miga" aria-label="Ruta de navegación">
-      <div class="contenedor">
-        <ol class="miga__lista">
-          <li><a href="/">Inicio</a></li>
-          <li><span>Proyectos</span></li>
-          <li><span aria-current="page">{NOMBRE_CORTO}</span></li>
-        </ol>
-      </div>
-    </nav>
-
-    {/* ============================================================
          1. HERO
 
          Fotografia interior real, con el balcon hacia el centro
@@ -189,28 +179,26 @@ const fichaPagina = {
          (prioritaria), porque es la primera que se ve y la que
          Lighthouse mide como LCP. Todas las demas van diferidas.
          ============================================================ */}
-    <section class="hero hero--interior hero--proyecto">
-      <div class="contenedor hero__contenido">
-        <span class="hero__etiqueta">{hero.ceja}</span>
-        <h1 class="hero__titulo">{hero.titulo}</h1>
-        <p class="hero__texto">{hero.texto}</p>
+    <section class="proyecto-hero-aprobado" aria-labelledby="proyecto-hero-titulo">
+      <a
+        class="proyecto-hero-aprobado__enlace"
+        href={`#${transformacion.id}`}
+        aria-label="Descubrir la transformación de Casa Colonial Centro"
+      >
+        <img
+          class="proyecto-hero-aprobado__imagen"
+          src={HERO_CONCEPTUAL_APROBADO}
+          alt="Representación conceptual aprobada de Casa Colonial Centro: propuesta visual de hospitalidad y gastronomía en Zipaquirá"
+          width="1536"
+          height="1024"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </a>
 
-        <div class="grupo-botones">
-          {hero.botones.map((boton, indice) => (
-            <a
-              class:list={['boton', 'boton--grande', indice === 0 ? 'boton--primario' : 'boton--claro']}
-              href={boton.href}
-              data-evento={boton.evento}
-            >{boton.texto}</a>
-          ))}
-        </div>
-      </div>
-
-      {hero.foto && (
-        <div class="contenedor hero__foto">
-          <ProyectoFoto foto={hero.foto} prioritaria medidas="(min-width: 1100px) 68rem, 100vw" />
-        </div>
-      )}
+      <h1 id="proyecto-hero-titulo" class="sr-only">Casa Colonial Centro — Una casa con historia. Una nueva visión.</h1>
+      <p class="proyecto-hero-aprobado__rotulo">Representación conceptual · Proyecto en desarrollo</p>
     </section>
 
     {/* ============================================================
