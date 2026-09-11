@@ -696,3 +696,34 @@
   .oferta__para--destacada { display: flex; }
   .tarjeta__precio--consulta { max-width: none; }
 }
+
+
+/* Home: seis hospedajes visibles de una vez */
+.hospedajes-home__grid {
+  grid-template-columns: 1fr;
+  gap: var(--esp-3);
+}
+@media (min-width: 700px) {
+  .hospedajes-home__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1050px) {
+  .hospedajes-home__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Casa Colonial en Home: recorte editorial para ocultar el cielo raso
+   superior y concentrar la imagen en el balcón y la vista. No altera
+   el archivo original ni la ficha del proyecto. */
+.crece__media .foto-proyecto {
+  overflow: hidden;
+  border-radius: var(--radio-md);
+}
+.crece__media .foto-proyecto picture,
+.crece__media .foto-proyecto img {
+  display: block;
+  width: 100%;
+}
+.crece__media .foto-proyecto img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: center 68%;
+}
