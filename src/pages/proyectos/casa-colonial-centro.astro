@@ -69,6 +69,8 @@ import {
   bitacora,
   aviso,
   cierre,
+  fotoPatioArcos,
+  conceptoPatioGastronomico,
 } from '../../data/casa-colonial-centro';
 
 /* La cabecera es la del sitio, con el menu del listado: esta pagina
@@ -184,36 +186,77 @@ const fichaPagina = {
          (prioritaria), porque es la primera que se ve y la que
          Lighthouse mide como LCP. Todas las demas van diferidas.
          ============================================================ */}
-    <section class="hero hero--interior hero--proyecto">
-      <div class="contenedor hero__contenido">
-        <span class="hero__etiqueta">{hero.ceja}</span>
-        <h1 class="hero__titulo">{hero.titulo}</h1>
-        <p class="hero__texto">{hero.texto}</p>
+    <section class="proyecto-hero">
+      <div class="proyecto-hero__visual" aria-hidden="true">
+        <ProyectoFoto
+          foto={conceptoPatioGastronomico}
+          prioritaria
+          medidas="100vw"
+        />
+      </div>
+      <div class="proyecto-hero__velo"></div>
+
+      <div class="contenedor proyecto-hero__contenido">
+        <span class="proyecto-hero__ceja">PROYECTO EN DESARROLLO · ZIPAQUIRÁ</span>
+        <p class="proyecto-hero__ubicacion">{UBICACION_PUBLICA}</p>
+        <h1 class="proyecto-hero__titulo">Casa Colonial Centro</h1>
+        <p class="proyecto-hero__bajada">
+          Recuperamos una casa con historia para proyectar un nuevo destino de
+          hospedaje, gastronomía y experiencias en Zipaquirá.
+        </p>
+
+        <div class="proyecto-hero__estado">
+          <span>HOY</span>
+          <strong>→</strong>
+          <span>VISIÓN DEL PROYECTO</span>
+        </div>
 
         <div class="grupo-botones">
-          {hero.botones.map((boton, indice) => (
-            <a
-              class:list={['boton', 'boton--grande', indice === 0 ? 'boton--primario' : 'boton--claro']}
-              href={boton.href}
-              data-evento={boton.evento}
-            >{boton.texto}</a>
-          ))}
+          <a class="boton boton--acento boton--grande" href="#transformacion" data-evento="ccc_transformacion_click">
+            Ver la transformación
+          </a>
+          <a class="boton boton--claro boton--grande" href="#alianzas" data-evento="ccc_proponer_alianza_click">
+            Conocer oportunidades
+          </a>
         </div>
 
-        {BORRADOR && !hero.foto && (
-          <p class="hueco-hero">
-            <strong>Hueco reservado.</strong> Aquí irá una fotografía interior real
-            con vista hacia la Catedral, cuando llegue seleccionada en el manifiesto
-            fotográfico aprobado. Esta nota solo se ve en el borrador.
-          </p>
-        )}
+        <p class="proyecto-hero__nota">
+          Representación conceptual. Diseño, distribución y acabados pueden cambiar durante el desarrollo.
+        </p>
       </div>
+    </section>
 
-      {hero.foto && (
-        <div class="contenedor hero__foto">
-          <ProyectoFoto foto={hero.foto} prioritaria medidas="(min-width: 1100px) 68rem, 100vw" />
+    <section class="seccion proyecto-antes-despues" aria-labelledby="antes-despues-titulo">
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion encabezado-seccion--centrado">
+          <span class="etiqueta">DE LA CASA DE HOY A LA VISIÓN ATHERON</span>
+          <h2 id="antes-despues-titulo">Mira la transformación antes de conocer los detalles</h2>
+          <p class="texto-grande texto-suave proyecto-antes-despues__intro">
+            Primero te mostramos lo que existe y, a su lado, cómo imaginamos su recuperación.
+            Lo conceptual siempre se identifica como propuesta.
+          </p>
         </div>
-      )}
+
+        <div class="proyecto-antes-despues__grid">
+          <figure class="proyecto-antes-despues__pieza">
+            <span class="proyecto-antes-despues__rotulo proyecto-antes-despues__rotulo--real">HOY · FOTOGRAFÍA REAL</span>
+            <ProyectoFoto foto={fotoPatioArcos} medidas="(min-width: 900px) 50vw, 100vw" />
+            <figcaption>El patio central en su estado actual.</figcaption>
+          </figure>
+
+          <figure class="proyecto-antes-despues__pieza">
+            <span class="proyecto-antes-despues__rotulo proyecto-antes-despues__rotulo--vision">VISIÓN · REPRESENTACIÓN CONCEPTUAL</span>
+            <ProyectoFoto foto={conceptoPatioGastronomico} medidas="(min-width: 900px) 50vw, 100vw" />
+            <figcaption>Una propuesta de uso gastronómico para el patio central.</figcaption>
+          </figure>
+        </div>
+
+        <div class="grupo-botones grupo-botones--centrado proyecto-antes-despues__cta">
+          <a class="boton boton--primario boton--grande" href="#transformacion">
+            Recorrer todos los antes y después →
+          </a>
+        </div>
+      </div>
     </section>
 
     {/* ============================================================
