@@ -631,3 +631,169 @@
   margin-top: var(--esp-3);
   font-size: 0.9rem;
 }
+
+
+/* ============================================================
+   HERO EDITORIAL + ANTES/DESPUES — CASA COLONIAL
+   ============================================================ */
+
+.proyecto-hero {
+  position: relative;
+  min-height: clamp(42rem, 82vh, 58rem);
+  display: grid;
+  align-items: end;
+  overflow: hidden;
+  background: var(--color-noche);
+  color: var(--color-blanco);
+}
+
+.proyecto-hero__visual,
+.proyecto-hero__visual .proyecto-foto,
+.proyecto-hero__visual picture,
+.proyecto-hero__visual img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.proyecto-hero__visual img {
+  object-fit: cover;
+  object-position: center;
+}
+
+.proyecto-hero__visual figcaption,
+.proyecto-hero__visual .proyecto-foto__rotulo {
+  display: none;
+}
+
+.proyecto-hero__velo {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(8, 19, 37, .92) 0%, rgba(8, 19, 37, .74) 38%, rgba(8, 19, 37, .28) 70%, rgba(8, 19, 37, .12) 100%),
+    linear-gradient(0deg, rgba(8, 19, 37, .78) 0%, transparent 55%);
+}
+
+.proyecto-hero__contenido {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding-block: clamp(4rem, 10vh, 8rem) clamp(3.5rem, 8vh, 6rem);
+}
+
+.proyecto-hero__ceja {
+  display: inline-flex;
+  padding: .48rem .8rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255,255,255,.48);
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.proyecto-hero__ubicacion {
+  margin-bottom: .7rem;
+  color: var(--color-sal-claro);
+  font-family: var(--fuente-titulo);
+  font-size: clamp(1.05rem, 2vw, 1.4rem);
+}
+
+.proyecto-hero__titulo {
+  max-width: 11ch;
+  margin-bottom: 1rem;
+  color: var(--color-blanco);
+  font-size: clamp(3rem, 7vw, 6.6rem);
+  line-height: .96;
+  text-wrap: balance;
+}
+
+.proyecto-hero__bajada {
+  max-width: 44rem;
+  margin-bottom: 1.4rem;
+  color: rgba(255,255,255,.92);
+  font-size: clamp(1.08rem, 2vw, 1.35rem);
+  line-height: 1.5;
+}
+
+.proyecto-hero__estado {
+  display: inline-flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: 1.5rem;
+  padding: .62rem .85rem;
+  border: 1px solid rgba(217, 176, 63, .72);
+  border-radius: .65rem;
+  background: rgba(8,19,37,.54);
+  color: var(--color-sal-claro);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+}
+
+.proyecto-hero__nota {
+  max-width: 42rem;
+  margin-top: 1rem;
+  color: rgba(255,255,255,.7);
+  font-size: .78rem;
+}
+
+.proyecto-antes-despues { background: #f7f4ed; }
+.proyecto-antes-despues__intro {
+  max-width: 48rem;
+  margin: var(--esp-2) auto 0;
+}
+.proyecto-antes-despues__grid {
+  display: grid;
+  gap: var(--esp-3);
+  margin-top: var(--esp-4);
+}
+.proyecto-antes-despues__pieza {
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  border-radius: var(--radio-lg);
+  background: var(--fondo);
+  box-shadow: var(--sombra-sm);
+}
+.proyecto-antes-despues__pieza .proyecto-foto { border-radius: 0; }
+.proyecto-antes-despues__pieza figcaption {
+  padding: .9rem 1rem 1rem;
+  color: var(--texto-suave);
+  font-size: .92rem;
+}
+.proyecto-antes-despues__rotulo {
+  position: absolute;
+  z-index: 4;
+  top: .85rem;
+  left: .85rem;
+  padding: .5rem .7rem;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+}
+.proyecto-antes-despues__rotulo--real {
+  background: rgba(255,255,255,.92);
+  color: var(--color-noche);
+}
+.proyecto-antes-despues__rotulo--vision {
+  background: var(--color-noche);
+  color: var(--color-sal-claro);
+}
+.proyecto-antes-despues__cta { margin-top: var(--esp-3); }
+
+@media (min-width: 900px) {
+  .proyecto-antes-despues__grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 700px) {
+  .proyecto-hero { min-height: 46rem; }
+  .proyecto-hero__velo {
+    background:
+      linear-gradient(0deg, rgba(8,19,37,.95) 0%, rgba(8,19,37,.76) 55%, rgba(8,19,37,.36) 100%);
+  }
+  .proyecto-hero__contenido { padding-block: 5rem 3rem; }
+  .proyecto-hero__titulo { font-size: clamp(3rem, 16vw, 4.6rem); }
+}
