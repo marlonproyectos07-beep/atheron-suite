@@ -93,6 +93,10 @@ const avisoBorrador = BORRADOR
    Se sirve como representación conceptual, nunca como fotografía real. */
 const HERO_CONCEPTUAL_APROBADO =
   'https://d2ol7oe51mr4n9.cloudfront.net/user_3IQy0aFmqi87opFPdFO6RSgr36u/d583d3ac-d9e2-4cae-a9cf-c32ae7b19129.png';
+const FACHADA_ACTUAL =
+  '/images/proyectos/casa-colonial-centro/169.jpg';
+const FACHADA_VISION_APROBADA =
+  'https://d2ol7oe51mr4n9.cloudfront.net/user_3IQy0aFmqi87opFPdFO6RSgr36u/79c74cd2-db0c-4659-bd10-568859d44e4a.png';
 
 /* ============================================================
    DATOS ESTRUCTURADOS
@@ -199,6 +203,29 @@ const fichaPagina = {
 
       <h1 id="proyecto-hero-titulo" class="sr-only">Casa Colonial Centro — Una casa con historia. Una nueva visión.</h1>
       <p class="proyecto-hero-aprobado__rotulo">Representación conceptual · Proyecto en desarrollo</p>
+    </section>
+
+    <section class="seccion fachada-antes-despues" aria-labelledby="fachada-antes-despues-titulo">
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">Primera transformación</span>
+          <h2 id="fachada-antes-despues-titulo">La misma fachada. Una nueva visión.</h2>
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+            Compara el estado actual con la representación conceptual aprobada.
+          </p>
+        </div>
+
+        <div class="fachada-antes-despues__grid">
+          <figure class="fachada-antes-despues__item">
+            <img src={FACHADA_ACTUAL} alt="Fotografía real de la fachada actual de Casa Colonial Centro en Zipaquirá" loading="lazy" decoding="async" />
+            <figcaption><strong>HOY</strong><span>Fotografía real · estado actual</span></figcaption>
+          </figure>
+          <figure class="fachada-antes-despues__item">
+            <img src={FACHADA_VISION_APROBADA} alt="Representación conceptual aprobada de la renovación de la fachada de Casa Colonial Centro" loading="lazy" decoding="async" />
+            <figcaption><strong>VISIÓN ATHERON</strong><span>Representación conceptual · sujeta al desarrollo del proyecto</span></figcaption>
+          </figure>
+        </div>
+      </div>
     </section>
 
     {/* ============================================================
