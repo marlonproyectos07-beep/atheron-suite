@@ -127,6 +127,15 @@ tarifas:
   mensaje: 'Hola, quiero consultar disponibilidad y tarifa de Casa Neusa en Cogua. Somos [numero] personas y estas son mis fechas:'
 habitaciones: []
 notaHabitaciones: ''
+videoPrincipal:
+  src: /assets/video/casa-neusa/recorrido-casa-neusa.mp4
+  poster: /assets/video/casa-neusa/recorrido-casa-neusa-poster.webp
+  titulo: Recorre Casa Neusa y su entorno
+  descripcion: Una vista real desde el aire y un recorrido por el exterior y los espacios interiores de la casa de campo.
+  ancho: 1280
+  alto: 720
+  duracion: '0:39'
+  capitulos: []
 heroFoto: true
 heroEncuadre: center 62%
 heroEncuadreMovil: ''
