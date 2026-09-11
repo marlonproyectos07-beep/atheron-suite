@@ -476,7 +476,14 @@ const fichaNegocio = {
                   </h3>
                   <p class="tarjeta__meta">
                     <span><Marca texto={data.listadoSector} pendiente={enObra} /></span>
-                    <span><Marca texto={data.listadoSegundoDato} pendiente={enObra} />{data.listadoSegundoDatoSufijo}</span>
+                    {data.grupos ? (
+                      <span>
+                        {data.grupos.tipo === 'maxima' ? 'Hasta ' : ''}
+                        {data.grupos.capacidad} huéspedes
+                      </span>
+                    ) : (
+                      <span><Marca texto={data.listadoSegundoDato} pendiente={enObra} />{data.listadoSegundoDatoSufijo}</span>
+                    )}
                   </p>
                   <p class="texto-suave">
                     <Marca texto={data.resumen} pendiente={enObra} />
