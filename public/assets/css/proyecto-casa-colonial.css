@@ -621,3 +621,43 @@
     font-size: .6rem;
   }
 }
+
+
+/* Fachada: comparación inmediata actual / visión */
+.fachada-antes-despues__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--esp-3);
+  margin-top: var(--esp-4);
+}
+.fachada-antes-despues__item {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(227,194,92,.24);
+  border-radius: var(--radio-md);
+  background: var(--color-noche);
+}
+.fachada-antes-despues__item img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+.fachada-antes-despues__item figcaption {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .35rem .7rem;
+  padding: .8rem 1rem;
+}
+.fachada-antes-despues__item figcaption strong {
+  color: var(--color-sal-claro);
+  letter-spacing: .07em;
+}
+.fachada-antes-despues__item figcaption span {
+  color: var(--color-texto-suave);
+  font-size: .82rem;
+}
+@media (max-width: 760px) {
+  .fachada-antes-despues__grid { grid-template-columns: 1fr; }
+}
