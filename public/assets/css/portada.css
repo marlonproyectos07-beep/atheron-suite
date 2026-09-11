@@ -530,48 +530,92 @@
 }
 
 
-/* Cierre CRO home — 11 sep 2026 */
+/* Cierre CRO home — 11 sep 2026
+   Ajuste 2: recuperar la escala visual del hero original.
+   Los nuevos mensajes ocupan menos alto para no forzar un recorte
+   excesivo de la imagen/video. El CTA 5+ usa vidrio oscuro y dorado,
+   no un bloque amarillo dominante. */
+.hero--portada {
+  min-height: clamp(500px, 67vh, 610px);
+}
+
+.hero--portada .hero__contenido {
+  max-width: 50rem;
+  padding-block: clamp(2.4rem, 5vh, 3.7rem);
+}
+
+.hero--portada .hero__titulo {
+  max-width: 15ch;
+  font-size: clamp(2.9rem, 5vw, 4.25rem);
+  line-height: .98;
+  margin-bottom: .9rem;
+}
+
 .hero__propuesta {
   display: inline-flex;
-  flex-direction: column;
-  gap: .2rem;
-  margin-block: .75rem .65rem;
-  padding: .7rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--color-sal-claro) 70%, transparent);
-  border-radius: .8rem;
-  background: rgba(7, 24, 38, .62);
+  flex-direction: row;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .25rem .7rem;
+  max-width: 42rem;
+  margin: 0 0 .55rem;
+  padding: .55rem .8rem;
+  border: 1px solid rgba(227, 194, 92, .52);
+  border-radius: .65rem;
+  background: rgba(7, 15, 27, .48);
   backdrop-filter: blur(5px);
 }
+
 .hero__propuesta-rotulo {
   color: var(--color-sal-claro);
-  font-size: .78rem;
+  font-size: .72rem;
   font-weight: 800;
-  letter-spacing: .09em;
+  letter-spacing: .08em;
   text-transform: uppercase;
 }
-.hero__propuesta strong { color: #fff; font-size: 1rem; }
 
-.hero__grupos--cta {
+.hero__propuesta strong {
+  color: rgba(255,255,255,.94);
+  font-size: .94rem;
+  font-weight: 650;
+}
+
+.hero__grupos.hero__grupos--cta {
   display: inline-flex;
-  flex-direction: column;
-  gap: .15rem;
+  flex-direction: row;
+  align-items: center;
+  gap: .45rem;
   width: fit-content;
-  margin-bottom: .7rem;
-  padding: .65rem .9rem;
-  border-radius: .7rem;
-  background: var(--color-sal-claro);
-  color: var(--color-azul-profundo);
+  margin: 0 0 .7rem;
+  padding: .48rem .78rem;
+  border: 1px solid rgba(227, 194, 92, .68);
+  border-radius: 999px;
+  background: rgba(7, 15, 27, .58);
+  color: var(--color-sal-claro);
   text-decoration: none;
-  box-shadow: 0 8px 24px rgba(0,0,0,.18);
-  transition: transform .2s ease, box-shadow .2s ease;
+  box-shadow: none;
+  backdrop-filter: blur(5px);
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
 }
-.hero__grupos--cta:hover,
-.hero__grupos--cta:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(0,0,0,.24);
+
+.hero__grupos.hero__grupos--cta:hover,
+.hero__grupos.hero__grupos--cta:focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--color-sal-claro);
+  background: rgba(227, 194, 92, .16);
+  color: #fff;
+  box-shadow: none;
 }
-.hero__grupos--cta strong { font-size: .94rem; }
-.hero__grupos--cta span { font-size: .86rem; }
+
+.hero__grupos--cta strong,
+.hero__grupos--cta span {
+  font-size: .82rem;
+  line-height: 1.2;
+}
+
+.hero--portada .hero__texto {
+  margin-bottom: 1rem;
+}
 
 .oferta__para--destacada {
   display: inline-flex;
@@ -618,9 +662,37 @@
   text-transform: uppercase;
 }
 
-@media (max-width: 700px) {
-  .hero__propuesta,
-  .hero__grupos--cta { width: 100%; }
+@media (max-width: 48rem) {
+  .hero--portada {
+    min-height: min(78vh, 620px);
+    padding-block: var(--esp-4);
+  }
+
+  .hero--portada .hero__contenido {
+    max-width: none;
+    padding-block: 0;
+  }
+
+  .hero--portada .hero__titulo {
+    font-size: clamp(2rem, 9vw, 2.6rem);
+    line-height: 1.08;
+  }
+
+  .hero__propuesta {
+    display: flex;
+    width: 100%;
+    padding: .5rem .7rem;
+  }
+
+  .hero__grupos.hero__grupos--cta {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    border-radius: .65rem;
+    text-align: center;
+  }
+
   .oferta__para--destacada { display: flex; }
   .tarjeta__precio--consulta { max-width: none; }
 }
