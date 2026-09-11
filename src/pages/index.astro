@@ -177,14 +177,18 @@ const fichaNegocio = {
             cincuenta mil y se va antes de enterarse de que existe otra
             tarifa. La linea de grupos va pegada al precio, no tres
             bloques mas abajo, porque ahi es donde se toma esa decision. */}
-        <p class="hero__precio">
-          <span class="hero__precio-rotulo">Tarifa de referencia</span>
-          <span class="hero__precio-cifra"><strong>$65.000</strong> por persona</span>
-        </p>
+        <div class="hero__propuesta">
+          <span class="hero__propuesta-rotulo">Hospedaje para cada plan</span>
+          <strong>Opciones y tarifas para parejas, familias y grupos</strong>
+        </div>
 
-        <p class="hero__grupos">
-          ¿Viajan en grupo? Cotizamos una tarifa especial.
-        </p>
+        <a
+          class="hero__grupos hero__grupos--cta"
+          {...atributosWhatsApp(MENSAJE_GRUPO, { origen: 'home_hero_grupo_5_mas', evento: 'whatsapp_group_quote' })}
+        >
+          <strong>¿Viajan 5 o más personas?</strong>
+          <span>Solicita una cotización para tu estadía →</span>
+        </a>
 
         <p class="hero__texto">
           Casas y habitaciones para parejas, familias y grupos.
@@ -248,7 +252,7 @@ const fichaNegocio = {
         <li class="oferta__tipo"><strong>Casas completas</strong></li>
         <li class="oferta__tipo"><strong>Casa campestre</strong></li>
       </ul>
-      <p class="oferta__para">Para parejas, familias y grupos.</p>
+      <p class="oferta__para oferta__para--destacada"><span>Ideal para tu estadía</span><strong>Parejas · Familias · 5 o más personas</strong></p>
     </div>
 
 
@@ -458,7 +462,13 @@ const fichaNegocio = {
                       medidas="(min-width: 1000px) 17rem, (min-width: 700px) 45vw, 92vw"
                     >Foto pendiente</Foto>
                   </a>
-                  <span class="tarjeta__insignia">Hospedaje {data.insignia}</span>
+                  <span class="tarjeta__insignia">
+                    {id === 'hotel-atheron-suite' ? 'Apartamentos' :
+                     id === 'casa-algarra' ? 'Casa completa' :
+                     id === 'casa-neusa' ? 'Casa campestre' :
+                     id === 'hotel-colonial-confort' ? 'Hotel' :
+                     'Hospedaje'}
+                  </span>
                 </div>
                 <div class="tarjeta__cuerpo">
                   <h3 class="tarjeta__titulo">
@@ -472,15 +482,8 @@ const fichaNegocio = {
                     <Marca texto={data.resumen} pendiente={enObra} />
                   </p>
                   <div class="tarjeta__pie">
-                    {!data.precioPendiente && (
-                    <span class="tarjeta__precio">
-                      {data.precio}
-                      {/* "/ noche" solo si hay cifra: pegarselo a "Tarifas
-                          segun habitacion y ocupacion" no dice nada. */}
-                      {/\d/.test(data.precio) && <span> / noche</span>}
-                    </span>
-                    )}
-                    <a class="boton boton--contorno" href={`/hospedajes/${id}`}>Ver ficha</a>
+                    <span class="tarjeta__precio tarjeta__precio--consulta">Opciones según alojamiento y ocupación</span>
+                    <a class="boton boton--contorno" href={`/hospedajes/${id}`}>Ver alojamiento →</a>
                   </div>
                 </div>
               </article>
@@ -523,21 +526,26 @@ const fichaNegocio = {
       <div class="contenedor crece__interior">
 
         <div class="crece__texto">
-          <span class="etiqueta">Atheron sigue creciendo</span>
-          <h2 id="crece-titulo">Estamos ampliando nuestra capacidad en Zipaquirá</h2>
+          <span class="etiqueta crece__etiqueta">✦ Atheron en expansión · Proyecto en desarrollo ✦</span>
+          <h2 id="crece-titulo">Estamos creciendo en Zipaquirá</h2>
 
           <p class="texto-grande" style="margin-block: var(--esp-2) var(--esp-3);">
-            Casa Colonial Centro es nuestro próximo proyecto: una casa colonial en
-            transformación que integrará alojamiento, gastronomía, experiencias y
-            espacios para grupos.
+            Casa Colonial Centro es uno de nuestros nuevos proyectos: un espacio en
+            transformación que integrará hospedaje, restaurante, cafetería y experiencias.
+          </p>
+
+          <p class="crece__oportunidad"><strong>Oportunidades de inversión y operación</strong></p>
+          <p class="texto-suave">
+            Buscamos inversionistas y aliados operadores interesados en participar
+            en el desarrollo del proyecto, especialmente en hospedaje, restaurante y cafetería.
           </p>
 
           {/* Cinco palabras y ninguna cifra. No se dice cuanta gente
               cabra, ni cuando abre, ni con que tarifa: nada de eso esta
               validado, y el proyecto todavia es privado. */}
           <p class="tarjeta__meta crece__usos">
-            <span>Hotel</span><span>Restaurante</span><span>Cafetería</span>
-            <span>Gastrobar</span><span>Experiencias</span>
+            <span>Hospedaje</span><span>Restaurante</span><span>Cafetería</span>
+            <span>Operación gastronómica</span><span>Experiencias</span>
           </p>
 
           <div class="grupo-botones" style="margin-top: var(--esp-3);">
@@ -549,7 +557,7 @@ const fichaNegocio = {
               href="/proyectos/casa-colonial-centro"
               rel="nofollow"
             >
-              Conocer el proyecto
+              Conocer el proyecto y sus oportunidades →
             </a>
           </div>
 
@@ -558,14 +566,14 @@ const fichaNegocio = {
               participacion, ni cupo. Se invita a conversar sobre una
               alianza, que es lo unico que hoy se puede sostener. */}
           <p class="crece__alianza">
-            ¿Te interesa construir una alianza con Atheron?{' '}
+            Proyecto en desarrollo · Aún no disponible para reservas.{' '}
             <a
               class="crece__enlace"
               {...atributosWhatsApp(
-                'Hola, Atheron. Me interesa conversar sobre una alianza con ustedes.',
+                'Hola, Atheron. Me interesa conocer las oportunidades de inversión u operación de Casa Colonial Centro.',
                 { origen: 'home_crece_alianza', evento: 'whatsapp_alianza' },
               )}
-            >Conversemos</a>.
+            >Quiero conocer las oportunidades</a>.
           </p>
         </div>
 
