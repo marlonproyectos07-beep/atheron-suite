@@ -783,7 +783,10 @@
    ------------------------------------------------------------ */
 .comparativa__lado .foto,
 .ubicacion-recorrido__media .foto {
-  aspect-ratio: auto;
+  /* La proporcion real del archivo, que pone ProyectoFoto como
+     variable. El 4/3 de respaldo solo actua si alguna imagen llegara
+     sin medidas declaradas; con el catalogo actual no pasa nunca. */
+  aspect-ratio: var(--proporcion, 4 / 3);
   height: auto;
 }
 

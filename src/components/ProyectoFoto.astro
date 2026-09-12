@@ -78,7 +78,22 @@ const visible = Boolean(foto && foto.aprobada);
 const esConceptual = foto?.tipo === 'CONCEPTUAL';
 ---
 
-<figure class:list={['foto-proyecto', clase, esConceptual && 'foto-proyecto--conceptual']}>
+{/* La proporcion exacta del archivo viaja como variable CSS. Quien la
+    quiera usar la lee con var(--proporcion); quien no, sigue con las
+    proporciones fijas de .foto y no cambia nada.
+
+    POR QUE ASI Y NO CON aspect-ratio: auto
+    El navegador deduce la proporcion de los atributos width y height
+    aplicando "aspect-ratio: auto 1200 / 900" desde su hoja interna.
+    Declarar "aspect-ratio: auto" en nuestra hoja SUSTITUYE esa regla y
+    se lleva por delante la parte "1200 / 900": la imagen se queda sin
+    proporcion, y mientras no ha cargado su altura es CERO. Se midio:
+    448 x 0 px en todo el recorrido. Con la variable la proporcion es
+    explicita y el hueco se reserva bien desde el primer pintado. */}
+<figure
+  class:list={['foto-proyecto', clase, esConceptual && 'foto-proyecto--conceptual']}
+  style={foto?.ancho && foto?.alto ? `--proporcion: ${foto.ancho} / ${foto.alto}` : undefined}
+>
   {visible && foto ? (
     <div class="foto-proyecto__marco">
       <Foto
