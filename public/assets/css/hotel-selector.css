@@ -60,6 +60,12 @@
   border-top-color: rgba(255,255,255,.34);
 }
 .hero--foto + .seccion .bloque-doble__texto > .etiqueta { color: #856a10; }
+/* El mismo tono accesible para las fichas SIN portada fotografica. El
+   dorado de marca sobre blanco da 2,41:1 y no pasa el contraste minimo;
+   el arreglo existia solo para las fichas con foto de portada, asi que
+   las demas seguian fallando. Las que ya tienen portada no cambian: su
+   regla es la de arriba y sigue mandando. */
+.hero--interior:not(.hero--foto) + .seccion .bloque-doble__texto > .etiqueta { color: #856a10; }
 
 /* La eleccion de Casa completa debe aparecer rapido al llegar a la
    seccion, sin tanto aire vertical antes del producto principal. */

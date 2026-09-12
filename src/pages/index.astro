@@ -20,7 +20,7 @@ import { menuHome, menuHomeMovil, ctaDisponibilidad } from '../data/navegacion';
 import ContactoWhatsApp from '../components/ContactoWhatsApp.astro';
 import { formularioContactoActivo } from '../data/ajustes';
 
-/* Los tres hospedajes destacados salen de la misma coleccion que
+/* Los cuatro hospedajes destacados salen de la misma coleccion que
    alimenta el listado y las fichas. Antes estaban escritos a mano
    aqui, y dos de las tres tarjetas enlazaban a la plantilla en vez
    de a su ficha: justo el tipo de descuadre que pasa cuando el
@@ -28,7 +28,7 @@ import { formularioContactoActivo } from '../data/ajustes';
 const destacados = (await getCollection('hospedajes'))
   .filter((f) => f.data.publicado)
   .sort((a, b) => a.data.orden - b.data.orden)
-  .slice(0, 3);
+  .slice(0, 4);
 
 /* Ficha del negocio para Google y los asistentes de IA.
 
@@ -237,7 +237,7 @@ const fichaNegocio = {
 
     {/* ============================================================
          4. HOSPEDAJES DESTACADOS
-         Aqui mostramos 3; los 7 completos viven en /hospedajes
+         Aqui mostramos hasta 4; el listado completo vive en /hospedajes
          ============================================================ */}
     <section class="seccion seccion--alterna" id="hospedajes">
       <div class="contenedor">
@@ -247,14 +247,20 @@ const fichaNegocio = {
           <h2>Hospedajes para descubrir Zipaquira</h2>
         </div>
 
-        <div class="grid grid--3 aparecer">
+        <div class="grid grid--4 aparecer">
 
           {destacados.map(({ id, data }) => {
             const enObra = !data.publicado;
             return (
               <article class="tarjeta">
                 <div class="tarjeta__media">
-                  <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                  <a
+                    class="tarjeta__imagen-enlace"
+                    href={`/hospedajes/${id}`}
+                    aria-label={`Explorar ${data.nombre}`}
+                  >
+                    <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                  </a>
                   <span class="tarjeta__insignia">Hospedaje {data.insignia}</span>
                 </div>
                 <div class="tarjeta__cuerpo">
