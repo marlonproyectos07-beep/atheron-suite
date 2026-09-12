@@ -621,6 +621,32 @@ export const entradaParqueVision = ficha('casa-colonial-entrada-parque-vision.we
   aprobada: true,
 });
 
+export const corredorRecepcionActual = ficha('casa-colonial-corredor-recepcion-actual.webp', {
+  tipo: 'REAL',
+  unidad: 'GENERAL',
+  espacio: 'Corredor interior hacia el Patio 1',
+  archivoOriginal: 'corredor-actual.webp',
+  alt: 'Corredor interior de la Casa Colonial Centro con el mosaico original y el arco que abre al patio',
+  orientacion: 'vertical',
+  ancho: 1086,
+  alto: 1448,
+  estado: 'VERIFICADO',
+  aprobada: true,
+});
+
+export const corredorRecepcionVision = ficha('casa-colonial-corredor-recepcion-vision.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'GENERAL',
+  espacio: 'Corredor interior hacia el Patio 1',
+  archivoOriginal: 'corredor-vision-atheron.webp',
+  alt: 'Representación conceptual del corredor interior restaurado, con el mosaico conservado y el arco hacia el patio',
+  orientacion: 'vertical',
+  ancho: 1086,
+  alto: 1448,
+  estado: 'PROPUESTA',
+  aprobada: true,
+});
+
 /** Las 22 del paquete, para poder contarlas y comprobarlas. */
 export const CATALOGO_FOTOS: FotoProyecto[] = [
   fotoHero,
@@ -799,6 +825,16 @@ export const comparativas: Comparativa[] = [
       'El acceso principal conduce desde el Parque Principal hacia la recepción y el Patio 1, proyectado como un espacio de bienvenida y encuentro, integrado con la cafetería.',
     actual: entradaParqueActual,
     vision: entradaParqueVision,
+    aprobada: true,
+  },
+  {
+    id: 'corredor-recepcion',
+    ceja: 'CORREDOR INTERIOR',
+    titulo: 'Un recorrido que conecta la experiencia',
+    texto:
+      'El corredor interior articula la llegada, la recepción y los espacios sociales, conservando el carácter de la casa dentro de la propuesta de transformación.',
+    actual: corredorRecepcionActual,
+    vision: corredorRecepcionVision,
     aprobada: true,
   },
 ];
