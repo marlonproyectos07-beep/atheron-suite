@@ -1,0 +1,49 @@
+---
+const disponibles = 45;
+const totalEdicion = 45;
+const fechaEntrega = 'Domingo 20 de septiembre';
+const canonical = 'https://hotelesatheron.com/gallina-amor-amistad';
+const reservaUrl = 'https://www.atheronsecurity.com/gallina-zipaquira';
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: 'Gallina al Vapor - Edición Amor y Amistad',
+  description: 'Gallina al vapor por encargo en Zipaquirá. Incluye gallina, papa, yuca, plátano y ají tradicional.',
+  offers: { '@type': 'Offer', priceCurrency: 'COP', price: '60000', availability: disponibles > 0 ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut', url: canonical }
+};
+---
+<html lang="es-CO">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gallina al Vapor en Zipaquirá | Amor y Amistad</title>
+<meta name="description" content="Reserva Gallina al Vapor en Zipaquirá para el domingo 20 de septiembre. Incluye gallina, papa, yuca, plátano y ají tradicional. $60.000. Domicilio $5.000." />
+<meta name="robots" content="index,follow,max-image-preview:large" />
+<link rel="canonical" href={canonical} />
+<meta name="theme-color" content="#7b263b" />
+<meta property="og:type" content="product" />
+<meta property="og:locale" content="es_CO" />
+<meta property="og:title" content="Gallina al Vapor · Amor y Amistad · Zipaquirá" />
+<meta property="og:description" content="Edición limitada por encargo. Domingo 20 de septiembre. $60.000. Incluye gallina, papa, yuca, plátano y ají tradicional." />
+<meta property="og:url" content={canonical} />
+<meta name="twitter:card" content="summary" />
+<script type="application/ld+json" set:html={JSON.stringify(schema)}></script>
+<style>
+:root{--vino:#7b263b;--verde:#157347;--tinta:#211a17;--borde:#ead8c0}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#fffaf4,#f5eadb);color:var(--tinta)}.wrap{width:min(1080px,92vw);margin:auto}.hero{padding:56px 0 42px}.grid{display:grid;grid-template-columns:1.08fr .92fr;gap:34px;align-items:center}.tag{display:inline-block;background:#fff;border:1px solid var(--borde);border-radius:999px;padding:9px 14px;font-weight:800;color:var(--vino)}h1{font-size:clamp(44px,7vw,82px);line-height:.95;letter-spacing:-.04em;margin:18px 0}h1 span{color:var(--vino)}.lead{font-size:clamp(18px,2.2vw,22px);line-height:1.55;color:#51443d}.facts{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}.fact{background:#fff;border:1px solid var(--borde);border-radius:14px;padding:11px 14px;font-weight:800}.price{font-size:42px;font-weight:950}.cta{display:inline-flex;align-items:center;justify-content:center;margin-top:18px;background:var(--verde);color:#fff;text-decoration:none;padding:16px 22px;border-radius:16px;font-size:18px;font-weight:900;min-height:52px}.visual{min-height:470px;border-radius:28px;padding:30px;display:flex;align-items:flex-end;color:#fff;background:radial-gradient(circle at 70% 22%,#f4c75f 0 12%,transparent 13%),linear-gradient(145deg,#2e231d,#6d2738 64%,#d7a13d);box-shadow:0 20px 50px #5c39242b;overflow:hidden;position:relative}.visual:before{content:'🐔';position:absolute;font-size:180px;right:20px;top:70px;filter:drop-shadow(0 18px 22px #0005)}.visual h2{font-size:34px;margin:0;max-width:420px;position:relative}.cards{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:16px 0 48px}.card{background:#fff;border:1px solid var(--borde);border-radius:26px;padding:26px;box-shadow:0 14px 40px #6b472018}.title{font-size:clamp(30px,4vw,42px);line-height:1.05;letter-spacing:-.03em;margin:12px 0}.big{font-size:70px;font-weight:950;color:var(--vino)}.meter{height:18px;background:#efe2cf;border-radius:999px;overflow:hidden;margin:16px 0}.meter span{display:block;width:100%;height:100%;background:linear-gradient(90deg,var(--verde),#6bc08d)}.warning{background:#fff3dc;border:1px solid #e4c27f;border-radius:16px;padding:16px;font-weight:750;line-height:1.45}.count{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:16px}.count div{background:#2f2723;color:#fff;border-radius:14px;padding:14px 6px;text-align:center}.count strong{display:block;font-size:28px}.count small{opacity:.8;text-transform:uppercase}.love{margin:0 auto 54px;background:var(--vino);color:#fff;border-radius:28px;padding:34px}.love p{font-size:20px;line-height:1.6}.foot{text-align:center;padding:0 0 70px}.foot p{color:#6d5f56;max-width:720px;margin:10px auto 20px;line-height:1.55}@media(max-width:800px){.grid,.cards{grid-template-columns:1fr}.visual{min-height:330px}.count{grid-template-columns:repeat(2,1fr)}.hero{padding-top:34px}}
+</style>
+</head>
+<body>
+<main>
+<section class="hero"><div class="wrap grid"><div><div class="tag">❤️ Edición Amor y Amistad · Zipaquirá</div><h1>Gallina al Vapor <span>para compartir</span></h1><p class="lead">Este <strong>{fechaEntrega}</strong>, comparte con tu familia, pareja o amigos una receta especial que vuelve <strong>solo una vez al mes</strong>.</p><div class="facts" aria-label="Incluye"><span class="fact">🐔 Gallina</span><span class="fact">🥔 Papa</span><span class="fact">🌿 Yuca</span><span class="fact">🍌 Plátano</span><span class="fact">🌶️ Ají tradicional</span></div><div class="price">$60.000</div><p>Domicilio en Zipaquirá: <strong>$5.000 adicionales.</strong></p><a class="cta" href={reservaUrl}>📲 Separar mi gallina</a></div><div class="visual" role="img" aria-label="Gallina al Vapor para compartir"><h2>Hay sabores que se disfrutan más cuando se comparten.</h2></div></div></section>
+<section><div class="wrap cards"><article class="card"><div class="tag">🔥 Reservas abiertas</div><h2 class="title">Disponibilidad de esta edición</h2><div class="big">{disponibles}</div><strong>unidades disponibles de {totalEdicion}</strong><div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax={totalEdicion} aria-valuenow={disponibles}><span></span></div><div class="warning">Cuando el contador llegue a <strong>0</strong>, cerramos pedidos. Si encuentras cupo 0, tendrás que esperar la edición del próximo mes.</div></article><article class="card"><div class="tag">⏳ Cierre programado</div><h2 class="title">Haz tu pedido antes del miércoles</h2><p>Podemos cerrar antes si se agotan las 45 unidades. La disponibilidad se actualizará únicamente con pedidos reales confirmados.</p><div class="count" aria-live="polite"><div><strong id="d">0</strong><small>días</small></div><div><strong id="h">00</strong><small>horas</small></div><div><strong id="m">00</strong><small>min</small></div><div><strong id="s">00</strong><small>seg</small></div></div></article></div></section>
+<section><div class="wrap love"><div class="tag" style="background:#ffffff18;border-color:#ffffff30;color:white">❤️ Septiembre · Amor y Amistad</div><h2 class="title">Comparte sabor, familia y amistad.</h2><p>Una preparación completa con gallina, papa, yuca, plátano y ají tradicional. Se prepara únicamente por encargo para esta edición mensual.</p></div></section>
+<section class="foot"><div class="wrap"><h2 class="title">Solo una edición al mes</h2><p>No hacemos producción adicional el mismo día. Si se agotan las unidades de septiembre, la próxima oportunidad será en la siguiente edición mensual.</p><a class="cta" href={reservaUrl}>📲 Reservar pedido</a><p><small>Zipaquirá, Cundinamarca · Domicilio: $5.000</small></p></div></section>
+</main>
+<script is:inline>
+const end=new Date('2026-09-16T23:59:59-05:00').getTime();
+const d=document.getElementById('d'),h=document.getElementById('h'),m=document.getElementById('m'),s=document.getElementById('s');
+function tick(){const x=Math.max(0,end-Date.now());d.textContent=Math.floor(x/86400000);h.textContent=String(Math.floor((x%86400000)/3600000)).padStart(2,'0');m.textContent=String(Math.floor((x%3600000)/60000)).padStart(2,'0');s.textContent=String(Math.floor((x%60000)/1000)).padStart(2,'0')}
+tick();setInterval(tick,1000);
+</script>
+</body>
+</html>
