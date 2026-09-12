@@ -390,38 +390,38 @@ const fichaPagina = {
          precio futuro de compra, la inversion realizada, los montos
          requeridos ni los porcentajes de participacion.
          ============================================================ */}
-    <section class="seccion" id={historia.id}>
+    {/* solo-titulo: esta seccion se quedo con la ceja y el H2 y nada
+        mas. Sin esa clase arrastraba 96 px de padding arriba y abajo
+        mas 48 de margen bajo el encabezado: casi 250 px de aire
+        alrededor de un titular suelto. */}
+    <section class="seccion seccion--solo-titulo" id={historia.id}>
       <div class="contenedor aparecer">
         <div class="encabezado-seccion">
           <span class="etiqueta">{historia.ceja}</span>
           <h2>{historia.titulo}</h2>
         </div>
 
-        {/* La nota "Redaccion sujeta a revision juridica" se retira, y
-            no por maquillar: existia porque el texto anterior hablaba
-            del acuerdo de arrendamiento con los propietarios. El texto
-            nuevo aprobado el 12/09/2026 no menciona el acuerdo, ni sus
-            condiciones, ni a los propietarios, asi que ya no hay nada
-            ahi que necesite pasar por abogados. El pendiente juridico
-            SIGUE VIVO para lo que sigue guardado en los datos -canon,
-            opcion de compra, montos-, que continua sin publicarse. */}
+        {/* ============================================================
+             AQUI VIVIA EL CUERPO DE ESTA SECCION
 
-        <div class="columna-texto">
-          {historia.parrafos.map((parrafo) => <p>{parrafo}</p>)}
-        </div>
+             Direccion lo retiro el 12/09/2026. Dejaron de pintarse los
+             tres parrafos, la frase destacada "Recuperar un inmueble
+             con historia y convertirlo en una oportunidad para
+             Zipaquira" y la fotografia del interior con balcon, con su
+             contenedor y su pie.
 
-        <blockquote class="destacado">{historia.destacado}</blockquote>
+             La seccion se queda con la ceja y el H2, que es lo que
+             direccion pidio conservar. NO queda ningun envoltorio
+             vacio: se retiraron los div, el blockquote y el bloque de
+             foto enteros, no su contenido. El espaciado lo sigue
+             dando .encabezado-seccion, que es el unico hijo.
 
-        {/* Historia y ubicacion. La ubicacion se ensena desde
-            dentro hacia el centro historico: la direccion exacta
-            no se publica todavia. */}
-        {historia.fotos.length > 0 && (
-          <div class="pareja-fotos">
-            {historia.fotos.map((foto) => (
-              <ProyectoFoto foto={foto} medidas="(min-width: 900px) 33rem, 100vw" />
-            ))}
-          </div>
-        )}
+             Nada se borro de los datos: historia.parrafos,
+             historia.destacado y historia.fotos siguen en
+             src/data/casa-colonial-centro.ts, y con ellos la
+             fotografia fotoHistoriaBalcon, que ya no se renderiza en
+             ninguna parte pero sigue en el repositorio.
+             ============================================================ */}
       </div>
     </section>
 

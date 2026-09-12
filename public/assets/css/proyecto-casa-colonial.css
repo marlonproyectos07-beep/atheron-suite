@@ -709,6 +709,28 @@
 }
 
 /* ------------------------------------------------------------
+   UNA SECCION QUE SOLO LLEVA TITULAR
+
+   El corte del 12/09/2026 dejo "EL PROYECTO" con la ceja y el H2 y
+   nada debajo. Con el espaciado de serie -96 px de padding arriba y
+   abajo, mas 48 de margen bajo el encabezado- el titular quedaba
+   flotando en casi 250 px de blanco, que es justo el hueco residual
+   que direccion pidio no dejar.
+
+   Aqui se aprieta a la mitad y se anula el margen del encabezado, que
+   no tiene nada a que separarse.
+   ------------------------------------------------------------ */
+.seccion--solo-titulo { padding-block: var(--esp-5); }
+.seccion--solo-titulo .encabezado-seccion {
+  max-width: 38rem;
+  margin-bottom: 0;
+}
+
+@media (max-width: 767px) {
+  .seccion--solo-titulo { padding-block: var(--esp-4); }
+}
+
+/* ------------------------------------------------------------
    PATRON A — COMPARATIVA 50/50
    ------------------------------------------------------------ */
 .comparativa {
