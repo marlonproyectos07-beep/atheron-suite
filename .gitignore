@@ -66,3 +66,10 @@ public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-700.avif
 public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-700.webp
 public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-900.avif
 public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-900.webp
+
+# Grafo de Graphify. Es artefacto GENERADO, no fuente: lo reconstruye
+# "graphify extract . --code-only" en segundos y sin coste de API. No se
+# versiona porque cambia con cada tanda de codigo y son ~1,1 MB por
+# reconstruccion. En una sesion nueva -local o en la nube- se regenera
+# antes de cualquier trabajo amplio; ver la seccion graphify de CLAUDE.md.
+graphify-out/
