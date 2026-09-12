@@ -159,8 +159,17 @@ for (const nombre of fichas) {
 }
 
 /* Las de las maquetas, que no salen de ningun .md. */
+/* Las fotos de maqueta llevan sus propios anchos. Los de ficha -400,
+   600, 700 y 900- se pensaron para fotos que ocupan media pantalla;
+   una imagen a sangre necesita el ancho entero del movil por su
+   densidad de pixeles, y el salto de 700 a 900 deja al telefono
+   bajando bastante mas de lo que cabe: con 412 px de ancho y densidad
+   1,75 pide 721, y al no haber nada entre medias se lleva la de 900.
+   Con 800 en la lista baja la que le corresponde. */
+const ANCHOS_MAQUETA = [400, 600, 800, 1100];
+
 for (const ruta of FOTOS_DE_MAQUETA) {
-  generadas += await genera(ruta, ANCHOS_PRINCIPAL);
+  generadas += await genera(ruta, ANCHOS_MAQUETA);
   fotos++;
 }
 
