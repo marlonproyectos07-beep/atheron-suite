@@ -595,6 +595,57 @@ export const conceptoGaleriaBienvenida = ficha('casa-colonial-concepto-galeria-b
    que revisar el bloque en movil antes de publicar.
    ------------------------------------------------------------ */
 
+/* --- FACHADA Y HERO ---
+   Estas tres llegaron el 11/09/2026 aprobadas por direccion y se
+   servian desde un CDN externo (cloudfront.net) escrito a mano en la
+   maqueta. Ahora viven en el repositorio, que es donde tienen que
+   estar: el enlace de aquel CDN es temporal y el dia que caduque el
+   hero desaparece sin aviso y sin error visible.
+
+   Son las MISMAS imagenes aprobadas, no otras ni retocadas: solo
+   convertidas a WebP. Pesaban 5,4 MB entre las tres y eran la causa
+   de un LCP de 21,2 s; ahora pesan 475 KB.
+
+   La fachada sigue prohibida en el resto del sitio -portada, catalogo,
+   vista previa al compartir-. Aqui se publica porque es el bloque de
+   transformacion que direccion aprobo, y solo aqui. */
+
+export const heroVisionFachada = ficha('casa-colonial-hero-vision-fachada.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'GENERAL',
+  espacio: 'Fachada restaurada, vista de conjunto',
+  alt: 'Representación conceptual de Casa Colonial Centro restaurada: propuesta de hospitalidad y gastronomía en Zipaquirá',
+  orientacion: 'horizontal',
+  ancho: 1536,
+  alto: 1024,
+  estado: 'PROPUESTA',
+  aprobada: true,
+});
+
+export const fachadaActual = ficha('casa-colonial-fachada-actual.webp', {
+  tipo: 'REAL',
+  unidad: 'GENERAL',
+  espacio: 'Fachada principal',
+  alt: 'Fotografía real de la fachada actual de Casa Colonial Centro en Zipaquirá',
+  orientacion: 'horizontal',
+  ancho: 1200,
+  alto: 900,
+  estado: 'VERIFICADO',
+  aprobada: true,
+});
+
+export const fachadaVision = ficha('casa-colonial-fachada-vision.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'GENERAL',
+  espacio: 'Fachada principal',
+  alt: 'Representación conceptual de la fachada de Casa Colonial Centro renovada, conservando su identidad arquitectónica',
+  orientacion: 'horizontal',
+  ancho: 1200,
+  alto: 900,
+  estado: 'PROPUESTA',
+  aprobada: true,
+});
+
 export const entradaParqueActual = ficha('casa-colonial-entrada-parque-actual.webp', {
   tipo: 'REAL',
   unidad: 'GENERAL',
@@ -801,6 +852,24 @@ export const hero = {
    desde antes y se deja como esta.
    ============================================================ */
 
+/* Bloque 2 del recorrido: donde esta la casa, antes de entrar en ella.
+   La ubicacion se ensena DESDE DENTRO hacia el centro historico, que
+   es como se ha ensenado siempre en esta pagina: la direccion exacta
+   no se publica todavia. Sin mapa, sin coordenadas y sin distancias
+   medidas a ojo.
+
+   La fotografia es la misma que estaba en "historia" y se ha movido
+   aqui, no copiado: cada imagen del paquete se usa una sola vez. */
+export const ubicacion = {
+  id: 'ubicacion',
+  ceja: 'DÓNDE ESTÁ',
+  titulo: 'En el corazón de Zipaquirá',
+  texto:
+    'La casa está en el centro histórico, a la vuelta del Parque Principal. Lo que se ve desde sus ventanas es el centro que el visitante viene a recorrer.',
+  foto: fotoVistaCentro as FotoProyecto | null,
+  estado: 'VERIFICADO' as Estado,
+};
+
 export interface Comparativa {
   /** Ancla de la seccion. Ej: "acceso-parque". */
   id: string;
@@ -816,7 +885,53 @@ export interface Comparativa {
   aprobada: boolean;
 }
 
+/* ============================================================
+   EL RECORRIDO, Y POR QUE SOLO TIENE CINCO PARADAS
+
+   Direccion pidio once bloques. Aqui hay cinco, y la diferencia no
+   es un descuido: para los otros seis NO EXISTE la pareja.
+
+   La regla que decide que entra: las dos imagenes tienen que ser del
+   MISMO PUNTO DE VISTA. Una fotografia de un sitio junto a una
+   conceptual de otro no es una transformacion, es una promesa falsa
+   -el visitante entiende "esto se convertira en aquello"-.
+
+   Comprobado imagen por imagen contra el paquete de 22:
+
+     Recepcion y escalera        no hay pareja.
+     Patio 1 / Cafeteria         patio-arcos es un patio estrecho con
+                                 arcos; concepto-patio-gastronomico es
+                                 un patio grande con pergola, palmera y
+                                 montanas al fondo. Otro lugar.
+     Patio 1, 2a perspectiva     no hay pareja.
+     Lobby / transicion          galeria-acristalada es una galeria con
+                                 piso de madera; concepto-galeria-
+                                 bienvenida es un zaguan con arcos a un
+                                 patio con cafeteria. Otro lugar.
+
+   Esos cuatro bloques se publican cuando lleguen sus fotografias, no
+   antes. Falta material, no falta trabajo.
+
+   DE DONDE SALEN ESCALERA Y PASILLO
+   Estaban en el comparador de pestanas de "transformacion", y se han
+   movido aqui. NO se duplican: se retiraron de alli. El criterio es
+   el mismo de arriba: las parejas del mismo punto de vista cuentan
+   mejor como recorrido, una al lado de la otra; las tematicas -un
+   espacio junto a una idea de otro sitio- se quedan en el comparador,
+   que es donde esa relacion se entiende sin enganar a nadie.
+   ============================================================ */
+
 export const comparativas: Comparativa[] = [
+  {
+    id: 'fachada',
+    ceja: 'FACHADA PRINCIPAL',
+    titulo: 'El mismo lugar. Una nueva visión.',
+    texto:
+      'La propuesta conserva la identidad arquitectónica de la casa y plantea una renovación orientada a hospitalidad, gastronomía y experiencias.',
+    actual: fachadaActual,
+    vision: fachadaVision,
+    aprobada: true,
+  },
   {
     id: 'acceso-parque',
     ceja: 'ACCESO PRINCIPAL',
@@ -835,6 +950,26 @@ export const comparativas: Comparativa[] = [
       'El corredor interior articula la llegada, la recepción y los espacios sociales, conservando el carácter de la casa dentro de la propuesta de transformación.',
     actual: corredorRecepcionActual,
     vision: corredorRecepcionVision,
+    aprobada: true,
+  },
+  {
+    id: 'escalera-piso-2',
+    ceja: 'ESCALERA HACIA EL PISO 2',
+    titulo: 'La escalera que comunica la casa',
+    texto:
+      'La escalera de madera comunica los dos niveles y es una de las piezas que el proyecto quiere conservar: la propuesta estudia su recuperación, no su sustitución.',
+    actual: fotoEscalera,
+    vision: conceptoEscalera,
+    aprobada: true,
+  },
+  {
+    id: 'llegada-piso-2',
+    ceja: 'LLEGADA AL PISO 2',
+    titulo: 'Donde empieza el hospedaje',
+    texto:
+      'El pasillo que reparte hacia las habitaciones. La propuesta conserva su trazado y trabaja sobre la luz, los acabados y el paso.',
+    actual: fotoPasillo,
+    vision: conceptoPasillo,
     aprobada: true,
   },
 ];
@@ -862,7 +997,10 @@ export const historia = {
      dentro y lo que se ve desde ella. La ubicacion se ensena asi,
      desde el interior hacia el centro historico, porque la
      direccion exacta no se publica todavia. */
-  fotos: [fotoHistoriaBalcon, fotoVistaCentro] as FotoProyecto[],
+  /* La vista hacia el centro se movio al bloque "ubicacion" del
+     recorrido, donde dice lo que tiene que decir. Aqui queda el
+     interior con balcon. */
+  fotos: [fotoHistoriaBalcon] as FotoProyecto[],
   estado: 'PENDIENTE' as Estado,
 };
 
@@ -935,32 +1073,12 @@ export const transformacion = {
       actualizado: null,
       aprobado: true,
     },
-    {
-      id: 'pasillo',
-      titulo: 'El pasillo de habitaciones',
-      fotoActual: fotoPasillo,
-      fotoConceptual: conceptoPasillo,
-      descripcionActual:
-        'El pasillo que reparte hacia las habitaciones, tal y como está hoy, antes de intervenirlo.',
-      descripcionPropuesta:
-        'La propuesta conserva el trazado del pasillo y trabaja sobre la luz, los acabados y el paso.',
-      estadoProyecto: 'PROPUESTA',
-      actualizado: null,
-      aprobado: true,
-    },
-    {
-      id: 'escalera',
-      titulo: 'La escalera de madera',
-      fotoActual: fotoEscalera,
-      fotoConceptual: conceptoEscalera,
-      descripcionActual:
-        'La escalera de madera que comunica los dos niveles de la casa. Es una de las piezas que el proyecto quiere conservar.',
-      descripcionPropuesta:
-        'La propuesta mantiene la escalera como elemento central y estudia su recuperación, no su sustitución.',
-      estadoProyecto: 'PROPUESTA',
-      actualizado: null,
-      aprobado: true,
-    },
+    /* El pasillo de habitaciones y la escalera de madera ya NO estan
+       aqui: son parejas del mismo punto de vista y cuentan mejor en el
+       recorrido, donde se ven las dos imagenes a la vez. Se movieron a
+       "comparativas" (bloques "llegada-piso-2" y "escalera-piso-2") y
+       se retiraron de este comparador para no ensenar dos veces las
+       mismas fotografias en la misma pagina. */
     {
       id: 'patio',
       titulo: 'El patio central',

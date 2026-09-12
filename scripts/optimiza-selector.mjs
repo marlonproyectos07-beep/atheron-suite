@@ -66,6 +66,11 @@ const ANCHOS_TARJETA = [400, 600, 700];
 const FOTOS_DE_MAQUETA = [
   /* Portada, seccion "Como nacio Atheron Suite". */
   '/assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg',
+  /* Hero de Casa Colonial Centro. Va a sangre y es la imagen que
+     Lighthouse mide como LCP: servir los 1536 px de ancho a un
+     telefono de 390 es mandar el triple de bytes de los que caben en
+     la pantalla. Con las variantes, el movil baja la de 700 u 900. */
+  '/assets/img/proyectos/casa-colonial-centro/casa-colonial-hero-vision-fachada.webp',
 ];
 
 /* Rutas de foto dentro de un .md. No hace falta interpretar el YAML

@@ -73,3 +73,14 @@ public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-900.webp
 # reconstruccion. En una sesion nueva -local o en la nube- se regenera
 # antes de cualquier trabajo amplio; ver la seccion graphify de CLAUDE.md.
 graphify-out/
+
+# Variantes por ancho del hero de Casa Colonial. Las genera el
+# prebuild igual que las de las fichas; el original si se versiona.
+public/assets/img/proyectos/casa-colonial-centro/*-400.avif
+public/assets/img/proyectos/casa-colonial-centro/*-400.webp
+public/assets/img/proyectos/casa-colonial-centro/*-600.avif
+public/assets/img/proyectos/casa-colonial-centro/*-600.webp
+public/assets/img/proyectos/casa-colonial-centro/*-700.avif
+public/assets/img/proyectos/casa-colonial-centro/*-700.webp
+public/assets/img/proyectos/casa-colonial-centro/*-900.avif
+public/assets/img/proyectos/casa-colonial-centro/*-900.webp

@@ -59,6 +59,8 @@ import {
   fechaEnTexto,
   seo,
   hero,
+  heroVisionFachada,
+  ubicacion,
   comparativas,
   historia,
   estadoActual,
@@ -96,14 +98,10 @@ const avisoBorrador = BORRADOR
   ? 'Borrador privado del proyecto Casa Colonial Centro. No indexado, sin enlazar y sin publicar. Pendiente de aprobación de Marlon y ChatGPT.'
   : null;
 
-/* Hero conceptual aprobado por dirección el 11/09/2026.
-   Se sirve como representación conceptual, nunca como fotografía real. */
-const HERO_CONCEPTUAL_APROBADO =
-  'https://d2ol7oe51mr4n9.cloudfront.net/user_3IQy0aFmqi87opFPdFO6RSgr36u/d583d3ac-d9e2-4cae-a9cf-c32ae7b19129.png';
-const FACHADA_ACTUAL =
-  'https://d2ol7oe51mr4n9.cloudfront.net/user_3IQy0aFmqi87opFPdFO6RSgr36u/e7b849e6-698a-42eb-ad27-938bab5b9a93.jpg';
-const FACHADA_VISION_APROBADA =
-  'https://d2ol7oe51mr4n9.cloudfront.net/user_3IQy0aFmqi87opFPdFO6RSgr36u/79c74cd2-db0c-4659-bd10-568859d44e4a.png';
+/* El hero conceptual aprobado por dirección el 11/09/2026. La ruta
+   sale del catálogo de fotos, no escrita a mano: antes eran tres URL
+   de un CDN externo puestas aquí, y un enlace temporal en la maqueta
+   es un hero que un día desaparece sin error visible. */
 
 /* ============================================================
    DATOS ESTRUCTURADOS
@@ -196,50 +194,66 @@ const fichaPagina = {
         href={`#${transformacion.id}`}
         aria-label="Descubrir la transformación de Casa Colonial Centro"
       >
+        {/* El hero va a sangre, asi que el navegador necesita tantos
+            pixeles como ancho tenga la pantalla y ni uno mas. Las
+            variantes las genera el prebuild (optimiza-selector.mjs);
+            el archivo de 1536 queda de respaldo y para escritorio. */}
         <img
           class="proyecto-hero-aprobado__imagen"
-          src={HERO_CONCEPTUAL_APROBADO}
-          alt="Representación conceptual aprobada de Casa Colonial Centro: propuesta visual de hospitalidad y gastronomía en Zipaquirá"
-          width="1536"
-          height="1024"
+          src={heroVisionFachada.ruta}
+          srcset={[
+            `${heroVisionFachada.ruta.replace(/\.webp$/, '-700.webp')} 700w`,
+            `${heroVisionFachada.ruta.replace(/\.webp$/, '-900.webp')} 900w`,
+            `${heroVisionFachada.ruta} ${heroVisionFachada.ancho}w`,
+          ].join(', ')}
+          sizes="100vw"
+          alt={heroVisionFachada.alt}
+          width={heroVisionFachada.ancho}
+          height={heroVisionFachada.alto}
           loading="eager"
           fetchpriority="high"
           decoding="async"
         />
       </a>
 
-      <h1 id="proyecto-hero-titulo" class="sr-only">Casa Colonial Centro — Una casa con historia. Una nueva visión.</h1>
+      {/* La clase es "solo-lectores", la del sitio. Antes decía
+          "sr-only", que no existe en ninguna hoja: el h1 se pintaba
+          visible, en texto oscuro sobre el fondo oscuro del hero. */}
+      <h1 id="proyecto-hero-titulo" class="solo-lectores">Casa Colonial Centro — Una casa con historia. Una nueva visión.</h1>
       <p class="proyecto-hero-aprobado__rotulo">Representación conceptual · Proyecto en desarrollo</p>
     </section>
 
-    <section class="seccion fachada-antes-despues" aria-labelledby="fachada-antes-despues-titulo">
+    {/* ============================================================
+         2. UBICACION / CONTEXTO
+         Donde esta la casa, antes de entrar en ella. Se ensena desde
+         dentro hacia el centro historico: la direccion exacta no se
+         publica todavia.
+         ============================================================ */}
+    <section class="seccion ubicacion-recorrido" id={ubicacion.id} aria-labelledby="ubicacion-titulo">
       <div class="contenedor aparecer">
         <div class="encabezado-seccion">
-          <span class="etiqueta">Primera transformación</span>
-          <h2 id="fachada-antes-despues-titulo">La misma fachada. Una nueva visión.</h2>
-          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
-            Compara el estado actual con la representación conceptual aprobada.
-          </p>
+          <span class="etiqueta">{ubicacion.ceja}</span>
+          <h2 id="ubicacion-titulo">{ubicacion.titulo}</h2>
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">{ubicacion.texto}</p>
         </div>
 
-        <div class="fachada-antes-despues__grid">
-          <figure class="fachada-antes-despues__item">
-            <img src={FACHADA_ACTUAL} alt="Fotografía real de la fachada actual de Casa Colonial Centro en Zipaquirá" loading="lazy" decoding="async" />
-            <figcaption><strong>HOY</strong><span>Fotografía real · estado actual</span></figcaption>
-          </figure>
-          <figure class="fachada-antes-despues__item">
-            <img src={FACHADA_VISION_APROBADA} alt="Representación conceptual aprobada de la renovación de la fachada de Casa Colonial Centro" loading="lazy" decoding="async" />
-            <figcaption><strong>VISIÓN ATHERON</strong><span>Representación conceptual · sujeta al desarrollo del proyecto</span></figcaption>
-          </figure>
+        <div class="ubicacion-recorrido__media">
+          <ProyectoFoto foto={ubicacion.foto} medidas="(min-width: 900px) 26rem, 100vw" />
         </div>
       </div>
     </section>
 
     {/* ============================================================
-         1 BIS. COMPARATIVAS HOY / VISION ATHERON
+         3 A 11. EL RECORRIDO — HOY / VISION ATHERON
 
-         Acceso desde el parque y corredor interior. Dos archivos por
-         bloque, nunca una imagen combinada, y el texto en HTML.
+         Fachada, acceso desde el parque, corredor, escalera y llegada
+         al piso 2. Dos archivos por bloque, nunca una imagen
+         combinada, y el texto en HTML.
+
+         La fachada ya no se maqueta a mano aqui: era el unico bloque
+         que escribia sus rotulos en el HTML -y por tanto el unico que
+         podia quedarse sin ellos al copiarlo-. Ahora sale del mismo
+         recorrido que los demas.
 
          LOS ROTULOS NO SE ESCRIBEN AQUI. Los pone ProyectoFoto a
          partir del tipo de cada imagen: REAL lleva "fotografia real",

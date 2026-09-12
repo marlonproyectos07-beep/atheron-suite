@@ -690,16 +690,29 @@
    en una pantalla de portatil.
 
    NO SE USA object-fit: contain. Con contain la imagen deja franjas
-   de fondo arriba y abajo en cuanto una futura sustitucion no sea
-   3:4, y eso se ve como un fallo. Lo que protege la proporcion aqui
-   es que las cuatro imagenes son 3:4 a proposito; si alguna deja de
-   serlo, se revisa este bloque, no se parchea con contain.
+   de fondo arriba y abajo, y eso se ve como un fallo. Lo que evita el
+   recorte aqui no es contain: es que cada imagen declara su
+   orientacion y .foto reserva EXACTAMENTE esa proporcion. Una imagen
+   3:4 marcada como vertical entra entera en un hueco 3:4; una 4:3
+   marcada como horizontal entra entera en uno 4:3. Cero recorte, sin
+   franjas.
+
+   LAS DOS COLUMNAS PUEDEN TENER ALTURAS DISTINTAS, Y ESTA BIEN
+   El par de la escalera mezcla una fotografia vertical con una
+   conceptual horizontal. Estirar las dos a la misma altura recortaria
+   una de las dos, y es justo lo que no se puede hacer: el elemento
+   arquitectonico que se quiere ensenar -la escalera entera- es lo
+   primero que se perderia. Las columnas se alinean ARRIBA y cada
+   imagen conserva su forma. Un bloque desigual es honesto; uno
+   cuadrado a costa de cortar la escalera, no.
    ------------------------------------------------------------ */
 .comparativa + .comparativa { padding-top: 0; }
 
 .comparativa__parejas {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Arriba, no estiradas: ver la nota sobre alturas desiguales. */
+  align-items: start;
   gap: var(--esp-4);
   max-width: 58rem;
   /* Alineada a la izquierda, no centrada: el titulo y el texto de la
@@ -733,3 +746,11 @@
     gap: var(--esp-5);
   }
 }
+
+/* Ubicacion: una sola imagen, no una pareja. Se limita el ancho para
+   que una fotografia vertical no se coma la pantalla en escritorio. */
+.ubicacion-recorrido__media {
+  max-width: 28rem;
+  margin-top: var(--esp-4);
+}
+.ubicacion-recorrido__media .foto-proyecto { margin-top: 0; }
