@@ -262,7 +262,7 @@ export function rotuloDe(tipo: TipoFoto): string {
 
 /* Atajo para no repetir la carpeta 22 veces. Recibe el nombre del
    archivo y devuelve la ficha completa. */
-function ficha(
+export function ficha(
   archivo: string,
   datos: Omit<FotoProyecto, 'id' | 'ruta'> & { id?: string },
 ): FotoProyecto {
@@ -870,144 +870,20 @@ export const ubicacion = {
   estado: 'VERIFICADO' as Estado,
 };
 
-export interface Comparativa {
-  /** Ancla de la seccion. Ej: "acceso-parque". */
-  id: string;
-  ceja: string;
-  titulo: string;
-  /** Narrativa en HTML, nunca dentro de la imagen. */
-  texto: string;
-  /** Fotografia real del estado de hoy. */
-  actual: FotoProyecto;
-  /** Representacion conceptual del mismo punto de vista. */
-  vision: FotoProyecto;
-  /** false = no se pinta, aunque los archivos existan. */
-  aprobada: boolean;
-}
-
 /* ============================================================
-   EL RECORRIDO, Y POR QUE SOLO TIENE CINCO PARADAS
+   EL RECORRIDO SE MUDO A src/data/casa-colonial-recorrido.ts
 
-   Direccion pidio once bloques. Aqui hay cinco, y la diferencia no
-   es un descuido: para los otros seis NO EXISTE la pareja.
+   Aqui vivian la interfaz Comparativa y un array de cinco bloques.
+   Con la curaduria final -24 paradas y 59 imagenes- este archivo se
+   iba a 1800 lineas, asi que el recorrido tiene modulo propio.
 
-   La regla que decide que entra: las dos imagenes tienen que ser del
-   MISMO PUNTO DE VISTA. Una fotografia de un sitio junto a una
-   conceptual de otro no es una transformacion, es una promesa falsa
-   -el visitante entiende "esto se convertira en aquello"-.
-
-   Comprobado imagen por imagen contra el paquete de 22:
-
-     Recepcion y escalera        no hay pareja.
-     Patio 1 / Cafeteria         patio-arcos es un patio estrecho con
-                                 arcos; concepto-patio-gastronomico es
-                                 un patio grande con pergola, palmera y
-                                 montanas al fondo. Otro lugar.
-     Patio 1, 2a perspectiva     no hay pareja.
-     Lobby / transicion          galeria-acristalada es una galeria con
-                                 piso de madera; concepto-galeria-
-                                 bienvenida es un zaguan con arcos a un
-                                 patio con cafeteria. Otro lugar.
-
-   Esos cuatro bloques se publican cuando lleguen sus fotografias, no
-   antes. Falta material, no falta trabajo.
-
-   ============================================================
-   LO QUE FALTA PARA EL CORTE HASTA LA HABITACION 206
-   Direccion aprobo el 12/09/2026 una narrativa de 23 bloques con sus
-   textos, capacidades y distribuciones. Los textos estan; las
-   IMAGENES NO. Se reviso el 12/09/2026 la carpeta de curaduria
-   entera, el Drive completo y el repositorio: no existe ni un solo
-   archivo para estos bloques.
-
-     06  Recepcion + escalera
-     07  Patio 1 / Cafeteria, perspectiva 1
-     08  Patio 1 / Cafeteria, perspectiva 2
-     11  Balcon del lobby hacia Patio 1
-     12  Lobby piso 2
-     13  Habitacion 208, cuarto mochilero (12 plazas, 6 camarotes)
-     14  Bano del cuarto mochilero
-     15  Pasillo central piso 2
-     16  Pasillo de acceso a habitaciones
-     17  Habitacion 201   (matrimonial + camarote + sofa cama)
-     18  Habitacion 202   (3 huespedes)
-     19  Habitacion 203   (3 huespedes, balcon al parque)
-     20  Bano modelo 201-208
-     21  Habitacion 204   (4 huespedes, camarote doble)
-     22  Habitacion 205   (igual a la 204; imagen separada, NO el
-                           collage 205+206)
-     23  Habitacion 206   (6-8 huespedes, 3 camarotes, balcon)
-
-   La orden es explicita: no se sustituye una imagen que falta por
-   otra parecida. Un bloque con la foto de otro sitio es peor que un
-   bloque que no esta.
-
-   ============================================================
-   DE DONDE SALEN ESCALERA Y PASILLO
-   Estaban en el comparador de pestanas de "transformacion", y se han
-   movido aqui. NO se duplican: se retiraron de alli. El criterio es
-   el mismo de arriba: las parejas del mismo punto de vista cuentan
-   mejor como recorrido, una al lado de la otra; las tematicas -un
-   espacio junto a una idea de otro sitio- se quedan en el comparador,
-   que es donde esa relacion se entiende sin enganar a nadie.
+   Lo que sigue aqui: el catalogo de las 22 aprobadas, la galeria,
+   las unidades, las alianzas y el resto de la pagina. El modulo del
+   recorrido importa de aqui las fichas que ya existian -fachada,
+   entrada al parque y corredor-, asi que ninguna imagen se declara
+   dos veces.
    ============================================================ */
 
-export const comparativas: Comparativa[] = [
-  {
-    id: 'fachada',
-    ceja: 'FACHADA PRINCIPAL',
-    titulo: 'El mismo lugar. Una nueva visión.',
-    texto:
-      'La propuesta conserva la identidad arquitectónica de la casa y plantea una renovación orientada a hospitalidad, gastronomía y experiencias.',
-    actual: fachadaActual,
-    vision: fachadaVision,
-    aprobada: true,
-  },
-  {
-    id: 'acceso-parque',
-    ceja: 'ACCESO PRINCIPAL',
-    titulo: 'Del parque al corazón de la casa',
-    texto:
-      'El acceso principal conduce desde el Parque Principal hacia la recepción y el Patio 1, proyectado como un espacio de bienvenida y encuentro, integrado con la cafetería.',
-    actual: entradaParqueActual,
-    vision: entradaParqueVision,
-    aprobada: true,
-  },
-  {
-    id: 'corredor-recepcion',
-    ceja: 'CORREDOR INTERIOR',
-    titulo: 'Un recorrido que conecta la experiencia',
-    texto:
-      'El corredor interior articula la llegada, la recepción y los espacios sociales, conservando el carácter de la casa dentro de la propuesta de transformación.',
-    actual: corredorRecepcionActual,
-    vision: corredorRecepcionVision,
-    aprobada: true,
-  },
-  {
-    id: 'escalera-piso-2',
-    ceja: 'ESCALERA HACIA EL PISO 2',
-    titulo: 'Ascenso al piso 2',
-    texto:
-      'La escalera restaurada conecta el nivel social con el segundo piso, marcando la transición hacia la experiencia de hospedaje.',
-    actual: fotoEscalera,
-    vision: conceptoEscalera,
-    aprobada: true,
-  },
-  {
-    id: 'llegada-piso-2',
-    ceja: 'LLEGADA AL PISO 2',
-    titulo: 'Aquí comienza el hospedaje',
-    /* Texto aprobado por direccion el 12/09/2026. Menciona el lobby y
-       la circulacion porque asi se aprobo, pero NINGUNO de esos dos
-       espacios tiene todavia bloque propio en la pagina: sus imagenes
-       no han llegado. Cuando lleguen, este texto encadena con ellos. */
-    texto:
-      'Al finalizar la escalera, el huésped encuentra un espacio de llegada que conecta lobby, circulación y acceso a las habitaciones.',
-    actual: fotoPasillo,
-    vision: conceptoPasillo,
-    aprobada: true,
-  },
-];
 
 /* ============================================================
    2. HISTORIA

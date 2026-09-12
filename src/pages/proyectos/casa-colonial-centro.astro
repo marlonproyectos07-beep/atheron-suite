@@ -43,6 +43,7 @@ import ProyectoComparador from '../../components/ProyectoComparador.astro';
 import ProyectoUnidad from '../../components/ProyectoUnidad.astro';
 import ProyectoFoto from '../../components/ProyectoFoto.astro';
 
+import { recorridoVisible, cierreRecorrido } from '../../data/casa-colonial-recorrido';
 import { menuHospedajes } from '../../data/navegacion';
 import { atributosWhatsApp, enlaceWhatsApp } from '../../data/whatsapp';
 import {
@@ -61,7 +62,6 @@ import {
   hero,
   heroVisionFachada,
   ubicacion,
-  comparativas,
   historia,
   estadoActual,
   galeriaEstadoActual,
@@ -88,11 +88,6 @@ const ctaCabecera = {
   externo: true,
 };
 
-/* Solo se pinta lo aprobado, igual que en la galeria y en el
-   comparador. Si una pareja se retira, desaparece su bloque entero
-   -las dos imagenes y el texto-, y no queda media comparativa
-   ensenando un "hoy" sin su "vision". */
-const comparativasVisibles = comparativas.filter((c) => c.aprobada);
 
 const avisoBorrador = BORRADOR
   ? 'Borrador privado del proyecto Casa Colonial Centro. No indexado, sin enlazar y sin publicar. Pendiente de aprobación de Marlon y ChatGPT.'
@@ -165,8 +160,17 @@ const fichaPagina = {
   titulo={seo.titulo}
   descripcion={seo.descripcion}
   ruta={RUTA}
-  indexable={false}
-  seguirEnlaces={false}
+  {/* EL INTERRUPTOR. Mientras BORRADOR sea true la pagina sale con
+      noindex, nofollow. Al ponerlo en false -y solo entonces- pasa a
+      index, follow. La canonica no depende de esto: la construye
+      Base.astro desde la ruta y el dominio, asi que ya es la correcta
+      hoy y lo seguira siendo despues.
+
+      Falta un paso mas, y es deliberado que sea manual: anadir la ruta
+      a src/pages/sitemap.xml.ts. Publicar es una decision, no un
+      efecto secundario de cambiar una variable. */}
+  indexable={!BORRADOR}
+  seguirEnlaces={!BORRADOR}
   imagen={seo.imagen}
   imagenAlt={seo.imagenAlt}
   avisoBorrador={avisoBorrador}
@@ -266,43 +270,104 @@ const fichaPagina = {
          despues VISION ATHERON. El orden lo da el HTML, no el CSS,
          asi que tambien es el orden que oye un lector de pantalla.
          ============================================================ */}
-    {comparativasVisibles.map((comparativa) => (
+    {recorridoVisible.map((bloque, indice) => (
       <section
-        class="seccion comparativa"
-        id={comparativa.id}
-        aria-labelledby={`${comparativa.id}-titulo`}
+        class:list={['seccion', 'comparativa', indice % 2 === 1 && 'seccion--alterna']}
+        id={bloque.id}
+        aria-labelledby={`${bloque.id}-titulo`}
       >
         <div class="contenedor aparecer">
           <div class="encabezado-seccion">
-            <span class="etiqueta">{comparativa.ceja}</span>
-            <h2 id={`${comparativa.id}-titulo`}>{comparativa.titulo}</h2>
+            <span class="etiqueta">{bloque.ceja}</span>
+            <h2 id={`${bloque.id}-titulo`}>{bloque.titulo}</h2>
             <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
-              {comparativa.texto}
+              {bloque.texto}
             </p>
           </div>
 
-          <div class="comparativa__parejas">
-            <div class="comparativa__lado">
-              <p class="comparativa__momento">Hoy</p>
-              <ProyectoFoto
-                foto={comparativa.actual}
-                textoHueco="Fotografía real pendiente"
-                medidas="(min-width: 900px) 26rem, 100vw"
-              />
-            </div>
+          {/* Los datos de la unidad, cuando los hay. Ninguna cifra se
+              escribe aqui: vienen del archivo de datos, y alli solo
+              entra lo que direccion aprobo por escrito. */}
+          {bloque.ficha && (
+            <dl class="comparativa__datos">
+              {bloque.ficha.map((dato) => (
+                <div class="comparativa__dato">
+                  <dt>{dato.etiqueta}</dt>
+                  <dd>{dato.valor}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
 
-            <div class="comparativa__lado">
-              <p class="comparativa__momento comparativa__momento--vision">Visión Atheron</p>
-              <ProyectoFoto
-                foto={comparativa.vision}
-                textoHueco="Representación conceptual pendiente"
-                medidas="(min-width: 900px) 26rem, 100vw"
-              />
-            </div>
+          <div
+            class:list={['comparativa__parejas', bloque.actuales.length === 0 && 'comparativa__parejas--sola']}
+          >
+            {/* HOY. Puede haber varias tomas del mismo espacio: la 201
+                tiene tres, la suite 207 cuatro. Se ensenan todas. */}
+            {bloque.actuales.length > 0 && (
+              <div class="comparativa__lado">
+                <p class="comparativa__momento">
+                  {bloque.actuales.length > 1 ? `Hoy · ${bloque.actuales.length} vistas` : 'Hoy'}
+                </p>
+                <div class="comparativa__pila">
+                  {bloque.actuales.map((foto) => (
+                    <ProyectoFoto foto={foto} medidas="(min-width: 900px) 26rem, 100vw" />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {bloque.vision && (
+              <div class="comparativa__lado">
+                <p class="comparativa__momento comparativa__momento--vision">Visión Atheron</p>
+                <ProyectoFoto foto={bloque.vision} medidas="(min-width: 900px) 26rem, 100vw" />
+              </div>
+            )}
           </div>
+
+          {bloque.nota && <p class="comparativa__nota">{bloque.nota}</p>}
         </div>
       </section>
     ))}
+
+    {/* ============================================================
+         CIERRE DEL RECORRIDO — LAS FORMAS DE CREAR EXPERIENCIAS
+
+         Siete frentes del proyecto, sin una sola cifra: ni tarifas,
+         ni rentabilidad, ni aforos, ni fecha de apertura. Es lo que
+         la casa puede albergar, no una oferta.
+         ============================================================ */}
+    <section class="seccion formas" id={cierreRecorrido.id} aria-labelledby="formas-titulo">
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">{cierreRecorrido.ceja}</span>
+          <h2 id="formas-titulo">{cierreRecorrido.titulo}</h2>
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+            {cierreRecorrido.texto}
+          </p>
+        </div>
+
+        <ul class="formas__rejilla">
+          {cierreRecorrido.tarjetas.map((t) => (
+            <li class="formas__tarjeta">
+              <h3 class="formas__titulo">{t.titulo}</h3>
+              <p class="formas__texto">{t.texto}</p>
+            </li>
+          ))}
+        </ul>
+
+        <div class="formas__accion">
+          <a
+            class="boton boton--grande boton--whatsapp"
+            href={enlaceWhatsApp(MENSAJE_GENERAL)}
+            data-whatsapp={MENSAJE_GENERAL}
+            data-evento="ccc_whatsapp_click"
+            rel="noopener"
+            target="_blank"
+          >Conversar sobre el proyecto</a>
+        </div>
+      </div>
+    </section>
 
     {/* ============================================================
          2. HISTORIA

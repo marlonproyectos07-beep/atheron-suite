@@ -747,6 +747,120 @@
   }
 }
 
+/* ------------------------------------------------------------
+   VARIAS TOMAS DEL MISMO ESPACIO
+
+   La 201 llego con tres fotografias, el bano modelo con tres y la
+   suite 207 con cuatro. Se apilan dentro de su columna: son el mismo
+   espacio visto desde varios sitios, no bloques distintos.
+   ------------------------------------------------------------ */
+.comparativa__pila {
+  display: grid;
+  gap: var(--esp-3);
+}
+
+/* ------------------------------------------------------------
+   CADA IMAGEN DEL RECORRIDO CONSERVA SU PROPIA PROPORCION
+
+   .foto trae tres proporciones fijas -3/4, 4/3, 1/1- y object-fit:
+   cover. Va bien en las fichas de hospedaje, donde las fotos se
+   producen a medida. Aqui no: la curaduria trae al menos cinco
+   proporciones distintas, y las fijas recortaban de verdad.
+
+     renders de habitacion  1200x1097  (1,094) contra 4/3 -> recorte
+     visiones de restaurante 1200x800  (1,500) contra 4/3 -> recorte
+     terraza del gastrobar    539x1200 (0,449) contra 3/4 -> recorte
+                                                del 30 %
+
+   Ese ultimo es el que importa: la terraza es una panoramica
+   estrecha y alta, y forzarla a 3/4 se comia el tercio que da sentido
+   a la toma.
+
+   Con aspect-ratio: auto la caja toma la proporcion real del archivo.
+   El hueco se sigue reservando antes de descargar la imagen -width y
+   height van en el HTML-, asi que esto NO reintroduce CLS: lo que
+   cambia es que la caja reservada es la correcta y no una recortada.
+   ------------------------------------------------------------ */
+.comparativa__lado .foto,
+.ubicacion-recorrido__media .foto {
+  aspect-ratio: auto;
+  height: auto;
+}
+
+/* Un bloque sin fotografia real -pasillo central y habitacion 206-
+   no deja media rejilla vacia: la vision ocupa una sola columna
+   centrada y con el ancho de una, no el de dos. */
+.comparativa__parejas--sola {
+  grid-template-columns: minmax(0, 28rem);
+}
+
+/* Datos de la unidad. Ninguna cifra se escribe en el CSS ni en la
+   maqueta: vienen del archivo de datos. */
+.comparativa__datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2) var(--esp-4);
+  margin: var(--esp-3) 0 0;
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--fondo);
+}
+.comparativa__dato { margin: 0; }
+.comparativa__dato dt {
+  margin: 0 0 .15rem;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+.comparativa__dato dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* La nota va debajo del bloque y en tono de aviso, no de texto
+   corrido: dice que lo de arriba es una proyeccion. */
+.comparativa__nota {
+  max-width: 58rem;
+  margin: var(--esp-3) 0 0;
+  font-size: .88rem;
+  color: var(--texto-suave);
+  font-style: italic;
+}
+
+/* ------------------------------------------------------------
+   CIERRE: LAS FORMAS DE CREAR EXPERIENCIAS
+   ------------------------------------------------------------ */
+.formas__rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--esp-3);
+  margin: var(--esp-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.formas__tarjeta {
+  padding: var(--esp-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-lg);
+  background: var(--fondo);
+  box-shadow: var(--sombra-sm);
+}
+.formas__titulo {
+  margin: 0 0 var(--esp-1);
+  font-size: 1.05rem;
+}
+.formas__texto {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: .92rem;
+}
+.formas__accion {
+  margin-top: var(--esp-4);
+}
+
 /* Ubicacion: una sola imagen, no una pareja. Se limita el ancho para
    que una fotografia vertical no se coma la pantalla en escritorio. */
 .ubicacion-recorrido__media {
