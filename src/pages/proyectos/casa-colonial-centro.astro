@@ -37,10 +37,6 @@ import Cabecera from '../../components/Cabecera.astro';
 import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import AvisoInformativo from '../../components/AvisoInformativo.astro';
-import ProyectoEstado from '../../components/ProyectoEstado.astro';
-import ProyectoGaleria from '../../components/ProyectoGaleria.astro';
-import ProyectoComparador from '../../components/ProyectoComparador.astro';
-import ProyectoUnidad from '../../components/ProyectoUnidad.astro';
 import ProyectoFoto from '../../components/ProyectoFoto.astro';
 
 import { recorridoVisible, cierreRecorrido } from '../../data/casa-colonial-recorrido';
@@ -54,25 +50,18 @@ import {
   UBICACION_PUBLICA,
   MENSAJE_GENERAL,
   AVISO_INFORMATIVO,
-  ETIQUETA_GALERIA_REAL,
-  HUECOS_GALERIA,
-  GRUPOS_GALERIA,
-  fechaEnTexto,
   seo,
   hero,
   heroVisionFachada,
   ubicacion,
   historia,
-  estadoActual,
-  galeriaEstadoActual,
-  transformacion,
-  unidades,
-  modelo,
-  /* alianzas, bitacora y cierre siguen exportados en los datos y sin
-     usar aqui: sus secciones se retiraron de la maqueta el 12/09/2026.
-     Se dejan fuera del import para que no queden como dependencias
-     fantasma, y vuelven con una linea cuando direccion los pida. */
-  aviso,
+  /* El corte del 12/09/2026 dejo esta pagina con cuatro bloques:
+     hero, ubicacion, recorrido y las siete tarjetas. Lo que ya no se
+     importa -estadoActual, galeriaEstadoActual, transformacion,
+     unidades, modelo, alianzas, bitacora, cierre y el objeto aviso-
+     sigue exportado en los datos, intacto. Se queda fuera del import
+     para no arrastrar dependencias fantasma, y vuelve con una linea.
+     AVISO_INFORMATIVO si se conserva: es el descargo legal. */
 } from '../../data/casa-colonial-centro';
 
 /* La cabecera es la del sitio, con el menu del listado: esta pagina
@@ -196,7 +185,11 @@ const fichaPagina = {
     <section class="proyecto-hero-aprobado" aria-labelledby="proyecto-hero-titulo">
       <a
         class="proyecto-hero-aprobado__enlace"
-        href={`#${transformacion.id}`}
+        {/* Apuntaba a #transformacion, que el corte del 12/09/2026
+            retiro: habria quedado un ancla a ninguna parte. Ahora
+            lleva a la primera parada del recorrido, que es
+            literalmente la transformacion que el enlace promete. */}
+        href={`#${recorridoVisible[0].id}`}
         aria-label="Descubrir la transformación de Casa Colonial Centro"
       >
         {/* El hero va a sangre, asi que el navegador necesita tantos
@@ -433,77 +426,6 @@ const fichaPagina = {
     </section>
 
     {/* ============================================================
-         3. LA CASA HOY
-         Solo fotografia real. El componente descarta cualquier
-         imagen conceptual que se cuele en los datos.
-         ============================================================ */}
-    <section class="seccion seccion--alterna" id={estadoActual.id}>
-      <div class="contenedor aparecer">
-        <div class="encabezado-seccion">
-          <span class="etiqueta">{estadoActual.ceja}</span>
-          <h2>{estadoActual.titulo}</h2>
-          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
-            {estadoActual.texto}
-          </p>
-        </div>
-
-        <ProyectoEstado estado={estadoActual.estado} />
-
-        <ProyectoGaleria
-          fotos={galeriaEstadoActual}
-          etiqueta={ETIQUETA_GALERIA_REAL}
-          huecos={HUECOS_GALERIA}
-          grupos={GRUPOS_GALERIA}
-        />
-      </div>
-    </section>
-
-    {/* ============================================================
-         4. TRANSFORMACION
-         Tres estados por espacio, con botones y sin deslizador.
-         Ver el porque en src/components/ProyectoComparador.astro.
-         ============================================================ */}
-    <section class="seccion" id={transformacion.id}>
-      <div class="contenedor aparecer">
-        <div class="encabezado-seccion">
-          <span class="etiqueta">{transformacion.ceja}</span>
-          <h2>{transformacion.titulo}</h2>
-          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
-            {transformacion.texto}
-          </p>
-        </div>
-
-        <ProyectoEstado
-          estado={transformacion.estado}
-          nota="Los espacios se cargarán con el manifiesto fotográfico aprobado."
-        />
-
-        <ProyectoComparador bloques={transformacion.bloques} />
-      </div>
-    </section>
-
-    {/* ============================================================
-         5. CUATRO EXPERIENCIAS
-         ============================================================ */}
-    <section class="seccion seccion--alterna" id={unidades.id}>
-      <div class="contenedor aparecer">
-        <div class="encabezado-seccion">
-          <span class="etiqueta">{unidades.ceja}</span>
-          <h2>{unidades.titulo}</h2>
-          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
-            {unidades.intro}
-          </p>
-        </div>
-
-        <div class="grid grid--4">
-          {unidades.lista
-            .filter((unidad) => unidad.visible)
-            .map((unidad) => <ProyectoUnidad unidad={unidad} />)}
-        </div>
-      </div>
-    </section>
-
-    {/* ============================================================
          RESUMEN DEL RECORRIDO — LAS FORMAS DE CREAR EXPERIENCIAS
 
          Movida aqui el 12/09/2026. Estaba justo despues del recorrido,
@@ -544,68 +466,48 @@ const fichaPagina = {
             target="_blank"
           >Conversar sobre el proyecto</a>
         </div>
+
+        {/* El descargo legal, en letra pequena y al pie de las
+            tarjetas. Estaba en su propia seccion "Aviso informativo",
+            que el corte del 12/09/2026 retiro. Dice que esta pagina no
+            constituye oferta de inversion ni promesa de rentabilidad,
+            y en una presentacion a inversionistas esa frase no puede
+            faltar: borrarla en silencio habria sido el unico cambio de
+            este corte con consecuencias fuera del diseno.
+
+            Asi las siete tarjetas siguen siendo el ultimo bloque
+            EDITORIAL -no hay seccion despues- y el descargo sigue
+            estando. */}
+        <p class="formas__legal">{AVISO_INFORMATIVO}</p>
       </div>
     </section>
     {/* ============================================================
-         6. MODELO ATHERON
-         Sin cifras ni porcentajes, y sin dar por seleccionados
-         operadores ni inversionistas.
+         EL CORTE NARRATIVO DEL 12/09/2026
+
+         Direccion fijo que la landing termina en las siete tarjetas.
+         Dejaron de pintarse, en este orden:
+
+           la casa hoy          galeria del estado actual
+           transformacion       el comparador de pestanas
+           cuatro experiencias  las tarjetas de unidad
+           EL MODELO            la seccion oscura del modelo
+           aviso informativo    ver mas abajo, NO desaparecio
+
+         Ninguna se borro: las cinco siguen exportadas en
+         src/data/casa-colonial-centro.ts y vuelven descomentando su
+         seccion. Lo que se retiro es el render, no el contenido.
+
+         EL DESCARGO LEGAL NO SE PERDIO
+         La seccion "Aviso informativo" llevaba el texto que dice que
+         esta pagina no constituye oferta de inversion ni promesa de
+         rentabilidad. Borrarlo en silencio habria dejado una
+         presentacion a inversionistas sin esa frase, asi que se movio
+         a letra pequena al pie de las siete tarjetas: las tarjetas
+         siguen siendo el ultimo bloque EDITORIAL, y el descargo sigue
+         estando. Si direccion prefiere retirarlo del todo, es una
+         decision suya y no un descuido de maquetacion.
          ============================================================ */}
-    <section class="seccion seccion--oscura" id={modelo.id}>
-      <div class="contenedor aparecer">
-        <div class="encabezado-seccion">
-          <span class="etiqueta">{modelo.ceja}</span>
-          <h2>{modelo.titulo}</h2>
-        </div>
 
-        <ProyectoEstado estado={modelo.estado} />
-
-        <div class="modelo">
-          <div class="modelo__cara">
-            <h3 class="modelo__titulo">Lo que ve el público</h3>
-            <ul class="modelo__lista">
-              {modelo.publico.map((punto) => <li>{punto}</li>)}
-            </ul>
-          </div>
-
-          <div class="modelo__cara">
-            <h3 class="modelo__titulo">Cómo funciona por dentro</h3>
-            <ul class="modelo__lista">
-              {modelo.interno.map((punto) => <li>{punto}</li>)}
-            </ul>
-            <ul class="modelo__unidades">
-              {unidades.lista.map((unidad) => (
-                <li>{unidad.nombreAdministrativo}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div class="columna-texto" style="margin-top: var(--esp-4);">
-          {modelo.parrafos.map((parrafo) => <p>{parrafo}</p>)}
-        </div>
-
-        {/* La vision integrada: por donde se entra a las cuatro
-            unidades. Representacion conceptual, rotulada. */}
-        {modelo.foto && (
-          <ProyectoFoto
-            foto={modelo.foto}
-            clase="foto-proyecto--centrada"
-            medidas="(min-width: 900px) 28rem, 100vw"
-          />
-        )}
-      </div>
-    </section>
-    {/* ============================================================
-         9. AVISO INFORMATIVO
-         Texto exacto, en el HTML inicial, legible sin interaccion y
-         antes del cierre de la pagina.
-         ============================================================ */}
-    <section class="seccion" id={aviso.id}>
-      <div class="contenedor aparecer">
-        <AvisoInformativo texto={aviso.texto} titulo={aviso.titulo} />
-      </div>
-    </section>
     {/* ============================================================
          LO QUE SE RETIRO DE LA MAQUETA EL 12/09/2026
 

@@ -930,6 +930,18 @@
   margin-top: var(--esp-4);
 }
 
+/* El descargo legal. Letra pequena y separada por una linea: tiene
+   que estar y tiene que leerse, pero no compite con las tarjetas. */
+.formas__legal {
+  max-width: 46rem;
+  margin: var(--esp-4) 0 0;
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--borde);
+  font-size: .78rem;
+  line-height: 1.5;
+  color: var(--texto-suave);
+}
+
 /* La ubicacion usaba .ubicacion-recorrido__media, un contenedor de
    28rem pegado a la izquierda: dejaba media pantalla en blanco a la
    derecha. Ahora usa .bloque-imagen-unica, el mismo patron que el
