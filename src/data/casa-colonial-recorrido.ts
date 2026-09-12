@@ -441,7 +441,13 @@ export const recorrido: BloqueRecorrido[] = [
       { etiqueta: 'Capacidad', valor: '6 a 8 huéspedes' },
       { etiqueta: 'Configuración', valor: '3 camarotes dobles' },
     ],
-    nota: 'Representación conceptual del espacio proyectado. Todavía no hay fotografía del estado actual con este mismo encuadre.',
+    /* El render lleva impresos dentro de la imagen cuatro iconos:
+       6-8 huespedes, Wi-Fi, aire acondicionado y bano privado. La
+       capacidad y los camarotes SI estan aprobados y por eso salen
+       arriba en HTML. Wi-Fi, aire acondicionado y bano privado NO
+       constan aprobados por escrito, asi que no se repiten fuera de
+       la imagen y la nota avisa de que no son servicios confirmados. */
+    nota: 'Representación conceptual del espacio proyectado. Todavía no hay fotografía del estado actual con este mismo encuadre. Los rótulos e iconos que aparecen dentro de la imagen forman parte de la propuesta de diseño y no constituyen servicios confirmados.',
     aprobada: true,
   },
   {
@@ -451,6 +457,32 @@ export const recorrido: BloqueRecorrido[] = [
     subtitulo: 'La unidad insignia del proyecto.',
     texto: 'La habitación de mayor jerarquía de la casa, documentada hoy en cuatro vistas del estado actual.',
     actuales: [h207Real1, h207Real2, h207Real3, h207Real4], vision: h207Vision,
+    /* ============================================================
+       EL RENDER DE LA 207 PUBLICA MAS DE LO QUE NADIE APROBO
+
+       No es un render: es una lamina compuesta -un panel grande y
+       tres paneles pequenos- con una barra de servicios impresa
+       dentro. Dice, literalmente:
+
+         Capacidad 8-10 huespedes
+         Cama principal King Size
+         2 camarotes (4 plazas)
+         2 sofa cama (4 plazas)
+         Bano privado · Wi-Fi · Aire acondicionado · Smart TV
+
+       mas el texto "La Habitacion 207 es la suite mas completa del
+       proyecto".
+
+       La orden del 12/09/2026 dice para esta unidad, textualmente:
+       "No inventar capacidad. No inventar metros cuadrados". Aqui NO
+       se publica ninguna cifra en HTML -este bloque no lleva ficha a
+       proposito-, pero la imagen las lleva dentro y no se retoca.
+
+       La nota es lo unico que se puede hacer sin tocar el asset ni
+       inventar nada. Si direccion no valida esos servicios, hace
+       falta un render sin la barra.
+       ============================================================ */
+    nota: 'Representación conceptual. Los rótulos, la capacidad y los iconos de servicios que aparecen dentro de la imagen forman parte de la propuesta de diseño y no constituyen características ni servicios confirmados del proyecto.',
     aprobada: true,
   },
   {

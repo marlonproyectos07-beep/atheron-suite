@@ -243,7 +243,7 @@ const fichaPagina = {
         </div>
 
         <div class="ubicacion-recorrido__media">
-          <ProyectoFoto foto={ubicacion.foto} medidas="(min-width: 900px) 26rem, 100vw" />
+          <ProyectoFoto foto={ubicacion.foto} medidas="(min-width: 900px) 26rem, 100vw" anchos={[400, 700]} />
         </div>
       </div>
     </section>
@@ -312,7 +312,7 @@ const fichaPagina = {
                 </p>
                 <div class="comparativa__pila">
                   {bloque.actuales.map((foto) => (
-                    <ProyectoFoto foto={foto} medidas="(min-width: 900px) 26rem, 100vw" />
+                    <ProyectoFoto foto={foto} medidas="(min-width: 900px) 26rem, 100vw" anchos={[400, 700]} />
                   ))}
                 </div>
               </div>
@@ -321,7 +321,7 @@ const fichaPagina = {
             {bloque.vision && (
               <div class="comparativa__lado">
                 <p class="comparativa__momento comparativa__momento--vision">Visión Atheron</p>
-                <ProyectoFoto foto={bloque.vision} medidas="(min-width: 900px) 26rem, 100vw" />
+                <ProyectoFoto foto={bloque.vision} medidas="(min-width: 900px) 26rem, 100vw" anchos={[400, 700]} />
               </div>
             )}
           </div>

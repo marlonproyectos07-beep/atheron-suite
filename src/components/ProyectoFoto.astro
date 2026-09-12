@@ -54,11 +54,16 @@ interface Props {
   prioritaria?: boolean;
   /** Que ancho ocupa la imagen, para que el navegador elija tamano. */
   medidas?: string;
+  /* Anchos de las variantes responsive. Sin esto la imagen se sirve
+     entera: en el recorrido eso significaba mandar 900 o 1200 px a un
+     telefono que la pinta a 360, casi un mega de mas repartido entre
+     los primeros bloques. */
+  anchos?: number[];
   /** Clase extra del <figure>, para colocarlo desde fuera. */
   clase?: string;
 }
 
-const { foto, textoHueco = 'Imagen por definir', prioritaria, medidas, clase } = Astro.props;
+const { foto, textoHueco = 'Imagen por definir', prioritaria, medidas, anchos, clase } = Astro.props;
 
 /* La orientacion del archivo decide la proporcion del hueco. Asi la
    pagina reserva el sitio exacto y no da el salto cuando la imagen
@@ -83,6 +88,7 @@ const esConceptual = foto?.tipo === 'CONCEPTUAL';
         ancho={foto.ancho}
         alto={foto.alto}
         medidas={medidas}
+        anchos={anchos}
         prioritaria={prioritaria}
       />
       {esConceptual && (

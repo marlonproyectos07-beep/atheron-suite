@@ -173,6 +173,39 @@ for (const ruta of FOTOS_DE_MAQUETA) {
   fotos++;
 }
 
+/* ------------------------------------------------------------
+   RECORRIDO DE CASA COLONIAL
+
+   Las 56 imagenes del brochure se guardan a 900 o 1200 px de ancho,
+   que es lo que necesita un escritorio. Un telefono las pinta a unos
+   360, asi que sin variantes se le mandaban tres veces los pixeles
+   que caben en su pantalla. Medido: 1,3 MB descargados antes del LCP,
+   de los cuales el hero solo eran 57 KB; el resto competia con el.
+
+   400 cubre el movil normal, 700 el movil de densidad alta y el
+   escritorio. El archivo entero se queda de respaldo del <img>.
+   ------------------------------------------------------------ */
+const CARPETA_RECORRIDO = 'assets/img/proyectos/casa-colonial-centro';
+const ANCHOS_RECORRIDO = [400, 700];
+
+const directorioRecorrido = path.join(PUBLICO, CARPETA_RECORRIDO);
+let nombresRecorrido = [];
+try {
+  nombresRecorrido = await fs.readdir(directorioRecorrido);
+} catch {
+  /* La carpeta solo existe si el proyecto tiene imagenes. Sin ella no
+     hay nada que generar y el build sigue igual. */
+}
+
+for (const nombre of nombresRecorrido) {
+  /* Solo los originales: los derivados ya llevan el sufijo del ancho
+     y regenerarlos seria morderse la cola. */
+  if (!nombre.endsWith('.webp')) continue;
+  if (/-\d{3,4}\.webp$/.test(nombre)) continue;
+  generadas += await genera(`/${CARPETA_RECORRIDO}/${nombre}`, ANCHOS_RECORRIDO);
+  fotos++;
+}
+
 console.log(
   generadas === 0
     ? `Variantes al dia: ${fotos} fotos revisadas, ninguna que generar.`
