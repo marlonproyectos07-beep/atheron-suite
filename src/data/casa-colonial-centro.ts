@@ -573,6 +573,54 @@ export const conceptoGaleriaBienvenida = ficha('casa-colonial-concepto-galeria-b
   aprobada: true,
 });
 
+/* ------------------------------------------------------------
+   4. CURADURIA WEB BROCHURE — PAREJAS HOY / VISION (4)
+
+   Estas cuatro NO forman parte del paquete de 22. Llegaron el 11 de
+   septiembre de 2026 en la carpeta "CURADURIA CASA COLONIAL CENTRO -
+   WEB BROCHURE VIDEO" y vienen emparejadas: cada fotografia real
+   tiene su representacion conceptual tomada desde el MISMO punto de
+   vista. Por eso viven aqui abajo y no mezcladas con el catalogo:
+   sueltas no significan nada, y separadas se podrian publicar sin
+   su pareja.
+
+   POR QUE NO SE JUNTAN EN UNA SOLA IMAGEN "ANTES / DESPUES"
+   Porque una imagen combinada se comparte, se recorta y acaba
+   circulando sin el rotulo de conceptual. Son dos archivos, y cada
+   uno lleva su rotulo pegado por ProyectoFoto.
+
+   LAS CUATRO SON 1086 x 1448 (vertical, 3:4), a proposito: con la
+   misma proporcion la rejilla de dos columnas cuadra sin recortar
+   nada. Si alguna se sustituye por otra de proporcion distinta, hay
+   que revisar el bloque en movil antes de publicar.
+   ------------------------------------------------------------ */
+
+export const entradaParqueActual = ficha('casa-colonial-entrada-parque-actual.webp', {
+  tipo: 'REAL',
+  unidad: 'GENERAL',
+  espacio: 'Acceso principal hacia el Parque Principal',
+  archivoOriginal: 'entrada-parque-actual.webp',
+  alt: 'Vista desde el zaguán de la Casa Colonial Centro hacia el Parque Principal de Zipaquirá y la catedral diocesana',
+  orientacion: 'vertical',
+  ancho: 1086,
+  alto: 1448,
+  estado: 'VERIFICADO',
+  aprobada: true,
+});
+
+export const entradaParqueVision = ficha('casa-colonial-entrada-parque-vision.webp', {
+  tipo: 'CONCEPTUAL',
+  unidad: 'GENERAL',
+  espacio: 'Acceso principal hacia el Parque Principal',
+  archivoOriginal: 'entrada-parque-vision-atheron.webp',
+  alt: 'Representación conceptual del acceso principal restaurado, con la puerta abierta hacia el Parque Principal de Zipaquirá',
+  orientacion: 'vertical',
+  ancho: 1086,
+  alto: 1448,
+  estado: 'PROPUESTA',
+  aprobada: true,
+});
+
 /** Las 22 del paquete, para poder contarlas y comprobarlas. */
 export const CATALOGO_FOTOS: FotoProyecto[] = [
   fotoHero,
@@ -699,6 +747,61 @@ export const hero = {
   foto: fotoHero as FotoProyecto | null,
   estado: 'VERIFICADO' as Estado,
 };
+
+/* ============================================================
+   1 BIS. COMPARATIVAS HOY / VISION ATHERON
+
+   Parejas de imagenes del MISMO punto de vista: a la izquierda la
+   fotografia real de hoy, a la derecha la representacion conceptual.
+   En movil se apilan, primero HOY y despues VISION ATHERON.
+
+   TRES REGLAS QUE NO SE TOCAN
+
+   1. Son dos archivos, nunca una imagen combinada. Una composicion
+      "antes / despues" en un solo archivo se recorta al compartirla
+      y el rotulo de conceptual se pierde por el camino.
+
+   2. El texto va en HTML, no incrustado en la fotografia. Asi lo
+      lee un buscador, lo lee un lector de pantalla y se puede
+      corregir sin volver a exportar una imagen.
+
+   3. Lo que se describe es una PROYECCION. No hay cafeteria
+      operando, ni fecha de apertura, ni aforo, ni servicios en
+      funcionamiento. Cualquier frase que lo insinue sobra, y el
+      rotulo automatico de la imagen conceptual no basta para
+      arreglar un texto que promete de mas.
+
+   El bloque de la fachada NO esta aqui: vive escrito en la maqueta
+   desde antes y se deja como esta.
+   ============================================================ */
+
+export interface Comparativa {
+  /** Ancla de la seccion. Ej: "acceso-parque". */
+  id: string;
+  ceja: string;
+  titulo: string;
+  /** Narrativa en HTML, nunca dentro de la imagen. */
+  texto: string;
+  /** Fotografia real del estado de hoy. */
+  actual: FotoProyecto;
+  /** Representacion conceptual del mismo punto de vista. */
+  vision: FotoProyecto;
+  /** false = no se pinta, aunque los archivos existan. */
+  aprobada: boolean;
+}
+
+export const comparativas: Comparativa[] = [
+  {
+    id: 'acceso-parque',
+    ceja: 'ACCESO PRINCIPAL',
+    titulo: 'Del parque al corazón de la casa',
+    texto:
+      'El acceso principal conduce desde el Parque Principal hacia la recepción y el Patio 1, proyectado como un espacio de bienvenida y encuentro, integrado con la cafetería.',
+    actual: entradaParqueActual,
+    vision: entradaParqueVision,
+    aprobada: true,
+  },
+];
 
 /* ============================================================
    2. HISTORIA

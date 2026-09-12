@@ -671,3 +671,65 @@
 @media (max-width: 760px) {
   .fachada-antes-despues__grid { grid-template-columns: 1fr; }
 }
+
+
+/* ------------------------------------------------------------
+   COMPARATIVAS HOY / VISION ATHERON
+
+   Dos columnas en escritorio, una en movil. La pareja de imagenes
+   es vertical 3:4 y .foto--alto reserva esa misma proporcion, asi
+   que object-fit: cover no llega a recortar nada: la foto entra
+   entera en el hueco que le corresponde.
+
+   POR QUE SE LIMITA EL ANCHO DE LA REJILLA
+   El contenedor de la pagina es ancho, y dos imagenes verticales a
+   media pantalla cada una se convierten en dos torres de mas de
+   700 px de alto: hay que desplazar la pagina para ver una sola
+   pareja, que es justo lo contrario de comparar. Con el tope de
+   58rem cada columna queda en unos 420 px y las dos caben juntas
+   en una pantalla de portatil.
+
+   NO SE USA object-fit: contain. Con contain la imagen deja franjas
+   de fondo arriba y abajo en cuanto una futura sustitucion no sea
+   3:4, y eso se ve como un fallo. Lo que protege la proporcion aqui
+   es que las cuatro imagenes son 3:4 a proposito; si alguna deja de
+   serlo, se revisa este bloque, no se parchea con contain.
+   ------------------------------------------------------------ */
+.comparativa + .comparativa { padding-top: 0; }
+
+.comparativa__parejas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--esp-4);
+  max-width: 58rem;
+  /* Alineada a la izquierda, no centrada: el titulo y el texto de la
+     seccion arrancan en el borde del contenedor, y una rejilla
+     centrada quedaba desplazada respecto a ellos. */
+  margin: var(--esp-4) 0 0;
+}
+
+.comparativa__lado { min-width: 0; }
+
+.comparativa__lado .foto-proyecto { margin-top: 0; }
+
+/* El momento -HOY / VISION ATHERON- va encima de cada imagen y en
+   HTML, no incrustado en la fotografia. */
+.comparativa__momento {
+  margin: 0 0 var(--esp-2);
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--color-texto-suave);
+}
+
+.comparativa__momento--vision { color: var(--color-sal-claro); }
+
+@media (max-width: 760px) {
+  /* Una debajo de la otra, en el orden del documento: primero HOY,
+     despues VISION ATHERON. */
+  .comparativa__parejas {
+    grid-template-columns: 1fr;
+    gap: var(--esp-5);
+  }
+}

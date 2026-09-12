@@ -59,6 +59,7 @@ import {
   fechaEnTexto,
   seo,
   hero,
+  comparativas,
   historia,
   estadoActual,
   galeriaEstadoActual,
@@ -84,6 +85,12 @@ const ctaCabecera = {
   whatsapp: MENSAJE_GENERAL,
   externo: true,
 };
+
+/* Solo se pinta lo aprobado, igual que en la galeria y en el
+   comparador. Si una pareja se retira, desaparece su bloque entero
+   -las dos imagenes y el texto-, y no queda media comparativa
+   ensenando un "hoy" sin su "vision". */
+const comparativasVisibles = comparativas.filter((c) => c.aprobada);
 
 const avisoBorrador = BORRADOR
   ? 'Borrador privado del proyecto Casa Colonial Centro. No indexado, sin enlazar y sin publicar. Pendiente de aprobación de Marlon y ChatGPT.'
@@ -227,6 +234,61 @@ const fichaPagina = {
         </div>
       </div>
     </section>
+
+    {/* ============================================================
+         1 BIS. COMPARATIVAS HOY / VISION ATHERON
+
+         Acceso desde el parque y corredor interior. Dos archivos por
+         bloque, nunca una imagen combinada, y el texto en HTML.
+
+         LOS ROTULOS NO SE ESCRIBEN AQUI. Los pone ProyectoFoto a
+         partir del tipo de cada imagen: REAL lleva "fotografia real",
+         CONCEPTUAL lleva el sello encima, el rotulo debajo y el aviso
+         de que el diseno puede cambiar. Escribirlos a mano en esta
+         maqueta es exactamente como se acaba ensenando una imagen
+         generada sin advertir que lo es.
+
+         EN MOVIL se apilan en el orden del documento: primero HOY,
+         despues VISION ATHERON. El orden lo da el HTML, no el CSS,
+         asi que tambien es el orden que oye un lector de pantalla.
+         ============================================================ */}
+    {comparativasVisibles.map((comparativa) => (
+      <section
+        class="seccion comparativa"
+        id={comparativa.id}
+        aria-labelledby={`${comparativa.id}-titulo`}
+      >
+        <div class="contenedor aparecer">
+          <div class="encabezado-seccion">
+            <span class="etiqueta">{comparativa.ceja}</span>
+            <h2 id={`${comparativa.id}-titulo`}>{comparativa.titulo}</h2>
+            <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+              {comparativa.texto}
+            </p>
+          </div>
+
+          <div class="comparativa__parejas">
+            <div class="comparativa__lado">
+              <p class="comparativa__momento">Hoy</p>
+              <ProyectoFoto
+                foto={comparativa.actual}
+                textoHueco="Fotografía real pendiente"
+                medidas="(min-width: 900px) 26rem, 100vw"
+              />
+            </div>
+
+            <div class="comparativa__lado">
+              <p class="comparativa__momento comparativa__momento--vision">Visión Atheron</p>
+              <ProyectoFoto
+                foto={comparativa.vision}
+                textoHueco="Representación conceptual pendiente"
+                medidas="(min-width: 900px) 26rem, 100vw"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+    ))}
 
     {/* ============================================================
          2. HISTORIA
