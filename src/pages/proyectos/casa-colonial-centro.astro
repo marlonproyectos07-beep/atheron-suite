@@ -234,7 +234,10 @@ const fichaPagina = {
          dentro hacia el centro historico: la direccion exacta no se
          publica todavia.
          ============================================================ */}
-    <section class="seccion ubicacion-recorrido" id={ubicacion.id} aria-labelledby="ubicacion-titulo">
+    {/* Una sola fotografia aprobada, asi que NO se monta una rejilla de
+        dos columnas: se centra y se agranda. Antes ocupaba 28rem
+        pegada a la izquierda y dejaba media pantalla en blanco. */}
+    <section class="seccion parada" id={ubicacion.id} aria-labelledby="ubicacion-titulo">
       <div class="contenedor aparecer">
         <div class="encabezado-seccion">
           <span class="etiqueta">{ubicacion.ceja}</span>
@@ -242,8 +245,9 @@ const fichaPagina = {
           <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">{ubicacion.texto}</p>
         </div>
 
-        <div class="ubicacion-recorrido__media">
-          <ProyectoFoto foto={ubicacion.foto} medidas="(min-width: 900px) 26rem, 100vw" anchos={[400, 700]} />
+        <div class="bloque-imagen-unica">
+          <p class="comparativa__momento">Hoy</p>
+          <ProyectoFoto foto={ubicacion.foto} medidas="(min-width: 768px) 46rem, 100vw" anchos={[400, 700]} />
         </div>
       </div>
     </section>
@@ -273,7 +277,7 @@ const fichaPagina = {
          ============================================================ */}
     {recorridoVisible.map((bloque, indice) => (
       <section
-        class:list={['seccion', 'comparativa', indice % 2 === 1 && 'seccion--alterna']}
+        class:list={['seccion', 'parada', indice % 2 === 1 && 'seccion--alterna']}
         id={bloque.id}
         aria-labelledby={`${bloque.id}-titulo`}
       >
@@ -300,31 +304,63 @@ const fichaPagina = {
             </dl>
           )}
 
-          <div
-            class:list={['comparativa__parejas', bloque.actuales.length === 0 && 'comparativa__parejas--sola']}
-          >
-            {/* HOY. Puede haber varias tomas del mismo espacio: la 201
-                tiene tres, la suite 207 cuatro. Se ensenan todas. */}
-            {bloque.actuales.length > 0 && (
-              <div class="comparativa__lado">
-                <p class="comparativa__momento">
-                  {bloque.actuales.length > 1 ? `Hoy · ${bloque.actuales.length} vistas` : 'Hoy'}
-                </p>
-                <div class="comparativa__pila">
-                  {bloque.actuales.map((foto) => (
-                    <ProyectoFoto foto={foto} medidas="(min-width: 900px) 26rem, 100vw" anchos={[400, 700]} />
-                  ))}
+          {/* ============================================================
+               DOS PATRONES, Y NINGUN TERCERO
+
+               A) Hay pareja -> comparativa 50/50: UNA real contra UNA
+                  vision. Si el espacio llego con mas tomas reales -la
+                  201 tiene tres, la suite 207 cuatro-, las demas NO se
+                  apilan en la columna izquierda: eso la estiraba al
+                  triple de la derecha y dejaba media pantalla en
+                  blanco. Van en una tira aparte, debajo y a todo el
+                  ancho.
+
+               B) No hay pareja -> una sola imagen, centrada y grande.
+                  No se pinta una rejilla de dos columnas con un hueco
+                  al lado, ni se reserva el sitio de la imagen que
+                  falta, ni se repite una foto para rellenar.
+               ============================================================ */}
+          {bloque.actuales.length > 0 && bloque.vision ? (
+            <>
+              <div class="comparativa">
+                <div class="comparativa__item">
+                  <p class="comparativa__momento">Hoy</p>
+                  <ProyectoFoto foto={bloque.actuales[0]} medidas="(min-width: 768px) 44vw, 100vw" anchos={[400, 700]} />
+                </div>
+                <div class="comparativa__item">
+                  <p class="comparativa__momento comparativa__momento--vision">Visión Atheron</p>
+                  <ProyectoFoto foto={bloque.vision} medidas="(min-width: 768px) 44vw, 100vw" anchos={[400, 700]} />
                 </div>
               </div>
-            )}
 
-            {bloque.vision && (
-              <div class="comparativa__lado">
-                <p class="comparativa__momento comparativa__momento--vision">Visión Atheron</p>
-                <ProyectoFoto foto={bloque.vision} medidas="(min-width: 900px) 26rem, 100vw" anchos={[400, 700]} />
-              </div>
-            )}
-          </div>
+              {bloque.actuales.length > 1 && (
+                <div class="comparativa__extra">
+                  <p class="comparativa__momento">
+                    El mismo espacio hoy, {bloque.actuales.length - 1} vista{bloque.actuales.length > 2 ? 's' : ''} más
+                  </p>
+                  <div class="comparativa__tira">
+                    {bloque.actuales.slice(1).map((foto) => (
+                      <ProyectoFoto foto={foto} medidas="(min-width: 768px) 30vw, 100vw" anchos={[400, 700]} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div class="bloque-imagen-unica">
+              {bloque.vision ? (
+                <>
+                  <p class="comparativa__momento comparativa__momento--vision">Visión Atheron</p>
+                  <ProyectoFoto foto={bloque.vision} medidas="(min-width: 768px) 46rem, 100vw" anchos={[400, 700]} />
+                </>
+              ) : (
+                <>
+                  <p class="comparativa__momento">Hoy</p>
+                  <ProyectoFoto foto={bloque.actuales[0]} medidas="(min-width: 768px) 46rem, 100vw" anchos={[400, 700]} />
+                </>
+              )}
+            </div>
+          )}
 
           {bloque.nota && <p class="comparativa__nota">{bloque.nota}</p>}
         </div>

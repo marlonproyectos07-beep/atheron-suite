@@ -672,139 +672,146 @@
   .fachada-antes-despues__grid { grid-template-columns: 1fr; }
 }
 
-
 /* ------------------------------------------------------------
-   COMPARATIVAS HOY / VISION ATHERON
+   EL RECORRIDO: RITMO, COMPARATIVAS E IMAGEN UNICA
 
-   Dos columnas en escritorio, una en movil. La pareja de imagenes
-   es vertical 3:4 y .foto--alto reserva esa misma proporcion, asi
-   que object-fit: cover no llega a recortar nada: la foto entra
-   entera en el hueco que le corresponde.
+   DOS PATRONES, Y NINGUN TERCERO
+   Cada parada es una comparativa de dos columnas o una imagen sola
+   centrada. No existe el caso intermedio -media rejilla con un hueco
+   al lado-, que es lo que dejaba columnas muertas.
 
-   POR QUE SE LIMITA EL ANCHO DE LA REJILLA
-   El contenedor de la pagina es ancho, y dos imagenes verticales a
-   media pantalla cada una se convierten en dos torres de mas de
-   700 px de alto: hay que desplazar la pagina para ver una sola
-   pareja, que es justo lo contrario de comparar. Con el tope de
-   58rem cada columna queda en unos 420 px y las dos caben juntas
-   en una pantalla de portatil.
-
-   NO SE USA object-fit: contain. Con contain la imagen deja franjas
-   de fondo arriba y abajo, y eso se ve como un fallo. Lo que evita el
-   recorte aqui no es contain: es que cada imagen declara su
-   orientacion y .foto reserva EXACTAMENTE esa proporcion. Una imagen
-   3:4 marcada como vertical entra entera en un hueco 3:4; una 4:3
-   marcada como horizontal entra entera en uno 4:3. Cero recorte, sin
-   franjas.
-
-   LAS DOS COLUMNAS PUEDEN TENER ALTURAS DISTINTAS, Y ESTA BIEN
-   El par de la escalera mezcla una fotografia vertical con una
-   conceptual horizontal. Estirar las dos a la misma altura recortaria
-   una de las dos, y es justo lo que no se puede hacer: el elemento
-   arquitectonico que se quiere ensenar -la escalera entera- es lo
-   primero que se perderia. Las columnas se alinean ARRIBA y cada
-   imagen conserva su forma. Un bloque desigual es honesto; uno
-   cuadrado a costa de cortar la escalera, no.
+   EL ESPACIADO SE BAJA AQUI, NO EN .seccion
+   .seccion lleva padding-block de 6rem: 96 px arriba y 96 abajo, o
+   sea 192 px entre paradas. En una pagina de 26 bloques eso son
+   cinco metros de pantalla en blanco. Pero .seccion es del sitio
+   entero, y tocarla cambiaria las fichas de hospedaje, la portada y
+   la guia. Asi que se baja solo dentro de .parada.
    ------------------------------------------------------------ */
-.comparativa + .comparativa { padding-top: 0; }
+/* 32 px arriba y 32 abajo: 64 px entre paradas, dentro del rango que
+   pidio direccion (48-80 en escritorio).
 
-.comparativa__parejas {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  /* Arriba, no estiradas: ver la nota sobre alturas desiguales. */
-  align-items: start;
-  gap: var(--esp-4);
-  max-width: 58rem;
-  /* Alineada a la izquierda, no centrada: el titulo y el texto de la
-     seccion arrancan en el borde del contenedor, y una rejilla
-     centrada quedaba desplazada respecto a ellos. */
-  margin: var(--esp-4) 0 0;
+   Se probo anular el padding-top cuando dos paradas comparten fondo,
+   para apretarlas mas. Se descarto: bajaba la separacion a 32 px, y
+   ademas al reves de como conviene -donde el fondo NO cambia es
+   justo donde hace falta el aire para que se lean como dos bloques-.
+   Uniforme es mas predecible y no depende de si la parada cae en
+   posicion par o impar. */
+.parada { padding-block: var(--esp-4); }
+
+/* El titulo pega con su bloque visual. De serie son 48 px, que
+   dejaban el titular flotando lejos de la imagen que presenta. */
+.parada .encabezado-seccion {
+  max-width: 46rem;
+  margin-bottom: var(--esp-3);
 }
 
-.comparativa__lado { min-width: 0; }
+/* ------------------------------------------------------------
+   PATRON A — COMPARATIVA 50/50
+   ------------------------------------------------------------ */
+.comparativa {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--esp-3);
+  max-width: 62rem;
+}
 
-.comparativa__lado .foto-proyecto { margin-top: 0; }
+.comparativa__item { min-width: 0; }
+.comparativa__item .foto-proyecto { margin-top: 0; }
 
-/* El momento -HOY / VISION ATHERON- va encima de cada imagen y en
-   HTML, no incrustado en la fotografia. */
+/* ------------------------------------------------------------
+   CADA IMAGEN, SU PROPORCION REAL — Y SIN CLS
+
+   La imagen ocupa el ancho de su columna y su alto sale de la
+   proporcion del archivo, que ProyectoFoto pone como variable. El
+   ancho es DEFINIDO (100 %), asi que el navegador calcula el alto
+   antes de descargar nada: el hueco queda reservado y no hay
+   desplazamiento.
+
+   SE PROBO IGUALAR LAS ALTURAS Y SE DESCARTO
+   Con un tope de altura y width: auto las dos imagenes de cada
+   pareja quedaban a la misma altura, que se ve mejor. Pero width:
+   auto necesita el tamano intrinseco de la imagen, y ese no se
+   conoce hasta que carga: el CLS subio de 0 a 0,019 y el
+   rendimiento movil bajo de 98 a 97. Medido en tres corridas.
+
+   Asi que las alturas dentro de una pareja pueden diferir cuando los
+   archivos tienen proporciones distintas. Las dos columnas arrancan
+   arriba -align-items: start-, asi que la mas corta simplemente
+   termina antes: un hueco pequeno bajo una foto, no media pantalla
+   en blanco. Y ninguna imagen se recorta, que es la prioridad.
+   ------------------------------------------------------------ */
+.comparativa__item .foto,
+.comparativa__tira .foto,
+.bloque-imagen-unica .foto {
+  aspect-ratio: var(--proporcion, 4 / 3);
+  width: 100%;
+  height: auto;
+}
+
+/* ------------------------------------------------------------
+   TOMAS EXTRA DEL MISMO ESPACIO
+
+   La 201 llego con tres fotografias reales, el bano modelo con tres,
+   la suite 207 con cuatro. Apiladas en la columna izquierda la
+   estiraban al triple de la derecha. Aqui van debajo, a todo el
+   ancho y a la misma altura entre ellas.
+   ------------------------------------------------------------ */
+.comparativa__extra { margin-top: var(--esp-4); }
+
+.comparativa__tira {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  align-items: start;
+  gap: var(--esp-3);
+  max-width: 62rem;
+}
+
+
+
+/* ------------------------------------------------------------
+   PATRON B — IMAGEN UNICA
+
+   Ubicacion, pasillo central y habitacion 206: solo hay una imagen
+   aprobada. Se centra y se agranda hasta 46rem. NO se reserva el
+   sitio de la que falta, no se repite otra foto para rellenar y no
+   se inventa una pareja.
+   ------------------------------------------------------------ */
+.bloque-imagen-unica {
+  max-width: 46rem;
+  margin-inline: auto;
+}
+
+.bloque-imagen-unica .foto-proyecto { margin-top: 0; }
+
+
+/* ------------------------------------------------------------
+   EL MOMENTO: HOY / VISION ATHERON
+   ------------------------------------------------------------ */
 .comparativa__momento {
-  margin: 0 0 var(--esp-2);
+  margin: 0 0 var(--esp-1);
   font-size: .74rem;
   font-weight: 700;
   letter-spacing: .12em;
   text-transform: uppercase;
-  color: var(--color-texto-suave);
+  color: var(--texto-suave);
 }
 
-.comparativa__momento--vision { color: var(--color-sal-claro); }
-
-@media (max-width: 760px) {
-  /* Una debajo de la otra, en el orden del documento: primero HOY,
-     despues VISION ATHERON. */
-  .comparativa__parejas {
-    grid-template-columns: 1fr;
-    gap: var(--esp-5);
-  }
-}
+.comparativa__momento--vision { color: var(--color-marca); }
 
 /* ------------------------------------------------------------
-   VARIAS TOMAS DEL MISMO ESPACIO
+   DATOS DE LA UNIDAD Y NOTA
 
-   La 201 llego con tres fotografias, el bano modelo con tres y la
-   suite 207 con cuatro. Se apilan dentro de su columna: son el mismo
-   espacio visto desde varios sitios, no bloques distintos.
+   Ninguna cifra se escribe aqui ni en la maqueta: vienen del archivo
+   de datos, y alli solo entra lo que direccion aprobo por escrito.
    ------------------------------------------------------------ */
-.comparativa__pila {
-  display: grid;
-  gap: var(--esp-3);
-}
-
-/* ------------------------------------------------------------
-   CADA IMAGEN DEL RECORRIDO CONSERVA SU PROPIA PROPORCION
-
-   .foto trae tres proporciones fijas -3/4, 4/3, 1/1- y object-fit:
-   cover. Va bien en las fichas de hospedaje, donde las fotos se
-   producen a medida. Aqui no: la curaduria trae al menos cinco
-   proporciones distintas, y las fijas recortaban de verdad.
-
-     renders de habitacion  1200x1097  (1,094) contra 4/3 -> recorte
-     visiones de restaurante 1200x800  (1,500) contra 4/3 -> recorte
-     terraza del gastrobar    539x1200 (0,449) contra 3/4 -> recorte
-                                                del 30 %
-
-   Ese ultimo es el que importa: la terraza es una panoramica
-   estrecha y alta, y forzarla a 3/4 se comia el tercio que da sentido
-   a la toma.
-
-   Con aspect-ratio: auto la caja toma la proporcion real del archivo.
-   El hueco se sigue reservando antes de descargar la imagen -width y
-   height van en el HTML-, asi que esto NO reintroduce CLS: lo que
-   cambia es que la caja reservada es la correcta y no una recortada.
-   ------------------------------------------------------------ */
-.comparativa__lado .foto,
-.ubicacion-recorrido__media .foto {
-  /* La proporcion real del archivo, que pone ProyectoFoto como
-     variable. El 4/3 de respaldo solo actua si alguna imagen llegara
-     sin medidas declaradas; con el catalogo actual no pasa nunca. */
-  aspect-ratio: var(--proporcion, 4 / 3);
-  height: auto;
-}
-
-/* Un bloque sin fotografia real -pasillo central y habitacion 206-
-   no deja media rejilla vacia: la vision ocupa una sola columna
-   centrada y con el ancho de una, no el de dos. */
-.comparativa__parejas--sola {
-  grid-template-columns: minmax(0, 28rem);
-}
-
-/* Datos de la unidad. Ninguna cifra se escribe en el CSS ni en la
-   maqueta: vienen del archivo de datos. */
 .comparativa__datos {
   display: flex;
   flex-wrap: wrap;
   gap: var(--esp-2) var(--esp-4);
-  margin: var(--esp-3) 0 0;
-  padding: var(--esp-3);
+  max-width: 62rem;
+  margin: 0 0 var(--esp-3);
+  padding: var(--esp-2) var(--esp-3);
   border: 1px solid var(--borde);
   border-radius: var(--radio-md);
   background: var(--fondo);
@@ -823,15 +830,42 @@
   font-weight: 600;
 }
 
-/* La nota va debajo del bloque y en tono de aviso, no de texto
-   corrido: dice que lo de arriba es una proyeccion. */
 .comparativa__nota {
-  max-width: 58rem;
+  max-width: 46rem;
   margin: var(--esp-3) 0 0;
   font-size: .88rem;
   color: var(--texto-suave);
   font-style: italic;
 }
+
+/* ------------------------------------------------------------
+   MOVIL: UNA COLUMNA, Y EL AIRE A LA MITAD
+   ------------------------------------------------------------ */
+@media (max-width: 767px) {
+  /* 24 + 24 = 48 px entre paradas, el techo del rango movil (28-48). */
+  .parada { padding-block: var(--esp-3); }
+
+  .parada .encabezado-seccion { margin-bottom: var(--esp-2); }
+
+  /* Primero HOY, despues VISION ATHERON. El orden lo da el HTML, asi
+     que es tambien el que oye un lector de pantalla. */
+  .comparativa {
+    grid-template-columns: 1fr;
+    gap: var(--esp-4);
+  }
+
+  /* Sin tope de altura: en una columna la imagen ocupa el ancho
+     entero y su altura es la que le toca por proporcion. Un tope
+     aqui la dejaria pequena en el centro de la pantalla. */
+  .comparativa__tira { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+
+  .comparativa__datos {
+    gap: var(--esp-2);
+    padding: var(--esp-2);
+  }
+}
+
 
 /* ------------------------------------------------------------
    CIERRE: LAS FORMAS DE CREAR EXPERIENCIAS
@@ -864,10 +898,15 @@
   margin-top: var(--esp-4);
 }
 
-/* Ubicacion: una sola imagen, no una pareja. Se limita el ancho para
-   que una fotografia vertical no se coma la pantalla en escritorio. */
-.ubicacion-recorrido__media {
-  max-width: 28rem;
-  margin-top: var(--esp-4);
+/* La ubicacion usaba .ubicacion-recorrido__media, un contenedor de
+   28rem pegado a la izquierda: dejaba media pantalla en blanco a la
+   derecha. Ahora usa .bloque-imagen-unica, el mismo patron que el
+   pasillo central y la 206. Las reglas viven arriba, con el recorrido. */
+
+/* El cierre tambien entra en el ritmo de las paradas. */
+.formas { padding-block: var(--esp-5); }
+.formas .encabezado-seccion { margin-bottom: var(--esp-3); }
+
+@media (max-width: 767px) {
+  .formas { padding-block: var(--esp-4); }
 }
-.ubicacion-recorrido__media .foto-proyecto { margin-top: 0; }
