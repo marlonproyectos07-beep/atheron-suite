@@ -912,6 +912,37 @@ export interface Comparativa {
    Esos cuatro bloques se publican cuando lleguen sus fotografias, no
    antes. Falta material, no falta trabajo.
 
+   ============================================================
+   LO QUE FALTA PARA EL CORTE HASTA LA HABITACION 206
+   Direccion aprobo el 12/09/2026 una narrativa de 23 bloques con sus
+   textos, capacidades y distribuciones. Los textos estan; las
+   IMAGENES NO. Se reviso el 12/09/2026 la carpeta de curaduria
+   entera, el Drive completo y el repositorio: no existe ni un solo
+   archivo para estos bloques.
+
+     06  Recepcion + escalera
+     07  Patio 1 / Cafeteria, perspectiva 1
+     08  Patio 1 / Cafeteria, perspectiva 2
+     11  Balcon del lobby hacia Patio 1
+     12  Lobby piso 2
+     13  Habitacion 208, cuarto mochilero (12 plazas, 6 camarotes)
+     14  Bano del cuarto mochilero
+     15  Pasillo central piso 2
+     16  Pasillo de acceso a habitaciones
+     17  Habitacion 201   (matrimonial + camarote + sofa cama)
+     18  Habitacion 202   (3 huespedes)
+     19  Habitacion 203   (3 huespedes, balcon al parque)
+     20  Bano modelo 201-208
+     21  Habitacion 204   (4 huespedes, camarote doble)
+     22  Habitacion 205   (igual a la 204; imagen separada, NO el
+                           collage 205+206)
+     23  Habitacion 206   (6-8 huespedes, 3 camarotes, balcon)
+
+   La orden es explicita: no se sustituye una imagen que falta por
+   otra parecida. Un bloque con la foto de otro sitio es peor que un
+   bloque que no esta.
+
+   ============================================================
    DE DONDE SALEN ESCALERA Y PASILLO
    Estaban en el comparador de pestanas de "transformacion", y se han
    movido aqui. NO se duplican: se retiraron de alli. El criterio es
@@ -955,9 +986,9 @@ export const comparativas: Comparativa[] = [
   {
     id: 'escalera-piso-2',
     ceja: 'ESCALERA HACIA EL PISO 2',
-    titulo: 'La escalera que comunica la casa',
+    titulo: 'Ascenso al piso 2',
     texto:
-      'La escalera de madera comunica los dos niveles y es una de las piezas que el proyecto quiere conservar: la propuesta estudia su recuperación, no su sustitución.',
+      'La escalera restaurada conecta el nivel social con el segundo piso, marcando la transición hacia la experiencia de hospedaje.',
     actual: fotoEscalera,
     vision: conceptoEscalera,
     aprobada: true,
@@ -965,9 +996,13 @@ export const comparativas: Comparativa[] = [
   {
     id: 'llegada-piso-2',
     ceja: 'LLEGADA AL PISO 2',
-    titulo: 'Donde empieza el hospedaje',
+    titulo: 'Aquí comienza el hospedaje',
+    /* Texto aprobado por direccion el 12/09/2026. Menciona el lobby y
+       la circulacion porque asi se aprobo, pero NINGUNO de esos dos
+       espacios tiene todavia bloque propio en la pagina: sus imagenes
+       no han llegado. Cuando lleguen, este texto encadena con ellos. */
     texto:
-      'El pasillo que reparte hacia las habitaciones. La propuesta conserva su trazado y trabaja sobre la luz, los acabados y el paso.',
+      'Al finalizar la escalera, el huésped encuentra un espacio de llegada que conecta lobby, circulación y acceso a las habitaciones.',
     actual: fotoPasillo,
     vision: conceptoPasillo,
     aprobada: true,
