@@ -35,7 +35,16 @@ const { estado, nota } = Astro.props;
 
 const TEXTO: Record<Estado, string> = {
   VERIFICADO: 'Verificado',
-  PENDIENTE: 'Pendiente de confirmación',
+  /* "Pendiente de confirmacion" era una etiqueta de trabajo nuestra, y
+     se estaba ensenando al visitante en una presentacion comercial.
+     Direccion la retiro el 12/09/2026: quien mira un proyecto no
+     necesita ver el estado de nuestro flujo editorial.
+
+     El estado PENDIENTE sigue existiendo en los datos -es
+     contabilidad real del proyecto y ProyectoFoto y las validaciones
+     lo usan-; lo que cambia es que en pantalla ya no se rotula como
+     una tarea a medias. */
+  PENDIENTE: 'En desarrollo',
   PROPUESTA: 'Propuesta',
 };
 ---

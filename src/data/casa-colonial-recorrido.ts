@@ -488,7 +488,19 @@ export const recorrido: BloqueRecorrido[] = [
     titulo: 'La unidad insignia del proyecto',
     subtitulo: 'La unidad insignia del proyecto.',
     texto: 'La habitación de mayor jerarquía de la casa, documentada hoy en cuatro vistas del estado actual.',
-    actuales: [h207Real1, h207Real2, h207Real3, h207Real4], vision: h207Vision,
+    /* LA 02 VA PRIMERA, Y NO ES UN CAPRICHO DE ORDEN
+
+       Direccion pidio el 12/09/2026 que no se viera la base de cama
+       negra que aparece en primer plano de la 01. La 02 es la misma
+       habitacion desde un encuadre equivalente -vertical, mismo piso
+       de madera, la puerta de tablero- y ahi la base NO esta en
+       primer plano: solo se intuye al fondo, en la habitacion
+       siguiente, a traves del vano.
+
+       Asi que se cambia la fotografia, no se retoca ninguna: es una
+       real aprobada que ya estaba en la curaduria. Las otras tres
+       siguen declaradas y en el repositorio, sin renderizar. */
+    actuales: [h207Real2, h207Real1, h207Real3, h207Real4], vision: h207Vision,
     /* ============================================================
        EL RENDER DE LA 207 PUBLICA MAS DE LO QUE NADIE APROBO
 

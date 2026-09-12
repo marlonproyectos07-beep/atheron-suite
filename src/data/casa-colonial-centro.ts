@@ -891,19 +891,37 @@ export const ubicacion = {
 
 export const historia = {
   id: 'historia',
-  ceja: 'NUESTRA HISTORIA',
+  ceja: 'EL PROYECTO',
+  /* ============================================================
+     TITULAR NUEVO, APROBADO EL 12/09/2026
+
+     El anterior decia "No comenzamos construyendo desde cero.
+     Comenzamos recuperando lo que otros habian olvidado". Direccion
+     lo retiro: en una presentacion a inversionistas y aliados, ese
+     "otros habian olvidado" reparte culpas -a los propietarios, al
+     municipio, a quien lo lea- y arranca el relato en el abandono.
+
+     El nuevo abre en lo que el proyecto APORTA. Mismo hecho, otra
+     puerta de entrada.
+     ============================================================ */
   titulo:
-    'No comenzamos construyendo desde cero. Comenzamos recuperando lo que otros habían olvidado.',
-  /* Texto provisional entregado por direccion. Los pasajes sobre el
-     acuerdo con los propietarios estan pendientes de revision
-     juridica antes de la publicacion publica. */
+    'Recuperamos patrimonio para crear nuevas oportunidades en el corazón de Zipaquirá.',
+  /* Los tres parrafos se reescribieron con el titular. Lo que cambia
+     es el angulo, no los hechos: se habla de lo que la casa va a
+     generar en vez de en que estado estaba.
+
+     NINGUNA CIFRA. Ni empleos, ni rentabilidad, ni ROI, ni ventas,
+     ni ocupacion, ni inversion, ni fecha de apertura. Direccion lo
+     prohibio expresamente y aqui no hay ni una. Tampoco se nombra el
+     acuerdo con los propietarios ni sus condiciones: eso sigue
+     pendiente de revision juridica. */
   parrafos: [
-    'Durante años, esta casa colonial permaneció deteriorada y sin aprovechar todo su potencial. Atheron vio algo diferente: una oportunidad para recuperar su arquitectura, devolverle vida y crear un lugar conectado con la historia, la gastronomía y el turismo de Zipaquirá.',
-    'El proyecto nació con una visión de largo plazo. La casa fue tomada en arrendamiento mediante un acuerdo con sus propietarios que permite adelantar su recuperación, operarla y desarrollar progresivamente un modelo comercial sostenible.',
-    'La meta no es solamente abrir otro hotel o restaurante. Queremos crear un destino que reúna alojamiento, gastronomía, tecnología y experiencias locales, y convertirlo en el primer modelo integral de Atheron que pueda documentarse y replicarse en otras ciudades.',
+    'Casa Colonial Centro es un inmueble con historia en el centro histórico de Zipaquirá, a la vuelta del Parque Principal. Atheron lo está recuperando para devolverle uso: conservar su arquitectura y ponerla otra vez en el centro de la vida de la ciudad.',
+    'El proyecto reúne bajo un mismo techo hospedaje y gastronomía, dos actividades que hoy están repartidas por el centro. Esa integración es la que genera actividad económica alrededor de la casa: proveedores locales, comercio del sector, oficios de la construcción durante la recuperación y operación cuando abra.',
+    'La casa está donde llega el turismo que viene por la Catedral de Sal y se queda a recorrer el centro. Conectar el inmueble con esa dinámica —y abrirlo a aliados operadores en hospedaje, cafetería, restaurante y experiencias— es el objetivo del proyecto.',
   ],
   destacado:
-    'Recuperar una casa con historia para construir una nueva oportunidad para Zipaquirá.',
+    'Recuperar un inmueble con historia y convertirlo en una oportunidad para Zipaquirá.',
   /* Historia y ubicacion, con dos fotografias reales: la casa por
      dentro y lo que se ve desde ella. La ubicacion se ensena asi,
      desde el interior hacia el centro historico, porque la

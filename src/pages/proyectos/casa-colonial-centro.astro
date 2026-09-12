@@ -68,10 +68,11 @@ import {
   transformacion,
   unidades,
   modelo,
-  alianzas,
-  bitacora,
+  /* alianzas, bitacora y cierre siguen exportados en los datos y sin
+     usar aqui: sus secciones se retiraron de la maqueta el 12/09/2026.
+     Se dejan fuera del import para que no queden como dependencias
+     fantasma, y vuelven con una linea cuando direccion los pida. */
   aviso,
-  cierre,
 } from '../../data/casa-colonial-centro';
 
 /* La cabecera es la del sitio, con el menu del listado: esta pagina
@@ -386,45 +387,6 @@ const fichaPagina = {
     ))}
 
     {/* ============================================================
-         CIERRE DEL RECORRIDO — LAS FORMAS DE CREAR EXPERIENCIAS
-
-         Siete frentes del proyecto, sin una sola cifra: ni tarifas,
-         ni rentabilidad, ni aforos, ni fecha de apertura. Es lo que
-         la casa puede albergar, no una oferta.
-         ============================================================ */}
-    <section class="seccion formas" id={cierreRecorrido.id} aria-labelledby="formas-titulo">
-      <div class="contenedor aparecer">
-        <div class="encabezado-seccion">
-          <span class="etiqueta">{cierreRecorrido.ceja}</span>
-          <h2 id="formas-titulo">{cierreRecorrido.titulo}</h2>
-          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
-            {cierreRecorrido.texto}
-          </p>
-        </div>
-
-        <ul class="formas__rejilla">
-          {cierreRecorrido.tarjetas.map((t) => (
-            <li class="formas__tarjeta">
-              <h3 class="formas__titulo">{t.titulo}</h3>
-              <p class="formas__texto">{t.texto}</p>
-            </li>
-          ))}
-        </ul>
-
-        <div class="formas__accion">
-          <a
-            class="boton boton--grande boton--whatsapp"
-            href={enlaceWhatsApp(MENSAJE_GENERAL)}
-            data-whatsapp={MENSAJE_GENERAL}
-            data-evento="ccc_whatsapp_click"
-            rel="noopener"
-            target="_blank"
-          >Conversar sobre el proyecto</a>
-        </div>
-      </div>
-    </section>
-
-    {/* ============================================================
          2. HISTORIA
 
          PENDIENTE JURIDICO: los textos relacionados con contrato,
@@ -442,10 +404,14 @@ const fichaPagina = {
           <h2>{historia.titulo}</h2>
         </div>
 
-        <ProyectoEstado
-          estado={historia.estado}
-          nota="Redacción sujeta a revisión jurídica antes de publicarse."
-        />
+        {/* La nota "Redaccion sujeta a revision juridica" se retira, y
+            no por maquillar: existia porque el texto anterior hablaba
+            del acuerdo de arrendamiento con los propietarios. El texto
+            nuevo aprobado el 12/09/2026 no menciona el acuerdo, ni sus
+            condiciones, ni a los propietarios, asi que ya no hay nada
+            ahi que necesite pasar por abogados. El pendiente juridico
+            SIGUE VIVO para lo que sigue guardado en los datos -canon,
+            opcion de compra, montos-, que continua sin publicarse. */}
 
         <div class="columna-texto">
           {historia.parrafos.map((parrafo) => <p>{parrafo}</p>)}
@@ -538,6 +504,49 @@ const fichaPagina = {
     </section>
 
     {/* ============================================================
+         RESUMEN DEL RECORRIDO — LAS FORMAS DE CREAR EXPERIENCIAS
+
+         Movida aqui el 12/09/2026. Estaba justo despues del recorrido,
+         en mitad de la experiencia, y direccion la queria funcionando
+         como resumen de lo que el visitante ACABA de ver. Ahora cierra
+         la presentacion, antes del modelo.
+
+         Siete frentes del proyecto, sin una sola cifra: ni tarifas,
+         ni rentabilidad, ni aforos, ni fecha de apertura. Es lo que
+         la casa puede albergar, no una oferta.
+         ============================================================ */}
+    <section class="seccion formas" id={cierreRecorrido.id} aria-labelledby="formas-titulo">
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">{cierreRecorrido.ceja}</span>
+          <h2 id="formas-titulo">{cierreRecorrido.titulo}</h2>
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+            {cierreRecorrido.texto}
+          </p>
+        </div>
+
+        <ul class="formas__rejilla">
+          {cierreRecorrido.tarjetas.map((t) => (
+            <li class="formas__tarjeta">
+              <h3 class="formas__titulo">{t.titulo}</h3>
+              <p class="formas__texto">{t.texto}</p>
+            </li>
+          ))}
+        </ul>
+
+        <div class="formas__accion">
+          <a
+            class="boton boton--grande boton--whatsapp"
+            href={enlaceWhatsApp(MENSAJE_GENERAL)}
+            data-whatsapp={MENSAJE_GENERAL}
+            data-evento="ccc_whatsapp_click"
+            rel="noopener"
+            target="_blank"
+          >Conversar sobre el proyecto</a>
+        </div>
+      </div>
+    </section>
+    {/* ============================================================
          6. MODELO ATHERON
          Sin cifras ni porcentajes, y sin dar por seleccionados
          operadores ni inversionistas.
@@ -587,102 +596,6 @@ const fichaPagina = {
         )}
       </div>
     </section>
-
-    {/* ============================================================
-         7. ALIANZAS
-
-         Tres puertas de entrada, ninguna financiera. La del
-         componente hotelero lleva el aviso informativo pegado, como
-         exige la instruccion: es el unico bloque que alguien podria
-         leer como captacion, y no lo es.
-
-         Ningun boton pide dinero, monto disponible, patrimonio,
-         ingresos, datos bancarios ni numero de identificacion: todos
-         abren una conversacion de WhatsApp con un texto ya escrito.
-         ============================================================ */}
-    <section class="seccion" id={alianzas.id}>
-      <div class="contenedor aparecer">
-        <div class="encabezado-seccion">
-          <span class="etiqueta">{alianzas.ceja}</span>
-          <h2>{alianzas.titulo}</h2>
-          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
-            {alianzas.texto}
-          </p>
-        </div>
-
-        <div class="grid grid--3">
-          {alianzas.lista.map((alianza) => (
-            <article class="tarjeta-alianza">
-              <h3>{alianza.titulo}</h3>
-              <p>{alianza.descripcion}</p>
-
-              {alianza.llevaAviso && (
-                <AvisoInformativo texto={AVISO_INFORMATIVO} variante="encajado" />
-              )}
-
-              <a
-                class="boton boton--whatsapp"
-                {...atributosWhatsApp(alianza.mensaje, { origen: 'proyecto_alianza', evento: alianza.evento })}
-              >{alianza.ctaTexto}</a>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    {/* ============================================================
-         8. BITACORA
-
-         Preparada para los articulos del blog de la categoria
-         casa-colonial-centro. Vacia hasta que se escriba el primero:
-         sin tarjetas de ejemplo, sin fechas inventadas y sin autores
-         que no han escrito nada.
-
-         El boton lleva a esta misma seccion mientras la categoria
-         del blog no exista. Es lo que permite la instruccion, y
-         evita el unico resultado inaceptable: un enlace roto.
-         ============================================================ */}
-    <section class="seccion seccion--alterna" id={bitacora.id}>
-      <div class="contenedor aparecer">
-        <div class="encabezado-seccion">
-          <span class="etiqueta">{bitacora.ceja}</span>
-          <h2>{bitacora.titulo}</h2>
-          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
-            {bitacora.texto}
-          </p>
-        </div>
-
-        <ProyectoEstado
-          estado={bitacora.estado}
-          nota="Estructura lista. Sin entradas publicadas todavía."
-        />
-
-        {bitacora.entradas.length > 0 ? (
-          <ul class="grid grid--3">
-            {bitacora.entradas.map((entrada) => (
-              <li class="tarjeta">
-                <p class="texto-suave" style="font-size: .85rem;">
-                  <time datetime={entrada.fecha}>{fechaEnTexto(entrada.fecha)}</time>
-                </p>
-                <h3><a href={entrada.href}>{entrada.titulo}</a></h3>
-                <p class="texto-suave">{entrada.resumen}</p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p class="bitacora__vacio">{bitacora.textoVacio}</p>
-        )}
-
-        <p style="margin-top: var(--esp-3);">
-          <a
-            class="boton boton--contorno"
-            href={`#${bitacora.id}`}
-            data-evento={bitacora.evento}
-          >{bitacora.ctaTexto}</a>
-        </p>
-      </div>
-    </section>
-
     {/* ============================================================
          9. AVISO INFORMATIVO
          Texto exacto, en el HTML inicial, legible sin interaccion y
@@ -693,49 +606,27 @@ const fichaPagina = {
         <AvisoInformativo texto={aviso.texto} titulo={aviso.titulo} />
       </div>
     </section>
-
     {/* ============================================================
-         10. CIERRE
-         Tres salidas: la bitacora, las alianzas y WhatsApp. El
-         numero no se escribe aqui: el href es el respaldo de
-         ajustes.ts y main.js lo reescribe con el mensaje.
+         LO QUE SE RETIRO DE LA MAQUETA EL 12/09/2026
+
+         Direccion fijo que EL MODELO es el cierre del relato y que
+         despues de el no siga la presentacion. Tres secciones dejaron
+         de pintarse:
+
+           alianzas   la peticion de aliados. Lo que decia vive ahora
+                      en el texto del proyecto, que habla de abrir la
+                      casa a aliados operadores, y la conversacion se
+                      abre con el CTA de WhatsApp del cierre.
+           bitacora   entradas de blog del proyecto. Desarrollo
+                      editorial que no hacia falta al final.
+           cierre     un segundo CTA. Habia dos seguidos.
+
+         NO se borro nada: los tres siguen exportados en
+         src/data/casa-colonial-centro.ts y vuelven con descomentar su
+         seccion. El aviso informativo SI se conserva, porque es una
+         nota legal y no desarrollo comercial.
          ============================================================ */}
-    <section class="seccion seccion--alterna" id={cierre.id}>
-      <div class="contenedor aparecer" style="max-width: 720px;">
-        <div class="encabezado-seccion encabezado-seccion--centrado">
-          <span class="etiqueta">{UBICACION_PUBLICA}</span>
-          <h2>{cierre.titulo}</h2>
-          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
-            {cierre.texto}
-          </p>
-        </div>
 
-        <div class="grupo-botones grupo-botones--centrado">
-          {cierre.botones.map((boton, indice) => (
-            <a
-              class:list={[
-                'boton',
-                'boton--grande',
-                boton.whatsapp ? 'boton--whatsapp' : indice === 0 ? 'boton--primario' : 'boton--contorno',
-              ]}
-              {...(boton.whatsapp
-                ? atributosWhatsApp(boton.whatsapp, { origen: 'proyecto_cierre', evento: boton.evento })
-                : { href: boton.href, 'data-evento': boton.evento })}
-            >{boton.texto}</a>
-          ))}
-        </div>
-
-        {/* Experiencia y bienvenida: la galeria de acogida, en
-            representacion conceptual y rotulada como tal. */}
-        <ProyectoFoto
-          foto={cierre.foto}
-          clase="foto-proyecto--centrada"
-          medidas="(min-width: 900px) 28rem, 100vw"
-        />
-
-        <p class="cierre__firma texto-suave">{NOMBRE}</p>
-      </div>
-    </section>
 
   </main>
 
