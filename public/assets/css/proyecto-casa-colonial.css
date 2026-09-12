@@ -700,8 +700,11 @@
 
 /* El titulo pega con su bloque visual. De serie son 48 px, que
    dejaban el titular flotando lejos de la imagen que presenta. */
+/* 38rem son unos 62 caracteres por linea con la tipografia del sitio,
+   dentro del rango editorial de 60-70 que pidio direccion. A 46rem se
+   iban a mas de 90 y el parrafo se leia como un muro. */
 .parada .encabezado-seccion {
-  max-width: 46rem;
+  max-width: 38rem;
   margin-bottom: var(--esp-3);
 }
 
@@ -712,8 +715,14 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
+  /* 24 px, dentro del rango 24-32 de escritorio. */
   gap: var(--esp-3);
   max-width: 62rem;
+}
+
+/* Tablet: 20 px, el techo del rango 16-20 que pidio direccion. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .comparativa { gap: 1.25rem; }
 }
 
 .comparativa__item { min-width: 0; }
@@ -742,30 +751,15 @@
    en blanco. Y ninguna imagen se recorta, que es la prioridad.
    ------------------------------------------------------------ */
 .comparativa__item .foto,
-.comparativa__tira .foto,
 .bloque-imagen-unica .foto {
   aspect-ratio: var(--proporcion, 4 / 3);
   width: 100%;
   height: auto;
 }
 
-/* ------------------------------------------------------------
-   TOMAS EXTRA DEL MISMO ESPACIO
-
-   La 201 llego con tres fotografias reales, el bano modelo con tres,
-   la suite 207 con cuatro. Apiladas en la columna izquierda la
-   estiraban al triple de la derecha. Aqui van debajo, a todo el
-   ancho y a la misma altura entre ellas.
-   ------------------------------------------------------------ */
-.comparativa__extra { margin-top: var(--esp-4); }
-
-.comparativa__tira {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  align-items: start;
-  gap: var(--esp-3);
-  max-width: 62rem;
-}
+/* La tira de tomas extra se retiro: direccion pidio una sola real por
+   bloque -claridad, no cantidad-. Las fotos siguen declaradas en los
+   datos, sin renderizar. */
 
 
 
@@ -780,6 +774,39 @@
 .bloque-imagen-unica {
   max-width: 46rem;
   margin-inline: auto;
+}
+
+/* ------------------------------------------------------------
+   PATRON C — APILADO (solo la terraza del gastrobar)
+
+   Estado actual arriba, vision debajo. Existe porque las
+   proporciones de esa pareja son irreconciliables en dos columnas:
+   las fotografias son 539 x 1200 y el render 4:3.
+
+   Las dos reales son de la misma proporcion entre si, asi que van
+   juntas y quedan equilibradas. El render va debajo y mas ancho
+   -56rem contra 42rem-, que es lo que le pide su formato horizontal.
+   Ninguna se recorta ni se deforma.
+   ------------------------------------------------------------ */
+/* Una sola real, vertical y centrada, a un ancho contenido: a 24rem
+   una foto 539 x 1200 mide 384 x 855, presente sin comerse la pagina. */
+.apilado__real {
+  max-width: 24rem;
+  margin-inline: auto;
+}
+
+.apilado__vision {
+  max-width: 56rem;
+  margin-inline: auto;
+  margin-top: var(--esp-4);
+}
+
+.apilado .foto-proyecto { margin-top: 0; }
+
+.apilado .foto {
+  aspect-ratio: var(--proporcion, 4 / 3);
+  width: 100%;
+  height: auto;
 }
 
 .bloque-imagen-unica .foto-proyecto { margin-top: 0; }
@@ -851,19 +878,24 @@
      que es tambien el que oye un lector de pantalla. */
   .comparativa {
     grid-template-columns: 1fr;
-    gap: var(--esp-4);
+    /* 16 px, el techo del rango movil (12-16). */
+    gap: var(--esp-2);
   }
 
   /* Sin tope de altura: en una columna la imagen ocupa el ancho
      entero y su altura es la que le toca por proporcion. Un tope
      aqui la dejaria pequena en el centro de la pantalla. */
-  .comparativa__tira { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 
   .comparativa__datos {
     gap: var(--esp-2);
     padding: var(--esp-2);
   }
+
+  /* La terraza en movil: las dos reales siguen en dos columnas -son
+     estrechas, caben, y separarlas alargaria el bloque sin ganar
+     nada- y el render debajo a ancho completo. */
+  .apilado__vision { margin-top: var(--esp-3); }
 }
 
 

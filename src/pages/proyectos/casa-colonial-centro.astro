@@ -246,7 +246,7 @@ const fichaPagina = {
         </div>
 
         <div class="bloque-imagen-unica">
-          <p class="comparativa__momento">Hoy</p>
+          <p class="comparativa__momento">Estado actual</p>
           <ProyectoFoto foto={ubicacion.foto} medidas="(min-width: 768px) 46rem, 100vw" anchos={[400, 700]} />
         </div>
       </div>
@@ -320,42 +320,60 @@ const fichaPagina = {
                   al lado, ni se reserva el sitio de la imagen que
                   falta, ni se repite una foto para rellenar.
                ============================================================ */}
-          {bloque.actuales.length > 0 && bloque.vision ? (
-            <>
-              <div class="comparativa">
-                <div class="comparativa__item">
-                  <p class="comparativa__momento">Hoy</p>
-                  <ProyectoFoto foto={bloque.actuales[0]} medidas="(min-width: 768px) 44vw, 100vw" anchos={[400, 700]} />
-                </div>
-                <div class="comparativa__item">
-                  <p class="comparativa__momento comparativa__momento--vision">Visión Atheron</p>
-                  <ProyectoFoto foto={bloque.vision} medidas="(min-width: 768px) 44vw, 100vw" anchos={[400, 700]} />
-                </div>
+          {bloque.disposicion === 'apilado' && bloque.vision ? (
+            /* ============================================================
+                 APILADO — primero el estado actual, despues la vision
+
+                 Solo la terraza. Sus fotografias son 539 x 1200 y el
+                 render 4:3: enfrentadas en dos columnas quedaba una
+                 franja estrecha junto a una postal, y recortar la
+                 vertical para igualarlas se comeria media toma.
+
+                 Arriba las reales, centradas y a su proporcion. Debajo
+                 el render, mas ancho, porque es horizontal y lo
+                 aprovecha. Las dos imagenes siguen siendo archivos
+                 separados y cada una con su rotulo en HTML.
+                 ============================================================ */
+            <div class="apilado">
+              <div class="apilado__real">
+                <p class="comparativa__momento">Estado actual</p>
+                <ProyectoFoto foto={bloque.actuales[0]} medidas="(min-width: 768px) 24rem, 100vw" anchos={[400, 700]} />
               </div>
 
-              {bloque.actuales.length > 1 && (
-                <div class="comparativa__extra">
-                  <p class="comparativa__momento">
-                    El mismo espacio hoy, {bloque.actuales.length - 1} vista{bloque.actuales.length > 2 ? 's' : ''} más
-                  </p>
-                  <div class="comparativa__tira">
-                    {bloque.actuales.slice(1).map((foto) => (
-                      <ProyectoFoto foto={foto} medidas="(min-width: 768px) 30vw, 100vw" anchos={[400, 700]} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
+              <div class="apilado__vision">
+                <p class="comparativa__momento comparativa__momento--vision">Visión del proyecto</p>
+                <ProyectoFoto foto={bloque.vision} medidas="(min-width: 768px) 56rem, 100vw" anchos={[400, 700]} />
+              </div>
+            </div>
+          ) : bloque.actuales.length > 0 && bloque.vision ? (
+            /* Una real contra una vision, y nada mas. Varios espacios
+               llegaron con tres o cuatro tomas del mismo sitio -la
+               201, el bano modelo, la suite 207, el gastrobar-. Se
+               probo ensenarlas todas en una tira debajo y direccion lo
+               descarto: claridad, no cantidad. Se pinta la toma de
+               establecimiento, que es la que explica el espacio, y las
+               demas se quedan declaradas en los datos sin renderizar,
+               listas para cuando hagan falta. */
+            <div class="comparativa">
+              <div class="comparativa__item">
+                <p class="comparativa__momento">Estado actual</p>
+                <ProyectoFoto foto={bloque.actuales[0]} medidas="(min-width: 768px) 44vw, 100vw" anchos={[400, 700]} />
+              </div>
+              <div class="comparativa__item">
+                <p class="comparativa__momento comparativa__momento--vision">Visión del proyecto</p>
+                <ProyectoFoto foto={bloque.vision} medidas="(min-width: 768px) 44vw, 100vw" anchos={[400, 700]} />
+              </div>
+            </div>
           ) : (
             <div class="bloque-imagen-unica">
               {bloque.vision ? (
                 <>
-                  <p class="comparativa__momento comparativa__momento--vision">Visión Atheron</p>
+                  <p class="comparativa__momento comparativa__momento--vision">Visión del proyecto</p>
                   <ProyectoFoto foto={bloque.vision} medidas="(min-width: 768px) 46rem, 100vw" anchos={[400, 700]} />
                 </>
               ) : (
                 <>
-                  <p class="comparativa__momento">Hoy</p>
+                  <p class="comparativa__momento">Estado actual</p>
                   <ProyectoFoto foto={bloque.actuales[0]} medidas="(min-width: 768px) 46rem, 100vw" anchos={[400, 700]} />
                 </>
               )}

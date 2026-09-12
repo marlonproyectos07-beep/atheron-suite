@@ -86,6 +86,16 @@ export interface BloqueRecorrido {
   nota?: string;
   /** Datos de la unidad, si es una habitación. Nunca inventados. */
   ficha?: { etiqueta: string; valor: string }[];
+  /* "apilado" saca el bloque de la comparativa 50/50 y pone la
+     fotografía real arriba y el render debajo, cada uno a su ancho.
+
+     Se usa cuando las proporciones de la pareja son tan distintas
+     que enfrentarlas se ve desbalanceado pase lo que pase. Hoy solo
+     la terraza: sus fotografías son 539 x 1200 -más del doble de
+     altas que anchas- y el render es 4:3. Al lado quedaba una franja
+     estrecha junto a una postal. Recortar la vertical para forzar
+     4:3 está descartado: se comería la mitad de la toma. */
+  disposicion?: 'comparativa' | 'apilado';
   /** false = no se pinta, aunque los archivos existan. */
   aprobada: boolean;
 }
@@ -226,9 +236,31 @@ const gastroExtReal2 = f('28-gastrobar-exterior-real-02', REAL, HORIZ, 'Exterior
 const gastroExtReal3 = f('28-gastrobar-exterior-real-03', REAL, HORIZ, 'Exterior del gastrobar en su estado actual, tercera vista');
 const gastroExtVision = f('28-gastrobar-exterior-vision', CONCEPTO, { orientacion: 'horizontal' as const, ancho: 1200, alto: 800 },
   'Representación conceptual del exterior del gastrobar');
-const terrazaReal1 = f('29-gastrobar-terraza-real-01', REAL, { orientacion: 'vertical' as const, ancho: 539, alto: 1200 },
+/* ============================================================
+   LAS DOS DE LA TERRAZA LLEVAN BARRAS NEGRAS INCRUSTADAS
+
+   Los archivos son 539 x 1200, pero 121 px de arriba y 121 de abajo
+   son barra negra: vienen de un fotograma de video vertical. Medido
+   fila a fila sobre el propio archivo.
+
+   La fotografia de verdad es 539 x 958, proporcion 0,563 en vez de
+   0,449. Esa diferencia era la que hacia imposible cuadrar el bloque:
+   no era una foto extremadamente alta, era una foto normal con
+   relleno negro.
+
+   NO se recorta el archivo -es un asset aprobado y no se toca-. Se
+   declaran aqui las medidas UTILES, que es para lo que existen estos
+   dos campos: Foto.astro dice que se pasan a mano "cuando la imagen
+   se recorta y las del archivo no sirven". Con 539 x 958 el hueco
+   toma la proporcion del contenido y object-fit: cover se come
+   exactamente las barras. Ni un pixel de fotografia se pierde.
+
+   Si algun dia se recortan los archivos de origen, estas dos lineas
+   vuelven a 1200 y todo sigue igual.
+   ============================================================ */
+const terrazaReal1 = f('29-gastrobar-terraza-real-01', REAL, { orientacion: 'vertical' as const, ancho: 539, alto: 958 },
   'Terraza del gastrobar en su estado actual, primera vista');
-const terrazaReal2 = f('29-gastrobar-terraza-real-02', REAL, { orientacion: 'vertical' as const, ancho: 539, alto: 1200 },
+const terrazaReal2 = f('29-gastrobar-terraza-real-02', REAL, { orientacion: 'vertical' as const, ancho: 539, alto: 958 },
   'Terraza del gastrobar en su estado actual, segunda vista');
 const terrazaVision = f('29-gastrobar-terraza-vision-aprobada', CONCEPTO, HORIZ,
   'Representación conceptual aprobada de la terraza del gastrobar');
@@ -518,7 +550,8 @@ export const recorrido: BloqueRecorrido[] = [
     ceja: 'GASTROBAR · TERRAZA',
     titulo: 'La terraza, y el final del recorrido',
     texto: 'La terraza cierra el recorrido: el punto más alto de la casa, mirando al centro histórico.',
-    actuales: [terrazaReal1, terrazaReal2], vision: terrazaVision, aprobada: true,
+    actuales: [terrazaReal1, terrazaReal2], vision: terrazaVision,
+    disposicion: 'apilado', aprobada: true,
   },
 ];
 
