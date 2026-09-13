@@ -92,6 +92,10 @@
   .bloque-doble { grid-template-columns: 1fr 1fr; gap: var(--esp-6); }
   /* .bloque-doble--invertido pone la imagen a la izquierda */
   .bloque-doble--invertido .bloque-doble__media { order: -1; }
+  /* Un bloque doble que se queda sin imagen -porque la foto real
+     todavia no existe- no deja media pantalla vacia: el texto ocupa
+     el ancho, con una medida de lectura comoda. */
+  .bloque-doble > :only-child { grid-column: 1 / -1; max-width: 46rem; }
 }
 
 /* ------------------------------------------------------------
