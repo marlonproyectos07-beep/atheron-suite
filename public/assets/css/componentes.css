@@ -62,11 +62,15 @@
 .logo picture,
 .logo__simbolo { flex-shrink: 0; }
 
-/* A 320 px la cabecera de las landings no cabe: simbolo, nombre y boton
-   suman mas que la pantalla. Se recorta el relleno lateral del boton, sin
-   tocar texto ni tamano de letra. */
+/* A 320 px la cabecera de las landings no cabe: simbolo, nombre y un
+   boton de dos lineas suman unos 60 px mas que la pantalla. Antes no se
+   notaba porque el simbolo se aplastaba a 0 px; al dejar de aplastarse,
+   el nombre quedaba debajo del boton. Se recupera el espacio sin tocar
+   ningun texto: menos relleno lateral y menos separacion en la cabecera,
+   y un boton algo mas compacto. Solo por debajo de 22rem. */
 @media (max-width: 22rem) {
-  .header__interior .boton { padding-inline: .9rem; }
+  .header__interior { padding-inline: 1rem; gap: .6rem; }
+  .header__interior .boton { padding-inline: .7rem; font-size: .85rem; }
 }
 /* El nombre conserva la alineacion por linea base que tenia antes
    entre "Atheron" y "SUITE". */

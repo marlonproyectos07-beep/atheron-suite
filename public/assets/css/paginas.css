@@ -96,6 +96,10 @@
      todavia no existe- no deja media pantalla vacia: el texto ocupa
      el ancho, con una medida de lectura comoda. */
   .bloque-doble > :only-child { grid-column: 1 / -1; max-width: 46rem; }
+  /* Las dos columnas se reparten el ancho de verdad. Sin min-width: 0 una
+     columna no puede ser mas estrecha que su contenido, y en Casa Neusa a
+     1024 px la de la derecha crecia a 668 px y desbordaba la pagina. */
+  .bloque-doble > * { min-width: 0; }
 }
 
 /* ------------------------------------------------------------
