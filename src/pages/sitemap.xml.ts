@@ -19,6 +19,10 @@
 
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
+import {
+  BORRADOR as BORRADOR_CASA_COLONIAL,
+  RUTA as RUTA_CASA_COLONIAL,
+} from '../data/casa-colonial-centro';
 
 const DOMINIO = 'https://hotelesatheron.com';
 
@@ -60,7 +64,17 @@ export const GET: APIRoute = async () => {
       fecha: comoFecha(f.data.actualizado),
     }));
 
-  const entradas = [...paginasFijas, ...fichas];
+  /* CASA COLONIAL CENTRO — PREPARADA, TODAVIA NO ACTIVA
+     Mientras BORRADOR sea true la pagina sale con noindex, nofollow,
+     y pedirle a Google que visite una pagina a la que le decimos que
+     no la indexe es contradictorio. Al poner BORRADOR en false en
+     src/data/casa-colonial-centro.ts entra aqui sola, a la vez que
+     pasa a indexable: los dos no se pueden desincronizar. */
+  const proyectos: Entrada[] = BORRADOR_CASA_COLONIAL
+    ? []
+    : [{ ruta: RUTA_CASA_COLONIAL, prioridad: '0.8' }];
+
+  const entradas = [...paginasFijas, ...proyectos, ...fichas];
 
   const cuerpo = entradas
     .map(({ ruta, prioridad, fecha }) => `  <url>

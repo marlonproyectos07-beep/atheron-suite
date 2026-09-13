@@ -52,3 +52,16 @@ public/assets/img/hospedajes/*/*-700.avif
 public/assets/img/hospedajes/*/*-700.webp
 public/assets/img/hospedajes/*/*-900.avif
 public/assets/img/hospedajes/*/*-900.webp
+
+# Variantes por ancho de las imagenes de Casa Colonial. Las genera el
+# prebuild (scripts/optimiza-selector.mjs); el original si se versiona.
+public/assets/img/proyectos/casa-colonial-centro/*-400.avif
+public/assets/img/proyectos/casa-colonial-centro/*-400.webp
+public/assets/img/proyectos/casa-colonial-centro/*-600.avif
+public/assets/img/proyectos/casa-colonial-centro/*-600.webp
+public/assets/img/proyectos/casa-colonial-centro/*-700.avif
+public/assets/img/proyectos/casa-colonial-centro/*-700.webp
+public/assets/img/proyectos/casa-colonial-centro/*-800.avif
+public/assets/img/proyectos/casa-colonial-centro/*-800.webp
+public/assets/img/proyectos/casa-colonial-centro/*-1100.avif
+public/assets/img/proyectos/casa-colonial-centro/*-1100.webp
