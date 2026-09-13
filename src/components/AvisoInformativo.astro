@@ -1,0 +1,46 @@
+---
+/* ============================================================
+   AVISO INFORMATIVO
+
+   El texto legal del proyecto, tal cual lo entrego direccion. No
+   se resume, no se reescribe y no se abrevia: se pasa entero desde
+   los datos.
+
+   COMO TIENE QUE VERSE, Y POR QUE
+
+   - En el HTML inicial, no cargado despues. Un aviso que aparece
+     cuando termina un guion es un aviso que puede no aparecer.
+   - Sin interaccion: ni globo de ayuda, ni ventana, ni acordeon.
+     Si hay que hacer clic para leerlo, no esta publicado.
+   - Fuera del pie de pagina.
+   - Con letra de tamano normal y contraste suficiente (WCAG AA).
+     Va en gris oscuro sobre crema, no en gris claro diminuto.
+   - No es una casilla que haya que aceptar: es informacion.
+   - Sin lenguaje alarmista: ni colores de peligro ni signos de
+     admiracion. Es una aclaracion, no una advertencia.
+
+   Se marca como <aside role="note"> para que un lector de pantalla
+   lo anuncie como lo que es: una nota al margen del contenido, no
+   un parrafo mas.
+   ============================================================ */
+
+interface Props {
+  /** El texto exacto. Llega desde src/data/casa-colonial-centro.ts. */
+  texto: string;
+  /** Titulo visible. Sin el, se pone uno solo para lectores de pantalla. */
+  titulo?: string | null;
+  /** "suelto" (por defecto) o "encajado" dentro de otra tarjeta. */
+  variante?: 'suelto' | 'encajado';
+}
+
+const { texto, titulo = null, variante = 'suelto' } = Astro.props;
+---
+
+<aside class:list={['aviso-informativo', `aviso-informativo--${variante}`]} role="note">
+  {titulo ? (
+    <h2 class="aviso-informativo__titulo">{titulo}</h2>
+  ) : (
+    <span class="solo-lectores">Aviso informativo</span>
+  )}
+  <p class="aviso-informativo__texto">{texto}</p>
+</aside>

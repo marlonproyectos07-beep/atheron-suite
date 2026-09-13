@@ -1,0 +1,78 @@
+/* ============================================================
+   IMAGEN DE PROYECTO CON SU ROTULO (componente ProyectoFoto)
+
+   POR QUE ESTA HOJA VIVE SEPARADA
+
+   Estas reglas nacieron dentro de proyecto-casa-colonial.css, que
+   solo carga /proyectos/casa-colonial-centro. Desde el sprint del
+   9 de septiembre de 2026 la franja de "proximo proyecto" de
+   /hospedajes usa el MISMO componente ProyectoFoto, porque es el
+   unico que garantiza que una representacion conceptual no pueda
+   salir sin su rotulo.
+
+   Las dos alternativas eran peores:
+   - cargar las 9,8 KB de la hoja entera del proyecto en el
+     catalogo, para usar 1 KB;
+   - copiar estas reglas en la hoja del catalogo, que es como el
+     sello de "representacion conceptual" acaba viendose distinto
+     en una pagina y en otra.
+
+   Asi hay una sola definicion y las dos paginas la comparten.
+   ============================================================ */
+
+.foto-proyecto {
+  margin: 0;
+  margin-top: var(--esp-3);
+}
+
+.foto-proyecto__marco { position: relative; }
+
+/* Sello permanente sobre la imagen conceptual. Va encima de la
+   propia foto a proposito: si alguien recorta la imagen o la
+   comparte suelta, el aviso viaja con ella. */
+.foto-proyecto__sello {
+  position: absolute;
+  inset-block-start: var(--esp-2);
+  inset-inline-start: var(--esp-2);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-blanco);
+  background: rgba(15, 23, 42, 0.88);
+}
+
+.foto-proyecto__pie { margin-top: var(--esp-2); }
+
+.foto-proyecto__rotulo {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.foto-proyecto__rotulo--real { color: var(--color-verde); }
+.foto-proyecto__rotulo--conceptual { color: #a16207; }
+
+.foto-proyecto__aviso,
+.foto-proyecto__texto {
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+}
+
+/* Centrada y con ancho de lectura: para las imagenes sueltas que
+   cierran una seccion, que si ocupan todo el ancho compiten con el
+   texto en vez de acompanarlo. */
+.foto-proyecto--centrada {
+  max-width: 28rem;
+  margin-inline: auto;
+  margin-top: var(--esp-4);
+}
+
+/* En fondo oscuro los dos colores del rotulo pierden contraste. */
+.seccion--oscura .foto-proyecto__rotulo--real,
+.seccion--oscura .foto-proyecto__rotulo--conceptual { color: var(--color-blanco); }
+
+.seccion--oscura .foto-proyecto__aviso,
+.seccion--oscura .foto-proyecto__texto { color: rgba(255, 255, 255, 0.82); }

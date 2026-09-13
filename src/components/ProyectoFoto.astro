@@ -1,0 +1,133 @@
+---
+/* ============================================================
+   UNA IMAGEN DEL PROYECTO, CON SU ROTULO PEGADO
+
+   POR QUE EXISTE ESTE COMPONENTE
+
+   En esta pagina conviven fotografias de una casa real con
+   representaciones conceptuales de una casa que todavia no existe.
+   Confundirlas no es un fallo de diseno: es prometer algo que no
+   se ha hecho.
+
+   La forma barata de evitarlo seria escribir el rotulo a mano
+   debajo de cada imagen. Funciona el primer dia y falla el sexto,
+   cuando alguien copia un bloque, cambia la imagen y se olvida del
+   texto de abajo.
+
+   Aqui el rotulo NO se escribe: se deduce del campo "tipo" de la
+   imagen, con rotuloDe(). Cambiar la imagen cambia el rotulo. Es
+   imposible poner una representacion conceptual bajo el rotulo de
+   una fotografia real, porque nadie escribe ninguno de los dos.
+
+     REAL        "Fotografia real - estado actual."
+     OBRA        "Fotografia real - proceso de remodelacion."
+     CONCEPTUAL  "Representacion conceptual - no corresponde al
+                  estado actual." + el aviso de que el diseno puede
+                  cambiar + el sello sobre la propia imagen.
+
+   LAS CONCEPTUALES LLEVAN TRES AVISOS, Y NO SOBRA NINGUNO
+   El sello va encima de la imagen, para quien solo mira. El rotulo
+   va debajo, para quien lee. Y el aviso largo explica que lo que
+   se ve puede cambiar. Un pantallazo recortado de la imagen sigue
+   llevando el sello encima.
+
+   SI TODAVIA NO HAY IMAGEN
+   Se pinta el rectangulo rayado del sitio y nada mas. Nunca se
+   rellena con otra fotografia: sustituir una imagen que falta por
+   la que haya a mano es como se acaba ensenando una propiedad
+   distinta.
+   ============================================================ */
+
+import Foto from './Foto.astro';
+import {
+  rotuloDe,
+  ETIQUETA_CONCEPTUAL,
+  AVISO_CONCEPTUAL,
+} from '../data/casa-colonial-centro';
+import type { FotoProyecto } from '../data/casa-colonial-centro';
+
+interface Props {
+  foto: FotoProyecto | null;
+  /** Texto del rectangulo cuando todavia no hay imagen. */
+  textoHueco?: string;
+  /** La unica imagen de la pagina que se carga con prioridad. */
+  prioritaria?: boolean;
+  /** Que ancho ocupa la imagen, para que el navegador elija tamano. */
+  medidas?: string;
+  /* Anchos de las variantes responsive. Sin esto la imagen se sirve
+     entera: en el recorrido eso significaba mandar 900 o 1200 px a un
+     telefono que la pinta a 360, casi un mega de mas repartido entre
+     los primeros bloques. */
+  anchos?: number[];
+  /** Clase extra del <figure>, para colocarlo desde fuera. */
+  clase?: string;
+}
+
+const { foto, textoHueco = 'Imagen por definir', prioritaria, medidas, anchos, clase } = Astro.props;
+
+/* La orientacion del archivo decide la proporcion del hueco. Asi la
+   pagina reserva el sitio exacto y no da el salto cuando la imagen
+   termina de bajar. */
+const FORMA = {
+  vertical: 'alto',
+  horizontal: undefined,
+  cuadrada: 'cuadrado',
+} as const;
+
+const visible = Boolean(foto && foto.aprobada);
+const esConceptual = foto?.tipo === 'CONCEPTUAL';
+---
+
+{/* La proporcion exacta del archivo viaja como variable CSS. Quien la
+    quiera usar la lee con var(--proporcion); quien no, sigue con las
+    proporciones fijas de .foto y no cambia nada.
+
+    POR QUE ASI Y NO CON aspect-ratio: auto
+    El navegador deduce la proporcion de los atributos width y height
+    aplicando "aspect-ratio: auto 1200 / 900" desde su hoja interna.
+    Declarar "aspect-ratio: auto" en nuestra hoja SUSTITUYE esa regla y
+    se lleva por delante la parte "1200 / 900": la imagen se queda sin
+    proporcion, y mientras no ha cargado su altura es CERO. Se midio:
+    448 x 0 px en todo el recorrido. Con la variable la proporcion es
+    explicita y el hueco se reserva bien desde el primer pintado. */}
+<figure
+  class:list={['foto-proyecto', clase, esConceptual && 'foto-proyecto--conceptual']}
+  style={foto?.ancho && foto?.alto ? `--proporcion: ${foto.ancho} / ${foto.alto}` : undefined}
+>
+  {visible && foto ? (
+    <div class="foto-proyecto__marco">
+      <Foto
+        src={foto.ruta}
+        alt={foto.alt}
+        forma={foto.orientacion ? FORMA[foto.orientacion] : undefined}
+        ancho={foto.ancho}
+        alto={foto.alto}
+        medidas={medidas}
+        anchos={anchos}
+        prioritaria={prioritaria}
+      />
+      {esConceptual && (
+        <span class="foto-proyecto__sello">{ETIQUETA_CONCEPTUAL}</span>
+      )}
+    </div>
+  ) : (
+    <div class="placeholder">{textoHueco}</div>
+  )}
+
+  {visible && foto && (
+    <figcaption class="foto-proyecto__pie">
+      <p
+        class:list={[
+          'foto-proyecto__rotulo',
+          esConceptual ? 'foto-proyecto__rotulo--conceptual' : 'foto-proyecto__rotulo--real',
+        ]}
+      >{rotuloDe(foto.tipo)}</p>
+
+      {esConceptual && <p class="foto-proyecto__aviso">{AVISO_CONCEPTUAL}</p>}
+
+      {foto.descripcion && (
+        <p class="foto-proyecto__texto texto-suave">{foto.descripcion}</p>
+      )}
+    </figcaption>
+  )}
+</figure>
