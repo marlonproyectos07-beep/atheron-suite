@@ -1,0 +1,729 @@
+/* ============================================================
+   PORTADA.CSS — estilos que SOLO usa la pagina de inicio
+
+   Vive aparte y no dentro de paginas.css porque el sitio incrusta
+   su CSS en el HTML: lo que se meta en una hoja comun viaja en las
+   26 paginas, aunque solo lo use una. Esta la pide la portada con
+   hojasExtra y no le anade un byte al resto.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   HERO DE PORTADA CON IMAGEN — prueba visual
+
+   PROCEDENCIA REGISTRADA: activo visual generado con inteligencia
+   artificial para Atheron. Recreacion visual conceptual de Zipaquira.
+   No constituye fotografia documental del lugar.
+
+   De ahi que la imagen sea decorativa y no lleve texto alternativo:
+   nunca debe describirse en publico como fotografia real ni como toma
+   real de dron. El registro esta en docs/fotografias.md.
+
+   La imagen va en el HTML, no en background-image de CSS: asi el
+   navegador la descubre en el primer analisis y puede tratarla como
+   recurso LCP con prioridad alta. Es el mismo mecanismo que ya usan
+   las fichas de hospedaje (.hero--foto), no una arquitectura nueva.
+   ------------------------------------------------------------ */
+.hero--portada {
+  isolation: isolate;
+  /* Sustituye al degradado provisional; el color de noche queda
+     debajo por si la imagen tarda o falla. */
+  background: var(--color-noche);
+}
+
+.hero__fondo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+}
+
+.hero__fondo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* En escritorio la banda y la imagen tienen casi la misma relacion
+     -1,85 frente a 1,91-, asi que apenas se recorta y el centro es el
+     encuadre correcto: deja el cielo arriba y la plaza abajo. */
+  object-position: var(--encuadre, center 50%);
+}
+
+/* Velo de legibilidad. Mas denso a la izquierda, que es donde cae el
+   texto, y mas claro a la derecha para no apagar la catedral
+   iluminada ni el atardecer. */
+.hero--portada::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(95deg, rgba(7, 15, 27, .84) 0%, rgba(7, 15, 27, .75) 46%, rgba(7, 15, 27, .44) 72%, rgba(7, 15, 27, .18) 100%),
+    linear-gradient(180deg, rgba(7, 15, 27, .26) 0%, rgba(7, 15, 27, .08) 45%, rgba(7, 15, 27, .36) 100%);
+  pointer-events: none;
+}
+
+/* Por debajo de escritorio el texto deja de ocupar solo la mitad
+   izquierda y se extiende sobre el cielo del atardecer, que es la zona
+   mas luminosa de la imagen. El velo horizontal ya no basta: se cierra
+   de forma casi uniforme. Medido, no estimado: sin esto el parrafo baja
+   a 3,7:1 y el minimo para texto normal es 4,5:1. */
+@media (max-width: 62rem) {
+  .hero--portada::after {
+    background:
+      linear-gradient(95deg, rgba(7, 15, 27, .72) 0%, rgba(7, 15, 27, .64) 55%, rgba(7, 15, 27, .54) 100%),
+      linear-gradient(180deg, rgba(7, 15, 27, .26) 0%, rgba(7, 15, 27, .12) 50%, rgba(7, 15, 27, .34) 100%);
+  }
+}
+
+/* ------------------------------------------------------------
+   VIDEO DE FONDO — mejora progresiva
+
+   Va encima del <picture> y debajo del velo, en la misma capa cero.
+   Nace invisible y solo aparece cuando de verdad esta reproduciendo:
+   asi, si la reproduccion se rechaza o el archivo no llega, lo que se
+   ve sigue siendo la imagen y el visitante no percibe ningun fallo.
+
+   No lleva atributo poster a proposito. El poster lo hace el <picture>
+   de debajo, que es el elemento LCP ya medido; darle uno al video
+   crearia un segundo candidato y habria que volver a validarlo todo.
+   ------------------------------------------------------------ */
+.hero__video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* El mismo encuadre que la imagen, para que el relevo no salte. */
+  object-position: var(--encuadre, center 50%);
+  opacity: 0;
+  transition: opacity .9s ease;
+  pointer-events: none;
+}
+
+.hero__video[data-visible="si"] { opacity: 1; }
+
+/* Cinturon y tirantes. El guion ya se abstiene de cargar el video con
+   movimiento reducido; esto lo garantiza aunque el guion falle. */
+@media (prefers-reduced-motion: reduce) {
+  .hero__video { display: none; }
+}
+
+.hero--portada .hero__contenido {
+  position: relative;
+  z-index: 2;
+}
+
+/* Sombras suaves: sostienen el contraste en los pocos pixeles donde el
+   cielo del atardecer sube de luminancia, sin ensuciar la tipografia. */
+.hero--portada .hero__titulo { text-shadow: 0 2px 22px rgba(0, 0, 0, .38); }
+.hero--portada .hero__texto { text-shadow: 0 1px 10px rgba(0, 0, 0, .42); }
+.hero--portada .hero__etiqueta {
+  background: rgba(7, 15, 27, .42);
+  backdrop-filter: blur(5px);
+}
+.hero--portada .hero__datos { border-top-color: rgba(255, 255, 255, .34); }
+
+/* En movil la banda es mas alta que ancha: si se deja el encuadre de
+   escritorio, el hero se convierte en cielo y tejados. Se desplaza el
+   recorte hacia la catedral, que es el punto de interes. */
+@media (max-width: 48rem) {
+  .hero__fondo img,
+  .hero__video { object-position: var(--encuadre-movil, 73% 50%); }
+}
+
+/* ------------------------------------------------------------
+   PRECIO Y GRUPOS
+
+   El precio es lo segundo que se mira despues del titular, asi que
+   se compone como una cifra, no como una linea de texto mas.
+   ------------------------------------------------------------ */
+.hero__precio {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  margin-bottom: var(--esp-2);
+  color: var(--color-blanco);
+}
+
+/* El rotulo desactiva la lectura de "precio unico y rigido" antes de
+   que se lea la cifra. Va arriba a proposito: despues ya es tarde. */
+.hero__precio-rotulo {
+  font-size: .78rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .78);
+}
+
+.hero__precio-cifra {
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+  font-size: clamp(.95rem, 2.4vw, 1.05rem);
+  color: rgba(255, 255, 255, .92);
+}
+
+.hero__precio strong {
+  font-family: var(--fuente-titulo);
+  font-size: clamp(2rem, 6vw, 2.9rem);
+  line-height: 1;
+  font-weight: 600;
+  color: var(--color-sal-claro);
+}
+
+/* Insignia, no parrafo: es un beneficio, y se lee de un vistazo. */
+.hero__grupos {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: .38rem .85rem;
+  margin-bottom: var(--esp-3);
+  border: 1px solid rgba(227, 194, 92, .55);
+  border-radius: 999px;
+  background: rgba(7, 15, 27, .42);
+  font-size: .86rem;
+  font-weight: 500;
+  color: var(--color-sal-claro);
+}
+
+/* El contenido se apila, y asi la insignia puede alinearse sola. */
+.hero--portada .hero__contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* ------------------------------------------------------------
+   MOVIL — que se vea la fotografia
+
+   El problema no era el diseño sino cuanto alto se comia el texto:
+   el visitante llegaba y veia parrafo, no Zipaquira. Aqui se recorta
+   todo lo que no es prioridad -ubicacion, titular, precio, grupos,
+   botones- y se apoya el resto en la imagen.
+   ------------------------------------------------------------ */
+@media (max-width: 48rem) {
+  .hero--portada {
+    min-height: min(78vh, 620px);
+    padding-block: var(--esp-4);
+  }
+
+  .hero--portada .hero__etiqueta {
+    padding: .3rem .7rem;
+    margin-bottom: var(--esp-2);
+    font-size: .74rem;
+    letter-spacing: .02em;
+  }
+
+  .hero--portada .hero__titulo {
+    font-size: clamp(2rem, 9vw, 2.6rem);
+    line-height: 1.08;
+    margin-bottom: var(--esp-2);
+  }
+
+  .hero--portada .hero__precio { margin-bottom: .45rem; }
+  .hero--portada .hero__grupos {
+    margin-bottom: var(--esp-2);
+    font-size: .8rem;
+  }
+
+  .hero--portada .hero__texto {
+    font-size: .98rem;
+    line-height: 1.45;
+    max-width: 30ch;
+    margin-bottom: var(--esp-3);
+  }
+
+  /* Botones apilados y juntos: dos toques, no dos pantallas. */
+  .hero--portada .grupo-botones {
+    display: grid;
+    gap: .6rem;
+    width: 100%;
+  }
+  .hero--portada .grupo-botones .boton { width: 100%; }
+
+  /* Los tres datos son credibilidad, no conversion. En escritorio
+     suman; en movil solo empujan la imagen fuera de la pantalla. */
+  .hero--portada .hero__datos { display: none; }
+}
+
+
+/* ------------------------------------------------------------
+   FRANJA DE OFERTA — que hay, en una linea
+
+   Una fila que se envuelve, no una rejilla de tarjetas: son cuatro
+   palabras, y montarles una tarjeta a cada una las convertiria en
+   otra pantalla que hay que atravesar antes de llegar al producto.
+   ------------------------------------------------------------ */
+.oferta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem .6rem;
+  list-style: none;
+  padding: 0;
+  margin: var(--esp-4) 0 var(--esp-1);
+}
+
+.oferta__tipo {
+  padding: .42rem .85rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  font-size: .9rem;
+  color: var(--texto-suave);
+}
+
+.oferta__tipo strong { color: var(--color-marca); font-weight: 600; }
+
+.oferta__para {
+  margin-bottom: var(--esp-4);
+  font-size: .92rem;
+  color: var(--texto-suave);
+}
+
+@media (max-width: 48rem) {
+  .oferta { gap: .4rem .45rem; margin-top: var(--esp-3); }
+  .oferta__tipo { padding: .34rem .7rem; font-size: .82rem; }
+  .oferta__para { font-size: .86rem; margin-bottom: var(--esp-3); }
+}
+
+/* ------------------------------------------------------------
+   MOSAICO DE LA COLECCION  (seccion "Una coleccion, no un directorio")
+
+   El bloque tenia texto a la izquierda y medio ancho de pagina en
+   blanco a la derecha. Aqui van tres hospedajes distintos: una foto
+   ancha arriba y dos cuadradas debajo.
+
+   Tres y no uno, y de propiedades distintas, porque es lo que la
+   seccion afirma. Una sola foto grande diria "tenemos un hospedaje",
+   que es justo lo contrario.
+
+   Las medidas del hueco las reserva el propio componente Foto con
+   width, height y aspect-ratio, asi que el mosaico no da ningun
+   salto mientras las imagenes bajan.
+   ------------------------------------------------------------ */
+.mosaico {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--esp-2);
+}
+
+.mosaico__pieza {
+  display: block;
+  border-radius: var(--radio-md);
+  overflow: hidden;
+  /* La sombra crece en el hover: la pieza se comporta como las
+     tarjetas del resto del sitio, no como una imagen suelta. */
+  box-shadow: var(--sombra-sm);
+  transition: transform var(--transicion), box-shadow var(--transicion);
+}
+
+.mosaico__pieza--grande { grid-column: 1 / -1; }
+
+.mosaico__pieza .foto { border-radius: 0; }
+
+.mosaico__pieza:hover { transform: translateY(-3px); box-shadow: var(--sombra-md); }
+
+/* El foco tiene que verse: la pieza es un enlace y se llega a el
+   con el tabulador. Sin esto, quien navega con teclado no sabe
+   donde esta. */
+.mosaico__pieza:focus-visible {
+  outline: 3px solid var(--color-sal);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mosaico__pieza { transition: none; }
+  .mosaico__pieza:hover { transform: none; }
+}
+
+/* ------------------------------------------------------------
+   ATHERON SIGUE CRECIENDO  (Casa Colonial Centro en la portada)
+
+   Antes era una seccion clara con un titulo y un boton de contorno:
+   se leia como una nota al pie entre dos bloques mas fuertes, y lo
+   que anuncia -que la operacion crece- es justo lo que da confianza
+   a quien esta decidiendo si reservar.
+
+   Fondo azul noche y filo dorado arriba: el mismo lenguaje de marca,
+   sin estridencia y sin parecer un anuncio. Se distingue del
+   catalogo a simple vista, que es la condicion para que nadie
+   intente reservar algo que todavia no existe.
+   ------------------------------------------------------------ */
+.crece {
+  position: relative;
+  background: var(--color-noche);
+  color: var(--color-blanco);
+}
+
+/* Filo dorado superior. Marca el cambio de registro sin necesidad
+   de un separador que ocupe alto. */
+.crece::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-sal), var(--color-sal-claro), var(--color-sal));
+}
+
+.crece .etiqueta { color: var(--color-sal-claro); }
+.crece h2 { color: var(--color-blanco); }
+.crece .texto-grande { color: rgba(255, 255, 255, .88); }
+
+.crece__interior {
+  display: grid;
+  gap: var(--esp-4);
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  /* La imagen algo mas estrecha que el texto: es el apoyo, no el
+     argumento. El argumento es que hay un proyecto en marcha. */
+  .crece__interior { grid-template-columns: 1.15fr 1fr; gap: var(--esp-6); }
+}
+
+.crece__usos span {
+  color: rgba(255, 255, 255, .82);
+  border-color: rgba(255, 255, 255, .22);
+}
+
+/* La linea de alianza va separada y en tono menor, a proposito. Es
+   una segunda lectura para quien tenga una propiedad o un interes
+   distinto del hospedaje, y no puede competir con el boton de
+   arriba ni parecer una oferta. */
+.crece__alianza {
+  margin-top: var(--esp-4);
+  padding-top: var(--esp-3);
+  border-top: 1px solid rgba(255, 255, 255, .16);
+  font-size: .92rem;
+  color: rgba(255, 255, 255, .72);
+}
+
+.crece__enlace {
+  color: var(--color-sal-claro);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.crece__enlace:hover { color: var(--color-blanco); }
+
+.crece__media .foto-proyecto { margin-top: 0; }
+
+/* El rotulo de la foto pierde contraste sobre el azul noche: es el
+   mismo caso que .seccion--oscura, resuelto igual. */
+.crece .foto-proyecto__rotulo--real { color: var(--color-blanco); }
+.crece .foto-proyecto__aviso,
+.crece .foto-proyecto__texto { color: rgba(255, 255, 255, .82); }
+
+/* ------------------------------------------------------------
+   EXPERIENCIAS  (rediseno del 9 de septiembre de 2026)
+
+   Estas reglas SUSTITUYEN a las de paginas.css para la portada.
+   Las de alli pintaban una caja oscura con un rayado diagonal de
+   relleno -.experiencia__fondo-, que era el hueco de una foto que
+   nunca llego. Se le enseño al visitante durante meses.
+
+   La pieza de aqui no necesita fotografia: el numero grande, la
+   regla dorada y los datos verificados la sostienen. Cuando exista
+   una foto legitima del lugar -hoy no hay ninguna, ver
+   src/data/experiencias.ts- entrara como fondo sin rehacer esto.
+   ------------------------------------------------------------ */
+.seccion .experiencia {
+  position: relative;
+  display: block;
+  min-height: 0;
+  padding: var(--esp-4);
+  color: var(--texto);
+  background: var(--color-blanco);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  overflow: hidden;
+  transition: transform var(--transicion), box-shadow var(--transicion), border-color var(--transicion);
+}
+
+/* La capa oscura de paginas.css sobraba aqui: no hay foto debajo
+   que oscurecer, y sobre fondo blanco tapaba el texto. */
+.seccion .experiencia::after { content: none; }
+
+/* Filo dorado a la izquierda: liga la pieza con el resto de la
+   marca sin pedirle una imagen. */
+.seccion .experiencia::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--color-sal), var(--color-sal-claro));
+}
+
+.experiencia__numero {
+  display: block;
+  font-family: var(--fuente-titulo);
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--color-gris-200);
+  margin-bottom: var(--esp-2);
+}
+
+.seccion .experiencia .experiencia__texto p {
+  color: var(--texto-suave);
+  font-size: .95rem;
+  margin-top: var(--esp-1);
+}
+
+.experiencia__datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .5rem;
+  margin-top: var(--esp-3);
+  padding: 0;
+  list-style: none;
+}
+
+.experiencia__datos li {
+  padding: .3rem .7rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  font-size: .8rem;
+  color: var(--texto-suave);
+}
+
+/* Solo la que tiene guia propia es un enlace. La otra es un
+   <article>: no se le pone aspecto de boton a algo que no lleva a
+   ninguna parte. */
+.experiencia--enlace { text-decoration: none; }
+
+.experiencia--enlace:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sombra-md);
+  border-color: var(--color-sal);
+}
+
+.experiencia--enlace:focus-visible {
+  outline: 3px solid var(--color-sal);
+  outline-offset: 3px;
+}
+
+.experiencia--enlace:hover .experiencia__numero { color: var(--color-sal-claro); }
+
+.experiencia__accion {
+  display: inline-block;
+  margin-top: var(--esp-3);
+  font-weight: 600;
+  font-size: .92rem;
+  color: var(--acento-texto);
+}
+
+/* La flecha va en CSS y no en el texto: es decoracion, y un lector
+   de pantalla no tiene por que leer "flecha derecha". */
+.experiencia__accion::after {
+  content: " \2192";
+  transition: transform var(--transicion);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seccion .experiencia { transition: none; }
+  .experiencia--enlace:hover { transform: none; }
+}
+
+@media (max-width: 48rem) {
+  .seccion .experiencia { padding: var(--esp-3); }
+  .experiencia__numero { font-size: 1.9rem; }
+}
+
+
+/* Cierre CRO home — 11 sep 2026
+   Ajuste 2: recuperar la escala visual del hero original.
+   Los nuevos mensajes ocupan menos alto para no forzar un recorte
+   excesivo de la imagen/video. El CTA 5+ usa vidrio oscuro y dorado,
+   no un bloque amarillo dominante. */
+.hero--portada {
+  min-height: clamp(500px, 67vh, 610px);
+}
+
+.hero--portada .hero__contenido {
+  max-width: 50rem;
+  padding-block: clamp(2.4rem, 5vh, 3.7rem);
+}
+
+.hero--portada .hero__titulo {
+  max-width: 15ch;
+  font-size: clamp(2.9rem, 5vw, 4.25rem);
+  line-height: .98;
+  margin-bottom: .9rem;
+}
+
+.hero__propuesta {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .25rem .7rem;
+  max-width: 42rem;
+  margin: 0 0 .55rem;
+  padding: .55rem .8rem;
+  border: 1px solid rgba(227, 194, 92, .52);
+  border-radius: .65rem;
+  background: rgba(7, 15, 27, .48);
+  backdrop-filter: blur(5px);
+}
+
+.hero__propuesta-rotulo {
+  color: var(--color-sal-claro);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.hero__propuesta strong {
+  color: rgba(255,255,255,.94);
+  font-size: .94rem;
+  font-weight: 650;
+}
+
+.hero__grupos.hero__grupos--cta {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .45rem;
+  width: fit-content;
+  margin: 0 0 .7rem;
+  padding: .48rem .78rem;
+  border: 1px solid rgba(227, 194, 92, .68);
+  border-radius: 999px;
+  background: rgba(7, 15, 27, .58);
+  color: var(--color-sal-claro);
+  text-decoration: none;
+  box-shadow: none;
+  backdrop-filter: blur(5px);
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+}
+
+.hero__grupos.hero__grupos--cta:hover,
+.hero__grupos.hero__grupos--cta:focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--color-sal-claro);
+  background: rgba(227, 194, 92, .16);
+  color: #fff;
+  box-shadow: none;
+}
+
+.hero__grupos--cta strong,
+.hero__grupos--cta span {
+  font-size: .82rem;
+  line-height: 1.2;
+}
+
+.hero--portada .hero__texto {
+  margin-bottom: 1rem;
+}
+
+.oferta__para--destacada {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .35rem .75rem;
+  margin-top: .8rem;
+  padding: .55rem .8rem;
+  border: 1px solid color-mix(in srgb, var(--color-sal-claro) 72%, transparent);
+  border-radius: .65rem;
+  background: color-mix(in srgb, var(--color-sal-claro) 10%, transparent);
+}
+.oferta__para--destacada span {
+  color: var(--color-sal);
+  font-size: .74rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.oferta__para--destacada strong { font-weight: 750; }
+
+.tarjeta__precio--consulta {
+  max-width: 18ch;
+  font-size: .86rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.crece__etiqueta {
+  border: 1px solid color-mix(in srgb, var(--color-sal-claro) 70%, transparent);
+  border-radius: 999px;
+  padding: .42rem .75rem;
+  background: color-mix(in srgb, var(--color-sal-claro) 10%, transparent);
+}
+.crece__oportunidad {
+  display: inline-block;
+  margin: 0 0 .65rem;
+  padding: .5rem .75rem;
+  border: 1px solid var(--color-sal-claro);
+  border-radius: .55rem;
+  color: var(--color-sal-claro);
+  font-size: .82rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 48rem) {
+  .hero--portada {
+    min-height: min(78vh, 620px);
+    padding-block: var(--esp-4);
+  }
+
+  .hero--portada .hero__contenido {
+    max-width: none;
+    padding-block: 0;
+  }
+
+  .hero--portada .hero__titulo {
+    font-size: clamp(2rem, 9vw, 2.6rem);
+    line-height: 1.08;
+  }
+
+  .hero__propuesta {
+    display: flex;
+    width: 100%;
+    padding: .5rem .7rem;
+  }
+
+  .hero__grupos.hero__grupos--cta {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    border-radius: .65rem;
+    text-align: center;
+  }
+
+  .oferta__para--destacada { display: flex; }
+  .tarjeta__precio--consulta { max-width: none; }
+}
+
+
+/* Home: seis hospedajes visibles de una vez */
+.hospedajes-home__grid {
+  grid-template-columns: 1fr;
+  gap: var(--esp-3);
+}
+@media (min-width: 700px) {
+  .hospedajes-home__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1050px) {
+  .hospedajes-home__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Casa Colonial en Home: recorte editorial para ocultar el cielo raso
+   superior y concentrar la imagen en el balcón y la vista. No altera
+   el archivo original ni la ficha del proyecto. */
+.crece__media .foto-proyecto {
+  overflow: hidden;
+  border-radius: var(--radio-md);
+}
+.crece__media .foto-proyecto picture,
+.crece__media .foto-proyecto img {
+  display: block;
+  width: 100%;
+}
+.crece__media .foto-proyecto img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: center 68%;
+}

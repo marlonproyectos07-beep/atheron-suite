@@ -273,6 +273,146 @@ nueva superficie de fallo. La aproximación por idioma es una heurística imperf
 **No se implementa ahora.** Solo se dejan los campos previstos para que añadirlo
 después no obligue a rehacer nada.
 
+### B.6 Video de fondo del hero — implementado
+
+**Construido el 8 de septiembre de 2026.** Este apartado se escribió antes como
+contrato y se conserva porque la implementación lo siguió punto por punto. Lo que
+cambió sobre la marcha está anotado al final, en «Lo que se decidió al construirlo».
+
+**No es el patrón fachada de B.1.** Aquel resuelve un video que el visitante
+*decide* ver y pulsa. Este es un fondo decorativo que nadie pide y que, si se hace
+mal, cobra megabytes a quien solo venía a leer el titular. Las decisiones son casi
+opuestas y por eso va aparte.
+
+#### El punto de partida que no se toca
+
+El hero estático del commit `c42d78f` es la línea base. El `<picture>` actual
+—portada, `hero__fondo`— **sigue siendo el elemento LCP y el fallback**. Todo lo
+que se añada va por encima y solo cuando ya no pueda estropear esa medida.
+
+#### Las cinco reglas
+
+| Regla | Cómo se cumple |
+|---|---|
+| **El poster manda** | El `<video>` **no lleva atributo `poster`**. La imagen que se ve antes, durante y después es el `<picture>` que ya existe debajo. Así el candidato a LCP sigue siendo exactamente el mismo que hoy y no hay que volver a medirlo |
+| **Cero bytes por defecto** | `preload="none"` **y sin atributo `autoplay`**. Ver abajo: los dos juntos no bastan |
+| **Cero desplazamiento** | `position: absolute; inset: 0; object-fit: cover`, igual que la imagen. El video no participa del flujo, así que no puede mover nada |
+| **Decorativo** | `aria-hidden="true"`, sin pista de audio, sin controles, sin subtítulos. No comunica nada que no diga ya el H1 |
+| **Movimiento reducido** | Con `prefers-reduced-motion: reduce` **no se adjunta la fuente**. No es pausarlo: es no descargarlo |
+
+#### El detalle que se suele equivocar
+
+`preload="none"` **no impide la descarga si el elemento lleva `autoplay`**. El
+navegador respeta la intención de reproducir por encima de la de no precargar, y
+el video empieza a bajar durante la carga inicial, que es justo el momento que hay
+que proteger.
+
+La forma correcta es no declarar `autoplay` en el marcado. El `<video>` nace vacío
+—sin `<source>`— y un guion breve le adjunta la fuente y llama a `play()` cuando
+se cumplen a la vez estas condiciones:
+
+1. la página ya terminó de cargar y el hilo principal está libre;
+2. `prefers-reduced-motion` no está en `reduce`;
+3. `navigator.connection` no indica `saveData` ni una conexión lenta;
+4. el hero está en pantalla.
+
+`play()` devuelve una promesa que **puede rechazarse** —hay políticas de
+reproducción automática que ni el silencio salva—. Ese rechazo se captura y no se
+hace nada: la imagen estática ya está debajo y el visitante no percibe fallo
+alguno. Esa es la prueba de que el diseño es correcto: si todo lo nuevo falla, la
+portada queda exactamente como está hoy.
+
+#### Presupuesto y formatos
+
+| | |
+|---|---|
+| **Duración** | 6-10 segundos, en bucle |
+| **Formatos** | WebM (AV1 o VP9) como primera opción y MP4 (H.264) como respaldo |
+| **Peso** | Techo de 1,5 MB para el WebM. Un fondo decorativo que pese más que el resto de la página no se publica |
+| **Sonido** | Ninguna pista de audio en el archivo, no solo `muted` en el marcado |
+| **Resolución** | La misma altura útil que el hero. No tiene sentido servir 1080p para una banda recortada |
+
+#### Dónde encaja en el código
+
+Un único hermano dentro de `<section class="hero hero--portada">`, después del
+`<picture>` y antes del contenido. El velo de `::after` va en `z-index: 1` y el
+texto en `z-index: 2`, así que el video entra en `z-index: 0` sin tocar ninguna de
+las dos capas. El CSS vive en `portada.css`, que solo se incrusta en la portada.
+
+El `<video>` vive en `src/pages/index.astro` y sus estilos en `portada.css`. El
+guion va **en línea**, no en `public/assets/js/` como el resto del sitio: es un
+kilobyte, y una petición más, aunque sea diferida, sigue siendo una petición en la
+ruta que precisamente hay que proteger.
+
+#### Lo que se decidió al construirlo
+
+**En móvil no hay video.** El corte está en 62rem, el mismo donde ya cambia el
+velo. Razón: en móvil se sirve la imagen de 51 KB y el video pesa 974 KB.
+Diecinueve veces más, con datos del visitante, por un fondo que nadie ha pedido.
+La orden pedía priorizar velocidad y esto es lo que sale de aplicarla.
+
+**El material se recortó para que el ciclo cerrara.** El maestro dura 8 segundos y
+la cámara avanza, así que el último fotograma no se parece al primero: en bucle
+eso es un corte visible cada 8 segundos. El derivado dura 6,5 segundos y su último
+segundo y medio disuelve hacia el primero, de modo que el fotograma final coincide
+con el inicial. Medido: la diferencia entre ambos baja de 30,2 a 1,6 sobre 255.
+
+**El contraste se volvió a medir con el video en marcha, no con la imagen.** Con
+un fondo que cambia, el contraste cambia fotograma a fotograma y medir un instante
+no dice nada. Se recorre el ciclo entero: el peor caso da 5,75:1 en el titular y
+6,02:1 en el párrafo, por encima de lo que daba la imagen sola.
+
+#### Lo medido, línea base contra implementación
+
+| | Línea base `87d3b92` | Con video |
+|---|---|---|
+| Bytes hasta `load`, escritorio | 212,0 KB | 213,3 KB |
+| Bytes tras cargar el video | 212,0 KB | 1.171 KB |
+| Rendimiento móvil | 100 | 100 |
+| LCP móvil | 1,3 / 1,3 / 1,4 s | 1,4 / 1,4 / 1,4 s |
+| Peso móvil | 74 KiB | 75 KiB |
+| Escritorio | 100 / 100 / 100 | 100 / 100 / 100 |
+| CLS | 0 | 0 |
+
+El video empieza a descargarse **después** del evento `load`, nunca antes.
+
+#### Lo que queda pendiente de decidir
+
+- **Procedencia.** El video es una recreación generada por IA de un lugar real e
+  identificable, y el movimiento refuerza la lectura de metraje real mucho más que
+  una imagen fija. Registrado en el apartado 8 de [fotografias.md](fotografias.md).
+#### El arranque: dos caminos, una sola puerta
+
+Resuelto el 8 de septiembre de 2026, sobre `aaccb55`. El guion arrancaba solo con
+`load`, y `load` espera a **todos** los recursos, incluidos los de terceros: si una
+hoja externa se cuelga, el video no arranca nunca. No es hipotético — pasa en el
+contenedor donde se prueba esto, donde Google Fonts no es alcanzable y `load` se va
+a 12,7 segundos.
+
+Ahora hay dos disparadores y una sola función de entrada, idempotente:
+
+1. **`load`**, el camino normal.
+2. **`DOMContentLoaded` + 2,5 s**, la red de seguridad.
+
+Gana el que llegue primero; el otro se desactiva solo, y con él su temporizador y
+sus oyentes. El margen se cuenta desde que el documento está listo, muy por detrás
+del LCP, así que no adelanta ninguna descarga.
+
+La función de inicio no se limita a comprobar un booleano: **si el hero no está a
+la vista, no se marca como iniciada**. Antes consumía el único intento sin hacer
+nada, y quien recargara con la página desplazada se quedaba sin video para
+siempre. Ahora el `IntersectionObserver` lo reintenta si el visitante sube.
+
+Medido, con la hoja externa cortada al instante y colgada a propósito:
+
+| | `load` normal | `load` colgado por un tercero |
+|---|---|---|
+| DOM listo | 214 ms | 139 ms |
+| `load` | 229 ms | no llegó a ocurrir |
+| Empieza la descarga | **292 ms** (por `load`) | **2.628 ms** (por la red de seguridad) |
+
+Antes del cambio, la segunda columna era 12,7 segundos.
+
 ---
 
 ## C. Estructura de datos y CMS

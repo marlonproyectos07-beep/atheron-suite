@@ -1,0 +1,538 @@
+---
+/* ============================================================
+   CASA COLONIAL CENTRO BY ATHERON — pagina de proyecto
+
+   BORRADOR PRIVADO. NO PUBLICAR SIN APROBACION ESCRITA.
+
+   Estado con el que sale a la calle esta pagina:
+
+     - noindex, nofollow  (Base.astro, indexable={false} y
+                           seguirEnlaces={false})
+     - FUERA del sitemap  (src/pages/sitemap.xml.ts no la lista)
+     - sin enlace desde la navegacion ni desde la portada
+     - accesible solo por la vista previa de Vercel
+
+   Los cuatro puntos van juntos a proposito. Quitar solo uno no
+   publica la pagina, pero deja el sitio en un estado incoherente:
+   una direccion indexable que nadie enlaza, o un sitemap que apunta
+   a una pagina con noindex. Cuando llegue la aprobacion se repasan
+   los cuatro de una vez, mas el interruptor BORRADOR de
+   src/data/casa-colonial-centro.ts.
+
+   DE DONDE SALE EL CONTENIDO
+   De src/data/casa-colonial-centro.ts, y de ningun otro sitio. Esta
+   pagina no reutiliza fotos, capacidades, tarifas, habitaciones ni
+   textos de Hotel Atheron Suite, Casa Algarra, Casa Neusa ni de
+   ningun otro hospedaje.
+
+   LO QUE ESTA PAGINA NO HACE
+   No pide dinero. No lleva formulario de aportes, pasarela de pago,
+   checkout, suscripcion, transferencia, reserva de participacion,
+   calculo de rentabilidad ni simulador de retorno. No promete
+   retornos. La unica accion posible es escribir por WhatsApp.
+   ============================================================ */
+
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import AvisoInformativo from '../../components/AvisoInformativo.astro';
+import ProyectoFoto from '../../components/ProyectoFoto.astro';
+
+import { recorridoVisible, cierreRecorrido } from '../../data/casa-colonial-recorrido';
+import { menuHospedajes } from '../../data/navegacion';
+import { atributosWhatsApp, enlaceWhatsApp } from '../../data/whatsapp';
+import {
+  BORRADOR,
+  RUTA,
+  NOMBRE,
+  NOMBRE_CORTO,
+  UBICACION_PUBLICA,
+  MENSAJE_GENERAL,
+  AVISO_INFORMATIVO,
+  seo,
+  hero,
+  heroVisionFachada,
+  ubicacion,
+  historia,
+  /* El corte del 12/09/2026 dejo esta pagina con cuatro bloques:
+     hero, ubicacion, recorrido y las siete tarjetas. Lo que ya no se
+     importa -estadoActual, galeriaEstadoActual, transformacion,
+     unidades, modelo, alianzas, bitacora, cierre y el objeto aviso-
+     sigue exportado en los datos, intacto. Se queda fuera del import
+     para no arrastrar dependencias fantasma, y vuelve con una linea.
+     AVISO_INFORMATIVO si se conserva: es el descargo legal. */
+} from '../../data/casa-colonial-centro';
+
+/* La cabecera es la del sitio, con el menu del listado: esta pagina
+   no se anade al menu, pero si ofrece la salida hacia el sitio. */
+/* El href se construye con EL MISMO mensaje que lleva data-whatsapp.
+   Antes apuntaba al enlace de respaldo generico, asi que el boton
+   decia una cosa -conversar sobre el proyecto- y abria WhatsApp con
+   otra -consultar disponibilidad de un hospedaje-. */
+const ctaCabecera = {
+  texto: 'Conversar por WhatsApp',
+  href: enlaceWhatsApp(MENSAJE_GENERAL),
+  clase: 'boton--whatsapp',
+  whatsapp: MENSAJE_GENERAL,
+  externo: true,
+};
+
+
+const avisoBorrador = BORRADOR
+  ? 'Borrador privado del proyecto Casa Colonial Centro. No indexado, sin enlazar y sin publicar. Pendiente de aprobación de Marlon y ChatGPT.'
+  : null;
+
+/* El hero conceptual aprobado por dirección el 11/09/2026. La ruta
+   sale del catálogo de fotos, no escrita a mano: antes eran tres URL
+   de un CDN externo puestas aquí, y un enlace temporal en la maqueta
+   es un hero que un día desaparece sin error visible. */
+
+/* ============================================================
+   DATOS ESTRUCTURADOS
+
+   Solo tres tipos, y ninguno de ellos declara un negocio abierto:
+   WebPage (esto es una pagina), Organization (quien la publica) y
+   BreadcrumbList (donde esta dentro del sitio).
+
+   LO QUE NO SE MARCA, Y POR QUE:
+   Hotel, LodgingBusiness, Restaurant, FoodEstablishment, Offer,
+   Product, AggregateRating, Review, PriceSpecification, Event y
+   OpeningHoursSpecification describirian servicios que todavia no
+   existen. Marcar como existente algo que es una propuesta es
+   declararle a Google un negocio que no puede visitar. BarOrPub no
+   se usa nunca: la cuarta unidad es un restaurante gastrobar.
+
+   El dominio no se escribe a mano: sale de astro.config.mjs, igual
+   que la canonica.
+
+   MIGA DE PAN: "Proyectos" va SIN direccion a proposito. La ruta
+   /proyectos no existe como pagina, y crear una pagina publica
+   vacia solo para que la miga tenga a donde apuntar seria peor
+   que dejar el escalon sin enlace. Queda como pendiente.
+   ============================================================ */
+const urlPagina = new URL(RUTA, Astro.site).href;
+const urlSitio = new URL('/', Astro.site).href;
+
+const fichaPagina = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${urlPagina}#pagina`,
+      url: urlPagina,
+      name: seo.titulo,
+      description: seo.descripcion,
+      inLanguage: 'es-CO',
+      isPartOf: { '@id': `${urlSitio}#organizacion` },
+      breadcrumb: { '@id': `${urlPagina}#miga` },
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${urlSitio}#organizacion`,
+      name: 'Atheron Suite',
+      url: urlSitio,
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': `${urlPagina}#miga`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: urlSitio },
+        { '@type': 'ListItem', position: 2, name: 'Proyectos' },
+        { '@type': 'ListItem', position: 3, name: NOMBRE_CORTO, item: urlPagina },
+      ],
+    },
+  ],
+};
+---
+
+<Base
+  titulo={seo.titulo}
+  descripcion={seo.descripcion}
+  ruta={RUTA}
+  {/* EL INTERRUPTOR. Mientras BORRADOR sea true la pagina sale con
+      noindex, nofollow. Al ponerlo en false -y solo entonces- pasa a
+      index, follow. La canonica no depende de esto: la construye
+      Base.astro desde la ruta y el dominio, asi que ya es la correcta
+      hoy y lo seguira siendo despues.
+
+      Falta un paso mas, y es deliberado que sea manual: anadir la ruta
+      a src/pages/sitemap.xml.ts. Publicar es una decision, no un
+      efecto secundario de cambiar una variable. */}
+  indexable={!BORRADOR}
+  seguirEnlaces={!BORRADOR}
+  imagen={seo.imagen}
+  imagenAlt={seo.imagenAlt}
+  avisoBorrador={avisoBorrador}
+  jsonLd={fichaPagina}
+  hojasExtra={['proyecto-foto', 'proyecto-casa-colonial']}
+>
+  <Cabecera enlaces={menuHospedajes} cta={ctaCabecera} />
+
+  <main id="contenido">
+
+    {/* ============================================================
+         1. HERO
+
+         Fotografia interior real, con el balcon hacia el centro
+         historico. La fachada no se usa en ningun sitio: ni aqui,
+         ni en la galeria, ni al compartir el enlace.
+
+         Es la unica imagen de la pagina que se pide con prioridad
+         (prioritaria), porque es la primera que se ve y la que
+         Lighthouse mide como LCP. Todas las demas van diferidas.
+         ============================================================ */}
+    <section class="proyecto-hero-aprobado" aria-labelledby="proyecto-hero-titulo">
+      <a
+        class="proyecto-hero-aprobado__enlace"
+        {/* Apuntaba a #transformacion, que el corte del 12/09/2026
+            retiro: habria quedado un ancla a ninguna parte. Ahora
+            lleva a la primera parada del recorrido, que es
+            literalmente la transformacion que el enlace promete. */}
+        href={`#${recorridoVisible[0].id}`}
+        aria-label="Descubrir la transformación de Casa Colonial Centro"
+      >
+        {/* El hero va a sangre, asi que el navegador necesita tantos
+            pixeles como ancho tenga la pantalla y ni uno mas. Las
+            variantes las genera el prebuild (optimiza-selector.mjs);
+            el archivo de 1536 queda de respaldo y para escritorio. */}
+        <img
+          class="proyecto-hero-aprobado__imagen"
+          src={heroVisionFachada.ruta}
+          srcset={[
+            `${heroVisionFachada.ruta.replace(/\.webp$/, '-600.webp')} 600w`,
+            `${heroVisionFachada.ruta.replace(/\.webp$/, '-800.webp')} 800w`,
+            `${heroVisionFachada.ruta.replace(/\.webp$/, '-1100.webp')} 1100w`,
+            `${heroVisionFachada.ruta} ${heroVisionFachada.ancho}w`,
+          ].join(', ')}
+          sizes="100vw"
+          alt={heroVisionFachada.alt}
+          width={heroVisionFachada.ancho}
+          height={heroVisionFachada.alto}
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </a>
+
+      {/* La clase es "solo-lectores", la del sitio. Antes decía
+          "sr-only", que no existe en ninguna hoja: el h1 se pintaba
+          visible, en texto oscuro sobre el fondo oscuro del hero. */}
+      <h1 id="proyecto-hero-titulo" class="solo-lectores">Casa Colonial Centro — Una casa con historia. Una nueva visión.</h1>
+      <p class="proyecto-hero-aprobado__rotulo">Representación conceptual · Proyecto en desarrollo</p>
+    </section>
+
+    {/* ============================================================
+         2. UBICACION / CONTEXTO
+         Donde esta la casa, antes de entrar en ella. Se ensena desde
+         dentro hacia el centro historico: la direccion exacta no se
+         publica todavia.
+         ============================================================ */}
+    {/* Una sola fotografia aprobada, asi que NO se monta una rejilla de
+        dos columnas: se centra y se agranda. Antes ocupaba 28rem
+        pegada a la izquierda y dejaba media pantalla en blanco. */}
+    <section class="seccion parada" id={ubicacion.id} aria-labelledby="ubicacion-titulo">
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">{ubicacion.ceja}</span>
+          <h2 id="ubicacion-titulo">{ubicacion.titulo}</h2>
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">{ubicacion.texto}</p>
+        </div>
+
+        <div class="bloque-imagen-unica">
+          <p class="comparativa__momento">Estado actual</p>
+          <ProyectoFoto foto={ubicacion.foto} medidas="(min-width: 768px) 46rem, 100vw" anchos={[400, 700]} />
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         3 A 11. EL RECORRIDO — HOY / VISION ATHERON
+
+         Fachada, acceso desde el parque, corredor, escalera y llegada
+         al piso 2. Dos archivos por bloque, nunca una imagen
+         combinada, y el texto en HTML.
+
+         La fachada ya no se maqueta a mano aqui: era el unico bloque
+         que escribia sus rotulos en el HTML -y por tanto el unico que
+         podia quedarse sin ellos al copiarlo-. Ahora sale del mismo
+         recorrido que los demas.
+
+         LOS ROTULOS NO SE ESCRIBEN AQUI. Los pone ProyectoFoto a
+         partir del tipo de cada imagen: REAL lleva "fotografia real",
+         CONCEPTUAL lleva el sello encima, el rotulo debajo y el aviso
+         de que el diseno puede cambiar. Escribirlos a mano en esta
+         maqueta es exactamente como se acaba ensenando una imagen
+         generada sin advertir que lo es.
+
+         EN MOVIL se apilan en el orden del documento: primero HOY,
+         despues VISION ATHERON. El orden lo da el HTML, no el CSS,
+         asi que tambien es el orden que oye un lector de pantalla.
+         ============================================================ */}
+    {recorridoVisible.map((bloque, indice) => (
+      <section
+        class:list={['seccion', 'parada', indice % 2 === 1 && 'seccion--alterna']}
+        id={bloque.id}
+        aria-labelledby={`${bloque.id}-titulo`}
+      >
+        <div class="contenedor aparecer">
+          <div class="encabezado-seccion">
+            <span class="etiqueta">{bloque.ceja}</span>
+            <h2 id={`${bloque.id}-titulo`}>{bloque.titulo}</h2>
+            <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+              {bloque.texto}
+            </p>
+          </div>
+
+          {/* Los datos de la unidad, cuando los hay. Ninguna cifra se
+              escribe aqui: vienen del archivo de datos, y alli solo
+              entra lo que direccion aprobo por escrito. */}
+          {bloque.ficha && (
+            <dl class="comparativa__datos">
+              {bloque.ficha.map((dato) => (
+                <div class="comparativa__dato">
+                  <dt>{dato.etiqueta}</dt>
+                  <dd>{dato.valor}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
+          {/* ============================================================
+               DOS PATRONES, Y NINGUN TERCERO
+
+               A) Hay pareja -> comparativa 50/50: UNA real contra UNA
+                  vision. Si el espacio llego con mas tomas reales -la
+                  201 tiene tres, la suite 207 cuatro-, las demas NO se
+                  apilan en la columna izquierda: eso la estiraba al
+                  triple de la derecha y dejaba media pantalla en
+                  blanco. Van en una tira aparte, debajo y a todo el
+                  ancho.
+
+               B) No hay pareja -> una sola imagen, centrada y grande.
+                  No se pinta una rejilla de dos columnas con un hueco
+                  al lado, ni se reserva el sitio de la imagen que
+                  falta, ni se repite una foto para rellenar.
+               ============================================================ */}
+          {bloque.disposicion === 'apilado' && bloque.vision ? (
+            /* ============================================================
+                 APILADO — primero el estado actual, despues la vision
+
+                 Solo la terraza. Sus fotografias son 539 x 1200 y el
+                 render 4:3: enfrentadas en dos columnas quedaba una
+                 franja estrecha junto a una postal, y recortar la
+                 vertical para igualarlas se comeria media toma.
+
+                 Arriba las reales, centradas y a su proporcion. Debajo
+                 el render, mas ancho, porque es horizontal y lo
+                 aprovecha. Las dos imagenes siguen siendo archivos
+                 separados y cada una con su rotulo en HTML.
+                 ============================================================ */
+            <div class="apilado">
+              <div class="apilado__real">
+                <p class="comparativa__momento">Estado actual</p>
+                <ProyectoFoto foto={bloque.actuales[0]} medidas="(min-width: 768px) 24rem, 100vw" anchos={[400, 700]} />
+              </div>
+
+              <div class="apilado__vision">
+                <p class="comparativa__momento comparativa__momento--vision">Visión del proyecto</p>
+                <ProyectoFoto foto={bloque.vision} medidas="(min-width: 768px) 56rem, 100vw" anchos={[400, 700]} />
+              </div>
+            </div>
+          ) : bloque.actuales.length > 0 && bloque.vision ? (
+            /* Una real contra una vision, y nada mas. Varios espacios
+               llegaron con tres o cuatro tomas del mismo sitio -la
+               201, el bano modelo, la suite 207, el gastrobar-. Se
+               probo ensenarlas todas en una tira debajo y direccion lo
+               descarto: claridad, no cantidad. Se pinta la toma de
+               establecimiento, que es la que explica el espacio, y las
+               demas se quedan declaradas en los datos sin renderizar,
+               listas para cuando hagan falta. */
+            <div class="comparativa">
+              <div class="comparativa__item">
+                <p class="comparativa__momento">Estado actual</p>
+                <ProyectoFoto foto={bloque.actuales[0]} medidas="(min-width: 768px) 44vw, 100vw" anchos={[400, 700]} />
+              </div>
+              <div class="comparativa__item">
+                <p class="comparativa__momento comparativa__momento--vision">Visión del proyecto</p>
+                <ProyectoFoto foto={bloque.vision} medidas="(min-width: 768px) 44vw, 100vw" anchos={[400, 700]} />
+              </div>
+            </div>
+          ) : (
+            <div class="bloque-imagen-unica">
+              {bloque.vision ? (
+                <>
+                  <p class="comparativa__momento comparativa__momento--vision">Visión del proyecto</p>
+                  <ProyectoFoto foto={bloque.vision} medidas="(min-width: 768px) 46rem, 100vw" anchos={[400, 700]} />
+                </>
+              ) : (
+                <>
+                  <p class="comparativa__momento">Estado actual</p>
+                  <ProyectoFoto foto={bloque.actuales[0]} medidas="(min-width: 768px) 46rem, 100vw" anchos={[400, 700]} />
+                </>
+              )}
+            </div>
+          )}
+
+          {bloque.nota && <p class="comparativa__nota">{bloque.nota}</p>}
+        </div>
+      </section>
+    ))}
+
+    {/* ============================================================
+         2. HISTORIA
+
+         PENDIENTE JURIDICO: los textos relacionados con contrato,
+         opcion preferente de compra, permisos y autoridades estan
+         pendientes de aprobacion juridica antes de publicacion
+         publica. Por eso aqui NO aparecen el canon, la identidad de
+         los propietarios, las condiciones contractuales privadas, el
+         precio futuro de compra, la inversion realizada, los montos
+         requeridos ni los porcentajes de participacion.
+         ============================================================ */}
+    {/* solo-titulo: esta seccion se quedo con la ceja y el H2 y nada
+        mas. Sin esa clase arrastraba 96 px de padding arriba y abajo
+        mas 48 de margen bajo el encabezado: casi 250 px de aire
+        alrededor de un titular suelto. */}
+    <section class="seccion seccion--solo-titulo" id={historia.id}>
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">{historia.ceja}</span>
+          <h2>{historia.titulo}</h2>
+        </div>
+
+        {/* ============================================================
+             AQUI VIVIA EL CUERPO DE ESTA SECCION
+
+             Direccion lo retiro el 12/09/2026. Dejaron de pintarse los
+             tres parrafos, la frase destacada "Recuperar un inmueble
+             con historia y convertirlo en una oportunidad para
+             Zipaquira" y la fotografia del interior con balcon, con su
+             contenedor y su pie.
+
+             La seccion se queda con la ceja y el H2, que es lo que
+             direccion pidio conservar. NO queda ningun envoltorio
+             vacio: se retiraron los div, el blockquote y el bloque de
+             foto enteros, no su contenido. El espaciado lo sigue
+             dando .encabezado-seccion, que es el unico hijo.
+
+             Nada se borro de los datos: historia.parrafos,
+             historia.destacado y historia.fotos siguen en
+             src/data/casa-colonial-centro.ts, y con ellos la
+             fotografia fotoHistoriaBalcon, que ya no se renderiza en
+             ninguna parte pero sigue en el repositorio.
+             ============================================================ */}
+      </div>
+    </section>
+
+    {/* ============================================================
+         RESUMEN DEL RECORRIDO — LAS FORMAS DE CREAR EXPERIENCIAS
+
+         Movida aqui el 12/09/2026. Estaba justo despues del recorrido,
+         en mitad de la experiencia, y direccion la queria funcionando
+         como resumen de lo que el visitante ACABA de ver. Ahora cierra
+         la presentacion, antes del modelo.
+
+         Siete frentes del proyecto, sin una sola cifra: ni tarifas,
+         ni rentabilidad, ni aforos, ni fecha de apertura. Es lo que
+         la casa puede albergar, no una oferta.
+         ============================================================ */}
+    <section class="seccion formas" id={cierreRecorrido.id} aria-labelledby="formas-titulo">
+      <div class="contenedor aparecer">
+        <div class="encabezado-seccion">
+          <span class="etiqueta">{cierreRecorrido.ceja}</span>
+          <h2 id="formas-titulo">{cierreRecorrido.titulo}</h2>
+          <p class="texto-grande texto-suave" style="margin-top: var(--esp-2);">
+            {cierreRecorrido.texto}
+          </p>
+        </div>
+
+        <ul class="formas__rejilla">
+          {cierreRecorrido.tarjetas.map((t) => (
+            <li class="formas__tarjeta">
+              <h3 class="formas__titulo">{t.titulo}</h3>
+              <p class="formas__texto">{t.texto}</p>
+            </li>
+          ))}
+        </ul>
+
+        <div class="formas__accion">
+          <a
+            class="boton boton--grande boton--whatsapp"
+            href={enlaceWhatsApp(MENSAJE_GENERAL)}
+            data-whatsapp={MENSAJE_GENERAL}
+            data-evento="ccc_whatsapp_click"
+            rel="noopener"
+            target="_blank"
+          >Conversar sobre el proyecto</a>
+        </div>
+
+        {/* El descargo legal, en letra pequena y al pie de las
+            tarjetas. Estaba en su propia seccion "Aviso informativo",
+            que el corte del 12/09/2026 retiro. Dice que esta pagina no
+            constituye oferta de inversion ni promesa de rentabilidad,
+            y en una presentacion a inversionistas esa frase no puede
+            faltar: borrarla en silencio habria sido el unico cambio de
+            este corte con consecuencias fuera del diseno.
+
+            Asi las siete tarjetas siguen siendo el ultimo bloque
+            EDITORIAL -no hay seccion despues- y el descargo sigue
+            estando. */}
+        <p class="formas__legal">{AVISO_INFORMATIVO}</p>
+      </div>
+    </section>
+    {/* ============================================================
+         EL CORTE NARRATIVO DEL 12/09/2026
+
+         Direccion fijo que la landing termina en las siete tarjetas.
+         Dejaron de pintarse, en este orden:
+
+           la casa hoy          galeria del estado actual
+           transformacion       el comparador de pestanas
+           cuatro experiencias  las tarjetas de unidad
+           EL MODELO            la seccion oscura del modelo
+           aviso informativo    ver mas abajo, NO desaparecio
+
+         Ninguna se borro: las cinco siguen exportadas en
+         src/data/casa-colonial-centro.ts y vuelven descomentando su
+         seccion. Lo que se retiro es el render, no el contenido.
+
+         EL DESCARGO LEGAL NO SE PERDIO
+         La seccion "Aviso informativo" llevaba el texto que dice que
+         esta pagina no constituye oferta de inversion ni promesa de
+         rentabilidad. Borrarlo en silencio habria dejado una
+         presentacion a inversionistas sin esa frase, asi que se movio
+         a letra pequena al pie de las siete tarjetas: las tarjetas
+         siguen siendo el ultimo bloque EDITORIAL, y el descargo sigue
+         estando. Si direccion prefiere retirarlo del todo, es una
+         decision suya y no un descuido de maquetacion.
+         ============================================================ */}
+
+    {/* ============================================================
+         LO QUE SE RETIRO DE LA MAQUETA EL 12/09/2026
+
+         Direccion fijo que EL MODELO es el cierre del relato y que
+         despues de el no siga la presentacion. Tres secciones dejaron
+         de pintarse:
+
+           alianzas   la peticion de aliados. Lo que decia vive ahora
+                      en el texto del proyecto, que habla de abrir la
+                      casa a aliados operadores, y la conversacion se
+                      abre con el CTA de WhatsApp del cierre.
+           bitacora   entradas de blog del proyecto. Desarrollo
+                      editorial que no hacia falta al final.
+           cierre     un segundo CTA. Habia dos seguidos.
+
+         NO se borro nada: los tres siguen exportados en
+         src/data/casa-colonial-centro.ts y vuelven con descomentar su
+         seccion. El aviso informativo SI se conserva, porque es una
+         nota legal y no desarrollo comercial.
+         ============================================================ */}
+
+
+  </main>
+
+  <Pie variante="simple" />
+
+  <BotonFlotante mensaje={MENSAJE_GENERAL} />
+</Base>

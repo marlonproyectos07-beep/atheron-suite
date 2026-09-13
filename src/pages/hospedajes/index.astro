@@ -1,6 +1,6 @@
 ---
 /* ============================================================
-   LISTADO DE LOS 7 HOSPEDAJES
+   CATALOGO INTEGRADO DE HOSPEDAJES Y PROYECTOS
 
    Antes: siete bloques de HTML casi identicos, copiados a mano.
    Cambiar el texto del boton de WhatsApp obligaba a editarlo
@@ -19,53 +19,150 @@ import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import Marca from '../../components/Marca.astro';
 import Foto from '../../components/Foto.astro';
+import ProyectoFoto from '../../components/ProyectoFoto.astro';
 import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
+import { migaDePan, url, ORGANIZACION } from '../../data/seo';
+import { atributosWhatsApp, MENSAJE_DISPONIBILIDAD, mensajeDisponibilidadDe } from '../../data/whatsapp';
+import { fotoPatioArcos, conceptoPatioGastronomico } from '../../data/casa-colonial-centro';
 
-/* ------------------------------------------------------------
-   RECOMENDACION PENDIENTE DE TU DECISION
-
-   Hoy las tarjetas de las fichas en obra llevan boton "Ver ficha".
-   Quien lo pulsa aterriza en una pagina que dice "Nombre del
-   hospedaje 2" y "$ ---". Eso es peor que no tener el enlace: el
-   visitante ya estaba interesado y le ensenamos que no hay nada.
-
-   Poniendo esto en true, la tarjeta se queda (comunica que hay
-   siete propiedades) pero el enlace desaparece hasta que la ficha
-   tenga contenido real. El boton de WhatsApp se queda siempre,
-   que es el que convierte de verdad.
-
-   Lo dejo en false para que la migracion no cambie nada todavia.
-   ------------------------------------------------------------ */
 const OCULTAR_ENLACE_DE_FICHAS_EN_OBRA = false;
+
+/* Estas dos fichas tienen contenido e imagenes reales, pero siguen
+   deliberadamente marcadas como borrador y noindex mientras se
+   completan sus datos operativos. Se muestran en esta vista previa
+   para que direccion pueda revisarlas sin declararlas publicadas. */
+const BORRADORES_VISIBLES = new Set([
+  'edificio-algarra',
+  'hotel-la-margarita',
+]);
 
 /* Ordenados por el campo "orden" del contenido, no por el nombre
    del archivo: asi renombrar un hospedaje no reordena el listado. */
 const hospedajes = (await getCollection('hospedajes'))
-  .filter((f) => f.data.publicado)
+  .filter((f) => f.data.publicado || BORRADORES_VISIBLES.has(f.id))
   .sort((a, b) => a.data.orden - b.data.orden);
+
+/* ============================================================
+   DATOS ESTRUCTURADOS DEL CATALOGO
+
+   Tres piezas, y ninguna dice nada que la pagina no enseñe:
+   CollectionPage (esto es un listado), ItemList (que hay en el
+   listado, y en que orden) y BreadcrumbList (donde esta el listado
+   dentro del sitio).
+
+   EL ITEMLIST SOLO LISTA LAS FICHAS PUBLICADAS
+   Las que estan en preparacion salen en la pagina para que
+   direccion pueda revisarlas, pero llevan noindex. Meterlas en la
+   lista que lee un buscador seria presentar como parte del catalogo
+   unas propiedades cuyos datos operativos todavia no estan
+   confirmados, que es justo lo que el noindex evita.
+
+   Cada elemento lleva nombre y direccion, nada mas. Sin precio, sin
+   valoraciones y sin disponibilidad: eso serian datos de oferta, y
+   una oferta se declara cuando existe. */
+const listables = hospedajes.filter((f) => f.data.publicado);
+
+/* La foto del hero sale del primer hospedaje publicado, no de una
+   ruta escrita a mano. Asi el hero siempre enseña una propiedad que
+   de verdad esta en el catalogo de abajo, y si cambia el orden o la
+   foto de la ficha, cambia sola.
+
+   Se usa fotoPrincipal y no fotoTarjeta porque es la unica que el
+   proceso previo a construir convierte a AVIF y WebP en cuatro
+   anchos, y esta es la imagen LCP de la pagina. */
+const primero = listables.find((f) => f.data.fotoPrincipal && f.data.fotoPrincipalAlt);
+const fotoHero = primero
+  ? { src: primero.data.fotoPrincipal as string, alt: primero.data.fotoPrincipalAlt as string }
+  : null;
+
+const fichaCatalogo = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      '@id': `${url('/hospedajes')}#pagina`,
+      url: url('/hospedajes'),
+      name: 'Hoteles y hospedajes en Zipaquirá | Atheron Suite',
+      description:
+        'Encuentra hoteles, casas y alojamientos para parejas, familias y grupos en Zipaquirá y Neusa. Conoce fotos, ubicación y disponibilidad con Atheron Suite.',
+      inLanguage: 'es-CO',
+      isPartOf: { '@id': ORGANIZACION['@id'] },
+      breadcrumb: { '@id': `${url('/hospedajes')}#miga` },
+      mainEntity: { '@id': `${url('/hospedajes')}#lista` },
+    },
+    {
+      '@type': 'ItemList',
+      '@id': `${url('/hospedajes')}#lista`,
+      name: 'Hospedajes de Atheron Suite',
+      numberOfItems: listables.length,
+      itemListElement: listables.map((f, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: f.data.nombre,
+        url: url(`/hospedajes/${f.id}`),
+      })),
+    },
+    ORGANIZACION,
+    migaDePan([
+      { nombre: 'Inicio', ruta: '/' },
+      { nombre: 'Hospedajes', ruta: '/hospedajes' },
+    ], `${url('/hospedajes')}#miga`),
+  ],
+};
 ---
 
 <Base
-  titulo="Nuestros hospedajes en Zipaquira | Atheron Suite"
-  descripcion="Conoce nuestros hospedajes en Zipaquira, Cundinamarca. Habitaciones, fotos, servicios y ubicacion de cada uno."
+  titulo="Hoteles y hospedajes en Zipaquirá | Atheron Suite"
+  descripcion="Encuentra hoteles, casas y alojamientos para parejas, familias y grupos en Zipaquirá y Neusa. Conoce fotos, ubicación y disponibilidad con Atheron Suite."
   ruta="/hospedajes"
-  ogTitulo="Hospedajes en Zipaquira | Atheron Suite"
-  ogDescripcion="Hospedajes seleccionados en Zipaquira, Cundinamarca. Mira habitaciones, fotos y ubicacion."
-  avisoBorrador="Version de trabajo. Estamos completando la informacion de cada hospedaje."
+  ogTitulo="Hospedajes en Zipaquirá | Atheron Suite"
+  ogDescripcion="Hospedajes seleccionados en Zipaquirá, Cundinamarca. Mira habitaciones, fotos y ubicación."
+  {/* La misma fotografia real que abre la pagina. */}
+  imagen={fotoHero?.src}
+  imagenAlt={fotoHero?.alt}
+  avisoBorrador="Version de trabajo. Estamos completando la información de cada hospedaje."
+  jsonLd={fichaCatalogo}
+  hojasExtra={['proyecto-foto', 'catalogo']}
 >
 
-  <Cabecera enlaces={menuHospedajes} cta={ctaDisponibilidad} actual="/hospedajes" />
+  <Cabecera enlaces={menuHospedajes} cta={{ ...ctaDisponibilidad, origen: 'catalogo' }} actual="/hospedajes" />
 
   <main id="contenido">
 
-    {/* Hero corto: en paginas internas no hace falta pantalla completa */}
-    <section class="hero hero--interior">
+    {/* Hero corto: en una pagina interna no hace falta pantalla
+        completa. Quien llega aqui ya decidio, y lo que necesita es ver
+        las propiedades, no otro discurso.
+
+        El hero se percibia generico: etiqueta, dos palabras y una
+        linea, sobre el mismo fondo plano de cualquier pagina interna.
+        Ahora lleva fotografia REAL de uno de los hospedajes del
+        catalogo, oscurecida lo justo para que el texto pase contraste.
+
+        Por que esta foto y no otra: es la fotoPrincipal del primer
+        hospedaje publicado, tomada de la coleccion. Si manana cambia
+        el orden o la foto, el hero se actualiza solo y sigue siendo
+        una propiedad que de verdad esta en el catalogo de abajo.
+
+        Es la imagen LCP de esta pagina: va con prioridad, sin
+        diferir y con las medidas declaradas. */}
+    <section class="hero hero--interior hero--catalogo">
+      {fotoHero && (
+        <div class="hero-catalogo__fondo">
+          <Foto
+            src={fotoHero.src}
+            alt={fotoHero.alt}
+            anchos={[400, 600, 700, 900]}
+            medidas="100vw"
+            prioritaria
+          />
+        </div>
+      )}
       <div class="contenedor hero__contenido">
-        <span class="hero__etiqueta">Zipaquira, Cundinamarca</span>
-        <h1 class="hero__titulo">Nuestros hospedajes</h1>
+        <span class="hero__etiqueta">Hospedajes en Zipaquirá</span>
+        <h1 class="hero__titulo">Hospedajes Atheron en Zipaquirá</h1>
         <p class="hero__texto">
-          Cada uno tiene su caracter. Entra a la ficha que te llame la atencion
-          para ver habitaciones, fotos y ubicacion.
+          Casas, habitaciones y alojamientos seleccionados para parejas,
+          familias y grupos. Encuentra el espacio que mejor se adapta a tu viaje.
         </p>
       </div>
     </section>
@@ -78,19 +175,68 @@ const hospedajes = (await getCollection('hospedajes'))
              Explica el modelo antes de que el visitante se confunda:
              una oficina central coordina todos los hospedajes.
              ========================================================== */}
-        <div class="nota-reserva" style="margin-bottom: var(--esp-5);">
-          <span class="nota-reserva__icono" aria-hidden="true">&#127968;</span>
-          <div>
-            <strong>Como funciona</strong>
-            Coordinamos todos los hospedajes desde nuestra oficina en la
-            Cra. 9 #10-32 de Zipaquira. Escribenos por WhatsApp, te confirmamos
-            disponibilidad y precio, y al confirmar la reserva te damos la
-            direccion exacta y coordinamos tu llegada.
+        {/* ==========================================================
+             OFICINA PRINCIPAL
+
+             Antes era una nota gris titulada "Como funciona". Decia lo
+             justo y no daba ninguna autoridad: una oficina fisica con
+             direccion y horario es de las pocas cosas que separan a
+             Atheron de un anuncio suelto, y estaba escrita como una
+             advertencia.
+
+             DOS CUIDADOS EN LA REDACCION, LOS DOS SEÑALADOS POR
+             DIRECCION:
+
+             1. Lo GRATIS es guardar el equipaje. La version anterior
+                de este texto ponia "sin costo" cerca de "consulta
+                disponibilidad", y se leia como si consultar pudiera
+                costar algo. Van en bloques separados y el "sin costo"
+                esta pegado al equipaje.
+
+             2. El domingo NO se garantiza. Se dice "consulta
+                disponibilidad previamente", no un horario: prometer
+                que abrimos y que alguien llegue con las maletas un
+                domingo a puerta cerrada es peor que no ofrecerlo.
+             ========================================================== */}
+        <section class="oficina" aria-labelledby="oficina-titulo">
+          <div class="oficina__bloque">
+            <span class="oficina__icono" aria-hidden="true">&#127968;</span>
+            <div>
+              <h2 class="oficina__titulo" id="oficina-titulo">
+                Oficina principal Atheron · Zipaquirá
+              </h2>
+              <p>
+                Coordinamos nuestros hospedajes desde nuestra oficina principal en
+                Cra. 9 #10-32. Consulta por WhatsApp disponibilidad, tarifas y la
+                opción que mejor se adapte a tu viaje.
+              </p>
+              <a
+                class="boton boton--whatsapp"
+                {...atributosWhatsApp(MENSAJE_DISPONIBILIDAD, { origen: 'catalogo_oficina' })}
+              >
+                Consultar disponibilidad
+              </a>
+            </div>
           </div>
-        </div>
+
+          <div class="oficina__bloque">
+            <span class="oficina__icono" aria-hidden="true">&#129530;</span>
+            <div>
+              <h3 class="oficina__titulo">¿Llegas antes del check-in?</h3>
+              <p>
+                Puedes dejar tu equipaje <strong>sin costo</strong> en nuestra
+                oficina y aprovechar el día para conocer Zipaquirá.
+              </p>
+              <ul class="oficina__horario">
+                <li><span>Lunes a sábado</span> <span>8:00 a. m. – 6:00 p. m.</span></li>
+                <li><span>Domingos</span> <span>Consulta disponibilidad previamente por WhatsApp</span></li>
+              </ul>
+            </div>
+          </div>
+        </section>
 
         {/* ==========================================================
-             GRILLA DE LOS 7 HOSPEDAJES
+             GRILLA DEL PORTAFOLIO DE HOSPEDAJES
              La maqueta se escribe una vez y se repite por cada
              hospedaje de la coleccion.
 
@@ -108,48 +254,105 @@ const hospedajes = (await getCollection('hospedajes'))
             return (
               <article class="tarjeta aparecer">
                 <div class="tarjeta__media">
-                  <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
+                  {mostrarEnlace ? (
+                    <a
+                      class="tarjeta__imagen-enlace"
+                      href={enlace}
+                      aria-label={`Explorar ${data.nombre}`}
+                    >
+                      <Foto
+                        src={data.fotoTarjeta}
+                        alt={data.fotoTarjetaAlt}
+                        anchos={[400, 600, 700]}
+                        medidas="(min-width: 1000px) 23rem, (min-width: 700px) 45vw, 92vw"
+                      >Foto pendiente</Foto>
+                    </a>
+                  ) : (
+                    <Foto
+                        src={data.fotoTarjeta}
+                        alt={data.fotoTarjetaAlt}
+                        anchos={[400, 600, 700]}
+                        medidas="(min-width: 1000px) 23rem, (min-width: 700px) 45vw, 92vw"
+                      >Foto pendiente</Foto>
+                  )}
                   <span class="tarjeta__insignia">{data.insignia}</span>
                 </div>
                 <div class="tarjeta__cuerpo">
 
+                  {enObra && <span class="etiqueta">Ficha en preparación</span>}
+
                   <h2 class="tarjeta__titulo">
                     {mostrarEnlace
-                      ? <a href={enlace}><Marca texto={data.nombre} pendiente={enObra} /></a>
-                      : <Marca texto={data.nombre} pendiente={enObra} />}
+                      ? <a href={enlace}><Marca texto={data.nombre} /></a>
+                      : <Marca texto={data.nombre} />}
                   </h2>
 
                   <p class="tarjeta__meta">
-                    <span><Marca texto={data.listadoSector} pendiente={enObra} /></span>
-                    <span><Marca texto={data.listadoSegundoDato} pendiente={enObra} />{data.listadoSegundoDatoSufijo}</span>
+                    <span><Marca texto={data.listadoSector} /></span>
+                    <span><Marca texto={data.listadoSegundoDato} />{data.listadoSegundoDatoSufijo}</span>
                   </p>
 
                   <p class="texto-suave">
-                    <Marca texto={data.resumen} pendiente={enObra} />
+                    <Marca texto={data.resumen} />
                   </p>
 
                   <div class="tarjeta__pie">
                     {!data.precioPendiente && (
                     <span class="tarjeta__precio">
-                      {data.precio} <span>/ noche</span>
+                      {data.precio}
+                      {/* "/ noche" solo si hay cifra: pegarselo a "Tarifas
+                          segun habitacion y ocupacion" no dice nada. */}
+                      {/\d/.test(data.precio) && <span> / noche</span>}
                     </span>
                     )}
+                    {/* El texto del enlace nombra su destino. "Ver
+                        ficha" repetido seis veces no distingue una
+                        tarjeta de otra ni para el visitante ni para un
+                        lector de pantalla, que los lee fuera de
+                        contexto uno detras de otro. Sale del contenido;
+                        si una ficha no lo trae, se compone con su
+                        nombre, que sigue siendo mejor que "ver ficha". */}
                     {mostrarEnlace && (
-                      <a class="boton boton--contorno" href={enlace}>Ver ficha</a>
+                      <a class="boton boton--contorno" href={enlace}>
+                        {data.listadoEnlaceTexto
+                          ? data.listadoEnlaceTexto
+                          : enObra
+                            ? `Revisar información de ${data.nombre}`
+                            : `Ver ${data.nombre}`}
+                      </a>
                     )}
                   </div>
 
+                  {/* Una ficha en preparacion NO ofrece reservar.
+                      Todavia no se ha confirmado que este disponible, y
+                      un boton que dice "Reservar" lo afirma antes de
+                      que nadie lo haya comprobado. Consulta el estado,
+                      que es lo que de verdad se puede hacer hoy.
+
+                      El municipio sale de la ficha. Se quedo escrito a
+                      mano cuando se saco de la plantilla de ficha, y en
+                      cuanto Casa Neusa aparecio en este listado su boton
+                      mandaba al cliente a consultar por una casa "en
+                      Zipaquira" que esta en Cogua. */}
+                  {/* Abre WhatsApp en un clic, con el mensaje ya
+                      identificado. El destino viene resuelto en el HTML
+                      desde el primer byte: antes era "/#contacto" y solo
+                      main.js lo convertia en wa.me al cargar, asi que
+                      quien pulsaba antes acababa en la portada.
+
+                      Una ficha en obra NO ofrece reservar: todavia no se
+                      ha confirmado que este disponible, y un boton que
+                      dice "disponibilidad" lo afirma antes de que nadie
+                      lo haya comprobado. El municipio sale de la ficha,
+                      no escrito a mano: Casa Neusa esta en Cogua. */}
                   <a class="boton boton--whatsapp boton--bloque"
-                     href="/#contacto"
-                     {/* El municipio sale de la ficha. Se quedo escrito a
-                          mano cuando se saco de la plantilla de ficha, y
-                          en cuanto Casa Neusa aparecio en este listado su
-                          boton mandaba al cliente a consultar por una casa
-                          "en Zipaquira" que esta en Cogua. Por defecto
-                          sigue siendo Zipaquira, asi que el resto de
-                          tarjetas no cambia. */}
-                     data-whatsapp={`Hola, me interesa ${data.nombre} de Atheron Suite en ${data.localidad}. Quiero consultar disponibilidad.`}>
-                    Reservar por WhatsApp
+                     {...atributosWhatsApp(
+                       enObra
+                         ? `Hola, quisiera consultar el estado del alojamiento ${data.nombre} de Atheron Suite en ${data.localidad}.`
+                         : mensajeDisponibilidadDe(`${data.nombre}, en ${data.localidad}`),
+                       { origen: 'catalogo_tarjeta', propiedad: data.nombre },
+                     )}>
+                    {enObra ? 'Consultar estado del alojamiento' : 'Consultar disponibilidad por WhatsApp'}
                   </a>
 
                 </div>
@@ -159,14 +362,113 @@ const hospedajes = (await getCollection('hospedajes'))
 
         </div>
 
-        <div class="cta-final aparecer" style="margin-top: var(--esp-6);">
-          <h2>No sabes cual elegir?</h2>
-          <p>Cuentanos cuantos son y que fechas manejan. Te recomendamos el mas adecuado.</p>
-          <div class="grupo-botones grupo-botones--centrado">
-            <a class="boton boton--acento boton--grande" href="/landing/hospedaje-en-zipaquira">Consultar disponibilidad</a>
+      </div>
+    </section>
+
+    {/* ============================================================
+         PROXIMO PROYECTO — CASA COLONIAL CENTRO
+
+         Antes era un bloque-doble mas, detras del catalogo y con
+         mucho aire muerto por delante: se leia como una septima
+         tarjeta que se habia salido de la rejilla.
+
+         Ahora es una franja propia, a sangre y con el azul de marca,
+         claramente distinta de lo que si se puede reservar. Esa
+         distincion no es estetica: es la que impide que alguien
+         intente reservar una casa que todavia esta en obra.
+
+         LAS DOS IMAGENES VAN EN PAREJA Y ROTULADAS
+
+         Estado actual y vision conceptual, una al lado de la otra.
+         Las pinta ProyectoFoto, que es el componente de la ficha del
+         proyecto y el unico que garantiza el rotulo: el texto no se
+         escribe aqui, lo deduce del tipo de la imagen. Es imposible
+         que una representacion conceptual salga bajo el rotulo de
+         una fotografia real, porque nadie escribe ninguno de los dos.
+
+         La pareja elegida es el patio central, que es el mismo
+         espacio en las dos: comparar dos sitios distintos no seria
+         un antes y un despues, seria un collage.
+
+         NADA FINANCIERO. Ni rentabilidad, ni retorno, ni
+         participacion, ni cupo. La segunda linea invita a conversar
+         sobre una alianza, que es lo unico sostenible hoy.
+         ============================================================ */}
+    <section class="proximo" aria-labelledby="proyecto-casa-colonial">
+      <div class="contenedor">
+
+        <div class="proximo__cabecera">
+          <span class="etiqueta">Próximo proyecto · Atheron crece</span>
+          <h2 id="proyecto-casa-colonial">Casa Colonial Centro</h2>
+          <p class="texto-grande proximo__entrada">
+            De una casa colonial en transformación a un nuevo destino Atheron.
+          </p>
+          <p class="proximo__texto">
+            Estamos desarrollando un proyecto que integrará alojamiento,
+            restaurante, cafetería, gastrobar y experiencias en el corazón de
+            Zipaquirá. Conoce cómo estamos transformando este espacio y nuestra
+            visión de crecimiento.
+          </p>
+        </div>
+
+        <div class="proximo__pareja">
+          <div class="proximo__lado">
+            <span class="proximo__rotulo proximo__rotulo--actual">Estado actual</span>
+            <ProyectoFoto foto={fotoPatioArcos} medidas="(min-width: 900px) 32rem, 92vw" />
+          </div>
+          <div class="proximo__lado">
+            <span class="proximo__rotulo proximo__rotulo--vision">Visión conceptual</span>
+            <ProyectoFoto foto={conceptoPatioGastronomico} medidas="(min-width: 900px) 32rem, 92vw" />
           </div>
         </div>
 
+        <div class="proximo__pie">
+          <div class="grupo-botones">
+            {/* rel="nofollow": la pagina de destino sigue en noindex y
+                fuera del sitemap. Que se pueda llegar navegando no es
+                lo mismo que pedirle a Google que la indexe. */}
+            <a class="boton boton--acento boton--grande" href="/proyectos/casa-colonial-centro" rel="nofollow">
+              Ver el proyecto
+            </a>
+          </div>
+
+          <p class="proximo__alianza">
+            ¿Tienes una propiedad o te interesa construir una alianza con Atheron?{' '}
+            <a
+              class="proximo__enlace"
+              {...atributosWhatsApp(
+                'Hola, Atheron. Tengo una propiedad o me interesa construir una alianza con ustedes. Quisiera conversar.',
+                { origen: 'catalogo_alianza', evento: 'whatsapp_alianza' },
+              )}
+            >Conversemos</a>.
+          </p>
+
+          <p class="proximo__aviso">
+            No está disponible para reservas. La página del proyecto presenta el
+            estado actual y las representaciones conceptuales claramente
+            identificadas.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="seccion">
+      <div class="contenedor">
+        <div class="cta-final aparecer">
+          <h2>¿No sabes cuál elegir?</h2>
+          <p>Cuéntanos cuántos son y qué fechas manejan. Te recomendamos el más adecuado.</p>
+          {/* Abre WhatsApp en un clic. Antes mandaba a la landing, que
+              volvia a proponer lo que el visitante ya habia decidido. */}
+          <div class="grupo-botones grupo-botones--centrado">
+            <a
+              class="boton boton--whatsapp boton--grande"
+              {...atributosWhatsApp(MENSAJE_DISPONIBILIDAD, { origen: 'catalogo_cierre' })}
+            >
+              Consultar disponibilidad
+            </a>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -174,9 +476,6 @@ const hospedajes = (await getCollection('hospedajes'))
 
   <Pie />
 
-  <BotonFlotante
-    href="/#contacto"
-    mensaje="Hola, estoy viendo los hospedajes de Atheron Suite en Zipaquira."
-  />
+  <BotonFlotante mensaje={MENSAJE_DISPONIBILIDAD} origen="catalogo_flotante" />
 
 </Base>

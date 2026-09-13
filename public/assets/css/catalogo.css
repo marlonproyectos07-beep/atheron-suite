@@ -1,0 +1,273 @@
+/* ============================================================
+   CATALOGO.CSS — estilos que SOLO usa /hospedajes
+
+   Va como hoja extra porque el sitio incrusta su CSS en el HTML:
+   lo que se meta en una hoja comun viaja en todas las paginas
+   aunque solo lo use una.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   HERO CON FOTOGRAFIA
+
+   La imagen va en el HTML, dentro de un <picture>, y no en
+   background-image: asi el navegador la descubre en el primer
+   analisis del documento y puede tratarla como recurso LCP con
+   prioridad alta. Es el mismo mecanismo del hero de la portada y
+   del de las fichas, no una arquitectura nueva.
+
+   El color de noche queda debajo por si la imagen tarda o falla:
+   el texto es blanco y tiene que leerse igual.
+   ------------------------------------------------------------ */
+.hero--catalogo {
+  position: relative;
+  isolation: isolate;
+  background: var(--color-noche);
+  color: var(--color-blanco);
+  overflow: hidden;
+}
+
+.hero-catalogo__fondo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.hero-catalogo__fondo .foto {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: cover;
+  border-radius: 0;
+}
+
+/* Velo de contraste. Mas denso a la izquierda, que es donde cae el
+   texto, y mas transparente a la derecha para que la fotografia se
+   vea. Sin esto el titular blanco sobre una pared clara no pasa AA,
+   y "casi se lee" no es un criterio. */
+.hero--catalogo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    rgba(15, 23, 42, .93) 0%,
+    rgba(15, 23, 42, .86) 42%,
+    rgba(15, 23, 42, .58) 100%
+  );
+}
+
+/* En celular la columna de texto ocupa todo el ancho, asi que el
+   velo tiene que ser parejo: un degradado lateral dejaria el final
+   de las lineas sobre la parte clara de la foto. */
+@media (max-width: 48rem) {
+  .hero--catalogo::after {
+    background: linear-gradient(180deg, rgba(15, 23, 42, .88) 0%, rgba(15, 23, 42, .93) 100%);
+  }
+}
+
+.hero--catalogo .hero__texto { max-width: 54ch; }
+
+/* ------------------------------------------------------------
+   OFICINA PRINCIPAL
+
+   Sustituye a la nota gris de "Como funciona". Dos bloques: quienes
+   somos y donde estamos, y el servicio de equipaje.
+
+   Los dos van separados a proposito. Cuando estaban en el mismo
+   parrafo, el "sin costo" del equipaje quedaba a dos lineas de
+   "consulta disponibilidad" y se leia como si consultar pudiera
+   costar algo. Ese fue un hallazgo del recorrido de direccion, no
+   una suposicion de diseno.
+   ------------------------------------------------------------ */
+.oficina {
+  display: grid;
+  gap: var(--esp-3);
+  margin-bottom: var(--esp-6);
+}
+
+@media (min-width: 900px) {
+  .oficina { grid-template-columns: 1.1fr 1fr; gap: var(--esp-4); }
+}
+
+.oficina__bloque {
+  display: flex;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--color-blanco);
+}
+
+/* El primero lleva el filo dorado: es el que da la autoridad -una
+   oficina con direccion- y el que lleva el boton. */
+.oficina__bloque:first-child { border-left: 3px solid var(--color-sal); }
+
+.oficina__icono { font-size: 1.5rem; line-height: 1.2; flex-shrink: 0; }
+
+.oficina__titulo {
+  font-size: 1.1rem;
+  margin-bottom: var(--esp-1);
+}
+
+.oficina__bloque p {
+  color: var(--texto-suave);
+  font-size: .95rem;
+  margin-bottom: var(--esp-3);
+}
+
+.oficina__bloque p strong { color: var(--texto); }
+
+.oficina__horario {
+  display: grid;
+  gap: .45rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  font-size: .9rem;
+}
+
+.oficina__horario li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem var(--esp-2);
+  justify-content: space-between;
+  padding-bottom: .45rem;
+  border-bottom: 1px dashed var(--borde);
+  color: var(--texto-suave);
+}
+
+.oficina__horario li:last-child { border-bottom: 0; padding-bottom: 0; }
+.oficina__horario span:first-child { font-weight: 600; color: var(--texto); }
+
+/* El horario del domingo es una frase, no una hora, y en pantallas
+   estrechas necesita su propia linea para no partirse a mitad. */
+.oficina__horario li span:last-child { text-align: right; min-width: 0; }
+
+@media (max-width: 30rem) {
+  .oficina__bloque { padding: var(--esp-3); }
+  .oficina__horario li { flex-direction: column; }
+  .oficina__horario li span:last-child { text-align: left; }
+}
+
+/* ------------------------------------------------------------
+   PROXIMO PROYECTO — CASA COLONIAL CENTRO
+
+   Franja propia, a sangre y con el azul de marca. La separacion
+   visual respecto al catalogo no es estetica: es lo que impide que
+   alguien intente reservar una casa que todavia esta en obra.
+
+   Nada de esta franja debe parecer una oferta. Sin precio, sin
+   disponibilidad, sin cuenta atras y sin una sola palabra
+   financiera.
+   ------------------------------------------------------------ */
+.proximo {
+  position: relative;
+  padding-block: var(--esp-7);
+  background: var(--color-noche);
+  color: var(--color-blanco);
+}
+
+.proximo::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-sal), var(--color-sal-claro), var(--color-sal));
+}
+
+.proximo .etiqueta { color: var(--color-sal-claro); }
+.proximo h2 { color: var(--color-blanco); }
+
+.proximo__cabecera { max-width: 62ch; margin-bottom: var(--esp-5); }
+
+.proximo__entrada {
+  margin-block: var(--esp-2) var(--esp-2);
+  color: var(--color-sal-claro);
+  font-family: var(--fuente-titulo);
+}
+
+.proximo__texto { color: rgba(255, 255, 255, .82); }
+
+/* ------------------------------------------------------------
+   LA PAREJA: ESTADO ACTUAL / VISION CONCEPTUAL
+
+   Las dos columnas tienen exactamente el mismo peso visual. Si la
+   conceptual saliera mas grande o mas destacada, estariamos
+   vendiendo la casa que no existe por encima de la que si.
+   ------------------------------------------------------------ */
+.proximo__pareja {
+  display: grid;
+  gap: var(--esp-4);
+}
+
+@media (min-width: 900px) {
+  .proximo__pareja { grid-template-columns: 1fr 1fr; gap: var(--esp-5); }
+}
+
+.proximo__lado { min-width: 0; }
+
+/* El rotulo de arriba es el titulo de la columna. El rotulo legal
+   -"Fotografia real", "Representacion conceptual"- lo pone
+   ProyectoFoto debajo de cada imagen y no se escribe aqui: asi es
+   imposible que una conceptual salga bajo el rotulo de una real. */
+.proximo__rotulo {
+  display: inline-block;
+  padding: .32rem .8rem;
+  border-radius: 999px;
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.proximo__rotulo--actual {
+  color: var(--color-noche);
+  background: var(--color-blanco);
+}
+
+.proximo__rotulo--vision {
+  color: var(--color-sal-claro);
+  background: transparent;
+  border: 1px solid var(--color-sal);
+}
+
+/* Sobre el azul noche, el verde y el ambar de los rotulos de
+   ProyectoFoto pierden contraste. Mismo caso que .seccion--oscura,
+   resuelto igual. */
+.proximo .foto-proyecto__rotulo--real,
+.proximo .foto-proyecto__rotulo--conceptual { color: var(--color-blanco); }
+
+.proximo .foto-proyecto__aviso,
+.proximo .foto-proyecto__texto { color: rgba(255, 255, 255, .82); }
+
+.proximo__pie { margin-top: var(--esp-5); max-width: 62ch; }
+
+/* La linea de alianza, en tono menor y separada del boton. Es una
+   segunda lectura para quien tenga una propiedad, no una oferta. */
+.proximo__alianza {
+  margin-top: var(--esp-4);
+  padding-top: var(--esp-3);
+  border-top: 1px solid rgba(255, 255, 255, .16);
+  font-size: .93rem;
+  color: rgba(255, 255, 255, .74);
+}
+
+.proximo__enlace {
+  color: var(--color-sal-claro);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.proximo__enlace:hover { color: var(--color-blanco); }
+
+.proximo__aviso {
+  margin-top: var(--esp-3);
+  font-size: .85rem;
+  color: rgba(255, 255, 255, .62);
+}
+
+@media (max-width: 48rem) {
+  .proximo { padding-block: var(--esp-6); }
+}

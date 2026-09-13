@@ -157,3 +157,57 @@ REPORTE PARA CHATGPT
 - RIESGO:
 - DECISIÓN QUE NECESITO:
 ```
+
+## graphify
+
+Grafo de conocimiento del repositorio. Está para **orientarse**: saber qué
+archivo mirar antes de abrir veinte, y gastar menos contexto.
+
+> El encabezado `## graphify` es el marcador que usa `graphify claude
+> uninstall` para quitar esta sección. No renombrarlo.
+
+**Para qué sirve, y en qué orden**
+
+```bash
+graphify query "<pregunta>"      # subgrafo acotado: por dónde empezar
+graphify explain "<concepto>"    # un nodo y sus vecinos, en lenguaje llano
+graphify path "<A>" "<B>"        # cómo se relacionan dos cosas
+graphify update .                # tras tocar código (solo AST, sin coste de API)
+```
+
+`graphify-out/GRAPH_REPORT.md` solo para revisión amplia de arquitectura,
+cuando los tres comandos de arriba no dan bastante contexto.
+
+**El grafo NO cubre todos los `.astro`.** Es la limitación que importa y no se
+puede ignorar: tree-sitter no parsea Astro del todo. En la última extracción,
+**24 de 53 archivos dieron error de sintaxis** y en varios no se extrajo ni un
+símbolo (`Cabecera.astro`, `ExperienciaLocal.astro`, `AvisoInformativo.astro`).
+Como este sitio es sobre todo `.astro`, la cobertura es **parcial**: el grafo va
+bien con `.ts` y con relaciones entre archivos, y se queda corto dentro de una
+maqueta. Que una consulta no devuelva algo **no significa que no exista**.
+
+**Al modificar, se abre el archivo.** El grafo orienta; no sustituye leer. Antes
+de editar, se abre el archivo concreto y se lee la parte que se va a tocar. Nadie
+edita a partir de un resumen del grafo.
+
+**La fuente técnica de verdad sigue siendo GitHub y el código real**, no el
+grafo. El grafo es un índice generado y puede estar desfasado, incompleto o
+equivocado. Ante cualquier discrepancia, manda el archivo.
+
+**No está versionado.** `graphify-out/` está en `.gitignore`: es artefacto
+generado, ~1,1 MB, y cambia con cada tanda de código. En una sesión nueva —local
+o en la nube— **no existe hasta que se construya**:
+
+```bash
+graphify extract . --code-only    # AST local, sin clave de API, sin coste
+```
+
+Se regenera antes de cualquier trabajo amplio. Si no se ha construido, los
+comandos no responden y **no pasa nada**: se trabaja como siempre.
+
+**Graphify nunca bloquea la sesión.** Los hooks de `.claude/settings.json` son
+fail-open: resuelven `graphify` por PATH y acaban en `|| true`, así que si no
+está instalado, si el grafo no existe o si el comando falla, devuelven 0 y la
+herramienta se ejecuta igual. En Claude Code solo el código de salida 2 bloquea,
+y estos hooks no pueden devolver 2. No dependen de ninguna ruta absoluta ni del
+usuario, así que valen igual en Windows, en Linux y en la nube.

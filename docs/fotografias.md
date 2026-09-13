@@ -186,3 +186,139 @@ oculto: es la regla fijada el 21 de agosto y está descrita en §21.9 de
 > iluminación, exposición, balance de blancos, perspectiva, ruido, nitidez, color
 > y pequeñas distracciones visuales. El resultado debe parecer una fotografía
 > hotelera profesional **del mismo lugar**, nunca un render.
+
+---
+
+## 8. Registro de procedencia de activos visuales
+
+Aquí queda constancia de cada imagen del sitio cuyo origen **no** sea una
+fotografía tomada del lugar. La lista existe para que nadie tenga que
+deducirlo mirando el archivo: los ficheros llegan sin EXIF, sin XMP y sin
+C2PA, así que la procedencia no se puede comprobar desde el repositorio.
+Si no está escrita, se pierde.
+
+### 8.1 Hero de la portada
+
+| | |
+|---|---|
+| **Archivo** | `public/assets/img/portada/zipaquira-centro-historico-atardecer-*.{avif,webp}` |
+| **Procedencia** | Activo visual generado con inteligencia artificial para Atheron. Recreación visual conceptual de Zipaquirá. **No constituye fotografía documental del lugar.** |
+| **Aprobado por** | Marlon, sobre el commit `c42d78f`, el 8 de septiembre de 2026 |
+| **Alcance** | Prueba en la rama `astro`. **No autorizado para producción todavía.** |
+| **Cómo se presenta** | Imagen decorativa: `alt` vacío y `aria-hidden`. No se describe en ningún texto visible, ni en `alt`, ni en Open Graph, ni en JSON-LD. |
+
+**Lo que no se puede hacer con este activo**, y es el motivo de que el registro
+exista: no se describe en público como fotografía real, ni como toma real de
+dron, ni se le atribuye autoría fotográfica. Si algún día se le pone pie de
+foto, texto alternativo o mención en redes, tiene que decir lo que es.
+
+### 8.2 Video de fondo del hero
+
+| | |
+|---|---|
+| **Archivo** | `public/assets/video/portada/zipaquira-plaza-dron.{webm,mp4}` |
+| **Procedencia** | Recreación audiovisual generada con inteligencia artificial a partir de un activo visual conceptual de Zipaquirá. **No constituye grabación documental ni toma real de dron.** |
+| **Herramienta** | Higgsfield |
+| **Aprobado por** | Marlon, el 8 de septiembre de 2026 |
+| **Alcance** | Prueba en la rama `astro`. **No autorizado para producción todavía.** |
+| **Cómo se presenta** | Fondo decorativo: `aria-hidden`, sin controles, sin pista de audio en el archivo, fuera del orden de tabulación. No se describe en ningún texto visible. |
+
+Se descartó un segundo material generado con Gemini: perdía el encuadre aprobado a
+los tres segundos y llevaba la marca de agua del generador visible sobre el
+empedrado.
+
+Vale aquí lo mismo que para la imagen, y con más motivo: **el movimiento refuerza
+la lectura de metraje real** mucho más que una fotografía fija. No se describe como
+grabación real, ni como toma de dron, ni se le atribuye autoría.
+
+### 8.3 Relación con la regla del apartado 7
+
+El apartado 7 registra una decisión que sigue vigente: **no se usan fotografías
+generadas por IA**. Esa regla habla de las **fichas de hospedaje**, donde una
+imagen generada engañaría sobre lo que el huésped va a encontrarse: el tamaño de
+la habitación, las camas, el baño, los acabados.
+
+El hero de la portada es un caso distinto y una **excepción explícita**: no
+muestra ningún alojamiento, no promete nada verificable sobre una estancia y
+funciona como fondo del titular. Aun así es una excepción, no una puerta abierta:
+está aquí escrita, con fecha y con quien la aprobó, igual que la de las siete
+imágenes de la Suite 301 recogida en §23.1 de
+[CONTINUIDAD-PROYECTO.md](CONTINUIDAD-PROYECTO.md).
+
+Toda excepción nueva se registra en este apartado antes de entrar en el sitio.
+
+---
+
+### 8.3 Recompresión del hero de portada (9 de septiembre de 2026)
+
+Autorizada por Dirección como pendiente S.2. **La imagen no cambia**: es la
+misma fotografía, sin añadir ni quitar nada, sin tocar arquitectura ni
+mobiliario. Solo cambia cómo está comprimida.
+
+| Archivo | Antes | Después | |
+|---|---|---|---|
+| `…-700.avif` | 51,3 KB | **42,8 KB** | −16 % |
+| `…-700.webp` | 73,1 KB | **58,4 KB** | −20 % |
+| `…-1600.avif` | 197,9 KB | **180,1 KB** | −9 % |
+| `…-1600.webp` | 286,2 KB | 286,2 KB | **sin tocar** |
+
+**El 1600.webp no se toca, y es deliberado:** es el archivo con más
+información del repositorio y la fuente de las otras tres conversiones.
+Recomprimirlo sería perder el original. Ningún ajuste probado lo mejoraba.
+
+#### Cómo se decidió que no hay degradación
+
+No a ojo. Cada candidato se comparó por **SSIM** contra una referencia de
+máxima fidelidad —el propio 1600.webp reducido con Lanczos— y el criterio
+de aceptación fue estricto:
+
+> se elige el ajuste **más ligero** cuyo SSIM sea **igual o mejor** que el
+> del archivo que ya estaba publicado. Si ninguno lo consigue, no se toca.
+
+Resultado: los cuatro archivos puntúan **igual o mejor** que antes, y tres
+pesan menos.
+
+| Archivo | SSIM antes | SSIM después |
+|---|---|---|
+| `…-700.avif` | 0,95914 | **0,96024** |
+| `…-700.webp` | 0,96886 | **0,97302** |
+| `…-1600.avif` | 0,97172 | **0,97560** |
+| `…-1600.webp` | 1,00000 | 1,00000 |
+
+> **Trampa ya pagada, para quien repita esto.** El primer intento midió el
+> archivo publicado con un `.resize()` y un `.toBuffer()` de más, que lo
+> vuelven a codificar y le añaden pérdida que el candidato no tenía. Con
+> esa medida, ajustes que en realidad empeoraban la imagen parecían
+> mejorarla, y se llegó a escribir en disco una versión peor. **Los dos
+> lados de la comparación tienen que decodificarse exactamente igual:**
+> a gris en crudo, sin reescalar y sin recodificar.
+
+#### Parámetros exactos, para poder reproducirlo
+
+Fuente: `…-1600.webp`. Reducción `lanczos3`.
+
+```
+700.avif    sharp.avif({ quality: 58, effort: 9, chromaSubsampling: '4:4:4' })
+700.webp    sharp.webp({ quality: 78, effort: 6 })
+1600.avif   sharp.avif({ quality: 58, effort: 9, chromaSubsampling: '4:4:4' })
+```
+
+`chromaSubsampling: '4:4:4'` conserva el color a plena resolución. En un
+atardecer con degradados amplios, el 4:2:0 por defecto es justo lo que se
+nota.
+
+**El original anterior sigue disponible** en el historial, en `ee3c6aa`:
+
+```bash
+git show ee3c6aa:public/assets/img/portada/zipaquira-centro-historico-atardecer-700.avif > /tmp/original.avif
+```
+
+---
+
+### 8.4 Tipografía Fraunces servida desde nuestro dominio
+
+Desde el 9 de septiembre de 2026 la tipografía de titulares ya no se pide a
+Google Fonts: vive en `public/assets/fuentes/`. Procedencia, licencia
+(SIL Open Font License 1.1), alcance del subconjunto y procedimiento de
+actualización, en
+[`public/assets/fuentes/PROCEDENCIA.md`](../public/assets/fuentes/PROCEDENCIA.md).

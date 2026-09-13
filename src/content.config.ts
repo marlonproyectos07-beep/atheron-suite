@@ -116,7 +116,7 @@ const fotoGaleria = z.object({
 
 /* Una habitacion del hospedaje. Los campos numericos son texto
    a proposito: mientras no haya dato real llevan "N". */
-const habitacion = z.object({
+const habitación = z.object({
   nombre: z.string(),
   /* Los tres datos de la cabecera pueden faltar. No es lo normal, pero
      una habitacion recien cargada puede tener confirmada la cama y
@@ -129,6 +129,43 @@ const habitacion = z.object({
   descripcion: z.string(),
   precio: z.string().default('$ ---'),
   pendiente: z.boolean().default(false),
+
+  /* ----------------------------------------------------------
+     TARIFA POR OCUPACION
+
+     El precio de arriba es una linea de texto para la tarjeta. Esto
+     es el dato de verdad: cuanto cuesta la noche segun cuanta gente
+     duerme. Va estructurado y no en prosa porque manana lo tiene que
+     leer un cotizador, el concierge, Odoo o un canal externo, y una
+     frase no se consulta.
+
+     Vacio = esta habitacion todavia no tiene matriz validada, y
+     entonces no se pinta ninguna tabla. Nunca se interpola ni se
+     deduce un precio que no este en esta lista.
+     ---------------------------------------------------------- */
+  tarifas: z
+    .array(
+      z.object({
+        huespedes: z.number().int().positive(),
+        precio: z.string(),
+      }),
+    )
+    .default([]),
+  /* Aviso corto bajo la tabla: acomodaciones extraordinarias, minimos
+     de temporada, lo que sea que la tabla no pueda decir sola. */
+  notaTarifas: textoOpcionalPanel,
+
+  /* Donde esta y como se llega. "solo escaleras" no es un detalle:
+     para quien va con equipaje pesado, con un niño o con movilidad
+     reducida es la diferencia entre reservar y no reservar, y
+     enterarse al llegar es la peor forma de saberlo. */
+  piso: textoOpcionalPanel,
+  acceso: textoOpcionalPanel,
+
+  /* Capacidad comoda frente a capacidad maxima. No son lo mismo y
+     confundirlas produce huespedes decepcionados: cuatro personas
+     caben, pero puede que solo tres duerman bien. */
+  capacidadComoda: textoOpcionalPanel,
   foto: textoOpcionalPanel,
   fotoAlt: textoOpcionalPanel,
 
@@ -153,6 +190,12 @@ const habitacion = z.object({
   /* Texto corto del boton en la tarjeta compacta, si el generico no
      encaja. Ej: "Ver suite". */
   etiquetaVer: textoOpcionalPanel,
+  /* Ficha propia de la unidad, cuando tiene pagina aparte en vez de
+     un bloque de detalle dentro de la misma ficha. Un edificio con
+     seis apartamentos no cabe en una sola pagina sin que ninguno se
+     pueda enlazar ni posicionar por su cuenta. Vacio = el
+     comportamiento de siempre, con ancla interna. */
+  enlace: textoOpcionalPanel,
 
   /* Galeria propia de la habitacion. Opcional y aditiva: una
      habitacion sin fotos sigue funcionando igual, solo que no
@@ -221,6 +264,20 @@ const hospedajes = defineCollection({
        Ahora son la misma casilla. */
     publicado: z.boolean().default(false),
 
+    /* Una ficha puede seguir en preparacion para SEO y, aun asi, ser una
+       opcion real que Atheron cotiza para grupos. Este bloque separa ambas
+       decisiones y deja trazable la capacidad comercial sin deducirla de
+       frases dispersas por la ficha. "maxima" siempre se presenta como
+       "hasta" y queda sujeta a disponibilidad. */
+    grupos: z
+      .object({
+        visible: z.boolean().default(true),
+        capacidad: z.number().int().positive(),
+        tipo: z.enum(['fija', 'maxima']),
+        nota: textoOpcionalPanel,
+      })
+      .optional(),
+
     /* Numero que se ve en la insignia de la tarjeta del listado. */
     insignia: z.string(),
 
@@ -244,6 +301,33 @@ const hospedajes = defineCollection({
     modalidad: z.enum(['habitaciones', 'casa-completa']).default('habitaciones'),
 
     /* ----------------------------------------------------------
+       A QUE FICHA PERTENECE ESTA, SI PERTENECE A ALGUNA
+
+       Aqui va el identificador de la ficha que CONTIENE a esta. El
+       archivo del apartamento 301 de Algarra lleva:
+
+           perteneceA: edificio-algarra
+
+       PARA QUE SIRVE, Y POR QUE NO ES UN ADORNO
+
+       La coleccion tiene fichas que se contienen unas a otras: el
+       edificio de Algarra y, aparte, cada uno de sus seis
+       apartamentos. La pagina de grupos suma la capacidad de las
+       fichas publicadas para anunciar un total, y si un dia se
+       publican el edificio Y sus apartamentos, las mismas camas se
+       contarian dos veces. El total se dispararia solo, sin que
+       nadie tocara una linea de codigo y sin ningun error visible:
+       la pagina simplemente anunciaria camas que no existen.
+
+       Con este campo, src/data/grupos.ts detecta la pareja, suma
+       solo la contenedora y avisa por consola al construir.
+
+       Vacio o ausente significa "no pertenece a ninguna", que es el
+       caso de la mayoria.
+       ---------------------------------------------------------- */
+    perteneceA: textoOpcionalPanel,
+
+    /* ----------------------------------------------------------
        SEO
        ---------------------------------------------------------- */
 
@@ -254,6 +338,12 @@ const hospedajes = defineCollection({
 
     /* Banda amarilla superior. Se quita poniendo null. */
     avisoBorrador: textoOpcional,
+
+    /* Nota de alojamiento aliado. Va discreta y al pie del contenido,
+       no como banda de alarma: el visitante tiene derecho a saber
+       quien opera donde va a dormir, pero no es un aviso de peligro.
+       Vacio = el hospedaje es propio y no se pinta nada. */
+    avisoAliado: textoOpcional,
 
     /* ----------------------------------------------------------
        PORTADA DE LA FICHA
@@ -276,7 +366,7 @@ const hospedajes = defineCollection({
 
        El valor por defecto es Zipaquira, asi que las fichas que ya
        existen no cambian ni una letra. */
-    localidad: z.string().default('Zipaquira'),
+    localidad: z.string().default('Zipaquirá'),
     /* Departamento, por si algun dia hay algo fuera de Cundinamarca. */
     departamento: z.string().default('Cundinamarca'),
 
@@ -344,6 +434,19 @@ const hospedajes = defineCollection({
     /* Texto que acompana al segundo dato y que NO va en amarillo.
        Ej: dato "N" + sufijo " habitaciones". */
     listadoSegundoDatoSufijo: z.string().default(''),
+
+    /* Texto del boton que lleva del listado a la ficha.
+
+       POR QUE NO SE DEJA EN "VER FICHA"
+       Seis tarjetas con el mismo enlace generico obligan al visitante
+       a mirar arriba para saber a donde va cada uno, y a un buscador
+       no le dicen nada: "ver ficha" no es una descripcion de destino.
+       Con el nombre del hospedaje dentro, el enlace se entiende solo,
+       tambien leido en voz alta por un lector de pantalla.
+
+       Vacio = la maqueta lo compone con el nombre del hospedaje. Se
+       rellena a mano cuando una propiedad pide otro verbo. */
+    listadoEnlaceTexto: textoOpcionalPanel,
     /* Descripcion de dos lineas de la tarjeta (pendiente 4). */
     resumen: z.string(),
     /* Precio por noche (pendiente 5). Sigue en amarillo aunque la
@@ -351,11 +454,32 @@ const hospedajes = defineCollection({
     precio: z.string().default('$ ---'),
     precioPendiente: z.boolean().default(true),
 
+    /* Video principal del hospedaje. Se usa cuando el recorrido debe
+       quedar visible en la ficha general y no escondido dentro de una
+       habitacion. Es opcional y no altera las fichas existentes. */
+    videoPrincipal: z
+      .object({
+        src: textoOpcional,
+        poster: z.string(),
+        titulo: z.string(),
+        descripcion: textoOpcional,
+        ancho: z.number(),
+        alto: z.number(),
+        duracion: textoOpcional,
+        capitulos: z.array(z.object({
+          src: z.string(),
+          poster: z.string(),
+          titulo: z.string(),
+          duracion: textoOpcional,
+        })).default([]),
+      })
+      .optional(),
+
     /* ----------------------------------------------------------
        HABITACIONES
        ---------------------------------------------------------- */
 
-    habitaciones: z.array(habitacion),
+    habitaciones: z.array(habitación),
     /* Aviso opcional bajo el titulo del apartado. */
     notaHabitaciones: textoOpcional,
 
@@ -417,7 +541,7 @@ const hospedajes = defineCollection({
         mensaje: z.string(),
 
         /* Cabecera del listado de habitaciones */
-        cejaHabitaciones: z.string().default('¿Prefieres una habitacion?'),
+        cejaHabitaciones: z.string().default('¿Prefieres una habitación?'),
         tituloHabitaciones: z.string().default('Conoce las opciones'),
         introHabitaciones: textoOpcional,
       })
@@ -529,6 +653,28 @@ const hospedajes = defineCollection({
               fecha: z.string(),
             }),
           )
+          .default([]),
+      })
+      .optional(),
+
+    /* ----------------------------------------------------------
+       PREGUNTAS FRECUENTES
+
+       Lo que la gente pregunta por WhatsApp antes de decidirse. Cada
+       respuesta contestada en la pagina es una conversacion menos que
+       atender y una duda menos que frene la reserva.
+
+       NO se marca FAQPage en el JSON-LD: Google restringio ese
+       resultado enriquecido a sitios de sanidad y gobierno, y marcarlo
+       aqui no aporta nada y anade superficie que mantener.
+       ---------------------------------------------------------- */
+    faq: z
+      .object({
+        etiqueta: z.string().default('Preguntas frecuentes'),
+        titulo: z.string(),
+        intro: textoOpcional,
+        preguntas: z
+          .array(z.object({ pregunta: z.string(), respuesta: z.string() }))
           .default([]),
       })
       .optional(),

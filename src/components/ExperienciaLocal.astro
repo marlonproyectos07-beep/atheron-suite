@@ -1,0 +1,160 @@
+---
+/* ============================================================
+   UN LUGAR DE LA CIUDAD, CON SU ESTADO COMERCIAL
+
+   Pinta un restaurante, un cafe o un sitio de la guia. El modelo y
+   la explicacion de los tres estados estan en
+   src/data/experiencias-locales.ts
+
+   ============================================================
+   LO QUE ESTE COMPONENTE GARANTIZA
+   ============================================================
+
+   Que no se pueda enseñar un distintivo que no corresponde. No
+   porque quien maquete se acuerde, sino porque no hay forma de
+   escribirlo a mano: el distintivo se deduce del estado de la ficha,
+   igual que ProyectoFoto deduce el rotulo del tipo de imagen.
+
+     INFORMATIVO   sin distintivo
+     RECOMENDADO   "Recomendado por Atheron" + el motivo
+     ALIADO        ademas, el bloque de beneficio
+
+   Y AL REVES, QUE ES LO QUE DE VERDAD IMPORTA:
+
+   - sin beneficio, el bloque de beneficio NO EXISTE en el DOM. No
+     sale vacio, no sale gris, no sale "proximamente". No sale.
+   - sin recomendacion, no hay insignia de recomendado.
+   - sin convenio, no hay insignia de aliado.
+   - sin foto legitima, la tarjeta se pinta sin foto y se ve bien.
+     No hay hueco rayado ni imagen de relleno.
+
+   Un campo comercial vacio pintado "por si acaso" es como se acaba
+   publicando "BENEFICIO ATHERON" encima de un sitio con el que
+   nunca se hablo.
+
+   ============================================================
+   EL BOTON DEL BENEFICIO NO EXISTE TODAVIA
+   ============================================================
+
+   El Atheron Pass no esta construido: no hay QR, ni codigos, ni
+   portal de aliados, ni nada que canjear. Por eso, cuando un
+   beneficio requiere el Pass, se enseña el beneficio pero NO un
+   boton para canjearlo. Un boton que promete algo que nadie puede
+   cumplir hace mas daño que no tenerlo.
+   ============================================================ */
+
+import Foto from './Foto.astro';
+import type { ExperienciaLocal } from '../data/experiencias-locales';
+
+interface Props {
+  lugar: ExperienciaLocal;
+  /** Medidas de la foto, para que el navegador elija el tamano. */
+  medidas?: string;
+}
+
+const { lugar, medidas } = Astro.props;
+
+/* Un borrador no se pinta jamas, aunque alguien lo pase por error. */
+const visible = lugar.estadoPublicacion === 'PUBLICADO';
+
+const esRecomendado = lugar.estadoComercial === 'RECOMENDADO' || lugar.estadoComercial === 'ALIADO';
+const esAliado = lugar.estadoComercial === 'ALIADO';
+
+/* El beneficio necesita convenio Y contenido. Con una de las dos
+   cosas a medias, no se pinta: mas vale sin beneficio que con un
+   beneficio sin descripcion, que el visitante lee como una trampa. */
+const beneficio = esAliado && lugar.beneficio?.descripcion ? lugar.beneficio : null;
+
+const hayFoto = Boolean(lugar.foto && lugar.fotoAlt);
+---
+
+{visible && (
+  <article class="lugar" id={lugar.slug}>
+
+    {hayFoto && (
+      <div class="lugar__media">
+        <Foto src={lugar.foto} alt={lugar.fotoAlt} medidas={medidas} />
+      </div>
+    )}
+
+    <div class="lugar__cuerpo">
+
+      <p class="lugar__categoria">
+        {lugar.categoria}
+        {/* La ciudad se pinta siempre. Es lo que evita que alguien
+            de por hecho que todo lo de esta guia esta en Zipaquira,
+            que es justo lo que pasa con Casa Neusa. */}
+        <span class="lugar__ciudad">{lugar.ciudad}</span>
+      </p>
+
+      <h3 class="lugar__nombre">{lugar.nombre}</h3>
+
+      {/* Los distintivos no se escriben: se deducen del estado. */}
+      {esRecomendado && (
+        <p class="lugar__insignia">Recomendado por Atheron</p>
+      )}
+      {esAliado && (
+        <p class="lugar__insignia lugar__insignia--aliado">Aliado Atheron</p>
+      )}
+
+      <p class="lugar__texto">{lugar.descripcion}</p>
+
+      {/* Una recomendacion sin motivo no es una recomendacion, es un
+          anuncio. Por eso el motivo se pinta pegado a la insignia. */}
+      {esRecomendado && lugar.motivoRecomendacion && (
+        <p class="lugar__motivo">{lugar.motivoRecomendacion}</p>
+      )}
+
+      {lugar.idealPara && (
+        <p class="lugar__ideal"><strong>Ideal para:</strong> {lugar.idealPara}</p>
+      )}
+
+      {lugar.queEncontraras && lugar.queEncontraras.length > 0 && (
+        <ul class="lugar__lista">
+          {lugar.queEncontraras.map((q) => <li>{q}</li>)}
+        </ul>
+      )}
+
+      {lugar.horarios && lugar.horarios.length > 0 && (
+        <ul class="lugar__horario">
+          {lugar.horarios.map((h) => (
+            <li><span>{h.dia}</span> <span>{h.horas}</span></li>
+          ))}
+        </ul>
+      )}
+
+      {lugar.direccion && <p class="lugar__dato">{lugar.direccion}</p>}
+
+      {beneficio && (
+        <div class="lugar__beneficio">
+          <p class="lugar__beneficio-titulo">{beneficio.titulo}</p>
+          <p class="lugar__beneficio-texto">{beneficio.descripcion}</p>
+          {/* Con Pass no hay boton: el Pass no existe. Se dice como
+              se obtendra, y nada mas. */}
+          {beneficio.requiereAtheronPass && (
+            <p class="lugar__beneficio-nota">
+              Disponible para huéspedes de Atheron. Te explicamos cómo al confirmar tu reserva.
+            </p>
+          )}
+        </div>
+      )}
+
+      {(lugar.sitioOficial || lugar.mapa) && (
+        <p class="lugar__enlaces">
+          {lugar.sitioOficial && (
+            <a href={lugar.sitioOficial} target="_blank" rel="noopener noreferrer">Sitio oficial</a>
+          )}
+          {lugar.mapa && (
+            <a href={lugar.mapa} target="_blank" rel="noopener noreferrer">Cómo llegar</a>
+          )}
+        </p>
+      )}
+
+      {/* Lo que puede quedarse viejo lleva su fecha a la vista. */}
+      {lugar.fechaUltimaVerificacion && (
+        <p class="lugar__verificado">Datos comprobados el {lugar.fechaUltimaVerificacion}.</p>
+      )}
+
+    </div>
+  </article>
+)}

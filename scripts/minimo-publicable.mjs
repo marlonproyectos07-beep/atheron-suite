@@ -29,16 +29,44 @@
    y las condiciones de reserva.
    ============================================================ */
 
+/* ------------------------------------------------------------
+   SALTOS DE LINEA DE WINDOWS
+
+   ESTE GUARDIAN SE CAIA EN WINDOWS Y DABA LA ALARMA AL REVES.
+
+   Los .md estan guardados con LF en el repositorio, pero git los
+   entrega con CRLF al trabajar en Windows. Al partir el frontmatter
+   por "\n", cada linea se queda con un "\r" pegado al final.
+
+   Y en JavaScript el punto de una expresion regular NO casa con
+   "\r": es un terminador de linea, igual que "\n". Asi que
+   "texto: Huespedes\r" no casaba con /^\s*texto:\s*(.*)$/ y este
+   archivo concluia que la ficha no declaraba ni una sola cifra.
+
+   El resultado era el peor posible: "PUBLICACION DETENIDA" sobre
+   Casa Neusa, que tiene las cuatro cifras puestas desde hace
+   semanas. Un guardian que acusa a fichas correctas se acaba
+   ignorando, y entonces ya no guarda nada.
+
+   En Vercel no se notaba, porque alli el checkout es LF. Solo se
+   caia en la maquina de quien edita.
+
+   Se normaliza en las dos funciones que leen el frontmatter, que
+   son por donde pasan todas las reglas.
+   ------------------------------------------------------------ */
+const enLineasNormales = (texto) => String(texto).replace(/\r\n?/g, '\n');
+
 /* Lee un campo de primer nivel del frontmatter. */
 export function valorDe(frontmatter, campo) {
-  const encontrado = frontmatter.match(new RegExp('^' + campo + ':\\s*(.*)$', 'm'));
+  const encontrado = enLineasNormales(frontmatter)
+    .match(new RegExp('^' + campo + ':\\s*(.*)$', 'm'));
   if (!encontrado) return '';
   return encontrado[1].trim().replace(/^['"]|['"]$/g, '');
 }
 
 /* Lee un bloque entero (una lista) hasta el siguiente campo de primer nivel. */
 export function bloqueDe(frontmatter, campo) {
-  const lineas = frontmatter.split('\n');
+  const lineas = enLineasNormales(frontmatter).split('\n');
   const inicio = lineas.findIndex((l) => l.startsWith(campo + ':'));
   if (inicio === -1) return '';
   const resto = lineas.slice(inicio + 1);
@@ -75,10 +103,17 @@ export function cifrasDe(frontmatter) {
   return cifras;
 }
 
+/* Quita tildes y la virgulilla de la ene para comparar. El texto de
+   una cifra lo escribe una persona, y "huespedes" y "huespedes" con
+   tilde son la misma palabra: sin esto, poner bien una tilde tumbaba
+   la publicacion de la ficha. */
+const sinTildes = (t) =>
+  String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
 /* Una cifra existe si esta, si su texto la nombra y si el numero es
    un numero de verdad mayor que cero. Un "N" de plantilla no cuenta. */
 function tieneCifra(frontmatter, patron) {
-  const c = cifrasDe(frontmatter).find((x) => patron.test(x.texto));
+  const c = cifrasDe(frontmatter).find((x) => patron.test(sinTildes(x.texto)));
   if (!c) return false;
   const n = Number(String(c.numero).replace(',', '.'));
   return Number.isFinite(n) && n > 0;
