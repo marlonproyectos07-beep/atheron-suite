@@ -154,6 +154,13 @@
   color: var(--texto-suave);
   white-space: nowrap;
 }
+/* En pantalla estrecha el valor puede ocupar varias lineas. Con nowrap,
+   un dato largo -"$ 10.000 por cada hora adicional, con coordinacion
+   previa" en Hotel Colonial Confort- ensanchaba la pagina a 521 px en un
+   telefono de 390. */
+@media (max-width: 48rem) {
+  .lista-distancias span:last-child { white-space: normal; text-align: right; }
+}
 
 /* ------------------------------------------------------------
    EXPERIENCIAS (tarjetas con foto grande)
