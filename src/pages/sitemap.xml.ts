@@ -23,6 +23,7 @@ import {
   BORRADOR as BORRADOR_CASA_COLONIAL,
   RUTA as RUTA_CASA_COLONIAL,
 } from '../data/casa-colonial-centro';
+import { articulosPublicados } from '../data/blog';
 
 const DOMINIO = 'https://hotelesatheron.com';
 
@@ -37,16 +38,49 @@ interface Entrada {
 }
 
 /* Las paginas fijas del sitio. Las fichas y los articulos se
-   anaden solos mas abajo. */
+   anaden solos mas abajo.
+
+   NO ESTA AQUI, Y ES A PROPOSITO:
+   /proyectos/casa-colonial-centro es un borrador privado. Sale con
+   noindex y nofollow, sin enlace desde ninguna parte del sitio, y
+   por eso tampoco entra en el sitemap: pedirle a Google que visite
+   una pagina a la que le estamos diciendo que no la indexe es
+   contradictorio. Se anadira cuando el proyecto se apruebe para
+   publicacion, junto con el interruptor BORRADOR de
+   src/data/casa-colonial-centro.ts. */
 const paginasFijas: Entrada[] = [
   { ruta: '/', prioridad: '1.0' },
   { ruta: '/landing/hospedaje-en-zipaquira', prioridad: '0.9' },
   { ruta: '/landing/casas-para-grupos-en-zipaquira', prioridad: '0.9' },
   { ruta: '/hospedajes', prioridad: '0.8' },
-  { ruta: '/blog', prioridad: '0.7' },
-  { ruta: '/blog/guia-de-zipaquira', prioridad: '0.9' },
-  { ruta: '/blog/como-nacio-atheron-suite', prioridad: '0.7' },
+  { ruta: '/grupos', prioridad: '0.8' },
+  /* Guias del destino. Son contenido propio e indexable, con su
+     propia fecha porque no se reescriben a la vez que el resto: la
+     de la Catedral lleva datos que hay que revisar contra la fuente
+     oficial, y su lastmod tiene que reflejar esa revision, no el
+     ultimo despliegue del sitio.
+
+     El hub va con prioridad 0.9, por encima de la guia suelta: es
+     el nodo desde el que se reparte el destino entero. */
+  { ruta: '/guia-zipaquira', prioridad: '0.9', fecha: '2026-09-10' },
+  { ruta: '/zipaquira/catedral-de-sal', prioridad: '0.8', fecha: '2026-09-10' },
+  { ruta: '/blog', prioridad: '0.7', fecha: '2026-09-10' },
 ];
+
+/* Los articulos salen del modelo de datos del blog, con SU fecha de
+   ultima modificacion real. Antes estaban en la lista de arriba y
+   heredaban la fecha de referencia, la misma para todos: un sitemap
+   que le dice a Google que siete paginas distintas se modificaron el
+   mismo dia no le esta diciendo nada.
+
+   Lo que NO se usa aqui, y es deliberado, es la fecha de hoy: un
+   lastmod que se pone al dia solo con cada despliegue afirma que el
+   contenido cambio cuando lo unico que cambio fue la publicacion. */
+const articulosDelSitemap: Entrada[] = articulosPublicados().map((a) => ({
+  ruta: a.ruta,
+  prioridad: '0.9',
+  fecha: a.modificado,
+}));
 
 const comoFecha = (f?: Date) =>
   f ? f.toISOString().slice(0, 10) : FECHA_BASE;
@@ -74,7 +108,7 @@ export const GET: APIRoute = async () => {
     ? []
     : [{ ruta: RUTA_CASA_COLONIAL, prioridad: '0.8' }];
 
-  const entradas = [...paginasFijas, ...proyectos, ...fichas];
+  const entradas = [...paginasFijas, ...articulosDelSitemap, ...proyectos, ...fichas];
 
   const cuerpo = entradas
     .map(({ ruta, prioridad, fecha }) => `  <url>
@@ -89,7 +123,7 @@ export const GET: APIRoute = async () => {
   SITEMAP generado automaticamente por src/pages/sitemap.xml.ts
   No editar a mano: los cambios se pierden en la siguiente publicacion.
 
-  Las fichas de hospedaje entran aqui solas cuando se marcan como
+  Las fichas de hospedaje entran aquí solas cuando se marcan como
   publicadas. Las paginas fijas estan listadas en ese mismo archivo.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

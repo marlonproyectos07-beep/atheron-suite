@@ -16,19 +16,63 @@ import Pie from '../components/Pie.astro';
 import BotonFlotante from '../components/BotonFlotante.astro';
 import Marca from '../components/Marca.astro';
 import Foto from '../components/Foto.astro';
+import ProyectoFoto from '../components/ProyectoFoto.astro';
 import { menuHome, menuHomeMovil, ctaDisponibilidad } from '../data/navegacion';
 import ContactoWhatsApp from '../components/ContactoWhatsApp.astro';
 import { formularioContactoActivo } from '../data/ajustes';
+import { experiencias } from '../data/experiencias';
+import { fotoHero } from '../data/casa-colonial-centro';
+import { atributosWhatsApp, MENSAJE_DISPONIBILIDAD, MENSAJE_GRUPO } from '../data/whatsapp';
 
-/* Los tres hospedajes destacados salen de la misma coleccion que
+/* Los cuatro hospedajes destacados salen de la misma coleccion que
    alimenta el listado y las fichas. Antes estaban escritos a mano
    aqui, y dos de las tres tarjetas enlazaban a la plantilla en vez
    de a su ficha: justo el tipo de descuadre que pasa cuando el
    mismo dato vive en tres sitios. */
-const destacados = (await getCollection('hospedajes'))
+const publicados = (await getCollection('hospedajes'))
   .filter((f) => f.data.publicado)
+  .sort((a, b) => a.data.orden - b.data.orden);
+
+/* La Home muestra los seis alojamientos que Atheron comercializa para
+   grupos, aunque alguna ficha siga en preparación SEO. La capacidad ya
+   está validada en data.grupos; la ficha conserva su noindex mientras
+   no esté publicada. */
+const destacados = (await getCollection('hospedajes'))
+  .filter((f) => f.data.grupos?.visible)
   .sort((a, b) => a.data.orden - b.data.orden)
-  .slice(0, 3);
+  .slice(0, 6);
+
+/* ------------------------------------------------------------
+   MOSAICO DE "UNA COLECCION, NO UN DIRECTORIO"
+
+   El bloque tenia el texto a la izquierda y medio ancho de pagina
+   vacio a la derecha. En un sitio que vende alojamiento, ese hueco
+   es el sitio mas caro de la portada.
+
+   Se llena con TRES hospedajes distintos, no con una foto grande.
+   La razon es literal: la seccion afirma que Atheron es una
+   coleccion y no un directorio, y tres espacios que no se parecen
+   entre si lo demuestran mejor que cualquier parrafo. Una sola foto
+   diria "tenemos un hospedaje".
+
+   Salen de la coleccion, en el orden que ya tienen. Nada escrito a
+   mano: si manana se publica otra ficha o cambia una foto, el
+   mosaico se actualiza solo y no puede contradecir a las fichas.
+
+   Cada imagen es la fotoPrincipal de su ficha, que es la unica que
+   el proceso previo a construir convierte a AVIF y WebP en cuatro
+   anchos. Usar aqui la foto de tarjeta obligaria a servir el
+   original entero.
+   ------------------------------------------------------------ */
+const mosaico = publicados
+  .filter((f) => f.data.fotoPrincipal && f.data.fotoPrincipalAlt)
+  .slice(0, 3)
+  .map((f) => ({
+    id: f.id,
+    nombre: f.data.nombre,
+    src: f.data.fotoPrincipal as string,
+    alt: f.data.fotoPrincipalAlt as string,
+  }));
 
 /* Ficha del negocio para Google y los asistentes de IA.
 
@@ -40,11 +84,11 @@ const fichaNegocio = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'Atheron Suite',
-  description: 'Coleccion de hospedajes seleccionados en Zipaquira, Cundinamarca.',
+  description: 'Colección de hospedajes seleccionados en Zipaquirá, Cundinamarca.',
   url: 'https://hotelesatheron.com/',
   areaServed: {
     '@type': 'City',
-    name: 'Zipaquira',
+    name: 'Zipaquirá',
     containedInPlace: {
       '@type': 'AdministrativeArea',
       name: 'Cundinamarca, Colombia',
@@ -54,12 +98,20 @@ const fichaNegocio = {
 ---
 
 <Base
-  titulo="Atheron Suite | Hospedajes con alma en Zipaquira, Cundinamarca"
-  descripcion="Atheron Suite reune hospedajes seleccionados en Zipaquira, Cundinamarca. Estancias comodas a minutos de la Catedral de Sal y del centro historico."
+  titulo="Atheron Suite | Hospedajes con alma en Zipaquirá, Cundinamarca"
+  descripcion="Atheron Suite reúne hospedajes seleccionados en Zipaquirá, Cundinamarca. Estancias cómodas a minutos de la Catedral de Sal y del centro histórico."
   ruta="/"
-  ogTitulo="Atheron Suite | Hospedajes en Zipaquira, Cundinamarca"
-  ogDescripcion="Hospedajes seleccionados en Zipaquira, a minutos de la Catedral de Sal y del centro historico."
+  ogTitulo="Atheron Suite | Hospedajes en Zipaquirá, Cundinamarca"
+  ogDescripcion="Hospedajes seleccionados en Zipaquirá, a minutos de la Catedral de Sal y del centro histórico."
+  {/* Vista previa al compartir. Es la MISMA fotografia real que abre el
+      mosaico, no la imagen del hero: la del hero esta generada con IA y
+      su registro de procedencia -docs/fotografias.md, 8.1- prohibe
+      expresamente usarla en Open Graph. Un enlace compartido por
+      WhatsApp sin imagen sale pelado, y WhatsApp es nuestro canal. */}
+  imagen={mosaico[0]?.src}
+  imagenAlt={mosaico[0]?.alt}
   jsonLd={fichaNegocio}
+  hojasExtra={['proyecto-foto', 'portada']}
 >
 
   <Cabecera enlaces={menuHome} enlacesMovil={menuHomeMovil} cta={ctaDisponibilidad} actual="/" />
@@ -69,32 +121,102 @@ const fichaNegocio = {
     {/* ============================================================
          1. HERO — promesa principal en 5 segundos
          ============================================================ */}
-    <section class="hero">
+    <section class="hero hero--portada">
+
+      {/* Activo generado con inteligencia artificial: recreacion visual
+          conceptual de Zipaquira, no fotografia documental. Registro en
+          docs/fotografias.md. Por eso es decorativa, sin texto
+          alternativo y oculta a los lectores de pantalla: lo que dice la
+          portada esta en el H1 y en el parrafo, y asi no se afirma en
+          ningun sitio que sea una toma real. Se carga con prioridad alta
+          y sin diferir, porque es el elemento LCP; las medidas van
+          declaradas para que no desplace nada.
+
+          Fase 2 previstas: este <picture> pasara a ser el poster y el
+          fallback del video de fondo, y seguira siendo el LCP. El
+          contrato esta en docs/propuesta-multiidioma-y-video.md, B.6. */}
+      <picture class="hero__fondo" aria-hidden="true">
+        <source media="(max-width: 700px)" type="image/avif" srcset="/assets/img/portada/zipaquira-centro-historico-atardecer-700.avif" />
+        <source media="(max-width: 700px)" type="image/webp" srcset="/assets/img/portada/zipaquira-centro-historico-atardecer-700.webp" />
+        <source type="image/avif" srcset="/assets/img/portada/zipaquira-centro-historico-atardecer-1600.avif" />
+        <img
+          src="/assets/img/portada/zipaquira-centro-historico-atardecer-1600.webp"
+          alt=""
+          width="1600"
+          height="837"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </picture>
+
+      {/* Video de fondo. Nace SIN fuente y SIN autoplay, a proposito: con
+          autoplay el navegador antepone la intencion de reproducir a
+          preload="none" y empieza a descargar durante la carga inicial,
+          que es justo el momento que hay que proteger. La fuente se la
+          adjunta el guion de abajo cuando ya no puede estorbar. */}
+      <video
+        id="video-portada"
+        class="hero__video"
+        muted
+        loop
+        playsinline
+        preload="none"
+        aria-hidden="true"
+        tabindex="-1"
+        width="1280"
+        height="720"
+      ></video>
+
       <div class="contenedor hero__contenido">
 
-        <span class="hero__etiqueta">Zipaquira, Cundinamarca</span>
+        <span class="hero__etiqueta">Zipaquirá · Cerca de la Catedral de Sal</span>
 
-        <h1 class="hero__titulo">
-          Hospedajes con alma, <br />
-          a minutos de la <em>Catedral de Sal</em>
-        </h1>
+        <h1 class="hero__titulo">Hospédate en Zipaquirá</h1>
+
+        {/* El precio es texto visible y nada mas. No entra en JSON-LD:
+            declararlo como oferta estructurada obligaria a sostener
+            condiciones, vigencia y disponibilidad que no tenemos.
+
+            "Tarifa de referencia" y no una cifra a secas: un grupo de
+            diez multiplica mentalmente por diez, le sale seiscientos
+            cincuenta mil y se va antes de enterarse de que existe otra
+            tarifa. La linea de grupos va pegada al precio, no tres
+            bloques mas abajo, porque ahi es donde se toma esa decision. */}
+        <div class="hero__propuesta">
+          <span class="hero__propuesta-rotulo">Hospedaje para cada plan</span>
+          <strong>Opciones y tarifas para parejas, familias y grupos</strong>
+        </div>
+
+        <a
+          class="hero__grupos hero__grupos--cta"
+          {...atributosWhatsApp(MENSAJE_GRUPO, { origen: 'home_hero_grupo_5_mas', evento: 'whatsapp_group_quote' })}
+        >
+          <strong>¿Viajan 5 o más personas?</strong>
+          <span>Solicita una cotización para tu estadía →</span>
+        </a>
 
         <p class="hero__texto">
-          Atheron Suite reune una seleccion de hospedajes en Zipaquira pensados
-          para descansar de verdad: espacios cuidados, atencion cercana y la
-          sabana de Cundinamarca a la salida.
+          Casas y habitaciones para parejas, familias y grupos.
         </p>
 
         <div class="grupo-botones">
           <a class="boton boton--acento boton--grande" href="/hospedajes">
-            Conocer los hospedajes
+            Ver hospedajes
           </a>
-          <a class="boton boton--claro boton--grande" href="#contacto">
-            Escribirnos
+          {/* Abre WhatsApp en un clic, con la plantilla ya escrita:
+              personas, fechas y tipo de evento. El destino viene
+              resuelto en el HTML, no lo pone main.js al cargar. */}
+          <a
+            class="boton boton--claro boton--grande"
+            {...atributosWhatsApp(MENSAJE_GRUPO, { origen: 'home_hero', evento: 'whatsapp_group_quote' })}
+          >
+            Cotizar mi grupo
           </a>
         </div>
 
-        {/* Datos rapidos: dan confianza sin pedir nada a cambio */}
+        {/* Datos rapidos: dan confianza sin pedir nada a cambio. En movil
+            se ocultan, que es donde el alto de pantalla es el problema. */}
         <div class="hero__datos">
           <div class="dato">
             <span class="dato__numero">7</span>
@@ -102,11 +224,14 @@ const fichaNegocio = {
           </div>
           <div class="dato">
             <span class="dato__numero">1</span>
-            <span class="dato__texto">Ciudad: Zipaquira</span>
+            <span class="dato__texto">Ciudad: Zipaquirá</span>
           </div>
+          {/* Antes decia "~50 km". Sin origen, destino, ruta ni fuente no
+              se sabe si es distancia lineal o por carretera, asi que no se
+              publica ninguna cifra: ver F3.1 en docs/pendientes.md. */}
           <div class="dato">
-            <span class="dato__numero">~50 km</span>
-            <span class="dato__texto">Desde Bogota</span>
+            <span class="dato__numero">Al norte</span>
+            <span class="dato__texto">de Bogotá</span>
           </div>
         </div>
 
@@ -115,17 +240,40 @@ const fichaNegocio = {
 
 
     {/* ============================================================
+         1.bis QUE HAY — tipos y para quien
+
+         Compacta a proposito. El hero ya se recorto para que se vea la
+         fotografia; volver a llenarlo aqui seria deshacerlo.
+
+         Los cuatro tipos salen de las fichas publicadas: casa entera
+         (Algarra), campestre (Neusa), apartamentos con cocina (Atheron
+         Suite) y habitaciones privadas (Colonial Confort). No se afirma
+         Wi-Fi de forma global porque no hay medicion que lo respalde en
+         las cuatro, y la cocina se dice donde consta.
+         ============================================================ */}
+    <div class="contenedor">
+      <ul class="oferta">
+        <li class="oferta__tipo"><strong>Habitaciones</strong></li>
+        <li class="oferta__tipo"><strong>Apartamentos</strong> con cocina</li>
+        <li class="oferta__tipo"><strong>Casas completas</strong></li>
+        <li class="oferta__tipo"><strong>Casa campestre</strong></li>
+      </ul>
+      <p class="oferta__para oferta__para--destacada"><span>Ideal para tu estadía</span><strong>Parejas · Familias · 5 o más personas</strong></p>
+    </div>
+
+
+    {/* ============================================================
          2. FRANJA DE CONFIANZA
          ============================================================ */}
     <div class="contenedor">
       <div class="franja">
         <div class="franja__item">
-          <strong>Atencion directa</strong>
+          <strong>Atención directa</strong>
           <span>Hablas con el anfitrion, sin intermediarios</span>
         </div>
         <div class="franja__item">
           <strong>Ubicaciones elegidas</strong>
-          <span>Cerca del centro historico y de la Catedral de Sal</span>
+          <span>Cerca del centro histórico y de la Catedral de Sal</span>
         </div>
         <div class="franja__item">
           <strong>Espacios verificados</strong>
@@ -133,7 +281,7 @@ const fichaNegocio = {
         </div>
         <div class="franja__item">
           <strong>Trato local</strong>
-          <span>Recomendaciones de quien vive Zipaquira</span>
+          <span>Recomendaciones de quien vive Zipaquirá</span>
         </div>
       </div>
     </div>
@@ -147,19 +295,53 @@ const fichaNegocio = {
 
         <div class="bloque-doble__texto">
           <span class="etiqueta">Quienes somos</span>
-          <h2>Una coleccion, no un directorio</h2>
+          <h2>Una colección, no un directorio</h2>
           <p class="texto-grande texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
-            Atheron Suite nace en Zipaquira con hospedajes seleccionados uno por uno.
+            Atheron Suite nace en Zipaquirá con hospedajes seleccionados uno por uno.
             No listamos todo lo que existe: mostramos los lugares donde nosotros mismos
             nos quedariamos.
           </p>
           <ul class="lista-check">
-            <li>Cada hospedaje tiene su propia pagina con fotos, habitaciones y ubicacion.</li>
+            <li>Cada hospedaje tiene su propia pagina con fotos, habitaciones y ubicación.</li>
             <li>Precios y condiciones claros, sin sorpresas al final.</li>
             <li>Un solo canal de contacto para resolver dudas antes de decidir.</li>
           </ul>
         </div>
 
+        {/* Tres hospedajes reales, tres espacios que no se parecen.
+            Es el argumento de la seccion, enseñado en vez de contado.
+
+            Las tres son fotografias reales de propiedades reales, con
+            su texto alternativo tomado de la ficha: aqui no se
+            describe ninguna imagen desde la maqueta, para que no pueda
+            decir una cosa distinta de la que dice la ficha.
+
+            Van enlazadas a su ficha. Una foto que se puede pulsar y no
+            lleva a ninguna parte es una promesa rota pequeña, pero
+            repetida tres veces. */}
+        {mosaico.length === 3 && (
+          <div class="bloque-doble__media">
+            <div class="mosaico">
+              {mosaico.map(({ id, nombre, src, alt }, i) => (
+                <a
+                  class:list={['mosaico__pieza', i === 0 && 'mosaico__pieza--grande']}
+                  href={`/hospedajes/${id}`}
+                  aria-label={`Ver ${nombre}`}
+                >
+                  <Foto
+                    src={src}
+                    alt={alt}
+                    forma={i === 0 ? undefined : 'cuadrado'}
+                    anchos={[400, 600, 700, 900]}
+                    medidas={i === 0
+                      ? '(min-width: 900px) 34rem, (min-width: 600px) 90vw, 92vw'
+                      : '(min-width: 900px) 17rem, (min-width: 600px) 45vw, 46vw'}
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
       </div>
     </section>
@@ -174,39 +356,55 @@ const fichaNegocio = {
          - Introduce de forma natural terminos que queremos posicionar
            (turismo en Zipaquira, Catedral de Sal, casas para grupos)
          - Diferencia: Booking lista propiedades, no cuenta historias
+
+         10 DE SEPTIEMBRE DE 2026 (F3.5): los dos primeros parrafos son
+         la redaccion autorizada por direccion, alineada con el articulo.
+         Antes decian que Zipaquira "no tenia como recibirlos: faltaba
+         alojamiento y faltaban servicios" y que el turismo "crecia mas
+         rapido que su capacidad": nada de eso esta confirmado. Aqui NO
+         se afirma que Atheron alojara al grupo, ni que la ciudad
+         careciera de alojamiento, ni se presenta como estadistica
+         oficial. "Opera y profesionaliza siete hospedajes" vive solo en
+         el articulo, donde tiene contexto.
          ============================================================ */}
     <section class="seccion seccion--oscura" id="historia">
       <div class="contenedor bloque-doble aparecer">
 
         <div class="bloque-doble__texto">
           <span class="etiqueta">Nuestra historia</span>
-          <h2>Como nacio Atheron Suite</h2>
+          <h2>Cómo nació Atheron Suite</h2>
 
           <p class="texto-grande texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
-            Todo empezo con un problema que vimos de cerca. Llegaron cerca de mil
-            turistas de China a conocer la Catedral de Sal, y Zipaquira no tenia
-            como recibirlos: faltaba alojamiento y faltaban servicios.
+            Todo empezó con una situación que vimos de cerca. Cerca de mil turistas
+            procedentes de China llegaron a conocer la Catedral de Sal y después
+            continuaron su viaje hacia Bogotá.
           </p>
 
           <p class="texto-suave" style="margin-bottom: var(--esp-3);">
-            Ahi entendimos dos cosas. Que el turismo en Zipaquira crecia mas
-            rapido que su capacidad de atenderlo, y que buena parte del valor que
-            ese turismo genera se estaba yendo de la region. Empezamos con
-            recursos limitados y unos pocos hospedajes, aprendiendo de cada
-            huesped y mejorando cada propiedad con lo que ese mismo trabajo iba
-            dejando.
+            Ver aquel movimiento de visitantes nos permitió identificar una
+            oportunidad: Zipaquirá atraía grandes grupos y podía fortalecer su
+            capacidad de alojamiento y la coordinación de la experiencia turística.
+            Ese fue uno de los puntos de partida de Atheron en el sector de
+            hospedajes.
           </p>
 
           <p class="texto-suave" style="margin-bottom: var(--esp-3);">
-            Hoy recibimos familias, viajeros y grupos grandes en Zipaquira. Pero
+            Todo comenzó con una habitación: la Suite 301. Después fueron
+            naciendo otras habitaciones, otras propiedades y las alianzas que hoy
+            nos permiten recibir grupos. Cada una se levantó aprendiendo del
+            huésped anterior y con lo que ese mismo trabajo iba dejando.
+          </p>
+
+          <p class="texto-suave" style="margin-bottom: var(--esp-3);">
+            Hoy recibimos familias, viajeros y grupos grandes en Zipaquirá. Pero
             Atheron Suite no es solo alojamiento: es nuestra prueba piloto.
-            Queremos demostrar aqui que se puede combinar hospitalidad,
-            tecnologia y automatizacion para construir mejores destinos, y
-            despues llevar ese modelo a otras ciudades.
+            Queremos demostrar aquí que se puede combinar hospitalidad,
+            tecnología y automatización para construir mejores destinos, y
+            después llevar ese modelo a otras ciudades.
           </p>
 
           <p style="font-family: var(--fuente-titulo); font-size: 1.35rem; color: var(--color-sal-claro); margin-bottom: var(--esp-3);">
-            Empezamos pequenos, pero pensamos en grande.
+            Empezamos pequeños, pero pensamos en grande.
           </p>
 
           <div class="grupo-botones">
@@ -219,6 +417,21 @@ const fichaNegocio = {
           </div>
         </div>
 
+        {/* La primera habitación, la que empezo todo. Es la fotografia
+            que le corresponde al texto: no un paisaje generico. */}
+        <div class="bloque-doble__media">
+          {/* Era el archivo mas pesado de la portada -99 KB, por
+              delante de la imagen del hero- porque se servia el JPG
+              tal cual. Ahora sale en AVIF y WebP por anchos, que los
+              genera el proceso previo a construir. Se ve exactamente
+              igual. */}
+          <Foto
+            src="/assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg"
+            alt="Suite 301, la primera habitación de Atheron en Zipaquirá, con cama doble y camarote"
+            anchos={[400, 600, 800, 1100]}
+            medidas="(min-width: 900px) 34rem, 92vw"
+          />
+        </div>
 
       </div>
     </section>
@@ -226,25 +439,44 @@ const fichaNegocio = {
 
     {/* ============================================================
          4. HOSPEDAJES DESTACADOS
-         Aqui mostramos 3; los 7 completos viven en /hospedajes
+         Aqui mostramos hasta 4; el listado completo vive en /hospedajes
          ============================================================ */}
     <section class="seccion seccion--alterna" id="hospedajes">
       <div class="contenedor">
 
         <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
           <span class="etiqueta">Nuestros hospedajes</span>
-          <h2>Hospedajes para descubrir Zipaquira</h2>
+          <h2>Hospedajes para descubrir Zipaquirá</h2>
         </div>
 
-        <div class="grid grid--3 aparecer">
+        <div class="grid hospedajes-home__grid aparecer">
 
           {destacados.map(({ id, data }) => {
             const enObra = !data.publicado;
             return (
               <article class="tarjeta">
                 <div class="tarjeta__media">
-                  <Foto src={data.fotoTarjeta} alt={data.fotoTarjetaAlt}>Foto pendiente</Foto>
-                  <span class="tarjeta__insignia">Hospedaje {data.insignia}</span>
+                  <a
+                    class="tarjeta__imagen-enlace"
+                    href={`/hospedajes/${id}`}
+                    aria-label={`Explorar ${data.nombre}`}
+                  >
+                    <Foto
+                      src={data.fotoTarjeta}
+                      alt={data.fotoTarjetaAlt}
+                      anchos={[400, 600, 700]}
+                      medidas="(min-width: 1000px) 17rem, (min-width: 700px) 45vw, 92vw"
+                    >Foto pendiente</Foto>
+                  </a>
+                  <span class="tarjeta__insignia">
+                    {id === 'hotel-atheron-suite' ? 'Apartamentos' :
+                     id === 'casa-algarra' ? 'Casa completa' :
+                     id === 'casa-neusa' ? 'Casa campestre' :
+                     id === 'edificio-algarra' ? 'Apartamentos' :
+                     id === 'hotel-colonial-confort' ? 'Hotel' :
+                     id === 'hotel-la-margarita' ? 'Hotel aliado' :
+                     'Hospedaje'}
+                  </span>
                 </div>
                 <div class="tarjeta__cuerpo">
                   <h3 class="tarjeta__titulo">
@@ -252,18 +484,21 @@ const fichaNegocio = {
                   </h3>
                   <p class="tarjeta__meta">
                     <span><Marca texto={data.listadoSector} pendiente={enObra} /></span>
-                    <span><Marca texto={data.listadoSegundoDato} pendiente={enObra} />{data.listadoSegundoDatoSufijo}</span>
+                    {data.grupos ? (
+                      <span>
+                        {data.grupos.tipo === 'maxima' ? 'Hasta ' : ''}
+                        {data.grupos.capacidad} huéspedes
+                      </span>
+                    ) : (
+                      <span><Marca texto={data.listadoSegundoDato} pendiente={enObra} />{data.listadoSegundoDatoSufijo}</span>
+                    )}
                   </p>
                   <p class="texto-suave">
                     <Marca texto={data.resumen} pendiente={enObra} />
                   </p>
                   <div class="tarjeta__pie">
-                    {!data.precioPendiente && (
-                    <span class="tarjeta__precio">
-                      {data.precio} <span>/ noche</span>
-                    </span>
-                    )}
-                    <a class="boton boton--contorno" href={`/hospedajes/${id}`}>Ver ficha</a>
+                    <span class="tarjeta__precio tarjeta__precio--consulta">Opciones según alojamiento y ocupación</span>
+                    <a class="boton boton--contorno" href={`/hospedajes/${id}`}>Ver alojamiento →</a>
                   </div>
                 </div>
               </article>
@@ -271,9 +506,88 @@ const fichaNegocio = {
           })}
 
         </div>
-        <div class="grupo-botones grupo-botones--centrado" style="margin-top: var(--esp-4);">
-          <a class="boton boton--primario boton--grande" href="/hospedajes">
-            Ver los hospedajes
+
+      </div>
+    </section>
+
+
+    {/* ============================================================
+         4.bis PROYECTOS ATHERON — CASA COLONIAL CENTRO
+
+         Va en su PROPIA seccion y no mezclada entre los hospedajes,
+         a proposito: lo que se puede reservar hoy y lo que todavia
+         es un proyecto no pueden compartir rejilla, o el visitante
+         intentara reservar algo que no existe.
+
+         El enlace lleva rel="nofollow" y la pagina sigue en noindex.
+         Que se pueda descubrir navegando no es lo mismo que pedirle
+         a Google que la indexe.
+         ============================================================ */}
+    <section class="seccion crece" id="proyectos" aria-labelledby="crece-titulo">
+      <div class="contenedor crece__interior">
+
+        <div class="crece__texto">
+          <span class="etiqueta crece__etiqueta">✦ Atheron en expansión · Proyecto en desarrollo ✦</span>
+          <h2 id="crece-titulo">Estamos creciendo en Zipaquirá</h2>
+
+          <p class="texto-grande" style="margin-block: var(--esp-2) var(--esp-3);">
+            Casa Colonial Centro es uno de nuestros nuevos proyectos: un espacio en
+            transformación que integrará hospedaje, restaurante, cafetería y experiencias.
+          </p>
+
+          <p class="crece__oportunidad"><strong>Oportunidades de inversión y operación</strong></p>
+          <p class="texto-suave">
+            Buscamos inversionistas y aliados operadores interesados en participar
+            en el desarrollo del proyecto, especialmente en hospedaje, restaurante y cafetería.
+          </p>
+
+          {/* Cinco palabras y ninguna cifra. No se dice cuanta gente
+              cabra, ni cuando abre, ni con que tarifa: nada de eso esta
+              validado, y el proyecto todavia es privado. */}
+          <p class="tarjeta__meta crece__usos">
+            <span>Hospedaje</span><span>Restaurante</span><span>Cafetería</span>
+            <span>Operación gastronómica</span><span>Experiencias</span>
+          </p>
+
+          <div class="grupo-botones" style="margin-top: var(--esp-3);">
+            {/* rel="nofollow": la pagina de destino sigue en noindex y
+                fuera del sitemap. Que se pueda llegar navegando no es lo
+                mismo que pedirle a Google que la indexe. */}
+            <a
+              class="boton boton--acento boton--grande"
+              href="/proyectos/casa-colonial-centro"
+              rel="nofollow"
+            >
+              Conocer el proyecto y sus oportunidades →
+            </a>
+          </div>
+
+          {/* Segunda lectura, deliberadamente discreta y sin una sola
+              palabra financiera: ni rentabilidad, ni retorno, ni
+              participacion, ni cupo. Se invita a conversar sobre una
+              alianza, que es lo unico que hoy se puede sostener. */}
+          <p class="crece__alianza">
+            Proyecto en desarrollo · Aún no disponible para reservas.{' '}
+            <a
+              class="crece__enlace"
+              {...atributosWhatsApp(
+                'Hola, Atheron. Me interesa conocer las oportunidades de inversión u operación de Casa Colonial Centro.',
+                { origen: 'home_crece_alianza', evento: 'whatsapp_alianza' },
+              )}
+            >Quiero conocer las oportunidades</a>.
+          </p>
+        </div>
+
+        {/* Fotografia REAL del estado actual, con su rotulo puesto por
+            el propio componente. Aqui no se usa ninguna representacion
+            conceptual: en la portada no hay sitio para explicar la
+            diferencia, y una imagen de algo que todavia no existe, sin
+            contexto, es exactamente lo que la regla prohibe. Las
+            conceptuales viven en /hospedajes y en la ficha del
+            proyecto, siempre en pareja con el estado actual. */}
+        <div class="crece__media">
+          <a href="/proyectos/casa-colonial-centro" rel="nofollow" tabindex="-1" aria-hidden="true">
+            <ProyectoFoto foto={fotoHero} medidas="(min-width: 900px) 32rem, 92vw" />
           </a>
         </div>
 
@@ -290,26 +604,80 @@ const fichaNegocio = {
         <div class="encabezado-seccion aparecer">
           <span class="etiqueta">Experiencias</span>
           <h2>Que hacer mientras te quedas con nosotros</h2>
+          <p class="texto-suave" style="max-width: 60ch; margin-top: var(--esp-2);">
+            Zipaquirá se recorre a pie. Esto es lo que tienes al lado.
+          </p>
         </div>
 
-        <div class="grid grid--3 aparecer">
+        {/* ==========================================================
+             TARJETAS DE EXPERIENCIA
 
-          <article class="experiencia">
-            <div class="experiencia__fondo"></div>
-            <div class="experiencia__texto">
-              <h3>Catedral de Sal</h3>
-              <p>El recorrido subterraneo mas conocido de Zipaquira, a pocos minutos del centro.</p>
-            </div>
-          </article>
+             Antes eran dos rectangulos oscuros con un rayado diagonal
+             de relleno: el hueco de una foto que nunca llego, enseñado
+             al visitante durante meses.
 
-          <article class="experiencia">
-            <div class="experiencia__fondo"></div>
-            <div class="experiencia__texto">
-              <h3>Centro historico</h3>
-              <p>Plaza principal, catedral diocesana, cafes y calles coloniales para caminar sin prisa.</p>
-            </div>
-          </article>
+             Ahora la tarjeta esta diseñada para funcionar SIN
+             fotografia. No disimula que falta: no la necesita. El
+             numero grande, la regla dorada y los datos verificados
+             sostienen la pieza por si solos, y el dia que exista una
+             foto legitima del lugar se rellena "foto" en
+             src/data/experiencias.ts y entra como fondo sin tocar esto.
 
+             POR QUE NO HAY FOTOS HOY: el unico material con ese motivo
+             en el repositorio esta generado con IA y su registro de
+             procedencia prohibe expresamente describirlo como el lugar.
+             La explicacion completa esta en src/data/experiencias.ts.
+
+             La que tiene guia propia es un enlace entero, no un
+             "leer mas" al final: el area pulsable es toda la tarjeta,
+             que en celular es la diferencia entre acertar y no.
+             ========================================================== */}
+        <div class="grid grid--2 aparecer">
+          {experiencias.map((e, i) => {
+            const Envoltorio = e.ruta ? 'a' : 'article';
+            return (
+              <Envoltorio
+                class:list={['experiencia', e.ruta && 'experiencia--enlace']}
+                href={e.ruta}
+                id={e.id}
+              >
+                <span class="experiencia__numero" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+
+                <div class="experiencia__texto">
+                  <h3>{e.titulo}</h3>
+                  <p>{e.texto}</p>
+
+                  {e.datos && (
+                    <ul class="experiencia__datos">
+                      {e.datos.map((d) => <li>{d}</li>)}
+                    </ul>
+                  )}
+
+                  {/* Se pinta como texto y no como <a>: la tarjeta
+                      entera ya es el enlace, y un enlace dentro de otro
+                      no es HTML valido ni se puede tabular bien. */}
+                  {e.ruta && (
+                    <span class="experiencia__accion">
+                      {e.enlaceTexto ?? `Ver ${e.titulo}`}
+                    </span>
+                  )}
+                </div>
+              </Envoltorio>
+            );
+          })}
+        </div>
+
+        {/* La portada enseña dos experiencias; la guia del destino
+            tiene el resto -centro historico, alrededores, itinerario-.
+            Un solo enlace y en secundario: la portada reparte hacia
+            hospedajes, y la guia es el camino largo para quien
+            todavia esta decidiendo si el viaje merece la pena. */}
+        <div class="grupo-botones" style="margin-top: var(--esp-4);">
+          <a class="boton boton--contorno boton--grande" href="/guia-zipaquira">
+            Explorar la guía de Zipaquirá
+          </a>
         </div>
       </div>
     </section>
@@ -321,18 +689,18 @@ const fichaNegocio = {
     <section class="seccion seccion--alterna" id="zipaquira">
       <div class="contenedor bloque-doble bloque-doble--invertido aparecer">
 
-
         <div class="bloque-doble__texto">
           <span class="etiqueta">El destino</span>
-          <h2>Zipaquira, cerca de todo y lejos del ruido</h2>
+          <h2>Zipaquirá, cerca de todo y lejos del ruido</h2>
           <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
-            A unos 50 km al norte de Bogota, Zipaquira combina patrimonio, clima frio
-            de sabana y una escala amable para caminar. Es un destino de fin de semana
-            y tambien una base tranquila para trabajar unos dias.
+            Zipaquirá, al norte de Bogotá, combina patrimonio, clima frío de sabana
+            y una escala amable para caminar. Es un destino de fin de semana y también
+            una base tranquila para trabajar unos días.
           </p>
 
+          {/* Sin cifra de distancia hasta cerrar F3.1 (docs/pendientes.md). */}
           <ul class="lista-distancias">
-            <li><span>Desde Bogota</span> <span>~50 km</span></li>
+            <li><span>Ubicación</span> <span>Al norte de Bogotá, en Cundinamarca</span></li>
           </ul>
         </div>
 
@@ -356,7 +724,7 @@ const fichaNegocio = {
 
           <ul class="lista-check">
             <li>Telefono / WhatsApp: <a href="tel:+573188983167">+57 318 898 3167</a></li>
-            <li>Zipaquira, Cundinamarca, Colombia</li>
+            <li>Zipaquirá, Cundinamarca, Colombia</li>
           </ul>
         </div>
 
@@ -370,7 +738,7 @@ const fichaNegocio = {
                 <input type="text" id="nombre" name="nombre" required autocomplete="name" />
               </div>
               <div class="campo">
-                <label for="telefono">Telefono</label>
+                <label for="telefono">Teléfono</label>
                 <input type="tel" id="telefono" name="telefono" autocomplete="tel" />
               </div>
             </div>
@@ -410,7 +778,7 @@ const fichaNegocio = {
 
           </form>
           ) : (
-            <ContactoWhatsApp mensaje="Hola, quiero informacion sobre los hospedajes de Atheron Suite en Zipaquira." />
+            <ContactoWhatsApp mensaje="Hola, quiero información sobre los hospedajes de Atheron Suite en Zipaquirá." />
           )}
         </div>
 
@@ -424,15 +792,23 @@ const fichaNegocio = {
     <section class="seccion">
       <div class="contenedor">
         <div class="cta-final aparecer">
-          <h2>Tu proxima escapada empieza aqui</h2>
+          <h2>Tu próxima escapada empieza aquí</h2>
           <p>
             Escribenos y te ayudamos a elegir que hospedaje se adapta mejor a tu viaje.
           </p>
+          {/* El cierre de la portada manda al canal donde se responde,
+              no a otra pagina. Quien ha bajado hasta aqui ya vio los
+              hospedajes; lo que le queda por hacer es preguntar. */}
           <div class="grupo-botones grupo-botones--centrado">
-            <a class="boton boton--acento boton--grande" href="/landing/hospedaje-en-zipaquira">
-              Ver la oferta de hospedaje
+            <a
+              class="boton boton--whatsapp boton--grande"
+              {...atributosWhatsApp(MENSAJE_DISPONIBILIDAD, { origen: 'home_cierre' })}
+            >
+              Ver disponibilidad
             </a>
-            <a class="boton boton--claro boton--grande" href="#contacto">Escribirnos</a>
+            <a class="boton boton--claro boton--grande" href="/hospedajes">
+              Explorar todos los hospedajes
+            </a>
           </div>
         </div>
       </div>
@@ -442,9 +818,206 @@ const fichaNegocio = {
 
   <Pie variante="completo" />
 
-  <BotonFlotante
-    href="#contacto"
-    mensaje="Hola, quiero informacion sobre los hospedajes de Atheron Suite en Zipaquira."
-  />
+  <BotonFlotante mensaje={MENSAJE_DISPONIBILIDAD} origen="home_flotante" />
+
+
+  {/* ============================================================
+       VIDEO DE FONDO DEL HERO — mejora progresiva
+
+       Va en linea y no en un archivo de public/assets/js/ como el resto
+       del sitio: es un kilobyte, y una peticion mas, aunque sea
+       diferida, sigue siendo una peticion en la ruta que precisamente
+       hay que proteger.
+
+       Sin este guion la portada funciona exactamente igual que antes:
+       el <video> se queda vacio e invisible y lo que se ve es la
+       imagen. Ese es el criterio de que la mejora es progresiva de
+       verdad y no un adorno que se cae con estilo.
+       ============================================================ */}
+  <script is:inline>
+    (function () {
+      var v = document.getElementById('video-portada');
+      if (!v || typeof v.canPlayType !== 'function') return;
+
+      /* 1. Movimiento reducido: no se pausa, no se descarga. */
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      /* 2. Ahorro de datos o conexion pobre: manda la imagen. */
+      var con = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      var tipo = (con && con.effectiveType) || '';
+      if (con && (con.saveData || /(^|-)(2g|slow-2g)$/.test(tipo))) return;
+
+      /* 3. Ancho de pantalla. Decide CUAL video -el hero movil mide
+            390 px y no necesita 1280 de ancho- y, de momento, tambien
+            decide SI lo hay.
+
+            INTERRUPTOR DEL EXPERIMENTO. El video en movil quedo
+            construido y probado, pero desactivado por medida propia. Se
+            aisló la causa ejecutando Lighthouse sobre ESTE MISMO codigo,
+            bloqueando y permitiendo la descarga del video:
+
+              video bloqueado : Speed Index 0,9-1,1 s   100 en 5 de 5
+              video permitido : Speed Index 2,1-2,2 s   100 en 5 de 5
+
+            El video multiplica por 2,4 el Speed Index. La puntuacion
+            aguanta en 100 porque 2,2 s todavia entra en la banda, pero
+            se queda sin margen: en siete pasadas anteriores una cayo a
+            98 en cuanto se sumo un pico de CPU. La regla acordada dice
+            revertir solo el video movil si peligra el 100, y eso es lo
+            que esta pasando.
+
+            Para habilitarlo basta poner esta constante en true; el resto
+            del camino -eleccion de archivo, guardas y derivados de 960
+            px- ya esta hecho y verificado. */
+      var VIDEO_EN_MOVIL = false;
+
+      var estrecha = !window.matchMedia('(min-width: 62rem)').matches;
+      if (estrecha && !VIDEO_EN_MOVIL) return;
+
+      /* 4. En pantalla estrecha el listón sube. Ahí el video se paga con
+            datos moviles y bateria ajena, asi que solo entra cuando el
+            terreno es claramente bueno: 3G no basta, y un telefono con
+            poca memoria tampoco. Si el navegador no informa, se concede
+            el beneficio de la duda: no se castiga por callar. */
+      if (estrecha) {
+        if (tipo && tipo !== '4g') return;
+        if (typeof navigator.deviceMemory === 'number' && navigator.deviceMemory < 4) return;
+      }
+
+      /* 5. Compatibilidad real, preguntada al navegador. Si no puede con
+            ninguno de los dos formatos, no se descarga nada. */
+      var puedeWebm = !!v.canPlayType('video/webm; codecs="vp9"');
+      var puedeMp4 = !!v.canPlayType('video/mp4; codecs="avc1.42E01E"');
+      if (!puedeWebm && !puedeMp4) return;
+
+      var base = '/assets/video/portada/zipaquira-plaza-dron' + (estrecha ? '-movil' : '');
+
+      var iniciado = false;   /* la fuente ya esta puesta */
+      var programado = false; /* alguien ya pidio el arranque */
+      var reloj = null;
+
+      /* Ni un temporizador ni un oyente sobreviven al arranque. */
+      function suelta() {
+        window.removeEventListener('load', programa);
+        document.removeEventListener('DOMContentLoaded', desdeDom);
+        if (reloj) { clearTimeout(reloj); reloj = null; }
+      }
+
+      function reproduce() {
+        var p = v.play();
+        if (p && typeof p.catch === 'function') {
+          p.catch(function () {
+            /* Reproduccion automatica denegada. No se hace nada: la
+               imagen ya esta debajo y nadie nota que faltaba algo. */
+          });
+        }
+      }
+
+      /* La imagen de respaldo tiene que estar pintada antes de que el
+         video toque la red. Si todavia no lo esta, no se marca nada como
+         iniciado y se reintenta: el video no adelanta jamas al poster. */
+      function posterListo() {
+        var img = v.parentNode.querySelector('.hero__fondo img');
+        return !img || (img.complete && img.naturalWidth > 0);
+      }
+
+      /* UNICO punto de entrada, y es idempotente: los dos caminos
+         terminan aqui y solo el primero llega a hacer algo. */
+      function inicia() {
+        if (iniciado) return;
+
+        /* Si el hero no se ve -el navegador puede restaurar la posicion
+           de lectura al recargar- no se descarga nada todavia. No se
+           marca como iniciado: el observador reintentara si el visitante
+           sube. Marcarlo aqui gastaria el unico intento sin hacer nada. */
+        var caja = v.getBoundingClientRect();
+        if (caja.bottom <= 0 || caja.top >= (window.innerHeight || 0)) return;
+
+        if (!posterListo()) { setTimeout(inicia, 400); return; }
+
+        iniciado = true;
+        suelta();
+
+        /* Algunos navegadores exigen la propiedad, no solo el atributo,
+           para permitir la reproduccion automatica. */
+        v.muted = true;
+
+        /* Se declaran los dos formatos y el navegador descarga UNO: el
+           primero que sabe reproducir. Los <source> no compiten, se
+           evaluan en orden. Y si ya sabemos que no puede con WebM, ni
+           siquiera se le ofrece. */
+        var fuentes = [];
+        if (puedeWebm) fuentes.push([base + '.webm', 'video/webm']);
+        if (puedeMp4) fuentes.push([base + '.mp4', 'video/mp4']);
+        fuentes.forEach(function (par) {
+          var s = document.createElement('source');
+          s.src = par[0];
+          s.type = par[1];
+          v.appendChild(s);
+        });
+
+        /* Solo se muestra cuando hay imagen de verdad que mostrar. */
+        v.addEventListener('playing', function () {
+          v.setAttribute('data-visible', 'si');
+        }, { once: true });
+
+        v.load();
+        reproduce();
+      }
+
+      /* Se cede el paso al hilo principal antes de tocar la red, para no
+         competir nunca con el recurso LCP. */
+      function programa() {
+        if (programado || iniciado) return;
+        programado = true;
+        suelta();
+        if (window.requestIdleCallback) {
+          window.requestIdleCallback(inicia, { timeout: 3000 });
+        } else {
+          setTimeout(inicia, 300);
+        }
+      }
+
+      /* Red de seguridad. "load" espera a TODOS los recursos, incluidos
+         los de terceros: si una hoja externa se cuelga, load se retrasa
+         y sin esto el video no arrancaria nunca. El margen se cuenta
+         desde que el documento esta listo, muy por detras del LCP, asi
+         que no adelanta ninguna descarga. Gana el que llegue primero y
+         el otro camino se desactiva solo. */
+      function desdeDom() {
+        reloj = setTimeout(programa, 2500);
+      }
+
+      if (document.readyState === 'complete') {
+        programa();
+      } else {
+        window.addEventListener('load', programa, { once: true });
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', desdeDom, { once: true });
+        } else {
+          desdeDom();
+        }
+      }
+
+      /* Fuera de pantalla o pestaña de fondo, no se gasta bateria. Y si
+         el hero no estaba a la vista cuando tocaba arrancar, este es el
+         que lo reintenta. */
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entradas) {
+          entradas.forEach(function (e) {
+            if (!e.isIntersecting) { if (iniciado) v.pause(); return; }
+            if (iniciado) reproduce();
+            else if (programado) inicia();
+          });
+        }, { threshold: 0 }).observe(v);
+      }
+
+      document.addEventListener('visibilitychange', function () {
+        if (!iniciado) return;
+        if (document.hidden) v.pause();
+        else reproduce();
+      });
+    })();
+  </script>
 
 </Base>
