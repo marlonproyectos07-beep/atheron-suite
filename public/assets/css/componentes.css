@@ -77,6 +77,16 @@
      En la portada, con menu, cabe entero y se ve entero. */
   .header__interior:has(> .boton) .logo__suite { display: none; }
 }
+
+/* Cabeceras SIN menu (las landings) en telefono: el logo no se encoge
+   por debajo de su contenido -antes su caja media 141 px con 180 px de
+   texto dentro, y el boton lo tapaba- y el boton usa una letra algo menor.
+   Probado a 320, 360, 390, 430 y 480 px en las dos landings: separacion
+   positiva en todos, sin desborde y sin texto fuera del boton. */
+@media (max-width: 30rem) {
+  .header__interior:has(> .boton) > .logo { flex-shrink: 0; }
+  .header__interior:has(> .boton) > .boton { font-size: .8rem; padding-inline: .8rem; line-height: 1.2; }
+}
 /* El nombre conserva la alineacion por linea base que tenia antes
    entre "Atheron" y "SUITE". */
 .logo__nombre {
