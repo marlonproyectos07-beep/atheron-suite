@@ -1,0 +1,17 @@
+# Resultados binarios de Higgsfield: no se versionan.
+# Una foto de 2,4 MB ya tumbo un despliegue; un video pesa decenas de MB.
+outputs/**
+!outputs/.gitkeep
+
+# Material original que entra por aqui: pesado y no publicable tal cual.
+inputs/**
+!inputs/.gitkeep
+
+# ZIP de relevo al Agente B: se genera cuando toca, no se guarda.
+*.zip
+
+# Credenciales: nunca. Red de seguridad, no sustituto de la regla.
+*.token
+*credentials*
+.env
+.env.*
