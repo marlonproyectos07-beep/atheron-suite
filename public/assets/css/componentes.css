@@ -71,6 +71,11 @@
 @media (max-width: 22rem) {
   .header__interior { padding-inline: 1rem; gap: .6rem; }
   .header__interior .boton { padding-inline: .7rem; font-size: .85rem; }
+  /* Aun asi, logo completo y un boton de dos lineas no caben en 288 px:
+     solo en las cabeceras SIN menu (las landings) se oculta la palabra
+     pequena "SUITE". Simbolo, "Atheron" y el texto del boton no cambian.
+     En la portada, con menu, cabe entero y se ve entero. */
+  .header__interior:has(> .boton) .logo__suite { display: none; }
 }
 /* El nombre conserva la alineacion por linea base que tenia antes
    entre "Atheron" y "SUITE". */
@@ -262,10 +267,13 @@
   margin-top: var(--esp-3);
 }
 @media (min-width: 32rem) {
+  /* En fila, pero partiendo linea cuando no caben. Con grid-auto-flow:
+     column y max-content nunca pasaban de linea: en una columna de 448 px
+     los tres botones sacaban la pagina por la derecha. */
   .botones-mapa {
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    justify-content: start;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 }
 
