@@ -17,7 +17,6 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
   descripcion="Guias practicas sobre Zipaquira, Cundinamarca: como llegar, que visitar, donde comer y donde alojarse."
   ruta="/blog"
   ogDescripcion="Guias practicas para planear tu visita a Zipaquira."
-  avisoBorrador="Version de trabajo. Los articulos marcados todavia no estan publicados."
 >
 
   <Cabecera enlaces={menuBlog} cta={ctaDisponibilidad} actual="/blog" />
@@ -43,10 +42,6 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
              Va sola y arriba porque es la mas importante del grupo.
              ========================================================== */}
         <article class="tarjeta aparecer" style="margin-bottom: var(--esp-5);">
-          <div class="tarjeta__media">
-            <div class="placeholder placeholder--ancho">Foto pendiente</div>
-            <span class="tarjeta__insignia">Guia principal</span>
-          </div>
           <div class="tarjeta__cuerpo">
             <p class="tarjeta-articulo__meta">Guia completa</p>
             <h2 class="tarjeta__titulo">
@@ -70,10 +65,6 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
 
         <div class="grid grid--3" style="margin-bottom: var(--esp-6);">
           <article class="tarjeta aparecer">
-            <div class="tarjeta__media">
-              <div class="placeholder">Foto pendiente</div>
-              <span class="tarjeta__insignia">Historia</span>
-            </div>
             <div class="tarjeta__cuerpo">
               <p class="tarjeta-articulo__meta">Sobre nosotros</p>
               <h3 class="tarjeta__titulo">
@@ -88,60 +79,6 @@ import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
               </div>
             </div>
           </article>
-        </div>
-
-        <div class="encabezado-seccion">
-          <span class="etiqueta">Proximos articulos</span>
-          <h2>En preparacion</h2>
-          <p class="texto-suave" style="margin-top: var(--esp-2);">
-            Estos son los articulos planeados. El orden esta en
-            <code>docs/estrategia-seo.md</code>.
-          </p>
-        </div>
-
-        {/* ==========================================================
-             ARTICULOS PENDIENTES
-             Cuando escribas uno, convierte su tarjeta en un enlace
-             real (como la de arriba) y anadelo al sitemap.xml.
-             ========================================================== */}
-        <div class="grid grid--3">
-
-          <article class="tarjeta-simple">
-            <p class="tarjeta-articulo__meta">Como llegar</p>
-            <h3><span class="pendiente">Como llegar de Bogota a Zipaquira</span></h3>
-            <p class="texto-suave">Bus, carro y Tren de la Sabana comparados.</p>
-          </article>
-
-          <article class="tarjeta-simple">
-            <p class="tarjeta-articulo__meta">Que visitar</p>
-            <h3><span class="pendiente">Catedral de Sal: horarios y precios</span></h3>
-            <p class="texto-suave">Que esperar del recorrido y cuanto dura.</p>
-          </article>
-
-          <article class="tarjeta-simple">
-            <p class="tarjeta-articulo__meta">Planes</p>
-            <h3><span class="pendiente">Zipaquira en un fin de semana</span></h3>
-            <p class="texto-suave">Itinerario de dos dias sin correr.</p>
-          </article>
-
-          <article class="tarjeta-simple">
-            <p class="tarjeta-articulo__meta">Comer</p>
-            <h3><span class="pendiente">Donde comer en Zipaquira</span></h3>
-            <p class="texto-suave">Opciones por zona y tipo de plan.</p>
-          </article>
-
-          <article class="tarjeta-simple">
-            <p class="tarjeta-articulo__meta">Familia</p>
-            <h3><span class="pendiente">Zipaquira con ninos</span></h3>
-            <p class="texto-suave">Que funciona y que no con los mas pequenos.</p>
-          </article>
-
-          <article class="tarjeta-simple">
-            <p class="tarjeta-articulo__meta">Alojamiento</p>
-            <h3><span class="pendiente">Donde dormir cerca de la Catedral de Sal</span></h3>
-            <p class="texto-suave">Que tener en cuenta al elegir zona.</p>
-          </article>
-
         </div>
 
         <div class="cta-final aparecer" style="margin-top: var(--esp-6);">

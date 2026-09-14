@@ -92,6 +92,14 @@
   .bloque-doble { grid-template-columns: 1fr 1fr; gap: var(--esp-6); }
   /* .bloque-doble--invertido pone la imagen a la izquierda */
   .bloque-doble--invertido .bloque-doble__media { order: -1; }
+  /* Un bloque doble que se queda sin imagen -porque la foto real
+     todavia no existe- no deja media pantalla vacia: el texto ocupa
+     el ancho, con una medida de lectura comoda. */
+  .bloque-doble > :only-child { grid-column: 1 / -1; max-width: 46rem; }
+  /* Las dos columnas se reparten el ancho de verdad. Sin min-width: 0 una
+     columna no puede ser mas estrecha que su contenido, y en Casa Neusa a
+     1024 px la de la derecha crecia a 668 px y desbordaba la pagina. */
+  .bloque-doble > * { min-width: 0; }
 }
 
 /* ------------------------------------------------------------
@@ -149,6 +157,13 @@
 .lista-distancias span:last-child {
   color: var(--texto-suave);
   white-space: nowrap;
+}
+/* En pantalla estrecha el valor puede ocupar varias lineas. Con nowrap,
+   un dato largo -"$ 10.000 por cada hora adicional, con coordinacion
+   previa" en Hotel Colonial Confort- ensanchaba la pagina a 521 px en un
+   telefono de 390. */
+@media (max-width: 48rem) {
+  .lista-distancias span:last-child { white-space: normal; text-align: right; }
 }
 
 /* ------------------------------------------------------------

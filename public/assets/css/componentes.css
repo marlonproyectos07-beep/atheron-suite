@@ -55,6 +55,38 @@
   height: 40px;
   width: auto;
 }
+
+/* El simbolo no cede espacio cuando la cabecera va justa. En las landings
+   la cabecera no lleva menu pero si un boton largo, y a 320 px ese boton
+   comprimia el <picture> hasta 0 px: el logo se deformaba. */
+.logo picture,
+.logo__simbolo { flex-shrink: 0; }
+
+/* A 320 px la cabecera de las landings no cabe: simbolo, nombre y un
+   boton de dos lineas suman unos 60 px mas que la pantalla. Antes no se
+   notaba porque el simbolo se aplastaba a 0 px; al dejar de aplastarse,
+   el nombre quedaba debajo del boton. Se recupera el espacio sin tocar
+   ningun texto: menos relleno lateral y menos separacion en la cabecera,
+   y un boton algo mas compacto. Solo por debajo de 22rem. */
+@media (max-width: 22rem) {
+  .header__interior { padding-inline: 1rem; gap: .6rem; }
+  .header__interior .boton { padding-inline: .7rem; font-size: .85rem; }
+  /* Aun asi, logo completo y un boton de dos lineas no caben en 288 px:
+     solo en las cabeceras SIN menu (las landings) se oculta la palabra
+     pequena "SUITE". Simbolo, "Atheron" y el texto del boton no cambian.
+     En la portada, con menu, cabe entero y se ve entero. */
+  .header__interior:has(> .boton) .logo__suite { display: none; }
+}
+
+/* Cabeceras SIN menu (las landings) en telefono: el logo no se encoge
+   por debajo de su contenido -antes su caja media 141 px con 180 px de
+   texto dentro, y el boton lo tapaba- y el boton usa una letra algo menor.
+   Probado a 320, 360, 390, 430 y 480 px en las dos landings: separacion
+   positiva en todos, sin desborde y sin texto fuera del boton. */
+@media (max-width: 30rem) {
+  .header__interior:has(> .boton) > .logo { flex-shrink: 0; }
+  .header__interior:has(> .boton) > .boton { font-size: .8rem; padding-inline: .8rem; line-height: 1.2; }
+}
 /* El nombre conserva la alineacion por linea base que tenia antes
    entre "Atheron" y "SUITE". */
 .logo__nombre {
@@ -245,10 +277,13 @@
   margin-top: var(--esp-3);
 }
 @media (min-width: 32rem) {
+  /* En fila, pero partiendo linea cuando no caben. Con grid-auto-flow:
+     column y max-content nunca pasaban de linea: en una columna de 448 px
+     los tres botones sacaban la pagina por la derecha. */
   .botones-mapa {
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    justify-content: start;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 }
 
