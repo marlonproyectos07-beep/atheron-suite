@@ -1,5 +1,14 @@
 # Continuidad del proyecto — Atheron Suite
 
+> # ⚠️ AVISO — MEMORIA HISTÓRICA
+>
+> Este documento es **memoria histórica**. Su estado operativo corresponde al
+> **23 de agosto de 2026** y **parte de lo que describe ya no es cierto**
+> (ramas, publicación, CMS, `public/admin/config.yml` y estado de producción).
+> Para conocer el **estado actual** consulta **primero**
+> `AI/PROJECT_STATE.md`. **No asumas** que las ramas, la publicación, el CMS
+> o la producción siguen en el estado descrito aquí.
+
 > **Documento de traspaso.** Escrito el 20 de agosto de 2026, al cerrar la sesión
 > en que el sitio se migró a Astro y se montó el panel de edición online.
 >
