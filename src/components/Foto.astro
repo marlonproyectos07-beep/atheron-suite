@@ -4,9 +4,15 @@
 
    Es la pieza que convierte "foto pendiente" en una foto de verdad
    sin tocar ni una linea de codigo: en cuanto subes la imagen desde
-   el panel, este componente deja de pintar el rectangulo y pinta la
-   foto. Las proporciones son las mismas, asi que el diseno no se
-   mueve.
+   el panel, este componente la pinta.
+
+   SIN IMAGEN NO PINTA NADA, Y ES DELIBERADO. Antes dibujaba un
+   rectangulo rayado con el texto "Foto pendiente". Eso servia mientras
+   el sitio era un borrador interno, pero al huesped le dice que la casa
+   no esta terminada. Direccion lo retiro el 8 de septiembre de 2026: lo
+   que falta se documenta dentro, no se le enseña al visitante. El
+   <slot> se conserva en la firma para no romper las llamadas que ya
+   pasan un texto, pero ese texto ya no se pinta.
 
    Sobre el texto alternativo (alt):
    es lo que lee un buscador y lo que oye alguien que usa lector de
@@ -14,6 +20,8 @@
    foto que Google no entiende. Si falta, avisamos en la consola
    durante el desarrollo en vez de dejarlo pasar en silencio.
    ============================================================ */
+
+import { medidasDe } from '../data/medidas-imagen';
 
 interface Props {
   /** Direccion de la imagen. Si no hay, se pinta el rectangulo. */
@@ -33,12 +41,51 @@ interface Props {
   anchos?: number[];
   /** Que espacio ocupa la foto, para que el navegador elija tamano. */
   medidas?: string;
-  /** Medidas reales del archivo, para reservar el hueco (evita CLS). */
+  /* Medidas reales del archivo, para reservar el hueco (evita CLS).
+     Si no se pasan, se leen del propio archivo al construir: ver
+     src/data/medidas-imagen.ts. Pasarlas a mano solo hace falta
+     cuando la imagen se recorta y las del archivo no sirven. */
   ancho?: number;
   alto?: number;
+  /* true = esta imagen es la que el visitante ve primero, sin
+     desplazar la pagina. Se carga de inmediato y con prioridad
+     alta, porque es la que Lighthouse mide como LCP.
+
+     Solo puede haber UNA por pagina. Diferirla la retrasa; pero
+     marcar varias tambien, porque compiten entre si y el navegador
+     deja de saber cual importa. Por eso es una excepcion explicita
+     y no el valor por defecto. */
+  prioritaria?: boolean;
 }
 
-const { src, alt, forma, anchos, medidas, ancho, alto } = Astro.props;
+const { src, alt, forma, anchos, medidas, ancho, alto, prioritaria } = Astro.props;
+
+/* Si quien llama no da las medidas, se leen del propio archivo. Es
+   lo que reserva el hueco de la imagen antes de que baje y evita que
+   la pagina de el salto (CLS). Un ancho o alto pasado a mano manda
+   sobre esto: puede haber un recorte que el archivo no sabe. */
+const propias = ancho && alto ? null : medidasDe(src);
+const anchoFinal = ancho ?? propias?.ancho;
+const altoFinal = alto ?? propias?.alto;
+
+/* Carga: la prioritaria se pide ya; todas las demas esperan a estar
+   cerca de la pantalla. Es la regla de rendimiento del sitio y vive
+   aqui, en un solo sitio, y no repetida en cada maqueta. */
+const carga = prioritaria ? 'eager' : 'lazy';
+/* La prioritaria se pide con prioridad alta. Las demas, con
+   prioridad BAJA y no sin declarar.
+
+   Por que importa: loading="lazy" no siempre las deja fuera de la
+   carga inicial. Cuando el navegador estima que una imagen esta
+   cerca de la pantalla -y en una pagina larga y estrecha el margen
+   es generoso- se la descarga igual, y entonces compite por el
+   ancho de banda con la imagen que el visitante SI esta viendo.
+
+   Se midio en la portada: dos fotos de mas abajo se estaban
+   descargando durante la carga inicial, delante de la imagen que
+   Lighthouse mide como LCP. Con prioridad baja siguen llegando,
+   pero detras y sin robarle sitio. */
+const prioridadRed = prioritaria ? 'high' : 'low';
 
 /* Las variantes se nombran a partir del propio src: se le quita la
    extension y se le pega "-<ancho>.<formato>". Asi no hay una segunda
@@ -46,7 +93,11 @@ const { src, alt, forma, anchos, medidas, ancho, alto } = Astro.props;
 const sinExtension = src ? src.replace(/\.[^.]+$/, '') : '';
 const juego = (formato: string) =>
   (anchos ?? []).map((w) => `${sinExtension}-${w}.${formato} ${w}w`).join(', ');
-const hayVariantes = Boolean(src && anchos && anchos.length);
+/* Las fotos ya optimizadas del edificio aliado se cargan directamente.
+   No tienen todavía el juego de derivados -240/-400/etc.; anunciar
+   variantes inexistentes en <source> hace que el navegador elija un 404. */
+const esFotoEdificioAlgarra = Boolean(src?.startsWith('/assets/edificio-algarra/'));
+const hayVariantes = Boolean(src && anchos && anchos.length && !esFotoEdificioAlgarra);
 
 const sufijo = forma ? `--${forma}` : '';
 const claseFoto = `foto${sufijo ? ` foto${sufijo}` : ''}`;
@@ -68,9 +119,10 @@ if (src && !alt) {
       class={claseFoto}
       src={src}
       alt={alt ?? ''}
-      width={ancho}
-      height={alto}
-      loading="lazy"
+      width={anchoFinal}
+      height={altoFinal}
+      loading={carga}
+      fetchpriority={prioridadRed}
       decoding="async"
     />
   </picture>
@@ -79,7 +131,10 @@ if (src && !alt) {
     class={claseFoto}
     src={src}
     alt={alt ?? ''}
-    loading="lazy"
+    width={anchoFinal}
+    height={altoFinal}
+    loading={carga}
+    fetchpriority={prioridadRed}
     decoding="async"
   />
 ) : null}

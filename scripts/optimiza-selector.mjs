@@ -32,17 +32,44 @@ const ANCHOS_PRINCIPAL = [400, 600, 700, 900];
 const ANCHOS_MINIATURA = [240, 360, 480];
 
 /* ------------------------------------------------------------
+   FOTOS DE TARJETA
+
+   La foto de tarjeta es la que sale en la portada, en el catalogo y
+   en la pagina de grupos. Hasta hoy era la unica de la ficha que NO
+   se convertia, asi que se servia el original entero: el catalogo
+   pesaba 721 KB, y la foto de tarjeta de Casa Algarra sola son 326
+   KB para pintarse a menos de 400 px de ancho.
+
+   Tres anchos y no cuatro: una tarjeta nunca se pinta a mas de unos
+   380 px de ancho de CSS. El 700 cubre el caso de una pantalla de
+   telefono con doble densidad; un 900 no lo elegiria nadie y solo
+   ocuparia disco.
+   ------------------------------------------------------------ */
+const ANCHOS_TARJETA = [400, 600, 700];
+
+/* ------------------------------------------------------------
    FOTOS QUE USA UNA MAQUETA, NO UNA FICHA
 
    Las de arriba se descubren solas leyendo los .md. Estas no: no
    pertenecen a ningun hospedaje, las escribe directamente una
    pagina, y por eso hay que nombrarlas.
+
+   La de la portada pesaba 99 KB y se servia tal cual, sin AVIF ni
+   WebP y sin reducir: era el archivo mas pesado de toda la portada,
+   por delante de la propia imagen del hero. Con variantes baja a
+   una fraccion sin que cambie nada de lo que se ve.
+
+   Anadir una aqui es escribir su ruta. El resto -formatos, anchos,
+   no regenerar lo que ya existe- ya funciona igual que para las
+   fichas.
    ------------------------------------------------------------ */
 const FOTOS_DE_MAQUETA = [
+  /* Portada, seccion "Como nacio Atheron Suite". */
+  '/assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg',
   /* Hero de Casa Colonial Centro. Va a sangre y es la imagen que
      Lighthouse mide como LCP: servir los 1536 px de ancho a un
      telefono de 390 es mandar el triple de bytes de los que caben en
-     la pantalla. Con las variantes, el movil baja la de 600 u 800. */
+     la pantalla. Con las variantes, el movil baja la de 700 u 900. */
   '/assets/img/proyectos/casa-colonial-centro/casa-colonial-hero-vision-fachada.webp',
 ];
 
@@ -52,16 +79,23 @@ const FOTOS_DE_MAQUETA = [
 function rutasDeFicha(texto) {
   const principal = [];
   const miniaturas = [];
-  for (const linea of texto.split('\n')) {
-    const m = linea.match(/^(\s*)(fotoPrincipal|foto):\s*(\/assets\/img\/[^\s'"]+)\s*$/);
+  const tarjetas = [];
+  /* Las fichas llegan con saltos de linea de Windows cuando se
+     trabaja en Windows. Sin quitar el "\r", el "$" de la expresion
+     no encuentra el final de linea y este archivo concluia que la
+     ficha no tenia ninguna foto. Mismo fallo que el del guardian de
+     publicacion, y por el mismo motivo. */
+  for (const linea of texto.replace(/\r\n?/g, '\n').split('\n')) {
+    const m = linea.match(/^(\s*)(fotoPrincipal|fotoTarjeta|foto):\s*(\/assets\/img\/[^\s'"]+)\s*$/);
     if (!m) continue;
     const [, sangria, clave, ruta] = m;
     if (clave === 'fotoPrincipal') principal.push(ruta);
+    else if (clave === 'fotoTarjeta') tarjetas.push(ruta);
     /* "foto:" sangrada vive dentro de una habitacion; sin sangrar no
        existe hoy, pero si apareciera seria otra foto de ficha. */
     else if (sangria.length > 0) miniaturas.push(ruta);
   }
-  return { principal, miniaturas };
+  return { principal, miniaturas, tarjetas };
 }
 
 async function existe(ruta) {
@@ -105,10 +139,17 @@ let fotos = 0;
 
 for (const nombre of fichas) {
   const texto = await fs.readFile(path.join(CONTENIDO, nombre), 'utf8');
-  const { principal, miniaturas } = rutasDeFicha(texto);
+  const { principal, miniaturas, tarjetas } = rutasDeFicha(texto);
 
   for (const ruta of principal) {
     generadas += await genera(ruta, ANCHOS_PRINCIPAL);
+    fotos++;
+  }
+  /* Una foto de tarjeta puede ser la misma que la principal -es el
+     caso de Hotel Atheron Suite-. No pasa nada: genera() no rehace
+     lo que ya existe. */
+  for (const ruta of tarjetas) {
+    generadas += await genera(ruta, ANCHOS_TARJETA);
     fotos++;
   }
   for (const ruta of miniaturas) {
@@ -117,9 +158,14 @@ for (const nombre of fichas) {
   }
 }
 
-/* Las de las maquetas, que no salen de ningun .md. Llevan sus propios
-   anchos: una imagen a sangre necesita el ancho entero del movil por
-   su densidad de pixeles. */
+/* Las de las maquetas, que no salen de ningun .md. */
+/* Las fotos de maqueta llevan sus propios anchos. Los de ficha -400,
+   600, 700 y 900- se pensaron para fotos que ocupan media pantalla;
+   una imagen a sangre necesita el ancho entero del movil por su
+   densidad de pixeles, y el salto de 700 a 900 deja al telefono
+   bajando bastante mas de lo que cabe: con 412 px de ancho y densidad
+   1,75 pide 721, y al no haber nada entre medias se lleva la de 900.
+   Con 800 en la lista baja la que le corresponde. */
 const ANCHOS_MAQUETA = [400, 600, 800, 1100];
 
 for (const ruta of FOTOS_DE_MAQUETA) {
@@ -130,10 +176,11 @@ for (const ruta of FOTOS_DE_MAQUETA) {
 /* ------------------------------------------------------------
    RECORRIDO DE CASA COLONIAL
 
-   Las imagenes del recorrido se guardan a 900 o 1200 px de ancho,
+   Las 56 imagenes del brochure se guardan a 900 o 1200 px de ancho,
    que es lo que necesita un escritorio. Un telefono las pinta a unos
    360, asi que sin variantes se le mandaban tres veces los pixeles
-   que caben en su pantalla.
+   que caben en su pantalla. Medido: 1,3 MB descargados antes del LCP,
+   de los cuales el hero solo eran 57 KB; el resto competia con el.
 
    400 cubre el movil normal, 700 el movil de densidad alta y el
    escritorio. El archivo entero se queda de respaldo del <img>.

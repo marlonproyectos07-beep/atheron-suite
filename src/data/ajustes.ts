@@ -34,9 +34,12 @@ export const formularioContactoActivo = false;
 /* ------------------------------------------------------------
    WhatsApp: destino de respaldo.
 
-   Solo se usa si el JavaScript no carga. El numero de trabajo
-   vive en public/assets/js/main.js, que es quien construye los
-   enlaces con el mensaje ya escrito. Aqui esta duplicado a
-   proposito, para que el boton nunca quede muerto.
+   Solo se usa donde todavia no se pasa un mensaje construido. El
+   numero y los mensajes viven ahora en src/data/whatsapp.ts, que es
+   la unica copia buena: antes estaba escrito aqui, otra vez en
+   public/assets/js/main.js y otra vez a mano en algunas maquetas.
+   Tres copias de un telefono son tres oportunidades de que una se
+   quede vieja. Esto queda como reexportacion para no romper lo que
+   ya lo importaba.
    ------------------------------------------------------------ */
-export const whatsappRespaldo = 'https://wa.me/573188983167';
+export { ENLACE_DISPONIBILIDAD as whatsappRespaldo } from './whatsapp';

@@ -209,11 +209,10 @@ const urlImagen = imagen ? new URL(imagen, Astro.site).href : null;
        Licencia SIL Open Font License 1.1; procedencia en
        public/assets/fuentes/PROCEDENCIA.md
        ============================================================ */}
-  {/* Precarga de la fuente de titulos. Sin ella, en escritorio el cambio
-       de la fuente de reserva a Fraunces reajustaba el titular del hero
-       despues del primer pintado: CLS 0,158 medido el 13/09/2026. Con la
-       precarga el archivo llega antes de pintar y el titular no se mueve. */}
-  <link rel="preload" href="/assets/fuentes/fraunces-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+  {/* SIN PRECARGA, a proposito. Se precargo el 13/09/2026 para frenar el
+       CLS del hero antiguo. El hero actual no se mueve cuando llega
+       Fraunces (CLS 0 medido con la fuente retrasada 500 ms), y la
+       precarga competia en movil con la imagen del hero, que es el LCP. */}
 
   {/* Nuestras hojas de estilo, siempre en este orden:
        base (variables) -> componentes -> paginas -> ajustes del selector.

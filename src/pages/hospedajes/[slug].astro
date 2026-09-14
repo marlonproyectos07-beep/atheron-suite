@@ -6,9 +6,11 @@ import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import Marca from '../../components/Marca.astro';
 import Foto from '../../components/Foto.astro';
-import { menuFicha, menuFichaMovil, ctaConsultar } from '../../data/navegacion';
+import { menuFicha, menuFichaMovil, ctaConsultarDe } from '../../data/navegacion';
 import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
 import { formularioContactoActivo } from '../../data/ajustes';
+import { migaDePan, url } from '../../data/seo';
+import { atributosWhatsApp } from '../../data/whatsapp';
 
 export async function getStaticPaths() {
   const fichas = await getCollection('hospedajes');
@@ -21,6 +23,7 @@ export async function getStaticPaths() {
 const { ficha } = Astro.props;
 const d = ficha.data;
 const ruta = `/hospedajes/${ficha.id}`;
+const heroConVariantes = !d.fotoPrincipal?.startsWith('/assets/edificio-algarra/');
 /* La presentacion comercial la manda el contenido, no el nombre del
    hospedaje. Antes esto era ficha.id === 'hotel-atheron-suite' y toda
    la seccion estaba escrita a medida de esa ficha: para montar la
@@ -49,6 +52,7 @@ const tarifas = d.tarifas ?? null;
 const espacios = d.espacios?.lista.length ? d.espacios : null;
 const opiniones = d.pruebaSocial ?? null;
 const condiciones = d.antesDeReservar ?? null;
+const faq = d.faq?.preguntas.length ? d.faq : null;
 const videos = d.habitaciones
   .map((h, i) => (h.video ? { ...h.video, id: `visor-video-${i + 1}` } : null))
   .filter((v) => v !== null);
@@ -63,6 +67,7 @@ const enlacesMovil = menuFichaMovil.filter((e) => {
   if (e.href === '#tarifas') return Boolean(tarifas);
   if (e.href === '#espacios') return Boolean(espacios);
   if (e.href === '#opiniones') return Boolean(opiniones);
+  if (e.href === '#faq') return Boolean(faq);
   return true;
 });
 
@@ -103,24 +108,58 @@ if (d.latitud != null && d.longitud != null) {
     longitude: d.longitud,
   };
 }
-if (d.mascotas !== undefined) fichaNegocio.petsAllowed = d.mascotas;
-/* El rango de tarifa, solo si la pagina lo muestra. No se marca
-   disponibilidad ni una oferta con fechas: lo unico verificado es
-   cuanto cuesta la noche segun cuantos vengan. */
-if (d.rangoPrecio) fichaNegocio.priceRange = d.rangoPrecio;
-if (d.checkin) fichaNegocio.checkinTime = d.checkin;
-if (d.checkout) fichaNegocio.checkoutTime = d.checkout;
-if (d.comodidades.length) {
-  fichaNegocio.amenityFeature = d.comodidades.map((nombre) => ({
-    '@type': 'LocationFeatureSpecification',
-    name: nombre,
-    value: true,
-  }));
+/* --- LO QUE SOLO SE DECLARA SI LA FICHA ESTA PUBLICADA ---
+
+   Una ficha sin publicar sale con noindex porque sus datos
+   operativos todavia no estan confirmados. Marcar ahi las tarifas,
+   los horarios de entrada y salida y la lista de comodidades es
+   describir un alojamiento en funcionamiento: son justo los campos
+   que un buscador lee como "esto se puede contratar hoy".
+
+   El bloque no desaparece -la propiedad existe y la pagina es
+   suya-, pero se queda en lo que si esta comprobado: como se llama,
+   donde esta y quien la gestiona. Cuando la ficha se publique,
+   estos campos entran solos. */
+if (d.publicado) {
+  if (d.mascotas !== undefined) fichaNegocio.petsAllowed = d.mascotas;
+  /* El rango de tarifa, solo si la pagina lo muestra. No se marca
+     disponibilidad ni una oferta con fechas: lo unico verificado es
+     cuanto cuesta la noche segun cuantos vengan. */
+  if (d.rangoPrecio) fichaNegocio.priceRange = d.rangoPrecio;
+  if (d.checkin) fichaNegocio.checkinTime = d.checkin;
+  if (d.checkout) fichaNegocio.checkoutTime = d.checkout;
+  if (d.comodidades.length) {
+    fichaNegocio.amenityFeature = d.comodidades.map((nombre) => ({
+      '@type': 'LocationFeatureSpecification',
+      name: nombre,
+      value: true,
+    }));
+  }
+} else {
+  /* Y se dice, en el propio dato, por que falta lo demas. */
+  fichaNegocio.disambiguatingDescription =
+    'Ficha en preparación. Sus datos operativos no están confirmados y el alojamiento no se ofrece como disponible.';
 }
 fichaNegocio.parentOrganization = {
   '@type': 'Organization',
   name: 'Atheron Suite',
   url: 'https://hotelesatheron.com/',
+};
+
+/* La ficha declara ademas donde esta dentro del sitio. Es lo que
+   permite a un buscador enseñar "Inicio > Hospedajes > Casa Algarra"
+   en vez de la direccion pelada, y es un dato que no hay que
+   verificar con nadie: sale de la propia estructura de rutas. */
+const fichaPagina = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    fichaNegocio,
+    migaDePan([
+      { nombre: 'Inicio', ruta: '/' },
+      { nombre: 'Hospedajes', ruta: '/hospedajes' },
+      { nombre: d.nombre, ruta },
+    ], `${url(ruta)}#miga`),
+  ],
 };
 
 function dato(valor, singular, plural) {
@@ -162,12 +201,12 @@ function idHabitacion(nombre) {
   ogTitulo={d.ogTitulo}
   ogDescripcion={d.ogDescripcion}
   indexable={d.publicado}
-  jsonLd={fichaNegocio}
+  jsonLd={fichaPagina}
   avisoBorrador={d.avisoBorrador}
   imagen={d.fotoPrincipal}
   imagenAlt={d.fotoPrincipalAlt}
 >
-  <Cabecera enlaces={menuFicha} enlacesMovil={enlacesMovil} cta={ctaConsultar} />
+  <Cabecera enlaces={menuFicha} enlacesMovil={enlacesMovil} cta={ctaConsultarDe(d.nombre, d.localidad)} />
 
   <main id="contenido">
     <section class:list={['hero', 'hero--interior', heroFoto && 'hero--foto']}>
@@ -180,10 +219,10 @@ function idHabitacion(nombre) {
             d.heroEncuadreMovil && `--encuadre-movil: ${d.heroEncuadreMovil}`,
           ].filter(Boolean).join('; ') || undefined}
         >
-          <source media="(max-width: 700px)" type="image/avif" srcset={`${baseHero}-700.avif`} />
-          <source media="(max-width: 700px)" type="image/webp" srcset={`${baseHero}-700.webp`} />
-          <source type="image/avif" srcset={`${baseHero}-900.avif`} />
-          <source type="image/webp" srcset={`${baseHero}-900.webp`} />
+          {heroConVariantes && <source media="(max-width: 700px)" type="image/avif" srcset={`${baseHero}-700.avif`} />}
+          {heroConVariantes && <source media="(max-width: 700px)" type="image/webp" srcset={`${baseHero}-700.webp`} />}
+          {heroConVariantes && <source type="image/avif" srcset={`${baseHero}-900.avif`} />}
+          {heroConVariantes && <source type="image/webp" srcset={`${baseHero}-900.webp`} />}
           <img
             src={d.fotoPrincipal}
             alt=""
@@ -204,8 +243,7 @@ function idHabitacion(nombre) {
         <div class="grupo-botones">
           <a
             class="boton boton--whatsapp boton--grande"
-            href="#contacto"
-            data-whatsapp={`${mensajeInteres} Quiero consultar disponibilidad.`}
+            {...atributosWhatsApp(`${mensajeInteres} Quiero consultar disponibilidad.`, { origen: 'ficha_hero', propiedad: d.nombre })}
           >
             Consultar disponibilidad
           </a>
@@ -292,8 +330,7 @@ function idHabitacion(nombre) {
 
             <a
               class="boton boton--whatsapp boton--grande tarifas__cta"
-              href="#contacto"
-              data-whatsapp={tarifas.mensaje ?? mensajeInteres}
+              {...atributosWhatsApp(tarifas.mensaje ?? mensajeInteres, { origen: 'ficha_tarifas', propiedad: d.nombre })}
             >{tarifas.cta}</a>
           </div>
         </div>
@@ -334,6 +371,56 @@ function idHabitacion(nombre) {
               </article>
             ))}
           </div>
+        </div>
+      </section>
+    )}
+
+    {d.videoPrincipal && (
+      <section class="seccion video-principal" id="video">
+        <div class="contenedor video-principal__interior aparecer">
+          <div class="video-principal__texto">
+            <span class="etiqueta">Recorrido en video</span>
+            <h2>{d.videoPrincipal.titulo}</h2>
+            {d.videoPrincipal.descripcion && <p class="texto-suave">{d.videoPrincipal.descripcion}</p>}
+            {d.videoPrincipal.duracion && <span class="video-principal__duracion">{d.videoPrincipal.duracion}</span>}
+          </div>
+          {d.videoPrincipal.capitulos.length > 0 ? (
+            <div class="video-capitulos">
+              {d.videoPrincipal.capitulos.map((capitulo, i) => (
+                <article class="video-capitulo">
+                  <h3>{i + 1}. {capitulo.titulo}</h3>
+                  <video
+                    class="video-principal__reproductor"
+                    controls
+                    playsinline
+                    preload="none"
+                    poster={capitulo.poster}
+                    width={d.videoPrincipal.ancho}
+                    height={d.videoPrincipal.alto}
+                    aria-label={capitulo.titulo}
+                  >
+                    <source src={capitulo.src} type="video/mp4" />
+                    Tu navegador no puede reproducir este video.
+                  </video>
+                  {capitulo.duracion && <span class="video-principal__duracion">{capitulo.duracion}</span>}
+                </article>
+              ))}
+            </div>
+          ) : d.videoPrincipal.src ? (
+            <video
+              class="video-principal__reproductor"
+              controls
+              playsinline
+              preload="none"
+              poster={d.videoPrincipal.poster}
+              width={d.videoPrincipal.ancho}
+              height={d.videoPrincipal.alto}
+              aria-label={d.videoPrincipal.titulo}
+            >
+              <source src={d.videoPrincipal.src} type="video/mp4" />
+              Tu navegador no puede reproducir este video.
+            </video>
+          ) : null}
         </div>
       </section>
     )}
@@ -386,8 +473,7 @@ function idHabitacion(nombre) {
                     <a class="boton boton--contorno" href="#detalle-casa-completa">{casa.ctaVer}</a>
                     <a
                       class="boton boton--whatsapp"
-                      href="#contacto"
-                      data-whatsapp={casa.mensaje}
+                      {...atributosWhatsApp(casa.mensaje, { origen: 'ficha_casa_completa', propiedad: d.nombre })}
                     >{casa.ctaCotizar}</a>
                   </div>
                 </div>
@@ -402,15 +488,18 @@ function idHabitacion(nombre) {
               <div class="hotel-habitaciones-grid">
                 {d.habitaciones.map((h) => {
                   const id = idHabitacion(h.nombre);
+                  /* Si la unidad tiene ficha propia, los enlaces van
+                     alli en vez de al bloque de detalle de esta pagina. */
+                  const destino = h.enlace ?? `#detalle-${id}`;
                   const datos = [
-                    dato(h.huespedes, 'huesped', 'huespedes'),
+                    dato(h.huéspedes, 'huésped', 'huéspedes'),
                     dato(h.camas, 'cama', 'camas'),
                     dato(h.banos, 'bano', 'banos'),
                   ].filter(Boolean).slice(0, 2);
 
                   return (
                     <article class="hotel-mini" data-destacada={h.destacada ? '' : undefined}>
-                      <a class="hotel-mini__foto" href={`#detalle-${id}`} aria-label={`Ver fotos y detalles de ${h.nombre}`}>
+                      <a class="hotel-mini__foto" href={destino} aria-label={`Ver fotos y detalles de ${h.nombre}`}>
                         {/* El distintivo va en el DOM y no como contenido de
                              CSS: dice algo que el visitante necesita saber
                              -si el bano es suyo o compartido- y eso tiene que
@@ -439,13 +528,12 @@ function idHabitacion(nombre) {
                         <div class="hotel-mini__acciones">
                           <a
                             class="boton boton--contorno"
-                            href={`#detalle-${id}`}
+                            href={destino}
                             data-etiqueta-ver={h.etiquetaVer ?? undefined}
                           >Ver fotos y detalles</a>
                           <a
                             class="boton boton--whatsapp"
-                            href="#contacto"
-                            data-whatsapp={`Hola, quiero consultar disponibilidad y precio de ${h.nombre} en ${d.nombre}.`}
+                            {...atributosWhatsApp(`Hola, quiero consultar disponibilidad y precio de ${h.nombre} en ${d.nombre}.`, { origen: 'ficha_mini_habitacion', propiedad: d.nombre })}
                           >Consultar</a>
                         </div>
                       </div>
@@ -468,8 +556,7 @@ function idHabitacion(nombre) {
               {casa.precioNota && <p class="hotel-casa__precio-nota">{casa.precioNota}</p>}
               <a
                 class="boton boton--whatsapp"
-                href="#contacto"
-                data-whatsapp={casa.mensaje}
+                {...atributosWhatsApp(casa.mensaje, { origen: 'ficha_casa_detalle', propiedad: d.nombre })}
               >{casa.ctaCotizar}</a>
 
               <div class="hotel-casa-detalle__mini">
@@ -531,7 +618,7 @@ function idHabitacion(nombre) {
                     <h3><Marca texto={h.nombre} pendiente={h.pendiente} /></h3>
                     <div class="habitacion__datos">
                       {[
-                        dato(h.huespedes, 'huesped', 'huespedes'),
+                        dato(h.huéspedes, 'huésped', 'huéspedes'),
                         dato(h.camas, 'cama', 'camas'),
                         dato(h.banos, 'bano', 'banos'),
                       ]
@@ -541,11 +628,53 @@ function idHabitacion(nombre) {
                         ))}
                     </div>
                     <p class="texto-suave"><Marca texto={h.descripcion} pendiente={h.pendiente} /></p>
+
+                    {/* Piso y acceso van juntos y antes del precio: para
+                        quien sube con maleta, con un niño o con movilidad
+                        reducida, "solo escaleras" decide la reserva, y
+                        enterarse al llegar es la peor forma de saberlo. */}
+                    {(h.piso || h.acceso) && (
+                      <p class="habitacion__acceso">
+                        {[h.piso, h.acceso].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+
+                    {/* TARIFA POR OCUPACION
+
+                        Una lista, no una tabla: en un movil de 360 px una
+                        tabla de siete filas y dos columnas se sale o se
+                        encoge hasta no leerse. Cada linea se lee sola y el
+                        precio queda alineado a la derecha.
+
+                        Solo se pinta lo que la ficha declara. No se
+                        interpola ni se deduce ninguna ocupacion que no
+                        este en la matriz validada. */}
+                    {h.tarifas.length > 0 && (
+                      <div class="tarifas">
+                        <p class="tarifas__titulo">Tarifa por noche, según cuántos duerman</p>
+                        <ul class="tarifas__lista">
+                          {h.tarifas.map((t) => (
+                            <li>
+                              <span>{t.huespedes} {t.huespedes === 1 ? 'huésped' : 'huéspedes'}</span>
+                              <strong>{t.precio}</strong>
+                            </li>
+                          ))}
+                        </ul>
+                        {h.notaTarifas && <p class="tarifas__nota">{h.notaTarifas}</p>}
+                      </div>
+                    )}
+
                     <div class="tarjeta__pie">
+                      {/* Si la habitacion ya publica su matriz por
+                          ocupacion, esta linea repetiria lo que la tabla
+                          acaba de decir, y encima peor: "Segun ocupacion"
+                          justo debajo de la ocupacion no informa de nada. */}
+                      {h.tarifas.length === 0 && (
                       <span class="tarjeta__precio">
                         <Marca texto={h.precio} pendiente={h.pendiente} />
                         {/\d/.test(h.precio) && <span> / noche</span>}
                       </span>
+                      )}
                       <div class="tarjeta__acciones">
                         {h.galeria.length > 0 && (
                           <button
@@ -558,8 +687,7 @@ function idHabitacion(nombre) {
                         )}
                         <a
                           class="boton boton--whatsapp"
-                          href="#contacto"
-                          data-whatsapp={`Hola, quiero consultar por la ${h.nombre} en ${d.nombre}.`}
+                          {...atributosWhatsApp(`Hola, quiero consultar por la ${h.nombre} en ${d.nombre}.`, { origen: 'ficha_habitacion', propiedad: d.nombre })}
                         >
                           Consultar
                         </a>
@@ -619,7 +747,7 @@ function idHabitacion(nombre) {
         <div class="contenedor">
           <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
             <span class="etiqueta">Galeria</span>
-            <h2>Fotos del hospedaje</h2>
+            <h2>{d.videoPrincipal ? 'Fotos y video del hospedaje' : 'Fotos del hospedaje'}</h2>
           </div>
           {/* Cada foto va dentro de un boton, igual que en las galerias de
                las habitaciones. Antes eran <div> sueltos: se veian, pero
@@ -643,6 +771,28 @@ function idHabitacion(nombre) {
                   <Foto src={f.imagen} alt={f.alt} forma="cuadrado" />
                 </button>
               ))}
+              {d.videoPrincipal && (
+                <a
+                  class="galeria__video"
+                  href="#video"
+                  aria-label={`Reproducir: ${d.videoPrincipal.titulo}`}
+                >
+                  <img
+                    class="foto foto--cuadrado"
+                    src={d.videoPrincipal.poster}
+                    alt=""
+                    width={d.videoPrincipal.ancho}
+                    height={d.videoPrincipal.alto}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span class="galeria__video-capa">
+                    <span class="galeria__video-play" aria-hidden="true"></span>
+                    <span class="galeria__video-texto">Ver recorrido en video</span>
+                    {d.videoPrincipal.duracion && <span class="galeria__video-duracion">{d.videoPrincipal.duracion}</span>}
+                  </span>
+                </a>
+              )}
             </div>
           ) : (
             <div class="galeria aparecer">
@@ -702,7 +852,7 @@ function idHabitacion(nombre) {
                   <blockquote class="opinion__texto">{r.texto}</blockquote>
                   <figcaption class="opinion__firma">
                     <strong>{r.autor}</strong>
-                    <span>{r.fecha} &middot; huesped de {opiniones.fuente}</span>
+                    <span>{r.fecha} &middot; huésped de {opiniones.fuente}</span>
                   </figcaption>
                 </figure>
               ))}
@@ -729,7 +879,7 @@ function idHabitacion(nombre) {
     <section class="seccion seccion--alterna" id="ubicacion">
       <div class="contenedor bloque-doble aparecer">
         <div class="bloque-doble__texto">
-          <span class="etiqueta">Ubicacion</span>
+          <span class="etiqueta">Ubicación</span>
           <h2>{d.zona}</h2>
           <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
             <Marca texto={d.descripcionZona} pendiente={d.descripcionZonaPendiente} />
@@ -758,7 +908,7 @@ function idHabitacion(nombre) {
               <div>
                 <strong>La direccion exacta se entrega al confirmar</strong>
                 Coordinamos la llegada contigo una vez la reserva esta confirmada.
-                Asi protegemos la tranquilidad de los huespedes que ya estan alojados y nos aseguramos de recibirte bien el dia de tu llegada.
+                Así protegemos la tranquilidad de los huéspedes que ya estan alojados y nos aseguramos de recibirte bien el dia de tu llegada.
               </div>
             </div>
           )}
@@ -768,7 +918,7 @@ function idHabitacion(nombre) {
           {d.mapaBbox ? (
             <iframe
               class="mapa"
-              title={d.mapaTitulo ?? `Mapa con la ubicacion de ${d.nombre}`}
+              title={d.mapaTitulo ?? `Mapa con la ubicación de ${d.nombre}`}
               src={`https://www.openstreetmap.org/export/embed.html?bbox=${d.mapaBbox}&layer=mapnik${
                 d.latitud != null && d.longitud != null
                   ? `&marker=${d.latitud}%2C${d.longitud}`
@@ -782,13 +932,13 @@ function idHabitacion(nombre) {
             <div class="nota-reserva">
               <span class="nota-reserva__icono" aria-hidden="true">&#128205;</span>
               <div>
-                <strong>Ubicacion exacta al confirmar</strong>
+                <strong>Ubicación exacta al confirmar</strong>
                 {/* Con enlace de Google Maps el texto NO puede seguir diciendo
                      que falta el mapa: justo debajo hay un boton que abre la
                      ubicacion, y decir las dos cosas a la vez confunde. Lo que
                      falta es el mapa incrustado, que necesita coordenadas. */}
                 {d.enlaceMapa
-                  ? <>Abajo puedes abrir la ubicacion en Google Maps. El mapa
+                  ? <>Abajo puedes abrir la ubicación en Google Maps. El mapa
                       dentro de la pagina llegara en cuanto confirmemos las
                       coordenadas exactas.</>
                   : <>Estamos terminando de publicar el mapa. Escribenos por WhatsApp y te
@@ -804,7 +954,7 @@ function idHabitacion(nombre) {
                necesitan coordenadas y solo salen si las hay. */}
           {(coordenadas || d.enlaceMapa) && (
             <nav class="botones-mapa" aria-label={`Como llegar a ${d.nombre}`}>
-              <a class="boton boton--primario" target="_blank" rel="noopener" href={d.enlaceMapa ?? `https://www.google.com/maps/search/?api=1&query=${coordenadas}`}>Ver ubicacion en Google Maps</a>
+              <a class="boton boton--primario" target="_blank" rel="noopener" href={d.enlaceMapa ?? `https://www.google.com/maps/search/?api=1&query=${coordenadas}`}>Ver ubicación en Google Maps</a>
               {coordenadas && (<>
               <a class="boton boton--contorno" target="_blank" rel="noopener" href={`https://waze.com/ul?ll=${coordenadas}&navigate=yes`}>Abrir en Waze</a>
               <a class="boton boton--contorno" target="_blank" rel="noopener" href={`https://www.google.com/maps/dir/?api=1&destination=${coordenadas}&travelmode=walking`}>Como llegar caminando</a>
@@ -832,6 +982,32 @@ function idHabitacion(nombre) {
         </div>
       </div>
     </section>
+
+    {/* PREGUNTAS FRECUENTES
+         Lo que la gente pregunta por WhatsApp antes de decidirse.
+         Cada respuesta aqui es una conversacion menos que atender y
+         una duda menos que frene la reserva. Se usa <details> nativo:
+         funciona con teclado y con lector de pantalla sin una linea
+         de JavaScript. */}
+    {faq && (
+      <section class="seccion seccion--alterna" id="faq">
+        <div class="contenedor">
+          <div class="encabezado-seccion aparecer">
+            <span class="etiqueta">{faq.etiqueta}</span>
+            <h2>{faq.titulo}</h2>
+            {faq.intro && <p class="texto-suave" style="margin-top: var(--esp-2);">{faq.intro}</p>}
+          </div>
+          <div class="faq aparecer">
+            {faq.preguntas.map((p) => (
+              <details class="faq__item">
+                <summary class="faq__pregunta">{p.pregunta}</summary>
+                <p class="faq__respuesta texto-suave">{p.respuesta}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
 
     {/* ANTES DE RESERVAR
          Lo que hay que saber para no llevarse una sorpresa: que pasa
@@ -911,7 +1087,7 @@ function idHabitacion(nombre) {
             ))}
           </div>
           <div style="margin-top: var(--esp-4);">
-            <p class="texto-suave">Te contamos mas en nuestra <a href="/blog/guia-de-zipaquira">guia de Zipaquira</a>.</p>
+            <p class="texto-suave">Te contamos mas en nuestra <a href="/blog/guia-de-zipaquira">guía de Zipaquirá</a>.</p>
           </div>
         </div>
       </section>
@@ -923,21 +1099,33 @@ function idHabitacion(nombre) {
           <span class="etiqueta">Consulta</span>
           <h2>{d.tituloContacto}</h2>
           <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
-            La forma mas rapida es WhatsApp: te respondemos con disponibilidad y precio para tus fechas.
+            {d.publicado
+              ? 'La forma mas rapida es WhatsApp: te respondemos con disponibilidad y precio para tus fechas.'
+              : 'La forma mas rapida es WhatsApp: te contamos en que estado esta este alojamiento y que podemos ofrecerte.'}
           </p>
 
+          {/* Una ficha sin publicar no ofrece reservar. Su
+              disponibilidad no esta confirmada, y un mensaje que
+              empieza por "quiero reservar" da por hecho que si lo
+              esta. Se consulta el estado del alojamiento, que es lo
+              que de verdad se puede hacer hoy; el mensaje nombra la
+              propiedad para que la conversacion llegue identificada. */}
           <div class="grupo-botones" style="margin-bottom: var(--esp-3);">
             <a
               class="boton boton--whatsapp boton--grande"
-              href="tel:+573188983167"
-              data-whatsapp={`Hola, quiero reservar en ${d.nombre} de Atheron Suite. Estas son mis fechas:`}
+              {...atributosWhatsApp(
+                d.publicado
+                  ? `Hola, quiero reservar en ${d.nombre} de Atheron Suite.\n\nFecha de llegada:\nFecha de salida:\nNúmero de huéspedes:`
+                  : `Hola, quisiera consultar el estado del alojamiento ${d.nombre} de Atheron Suite.`,
+                { origen: 'ficha_contacto', propiedad: d.nombre },
+              )}
             >
-              Escribir por WhatsApp
+              {d.publicado ? 'Escribir por WhatsApp' : 'Consultar estado del alojamiento'}
             </a>
           </div>
 
           <ul class="lista-check">
-            <li>Telefono: <a href="tel:+573188983167">+57 318 898 3167</a></li>
+            <li>Teléfono: <a href="tel:+573188983167">+57 318 898 3167</a></li>
             {d.datosContacto.map((linea) => <li>{linea}</li>)}
           </ul>
 
@@ -961,7 +1149,7 @@ function idHabitacion(nombre) {
                   <input type="text" id="h-nombre" name="nombre" required autocomplete="name" />
                 </div>
                 <div class="campo">
-                  <label for="h-telefono">Telefono</label>
+                  <label for="h-telefono">Teléfono</label>
                   <input type="tel" id="h-telefono" name="telefono" autocomplete="tel" />
                 </div>
               </div>
@@ -992,14 +1180,22 @@ function idHabitacion(nombre) {
         </div>
       </div>
     </section>
+    {/* Quien opera el alojamiento. El huesped tiene derecho a saber
+         donde va a dormir y con quien se coordina la entrega; no es un
+         aviso de alarma, asi que va discreto y al final, no en una
+         banda roja arriba. Nada del acuerdo comercial se publica. */}
+    {d.avisoAliado && (
+      <section class="seccion seccion--estrecha">
+        <div class="contenedor">
+          <p class="nota-aliado">{d.avisoAliado}</p>
+        </div>
+      </section>
+    )}
   </main>
 
   <Pie textoVuelta="Ver todos los hospedajes" hrefVuelta="/hospedajes" />
 
-  <BotonFlotante
-    href="#contacto"
-    mensaje={mensajeInteres}
-  />
+  <BotonFlotante mensaje={`${mensajeInteres} Quiero consultar disponibilidad.`} origen="ficha_flotante" />
 
   {/* El visor se monta si hay ALGO que ampliar: fotos de habitacion o
        de la galeria del hospedaje. Antes solo miraba las habitaciones, y
@@ -1235,12 +1431,12 @@ function idHabitacion(nombre) {
     margin-top: 1.5rem;
   }
 
-  .hotel-selector-seccion .hotel-detalles > .habitacion {
+  .hotel-selector-seccion .hotel-detalles > .habitación {
     display: none;
     scroll-margin-top: 6.5rem;
   }
 
-  .hotel-selector-seccion .hotel-detalles > .habitacion:target {
+  .hotel-selector-seccion .hotel-detalles > .habitación:target {
     display: grid;
   }
 

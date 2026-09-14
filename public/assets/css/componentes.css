@@ -359,6 +359,23 @@
 .tarjeta:hover { transform: translateY(-4px); box-shadow: var(--sombra-md); }
 
 .tarjeta__media { position: relative; }
+.tarjeta__imagen-enlace {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.tarjeta__imagen-enlace:focus-visible {
+  outline: 3px solid var(--acento);
+  outline-offset: -3px;
+}
+.tarjeta__imagen-enlace .foto,
+.tarjeta__imagen-enlace .placeholder {
+  transition: transform var(--transicion), filter var(--transicion);
+}
+.tarjeta__imagen-enlace:hover .foto {
+  transform: scale(1.015);
+  filter: brightness(.94);
+}
 .tarjeta__media .placeholder { border-radius: 0; }
 
 .tarjeta__insignia {
@@ -584,6 +601,47 @@
   bottom: var(--esp-2);
   z-index: 90;
   box-shadow: var(--sombra-lg);
+}
+
+/* ------------------------------------------------------------
+   EL FLOTANTE EN CELULAR
+
+   En la auditoria movil tapaba texto y se solapaba con los botones
+   verdes de WhatsApp de las tarjetas: dos llamadas identicas, una
+   encima de otra, compitiendo. Aqui se encoge a una pastilla
+   pequena, se separa del borde respetando el area segura del
+   telefono, y no baja de 44 px de lado para seguir siendo un blanco
+   tactil accesible.
+
+   No se oculta nunca: es el canal comercial del negocio.
+
+   Casa Colonial Centro queda fuera: se publico el 13/09/2026 con el
+   flotante anterior y debe verse igual hasta que Direccion apruebe
+   actualizarla.
+   ------------------------------------------------------------ */
+@media (max-width: 48rem) {
+  :where(body:not(:has(.proyecto-hero-aprobado))) .flotante {
+    right: max(.7rem, env(safe-area-inset-right));
+    bottom: max(.7rem, env(safe-area-inset-bottom));
+    padding: .6rem .9rem;
+    min-height: 44px;
+    font-size: .86rem;
+    gap: .4rem;
+  }
+  :where(body:not(:has(.proyecto-hero-aprobado))) .flotante svg,
+  :where(body:not(:has(.proyecto-hero-aprobado))) .flotante img { width: 1.05rem; height: 1.05rem; }
+}
+
+/* SE PROBO dejarlo solo con el icono en pantallas estrechas y se
+   descarto: este boton no tiene icono, su contenido es literalmente la
+   palabra "WhatsApp". Ocultar el texto lo dejaba como un circulo verde
+   vacio, sin decirle a nadie que era. Se queda como pastilla pequena
+   con su texto, que es lo que se entiende sin explicacion. */
+@media (max-width: 26rem) {
+  :where(body:not(:has(.proyecto-hero-aprobado))) .flotante {
+    padding: .5rem .75rem;
+    font-size: .8rem;
+  }
 }
 
 /* ------------------------------------------------------------
