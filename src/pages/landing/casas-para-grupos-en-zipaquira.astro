@@ -17,6 +17,7 @@ import { ctaLandingGrupos } from '../../data/navegacion';
 import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
 import { formularioContactoActivo } from '../../data/ajustes';
 import { atributosWhatsApp, MENSAJE_GRUPO, EVENTO_GRUPO } from '../../data/whatsapp';
+import { ORGANIZACION } from '../../data/seo';
 
 const fichaServicio = {
   '@context': 'https://schema.org',
@@ -32,10 +33,13 @@ const fichaServicio = {
       name: 'Cundinamarca, Colombia',
     },
   },
+  /* Quien presta el servicio es la organizacion del sitio, con su
+     identificador compartido: escrita a mano aqui, sin @id, Google
+     leia una segunda "Atheron Suite" distinta de la de /#organizacion
+     y el historial de la marca no se acumulaba en ninguna de las dos.
+     El telefono es el que ya aparece en esta misma pagina. */
   provider: {
-    '@type': 'Organization',
-    name: 'Atheron Suite',
-    url: 'https://hotelesatheron.com/',
+    ...ORGANIZACION,
     telephone: '+573188983167',
   },
 };
