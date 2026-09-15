@@ -1,8 +1,8 @@
 ---
 nombre: Hotel Colonial Confort
-publicado: false
+publicado: true
 grupos:
-  visible: false
+  visible: true
   capacidad: 28
   tipo: fija
   nota: Veintiocho personas en camas fijas; hasta 30 requiere colchoneta y confirmacion.
@@ -13,7 +13,7 @@ titulo: Hotel Colonial Confort en Zipaquirá | Hospedaje para parejas
 descripcion: Hotel aliado para parejas y grupos de adultos en el centro de Zipaquirá, cerca de la Catedral de Sal. Consulta disponibilidad con Atheron Suite.
 ogTitulo: Hotel Colonial Confort | Centro de Zipaquirá
 ogDescripcion: Habitaciones privadas para parejas y grupos de adultos en el centro de Zipaquirá, cerca de la Catedral de Sal.
-avisoBorrador: 'Ficha en preparación. Pendiente de validación comercial y operativa; consulta el estado antes de planear una reserva.'
+avisoBorrador: ''
 avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operacion y la entrega de las habitaciones se coordinan con la administracion del hotel.
 zona: Centro de Zipaquirá
 localidad: Zipaquirá
@@ -134,7 +134,7 @@ antesDeReservar:
       texto: Las camas fijas permiten alojar hasta 28 adultos. Para grupos de 29 o 30 se agrega una colchoneta adicional, informada y confirmada antes de reservar.
     - titulo: Horarios y horas adicionales
       texto: El check-in es desde las 6:00 p. m. y el check-out hasta las 10:00 a. m. La atención esta disponible las 24 horas. Ingresar antes o salir después cuesta $ 10.000 por cada hora adicional y debe coordinarse previamente.
-descripcionZona: En el centro de Zipaquirá, en la Carrera 9. Su ubicación facilita el acceso al centro histórico y a la Catedral de Sal; las distancias exactas se verificaran antes de publicar.
+descripcionZona: En el centro de Zipaquirá, en la Carrera 9. Su ubicación facilita el acceso al centro histórico y a la Catedral de Sal.
 descripcionZonaPendiente: false
 distancias: []
 horarios:
@@ -181,7 +181,7 @@ comodidades:
   - Televisión
   - Agua caliente
   - Bano privado
-actualizado: '2026-09-04'
+actualizado: '2026-09-15'
 ---
 
 Hotel Colonial Confort es un alojamiento aliado ubicado en el centro de
