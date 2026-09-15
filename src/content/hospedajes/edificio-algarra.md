@@ -3,18 +3,18 @@ nombre: Apartamentos en Algarra
 publicado: false
 grupos:
   visible: true
-  capacidad: 35
+  capacidad: 43
   tipo: maxima
-  nota: Máximo grupal sujeto a disponibilidad; puede incluir sofa-camas y colchonetas.
+  nota: Máximo grupal sujeto a disponibilidad; 41 huéspedes en acomodación habitual y hasta 2 puestos auxiliares con colchonetas.
 orden: 4
 insignia: '04'
 modalidad: casa-completa
 titulo: Apartamentos en Algarra, Zipaquirá | Alojamiento para grupos
-descripcion: Seis apartamentos independientes en el sector de Algarra, Zipaquirá, comercializados por Atheron Suite. Cocina equipada, wifi y zona de trabajo en cada uno, y capacidad grupal bajo confirmacion.
+descripcion: Seis apartamentos independientes en el sector de Algarra, Zipaquirá, comercializados por Atheron Suite. Cocina equipada, wifi y zona de trabajo en cada uno, y capacidad grupal de hasta 43 huéspedes bajo confirmación.
 ogTitulo: Apartamentos en Algarra | Alojamiento para grupos en Zipaquirá
 ogDescripcion: Seis apartamentos independientes en Algarra, Zipaquirá. Para familias, delegaciones y equipos que necesitan varias unidades a la vez.
-avisoBorrador: Ficha en preparacion. Faltan el nombre comercial definitivo, las fotografias autorizadas y varios datos por confirmar con la administracion.
-avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operacion y la entrega de los apartamentos se coordinan con la administracion del edificio.
+avisoBorrador: ''
+avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operación y la entrega de los apartamentos se coordinan con la administración del edificio.
 zona: 'Algarra, Zipaquirá'
 localidad: Zipaquirá
 departamento: Cundinamarca
@@ -42,18 +42,18 @@ galeria:
   - imagen: /assets/edificio-algarra/apto-402/06.webp
     alt: Balcón del apartamento 402 con vista al sector
   - imagen: /assets/edificio-algarra/duplex/07.webp
-    alt: Cocina equipada del duplex
+    alt: Cocina equipada del dúplex
   - imagen: /assets/edificio-algarra/duplex/05.webp
-    alt: Habitación del duplex con cama doble
+    alt: Habitación del dúplex con cama doble
 datos:
   - numero: '6'
     texto: Apartamentos
     pendiente: false
-  - numero: '6 a 7'
+  - numero: '5 a 8'
     texto: Huéspedes por apartamento
     pendiente: false
   - numero: '1'
-    texto: Bano por apartamento
+    texto: Baño por apartamento
     pendiente: false
   - numero: '2'
     texto: Parqueaderos
@@ -73,7 +73,7 @@ caracteristicas:
     pendiente: false
   - texto: Refrigerador
     pendiente: false
-  - texto: Un bano por apartamento
+  - texto: Un baño por apartamento
     pendiente: false
   - texto: Dos espacios de estacionamiento para el edificio
     pendiente: false
@@ -85,46 +85,50 @@ resumen: Seis apartamentos independientes en Algarra, Zipaquirá, para grupos qu
 precio: Consultar
 precioPendiente: true
 casaCompleta:
-  etiquetaSeccion: Como hospedarse
-  tituloSeccion: Una solucion para grupos en Zipaquirá
+  etiquetaSeccion: Cómo hospedarse
+  tituloSeccion: Una solución para grupos en Zipaquirá
   introSeccion: Se puede reservar un apartamento suelto o varias unidades del edificio a la vez. Para grupos grandes coordinamos el conjunto.
   ceja: '¿Vienen muchos?'
   titulo: El edificio para tu grupo
   insignia: Para grupos y delegaciones
   nombre: Varias unidades a la vez
   datos:
-    - Hasta 35 huéspedes en modalidad grupal
+    - Hasta 43 huéspedes en modalidad grupal
+    - 41 huéspedes en acomodación habitual + hasta 2 puestos auxiliares
     - 6 apartamentos independientes
     - Cocina equipada en cada unidad
     - 2 parqueaderos
   resumen: >-
     Para familias grandes, delegaciones, equipos de trabajo y grupos que
-    prefieren estar en el mismo edificio, cada uno con su cocina equipada y su bano,
+    prefieren estar en el mismo edificio, cada uno con su cocina equipada y su baño,
     en vez de repartirse entre hoteles.
   precio: 'Tarifa de referencia: desde $ 65.000 por persona por noche'
-  precioNota: 'Para grupos la tarifa se cotiza a la medida, segun fechas, numero de personas y unidades disponibles.'
+  precioNota: 'Para grupos la tarifa se cotiza a la medida, según fechas, número de personas y unidades disponibles.'
   detalleCeja: Para grupos y delegaciones
-  detalleTitulo: Capacidad grupal de hasta 35 huéspedes
+  detalleTitulo: Capacidad grupal de hasta 43 huéspedes
   detalleTexto: >-
-    Capacidad grupal de hasta 35 huéspedes, sujeta a disponibilidad y
-    confirmacion previa. La acomodacion maxima puede incluir sofa-camas y dos
-    colchonetas adicionales, así que no equivale a 35 camas convencionales.
-    Escribenos con las fechas y el numero de personas y armamos la propuesta
-    con las unidades que esten libres.
+    Capacidad grupal de hasta 43 huéspedes, sujeta a disponibilidad y
+    confirmación previa. La distribución habitual de los seis apartamentos
+    permite alojar hasta 41 personas; para llegar al máximo se pueden disponer
+    hasta dos colchonetas auxiliares. La acomodación máxima incluye camas dobles,
+    sofá-camas y esos puestos auxiliares, por lo que no equivale a 43 camas
+    convencionales. Escríbenos con las fechas y el número de personas y armamos
+    la propuesta con las unidades que estén libres.
   detalleDatos:
-    - Hasta 35 huéspedes, bajo confirmacion
-    - Varias unidades del mismo edificio
-    - Cocina equipada y bano en cada apartamento
+    - Hasta 43 huéspedes, bajo confirmación
+    - 41 huéspedes en acomodación habitual
+    - Hasta 2 puestos auxiliares con colchonetas
+    - Cocina equipada y baño en cada apartamento
   ctaVer: Ver la propuesta para grupos
-  ctaCotizar: Solicitar cotizacion para grupos
-  mensaje: 'Hola, quiero cotizar los apartamentos de Algarra en Zipaquirá para un grupo. Somos [numero] personas y estas son mis fechas:'
+  ctaCotizar: Solicitar cotización para grupos
+  mensaje: 'Hola, quiero cotizar los apartamentos de Algarra en Zipaquirá para un grupo. Somos [número] personas y estas son mis fechas:'
   cejaHabitaciones: '¿Vienen pocos?'
   tituloHabitaciones: Los apartamentos, uno a uno
-  introHabitaciones: Cada apartamento se reserva por separado. Las fotografias corresponden a la unidad indicada; las del apartamento 201 siguen pendientes de validacion.
+  introHabitaciones: Cada apartamento se reserva por separado. Las fotografías corresponden a la unidad indicada; las del apartamento 201 siguen pendientes de validación.
 videoPrincipal:
   poster: /assets/edificio-algarra/video/parte-01-poster.webp
   titulo: Recorrido del edificio y del apartamento 402
-  descripcion: Recorre la fachada, el acceso por escaleras y los espacios reales del apartamento 402. El video esta dividido para que cargue mejor en celular.
+  descripcion: Recorre la fachada, el acceso por escaleras y los espacios reales del apartamento 402. El video está dividido para que cargue mejor en celular.
   ancho: 360
   alto: 640
   duracion: '0:50 en total'
@@ -143,7 +147,7 @@ videoPrincipal:
       duracion: '0:10'
     - src: /assets/edificio-algarra/video/parte-04.mp4
       poster: /assets/edificio-algarra/video/parte-04-poster.webp
-      titulo: Cocina, bano y zona de descanso
+      titulo: Cocina, baño y zona de descanso
       duracion: '0:10'
     - src: /assets/edificio-algarra/video/parte-05.mp4
       poster: /assets/edificio-algarra/video/parte-05-poster.webp
@@ -151,8 +155,8 @@ videoPrincipal:
       duracion: '0:10'
 habitaciones:
   - nombre: Apartamento 201
-    huespedes: Hasta 6
-    camas: 2 camas dobles de 1,40 m y 1 sofa cama
+    huespedes: Hasta 5
+    camas: 2 camas dobles de 1,40 m y 1 sofá cama
     banos: '1'
     descripcion: >-
       Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
@@ -164,8 +168,8 @@ habitaciones:
     enlace: /hospedajes/algarra-201
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 301
-    huespedes: Hasta 6
-    camas: 3 camas dobles de 1,40 m y 1 sofa cama
+    huespedes: Hasta 7
+    camas: 3 camas dobles de 1,40 m y 1 sofá cama
     banos: '1'
     descripcion: >-
       Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
@@ -173,16 +177,16 @@ habitaciones:
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/apto-301/01.webp
-    fotoAlt: Sala comedor del apartamento 301 con sofa, mesa y ventanal
+    fotoAlt: Sala comedor del apartamento 301 con sofá, mesa y ventanal
     enlace: /hospedajes/algarra-301
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 302
-    huespedes: Hasta 6
-    camas: 3 camas dobles de 1,40 m y 1 sofa cama
+    huespedes: Hasta 7
+    camas: 3 camas dobles de 1,40 m y 1 sofá cama
     banos: '1'
     descripcion: >-
       Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
-      televisión y refrigerador. Llegada autonoma con cerradura de teclado.
+      televisión y refrigerador. Llegada autónoma con cerradura de teclado.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/apto-302/01.webp
@@ -191,11 +195,11 @@ habitaciones:
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 401
     huespedes: Hasta 7
-    camas: 3 camas dobles de 1,40 m y 1 sofa cama
+    camas: 3 camas dobles de 1,40 m y 1 sofá cama
     banos: '1'
     descripcion: >-
-      El de mayor capacidad publicada. Una habitación, con cocina equipada, wifi, zona
-      de trabajo, televisión y refrigerador.
+      Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
+      televisión y refrigerador.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/apto-401/02.webp
@@ -203,28 +207,29 @@ habitaciones:
     enlace: /hospedajes/algarra-401
     etiquetaVer: Ver apartamento
   - nombre: Apartamento 402
-    camas: 3 camas dobles de 1,40 m
+    huespedes: Hasta 7
+    camas: 3 camas dobles de 1,40 m y 1 sofá cama
     banos: '1'
     descripcion: >-
       Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
-      televisión y refrigerador. La capacidad exacta esta por confirmar con la
-      administracion.
+      televisión y refrigerador.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/apto-402/01.webp
     fotoAlt: Cocina equipada, comedor y sala del apartamento 402
     enlace: /hospedajes/algarra-402
     etiquetaVer: Ver apartamento
-  - nombre: Duplex
-    huespedes: Hasta 6
+  - nombre: Dúplex
+    huespedes: Hasta 8
     banos: '1'
     descripcion: >-
-      Apartamento duplex con cocina equipada, wifi, zona de trabajo y televisión. La
-      distribucion exacta esta por confirmar con la administracion.
+      Es la unidad de mayor capacidad del edificio. Apartamento dúplex con cocina
+      equipada, wifi, zona de trabajo y televisión. La distribución concreta de
+      camas se confirma al reservar.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/duplex/03.webp
-    fotoAlt: Sala del duplex con sofa cama
+    fotoAlt: Sala del dúplex con sofá cama
     enlace: /hospedajes/algarra-duplex
     etiquetaVer: Ver apartamento
 notaHabitaciones: ''
@@ -237,38 +242,38 @@ faq:
   preguntas:
     - pregunta: '¿Se puede reservar un solo apartamento?'
       respuesta: >-
-        Si. Cada apartamento se reserva por separado y tiene su propia cocina y
-        su propio bano. La modalidad grupal es una opcion, no una condicion.
-    - pregunta: '¿Cuantas personas caben en total?'
+        Sí. Cada apartamento se reserva por separado y tiene su propia cocina y
+        su propio baño. La modalidad grupal es una opción, no una condición.
+    - pregunta: '¿Cuántas personas caben en total?'
       respuesta: >-
-        En modalidad grupal, hasta 35 huéspedes, sujeto a disponibilidad y
-        confirmacion previa. Esa cifra incluye sofa-camas y dos colchonetas
-        adicionales, así que no son 35 camas convencionales. La acomodacion
-        concreta se confirma antes de reservar.
+        En modalidad grupal, hasta 43 huéspedes, sujeto a disponibilidad y
+        confirmación previa. La acomodación habitual permite hasta 41 personas;
+        para llegar al máximo se pueden disponer hasta dos colchonetas auxiliares.
+        La acomodación concreta se confirma antes de reservar.
     - pregunta: '¿Hay estacionamiento?'
       respuesta: >-
-        Si. Hay dos espacios cubiertos para carros y tres para motos, todos
+        Sí. Hay dos espacios cubiertos para carros y tres para motos, todos
         sujetos a disponibilidad. La tarifa es de $ 20.000 por carro y
         $ 10.000 por moto, por noche, y se paga directamente en las
         instalaciones. Recomendamos solicitar el cupo antes de llegar.
     - pregunta: '¿Se aceptan mascotas?'
       respuesta: >-
-        Si, las mascotas son bienvenidas y deben reportarse antes de la llegada.
+        Sí, las mascotas son bienvenidas y deben reportarse antes de la llegada.
         El aseo del apartamento tiene un recargo adicional, cuyo valor se
         confirma antes de reservar.
-    - pregunta: '¿Emiten factura electronica?'
+    - pregunta: '¿Emiten factura electrónica?'
       respuesta: >-
-        Si, para reservas directas. Solicitala al momento de reservar y te
+        Sí, para reservas directas. Solicítala al momento de reservar y te
         indicamos los datos necesarios.
-    - pregunta: '¿Como se cotiza un grupo?'
+    - pregunta: '¿Cómo se cotiza un grupo?'
       respuesta: >-
-        Escribenos por WhatsApp con las fechas, el numero de personas y si
-        necesitan parqueadero. Con eso confirmamos que unidades estan libres y
+        Escríbenos por WhatsApp con las fechas, el número de personas y si
+        necesitan parqueadero. Con eso confirmamos qué unidades están libres y
         armamos la propuesta.
 antesDeReservar:
   etiqueta: Antes de reservar
   titulo: Lo que conviene saber
-  intro: Preferimos decirlo antes que después. Si algo de esto te afecta, escribenos y lo miramos.
+  intro: Preferimos decirlo antes que después. Si algo de esto te afecta, escríbenos y lo miramos.
   condiciones:
     - titulo: Estacionamiento
       texto: >-
@@ -287,12 +292,12 @@ antesDeReservar:
         recargo adicional; confirmamos su valor antes de reservar.
     - titulo: Capacidad grupal
       texto: >-
-        Capacidad grupal de hasta 35 huéspedes, sujeta a disponibilidad y
-        confirmacion previa. La acomodacion maxima puede incluir sofa-camas y
-        dos colchonetas adicionales.
+        Capacidad grupal de hasta 43 huéspedes, sujeta a disponibilidad y
+        confirmación previa. La acomodación habitual permite hasta 41 personas;
+        para llegar al máximo se pueden disponer hasta dos colchonetas auxiliares.
     - titulo: Tarifa de grupo
       texto: >-
-        La tarifa de grupo se cotiza a la medida. Necesitamos fechas y numero
+        La tarifa de grupo se cotiza a la medida. Necesitamos fechas y número
         de personas para confirmar disponibilidad y darte un precio en firme.
 descripcionZona: >-
   En el barrio Algarra III, en Zipaquirá. Puedes consultar el punto exacto en
@@ -302,7 +307,7 @@ descripcionZonaPendiente: false
 distancias: []
 horarios:
   - lugar: Entrada (check-in)
-    valor: De 3:00 p. m. a 5:00 p. m.; si llegas en otro horario, avisanos con anticipacion
+    valor: De 3:00 p. m. a 5:00 p. m.; si llegas en otro horario, avísanos con anticipación
     pendiente: false
   - lugar: Salida (check-out)
     valor: Antes de las 11:00 a. m.
@@ -315,7 +320,7 @@ nombreAnterior: ''
 mapaNota: Consulta el punto exacto en Google Maps y coordina con nosotros las instrucciones de ingreso.
 mapaNotaPendiente: false
 experiencias: []
-tituloContacto: Solicita una cotizacion para tu grupo
+tituloContacto: Solicita una cotización para tu grupo
 datosContacto:
   - Algarra, Zipaquirá, Cundinamarca
   - Seis apartamentos independientes
@@ -333,18 +338,18 @@ comodidades:
   - Zona de trabajo
   - Televisión
   - Refrigerador
-actualizado: '2026-09-04'
+actualizado: '2026-09-15'
 ---
 
 Seis apartamentos independientes en el mismo edificio, en el sector de
-Algarra, en Zipaquirá. Cada uno tiene su cocina, su bano y su zona de
+Algarra, en Zipaquirá. Cada uno tiene su cocina, su baño y su zona de
 trabajo, así que un grupo puede repartirse por unidades sin salir del
 edificio ni renunciar a la independencia de cada familia.
 
-Es la opcion para grupos que hoy no caben en una sola casa: delegaciones,
+Es la opción para grupos que hoy no caben en una sola casa: delegaciones,
 equipos de trabajo, familias grandes y celebraciones que prefieren estar
 juntos pero con espacios propios.
 
 Los apartamentos se pueden reservar por separado o en conjunto. Para
-grupos armamos la propuesta segun las fechas, el numero de personas y las
+grupos armamos la propuesta según las fechas, el número de personas y las
 unidades disponibles.
