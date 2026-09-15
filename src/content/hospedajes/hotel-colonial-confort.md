@@ -1,8 +1,8 @@
 ---
 nombre: Hotel Colonial Confort
-publicado: true
+publicado: false
 grupos:
-  visible: true
+  visible: false
   capacidad: 28
   tipo: fija
   nota: Veintiocho personas en camas fijas; hasta 30 requiere colchoneta y confirmacion.
@@ -13,7 +13,7 @@ titulo: Hotel Colonial Confort en Zipaquirá | Hospedaje para parejas
 descripcion: Hotel aliado para parejas y grupos de adultos en el centro de Zipaquirá, cerca de la Catedral de Sal. Consulta disponibilidad con Atheron Suite.
 ogTitulo: Hotel Colonial Confort | Centro de Zipaquirá
 ogDescripcion: Habitaciones privadas para parejas y grupos de adultos en el centro de Zipaquirá, cerca de la Catedral de Sal.
-avisoBorrador: ''
+avisoBorrador: 'Ficha en preparación. Pendiente de validación comercial y operativa; consulta el estado antes de planear una reserva.'
 avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operacion y la entrega de las habitaciones se coordinan con la administracion del hotel.
 zona: Centro de Zipaquirá
 localidad: Zipaquirá
