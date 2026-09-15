@@ -23,6 +23,7 @@ import { formularioContactoActivo } from '../data/ajustes';
 import { experiencias } from '../data/experiencias';
 import { fotoHero } from '../data/casa-colonial-centro';
 import { atributosWhatsApp, MENSAJE_DISPONIBILIDAD, MENSAJE_GRUPO } from '../data/whatsapp';
+import { ORGANIZACION } from '../data/seo';
 
 /* Los cuatro hospedajes destacados salen de la misma coleccion que
    alimenta el listado y las fichas. Antes estaban escritos a mano
@@ -82,10 +83,8 @@ const mosaico = publicados
    penalizacion. Se agregan cuando cierren los pendientes 8 y 22. */
 const fichaNegocio = {
   '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'Atheron Suite',
+  ...ORGANIZACION,
   description: 'Colección de hospedajes seleccionados en Zipaquirá, Cundinamarca.',
-  url: 'https://hotelesatheron.com/',
   areaServed: {
     '@type': 'City',
     name: 'Zipaquirá',

@@ -26,6 +26,7 @@ export const ORGANIZACION = {
   '@id': `${DOMINIO}/#organizacion`,
   name: 'Atheron Suite',
   url: `${DOMINIO}/`,
+  logo: `${DOMINIO}/assets/img/marca/atheron-icono-180.png`,
 } as const;
 
 export interface Escalon {
