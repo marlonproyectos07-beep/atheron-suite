@@ -1,6 +1,6 @@
 ---
 nombre: Apartamentos en Algarra
-publicado: false
+publicado: true
 grupos:
   visible: true
   capacidad: 43
@@ -8,7 +8,7 @@ grupos:
   nota: Máximo grupal sujeto a disponibilidad; 41 huéspedes en acomodación habitual y hasta 2 puestos auxiliares con colchonetas.
 orden: 4
 insignia: '04'
-modalidad: casa-completa
+modalidad: habitaciones
 titulo: Apartamentos en Algarra, Zipaquirá | Alojamiento para grupos
 descripcion: Seis apartamentos independientes en el sector de Algarra, Zipaquirá, comercializados por Atheron Suite. Cocina equipada, wifi y zona de trabajo en cada uno, y capacidad grupal de hasta 43 huéspedes bajo confirmación.
 ogTitulo: Apartamentos en Algarra | Alojamiento para grupos en Zipaquirá
@@ -49,8 +49,8 @@ datos:
   - numero: '6'
     texto: Apartamentos
     pendiente: false
-  - numero: '5 a 8'
-    texto: Huéspedes por apartamento
+  - numero: '43'
+    texto: Huéspedes en modalidad grupal
     pendiente: false
   - numero: '1'
     texto: Baño por apartamento
@@ -78,12 +78,12 @@ caracteristicas:
   - texto: Dos espacios de estacionamiento para el edificio
     pendiente: false
 listadoSector: Algarra
-listadoSegundoDato: '6'
-listadoSegundoDatoSufijo: ' apartamentos'
-listadoEnlaceTexto: Revisar información de Apartamentos en Algarra
-resumen: Seis apartamentos independientes en Algarra, Zipaquirá, para grupos que necesitan varias unidades a la vez.
+listadoSegundoDato: '43'
+listadoSegundoDatoSufijo: ' huéspedes máximo grupal'
+listadoEnlaceTexto: Ver Apartamentos en Algarra
+resumen: Seis apartamentos independientes en Algarra, Zipaquirá, para grupos de hasta 43 huéspedes bajo confirmación.
 precio: Consultar
-precioPendiente: true
+precioPendiente: false
 casaCompleta:
   etiquetaSeccion: Cómo hospedarse
   tituloSeccion: Una solución para grupos en Zipaquirá
@@ -157,10 +157,10 @@ habitaciones:
   - nombre: Apartamento 201
     huespedes: Hasta 5
     camas: 2 camas dobles de 1,40 m y 1 sofá cama
-    banos: '1'
+    insignia: Hasta 5 huéspedes
     descripcion: >-
       Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
-      televisión y refrigerador.
+      televisión y refrigerador. Cuenta con baño propio.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/duplex/01.webp
@@ -170,10 +170,10 @@ habitaciones:
   - nombre: Apartamento 301
     huespedes: Hasta 7
     camas: 3 camas dobles de 1,40 m y 1 sofá cama
-    banos: '1'
+    insignia: Hasta 7 huéspedes
     descripcion: >-
       Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
-      televisión y refrigerador.
+      televisión y refrigerador. Cuenta con baño propio.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/apto-301/01.webp
@@ -183,10 +183,10 @@ habitaciones:
   - nombre: Apartamento 302
     huespedes: Hasta 7
     camas: 3 camas dobles de 1,40 m y 1 sofá cama
-    banos: '1'
+    insignia: Hasta 7 huéspedes
     descripcion: >-
       Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
-      televisión y refrigerador. Llegada autónoma con cerradura de teclado.
+      televisión y refrigerador. Cuenta con baño propio y llegada autónoma con cerradura de teclado.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/apto-302/01.webp
@@ -196,10 +196,10 @@ habitaciones:
   - nombre: Apartamento 401
     huespedes: Hasta 7
     camas: 3 camas dobles de 1,40 m y 1 sofá cama
-    banos: '1'
+    insignia: Hasta 7 huéspedes
     descripcion: >-
       Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
-      televisión y refrigerador.
+      televisión y refrigerador. Cuenta con baño propio.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/apto-401/02.webp
@@ -209,10 +209,10 @@ habitaciones:
   - nombre: Apartamento 402
     huespedes: Hasta 7
     camas: 3 camas dobles de 1,40 m y 1 sofá cama
-    banos: '1'
+    insignia: Hasta 7 huéspedes
     descripcion: >-
       Apartamento de una habitación con cocina equipada, wifi, zona de trabajo,
-      televisión y refrigerador.
+      televisión y refrigerador. Cuenta con baño propio.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/apto-402/01.webp
@@ -221,11 +221,11 @@ habitaciones:
     etiquetaVer: Ver apartamento
   - nombre: Dúplex
     huespedes: Hasta 8
-    banos: '1'
+    insignia: Hasta 8 huéspedes
     descripcion: >-
       Es la unidad de mayor capacidad del edificio. Apartamento dúplex con cocina
-      equipada, wifi, zona de trabajo y televisión. La distribución concreta de
-      camas se confirma al reservar.
+      equipada, wifi, zona de trabajo, televisión y baño propio. La distribución
+      concreta de camas se confirma al reservar.
     precio: Consultar
     pendiente: false
     foto: /assets/edificio-algarra/duplex/03.webp
