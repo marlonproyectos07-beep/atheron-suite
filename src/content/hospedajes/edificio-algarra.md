@@ -1,6 +1,6 @@
 ---
 nombre: Apartamentos en Algarra
-publicado: true
+publicado: false
 grupos:
   visible: true
   capacidad: 43
