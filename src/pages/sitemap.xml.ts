@@ -28,8 +28,15 @@ import { articulosPublicados } from '../data/blog';
 const DOMINIO = 'https://hotelesatheron.com';
 
 /* Fecha de referencia para las paginas que no llevan la suya.
-   Se actualiza a mano cuando se reescribe una pagina fija. */
-const FECHA_BASE = '2026-08-18';
+   Se actualiza a mano cuando se reescribe una pagina fija.
+
+   14 de septiembre de 2026: es la fecha del ultimo cambio real de las
+   cuatro paginas que dependen de este valor -la portada, el catalogo,
+   /grupos y las dos landings-, comprobable con git log sobre cada
+   archivo. Se quedo en el 18 de agosto mientras esas paginas se
+   reescribian dos veces, asi que el sitemap le estaba diciendo a
+   Google que llevaban casi un mes sin tocarse. */
+const FECHA_BASE = '2026-09-14';
 
 interface Entrada {
   ruta: string;

@@ -9,7 +9,7 @@ import Foto from '../../components/Foto.astro';
 import { menuFicha, menuFichaMovil, ctaConsultarDe } from '../../data/navegacion';
 import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
 import { formularioContactoActivo } from '../../data/ajustes';
-import { migaDePan, url } from '../../data/seo';
+import { migaDePan, url, ORGANIZACION } from '../../data/seo';
 import { atributosWhatsApp } from '../../data/whatsapp';
 
 export async function getStaticPaths() {
@@ -76,9 +76,19 @@ const { Content } = await render(ficha);
 const fichaNegocio: Record<string, unknown> = {
   '@context': 'https://schema.org',
   '@type': 'LodgingBusiness',
+  /* Identificador estable del alojamiento. Sin el, cada rastreo crea
+     un nodo anonimo nuevo y nada puede referirse a esta propiedad:
+     ni la miga de pan de esta pagina ni el catalogo. Es la misma
+     convencion que ya usan la miga (#miga) y la organizacion
+     (#organizacion), asi que no hay una segunda forma de nombrarla. */
+  '@id': `${url(ruta)}#negocio`,
   name: d.nombre,
   description: d.descripcion,
-  url: `https://hotelesatheron.com${ruta}`,
+  /* El dominio no se escribe a mano: sale de src/data/seo.ts, que es
+     el mismo del que salen la canonica y la organizacion. Escrito
+     aqui aparte, bastaba con que uno de los dos cambiara para que el
+     dato estructurado contradijera a la canonica de su propia pagina. */
+  url: url(ruta),
   telephone: '+573188983167',
   address: {
     '@type': 'PostalAddress',
@@ -89,6 +99,12 @@ const fichaNegocio: Record<string, unknown> = {
   },
 };
 
+/* La foto de la propiedad. Es la MISMA que la pagina ya ensena arriba
+   y la misma que viaja en og:image, no una imagen nueva: aqui solo se
+   declara en el dato estructurado, que es donde Google la pide para
+   que la ficha pueda salir con fotografia. Si la ficha todavia no
+   tiene foto principal, no se declara ninguna. */
+if (d.fotoPrincipal) fichaNegocio.image = url(d.fotoPrincipal);
 if (d.nombreAnterior) fichaNegocio.alternateName = d.nombreAnterior;
 /* El anuncio del alojamiento en la plataforma donde ya tiene
    historial. "sameAs" dice que las dos direcciones son el mismo
@@ -140,11 +156,13 @@ if (d.publicado) {
   fichaNegocio.disambiguatingDescription =
     'Ficha en preparación. Sus datos operativos no están confirmados y el alojamiento no se ofrece como disponible.';
 }
-fichaNegocio.parentOrganization = {
-  '@type': 'Organization',
-  name: 'Atheron Suite',
-  url: 'https://hotelesatheron.com/',
-};
+/* Quien comercializa el alojamiento es la MISMA entidad que firma los
+   articulos, el blog y el catalogo, y por eso se referencia con su
+   identificador compartido en vez de describirla otra vez aqui.
+   Repetida a mano en cada ficha -sin @id- Google leia veintitres
+   organizaciones llamadas "Atheron Suite" sin relacion entre si, y
+   ninguna de ellas era la de /#organizacion. */
+fichaNegocio.parentOrganization = ORGANIZACION;
 
 /* La ficha declara ademas donde esta dentro del sitio. Es lo que
    permite a un buscador enseñar "Inicio > Hospedajes > Casa Algarra"
