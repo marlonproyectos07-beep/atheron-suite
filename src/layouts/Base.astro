@@ -138,6 +138,12 @@ const urlImagen = imagen ? new URL(imagen, Astro.site).href : null;
   {/* viewport: sin esta linea el sitio NO se ve bien en celular */}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  {/* Google Analytics 4. La libreria se declara directamente en el <head>
+       para que Google Tag Assistant pueda detectarla. main.js configura y
+       envia datos solo en hotelesatheron.com / www.hotelesatheron.com, de
+       modo que los previews de Vercel no contaminan Analytics. */}
+  <script is:inline async data-atheron-ga4 src="https://www.googletagmanager.com/gtag/js?id=G-KXXM0LJKK9"></script>
+
   <title>{titulo}</title>
   <meta name="description" content={descripcion}>
 
