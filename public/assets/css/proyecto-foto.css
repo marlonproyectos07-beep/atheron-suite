@@ -76,3 +76,11 @@
 
 .seccion--oscura .foto-proyecto__aviso,
 .seccion--oscura .foto-proyecto__texto { color: rgba(255, 255, 255, 0.82); }
+
+/* Casa Colonial Centro: se retira únicamente la fotografía de la
+   sección de ubicación para que la comparativa de fachada aparezca
+   inmediatamente después del contexto introductorio. El selector se
+   limita a esta página: el hero conceptual es el hermano anterior. */
+.proyecto-hero-aprobado + #ubicacion .bloque-imagen-unica {
+  display: none;
+}
