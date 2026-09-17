@@ -43,6 +43,7 @@ import {
   rotuloDe,
   ETIQUETA_CONCEPTUAL,
   AVISO_CONCEPTUAL,
+  fachadaVision,
 } from '../data/casa-colonial-centro';
 import type { FotoProyecto } from '../data/casa-colonial-centro';
 
@@ -63,7 +64,15 @@ interface Props {
   clase?: string;
 }
 
-const { foto, textoHueco = 'Imagen por definir', prioritaria, medidas, anchos, clase } = Astro.props;
+let { foto, textoHueco = 'Imagen por definir', prioritaria, medidas, anchos, clase } = Astro.props;
+
+/* La portada muestra la visión completa de la fachada en el bloque de
+   expansión, por decisión de dirección. El mismo fotoHero se mantiene
+   intacto dentro de /proyectos/casa-colonial-centro; solo en la home se
+   sustituye por la representación conceptual aprobada de la fachada. */
+if (Astro.url.pathname === '/' && foto?.id === 'hero-interior-balcon') {
+  foto = fachadaVision;
+}
 
 /* La orientacion del archivo decide la proporcion del hueco. Asi la
    pagina reserva el sitio exacto y no da el salto cuando la imagen
