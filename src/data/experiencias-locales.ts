@@ -34,8 +34,16 @@
      no la da una comision y no la da que el sitio nos caiga bien.
 
    ALIADO
-     Ademas, existe un convenio FIRMADO. Solo entonces pueden
-     aparecer el distintivo de aliado y el beneficio.
+     Ademas, existe un ACUERDO COMERCIAL con Atheron, y se declara.
+     Solo entonces puede aparecer el distintivo de aliado.
+
+     ALIADO NO IMPLICA RECOMENDADO. El escalon de recomendacion es
+     editorial y lo sostiene una visita con su motivo, no un acuerdo.
+     Un aliado sin visita sale como aliado y nada mas: la insignia de
+     "Recomendado por Atheron" se pinta solo cuando hay
+     motivoRecomendacion, porque una recomendacion sin motivo no es
+     una recomendacion, es un anuncio. El beneficio, igual: sin
+     descripcion no se pinta.
 
    LA REGLA QUE SOSTIENE TODO ESTO:
    una comision no compra una mejor posicion editorial. Si algun dia
@@ -177,19 +185,22 @@ export interface ExperienciaLocal {
    confirmados POR EL LOCAL: cuando los confirme, se anaden aqui y
    la ficha los pinta sola. Ver docs/red-atheron-zipaquira.md.
 
-   Estado INFORMATIVO y no RECOMENDADO: recomendar es una decision
-   editorial de quien ha estado y responde por ella, y hoy no la
-   hay. Tampoco ALIADO: la insignia de aliado afirma "convenio
-   firmado, que se declara", y lo que hay confirmado por direccion es
-   que existe una relacion comercial, no un convenio publicable.
-
-   PERO LA RELACION SE DECLARA. Direccion confirmo que existe. Dejar
-   la ficha como simple INFORMATIVO seria presentarla como si no
-   hubiera ningun interes detras, y eso es lo que hace enganosa una
-   guia. Por eso lleva divulgacionComercial: se dice que la relacion
-   existe, no se dice ni una sola condicion. Ninguna comision, ningun
+   ESTADO ALIADO, por decision de direccion del 19 de septiembre de
+   2026: existe una relacion comercial confirmada con el propietario.
+   La alianza se declara; las condiciones NO. Ninguna comision, ningun
    porcentaje y ningun termino del acuerdo aparece en el sitio ni en
-   este repositorio.
+   este repositorio, y no se pueden deducir de nada publicado.
+
+   NO es RECOMENDADO. Nadie de Atheron ha estado todavia, asi que no
+   hay motivoRecomendacion y la insignia de recomendacion no se pinta.
+   Ser aliado no convierte un sitio en recomendado: esa es la regla
+   que sostiene la guia entera.
+
+   SIN BENEFICIO. No hay ninguno acordado que publicar, asi que el
+   objeto beneficio no existe y su bloque no se pinta.
+
+   TEXTO AUTORIZADO, literal y sin una palabra de mas:
+   "Establecimiento aliado de la Red Atheron Zipaquira."
    ------------------------------------------------------------ */
 export const experienciasLocales: ExperienciaLocal[] = [
   {
@@ -200,11 +211,8 @@ export const experienciasLocales: ExperienciaLocal[] = [
     descripcion:
       'Restaurante en Zipaquirá. Esta ficha está en construcción: publicaremos la carta, ' +
       'los horarios y los servicios para familias y grupos cuando el local los confirme.',
-    estadoComercial: 'INFORMATIVO',
-    divulgacionComercial:
-      'Atheron mantiene una relación comercial con este establecimiento. ' +
-      'No condiciona lo que publicamos: los datos se comprueban igual y una ' +
-      'comisión no compra posición editorial.',
+    estadoComercial: 'ALIADO',
+    divulgacionComercial: 'Establecimiento aliado de la Red Atheron Zipaquirá.',
     fechaUltimaVerificacion: '2026-09-19',
     fuentes: ['Listado «Restaurante La Triada» en Detour Cundinamarca (Gobierno de Cundinamarca)'],
     estadoPublicacion: 'PUBLICADO',

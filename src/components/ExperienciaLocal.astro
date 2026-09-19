@@ -61,8 +61,15 @@ const { lugar, medidas, origen = 'tarjeta_lugar' } = Astro.props;
 /* Un borrador no se pinta jamas, aunque alguien lo pase por error. */
 const visible = lugar.estadoPublicacion === 'PUBLICADO';
 
-const esRecomendado = lugar.estadoComercial === 'RECOMENDADO' || lugar.estadoComercial === 'ALIADO';
 const esAliado = lugar.estadoComercial === 'ALIADO';
+
+/* La insignia de recomendacion necesita MOTIVO, no estado. Un aliado
+   sin visita no esta recomendado: si se pintaran las dos insignias por
+   el solo hecho de haber acuerdo, la pagina afirmaria que alguien de
+   Atheron estuvo alli, que es justo lo que no se puede inventar. */
+const esRecomendado =
+  (lugar.estadoComercial === 'RECOMENDADO' || esAliado) &&
+  Boolean(lugar.motivoRecomendacion);
 
 /* El beneficio necesita convenio Y contenido. Con una de las dos
    cosas a medias, no se pinta: mas vale sin beneficio que con un
@@ -104,9 +111,18 @@ const hayFoto = Boolean(lugar.foto && lugar.fotoAlt);
       <p class="lugar__texto">{lugar.descripcion}</p>
 
       {/* Una recomendacion sin motivo no es una recomendacion, es un
-          anuncio. Por eso el motivo se pinta pegado a la insignia. */}
-      {esRecomendado && lugar.motivoRecomendacion && (
+          anuncio. Por eso el motivo se pinta pegado a la insignia, y
+          por eso sin motivo no hay insignia (ver arriba). */}
+      {esRecomendado && (
         <p class="lugar__motivo">{lugar.motivoRecomendacion}</p>
+      )}
+
+      {/* EL VINCULO COMERCIAL SE DECLARA SIEMPRE, y va pegado a lo que
+          la tarjeta cuenta del sitio, no al final: si hay interes
+          economico detras, el lector tiene que verlo sin buscarlo. No
+          lleva condiciones: ver src/data/experiencias-locales.ts. */}
+      {lugar.divulgacionComercial && (
+        <p class="lugar__divulgacion">{lugar.divulgacionComercial}</p>
       )}
 
       {lugar.idealPara && (
@@ -163,14 +179,6 @@ const hayFoto = Boolean(lugar.foto && lugar.fotoAlt);
             {...atributosRed(eventoDeLugar(lugar.slug), origen, lugar.slug)}
           >Ver ficha</a>
         </p>
-      )}
-
-      {/* EL VINCULO COMERCIAL SE DECLARA SIEMPRE, y va antes de la
-          fecha: si existe interes economico detras de una ficha, el
-          lector tiene que verlo sin buscarlo. No lleva condiciones:
-          ver src/data/experiencias-locales.ts. */}
-      {lugar.divulgacionComercial && (
-        <p class="lugar__divulgacion">{lugar.divulgacionComercial}</p>
       )}
 
       {/* Lo que puede quedarse viejo lleva su fecha a la vista. */}

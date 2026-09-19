@@ -3,6 +3,8 @@
 > Arrancado el 19 de septiembre de 2026 en `preview/red-atheron-zipaquira-20260919`
 > (commit `dec3dfe`), sobre `origin/main` (`e6392a9`). Continuado el mismo día en
 > `claude/atherton-zipaquira-recovery-cwc3la`, que parte de `dec3dfe` sin reconstruir nada.
+> Segunda tanda del mismo día: redespliegue programado preparado y **apagado**, y La Triada
+> pasada a aliado por decisión de dirección.
 > Este documento es interno: **no se publica** y no contiene condiciones comerciales.
 
 ## Qué se construyó
@@ -10,7 +12,7 @@
 | Ruta | Qué es | Indexable |
 |---|---|---|
 | `/guia-zipaquira/restaurantes-y-cafes` | Hub editorial de restaurantes y cafés | No (noindex, follow) |
-| `/guia-zipaquira/restaurantes-y-cafes/la-triada` | Ficha de La Triada (comercio piloto) | No (noindex, follow) |
+| `/guia-zipaquira/restaurantes-y-cafes/la-triada` | Ficha de La Triada (aliado piloto) | No (noindex, follow) |
 | `/guia-zipaquira/gallina-al-vapor` | Jornada gastronómica permanente | Sí |
 
 Modificados: la tarjeta «Dónde comer y cafés» y la sección de grupos del hub `/guia-zipaquira`,
@@ -53,25 +55,70 @@ dice la verdad y ofrece el WhatsApp), y un bloqueo que estorba acaba desactivado
 | marzo 2027 | «Fecha por anunciar» |
 | Con dos fechas cargadas, visita del 25 sep | Salta sola a la segunda |
 
-### Pendiente de autorización: reconstrucción programada
+### El caso sin JavaScript: redespliegue programado (implementado, APAGADO)
 
-Queda un caso residual: un visitante **sin JavaScript** que llegue después de la fecha seguiría
-viendo el build viejo. Se cierra con un despliegue automático periódico, que **toca configuración
-de producción y necesita el visto bueno de Marlon**. Cuando se autorice, es un Deploy Hook de
-Vercel y un `.github/workflows/redespliegue.yml` de seis líneas:
+Queda un caso que el navegador no puede resolver: quien tenga JavaScript desactivado, y un
+rastreador que no ejecute scripts, reciben el HTML tal como quedó el último despliegue. En un
+sitio estático eso solo se cierra volviendo a construir.
 
-```yaml
-on:
-  schedule:
-    - cron: '0 8 * * *'   # 03:00 en Colombia
-jobs:
-  redesplegar:
-    runs-on: ubuntu-latest
-    steps:
-      - run: curl -fsSL -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
-```
+El mecanismo está escrito y probado. **No está activo y no puede activarse solo.**
 
-No se ha creado: crea despliegues a producción, que es exactamente lo que no se hace sin orden.
+| Pieza | Qué hace |
+|---|---|
+| `.github/workflows/redespliegue-programado.yml` | Cron diario a las 05:07 UTC = **00:07 en Colombia** |
+| `scripts/necesita-redespliegue.mjs` | Decide si hace falta. Sin él, el flujo desplegaría a diario sin motivo |
+
+**Cómo decide.** Descarga `/guia-zipaquira/gallina-al-vapor` del sitio publicado y mira qué bloque
+`data-jornada-id` **no** lleva `hidden`. Lo compara con lo que correspondería hoy según `JORNADAS`.
+Si coinciden, no hace nada. Si no, dispara el Deploy Hook.
+
+**En caso de duda, no despliega.** Si la página no responde, devuelve un 404, no trae ningún
+marcador (por ejemplo, porque el dominio todavía sirve el sitio antiguo) o muestra dos bloques a
+la vez, la respuesta es «no hace falta» y queda un aviso en el registro. Un fallo de lectura no
+puede convertirse en un despliegue diario en bucle contra producción.
+
+**Por qué las 00:07.** Una jornada deja de anunciarse a las 23:59:59 hora de Colombia. Siete
+minutos después ya está vencida: la ventana en que alguien sin JavaScript podría ver la fecha
+pasada baja de días a minutos. El minuto 7 y no el 0 porque GitHub retrasa los cron en las horas
+en punto.
+
+#### Los tres cerrojos
+
+Para que este flujo llame a Vercel tienen que cumplirse **las tres**:
+
+1. **Estar en la rama por defecto.** GitHub solo ejecuta `schedule` en la rama por defecto. Mientras
+   viva en `claude/atherton-zipaquira-recovery-cwc3la`, **no se ejecuta ni una vez**.
+2. **Variable `REDESPLIEGUE_ACTIVO` = `si`** (acepta `SI`, `sí`, `true`, `1`).
+   *Settings → Secrets and variables → Actions → Variables.*
+3. **Secreto `VERCEL_DEPLOY_HOOK`** con la dirección del Deploy Hook.
+   *Settings → Secrets and variables → Actions → Secrets.*
+
+Falta cualquiera de las tres y el flujo se ejecuta, lo deja dicho en el registro y termina sin
+llamar a nadie.
+
+#### Qué hay que activar en Vercel, exactamente
+
+1. Vercel → proyecto → **Settings → Git → Deploy Hooks → Create Hook**.
+   Nombre: `jornada-gallina`. Rama: la que publica producción (**hoy `main`**; el hook dispara un
+   despliegue de esa rama, así que crearlo apuntando a otra no serviría de nada).
+2. Copiar la URL que devuelve. **Es un secreto: quien la tenga puede desplegar.** No se pega en el
+   chat ni en el repositorio.
+3. Pegarla en GitHub como secreto `VERCEL_DEPLOY_HOOK`.
+4. Crear la variable `REDESPLIEGUE_ACTIVO` con valor `si`.
+5. Opcional: variable `URL_PUBLICADA` si alguna vez se quiere comprobar otro dominio. Por defecto
+   `https://hotelesatheron.com`.
+6. Probar sin desplegar: **Actions → Redespliegue programado → Run workflow**, dejando *simular*
+   en `true`. Llega hasta la decisión y no llama al hook. (`workflow_dispatch` solo aparece en la
+   interfaz cuando el archivo está en la rama por defecto.)
+
+**Frecuencia: una vez al día.** Es lo que corresponde al problema: las jornadas cambian de estado
+a medianoche, no cada hora. Con el filtro de `necesita-redespliegue.mjs`, los días en que no
+cambia nada no se crea ningún despliegue: el historial de Vercel sigue mostrando solo los
+despliegues que importan. Un consumo típico son ~30 ejecuciones de menos de un minuto al mes.
+
+**Ojo al orden.** Mientras `hotelesatheron.com` sirva el sitio antiguo, el script no encontrará
+ningún `data-jornada-id` y responderá «no hace falta». Es lo correcto, pero significa que este
+mecanismo **no empieza a servir hasta después del merge a `main`**.
 
 ---
 
@@ -112,30 +159,33 @@ fuente** (Detour devolvió 402 y zipaquira.travel un muro anti-bot), así que **
 - Ninguna comisión ni condición privada con La Triada aparece en el sitio ni en el código.
 - Cero datos personales en analítica: ni nombre, ni teléfono, ni texto libre.
 
-## El vínculo comercial con La Triada: cómo se resolvió
+## La Triada: aliado declarado, acuerdo no publicado
 
-El riesgo que quedó abierto el 19 de septiembre era este: el directorio define «Aliado Atheron»
-como «existe un convenio firmado, que se declara», y mostrar como simple **Informativo** un
-comercio con el que hay una relación comercial real es presentarlo como si no hubiera ningún
-interés detrás. Eso es lo que hace engañosa una guía.
+Decisión de dirección del 19 de septiembre de 2026: **tratar La Triada como Aliado Atheron**,
+porque existe una relación comercial confirmada con el propietario. Cómo quedó implementado:
 
-Se resolvió sin publicar ni una condición y sin afirmar lo que no consta:
+- `estadoComercial: 'ALIADO'` en `src/data/experiencias-locales.ts`. Se pinta la insignia
+  **Aliado Atheron** en la tarjeta y en la ficha.
+- Texto público, **literal y sin una palabra de más**, el autorizado:
 
-- El estado sigue siendo `INFORMATIVO`. **No** se pone `ALIADO`, porque esa insignia afirma
-  «convenio firmado» y lo confirmado por dirección es que existe una relación comercial.
-- Se añadió el campo `divulgacionComercial` al modelo. Declara que la relación **existe** y que
-  no condiciona lo que se publica. Aparece en la tarjeta y, en la ficha, en un bloque propio
-  justo debajo del hero — fuera del hero a propósito, que es oscuro, para que se lea sin esfuerzo.
-- **Nunca** lleva porcentajes, comisiones, cupos, plazos ni ningún término del acuerdo. Nada de
-  eso está en el sitio ni en este repositorio.
+  > Establecimiento aliado de la Red Atheron Zipaquirá.
 
-Texto publicado hoy, literal:
+- **Ninguna condición.** Ni comisión, ni porcentaje, ni cupos, ni plazos, ni vigencia. Nada de
+  eso está en el sitio ni en este repositorio, y no se puede deducir de nada publicado.
+- **Sin beneficio.** No hay ninguno acordado que publicar, así que el objeto `beneficio` no
+  existe y su bloque no se pinta. La maqueta ya lo contemplaba.
+- **Aliado no es recomendado.** Es el punto delicado. Antes, el componente pintaba la insignia
+  «Recomendado por Atheron» a cualquier `ALIADO`, lo que habría afirmado que alguien de Atheron
+  estuvo allí y responde por el sitio. No es cierto: nadie ha ido. Ahora esa insignia depende de
+  `motivoRecomendacion`, no del estado. La Triada sale como aliado y nada más.
+- La definición del hub se ajustó para que sea sostenible: «Existe un acuerdo comercial con
+  Atheron, y se declara en su ficha. Las condiciones del acuerdo son privadas y no se publican.»
+  Antes decía «convenio firmado», que es una afirmación que hoy no consta por escrito aquí.
+- **Sigue `noindex, follow` y fuera del sitemap**, tal como se pidió: la página no tiene todavía
+  contenido suficiente para sostener una URL pública de calidad.
 
-> Atheron mantiene una relación comercial con este establecimiento. No condiciona lo que
-> publicamos: los datos se comprueban igual y una comisión no compra posición editorial.
-
-**Lo que decide Marlon:** si ese es el texto que quiere, y si al haber convenio firmado prefiere
-pasar la ficha a `ALIADO`. Mientras tanto la página sigue **noindex** y no se promociona.
+Nada de lo de arriba añade un solo dato del local. Dirección, horarios, capacidad, menú, precios,
+parqueadero, teléfono y fotografías siguen sin publicarse: ver la lista de abajo.
 
 ## Atribución (concepto)
 
@@ -154,10 +204,32 @@ Comprobado sobre el JavaScript ya construido: `group_lead_submit` envía únicam
 `referral_code`, `group_size_range` (rango, no la cifra), tres banderas de servicio y `page_path`.
 **No viajan nombre, teléfono, fecha exacta, ciudad ni observaciones.**
 
+## Pruebas que quedan en el repositorio
+
+```bash
+npm run comprueba          # contenido, fotos y estado del calendario
+npm run prueba             # 42 pruebas de mínimo publicable
+npm run prueba-jornadas    # 25 pruebas del calendario: antes, durante y después
+npm run redespliegue-necesario   # ¿el sitio publicado está al día? (no despliega)
+```
+
+`npm run prueba-jornadas` cubre el 19 (antes), el 20 por la mañana y a las 23:59:58 (durante),
+el 21 a las 00:00:00 (después) y meses más tarde; el mismo instante escrito en UTC y en hora de
+Colombia, para que la zona horaria del servidor que construye no pueda colarse; y el encadenado
+de dos fechas con un calendario de mentira, local a la prueba: **en `JORNADAS` no se inventa
+ninguna fecha**.
+
+Lo que no cabe en un script queda comprobado con navegador real (Playwright, reloj falseado):
+los seis momentos de arriba sobre la página construida el 19, la tarjeta del hub, y el caso
+**sin JavaScript**, que es exactamente el que justifica el redespliegue programado.
+
 ## Otros arreglos hechos al continuar
 
 - `.guia__fuente a` dentro del cuerpo se pintaba en sal claro sobre blanco (1,9:1). Corregido a
   `--acento-texto`. Era un fallo latente en `guia.css`, no solo de estas páginas.
+- La insignia de aliado salía en gris sobre verde (1,29:1) y estirada a todo el ancho en la
+  ficha: `.guia__cuerpo p` le ganaba en especificidad, y `align-self` no hace nada fuera de un
+  contenedor flex. Nunca se había visto porque hasta hoy ningún lugar era aliado.
 - Las fichas publicaban la fecha de verificación en crudo: «Datos comprobados el 2026-09-19».
   Ahora todo el sitio usa una sola función, `src/data/fechas.ts`, que el blog también reexporta.
 - El `lastmod` de Gallina en el sitemap estaba escrito a mano; ahora sale de `MODIFICADO` en su

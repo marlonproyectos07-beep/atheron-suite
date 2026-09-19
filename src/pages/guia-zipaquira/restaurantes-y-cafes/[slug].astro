@@ -59,6 +59,7 @@ const extra = extraDe(lugar.slug);
 const RUTA = lugar.rutaFicha!;
 
 const hayFoto = Boolean(lugar.foto && lugar.fotoAlt);
+const esAliado = lugar.estadoComercial === 'ALIADO';
 /* Los precios de la carta solo salen con su fecha. */
 const platosConPrecio = extra.menu?.fechaPrecios && extra.menu.platos?.length ? extra.menu.platos : null;
 
@@ -127,15 +128,25 @@ const ficha = {
          VINCULO COMERCIAL — lo primero despues del hero
 
          Si existe cualquier interes economico detras de la ficha, se
-         declara antes que ningun dato del local, no al final. No lleva
-         condiciones: ver src/data/experiencias-locales.ts. Va fuera
-         del hero a proposito: el hero es oscuro, y una declaracion de
-         interes tiene que leerse sin esfuerzo.
+         declara antes que ningun dato del local, no al final. Se dice
+         que el acuerdo existe; sus condiciones NO se publican. Ver
+         src/data/experiencias-locales.ts. Va fuera del hero a
+         proposito: el hero es oscuro, y una declaracion de interes
+         tiene que leerse sin esfuerzo.
+
+         La regla de al lado no es adorno: es lo que impide que el
+         visitante lea "aliado" como "Atheron dice que es bueno".
          ============================================================ */}
     {lugar.divulgacionComercial && (
       <section class="seccion seccion--estrecha" id="divulgacion">
         <div class="contenedor guia__cuerpo">
+          {esAliado && <p class="lugar__insignia lugar__insignia--aliado">Aliado Atheron</p>}
           <p class="lugar__divulgacion">{lugar.divulgacionComercial}</p>
+          <p class="guia__fuente">
+            Ser aliado no es estar recomendado: las condiciones del acuerdo son privadas y
+            no compran posición editorial. <a href={HUB_RESTAURANTES.ruta}>Cómo funciona este
+            directorio</a>.
+          </p>
         </div>
       </section>
     )}
@@ -276,9 +287,8 @@ const ficha = {
           </p>
         )}
         <p class="guia__fuente">
-          El estado de cada lugar en la guía (informativo, recomendado o aliado) se indica en su ficha,
-          y cualquier vínculo comercial se declara en ella. <a href={HUB_RESTAURANTES.ruta}>Cómo funciona
-          este directorio</a>.
+          El estado de cada lugar en la guía (informativo, recomendado o aliado) se indica en
+          su ficha, y cualquier acuerdo comercial se declara en ella.
         </p>
       </div>
     </section>

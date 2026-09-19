@@ -376,6 +376,26 @@ a.descubrir__item:focus-visible {
   background: var(--color-verde);
 }
 
+/* Las insignias son parrafos, y ".guia__cuerpo p" pinta gris-500 con
+   mas especificidad (0,1,1) que las dos reglas de arriba (0,1,0): la
+   insignia de aliado salia en gris sobre verde, 1,29:1, ilegible.
+   Nunca se habia visto porque hasta hoy ningun lugar era aliado. */
+.guia__cuerpo .lugar__insignia,
+.lugar .lugar__insignia { color: var(--color-noche); }
+
+.guia__cuerpo .lugar__insignia--aliado,
+.lugar .lugar__insignia--aliado { color: var(--color-blanco); }
+
+/* align-self solo hace algo dentro de un contenedor flex, y eso es la
+   tarjeta. En la ficha la insignia vive en .guia__cuerpo, que es flujo
+   normal: sin esto se estira a todo el ancho y queda una franja verde
+   con dos palabras en la esquina. */
+.guia__cuerpo .lugar__insignia {
+  display: inline-block;
+  width: auto;
+  margin-bottom: var(--esp-2);
+}
+
 .lugar__texto { font-size: .93rem; color: var(--texto-suave); }
 
 .lugar__motivo {
