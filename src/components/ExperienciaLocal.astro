@@ -45,14 +45,17 @@
 
 import Foto from './Foto.astro';
 import type { ExperienciaLocal } from '../data/experiencias-locales';
+import { atributosRed, eventoDeLugar } from '../data/eventos-red';
 
 interface Props {
   lugar: ExperienciaLocal;
+  /** De donde se pinta la tarjeta, para medir el clic a la ficha. */
+  origen?: string;
   /** Medidas de la foto, para que el navegador elija el tamano. */
   medidas?: string;
 }
 
-const { lugar, medidas } = Astro.props;
+const { lugar, medidas, origen = 'tarjeta_lugar' } = Astro.props;
 
 /* Un borrador no se pinta jamas, aunque alguien lo pase por error. */
 const visible = lugar.estadoPublicacion === 'PUBLICADO';
@@ -147,6 +150,17 @@ const hayFoto = Boolean(lugar.foto && lugar.fotoAlt);
           {lugar.mapa && (
             <a href={lugar.mapa} target="_blank" rel="noopener noreferrer">Cómo llegar</a>
           )}
+        </p>
+      )}
+
+      {/* La ficha solo se enlaza si existe: rutaFicha la declara el
+          modelo, no la maqueta, asi que no hay forma de apuntar a un 404. */}
+      {lugar.rutaFicha && (
+        <p class="lugar__enlaces">
+          <a
+            href={lugar.rutaFicha}
+            {...atributosRed(eventoDeLugar(lugar.slug), origen, lugar.slug)}
+          >Ver ficha</a>
         </p>
       )}
 

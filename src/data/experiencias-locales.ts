@@ -130,14 +130,50 @@ export interface ExperienciaLocal {
   /** De donde salio cada dato que puede cambiar. */
   fuentes?: string[];
   estadoPublicacion: EstadoPublicacion;
+
+  /* --- Ficha propia --- */
+  /* Ruta de la ficha completa dentro de la guia. Solo si existe la
+     pagina: la tarjeta pinta "Ver ficha" unicamente cuando esto esta
+     puesto, asi que no puede enlazar a un 404. Las fichas se generan
+     solas desde esta lista: src/pages/guia-zipaquira/restaurantes-y-cafes/[slug].astro */
+  rutaFicha?: string;
 }
 
 /* ------------------------------------------------------------
    LA LISTA
 
-   Vacia. Ver el encabezado de este archivo.
+   Estuvo vacia hasta el 19 de septiembre de 2026, y sigue el mismo
+   criterio: un lugar entra solo con lo que se puede sostener.
+
+   LA TRIADA — INFORMATIVO, Y SOLO CON TRES DATOS
+   Nombre, categoria y ciudad. Aparece como "Restaurante La Triada" en
+   el listado de turismo del Gobierno de Cundinamarca (Detour). Ni la
+   direccion, ni los horarios, ni la carta, ni los precios, ni la
+   capacidad, ni los servicios para familias o grupos estan
+   confirmados POR EL LOCAL: cuando los confirme, se anaden aqui y
+   la ficha los pinta sola. Ver docs/red-atheron-zipaquira.md.
+
+   Estado INFORMATIVO y no RECOMENDADO: recomendar es una decision
+   editorial de quien ha estado y responde por ella, y hoy no la
+   hay. Tampoco ALIADO: no hay convenio publicable, y ninguna
+   condicion comercial privada se publica en este sitio.
    ------------------------------------------------------------ */
-export const experienciasLocales: ExperienciaLocal[] = [];
+export const experienciasLocales: ExperienciaLocal[] = [
+  {
+    slug: 'la-triada',
+    nombre: 'La Triada',
+    categoria: 'Restaurante',
+    ciudad: 'Zipaquirá',
+    descripcion:
+      'Restaurante en Zipaquirá. Esta ficha está en construcción: publicaremos la carta, ' +
+      'los horarios y los servicios para familias y grupos cuando el local los confirme.',
+    estadoComercial: 'INFORMATIVO',
+    fechaUltimaVerificacion: '2026-09-19',
+    fuentes: ['Listado «Restaurante La Triada» en Detour Cundinamarca (Gobierno de Cundinamarca)'],
+    estadoPublicacion: 'PUBLICADO',
+    rutaFicha: '/guia-zipaquira/restaurantes-y-cafes/la-triada',
+  },
+];
 
 /* ------------------------------------------------------------
    CONSULTAS

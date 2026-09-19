@@ -140,17 +140,21 @@ export const categorias: Categoria[] = [
     href: '/hospedajes',
     externa: true,
   },
-  /* La de abajo NO lleva href. Cuando existan lugares verificados en
-     src/data/experiencias-locales.ts, se le pone el destino y se
-     enciende sola.
+  /* Se enciende el 19 de septiembre de 2026, cuando entra el primer
+     lugar verificado a src/data/experiencias-locales.ts y existe el
+     destino real: /guia-zipaquira/restaurantes-y-cafes.
 
      Eran dos tarjetas -"Donde comer" y "Cafes y experiencias"- que
      decian lo mismo. Juntas son una: con la del articulo practico
-     el indice queda en ocho, sin tarjeta huerfana en la ultima fila. */
+     el indice queda en ocho, sin tarjeta huerfana en la ultima fila.
+     Las jornadas gastronomicas (Gallina al Vapor) viven dentro de
+     ese destino, no como novena tarjeta. */
   {
     id: 'donde-comer',
     titulo: 'Dónde comer y cafés',
-    texto: 'Estamos visitando y verificando sitio por sitio antes de recomendar ninguno.',
+    texto: 'Un directorio que crece sitio por sitio, y las jornadas gastronómicas.',
+    href: '/guia-zipaquira/restaurantes-y-cafes',
+    externa: true,
   },
 ];
 

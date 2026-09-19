@@ -50,10 +50,14 @@ import Cabecera from '../../components/Cabecera.astro';
 import Pie from '../../components/Pie.astro';
 import BotonFlotante from '../../components/BotonFlotante.astro';
 import ExperienciaLocal from '../../components/ExperienciaLocal.astro';
+import FormularioGrupo from '../../components/FormularioGrupo.astro';
 import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
 import { migaDePan, url, ORGANIZACION } from '../../data/seo';
 import { atributosWhatsApp, EVENTO_GRUPO } from '../../data/whatsapp';
 import { experienciasDe } from '../../data/experiencias-locales';
+import { HUB_RESTAURANTES } from '../../data/fichas-lugares';
+import { atributosRed, EVENTO_GALLINA } from '../../data/eventos-red';
+import { RUTA_GALLINA } from '../../data/gallina-al-vapor';
 import { datosPracticos, pasaportes, SITIO_OFICIAL, VERIFICADO_EL } from '../../data/catedral-de-sal';
 import {
   CIUDAD,
@@ -144,7 +148,7 @@ const fichaGuia = {
   ogTitulo="Descubre Zipaquirá · Guía Atheron"
   ogDescripcion="Catedral de Sal, centro histórico, naturaleza y alrededores. Todo lo que puedes vivir en Zipaquirá y cerca."
   jsonLd={fichaGuia}
-  hojasExtra={['guia', 'guia-hub']}
+  hojasExtra={['guia', 'guia-hub', 'red-gastronomica']}
 >
 
   <Cabecera enlaces={menuHospedajes} cta={{ ...ctaDisponibilidad, origen: 'guia_hub' }} actual={RUTA} />
@@ -394,7 +398,17 @@ const fichaGuia = {
           <span class="etiqueta">Dónde comer</span>
           <h2>Gastronomía y cafés</h2>
           <div class="grid grid--2" style="margin-top: var(--esp-4);">
-            {lugares.map((l) => <ExperienciaLocal lugar={l} medidas="(min-width: 900px) 28rem, 92vw" />)}
+            {lugares.map((l) => <ExperienciaLocal lugar={l} medidas="(min-width: 900px) 28rem, 92vw" origen="guia_hub" />)}
+          </div>
+          <div class="grupo-botones" style="margin-top: var(--esp-3);">
+            <a class="boton boton--contorno boton--grande" href={HUB_RESTAURANTES.ruta}>
+              Ver restaurantes y cafés
+            </a>
+            <a
+              class="boton boton--contorno boton--grande"
+              href={RUTA_GALLINA}
+              {...atributosRed(EVENTO_GALLINA, 'guia_hub', 'gallina_al_vapor')}
+            >Jornada Gallina al Vapor</a>
           </div>
         </div>
       </section>
@@ -448,7 +462,7 @@ const fichaGuia = {
     <section class="seccion" id="grupos">
       <div class="contenedor guia__cuerpo">
         <span class="etiqueta">Grupos</span>
-        <h2>¿Viajan en grupo?</h2>
+        <h2>¿Vienes con un grupo a Zipaquirá?</h2>
         <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
           Estudiamos una combinación de hospedajes según el número de personas, las
           fechas y la disponibilidad. Si el grupo no cabe en una sola propiedad, lo
@@ -464,6 +478,12 @@ const fichaGuia = {
           >
             Cotizar mi grupo
           </a>
+        </div>
+
+        {/* El formulario reune los datos y abre WhatsApp con la solicitud
+            escrita. No promete disponibilidad ni tarifa. */}
+        <div style="margin-top: var(--esp-4);">
+          <FormularioGrupo origen="guia-hub" id="grupo-guia" nivel="h3" titulo="Cuéntanos de tu grupo" />
         </div>
       </div>
     </section>
