@@ -46,6 +46,7 @@
 import Foto from './Foto.astro';
 import type { ExperienciaLocal } from '../data/experiencias-locales';
 import { atributosRed, eventoDeLugar } from '../data/eventos-red';
+import { fechaLarga } from '../data/fechas';
 
 interface Props {
   lugar: ExperienciaLocal;
@@ -164,9 +165,17 @@ const hayFoto = Boolean(lugar.foto && lugar.fotoAlt);
         </p>
       )}
 
+      {/* EL VINCULO COMERCIAL SE DECLARA SIEMPRE, y va antes de la
+          fecha: si existe interes economico detras de una ficha, el
+          lector tiene que verlo sin buscarlo. No lleva condiciones:
+          ver src/data/experiencias-locales.ts. */}
+      {lugar.divulgacionComercial && (
+        <p class="lugar__divulgacion">{lugar.divulgacionComercial}</p>
+      )}
+
       {/* Lo que puede quedarse viejo lleva su fecha a la vista. */}
       {lugar.fechaUltimaVerificacion && (
-        <p class="lugar__verificado">Datos comprobados el {lugar.fechaUltimaVerificacion}.</p>
+        <p class="lugar__verificado">Datos comprobados el {fechaLarga(lugar.fechaUltimaVerificacion)}.</p>
       )}
 
     </div>

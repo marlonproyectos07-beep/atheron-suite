@@ -50,11 +50,23 @@ import { experienciasDe } from '../../../data/experiencias-locales';
 import { CIUDAD, WA_GUIA } from '../../../data/guia-zipaquira';
 import { HUB_RESTAURANTES } from '../../../data/fichas-lugares';
 import { atributosRed, EVENTO_GALLINA, EVENTO_HOSPEDAJE } from '../../../data/eventos-red';
-import { JORNADA, jornadaVigente, RUTA_GALLINA } from '../../../data/gallina-al-vapor';
+import SelectorJornada from '../../../components/SelectorJornada.astro';
+import {
+  jornadasPendientes,
+  jornadaVigente,
+  RUTA_GALLINA,
+  SIN_JORNADA,
+} from '../../../data/gallina-al-vapor';
 
 const RUTA = HUB_RESTAURANTES.ruta;
 const lugares = experienciasDe(CIUDAD.nombre);
-const hayJornada = jornadaVigente();
+
+/* La fecha de la jornada no puede depender del despliegue: se pintan
+   todas las pendientes y el navegador deja visible la que toca. Ver
+   src/components/SelectorJornada.astro. */
+const pendientes = jornadasPendientes();
+const vigente = jornadaVigente();
+const activo = vigente ? vigente.fechaMaquina : SIN_JORNADA;
 
 const ficha = {
   '@context': 'https://schema.org',
@@ -180,10 +192,16 @@ const ficha = {
           <p class="texto-suave">
             Una preparación de varias horas que se ofrece en jornadas especiales, no todos
             los días.
-            {hayJornada
-              ? ` La próxima es el ${JORNADA.fechaLarga}.`
-              : ' Consulta la fecha de la próxima jornada.'}
+            {pendientes.map((j) => (
+              <span data-jornada-id={j.fechaMaquina} hidden={j.fechaMaquina !== activo}>
+                {' '}La próxima es el {j.fechaLarga}.
+              </span>
+            ))}
+            <span data-jornada-id={SIN_JORNADA} hidden={activo !== SIN_JORNADA}>
+              {' '}Consulta la fecha de la próxima jornada.
+            </span>
           </p>
+          <SelectorJornada />
         </div>
         <div>
           <a

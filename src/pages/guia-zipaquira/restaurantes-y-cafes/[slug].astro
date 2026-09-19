@@ -38,6 +38,7 @@ import { experienciasDe } from '../../../data/experiencias-locales';
 import { CIUDAD, WA_GUIA } from '../../../data/guia-zipaquira';
 import { extraDe, HUB_RESTAURANTES } from '../../../data/fichas-lugares';
 import { atributosRed, EVENTO_HOSPEDAJE } from '../../../data/eventos-red';
+import { fechaLarga } from '../../../data/fechas';
 
 export function getStaticPaths() {
   return experienciasDe(CIUDAD.nombre)
@@ -123,6 +124,23 @@ const ficha = {
     </section>
 
     {/* ============================================================
+         VINCULO COMERCIAL — lo primero despues del hero
+
+         Si existe cualquier interes economico detras de la ficha, se
+         declara antes que ningun dato del local, no al final. No lleva
+         condiciones: ver src/data/experiencias-locales.ts. Va fuera
+         del hero a proposito: el hero es oscuro, y una declaracion de
+         interes tiene que leerse sin esfuerzo.
+         ============================================================ */}
+    {lugar.divulgacionComercial && (
+      <section class="seccion seccion--estrecha" id="divulgacion">
+        <div class="contenedor guia__cuerpo">
+          <p class="lugar__divulgacion">{lugar.divulgacionComercial}</p>
+        </div>
+      </section>
+    )}
+
+    {/* ============================================================
          DATOS DEL LUGAR — cada uno solo si existe
          ============================================================ */}
     {(hayFoto || extra.intro || lugar.direccion || lugar.horarios?.length || lugar.sitioOficial || lugar.mapa || lugar.telefono) && (
@@ -164,7 +182,7 @@ const ficha = {
               <ul class="red__datos">
                 {platosConPrecio.map((p) => <li><span>{p.plato}</span> <strong>{p.precio}</strong></li>)}
               </ul>
-              <p class="guia__fuente">Precios comprobados el {extra.menu!.fechaPrecios}. Pueden cambiar: confirma en el local.</p>
+              <p class="guia__fuente">Precios comprobados el {fechaLarga(extra.menu!.fechaPrecios!)}. Pueden cambiar: confirma en el local.</p>
             </>
           )}
           {extra.menu?.enlace && (
@@ -253,12 +271,14 @@ const ficha = {
 
         {(lugar.fechaUltimaVerificacion || lugar.fuentes?.length) && (
           <p class="guia__fuente">
-            {lugar.fechaUltimaVerificacion && <>Datos comprobados el {lugar.fechaUltimaVerificacion}. </>}
+            {lugar.fechaUltimaVerificacion && <>Datos comprobados el {fechaLarga(lugar.fechaUltimaVerificacion)}. </>}
             {lugar.fuentes?.length ? <>Fuente: {lugar.fuentes.join('; ')}.</> : null}
           </p>
         )}
         <p class="guia__fuente">
-          El estado de cada lugar en la guía (informativo, recomendado o aliado) se indica en su ficha.
+          El estado de cada lugar en la guía (informativo, recomendado o aliado) se indica en su ficha,
+          y cualquier vínculo comercial se declara en ella. <a href={HUB_RESTAURANTES.ruta}>Cómo funciona
+          este directorio</a>.
         </p>
       </div>
     </section>

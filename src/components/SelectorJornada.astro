@@ -1,0 +1,78 @@
+---
+/* ============================================================
+   SELECTOR DE JORNADA — la fecha deja de depender del despliegue
+
+   EL PROBLEMA QUE RESUELVE
+
+   El sitio es estatico: lo que decide la pagina lo decide el momento
+   del build. Con una jornada con fecha eso significa que, si pasa el
+   dia y nadie despliega, la pagina sigue anunciando una fecha vencida
+   con su precio, sin ningun error visible. Es el mismo fallo silencioso
+   del formulario que decia "recibimos tu mensaje" sin enviar nada.
+
+   COMO FUNCIONA
+
+   La pagina pinta TODOS los bloques del calendario -uno por jornada
+   pendiente, mas el de "fecha por anunciar"- y deja visible el que
+   corresponde al momento del build. Cada bloque lleva
+   data-jornada-id. Este componente escribe el calendario (solo
+   fechas) y un script minimo que vuelve a elegir con el reloj del
+   visitante.
+
+   Resultado:
+   - Navegador con JavaScript: siempre correcto, se haya desplegado
+     cuando se haya desplegado.
+   - Sin JavaScript: queda lo que decidio el build, que es exactamente
+     el comportamiento anterior. Nunca peor.
+
+   POR QUE EL SCRIPT VA AQUI Y NO EN main.js
+
+   Tiene que ejecutarse mientras se analiza el documento, antes de
+   pintar, para que no se vea parpadear un bloque. main.js va aplazado
+   y espera a DOMContentLoaded: se veria el cambio. Son ~250 bytes
+   dentro del HTML, sin peticion extra.
+
+   DONDE SE COLOCA
+
+   Justo DESPUES del ultimo elemento con data-jornada-id de la pagina.
+   Antes, esos elementos todavia no existen en el DOM.
+
+   SEO
+
+   No cambia titulo, descripcion, canonica ni JSON-LD: esas son
+   permanentes y sin fecha a proposito. Esto solo decide que bloque
+   del cuerpo se ve. Google ejecuta JavaScript, asi que indexa el
+   bloque correcto; y si no lo ejecutara, indexaria el del build, que
+   es lo que indexaba antes.
+   ============================================================ */
+
+import { calendarioCliente, SIN_JORNADA } from '../data/gallina-al-vapor';
+
+interface Props {
+  /** Calendario ya filtrado. Por defecto, las jornadas pendientes al construir. */
+  calendario?: { id: string; hasta: string }[];
+}
+
+const { calendario = calendarioCliente() } = Astro.props;
+
+---
+
+<script is:inline define:vars={{ calendario, SIN_JORNADA }}>
+  (function () {
+    try {
+      var cal = calendario || [];
+      var ahora = Date.now();
+      var elegido = SIN_JORNADA;
+      for (var i = 0; i < cal.length; i++) {
+        var fin = Date.parse(cal[i].hasta);
+        if (!isNaN(fin) && fin >= ahora) { elegido = cal[i].id; break; }
+      }
+      var bloques = document.querySelectorAll('[data-jornada-id]');
+      for (var j = 0; j < bloques.length; j++) {
+        bloques[j].hidden = bloques[j].getAttribute('data-jornada-id') !== elegido;
+      }
+    } catch (e) {
+      /* Si algo falla, se queda lo que decidio el build. */
+    }
+  })();
+</script>

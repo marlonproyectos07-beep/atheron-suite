@@ -26,7 +26,7 @@ import {
 import { articulosPublicados } from '../data/blog';
 import { experienciasDe } from '../data/experiencias-locales';
 import { extraDe, HUB_RESTAURANTES } from '../data/fichas-lugares';
-import { RUTA_GALLINA } from '../data/gallina-al-vapor';
+import { RUTA_GALLINA, MODIFICADO as GALLINA_MODIFICADO } from '../data/gallina-al-vapor';
 
 const DOMINIO = 'https://hotelesatheron.com';
 
@@ -128,12 +128,14 @@ export const GET: APIRoute = async () => {
      la indexe es contradictorio.
 
      Gallina al Vapor si entra: tiene datos propios y confirmados. Su
-     lastmod es la fecha de la jornada mas reciente cargada. */
+     lastmod sale de MODIFICADO en src/data/gallina-al-vapor.ts, y no
+     de la fecha de la jornada ni de la del despliegue: la direccion es
+     permanente y solo cambia cuando cambia su contenido. */
   const redGastronomica: Entrada[] = [
     ...(HUB_RESTAURANTES.indexable
       ? [{ ruta: HUB_RESTAURANTES.ruta, prioridad: '0.7', fecha: HUB_RESTAURANTES.modificado }]
       : []),
-    { ruta: RUTA_GALLINA, prioridad: '0.7', fecha: '2026-09-19' },
+    { ruta: RUTA_GALLINA, prioridad: '0.7', fecha: GALLINA_MODIFICADO },
     ...experienciasDe('Zipaquirá')
       .filter((l) => l.rutaFicha && extraDe(l.slug).indexable)
       .map<Entrada>((l) => ({

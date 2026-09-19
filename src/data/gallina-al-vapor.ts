@@ -10,22 +10,46 @@
    LA URL ES PERMANENTE, LA JORNADA NO
 
    /guia-zipaquira/gallina-al-vapor no cambia nunca. Lo que cambia es
-   el objeto JORNADA de mas abajo. Para anunciar la proxima:
+   el CALENDARIO de mas abajo. Para anunciar la proxima jornada se
+   anade un objeto a JORNADAS y se vuelve a construir. Nada mas: ni la
+   pagina, ni el sitemap, ni los enlaces internos necesitan tocarse, y
+   el SEO acumulado de la direccion no se pierde nunca.
 
-     1. Editar JORNADA: fecha, precios, lo que incluye.
-     2. Volver a construir el sitio.
+   ============================================================
+   POR QUE ES UN CALENDARIO Y NO UNA SOLA JORNADA
+   ============================================================
 
-   Nada mas: ni la pagina, ni el sitemap, ni los enlaces internos
-   necesitan tocarse.
+   La version anterior tenia una unica JORNADA y decidia AL CONSTRUIR
+   si se anunciaba. Eso deja dos agujeros reales:
 
-   CUANDO LA FECHA PASA
-   jornadaVigente() decide, AL CONSTRUIR, si la jornada se anuncia o
-   no. Pasada la fecha, la pagina deja de mostrar precios y fecha y
-   pasa a "proxima fecha por anunciar", con el WhatsApp para
-   preguntar. Igual que la agenda del hub: la comprobacion es al
-   construir, asi que si despues de la fecha no hay ningun despliegue,
-   el anuncio sigue visible hasta el siguiente. Por eso, el lunes 21 de
-   septiembre hay que desplegar o actualizar JORNADA.
+     1. Si pasa la fecha y nadie despliega, la pagina sigue anunciando
+        una jornada vencida, con su precio y su dia, indefinidamente.
+        El error no se ve: la pagina esta "bien", solo esta caducada.
+     2. Para anunciar la siguiente hay que estar disponible ese dia.
+
+   Ahora hay tres defensas, y ninguna depende de que alguien se
+   acuerde:
+
+     A. CALENDARIO. Se pueden dejar cargadas varias fechas por
+        adelantado. Al terminar una, la pagina pasa sola a la
+        siguiente sin desplegar nada.
+     B. RELOJ DEL VISITANTE. La pagina se construye con el estado
+        correcto en el momento del build Y ademas lleva el calendario
+        dentro. El navegador vuelve a elegir el bloque con la hora
+        del visitante (src/components/SelectorJornada.astro). Una
+        construccion vieja deja de poder mostrar una fecha vencida.
+     C. METADATOS SIN FECHA. El <title>, la meta descripcion y el
+        Open Graph son permanentes y no llevan fecha ni precio: aunque
+        Google guarde en cache una version antigua, el resultado de
+        busqueda nunca anuncia una jornada que ya paso. La fecha vive
+        en el cuerpo de la pagina, que es donde puede caducar sin
+        enganar a nadie.
+
+   Queda un caso que el codigo no puede resolver solo: que se agote el
+   calendario. Cuando eso pasa la pagina dice "fecha por anunciar" y
+   ofrece el WhatsApp, que es la verdad. scripts/comprueba-jornadas.mjs
+   avisa al construir cuando quedan pocas jornadas por delante, o
+   ninguna.
 
    ============================================================
    DATOS CONFIRMADOS (direccion, 19 de septiembre de 2026)
@@ -54,21 +78,20 @@
 export const NUMERO_GALLINA = '573124004887';
 export const NUMERO_GALLINA_VISIBLE = '312 400 4887';
 
-/** La landing oficial de la jornada. La guia enlaza; no la reemplaza. */
-export const LANDING_OFICIAL =
-  'https://gallina-al-vapor-20-septiembre.marlon-proyectos07.chatgpt.site';
-
 export const RUTA_GALLINA = '/guia-zipaquira/gallina-al-vapor';
 
-/** Ultima vez que se comprobaron los datos de JORNADA con direccion. */
-export const VERIFICADO_EL = '2026-09-19';
+/** Identificador del bloque que se pinta cuando no queda ninguna jornada. */
+export const SIN_JORNADA = 'por-anunciar';
+
+/** AAAA-MM-DD del ultimo cambio real de esta pagina. Alimenta el sitemap. */
+export const MODIFICADO = '2026-09-19';
 
 export interface Jornada {
-  /** AAAA-MM-DD. */
+  /** AAAA-MM-DD. Es tambien el identificador del bloque en la pagina. */
   fechaMaquina: string;
   /** Como se lee en pantalla. */
   fechaTexto: string;
-  /** Con dia de la semana, para el titulo y la descripcion. */
+  /** Con dia de la semana, para los titulos del cuerpo de la pagina. */
   fechaLarga: string;
   precios: { producto: string; valor: string }[];
   incluye: string[];
@@ -77,30 +100,82 @@ export interface Jornada {
      depende del dia: "este domingo" solo es cierto si la jornada es
      un domingo. Se cambia junto con la fecha. */
   tituloFamiliar: string;
+  /** Ultima vez que se comprobaron estos datos con direccion. AAAA-MM-DD. */
+  verificadoEl: string;
+  /* Landing propia de ESA jornada, si la hay. Va dentro de la jornada y
+     no suelta en el modulo porque una landing de septiembre no puede
+     seguir enlazada cuando la jornada vigente es la de octubre. */
+  landing?: string;
 }
 
-export const JORNADA: Jornada = {
-  fechaMaquina: '2026-09-20',
-  fechaTexto: '20 de septiembre de 2026',
-  fechaLarga: 'domingo 20 de septiembre de 2026',
-  tituloFamiliar: '¿Plan familiar este domingo?',
-  precios: [
-    { producto: 'Gallina completa', valor: '$60.000 COP' },
-    { producto: 'Media gallina', valor: '$32.000 COP' },
-  ],
-  incluye: ['Gallina', 'Papa', 'Yuca', 'Plátano', 'Ají tradicional'],
-  preparacion: 'Aproximadamente de 5 a 6 horas',
-};
+/* ------------------------------------------------------------
+   EL CALENDARIO
 
-/** true hasta el final del dia de la jornada, hora de Colombia. */
-export const jornadaVigente = (hoy: Date = new Date()): boolean =>
-  hoy <= new Date(`${JORNADA.fechaMaquina}T23:59:59-05:00`);
+   En orden, la mas proxima primero. Se pueden dejar varias cargadas:
+   la pagina pasa sola de una a otra. Una jornada que ya paso se puede
+   borrar de aqui, pero no hace falta: el codigo la ignora.
+   ------------------------------------------------------------ */
+export const JORNADAS: Jornada[] = [
+  {
+    fechaMaquina: '2026-09-20',
+    fechaTexto: '20 de septiembre de 2026',
+    fechaLarga: 'domingo 20 de septiembre de 2026',
+    tituloFamiliar: '¿Plan familiar este domingo?',
+    precios: [
+      { producto: 'Gallina completa', valor: '$60.000 COP' },
+      { producto: 'Media gallina', valor: '$32.000 COP' },
+    ],
+    incluye: ['Gallina', 'Papa', 'Yuca', 'Plátano', 'Ají tradicional'],
+    preparacion: 'Aproximadamente de 5 a 6 horas',
+    verificadoEl: '2026-09-19',
+    landing:
+      'https://gallina-al-vapor-20-septiembre.marlon-proyectos07.chatgpt.site',
+  },
+];
 
-/* Mensajes. El primero lleva el contexto de que la persona viene de la
-   guia: quien atiende sabe por donde entro. */
-export const MENSAJE_PEDIDO =
+/* ------------------------------------------------------------
+   CONSULTAS
+
+   Colombia no tiene horario de verano, asi que -05:00 es constante y
+   se puede escribir fijo sin arrastrar una libreria de zonas.
+   ------------------------------------------------------------ */
+
+/** Instante en que la jornada deja de anunciarse, hora de Colombia. */
+export const finDeJornada = (j: Jornada): string =>
+  `${j.fechaMaquina}T23:59:59-05:00`;
+
+const porFecha = (a: Jornada, b: Jornada) =>
+  a.fechaMaquina < b.fechaMaquina ? -1 : a.fechaMaquina > b.fechaMaquina ? 1 : 0;
+
+/** Las que todavia no han terminado, de la mas proxima a la mas lejana. */
+export const jornadasPendientes = (hoy: Date = new Date()): Jornada[] =>
+  [...JORNADAS]
+    .sort(porFecha)
+    .filter((j) => new Date(finDeJornada(j)).getTime() >= hoy.getTime());
+
+/** La que se anuncia ahora mismo, o null si no queda ninguna. */
+export const jornadaVigente = (hoy: Date = new Date()): Jornada | null =>
+  jornadasPendientes(hoy)[0] ?? null;
+
+/* Lo que viaja al navegador para que vuelva a elegir con SU reloj.
+   Solo fechas: ni precios ni textos, que ya estan en el HTML. */
+export const calendarioCliente = (
+  hoy: Date = new Date(),
+): { id: string; hasta: string }[] =>
+  jornadasPendientes(hoy).map((j) => ({
+    id: j.fechaMaquina,
+    hasta: finDeJornada(j),
+  }));
+
+/* ------------------------------------------------------------
+   MENSAJES DE WHATSAPP
+
+   El de pedido lleva la fecha de SU jornada: quien atiende sabe de
+   cual se le habla, y de que la persona viene de la guia.
+   ------------------------------------------------------------ */
+export const mensajePedido = (j: Jornada): string =>
   `Hola, vengo de la Guía Atheron y quiero información sobre la gallina al vapor ` +
-  `del ${JORNADA.fechaLarga}.`;
+  `del ${j.fechaLarga}.`;
 
 export const MENSAJE_PROXIMA =
   'Hola, vengo de la Guía Atheron y quiero saber cuándo es la próxima jornada de gallina al vapor.';

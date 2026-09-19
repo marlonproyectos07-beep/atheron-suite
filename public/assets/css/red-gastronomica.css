@@ -11,6 +11,18 @@
    ============================================================ */
 
 /* ------------------------------------------------------------
+   BLOQUES QUE DEPENDEN DE LA JORNADA VIGENTE
+
+   Los botones y las secciones de Gallina al Vapor se pintan todos y
+   se ocultan con el atributo hidden (ver SelectorJornada.astro). El
+   navegador le da display:none por defecto, pero .boton declara
+   display:inline-flex y gana por especificidad: sin esta regla, un
+   boton oculto se seguiria viendo. Es la clase de fallo que no da
+   ningun error y solo se ve en pantalla.
+   ------------------------------------------------------------ */
+[hidden] { display: none !important; }
+
+/* ------------------------------------------------------------
    DATOS EN LISTA (precios, direccion, horarios)
    ------------------------------------------------------------ */
 .red__datos {

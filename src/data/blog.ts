@@ -206,12 +206,7 @@ export const articulosPublicados = (): Articulo[] =>
     .filter((a) => a.publicadoEnSitio)
     .sort((a, b) => b.publicado.localeCompare(a.publicado));
 
-/** "2026-09-10" -> "10 de septiembre de 2026". En UTC para que la
-    zona horaria de la maquina que construye no mueva el dia. */
-export const fechaLarga = (iso: string): string =>
-  new Intl.DateTimeFormat('es-CO', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(`${iso}T00:00:00Z`));
+/* "2026-09-10" -> "10 de septiembre de 2026". La implementacion vive
+   en src/data/fechas.ts, que es de todo el sitio; se reexporta aqui
+   para no romper lo que ya la importa desde el blog. */
+export { fechaLarga } from './fechas';

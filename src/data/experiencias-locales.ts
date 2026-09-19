@@ -1,22 +1,23 @@
 /* ============================================================
    EXPERIENCIAS LOCALES — restaurantes, cafes y sitios de la ciudad
 
-   QUE ES ESTO Y POR QUE ESTA VACIO HOY
+   QUE ES ESTO
 
    Es el modelo de un lugar de la ciudad que NO es nuestro: un
    restaurante, un cafe, un museo, un mirador. La guia de Zipaquira
    va a llenarse de ellos, y hay interes comercial en convertir a
    algunos en aliados.
 
-   La lista de abajo esta VACIA a proposito. No hay ni un lugar con
-   datos verificados: ni direccion, ni horario, ni fotografia con
-   procedencia, ni permiso. Publicar uno hoy seria inventarlo, y un
-   horario inventado es un cliente que llega y se encuentra cerrado.
+   La lista estuvo VACIA a proposito hasta el 19 de septiembre de
+   2026, y el criterio no ha cambiado: un lugar entra solo con lo que
+   se puede sostener. No hay direccion, ni horario, ni fotografia con
+   procedencia, ni permiso que se publique sin comprobar. Un horario
+   inventado es un cliente que llega y se encuentra cerrado.
 
    Es el mismo criterio que ya se aplico a los testimonios de grupos
-   en src/data/grupos.ts: la estructura se deja hecha, la lista se
-   deja vacia, y el dia que llegue el primer dato real es rellenar
-   un objeto. Ni la maqueta ni el CSS cambian.
+   en src/data/grupos.ts: la estructura se deja hecha, y el dia que
+   llegue el dato real es rellenar un campo. Ni la maqueta ni el CSS
+   cambian.
 
    ============================================================
    LOS TRES ESTADOS, Y POR QUE NO SE PUEDEN CONFUNDIR
@@ -42,6 +43,23 @@
    lector descubra que "recomendado" significaba "nos paga", la guia
    entera deja de valer, y con ella la razon por la que alguien
    confiaria en nuestras recomendaciones de hospedaje.
+
+   ============================================================
+   DIVULGAR EL VINCULO NO ES PUBLICAR EL ACUERDO
+   ============================================================
+
+   Hay un hueco entre los tres estados: un lugar con el que EXISTE
+   una relacion comercial pero cuyo convenio todavia no se puede
+   declarar como firmado sigue apareciendo como INFORMATIVO, es decir,
+   como si no hubiera ningun interes detras. Eso es lo que las guias
+   de divulgacion de vinculos comerciales consideran enganoso, y es
+   un riesgo real de reputacion.
+
+   El campo divulgacionComercial cierra ese hueco. Dice que la
+   relacion existe y que no condiciona lo que se publica. NO dice
+   -y no puede decir nunca- porcentajes, comisiones, cupos, plazos
+   ni ninguna otra condicion privada: eso no aparece en el sitio ni
+   en este repositorio. Ver docs/red-atheron-zipaquira.md.
 
    ============================================================
    BAGATELA E INDULTO — NO ESTAN AQUI, Y ES DELIBERADO
@@ -124,6 +142,12 @@ export interface ExperienciaLocal {
     vigencia?: { desde: string; hasta?: string };
   };
 
+  /* Vinculo comercial declarado, SIN condiciones. Una frase corta,
+     visible en la tarjeta y en la ficha. Se pone en cuanto existe
+     cualquier interes economico, aunque el estado siga siendo
+     INFORMATIVO. Nunca lleva cifras ni terminos del acuerdo. */
+  divulgacionComercial?: string;
+
   /* --- Trazabilidad --- */
   /** AAAA-MM-DD. Cuando se comprobo por ultima vez lo de arriba. */
   fechaUltimaVerificacion?: string;
@@ -155,8 +179,17 @@ export interface ExperienciaLocal {
 
    Estado INFORMATIVO y no RECOMENDADO: recomendar es una decision
    editorial de quien ha estado y responde por ella, y hoy no la
-   hay. Tampoco ALIADO: no hay convenio publicable, y ninguna
-   condicion comercial privada se publica en este sitio.
+   hay. Tampoco ALIADO: la insignia de aliado afirma "convenio
+   firmado, que se declara", y lo que hay confirmado por direccion es
+   que existe una relacion comercial, no un convenio publicable.
+
+   PERO LA RELACION SE DECLARA. Direccion confirmo que existe. Dejar
+   la ficha como simple INFORMATIVO seria presentarla como si no
+   hubiera ningun interes detras, y eso es lo que hace enganosa una
+   guia. Por eso lleva divulgacionComercial: se dice que la relacion
+   existe, no se dice ni una sola condicion. Ninguna comision, ningun
+   porcentaje y ningun termino del acuerdo aparece en el sitio ni en
+   este repositorio.
    ------------------------------------------------------------ */
 export const experienciasLocales: ExperienciaLocal[] = [
   {
@@ -168,6 +201,10 @@ export const experienciasLocales: ExperienciaLocal[] = [
       'Restaurante en Zipaquirá. Esta ficha está en construcción: publicaremos la carta, ' +
       'los horarios y los servicios para familias y grupos cuando el local los confirme.',
     estadoComercial: 'INFORMATIVO',
+    divulgacionComercial:
+      'Atheron mantiene una relación comercial con este establecimiento. ' +
+      'No condiciona lo que publicamos: los datos se comprueban igual y una ' +
+      'comisión no compra posición editorial.',
     fechaUltimaVerificacion: '2026-09-19',
     fuentes: ['Listado «Restaurante La Triada» en Detour Cundinamarca (Gobierno de Cundinamarca)'],
     estadoPublicacion: 'PUBLICADO',
