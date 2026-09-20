@@ -99,6 +99,72 @@ export const CATEGORIA_ATHERON = 'Atheron Suite';
 
 export const articulos: Articulo[] = [
   {
+    ruta: '/eventos/semana-de-la-juventud-zipaquira-2026',
+    titulo: 'Semana de la Juventud de Zipaquirá 2026: programación de Parche Zipa Fest',
+    tituloCorto: 'Semana de la Juventud 2026: programación',
+    rotulo: 'Agenda verificada',
+    descripcion:
+      'Consulta fechas, horarios, lugares e inscripciones de Parche Zipa Fest, la Semana de la Juventud de Zipaquirá del 18 al 26 de septiembre de 2026.',
+    autor: 'Atheron Suite',
+    publicado: '2026-09-19',
+    modificado: '2026-09-19',
+    categoria: CATEGORIA_ZIPAQUIRA,
+    imagen: null,
+    imagenAlt: null,
+    fuentes: [
+      {
+        titulo: 'Parche Zipa Fest 2026 — Programa de Juventudes de Zipaquirá',
+        url: 'https://parchezipa2026.github.io/ParcheZipaFest/',
+      },
+      {
+        titulo: 'Canal oficial ParcheZipa',
+        url: 'https://linktr.ee/ParcheZipa',
+      },
+    ],
+    enlacesInternos: [
+      { texto: 'Guía Atheron de Zipaquirá', href: '/guia-zipaquira' },
+      { texto: 'Hospedajes en Zipaquirá', href: '/hospedajes' },
+      { texto: 'Alojamiento para grupos', href: '/grupos' },
+    ],
+    cta: { texto: 'Consultar alojamiento para grupos', href: '/grupos' },
+    publicadoEnSitio: true,
+  },
+  {
+    ruta: '/eventos/mes-del-patrimonio-zipaquira-2026',
+    titulo: 'Mes del Patrimonio Cultural de Zipaquirá 2026: agenda y contexto',
+    tituloCorto: 'Mes del Patrimonio 2026: agenda',
+    rotulo: 'Agenda cultural',
+    descripcion:
+      'Agenda verificada del Mes del Patrimonio Cultural de Zipaquirá 2026, con el Trueque de Yerbatería, la ruta Ciudad Patrimonial y enlaces a las fuentes organizadoras.',
+    autor: 'Atheron Suite',
+    publicado: '2026-09-19',
+    modificado: '2026-09-19',
+    categoria: CATEGORIA_ZIPAQUIRA,
+    imagen: null,
+    imagenAlt: null,
+    fuentes: [
+      {
+        titulo: 'Programación del Mes del Patrimonio Cultural de Zipaquirá',
+        url: 'https://www.facebook.com/61555818596506/posts/122323254218193953/',
+      },
+      {
+        titulo: 'Publicación de la programación en Instagram',
+        url: 'https://www.instagram.com/p/DdWktkxkcq1/',
+      },
+      {
+        titulo: 'Camino del Gone — contexto histórico regional',
+        url: 'https://www.conexionsabana360.com/play/videos/camino-del-gone-ecopasaporte-capitulo-2',
+      },
+    ],
+    enlacesInternos: [
+      { texto: 'Guía Atheron de Zipaquirá', href: '/guia-zipaquira' },
+      { texto: 'Guía práctica para llegar y quedarse', href: '/blog/guia-de-zipaquira' },
+      { texto: 'Hospedajes en Zipaquirá', href: '/hospedajes' },
+    ],
+    cta: { texto: 'Ver hospedajes en Zipaquirá', href: '/hospedajes' },
+    publicadoEnSitio: true,
+  },
+  {
     ruta: '/blog/guia-de-zipaquira',
     titulo: 'Guía práctica de Zipaquirá: cómo llegar, cuántos días quedarse y dónde dormir',
     tituloCorto: 'Guía práctica: cómo llegar y cuántos días quedarse',
