@@ -11,8 +11,26 @@ No contiene código del sitio. No afecta al build, ni a Vercel, ni a producción
 | Archivo | Qué es |
 |---|---|
 | `settings.json` | Marketplaces aprobados + plugins habilitados |
+| `scripts/bootstrap-plugins.sh` | **Paso obligatorio** en cada máquina o contenedor nuevo. Ver abajo. |
 | `scripts/bootstrap-graphify.sh` | Instalador **opcional** de Graphify (no se ejecuta solo) |
 | `README.md` | Este archivo |
+
+## Puesta en marcha
+
+En cada máquina o contenedor nuevo, una vez:
+
+```bash
+bash .claude/scripts/bootstrap-plugins.sh
+```
+
+**Sin este paso no se carga ninguna Skill.** `settings.json` declara *qué*
+marketplaces usa el proyecto, pero no trae su contenido: Claude Code necesita
+una copia local en `~/.claude/plugins/marketplaces/`, que en un contenedor nuevo
+nace vacía. El script la reconstruye clonando exactamente los repositorios que
+ya declara `settings.json`, instala `superpowers` en ámbito de proyecto y
+enumera lo instalado. No necesita credenciales: solo lectura pública de GitHub.
+
+Después hay que reiniciar la sesión de Claude Code para que cargue las Skills.
 
 ## Qué NO se versiona, y por qué
 
