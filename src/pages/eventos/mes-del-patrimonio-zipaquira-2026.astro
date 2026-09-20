@@ -1,0 +1,67 @@
+---
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
+import { articuloDe, fechaLarga } from '../../data/blog';
+import { atributosWhatsApp } from '../../data/whatsapp';
+import { migaDePan, url, ORGANIZACION } from '../../data/seo';
+
+const articulo = articuloDe('/eventos/mes-del-patrimonio-zipaquira-2026')!;
+const fuentePrograma = 'https://www.facebook.com/61555818596506/posts/122323254218193953/';
+const agenda = [
+  { id: 'trueque-yerbateria', fecha: '2026-09-23', dia: '23 de septiembre', hora: '3:00 p. m.', titulo: 'Trueque de Yerbatería', lugar: 'Museo de Zipaquirá — Casa Quevedo Zornoza', condicion: 'La programación consultada no publica costo, cupos ni requisito de inscripción.' },
+  { id: 'ruta-ciudad-patrimonial', fecha: '2026-09-25', dia: '25 de septiembre', hora: '3:30 p. m.', titulo: 'Ruta patrimonial: Zipaquirá Ciudad Patrimonial', lugar: 'Salida desde la Estación del Ferrocarril', condicion: 'Requiere inscripción previa. La programación consultada no publica costo ni cupos.' },
+];
+const ficha = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'BlogPosting', '@id': `${url(articulo.ruta)}#articulo`, headline: articulo.titulo, description: articulo.descripcion, url: url(articulo.ruta), datePublished: articulo.publicado, dateModified: articulo.modificado, inLanguage: 'es-CO', author: { '@type': 'Organization', name: articulo.autor }, publisher: { '@id': ORGANIZACION['@id'] }, citation: articulo.fuentes.map((f) => f.url ?? f.titulo), mainEntityOfPage: url(articulo.ruta) },
+    ...agenda.map((a) => ({ '@type': 'Event', name: a.titulo, startDate: `${a.fecha}T${a.hora.startsWith('3:00') ? '15:00' : '15:30'}:00-05:00`, location: { '@type': 'Place', name: a.lugar, address: { '@type': 'PostalAddress', addressLocality: 'Zipaquirá', addressRegion: 'Cundinamarca', addressCountry: 'CO' } }, url: fuentePrograma })),
+    ORGANIZACION,
+    migaDePan([{ nombre: 'Inicio', ruta: '/' }, { nombre: 'Blog', ruta: '/blog' }, { nombre: 'Mes del Patrimonio 2026', ruta: articulo.ruta }], `${url(articulo.ruta)}#miga`),
+  ],
+};
+const WA = 'Hola, vi la agenda del Mes del Patrimonio en el blog de Atheron y quiero consultar hospedaje en Zipaquirá.\n\nFecha de llegada:\nFecha de salida:\nNúmero de huéspedes:';
+---
+
+<Base titulo="Mes del Patrimonio Zipaquirá 2026 | Agenda" descripcion={articulo.descripcion} ruta={articulo.ruta} ogTipo="article" jsonLd={ficha} hojasExtra={['guia', 'eventos']}>
+  <Cabecera enlaces={menuBlog} cta={{ ...ctaDisponibilidad, origen: 'evento_patrimonio' }} actual="/blog" />
+  <main id="contenido">
+    <section class="evento-hero">
+      <div class="contenedor evento-hero__contenido">
+        <nav class="migas" aria-label="Ruta de navegación"><ol><li><a href="/">Inicio</a></li><li><a href="/blog">Blog</a></li><li aria-current="page">Mes del Patrimonio 2026</li></ol></nav>
+        <span class="hero__etiqueta">Agenda cultural verificada</span>
+        <h1>Mes del Patrimonio Cultural de Zipaquirá 2026</h1>
+        <p class="hero__texto">Fechas confirmadas, contexto para comprender cada encuentro y enlaces a las publicaciones de origen. Atheron organiza la información; la inscripción y las condiciones pertenecen a sus organizadores.</p>
+        <span class="evento-hero__fecha">Programación hasta el 12 de octubre de 2026</span>
+      </div>
+    </section>
+
+    <section class="seccion"><div class="contenedor articulo">
+      <p class="articulo__meta"><span>Verificado el <time datetime={articulo.modificado}>{fechaLarga(articulo.modificado)}</time></span><span>Por {articulo.autor}</span></p>
+      <div class="respuesta-rapida"><strong>En corto</strong> La agenda reúne actividades sobre memoria, recorridos y prácticas culturales. Para las dos próximas actividades verificadas, no se publicaron cupos ni valores; la ruta del 25 de septiembre sí anuncia inscripción previa.</div>
+
+      <h2>Próximas actividades verificadas</h2>
+      <div class="evento-agenda">
+        {agenda.map((a) => <article class="evento-dia" id={a.id}><div class="evento-dia__cuando"><time datetime={a.fecha}>{a.dia}</time><span class="evento-dia__hora">{a.hora}</span></div><div class="evento-dia__detalle"><h3>{a.titulo}</h3><p class="evento-dia__meta"><strong>Lugar:</strong> {a.lugar}<br/><strong>Condiciones:</strong> {a.condicion}</p><a class="boton boton--contorno evento-dia__accion" href={fuentePrograma} target="_blank" rel="noopener noreferrer">Consultar publicación de origen</a></div></article>)}
+      </div>
+
+      <h2 id="contexto-del-trueque">El trueque: intercambiar también es encontrarse</h2>
+      <p><strong>Interpretación editorial de Atheron:</strong> el trueque puede leerse como algo más que cambiar un objeto por otro. Es una forma de reconocer el conocimiento de la otra persona, conversar sobre el origen de lo que se ofrece y mantener vivos vínculos entre plantas, territorio y comunidad.</p>
+      <p>En la Sabana, la circulación de productos y saberes tiene una historia anterior a los mercados actuales. Una referencia regional sobre el Camino del Gone lo presenta como un corredor ancestral entre Tocancipá y Zipaquirá relacionado con el intercambio de sal y otros productos. Ese contexto ayuda a comprender por qué hablar hoy de trueque también abre una conversación sobre memoria y territorio.</p>
+      <div class="evento-nota"><strong>Lo que no estamos afirmando:</strong> este contexto histórico no describe las reglas del evento del 23 de septiembre. La programación no indica que debas llevar plantas, semillas u objetos; consulta directamente con el organizador antes de asistir.</div>
+
+      <h2>Atheron te ayuda a vivir la ciudad</h2>
+      <p>Si una actividad cultural te trae desde Bogotá u otro municipio, puedes convertir la visita en un recorrido más tranquilo por el centro histórico. Primero confirma el evento en su fuente; después compara hospedajes según tus fechas y número de viajeros.</p>
+
+      <aside class="evento-conversion"><div><h2>¿Te quedas en Zipaquirá?</h2><p>Consulta hospedajes para parejas, familias o grupos. No ofrecemos acceso preferencial ni cupos en estas actividades.</p></div><div class="evento-conversion__acciones"><a class="boton boton--primario" href="/hospedajes">Ver hospedajes</a><a class="boton boton--whatsapp" {...atributosWhatsApp(WA, { origen: 'evento_mes_patrimonio' })}>Consultar disponibilidad</a></div></aside>
+
+      <h2>Fuentes</h2>
+      <ul class="evento-fuentes"><li><a href={fuentePrograma} target="_blank" rel="noopener noreferrer">Programación del Mes del Patrimonio Cultural</a></li><li><a href="https://www.instagram.com/p/DdWktkxkcq1/" target="_blank" rel="noopener noreferrer">Publicación complementaria de la agenda</a></li><li><a href="https://www.conexionsabana360.com/play/videos/camino-del-gone-ecopasaporte-capitulo-2" target="_blank" rel="noopener noreferrer">Camino del Gone — contexto histórico regional</a></li></ul>
+    </div></section>
+  </main>
+  <Pie />
+  <BotonFlotante mensaje={WA} origen="evento_patrimonio_flotante" />
+</Base>
