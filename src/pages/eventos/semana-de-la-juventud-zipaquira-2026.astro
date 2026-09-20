@@ -1,0 +1,99 @@
+---
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
+import { articuloDe, fechaLarga } from '../../data/blog';
+import { atributosWhatsApp } from '../../data/whatsapp';
+import { migaDePan, url, ORGANIZACION } from '../../data/seo';
+
+const articulo = articuloDe('/eventos/semana-de-la-juventud-zipaquira-2026')!;
+const fuenteOficial = 'https://parchezipa2026.github.io/ParcheZipaFest/';
+const formularioGeneral = 'https://parchezipa2026.github.io/ParcheZipaFest/inscripcion.html';
+
+const actividades = [
+  { fecha: '2026-09-21', horaIso: '16:30', dia: '21 de septiembre', hora: '4:30 p. m.', titulo: 'ExpresArte', lugar: 'Casa de la Juventud, Calle 4A #17-03, Algarra 3, segundo piso', publico: 'Jóvenes de 14 a 28 años', resumen: 'Exposición de pintura y fotografía, ceremonia de presentación y taller de fotografía.', inscripcion: true },
+  { fecha: '2026-09-22', horaIso: '09:00', dia: '22 de septiembre', hora: '9:00 a. m.', titulo: 'Youth Squad Game', lugar: 'Casa de la Juventud, Calle 4A #17-03, Algarra 3, segundo piso', publico: 'Jóvenes de 14 a 28 años', resumen: 'Jornada de retos, estrategia y competencia.', inscripcion: true },
+  { fecha: '2026-09-22', horaIso: '15:00', dia: '22 de septiembre', hora: '3:00 p. m.', titulo: 'Parche Gamer', lugar: 'Casa de la Juventud, Calle 4A #17-03, Algarra 3, segundo piso', publico: 'Jóvenes de 14 a 28 años', resumen: 'Encuentro de videojuegos con torneos y retos.', inscripcion: true },
+  { fecha: '2026-09-23', horaIso: '17:30', dia: '23 de septiembre', hora: '5:30 p. m.', titulo: 'Level Up 2026', lugar: 'Teatro Bicentenario', publico: 'Jóvenes de 14 a 28 años con impacto comunitario', resumen: 'Reconocimiento a jóvenes con impacto en la comunidad. Consulta en la fuente el estado de nominaciones y votaciones.', inscripcion: false },
+  { fecha: '2026-09-24', horaIso: '15:00', dia: '24 de septiembre', hora: '3:00 p. m.', titulo: 'Parchados al Barrio', lugar: 'Barrio Bolívar 83', publico: 'Jóvenes de 14 a 28 años', resumen: 'Jornada con muralismo, actividad física y retos.', inscripcion: true, condicion: 'La fuente indica entrada libre.' },
+  { fecha: '2026-09-25', horaIso: '09:00', dia: '25 de septiembre', hora: '9:00 a. m.', titulo: 'Colegios con Flow', lugar: 'Colegio ganador', publico: 'Estudiantes de colegios de Zipaquirá', resumen: 'Encuentro de talento, creatividad y baile entre colegios.', inscripcion: false },
+  { fecha: '2026-09-25', horaIso: '16:30', dia: '25 de septiembre', hora: '4:30 p. m.', titulo: 'Business Lab', lugar: 'Casa de la Juventud, Calle 4A #17-03, Algarra 3, segundo piso', publico: 'Jóvenes emprendedores de 18 a 28 años', resumen: 'Taller con herramientas y conexiones para jóvenes emprendedores.', inscripcion: true },
+  { fecha: '2026-09-26', horaIso: '17:00', dia: '26 de septiembre', hora: '5:00 p. m.', titulo: 'Parche Bajo las Estrellas', lugar: 'Parque de La Esperanza', publico: 'Comunidad juvenil de Zipaquirá', resumen: 'Cierre con música en vivo, demostraciones artísticas y talleres.', inscripcion: false, condicion: 'La fuente indica entrada libre.' },
+];
+
+const ficha = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BlogPosting', '@id': `${url(articulo.ruta)}#articulo`, headline: articulo.titulo,
+      description: articulo.descripcion, url: url(articulo.ruta), datePublished: articulo.publicado,
+      dateModified: articulo.modificado, inLanguage: 'es-CO', author: { '@type': 'Organization', name: articulo.autor },
+      publisher: { '@id': ORGANIZACION['@id'] }, mainEntityOfPage: url(articulo.ruta),
+      citation: articulo.fuentes.map((f) => f.url ?? f.titulo),
+    },
+    ...actividades.map((a) => ({
+      '@type': 'Event', name: a.titulo, startDate: `${a.fecha}T${a.horaIso}:00-05:00`,
+      location: { '@type': 'Place', name: a.lugar, address: { '@type': 'PostalAddress', addressLocality: 'Zipaquirá', addressRegion: 'Cundinamarca', addressCountry: 'CO' } },
+      organizer: { '@type': 'Organization', name: 'Programa de Juventudes de Zipaquirá', url: fuenteOficial },
+      url: fuenteOficial,
+    })),
+    ORGANIZACION,
+    migaDePan([{ nombre: 'Inicio', ruta: '/' }, { nombre: 'Blog', ruta: '/blog' }, { nombre: 'Semana de la Juventud 2026', ruta: articulo.ruta }], `${url(articulo.ruta)}#miga`),
+  ],
+};
+
+const WA = 'Hola, vi la agenda de la Semana de la Juventud en el blog de Atheron. Viajo con un grupo y quiero consultar alojamiento.\n\nFechas:\nNúmero de personas:';
+---
+
+<Base titulo="Semana de la Juventud Zipaquirá 2026 | Programación" descripcion={articulo.descripcion} ruta={articulo.ruta} ogTipo="article" jsonLd={ficha} hojasExtra={['guia', 'eventos']}>
+  <Cabecera enlaces={menuBlog} cta={{ ...ctaDisponibilidad, origen: 'evento_juventud' }} actual="/blog" />
+  <main id="contenido">
+    <section class="evento-hero">
+      <div class="contenedor evento-hero__contenido">
+        <nav class="migas" aria-label="Ruta de navegación"><ol><li><a href="/">Inicio</a></li><li><a href="/blog">Blog</a></li><li aria-current="page">Semana de la Juventud 2026</li></ol></nav>
+        <span class="hero__etiqueta">Agenda verificada</span>
+        <h1>Semana de la Juventud de Zipaquirá 2026</h1>
+        <p class="hero__texto">Parche Zipa Fest reúne arte, videojuegos, emprendimiento, deporte y participación juvenil. Aquí organizamos la programación y te llevamos a la fuente responsable de las inscripciones.</p>
+        <span class="evento-hero__fecha">Del 18 al 26 de septiembre de 2026</span>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <div class="contenedor articulo">
+        <p class="articulo__meta"><span>Verificado el <time datetime={articulo.modificado}>{fechaLarga(articulo.modificado)}</time></span><span>Por {articulo.autor}</span></p>
+        <div class="respuesta-rapida"><strong>En corto</strong> La programación es organizada por el Programa de Juventudes de la Secretaría de Familia y Desarrollo Social de Zipaquirá. Los requisitos, cupos y estados de inscripción pueden cambiar: confírmalos en el sitio del organizador antes de desplazarte.</div>
+
+        <h2>Programación próxima</h2>
+        <div class="evento-agenda">
+          {actividades.map((a) => (
+            <article class="evento-dia">
+              <div class="evento-dia__cuando"><time datetime={a.fecha}>{a.dia}</time><span class="evento-dia__hora">{a.hora}</span></div>
+              <div class="evento-dia__detalle">
+                <h3>{a.titulo}</h3><p>{a.resumen}</p>
+                <p class="evento-dia__meta"><strong>Lugar:</strong> {a.lugar}<br/><strong>Dirigido a:</strong> {a.publico}{a.condicion && <><br/><strong>Acceso:</strong> {a.condicion}</>}</p>
+                {a.inscripcion && <a class="boton boton--contorno evento-dia__accion" href={formularioGeneral} target="_blank" rel="noopener noreferrer">Consultar inscripción oficial</a>}
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div class="evento-estado"><strong>Importante:</strong> no asumimos que una actividad sea gratuita si la fuente no lo dice. Tampoco garantizamos cupos ni inscripciones. Revisa las condiciones vigentes en el <a href={fuenteOficial} target="_blank" rel="noopener noreferrer">sitio oficial de Parche Zipa Fest</a>.</div>
+
+        <h2>Atheron te ayuda a vivir la ciudad</h2>
+        <p>Esta agenda sirve para decidir qué actividad encaja con tu visita. Si vienes desde otro municipio con un colegio, una agrupación o una delegación, conviene resolver el alojamiento antes de viajar y confirmar la participación directamente con el organizador.</p>
+
+        <aside class="evento-conversion" aria-label="Opciones de alojamiento">
+          <div><h2>¿Vienes con un grupo?</h2><p>Cuéntanos cuántas personas viajan y para qué fechas. Te proponemos una combinación de hospedajes en Zipaquirá; la consulta no incluye inscripción ni acceso al evento.</p></div>
+          <div class="evento-conversion__acciones"><a class="boton boton--whatsapp" {...atributosWhatsApp(WA, { origen: 'evento_semana_juventud' })}>Cotizar alojamiento</a><a class="boton boton--claro" href="/grupos">Ver opciones para grupos</a></div>
+        </aside>
+
+        <h2>Fuentes</h2>
+        <ul class="evento-fuentes"><li><a href={fuenteOficial} target="_blank" rel="noopener noreferrer">Parche Zipa Fest 2026 — programación e inscripciones</a></li><li><a href="https://linktr.ee/ParcheZipa" target="_blank" rel="noopener noreferrer">Canal ParcheZipa</a></li></ul>
+      </div>
+    </section>
+  </main>
+  <Pie />
+  <BotonFlotante mensaje={WA} origen="evento_juventud_flotante" />
+</Base>
