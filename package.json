@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "comprueba": "node scripts/comprueba-contenido.mjs",
+    "comprueba": "node scripts/comprueba-contenido.mjs && node scripts/comprueba-jornadas.mjs",
     "prueba": "node scripts/prueba-minimo-publicable.mjs",
+    "prueba-jornadas": "node --experimental-strip-types --no-warnings scripts/prueba-jornadas.mts",
+    "redespliegue-necesario": "node scripts/necesita-redespliegue.mjs",
     "foto": "node scripts/optimiza-fotos.mjs",
-    "prebuild": "node scripts/comprueba-contenido.mjs && node scripts/optimiza-selector.mjs",
+    "prebuild": "node scripts/comprueba-contenido.mjs && node scripts/comprueba-jornadas.mjs && node scripts/optimiza-selector.mjs",
     "build": "astro build",
     "preview": "astro preview"
   },

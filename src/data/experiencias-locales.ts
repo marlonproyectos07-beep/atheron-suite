@@ -1,22 +1,23 @@
 /* ============================================================
    EXPERIENCIAS LOCALES — restaurantes, cafes y sitios de la ciudad
 
-   QUE ES ESTO Y POR QUE ESTA VACIO HOY
+   QUE ES ESTO
 
    Es el modelo de un lugar de la ciudad que NO es nuestro: un
    restaurante, un cafe, un museo, un mirador. La guia de Zipaquira
    va a llenarse de ellos, y hay interes comercial en convertir a
    algunos en aliados.
 
-   La lista de abajo esta VACIA a proposito. No hay ni un lugar con
-   datos verificados: ni direccion, ni horario, ni fotografia con
-   procedencia, ni permiso. Publicar uno hoy seria inventarlo, y un
-   horario inventado es un cliente que llega y se encuentra cerrado.
+   La lista estuvo VACIA a proposito hasta el 19 de septiembre de
+   2026, y el criterio no ha cambiado: un lugar entra solo con lo que
+   se puede sostener. No hay direccion, ni horario, ni fotografia con
+   procedencia, ni permiso que se publique sin comprobar. Un horario
+   inventado es un cliente que llega y se encuentra cerrado.
 
    Es el mismo criterio que ya se aplico a los testimonios de grupos
-   en src/data/grupos.ts: la estructura se deja hecha, la lista se
-   deja vacia, y el dia que llegue el primer dato real es rellenar
-   un objeto. Ni la maqueta ni el CSS cambian.
+   en src/data/grupos.ts: la estructura se deja hecha, y el dia que
+   llegue el dato real es rellenar un campo. Ni la maqueta ni el CSS
+   cambian.
 
    ============================================================
    LOS TRES ESTADOS, Y POR QUE NO SE PUEDEN CONFUNDIR
@@ -33,8 +34,16 @@
      no la da una comision y no la da que el sitio nos caiga bien.
 
    ALIADO
-     Ademas, existe un convenio FIRMADO. Solo entonces pueden
-     aparecer el distintivo de aliado y el beneficio.
+     Ademas, existe un ACUERDO COMERCIAL con Atheron, y se declara.
+     Solo entonces puede aparecer el distintivo de aliado.
+
+     ALIADO NO IMPLICA RECOMENDADO. El escalon de recomendacion es
+     editorial y lo sostiene una visita con su motivo, no un acuerdo.
+     Un aliado sin visita sale como aliado y nada mas: la insignia de
+     "Recomendado por Atheron" se pinta solo cuando hay
+     motivoRecomendacion, porque una recomendacion sin motivo no es
+     una recomendacion, es un anuncio. El beneficio, igual: sin
+     descripcion no se pinta.
 
    LA REGLA QUE SOSTIENE TODO ESTO:
    una comision no compra una mejor posicion editorial. Si algun dia
@@ -42,6 +51,23 @@
    lector descubra que "recomendado" significaba "nos paga", la guia
    entera deja de valer, y con ella la razon por la que alguien
    confiaria en nuestras recomendaciones de hospedaje.
+
+   ============================================================
+   DIVULGAR EL VINCULO NO ES PUBLICAR EL ACUERDO
+   ============================================================
+
+   Hay un hueco entre los tres estados: un lugar con el que EXISTE
+   una relacion comercial pero cuyo convenio todavia no se puede
+   declarar como firmado sigue apareciendo como INFORMATIVO, es decir,
+   como si no hubiera ningun interes detras. Eso es lo que las guias
+   de divulgacion de vinculos comerciales consideran enganoso, y es
+   un riesgo real de reputacion.
+
+   El campo divulgacionComercial cierra ese hueco. Dice que la
+   relacion existe y que no condiciona lo que se publica. NO dice
+   -y no puede decir nunca- porcentajes, comisiones, cupos, plazos
+   ni ninguna otra condicion privada: eso no aparece en el sitio ni
+   en este repositorio. Ver docs/red-atheron-zipaquira.md.
 
    ============================================================
    BAGATELA E INDULTO — NO ESTAN AQUI, Y ES DELIBERADO
@@ -124,20 +150,75 @@ export interface ExperienciaLocal {
     vigencia?: { desde: string; hasta?: string };
   };
 
+  /* Vinculo comercial declarado, SIN condiciones. Una frase corta,
+     visible en la tarjeta y en la ficha. Se pone en cuanto existe
+     cualquier interes economico, aunque el estado siga siendo
+     INFORMATIVO. Nunca lleva cifras ni terminos del acuerdo. */
+  divulgacionComercial?: string;
+
   /* --- Trazabilidad --- */
   /** AAAA-MM-DD. Cuando se comprobo por ultima vez lo de arriba. */
   fechaUltimaVerificacion?: string;
   /** De donde salio cada dato que puede cambiar. */
   fuentes?: string[];
   estadoPublicacion: EstadoPublicacion;
+
+  /* --- Ficha propia --- */
+  /* Ruta de la ficha completa dentro de la guia. Solo si existe la
+     pagina: la tarjeta pinta "Ver ficha" unicamente cuando esto esta
+     puesto, asi que no puede enlazar a un 404. Las fichas se generan
+     solas desde esta lista: src/pages/guia-zipaquira/restaurantes-y-cafes/[slug].astro */
+  rutaFicha?: string;
 }
 
 /* ------------------------------------------------------------
    LA LISTA
 
-   Vacia. Ver el encabezado de este archivo.
+   Estuvo vacia hasta el 19 de septiembre de 2026, y sigue el mismo
+   criterio: un lugar entra solo con lo que se puede sostener.
+
+   LA TRIADA — INFORMATIVO, Y SOLO CON TRES DATOS
+   Nombre, categoria y ciudad. Aparece como "Restaurante La Triada" en
+   el listado de turismo del Gobierno de Cundinamarca (Detour). Ni la
+   direccion, ni los horarios, ni la carta, ni los precios, ni la
+   capacidad, ni los servicios para familias o grupos estan
+   confirmados POR EL LOCAL: cuando los confirme, se anaden aqui y
+   la ficha los pinta sola. Ver docs/red-atheron-zipaquira.md.
+
+   ESTADO ALIADO, por decision de direccion del 19 de septiembre de
+   2026: existe una relacion comercial confirmada con el propietario.
+   La alianza se declara; las condiciones NO. Ninguna comision, ningun
+   porcentaje y ningun termino del acuerdo aparece en el sitio ni en
+   este repositorio, y no se pueden deducir de nada publicado.
+
+   NO es RECOMENDADO. Nadie de Atheron ha estado todavia, asi que no
+   hay motivoRecomendacion y la insignia de recomendacion no se pinta.
+   Ser aliado no convierte un sitio en recomendado: esa es la regla
+   que sostiene la guia entera.
+
+   SIN BENEFICIO. No hay ninguno acordado que publicar, asi que el
+   objeto beneficio no existe y su bloque no se pinta.
+
+   TEXTO AUTORIZADO, literal y sin una palabra de mas:
+   "Establecimiento aliado de la Red Atheron Zipaquira."
    ------------------------------------------------------------ */
-export const experienciasLocales: ExperienciaLocal[] = [];
+export const experienciasLocales: ExperienciaLocal[] = [
+  {
+    slug: 'la-triada',
+    nombre: 'La Triada',
+    categoria: 'Restaurante',
+    ciudad: 'Zipaquirá',
+    descripcion:
+      'Restaurante en Zipaquirá. Esta ficha está en construcción: publicaremos la carta, ' +
+      'los horarios y los servicios para familias y grupos cuando el local los confirme.',
+    estadoComercial: 'ALIADO',
+    divulgacionComercial: 'Establecimiento aliado de la Red Atheron Zipaquirá.',
+    fechaUltimaVerificacion: '2026-09-19',
+    fuentes: ['Listado «Restaurante La Triada» en Detour Cundinamarca (Gobierno de Cundinamarca)'],
+    estadoPublicacion: 'PUBLICADO',
+    rutaFicha: '/guia-zipaquira/restaurantes-y-cafes/la-triada',
+  },
+];
 
 /* ------------------------------------------------------------
    CONSULTAS

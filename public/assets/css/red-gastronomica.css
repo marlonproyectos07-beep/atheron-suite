@@ -1,0 +1,166 @@
+/* ============================================================
+   RED GASTRONOMICA Y GRUPOS — estilos propios
+
+   Se incrusta SOLO en las paginas que lo piden (hojasExtra en
+   Base.astro): hub de restaurantes, fichas de lugares, Gallina al
+   Vapor y las paginas con el formulario de grupo. No pesa en la
+   portada.
+
+   Reutiliza las variables de base.css y las clases .formulario y
+   .campo de componentes.css. Aqui solo lo que no existia.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   BLOQUES QUE DEPENDEN DE LA JORNADA VIGENTE
+
+   Los botones y las secciones de Gallina al Vapor se pintan todos y
+   se ocultan con el atributo hidden (ver SelectorJornada.astro). El
+   navegador le da display:none por defecto, pero .boton declara
+   display:inline-flex y gana por especificidad: sin esta regla, un
+   boton oculto se seguiria viendo. Es la clase de fallo que no da
+   ningun error y solo se ve en pantalla.
+   ------------------------------------------------------------ */
+[hidden] { display: none !important; }
+
+/* ------------------------------------------------------------
+   DATOS EN LISTA (precios, direccion, horarios)
+   ------------------------------------------------------------ */
+.red__datos {
+  display: grid;
+  gap: .5rem;
+  padding: 0;
+  margin: var(--esp-2) 0 var(--esp-3);
+  list-style: none;
+  font-size: .98rem;
+}
+
+.red__datos li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem var(--esp-2);
+  justify-content: space-between;
+  padding-bottom: .5rem;
+  border-bottom: 1px dashed var(--borde);
+  color: var(--texto-suave);
+}
+
+.red__datos li:last-child { border-bottom: 0; }
+.red__datos strong { color: var(--texto); font-weight: 600; }
+
+/* ------------------------------------------------------------
+   LOS TRES ESTADOS DEL DIRECTORIO
+   ------------------------------------------------------------ */
+.red__estados {
+  display: grid;
+  gap: .75rem;
+  padding: 0;
+  margin: var(--esp-2) 0;
+  list-style: none;
+}
+
+.red__estados li {
+  padding: .9rem 1.1rem;
+  background: var(--fondo-alterno);
+  border-left: 3px solid var(--acento);
+  border-radius: 0 var(--radio-sm) var(--radio-sm) 0;
+}
+
+.red__regla {
+  font-weight: 600;
+  color: var(--texto);
+}
+
+/* ------------------------------------------------------------
+   JORNADA (bloque de Gallina en el hub)
+   ------------------------------------------------------------ */
+.red__jornada {
+  display: grid;
+  gap: var(--esp-3);
+  align-items: center;
+}
+
+@media (min-width: 760px) {
+  .red__jornada { grid-template-columns: 1fr auto; }
+}
+
+/* ------------------------------------------------------------
+   OPINION DE UNA VISITA DE ATHERON
+   ------------------------------------------------------------ */
+.red__opinion {
+  margin: var(--esp-2) 0;
+  padding: var(--esp-2) var(--esp-3);
+  border-left: 3px solid var(--acento);
+  background: var(--fondo-alterno);
+}
+
+.red__opinion footer {
+  margin-top: .5rem;
+  font-size: .85rem;
+  color: var(--texto-suave);
+}
+
+/* ------------------------------------------------------------
+   FORMULARIO DE GRUPO
+   ------------------------------------------------------------ */
+.grupo-lead {
+  padding: var(--esp-4) var(--esp-3);
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  box-shadow: var(--sombra-sm);
+}
+
+.grupo-lead__titulo { margin-bottom: .5rem; }
+.grupo-lead__entrada { color: var(--texto-suave); margin-bottom: .5rem; }
+.grupo-lead__tarifas { margin-bottom: var(--esp-3); }
+
+.grupo-lead__fila { display: grid; gap: var(--esp-2); }
+@media (min-width: 640px) {
+  .grupo-lead__fila { grid-template-columns: 1fr 1fr; }
+}
+
+.grupo-lead__servicios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem var(--esp-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.grupo-lead__servicios legend {
+  padding: 0;
+  margin-bottom: .35rem;
+  font-size: .88rem;
+  font-weight: 600;
+}
+
+/* Objetivo tactil comodo en movil (minimo 44 px de alto). */
+.grupo-lead__opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.grupo-lead__opcion input { width: 1.15rem; height: 1.15rem; accent-color: var(--color-verde); }
+
+.grupo-lead__aviso,
+.grupo-lead__privacidad {
+  font-size: .85rem;
+  color: var(--texto-suave);
+}
+
+.grupo-lead__estado {
+  min-height: 1.4em;
+  font-weight: 600;
+  color: var(--color-verde);
+}
+
+.grupo-lead input:focus-visible,
+.grupo-lead textarea:focus-visible,
+.grupo-lead .boton:focus-visible {
+  outline: 3px solid var(--acento);
+  outline-offset: 2px;
+}

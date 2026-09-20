@@ -376,6 +376,26 @@ a.descubrir__item:focus-visible {
   background: var(--color-verde);
 }
 
+/* Las insignias son parrafos, y ".guia__cuerpo p" pinta gris-500 con
+   mas especificidad (0,1,1) que las dos reglas de arriba (0,1,0): la
+   insignia de aliado salia en gris sobre verde, 1,29:1, ilegible.
+   Nunca se habia visto porque hasta hoy ningun lugar era aliado. */
+.guia__cuerpo .lugar__insignia,
+.lugar .lugar__insignia { color: var(--color-noche); }
+
+.guia__cuerpo .lugar__insignia--aliado,
+.lugar .lugar__insignia--aliado { color: var(--color-blanco); }
+
+/* align-self solo hace algo dentro de un contenedor flex, y eso es la
+   tarjeta. En la ficha la insignia vive en .guia__cuerpo, que es flujo
+   normal: sin esto se estira a todo el ancho y queda una franja verde
+   con dos palabras en la esquina. */
+.guia__cuerpo .lugar__insignia {
+  display: inline-block;
+  width: auto;
+  margin-bottom: var(--esp-2);
+}
+
 .lugar__texto { font-size: .93rem; color: var(--texto-suave); }
 
 .lugar__motivo {
@@ -451,6 +471,35 @@ a.descubrir__item:focus-visible {
 .lugar__enlaces a { color: var(--acento-texto); font-weight: 600; }
 
 .lugar__verificado { font-size: .78rem; color: var(--texto-suave); }
+
+/* ------------------------------------------------------------
+   DIVULGACION DEL VINCULO COMERCIAL
+
+   Tiene que LEERSE, no esconderse en letra gris de pie de pagina:
+   una declaracion de interes que nadie ve no declara nada. Pero
+   tampoco es un distintivo ni un reclamo, asi que no compite con el
+   nombre del lugar. Por eso: mismo cuerpo que el texto de apoyo, con
+   una barra lateral que la separa del resto.
+   ------------------------------------------------------------ */
+.lugar__divulgacion {
+  margin-top: var(--esp-2);
+  padding: .6rem .85rem;
+  border-left: 3px solid var(--borde);
+  /* Tinte propio y no --fondo-alterno: la ficha la pinta sobre un hero
+     que ya es crema, y alli el bloque desapareceria. */
+  background: rgba(0, 0, 0, .035);
+  border-radius: 0 6px 6px 0;
+  font-size: .85rem;
+  line-height: 1.5;
+  color: var(--texto);
+}
+
+/* .guia__cuerpo p pinta gris-500, y sobre el tinte de este bloque se
+   queda en 4,47:1, por debajo de AA. Gana por especificidad (0,1,1)
+   a la regla de arriba, asi que hace falta esta. Una declaracion de
+   interes que no se lee bien no declara nada. */
+.guia__cuerpo .lugar__divulgacion,
+.lugar .lugar__divulgacion { color: var(--texto); }
 
 @media (max-width: 48rem) {
   .hub__hero-composicion, .hub__evento-interior { grid-template-columns: 1fr; }

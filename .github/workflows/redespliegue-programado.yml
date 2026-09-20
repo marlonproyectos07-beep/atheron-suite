@@ -1,0 +1,144 @@
+# ============================================================
+# REDESPLIEGUE PROGRAMADO — el ultimo caso de la jornada vencida
+#
+# QUE RESUELVE
+#
+# /guia-zipaquira/gallina-al-vapor ya no puede anunciar una jornada
+# vencida a quien tenga JavaScript: el navegador vuelve a elegir el
+# bloque con su reloj (src/components/SelectorJornada.astro). A quien
+# lo tenga desactivado, y a un rastreador que no ejecute scripts, le
+# llega el HTML tal como quedo el ultimo despliegue.
+#
+# En un sitio estatico eso solo se cierra volviendo a construir. Este
+# flujo lo hace, una vez al dia, y SOLO si de verdad hace falta.
+#
+# ============================================================
+# ESTA APAGADO. HACEN FALTA TRES COSAS PARA QUE PUBLIQUE NADA
+# ============================================================
+#
+#   1. Estar en la rama por defecto. GitHub solo ejecuta "schedule"
+#      en la rama por defecto del repositorio. Mientras esto viva en
+#      una rama de trabajo, no se ejecuta nunca, ni una vez.
+#   2. La variable REDESPLIEGUE_ACTIVO con el valor "si" (vale
+#      tambien SI, si, true o 1)
+#      (Settings > Secrets and variables > Actions > Variables).
+#   3. El secreto VERCEL_DEPLOY_HOOK con la direccion del Deploy Hook
+#      de Vercel (Settings > Secrets and variables > Actions >
+#      Secrets).
+#
+# Si falta cualquiera de las tres, el flujo se ejecuta, deja dicho en
+# el registro que esta apagado y termina sin llamar a nadie. Se puede
+# probar entero sin desplegar: es lo que hace "workflow_dispatch" con
+# "simular" en true, que llega hasta la decision y no dispara el hook.
+#
+# POR QUE A LAS 00:07 DE COLOMBIA
+#
+# Una jornada deja de anunciarse al terminar su dia (23:59:59, hora de
+# Colombia). Siete minutos despues ya esta vencida, asi que la ventana
+# en la que un visitante sin JavaScript podria ver la fecha pasada es
+# de minutos, no de dias. GitHub retrasa los cron en las horas en
+# punto; por eso el minuto 7 y no el 0.
+#
+# POR QUE NO DESPLIEGA TODOS LOS DIAS
+#
+# scripts/necesita-redespliegue.mjs compara lo que el sitio publicado
+# esta anunciando con lo que corresponde hoy. Si coinciden, no se hace
+# nada. Un despliegue diario porque si ensucia el historial de Vercel y
+# esconde los despliegues que si importan.
+# ============================================================
+
+name: Redespliegue programado
+
+on:
+  schedule:
+    # 05:07 UTC = 00:07 en Colombia (UTC-5, sin horario de verano).
+    - cron: '7 5 * * *'
+  workflow_dispatch:
+    inputs:
+      simular:
+        description: 'Solo decidir, sin llamar al Deploy Hook'
+        type: boolean
+        default: true
+
+# Solo leer el repositorio. Este flujo no escribe nada en GitHub.
+permissions:
+  contents: read
+
+# Dos ejecuciones a la vez no tendrian sentido, y se pisarian.
+concurrency:
+  group: redespliegue-programado
+  cancel-in-progress: false
+
+jobs:
+  redesplegar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Cerrojo 2. Sin la variable puesta, no se sigue. Se aceptan
+      # varias formas de decir que si -mayusculas, tilde, true, 1-
+      # porque un cerrojo que no abre por una tilde no es seguridad,
+      # es una llamada de telefono.
+      - name: Comprobar que el redespliegue esta activado
+        id: cerrojo
+        env:
+          ACTIVO: ${{ vars.REDESPLIEGUE_ACTIVO }}
+        run: |
+          normalizado=$(printf '%s' "${ACTIVO:-}" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+          case "$normalizado" in
+            si|sí|true|1) echo "activo=true" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "::notice::Redespliegue programado APAGADO (REDESPLIEGUE_ACTIVO no esta en «si»). No se hace nada."
+              echo "activo=false" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
+      # Compara el sitio publicado con el calendario del repositorio.
+      # No despliega: solo decide. Nunca falla.
+      - name: Decidir si hace falta
+        id: estado
+        if: steps.cerrojo.outputs.activo == 'true'
+        env:
+          URL_PUBLICADA: ${{ vars.URL_PUBLICADA || 'https://hotelesatheron.com' }}
+        run: node scripts/necesita-redespliegue.mjs
+
+      # Cerrojo 3. Sin secreto, no hay a quien llamar.
+      - name: Disparar el Deploy Hook de Vercel
+        if: steps.estado.outputs.necesita == 'true' && inputs.simular != true
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+          MOTIVO: ${{ steps.estado.outputs.motivo }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::warning::Hace falta redesplegar ($MOTIVO) pero no hay VERCEL_DEPLOY_HOOK. No se dispara nada."
+            exit 0
+          fi
+          echo "Motivo: $MOTIVO"
+          codigo=$(curl -sS -X POST "$HOOK" -o /dev/null -w '%{http_code}')
+          echo "Vercel respondio $codigo"
+          case "$codigo" in
+            2*) echo "::notice::Despliegue solicitado a Vercel." ;;
+            *)  echo "::error::Vercel respondio $codigo; el despliegue NO se ha encolado."; exit 1 ;;
+          esac
+
+      - name: Resumen
+        if: always()
+        env:
+          ACTIVO: ${{ steps.cerrojo.outputs.activo }}
+          NECESITA: ${{ steps.estado.outputs.necesita }}
+          MOTIVO: ${{ steps.estado.outputs.motivo }}
+        run: |
+          {
+            echo "### Redespliegue programado"
+            echo ""
+            echo "- Activado: \`${ACTIVO:-false}\`"
+            echo "- Hace falta: \`${NECESITA:-no evaluado}\`"
+            echo "- Motivo: ${MOTIVO:-sin evaluar}"
+            echo "- Simulacion: \`${{ inputs.simular }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

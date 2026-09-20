@@ -1,0 +1,306 @@
+---
+/* ============================================================
+   GALLINA AL VAPOR — pieza permanente de la guia gastronomica
+
+   Jornada gastronomica especial. NO un restaurante de atencion diaria.
+
+   LA URL NO CAMBIA NUNCA. Lo que cambia es el calendario de
+   src/data/gallina-al-vapor.ts. Para anunciar la proxima jornada se
+   anade un objeto a JORNADAS; se pueden dejar varias cargadas por
+   adelantado y la pagina pasa sola de una a otra.
+
+   LA FECHA NO DEPENDE DEL DESPLIEGUE
+   La pagina pinta un bloque por cada jornada pendiente mas el de
+   «fecha por anunciar», y deja visible el que toca en el momento del
+   build. El navegador vuelve a elegir con el reloj del visitante
+   (src/components/SelectorJornada.astro). Asi una construccion vieja
+   no puede seguir anunciando una jornada vencida.
+
+   TITULO, DESCRIPCION Y OPEN GRAPH SON PERMANENTES
+   Sin fecha y sin precio, a proposito. Son lo que Google guarda en
+   cache y lo que se ve al compartir el enlace: si llevaran la fecha,
+   una version antigua anunciaria una jornada que ya paso. La fecha
+   vive en el cuerpo, donde caduca a la vista y sin enganar.
+
+   LA GUIA ENLAZA, NO REEMPLAZA
+   La landing oficial de cada jornada sigue siendo suya, y va dentro
+   de la jornada: la de septiembre no puede quedar enlazada cuando la
+   vigente sea otra. El WhatsApp de Gallina es OTRO numero: por eso el
+   boton no usa data-whatsapp (main.js lo redirigiria al numero de
+   Atheron). Ver src/data/eventos-red.ts.
+
+   LO QUE NO SE AFIRMA
+   Porciones por persona, hora limite de pedidos, zonas de entrega,
+   direccion del punto de venta, medios de pago, cupos. Nada de eso
+   esta confirmado. El domicilio se dice como lo dijo la direccion:
+   «se consulta por WhatsApp».
+
+   SCHEMA
+   WebPage + BreadcrumbList. Ni Event (exige un lugar y una direccion
+   que no tenemos), ni Restaurant, ni Offer con disponibilidad.
+   ============================================================ */
+
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import SelectorJornada from '../../components/SelectorJornada.astro';
+import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
+import { migaDePan, url, ORGANIZACION } from '../../data/seo';
+import { CIUDAD, WA_GUIA } from '../../data/guia-zipaquira';
+import { fechaLarga } from '../../data/fechas';
+import { HUB_RESTAURANTES } from '../../data/fichas-lugares';
+import {
+  atributosRed,
+  EVENTO_GALLINA,
+  EVENTO_GALLINA_WHATSAPP,
+  EVENTO_HOSPEDAJE,
+} from '../../data/eventos-red';
+import {
+  jornadasPendientes,
+  jornadaVigente,
+  RUTA_GALLINA,
+  SIN_JORNADA,
+  NUMERO_GALLINA_VISIBLE,
+  mensajePedido,
+  MENSAJE_PROXIMA,
+  enlaceGallina,
+} from '../../data/gallina-al-vapor';
+
+const RUTA = RUTA_GALLINA;
+
+/* Todo lo que hay por delante se pinta; el selector deja visible uno.
+   La del build se marca visible para que, sin JavaScript, la pagina
+   se comporte igual que antes. */
+const pendientes = jornadasPendientes();
+const vigente = jornadaVigente();
+const activo = vigente ? vigente.fechaMaquina : SIN_JORNADA;
+
+/* Permanente y sin fecha: ver la nota de arriba. 141 caracteres,
+   por debajo de lo que Google recorta (~155). */
+const descripcion =
+  'Gallina al Vapor en Zipaquirá: jornada gastronómica de preparación lenta, ' +
+  'en fechas anunciadas. Consulta aquí la próxima y pide por WhatsApp.';
+
+const ficha = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${url(RUTA)}#pagina`,
+      url: url(RUTA),
+      name: 'Gallina al Vapor en Zipaquirá · jornada gastronómica',
+      description: descripcion,
+      inLanguage: 'es-CO',
+      isPartOf: { '@id': `${url(CIUDAD.ruta)}#pagina` },
+      breadcrumb: { '@id': `${url(RUTA)}#miga` },
+    },
+    ORGANIZACION,
+    migaDePan(
+      [
+        { nombre: 'Inicio', ruta: '/' },
+        { nombre: 'Guía de Zipaquirá', ruta: CIUDAD.ruta },
+        { nombre: 'Gallina al Vapor' },
+      ],
+      `${url(RUTA)}#miga`,
+    ),
+  ],
+};
+---
+
+<Base
+  titulo="Gallina al Vapor en Zipaquirá: jornada gastronómica | Atheron"
+  descripcion={descripcion}
+  ruta={RUTA}
+  ogTitulo="Gallina al Vapor · jornada gastronómica en Zipaquirá"
+  ogDescripcion="Una preparación de varias horas que se ofrece en jornadas anunciadas. Consulta la próxima por WhatsApp."
+  jsonLd={ficha}
+  hojasExtra={['guia', 'guia-hub', 'red-gastronomica']}
+>
+
+  <Cabecera enlaces={menuHospedajes} cta={{ ...ctaDisponibilidad, origen: 'guia_gallina' }} actual={CIUDAD.ruta} />
+
+  <main id="contenido">
+
+    <section class="hero hero--interior guia__hero">
+      <div class="contenedor hero__contenido">
+        <nav class="migas" aria-label="Ruta de navegación">
+          <ol>
+            <li><a href="/">Inicio</a></li>
+            <li><a href={CIUDAD.ruta}>Guía de Zipaquirá</a></li>
+            <li aria-current="page">Gallina al Vapor</li>
+          </ol>
+        </nav>
+        <p class="hero__etiqueta">Jornada gastronómica · Zipaquirá</p>
+        <h1 class="hero__titulo">Gallina al Vapor</h1>
+        <p class="hero__texto">
+          Una jornada gastronómica especial, no un restaurante de atención diaria. Se prepara
+          durante varias horas y se ofrece cuando se anuncia.
+        </p>
+
+        {/* Un juego de botones por jornada pendiente, mas el de «sin
+            jornada». El selector deja visible uno solo. */}
+        <div class="grupo-botones">
+          {pendientes.map((j) => (
+            <a
+              class="boton boton--whatsapp boton--grande"
+              data-jornada-id={j.fechaMaquina}
+              hidden={j.fechaMaquina !== activo}
+              href={enlaceGallina(mensajePedido(j))}
+              target="_blank"
+              rel="noopener noreferrer"
+              {...atributosRed(EVENTO_GALLINA_WHATSAPP, 'gallina_hero', 'gallina_whatsapp')}
+            >Pedir por WhatsApp</a>
+          ))}
+          <a
+            class="boton boton--whatsapp boton--grande"
+            data-jornada-id={SIN_JORNADA}
+            hidden={activo !== SIN_JORNADA}
+            href={enlaceGallina(MENSAJE_PROXIMA)}
+            target="_blank"
+            rel="noopener noreferrer"
+            {...atributosRed(EVENTO_GALLINA_WHATSAPP, 'gallina_hero', 'gallina_whatsapp')}
+          >Preguntar por la próxima jornada</a>
+
+          {pendientes.filter((j) => j.landing).map((j) => (
+            <a
+              class="boton boton--claro boton--grande"
+              data-jornada-id={j.fechaMaquina}
+              hidden={j.fechaMaquina !== activo}
+              href={j.landing}
+              target="_blank"
+              rel="noopener noreferrer"
+              {...atributosRed(EVENTO_GALLINA, 'gallina_hero', 'landing_oficial')}
+            >Ver la página de la jornada</a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         LA JORNADA — un bloque por fecha pendiente, y el de reserva
+         ============================================================ */}
+    {pendientes.map((j) => (
+      <section
+        class="seccion seccion--estrecha"
+        id={`jornada-${j.fechaMaquina}`}
+        data-jornada-id={j.fechaMaquina}
+        hidden={j.fechaMaquina !== activo}
+      >
+        <div class="contenedor guia__cuerpo">
+          <span class="etiqueta">Próxima jornada</span>
+          <h2><time datetime={j.fechaMaquina}>{j.fechaLarga}</time></h2>
+
+          <ul class="red__datos">
+            {j.precios.map((p) => <li><span>{p.producto}</span> <strong>{p.valor}</strong></li>)}
+            <li><span>Preparación</span> <strong>{j.preparacion}</strong></li>
+          </ul>
+
+          <h3>Qué incluye</h3>
+          <ul class="lista-check">
+            {j.incluye.map((i) => <li>{i}</li>)}
+          </ul>
+
+          <p>
+            El domicilio se consulta por WhatsApp: <strong>{NUMERO_GALLINA_VISIBLE}</strong>.
+          </p>
+
+          <p class="guia__fuente">Datos de la jornada comprobados el {fechaLarga(j.verificadoEl)}.</p>
+        </div>
+      </section>
+    ))}
+
+    <section
+      class="seccion seccion--estrecha"
+      id="jornada"
+      data-jornada-id={SIN_JORNADA}
+      hidden={activo !== SIN_JORNADA}
+    >
+      <div class="contenedor guia__cuerpo">
+        <span class="etiqueta">Próxima jornada</span>
+        <h2>Fecha por anunciar</h2>
+        <p>
+          La próxima jornada todavía no tiene fecha publicada aquí. Escríbenos por WhatsApp y
+          te contamos cuándo es.
+        </p>
+      </div>
+    </section>
+
+    {/* ============================================================
+         PLAN FAMILIAR — sin porciones, sin zonas, sin cupos
+         ============================================================ */}
+    {pendientes.map((j) => (
+      <section
+        class="seccion seccion--alterna"
+        id={`plan-familiar-${j.fechaMaquina}`}
+        data-jornada-id={j.fechaMaquina}
+        hidden={j.fechaMaquina !== activo}
+      >
+        <div class="contenedor guia__cuerpo">
+          <h2>{j.tituloFamiliar}</h2>
+          <p>
+            Una gallina completa o media, con papa, yuca, plátano y ají tradicional, para llevar
+            a la mesa. Si necesitas domicilio, pregúntalo por WhatsApp antes de decidir.
+          </p>
+          <div class="grupo-botones">
+            <a
+              class="boton boton--whatsapp boton--grande"
+              href={enlaceGallina(mensajePedido(j))}
+              target="_blank"
+              rel="noopener noreferrer"
+              {...atributosRed(EVENTO_GALLINA_WHATSAPP, 'gallina_plan_familiar', 'gallina_whatsapp')}
+            >Consultar por WhatsApp</a>
+          </div>
+        </div>
+      </section>
+    ))}
+
+    {/* El selector va DESPUES del ultimo bloque con data-jornada-id. */}
+    <SelectorJornada />
+
+    {/* ============================================================
+         QUE ES — permanente, no depende de ninguna fecha. Es el
+         contenido que sostiene la indexacion de esta direccion.
+         ============================================================ */}
+    <section class="seccion seccion--estrecha" id="que-es">
+      <div class="contenedor guia__cuerpo">
+        <h2>Qué es la gallina al vapor</h2>
+        <p>
+          Es una preparación lenta: la gallina se cocina al vapor durante varias horas, y por eso
+          no se sirve a diario, sino en jornadas que se anuncian con antelación. Se acompaña con
+          papa, yuca, plátano y ají tradicional.
+        </p>
+        <p>
+          Esta página es permanente: aquí anunciamos cada nueva jornada, con su fecha y sus
+          precios, en cuanto se confirma. Si llegas y no ves fecha, es que la próxima todavía no
+          está confirmada; pregúntala por WhatsApp al {NUMERO_GALLINA_VISIBLE}.
+        </p>
+        <p class="guia__fuente">
+          Gallina al Vapor tiene su propio WhatsApp, distinto del de Atheron. La Guía Atheron
+          enlaza a la jornada, no la organiza ni la vende.
+        </p>
+      </div>
+    </section>
+
+    {/* ============================================================
+         DENTRO DE LA GUIA — enlaces con sentido, no una nube
+         ============================================================ */}
+    <section class="seccion seccion--alterna" id="mas">
+      <div class="contenedor guia__cuerpo">
+        <h2>Si vienes a Zipaquirá</h2>
+        <ul class="lista-check">
+          <li><a href={HUB_RESTAURANTES.ruta}>Restaurantes y cafés de Zipaquirá</a></li>
+          <li><a href="/zipaquira/catedral-de-sal">Catedral de Sal: cómo planear tu visita</a></li>
+          <li><a href={CIUDAD.ruta}>Guía de Zipaquirá</a></li>
+          <li>
+            <a href="/hospedajes" {...atributosRed(EVENTO_HOSPEDAJE, 'gallina', 'hospedajes')}>Dónde hospedarse en Zipaquirá</a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <Pie />
+  <BotonFlotante mensaje={WA_GUIA} origen="guia_gallina_flotante" texto="Consultar hospedaje" />
+</Base>

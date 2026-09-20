@@ -91,6 +91,13 @@
 .guia__cuerpo h2 { margin-bottom: var(--esp-3); }
 .guia__cuerpo .lista-check a { color: var(--acento-texto); font-weight: 600; }
 
+/* .guia__fuente nacio para el hero oscuro, donde sus enlaces van en sal
+   claro. Dentro del cuerpo el fondo es blanco y ese mismo color se
+   queda en 1,9:1: el enlace se ve, pero no lo lee quien peor ve. El
+   texto del parrafo ya lo corrige ".guia__cuerpo p"; al enlace le
+   faltaba su regla. */
+.guia__cuerpo .guia__fuente a { color: var(--acento-texto); font-weight: 600; }
+
 /* ------------------------------------------------------------
    PASAPORTES
    ------------------------------------------------------------ */

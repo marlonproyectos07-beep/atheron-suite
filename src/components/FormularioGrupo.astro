@@ -1,0 +1,182 @@
+---
+/* ============================================================
+   FORMULARIO DE GRUPO — "¿Vienes con un grupo a Zipaquirá?"
+
+   Reune los datos de un grupo y abre WhatsApp con la solicitud ya
+   escrita. No hay servidor: ver src/data/leads-grupo.ts, donde esta
+   explicado por que, y como se construye el codigo ATH-TRI-xxxxx.
+
+   LO QUE ESTE COMPONENTE NUNCA DICE
+   Que hay disponibilidad, ni una tarifa, ni un descuento. El copy sale
+   de COPY_GRUPO y es el mismo en todas las paginas.
+
+   SIN JAVASCRIPT
+   El formulario no puede enviar nada sin script, y decir lo contrario
+   seria repetir el error del formulario apagado. El <noscript> ofrece
+   el enlace directo a WhatsApp con el mensaje base.
+
+   PROPS
+   - origen: de que pagina sale ("la-triada", "guia-hub",
+     "guia-restaurantes"). Decide el aliado del codigo y el origen del
+     evento.
+   - id: unico por pagina, para asociar etiquetas y campos.
+   ============================================================ */
+
+import { COPY_GRUPO } from '../data/leads-grupo';
+import { ENLACE_GRUPO } from '../data/whatsapp';
+
+interface Props {
+  origen: string;
+  id: string;
+  /** Sobrescribe el titulo. Por defecto, el copy oficial. */
+  titulo?: string;
+  /** Nivel de encabezado: h2 en la mayoria de paginas. */
+  nivel?: 'h2' | 'h3';
+}
+
+const { origen, id, titulo = COPY_GRUPO.titulo, nivel = 'h2' } = Astro.props;
+const Encabezado = nivel;
+---
+
+<section class="grupo-lead" aria-labelledby={`${id}-titulo`}>
+  <Encabezado id={`${id}-titulo`} class="grupo-lead__titulo">{titulo}</Encabezado>
+  <p class="grupo-lead__entrada">{COPY_GRUPO.entrada}</p>
+  <p class="grupo-lead__tarifas"><strong>{COPY_GRUPO.tarifas}</strong></p>
+
+  <form class="formulario grupo-lead__form" data-form-grupo data-origen={origen} novalidate>
+    <div class="grupo-lead__fila">
+      <div class="campo">
+        <label for={`${id}-nombre`}>Nombre</label>
+        <input id={`${id}-nombre`} name="nombre" type="text" autocomplete="name" required maxlength="80" />
+      </div>
+      <div class="campo">
+        <label for={`${id}-whatsapp`}>Teléfono o WhatsApp</label>
+        <input id={`${id}-whatsapp`} name="whatsapp" type="tel" inputmode="tel" autocomplete="tel" required minlength="7" maxlength="20" />
+      </div>
+    </div>
+
+    <div class="grupo-lead__fila">
+      <div class="campo">
+        <label for={`${id}-fecha`}>Fecha aproximada</label>
+        <input id={`${id}-fecha`} name="fecha" type="date" data-fecha />
+        <span class="campo__ayuda">Puede ser una fecha tentativa.</span>
+      </div>
+      <div class="campo">
+        <label for={`${id}-personas`}>Número aproximado de personas</label>
+        <input id={`${id}-personas`} name="personas" type="number" inputmode="numeric" min="2" max="500" required />
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for={`${id}-ciudad`}>Ciudad de origen</label>
+      <input id={`${id}-ciudad`} name="ciudad" type="text" autocomplete="address-level2" required maxlength="60" />
+    </div>
+
+    <fieldset class="grupo-lead__servicios">
+      <legend>¿Qué te interesa incluir?</legend>
+      <label class="grupo-lead__opcion"><input type="checkbox" name="servicios" value="almuerzo" /> Almuerzo</label>
+      <label class="grupo-lead__opcion"><input type="checkbox" name="servicios" value="catedral" /> Catedral de Sal</label>
+      <label class="grupo-lead__opcion"><input type="checkbox" name="servicios" value="hospedaje" /> Hospedaje</label>
+    </fieldset>
+
+    <div class="campo">
+      <label for={`${id}-observaciones`}>Observaciones</label>
+      <textarea id={`${id}-observaciones`} name="observaciones" maxlength="500" rows="3"></textarea>
+    </div>
+
+    <p class="grupo-lead__aviso">{COPY_GRUPO.aviso}</p>
+
+    <button class="boton boton--whatsapp boton--grande" type="submit">Enviar solicitud por WhatsApp</button>
+
+    <p class="grupo-lead__estado" role="status" aria-live="polite" data-estado></p>
+    <p class="grupo-lead__privacidad">{COPY_GRUPO.privacidad}</p>
+  </form>
+
+  <noscript>
+    <p class="grupo-lead__aviso">
+      Este formulario necesita JavaScript.
+      <a href={ENLACE_GRUPO} target="_blank" rel="noopener noreferrer">Escríbenos directamente por WhatsApp</a>.
+    </p>
+  </noscript>
+</section>
+
+<script>
+  import {
+    generarCodigo,
+    enlaceSolicitud,
+    rangoPersonas,
+    type SolicitudGrupo,
+  } from '../data/leads-grupo';
+  import { EVENTO_SOLICITUD_GRUPO } from '../data/eventos-red';
+
+  const hoy = new Date();
+  const iso = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+
+  document.querySelectorAll<HTMLFormElement>('form[data-form-grupo]').forEach((form) => {
+    /* La fecha no puede ser pasada. Se pone aqui y no al construir: la
+       de construir seria la del despliegue, no la del visitante. */
+    const fecha = form.querySelector<HTMLInputElement>('[data-fecha]');
+    if (fecha) fecha.min = iso;
+
+    const estado = form.querySelector<HTMLElement>('[data-estado]');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const datos = new FormData(form);
+      const texto = (k: string) => String(datos.get(k) ?? '').trim();
+      const origen = form.dataset.origen ?? 'guia';
+
+      const solicitud: SolicitudGrupo = {
+        codigo: generarCodigo(origen),
+        origen,
+        nombre: texto('nombre'),
+        whatsapp: texto('whatsapp'),
+        fecha: texto('fecha'),
+        personas: texto('personas'),
+        ciudad: texto('ciudad'),
+        servicios: datos.getAll('servicios').map(String),
+        observaciones: texto('observaciones'),
+      };
+
+      /* Analitica SIN datos personales: ni nombre, ni telefono, ni el
+         texto libre. Solo origen, referencia y tamaño en rango. */
+      try {
+        const gtag = (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag;
+        if (typeof gtag === 'function') {
+          gtag('event', EVENTO_SOLICITUD_GRUPO, {
+            event_category: 'conversion',
+            origin: origen,
+            referral_code: solicitud.codigo,
+            group_size_range: rangoPersonas(Number(solicitud.personas)),
+            wants_lunch: solicitud.servicios.includes('almuerzo') ? 1 : 0,
+            wants_cathedral: solicitud.servicios.includes('catedral') ? 1 : 0,
+            wants_lodging: solicitud.servicios.includes('hospedaje') ? 1 : 0,
+            page_path: location.pathname,
+            transport_type: 'beacon',
+          });
+        }
+      } catch {
+        /* La medicion nunca debe impedir enviar la solicitud. */
+      }
+
+      const enlace = enlaceSolicitud(solicitud);
+      /* Sin "noopener" en la llamada: con esa opcion window.open devuelve
+         siempre null y no se podria distinguir un bloqueo de ventanas de
+         un exito. Se corta el acceso a mano justo despues. */
+      const ventana = window.open(enlace, '_blank');
+      if (ventana) ventana.opener = null;
+      else window.location.href = enlace;
+
+      if (estado) {
+        estado.textContent =
+          `Abrimos WhatsApp con tu solicitud (referencia ${solicitud.codigo}). ` +
+          'Envía el mensaje para completarla: hasta entonces no la hemos recibido.';
+      }
+    });
+  });
+</script>

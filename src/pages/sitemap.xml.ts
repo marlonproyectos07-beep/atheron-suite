@@ -24,6 +24,9 @@ import {
   RUTA as RUTA_CASA_COLONIAL,
 } from '../data/casa-colonial-centro';
 import { articulosPublicados } from '../data/blog';
+import { experienciasDe } from '../data/experiencias-locales';
+import { extraDe, HUB_RESTAURANTES } from '../data/fichas-lugares';
+import { RUTA_GALLINA, MODIFICADO as GALLINA_MODIFICADO } from '../data/gallina-al-vapor';
 
 const DOMINIO = 'https://hotelesatheron.com';
 
@@ -115,7 +118,34 @@ export const GET: APIRoute = async () => {
     ? []
     : [{ ruta: RUTA_CASA_COLONIAL, prioridad: '0.8' }];
 
-  const entradas = [...paginasFijas, ...articulosDelSitemap, ...proyectos, ...fichas];
+  /* RED GASTRONOMICA (19 de septiembre de 2026).
+
+     Cada pagina entra SOLO si es indexable, y la constante que decide
+     eso es la misma que le pone o le quita el noindex a la pagina
+     (src/data/fichas-lugares.ts): no pueden desincronizarse. Hoy el
+     hub y la ficha de La Triada son noindex,follow y NO estan aqui;
+     pedirle a Google que visite una pagina a la que le decimos que no
+     la indexe es contradictorio.
+
+     Gallina al Vapor si entra: tiene datos propios y confirmados. Su
+     lastmod sale de MODIFICADO en src/data/gallina-al-vapor.ts, y no
+     de la fecha de la jornada ni de la del despliegue: la direccion es
+     permanente y solo cambia cuando cambia su contenido. */
+  const redGastronomica: Entrada[] = [
+    ...(HUB_RESTAURANTES.indexable
+      ? [{ ruta: HUB_RESTAURANTES.ruta, prioridad: '0.7', fecha: HUB_RESTAURANTES.modificado }]
+      : []),
+    { ruta: RUTA_GALLINA, prioridad: '0.7', fecha: GALLINA_MODIFICADO },
+    ...experienciasDe('Zipaquirá')
+      .filter((l) => l.rutaFicha && extraDe(l.slug).indexable)
+      .map<Entrada>((l) => ({
+        ruta: l.rutaFicha!,
+        prioridad: '0.6',
+        fecha: extraDe(l.slug).modificado,
+      })),
+  ];
+
+  const entradas = [...paginasFijas, ...articulosDelSitemap, ...proyectos, ...redGastronomica, ...fichas];
 
   const cuerpo = entradas
     .map(({ ruta, prioridad, fecha }) => `  <url>

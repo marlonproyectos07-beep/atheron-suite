@@ -1,0 +1,257 @@
+---
+/* ============================================================
+   HUB — RESTAURANTES Y CAFES DE ZIPAQUIRA
+
+   Un directorio EDITORIAL, no un listado publicitario.
+
+   POR QUE ESTA PAGINA NO EXISTIA
+   /guia-zipaquira/restaurantes-y-cafes devolvia 404 en produccion y
+   no estaba en ninguna rama del repositorio (comprobado el 19 de
+   septiembre de 2026). El hub de la guia solo tenia una tarjeta
+   apagada, "Dónde comer y cafés", y un ancla que no se pintaba con
+   la lista vacia. Esta pagina la sustituye como destino de esa
+   tarjeta.
+
+   QUE HAY AQUI Y QUE NO
+
+   Los lugares salen de src/data/experiencias-locales.ts, la misma
+   fuente que ya alimentaba el hub principal: aqui no se escribe ni un
+   nombre a mano. Hoy hay un lugar, con tres datos, porque es lo unico
+   que se sostiene. La pagina lo dice sin disfrazarlo: una guia que
+   crece sitio por sitio, con fuente y fecha, es mas creible que una
+   lista de doce restaurantes copiados de otro sitio.
+
+   SIN PUBLICIDAD DISFRAZADA
+   Se explican los tres estados y se dice, en voz alta, que una
+   comision no compra posicion editorial. Es la regla de
+   src/data/experiencias-locales.ts. NO se publica ni se insinua
+   ninguna condicion comercial privada con ningun comercio.
+
+   INDEXACION
+   noindex,follow hasta que haya contenido para justificarlo. La
+   constante esta en src/data/fichas-lugares.ts y el sitemap la lee.
+
+   SIN CANIBALIZACION
+   Intencion nueva ("donde comer en Zipaquira"): ninguna pagina del
+   sitio la cubre hoy. No compite con /grupos ni con la guia de la
+   Catedral: enlaza a ellas.
+   ============================================================ */
+
+import Base from '../../../layouts/Base.astro';
+import Cabecera from '../../../components/Cabecera.astro';
+import Pie from '../../../components/Pie.astro';
+import BotonFlotante from '../../../components/BotonFlotante.astro';
+import ExperienciaLocal from '../../../components/ExperienciaLocal.astro';
+import FormularioGrupo from '../../../components/FormularioGrupo.astro';
+import { menuHospedajes, ctaDisponibilidad } from '../../../data/navegacion';
+import { migaDePan, url, ORGANIZACION } from '../../../data/seo';
+import { atributosWhatsApp } from '../../../data/whatsapp';
+import { experienciasDe } from '../../../data/experiencias-locales';
+import { CIUDAD, WA_GUIA } from '../../../data/guia-zipaquira';
+import { HUB_RESTAURANTES } from '../../../data/fichas-lugares';
+import { atributosRed, EVENTO_GALLINA, EVENTO_HOSPEDAJE } from '../../../data/eventos-red';
+import SelectorJornada from '../../../components/SelectorJornada.astro';
+import {
+  jornadasPendientes,
+  jornadaVigente,
+  RUTA_GALLINA,
+  SIN_JORNADA,
+} from '../../../data/gallina-al-vapor';
+
+const RUTA = HUB_RESTAURANTES.ruta;
+const lugares = experienciasDe(CIUDAD.nombre);
+
+/* La fecha de la jornada no puede depender del despliegue: se pintan
+   todas las pendientes y el navegador deja visible la que toca. Ver
+   src/components/SelectorJornada.astro. */
+const pendientes = jornadasPendientes();
+const vigente = jornadaVigente();
+const activo = vigente ? vigente.fechaMaquina : SIN_JORNADA;
+
+const ficha = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      '@id': `${url(RUTA)}#pagina`,
+      url: url(RUTA),
+      name: 'Restaurantes y cafés en Zipaquirá · Guía Atheron',
+      description:
+        'Directorio editorial de la Guía Atheron: restaurantes y cafés de Zipaquirá, ' +
+        'verificados sitio por sitio, cada uno con su fuente y su fecha.',
+      inLanguage: 'es-CO',
+      isPartOf: { '@id': `${url(CIUDAD.ruta)}#pagina` },
+      about: `${CIUDAD.nombre}, ${CIUDAD.departamento}`,
+      breadcrumb: { '@id': `${url(RUTA)}#miga` },
+    },
+    ORGANIZACION,
+    migaDePan(
+      [
+        { nombre: 'Inicio', ruta: '/' },
+        { nombre: 'Guía de Zipaquirá', ruta: CIUDAD.ruta },
+        { nombre: 'Restaurantes y cafés' },
+      ],
+      `${url(RUTA)}#miga`,
+    ),
+  ],
+};
+---
+
+<Base
+  titulo="Restaurantes y cafés en Zipaquirá | Guía Atheron"
+  descripcion="Directorio editorial de la Guía Atheron: restaurantes y cafés de Zipaquirá verificados sitio por sitio, con su fuente y fecha. Y cómo planear una comida en grupo."
+  ruta={RUTA}
+  ogTitulo="Dónde comer en Zipaquirá · Guía Atheron"
+  ogDescripcion="Un directorio editorial que crece sitio por sitio, sin publicidad disfrazada."
+  indexable={HUB_RESTAURANTES.indexable}
+  jsonLd={ficha}
+  hojasExtra={['guia', 'guia-hub', 'red-gastronomica']}
+>
+
+  <Cabecera enlaces={menuHospedajes} cta={{ ...ctaDisponibilidad, origen: 'guia_restaurantes' }} actual={CIUDAD.ruta} />
+
+  <main id="contenido">
+
+    <section class="hero hero--interior guia__hero">
+      <div class="contenedor hero__contenido">
+        <nav class="migas" aria-label="Ruta de navegación">
+          <ol>
+            <li><a href="/">Inicio</a></li>
+            <li><a href={CIUDAD.ruta}>Guía de Zipaquirá</a></li>
+            <li aria-current="page">Restaurantes y cafés</li>
+          </ol>
+        </nav>
+        <h1 class="hero__titulo">Dónde comer y tomar café en Zipaquirá</h1>
+        <p class="hero__texto">
+          Un directorio que crece sitio por sitio. Cada lugar entra con lo que hemos
+          podido comprobar, y con la fecha en que lo comprobamos.
+        </p>
+        <div class="grupo-botones">
+          <a class="boton boton--acento boton--grande" href="#en-la-guia">Ver los lugares</a>
+          <a class="boton boton--claro boton--grande" href="#grupo">Viajo con un grupo</a>
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         COMO FUNCIONA — los tres estados, dichos sin adorno
+         ============================================================ */}
+    <section class="seccion seccion--estrecha" id="como-funciona">
+      <div class="contenedor guia__cuerpo">
+        <h2>Cómo funciona este directorio</h2>
+        <p>
+          No es una lista de «los diez mejores». Nos interesa que, si sigues una
+          sugerencia, el sitio exista, esté abierto cuando dice y sea lo que cuenta.
+          Por eso cada ficha muestra su estado:
+        </p>
+        <ul class="red__estados">
+          <li><strong>Informativo.</strong> El lugar existe y sus datos están comprobados. Nada más.</li>
+          <li><strong>Recomendado por Atheron.</strong> Además, alguien de Atheron ha estado y responde por la recomendación, con su motivo a la vista.</li>
+          <li><strong>Aliado Atheron.</strong> Existe un acuerdo comercial con Atheron, y se declara en su ficha. Las condiciones del acuerdo son privadas y no se publican.</li>
+        </ul>
+        <p class="red__regla">
+          Ser aliado no es estar recomendado, y una comisión no compra posición
+          editorial: la recomendación la sostiene una visita nuestra con su motivo a la
+          vista, nunca un acuerdo. Si algún día hay contenido patrocinado, se
+          identificará como tal.
+        </p>
+      </div>
+    </section>
+
+    {/* ============================================================
+         EN LA GUIA HOY — desde experiencias-locales.ts
+         ============================================================ */}
+    {lugares.length > 0 && (
+      <section class="seccion seccion--alterna" id="en-la-guia">
+        <div class="contenedor">
+          <div class="encabezado-seccion">
+            <span class="etiqueta">En la guía hoy</span>
+            <h2>Lugares comprobados</h2>
+            <p class="texto-suave" style="margin-top: var(--esp-2);">
+              {lugares.length === 1 ? 'Es el primero' : `Son ${lugares.length}`}, y la lista irá
+              creciendo. Sin fotografías ni datos que no podamos sostener, la tarjeta no los inventa.
+            </p>
+          </div>
+          <div class="grid grid--2">
+            {lugares.map((l) => (
+              <ExperienciaLocal lugar={l} medidas="(min-width: 900px) 28rem, 92vw" origen="hub_restaurantes" />
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    {/* ============================================================
+         JORNADAS GASTRONOMICAS — Gallina al Vapor
+         No es un restaurante de atencion diaria: es una jornada
+         especial que se repite cuando se anuncia.
+         ============================================================ */}
+    <section class="seccion" id="jornadas">
+      <div class="contenedor red__jornada">
+        <div>
+          <span class="etiqueta">Jornada gastronómica</span>
+          <h2>Gallina al Vapor</h2>
+          <p class="texto-suave">
+            Una preparación de varias horas que se ofrece en jornadas especiales, no todos
+            los días.
+            {pendientes.map((j) => (
+              <span data-jornada-id={j.fechaMaquina} hidden={j.fechaMaquina !== activo}>
+                {' '}La próxima es el {j.fechaLarga}.
+              </span>
+            ))}
+            <span data-jornada-id={SIN_JORNADA} hidden={activo !== SIN_JORNADA}>
+              {' '}Consulta la fecha de la próxima jornada.
+            </span>
+          </p>
+          <SelectorJornada />
+        </div>
+        <div>
+          <a
+            class="boton boton--acento boton--grande"
+            href={RUTA_GALLINA}
+            {...atributosRed(EVENTO_GALLINA, 'hub_restaurantes', 'gallina_al_vapor')}
+          >Ver la jornada</a>
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         ANTES O DESPUES DE LA CATEDRAL — enlaces, sin cifras
+         ============================================================ */}
+    <section class="seccion seccion--alterna" id="planear">
+      <div class="contenedor guia__cuerpo">
+        <h2>Planea la comida con el resto del viaje</h2>
+        <p>
+          La comida se organiza mejor cuando ya sabes cómo repartir el día. La guía de la
+          Catedral de Sal explica su horario y sus modalidades, y la guía de Zipaquirá
+          propone cómo repartir dos días.
+        </p>
+        <ul class="lista-check">
+          <li><a href="/zipaquira/catedral-de-sal">Catedral de Sal: cómo planear tu visita</a></li>
+          <li><a href={CIUDAD.ruta}>Guía de Zipaquirá: centro, alrededores y dos días</a></li>
+          <li>
+            <a href="/hospedajes" {...atributosRed(EVENTO_HOSPEDAJE, 'hub_restaurantes', 'hospedajes')}>Dónde hospedarse en Zipaquirá</a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    {/* GRUPOS — el formulario comparte codigo con La Triada (TRI) solo
+         en su propia ficha; aqui el origen es la guia. */}
+    <section class="seccion" id="grupo">
+      <div class="contenedor guia__cuerpo">
+        <FormularioGrupo origen="guia-restaurantes" id="grupo-restaurantes" />
+        <p class="texto-suave" style="margin-top: var(--esp-3);">
+          ¿Prefieres escribirnos tú? <a
+            {...atributosWhatsApp(WA_GUIA, { origen: 'guia_restaurantes_consulta' })}
+          >Consultar por WhatsApp</a>. También puedes ver
+          {' '}<a href="/grupos">el alojamiento para grupos</a>.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <Pie />
+  <BotonFlotante mensaje={WA_GUIA} origen="guia_restaurantes_flotante" texto="Consultar" />
+</Base>

@@ -1,0 +1,300 @@
+---
+/* ============================================================
+   FICHA DE UN LUGAR — restaurantes y cafes de la guia
+
+   Una sola plantilla para todas las fichas. Se genera una pagina por
+   cada lugar de src/data/experiencias-locales.ts que declare
+   rutaFicha. Anadir la ficha del segundo comercio es anadir un objeto
+   alli (y, si procede, su bloque en src/data/fichas-lugares.ts): ni
+   esta plantilla ni el CSS cambian.
+
+   REGLA UNICA: CADA BLOQUE SE PINTA SOLO SI TIENE DATO
+   Sin carta, no hay bloque de carta. Sin horario, no hay horario.
+   No sale vacio ni «proximamente»: no sale. Lo que falta se documenta
+   en docs/red-atheron-zipaquira.md, no se le ensena al visitante.
+
+   LO QUE NO LLEVA, Y NO DEBE LLEVAR NUNCA SIN DATO REAL
+   - Restaurant / LocalBusiness / PostalAddress / OpeningHours:
+     ningun atributo de negocio esta confirmado por el local.
+   - AggregateRating / Review: en este sitio no existe ninguna
+     valoracion, ni propia ni de terceros.
+   - Precios sin fecha, capacidad, distancias sin medir.
+
+   EL BLOQUE DE GRUPOS ES DE ATHERON, NO DEL LOCAL
+   «¿Vienes con un grupo a Zipaquirá?» es nuestra cotizacion. No
+   afirma que el local tenga menu de grupos, cupo ni tarifa. Lo que el
+   local confirme sobre grupos va en FichaExtra.grupos, aparte.
+   ============================================================ */
+
+import Base from '../../../layouts/Base.astro';
+import Cabecera from '../../../components/Cabecera.astro';
+import Pie from '../../../components/Pie.astro';
+import BotonFlotante from '../../../components/BotonFlotante.astro';
+import Foto from '../../../components/Foto.astro';
+import FormularioGrupo from '../../../components/FormularioGrupo.astro';
+import { menuHospedajes, ctaDisponibilidad } from '../../../data/navegacion';
+import { migaDePan, url, ORGANIZACION } from '../../../data/seo';
+import { experienciasDe } from '../../../data/experiencias-locales';
+import { CIUDAD, WA_GUIA } from '../../../data/guia-zipaquira';
+import { extraDe, HUB_RESTAURANTES } from '../../../data/fichas-lugares';
+import { atributosRed, EVENTO_HOSPEDAJE } from '../../../data/eventos-red';
+import { fechaLarga } from '../../../data/fechas';
+
+export function getStaticPaths() {
+  return experienciasDe(CIUDAD.nombre)
+    .filter((l) => l.rutaFicha)
+    .map((lugar) => {
+      /* La ruta declarada y la real no pueden divergir: la canonica, el
+         sitemap y los enlaces internos salen de rutaFicha. */
+      const esperada = `${HUB_RESTAURANTES.ruta}/${lugar.slug}`;
+      if (lugar.rutaFicha !== esperada) {
+        throw new Error(`rutaFicha de «${lugar.slug}» deberia ser ${esperada} y es ${lugar.rutaFicha}`);
+      }
+      return { params: { slug: lugar.slug }, props: { lugar } };
+    });
+}
+
+const { lugar } = Astro.props;
+const extra = extraDe(lugar.slug);
+const RUTA = lugar.rutaFicha!;
+
+const hayFoto = Boolean(lugar.foto && lugar.fotoAlt);
+const esAliado = lugar.estadoComercial === 'ALIADO';
+/* Los precios de la carta solo salen con su fecha. */
+const platosConPrecio = extra.menu?.fechaPrecios && extra.menu.platos?.length ? extra.menu.platos : null;
+
+const ficha = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${url(RUTA)}#pagina`,
+      url: url(RUTA),
+      name: `${lugar.nombre} en ${lugar.ciudad} · Guía Atheron`,
+      inLanguage: 'es-CO',
+      isPartOf: { '@id': `${url(HUB_RESTAURANTES.ruta)}#pagina` },
+      about: { '@type': 'Thing', name: lugar.nombre },
+      breadcrumb: { '@id': `${url(RUTA)}#miga` },
+    },
+    ORGANIZACION,
+    migaDePan(
+      [
+        { nombre: 'Inicio', ruta: '/' },
+        { nombre: 'Guía de Zipaquirá', ruta: CIUDAD.ruta },
+        { nombre: 'Restaurantes y cafés', ruta: HUB_RESTAURANTES.ruta },
+        { nombre: lugar.nombre },
+      ],
+      `${url(RUTA)}#miga`,
+    ),
+  ],
+};
+---
+
+<Base
+  titulo={`${lugar.nombre} en ${lugar.ciudad} | Guía Atheron`}
+  descripcion={`Ficha de ${lugar.nombre}, ${lugar.categoria.toLowerCase()} en ${lugar.ciudad}, en la Guía Atheron. Datos comprobados con su fuente y fecha, y cotización para grupos.`}
+  ruta={RUTA}
+  ogTitulo={`${lugar.nombre} · Guía Atheron de ${lugar.ciudad}`}
+  ogDescripcion={`${lugar.categoria} en ${lugar.ciudad}. Datos comprobados con su fuente y fecha.`}
+  indexable={extra.indexable}
+  jsonLd={ficha}
+  hojasExtra={['guia', 'guia-hub', 'red-gastronomica']}
+>
+
+  <Cabecera enlaces={menuHospedajes} cta={{ ...ctaDisponibilidad, origen: `guia_${lugar.slug}` }} actual={CIUDAD.ruta} />
+
+  <main id="contenido">
+
+    <section class="hero hero--interior guia__hero">
+      <div class="contenedor hero__contenido">
+        <nav class="migas" aria-label="Ruta de navegación">
+          <ol>
+            <li><a href="/">Inicio</a></li>
+            <li><a href={CIUDAD.ruta}>Guía de Zipaquirá</a></li>
+            <li><a href={HUB_RESTAURANTES.ruta}>Restaurantes y cafés</a></li>
+            <li aria-current="page">{lugar.nombre}</li>
+          </ol>
+        </nav>
+        <p class="hero__etiqueta">{lugar.categoria} · {lugar.ciudad}</p>
+        <h1 class="hero__titulo">{lugar.nombre}</h1>
+        <p class="hero__texto">{lugar.descripcion}</p>
+        <div class="grupo-botones">
+          <a class="boton boton--acento boton--grande" href="#grupo">¿Vienes con un grupo?</a>
+        </div>
+      </div>
+    </section>
+
+    {/* ============================================================
+         VINCULO COMERCIAL — lo primero despues del hero
+
+         Si existe cualquier interes economico detras de la ficha, se
+         declara antes que ningun dato del local, no al final. Se dice
+         que el acuerdo existe; sus condiciones NO se publican. Ver
+         src/data/experiencias-locales.ts. Va fuera del hero a
+         proposito: el hero es oscuro, y una declaracion de interes
+         tiene que leerse sin esfuerzo.
+
+         La regla de al lado no es adorno: es lo que impide que el
+         visitante lea "aliado" como "Atheron dice que es bueno".
+         ============================================================ */}
+    {lugar.divulgacionComercial && (
+      <section class="seccion seccion--estrecha" id="divulgacion">
+        <div class="contenedor guia__cuerpo">
+          {esAliado && <p class="lugar__insignia lugar__insignia--aliado">Aliado Atheron</p>}
+          <p class="lugar__divulgacion">{lugar.divulgacionComercial}</p>
+          <p class="guia__fuente">
+            Ser aliado no es estar recomendado: las condiciones del acuerdo son privadas y
+            no compran posición editorial. <a href={HUB_RESTAURANTES.ruta}>Cómo funciona este
+            directorio</a>.
+          </p>
+        </div>
+      </section>
+    )}
+
+    {/* ============================================================
+         DATOS DEL LUGAR — cada uno solo si existe
+         ============================================================ */}
+    {(hayFoto || extra.intro || lugar.direccion || lugar.horarios?.length || lugar.sitioOficial || lugar.mapa || lugar.telefono) && (
+      <section class="seccion seccion--estrecha" id="datos">
+        <div class="contenedor guia__cuerpo">
+          <h2>Lo que sabemos de {lugar.nombre}</h2>
+          {hayFoto && <Foto src={lugar.foto} alt={lugar.fotoAlt} medidas="(min-width: 900px) 40rem, 92vw" />}
+          {extra.intro?.map((p) => <p>{p}</p>)}
+          <ul class="red__datos">
+            {lugar.direccion && <li><span>Dirección</span> <strong>{lugar.direccion}</strong></li>}
+            {lugar.telefono && <li><span>Teléfono</span> <strong>{lugar.telefono}</strong></li>}
+            {lugar.horarios?.map((h) => <li><span>{h.dia}</span> <strong>{h.horas}</strong></li>)}
+          </ul>
+          {(lugar.sitioOficial || lugar.mapa) && (
+            <p class="lugar__enlaces">
+              {lugar.sitioOficial && <a href={lugar.sitioOficial} target="_blank" rel="noopener noreferrer">Sitio oficial</a>}
+              {lugar.mapa && <a href={lugar.mapa} target="_blank" rel="noopener noreferrer">Cómo llegar</a>}
+            </p>
+          )}
+        </div>
+      </section>
+    )}
+
+    {extra.platosDestacados?.length ? (
+      <section class="seccion seccion--alterna" id="platos">
+        <div class="contenedor guia__cuerpo">
+          <h2>Platos destacados</h2>
+          <ul class="lista-check">{extra.platosDestacados.map((p) => <li>{p}</li>)}</ul>
+        </div>
+      </section>
+    ) : null}
+
+    {(extra.menu?.enlace || platosConPrecio) && (
+      <section class="seccion seccion--estrecha" id="carta">
+        <div class="contenedor guia__cuerpo">
+          <h2>Carta</h2>
+          {platosConPrecio && (
+            <>
+              <ul class="red__datos">
+                {platosConPrecio.map((p) => <li><span>{p.plato}</span> <strong>{p.precio}</strong></li>)}
+              </ul>
+              <p class="guia__fuente">Precios comprobados el {fechaLarga(extra.menu!.fechaPrecios!)}. Pueden cambiar: confirma en el local.</p>
+            </>
+          )}
+          {extra.menu?.enlace && (
+            <p><a href={extra.menu.enlace} target="_blank" rel="noopener noreferrer">Ver la carta del local</a></p>
+          )}
+        </div>
+      </section>
+    )}
+
+    {extra.familias && (
+      <section class="seccion seccion--alterna" id="familias">
+        <div class="contenedor guia__cuerpo"><h2>Con familia</h2><p>{extra.familias}</p></div>
+      </section>
+    )}
+
+    {extra.grupos && (
+      <section class="seccion seccion--estrecha" id="para-grupos-local">
+        <div class="contenedor guia__cuerpo"><h2>Grupos, según el local</h2><p>{extra.grupos}</p></div>
+      </section>
+    )}
+
+    {extra.rutaCatedral && (
+      <section class="seccion seccion--alterna" id="catedral">
+        <div class="contenedor guia__cuerpo">
+          <h2>Cerca de la Catedral de Sal</h2>
+          <p>{extra.rutaCatedral}</p>
+          <p><a href="/zipaquira/catedral-de-sal">Cómo planear la visita a la Catedral</a></p>
+        </div>
+      </section>
+    )}
+
+    {extra.galeria?.length ? (
+      <section class="seccion seccion--estrecha" id="galeria">
+        <div class="contenedor">
+          <h2>Fotografías</h2>
+          <div class="grid grid--2">
+            {extra.galeria.map((f) => <Foto src={f.src} alt={f.alt} medidas="(min-width: 900px) 28rem, 92vw" />)}
+          </div>
+        </div>
+      </section>
+    ) : null}
+
+    {extra.video && (
+      <section class="seccion seccion--alterna" id="video">
+        <div class="contenedor guia__cuerpo">
+          <h2>Video</h2>
+          <p><a href={extra.video.enlace} target="_blank" rel="noopener noreferrer">{extra.video.titulo}</a></p>
+        </div>
+      </section>
+    )}
+
+    {extra.opinionesAtheron?.length ? (
+      <section class="seccion seccion--estrecha" id="opiniones">
+        <div class="contenedor guia__cuerpo">
+          <h2>Nuestra visita</h2>
+          {extra.opinionesAtheron.map((o) => (
+            <blockquote class="red__opinion">
+              <p>{o.texto}</p>
+              <footer>Visita de Atheron, {o.fecha}</footer>
+            </blockquote>
+          ))}
+        </div>
+      </section>
+    ) : null}
+
+    {/* ============================================================
+         GRUPOS — cotizacion de Atheron, con referencia ATH-TRI-xxxxx
+         cuando el origen es un comercio con codigo propio.
+         ============================================================ */}
+    <section class="seccion seccion--alterna" id="grupo">
+      <div class="contenedor guia__cuerpo">
+        <FormularioGrupo origen={lugar.slug} id={`grupo-${lugar.slug}`} />
+      </div>
+    </section>
+
+    <section class="seccion seccion--estrecha">
+      <div class="contenedor guia__cuerpo">
+        <h2>Seguir leyendo</h2>
+        <ul class="lista-check">
+          <li><a href={HUB_RESTAURANTES.ruta}>Más restaurantes y cafés de Zipaquirá</a></li>
+          <li><a href="/zipaquira/catedral-de-sal">Catedral de Sal: cómo planear tu visita</a></li>
+          <li>
+            <a href="/hospedajes" {...atributosRed(EVENTO_HOSPEDAJE, `ficha_${lugar.slug}`, 'hospedajes')}>Dónde hospedarse en Zipaquirá</a>
+          </li>
+        </ul>
+
+        {(lugar.fechaUltimaVerificacion || lugar.fuentes?.length) && (
+          <p class="guia__fuente">
+            {lugar.fechaUltimaVerificacion && <>Datos comprobados el {fechaLarga(lugar.fechaUltimaVerificacion)}. </>}
+            {lugar.fuentes?.length ? <>Fuente: {lugar.fuentes.join('; ')}.</> : null}
+          </p>
+        )}
+        <p class="guia__fuente">
+          El estado de cada lugar en la guía (informativo, recomendado o aliado) se indica en
+          su ficha, y cualquier acuerdo comercial se declara en ella.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <Pie />
+  <BotonFlotante mensaje={WA_GUIA} origen={`guia_${lugar.slug}_flotante`} texto="Consultar" />
+</Base>
