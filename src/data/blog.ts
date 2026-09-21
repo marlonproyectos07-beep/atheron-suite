@@ -99,6 +99,41 @@ export const CATEGORIA_ATHERON = 'Atheron Suite';
 
 export const articulos: Articulo[] = [
   {
+    ruta: '/eventos/dia-mundial-del-turismo-zipaquira-2026',
+    titulo: 'Día Mundial del Turismo en Zipaquirá 2026: free tour e inscripción',
+    tituloCorto: 'Día Mundial del Turismo: free tour en Zipaquirá',
+    rotulo: 'Convocatoria verificada',
+    descripcion:
+      'Zipaquirá invita a redescubrir su centro histórico con un free tour por el Día Mundial del Turismo. Consulta la inscripción oficial y los datos todavía pendientes.',
+    autor: 'Atheron Suite',
+    publicado: '2026-09-21',
+    modificado: '2026-09-21',
+    categoria: CATEGORIA_ZIPAQUIRA,
+    imagen: null,
+    imagenAlt: null,
+    fuentes: [
+      {
+        titulo: 'Zipaquirá Travel — convocatoria oficial del free tour',
+        url: 'https://www.instagram.com/zipaquira.travel/reel/Ddh68gRRJiU/',
+      },
+      {
+        titulo: 'Secretaría de Desarrollo Económico y Turismo — formulario de inscripción',
+        url: 'https://forms.cloud.microsoft/r/2iEqnNR2dc',
+      },
+      {
+        titulo: 'ONU Turismo — Día Mundial del Turismo',
+        url: 'https://www.untourism.int/es/dia-mundial-turismo',
+      },
+    ],
+    enlacesInternos: [
+      { texto: 'Guía Atheron de Zipaquirá', href: '/guia-zipaquira' },
+      { texto: 'Guía práctica para llegar y quedarse', href: '/blog/guia-de-zipaquira' },
+      { texto: 'Hospedajes en Zipaquirá', href: '/hospedajes' },
+    ],
+    cta: { texto: 'Ver hospedajes en Zipaquirá', href: '/hospedajes' },
+    publicadoEnSitio: true,
+  },
+  {
     ruta: '/eventos/semana-de-la-juventud-zipaquira-2026',
     titulo: 'Semana de la Juventud de Zipaquirá 2026: programación de Parche Zipa Fest',
     tituloCorto: 'Semana de la Juventud 2026: programación',
