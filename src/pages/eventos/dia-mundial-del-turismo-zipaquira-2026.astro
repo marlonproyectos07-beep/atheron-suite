@@ -1,0 +1,112 @@
+---
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
+import { articuloDe, fechaLarga } from '../../data/blog';
+import { atributosWhatsApp } from '../../data/whatsapp';
+import { migaDePan, url, ORGANIZACION } from '../../data/seo';
+
+const articulo = articuloDe('/eventos/dia-mundial-del-turismo-zipaquira-2026')!;
+const fuenteConvocatoria = 'https://www.instagram.com/zipaquira.travel/reel/Ddh68gRRJiU/';
+const fuenteInscripcion = 'https://forms.cloud.microsoft/r/2iEqnNR2dc';
+const fuenteDiaMundial = 'https://www.untourism.int/es/dia-mundial-turismo';
+
+const ficha = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BlogPosting',
+      '@id': `${url(articulo.ruta)}#articulo`,
+      headline: articulo.titulo,
+      description: articulo.descripcion,
+      url: url(articulo.ruta),
+      datePublished: articulo.publicado,
+      dateModified: articulo.modificado,
+      inLanguage: 'es-CO',
+      author: { '@type': 'Organization', name: articulo.autor },
+      publisher: { '@id': ORGANIZACION['@id'] },
+      citation: articulo.fuentes.map((f) => f.url ?? f.titulo),
+      mainEntityOfPage: url(articulo.ruta),
+    },
+    ORGANIZACION,
+    migaDePan([
+      { nombre: 'Inicio', ruta: '/' },
+      { nombre: 'Blog', ruta: '/blog' },
+      { nombre: 'Día Mundial del Turismo 2026', ruta: articulo.ruta },
+    ], `${url(articulo.ruta)}#miga`),
+  ],
+};
+
+const WA = 'Hola, vi la información del Día Mundial del Turismo en el blog de Atheron y quiero consultar hospedaje en Zipaquirá.\n\nFecha de llegada:\nFecha de salida:\nNúmero de huéspedes:';
+---
+
+<Base
+  titulo="Día Mundial del Turismo en Zipaquirá 2026 | Free tour"
+  descripcion={articulo.descripcion}
+  ruta={articulo.ruta}
+  ogTipo="article"
+  jsonLd={ficha}
+  hojasExtra={['guia', 'eventos']}
+>
+  <Cabecera enlaces={menuBlog} cta={{ ...ctaDisponibilidad, origen: 'evento_turismo' }} actual="/blog" />
+
+  <main id="contenido">
+    <section class="evento-hero">
+      <div class="contenedor evento-hero__contenido">
+        <nav class="migas" aria-label="Ruta de navegación"><ol><li><a href="/">Inicio</a></li><li><a href="/blog">Blog</a></li><li aria-current="page">Día Mundial del Turismo 2026</li></ol></nav>
+        <span class="hero__etiqueta">Convocatoria oficial verificada</span>
+        <h1>Día Mundial del Turismo en Zipaquirá 2026: free tour por el centro histórico</h1>
+        <p class="hero__texto">La Secretaría de Desarrollo Económico y Turismo invita a redescubrir la ciudad. Aquí separamos los datos confirmados de la información que el organizador todavía no ha publicado.</p>
+        <span class="evento-hero__fecha">Inscripciones anunciadas hasta el 23 de septiembre de 2026</span>
+      </div>
+    </section>
+
+    <section class="seccion"><div class="contenedor articulo">
+      <p class="articulo__meta"><span>Verificado el <time datetime={articulo.modificado}>{fechaLarga(articulo.modificado)}</time></span><span>Por {articulo.autor}</span></p>
+
+      <div class="respuesta-rapida"><strong>En corto</strong> La convocatoria institucional anuncia un free tour por el centro histórico de Zipaquirá y recibe inscripciones hasta el 23 de septiembre. El formulario oficial está activo. La publicación y el formulario consultados no indican todavía la fecha y hora del recorrido, el punto de encuentro ni los cupos.</div>
+
+      <h2>Lo que está confirmado</h2>
+      <ul class="evento-datos">
+        <li><strong>Actividad:</strong> free tour por el centro histórico de Zipaquirá.</li>
+        <li><strong>Organiza:</strong> Secretaría de Desarrollo Económico y Turismo de la Alcaldía de Zipaquirá.</li>
+        <li><strong>Inscripción:</strong> mediante formulario oficial de Microsoft Forms.</li>
+        <li><strong>Plazo anunciado:</strong> hasta el 23 de septiembre de 2026.</li>
+        <li><strong>Costo:</strong> la entidad lo identifica como “free tour” y en su enlace oficial como “City Tour ¡Gratuito!”.</li>
+      </ul>
+
+      <div class="evento-conversion">
+        <div><h2>Inscripción oficial</h2><p>El formulario solicita datos personales y la aceptación de la política de tratamiento de datos de la Secretaría. Atheron no recibe esa información ni administra los cupos.</p></div>
+        <div class="evento-conversion__acciones"><a class="boton boton--primario" href={fuenteInscripcion} target="_blank" rel="noopener noreferrer">Ir al formulario oficial</a><a class="boton boton--contorno" href={fuenteConvocatoria} target="_blank" rel="noopener noreferrer">Ver convocatoria</a></div>
+      </div>
+
+      <h2>Datos pendientes antes de asistir</h2>
+      <p>En las fuentes consultadas no aparecen la fecha y hora exactas del recorrido, el punto de encuentro, la duración, los cupos ni recomendaciones de accesibilidad. Inscribirte no autoriza a Atheron a completar esos datos por su cuenta: confirma la información que envíe el organizador antes de desplazarte.</p>
+      <div class="evento-nota"><strong>Importante:</strong> no presentamos este recorrido como paquete de Atheron ni prometemos cupos, transporte o acceso a otros atractivos. El registro y las condiciones pertenecen a la entidad organizadora.</div>
+
+      <h2>¿Por qué se celebra el Día Mundial del Turismo?</h2>
+      <p>ONU Turismo conmemora el Día Mundial del Turismo cada 27 de septiembre. La fecha invita a mirar el turismo no solo como desplazamiento, sino como una actividad con efectos culturales, sociales y económicos en los lugares que reciben visitantes.</p>
+      <p><strong>Interpretación editorial de Atheron:</strong> redescubrir Zipaquirá también significa caminarla con más atención: reconocer su arquitectura, escuchar las historias del centro y entender que restaurantes, guías, comercios y hospedajes forman parte de la experiencia del destino. Esta reflexión es de Atheron; no es una descripción oficial del recorrido.</p>
+
+      <h2>Atheron te ayuda a vivir la ciudad</h2>
+      <p>Si vienes desde Bogotá u otro municipio, primero completa la inscripción con la entidad organizadora. Después puedes consultar nuestra <a href="/guia-zipaquira">guía de Zipaquirá</a>, revisar <a href="/hospedajes">hospedajes</a> o pedir una cotización si viajas con varias personas.</p>
+
+      <aside class="evento-conversion">
+        <div><h2>¿Quieres quedarte en Zipaquirá?</h2><p>Compara casas, apartamentos y habitaciones según tus fechas y número de viajeros. La reserva de alojamiento es independiente del free tour.</p></div>
+        <div class="evento-conversion__acciones"><a class="boton boton--primario" href="/hospedajes">Ver hospedajes</a><a class="boton boton--whatsapp" {...atributosWhatsApp(WA, { origen: 'evento_dia_turismo' })}>Consultar disponibilidad</a></div>
+      </aside>
+
+      <h2>Fuentes</h2>
+      <ul class="evento-fuentes">
+        <li><a href={fuenteConvocatoria} target="_blank" rel="noopener noreferrer">Zipaquirá Travel — convocatoria oficial publicada el 20 de septiembre de 2026</a></li>
+        <li><a href={fuenteInscripcion} target="_blank" rel="noopener noreferrer">Secretaría de Desarrollo Económico y Turismo — formulario de inscripción</a></li>
+        <li><a href={fuenteDiaMundial} target="_blank" rel="noopener noreferrer">ONU Turismo — Día Mundial del Turismo</a></li>
+      </ul>
+    </div></section>
+  </main>
+
+  <Pie />
+  <BotonFlotante mensaje={WA} origen="evento_dia_turismo_flotante" />
+</Base>
