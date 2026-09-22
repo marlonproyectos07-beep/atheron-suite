@@ -56,6 +56,42 @@
    ============================================================ */
 
 import { REGLA } from './economia-red.ts';
+
+/* ------------------------------------------------------------
+   INTEGRIDAD — LO QUE HAY QUE PODER DEMOSTRAR ANTES DE FACTURAR
+
+   La reauditoria borro las referencias de una venta: habia 300.000
+   reales, el informe encontro 200.000 y dijo "cuadra". Cuadraba
+   consigo mismo, que no es lo mismo que cuadrar.
+
+   Detectar "el indice nombra algo que no esta" no basta. Hay que
+   comprobar las dos direcciones y todo lo que cuelga. Quien recoge
+   estos datos es el servicio, porque necesita el almacen; quien
+   decide que significan es este archivo.
+   ------------------------------------------------------------ */
+export interface Integridad {
+  /** El índice los nombra y no se pudieron leer. */
+  faltantes: string[];
+  /** Existen pero ningún índice de los que les tocan los nombra. */
+  sinIndice: string[];
+  /** Apuntan a un crédito que no existe. */
+  creditosFaltantes: string[];
+  /** Están en el índice de redenciones sin estar redimidas ni cerradas. */
+  indicesDivergentes: string[];
+  /** Ids que no son de transacción dentro de un índice de transacciones. */
+  contaminados: string[];
+  /** El registro y su índice caducan en momentos muy distintos. */
+  ttlDivergente: string[];
+}
+
+export const INTEGRIDAD_LIMPIA: Integridad = {
+  faltantes: [],
+  sinIndice: [],
+  creditosFaltantes: [],
+  indicesDivergentes: [],
+  contaminados: [],
+  ttlDivergente: [],
+};
 import {
   CABECERA_CONCILIACION,
   ETIQUETA_FUENTE,
@@ -125,8 +161,11 @@ export interface Informe {
   personasPrevistas: number;
   redenciones: number;
   cerradasSinConsumo: number;
-  /** Redenciones / activaciones de la semana, en %. */
+  /* De las activaciones de ESTA semana, cuántas acabaron
+     consumiéndose, en %. Misma cohorte arriba y abajo. */
   conversion: number;
+  /** Las de la cohorte que sí se redimieron. El numerador, a la vista. */
+  cohorteRedimida: number;
   personasAtendidas: number;
   consumoAtribuido: number;
   comision: number;
@@ -137,10 +176,13 @@ export interface Informe {
   porRegla: BloqueRegla[];
   satisfaccionMedia: number | null;
   incidencias: number;
-  /** Ids que el indice nombraba y no se pudieron leer. */
+  /** Todo lo que no se pudo demostrar sobre los datos de esta semana. */
+  integridad: Integridad;
+  /** Atajo: los ids que el índice nombraba y no se pudieron leer. */
   faltantes: string[];
   /** Redenciones sin economia guardada: no se pueden facturar. */
   sinEconomia: string[];
+  /** Una fila por movimiento: activaciones, cierres y redenciones. */
   filas: string[];
   avisos: string[];
 }
@@ -148,8 +190,9 @@ export interface Informe {
 export function informeSemanal(
   transacciones: Transaccion[],
   semana: Semana,
-  faltantes: string[] = [],
+  integridad: Integridad = INTEGRIDAD_LIMPIA,
 ): Informe {
+  const faltantes = integridad.faltantes;
   const activadas = transacciones.filter((t) => enSemana(soloFecha(t.activadoEn), semana));
   const redimidas = transacciones.filter(
     (t) => t.estado === 'REDIMIDO' && t.redimidoEn && enSemana(soloFecha(t.redimidoEn), semana),
@@ -197,11 +240,27 @@ export function informeSemanal(
     reglas.set(e.reglaVersion, bloque);
   }
 
-  const notas = redimidas
+  /* LA SATISFACCION ES UN EVENTO, NO UN ESTADO.
+     Se cuentan las opiniones DEJADAS EN ESTA SEMANA, mirando el
+     sello del seguimiento. Si se contara el estado actual, una
+     opinion escrita hoy cambiaria la media de una semana ya
+     facturada: el pasado dejaria de ser el pasado. */
+  const opiniones = transacciones.filter(
+    (t) => t.seguimiento?.sello && enSemana(soloFecha(t.seguimiento.sello), semana),
+  );
+  const notas = opiniones
     .map((t) => t.seguimiento?.satisfaccion)
     .filter((n): n is number => typeof n === 'number');
 
   const sinEconomia = redimidas.filter((t) => !t.economia).map((t) => t.codigo);
+
+  /* LA CONVERSION ES DE UNA COHORTE, NO DE UN CAJON.
+     Numerador y denominador tienen que ser la MISMA gente: de las
+     activaciones de esta semana, cuantas se consumieron (aunque se
+     consumieran despues). Mezclar "redenciones de la semana" con
+     "activaciones de la semana" da porcentajes por encima de 100
+     cuando se consume lo activado la semana anterior. */
+  const cohorteRedimida = activadas.filter((t) => t.estado === 'REDIMIDO').length;
 
   const avisos: string[] = [];
   if (REGLA.estadoReparto !== 'CONFIRMADA POR CEO') {
@@ -222,6 +281,21 @@ export function informeSemanal(
   if (sinEconomia.length) {
     avisos.push(`${sinEconomia.length} redención(es) sin consumo guardado: revisar antes de facturar.`);
   }
+  if (integridad.sinIndice.length) {
+    avisos.push(`${integridad.sinIndice.length} transacción(es) que ningún índice nombra: el informe puede estar dejándose ventas fuera.`);
+  }
+  if (integridad.creditosFaltantes.length) {
+    avisos.push(`${integridad.creditosFaltantes.length} crédito(s) referenciados que no existen en el libro.`);
+  }
+  if (integridad.contaminados.length) {
+    avisos.push(`${integridad.contaminados.length} id(s) que no son transacciones dentro de un índice de transacciones.`);
+  }
+  if (integridad.indicesDivergentes.length) {
+    avisos.push(`${integridad.indicesDivergentes.length} transacción(es) en el índice de redenciones sin estar redimidas ni cerradas.`);
+  }
+  if (integridad.ttlDivergente.length) {
+    avisos.push(`${integridad.ttlDivergente.length} transacción(es) cuyo registro y su índice caducan en momentos distintos.`);
+  }
   if (reglas.size > 1) {
     avisos.push('En esta semana se aplicó más de una regla económica. Cada bloque se liquida con la suya.');
   }
@@ -232,7 +306,8 @@ export function informeSemanal(
     personasPrevistas: suma(activadas, (t) => t.personasPrevistas ?? 0),
     redenciones: redimidas.length,
     cerradasSinConsumo: cerradas.length,
-    conversion: activadas.length ? Math.round((redimidas.length / activadas.length) * 1000) / 10 : 0,
+    conversion: activadas.length ? Math.round((cohorteRedimida / activadas.length) * 1000) / 10 : 0,
+    cohorteRedimida,
     personasAtendidas: suma(redimidas, (t) => t.personas ?? 0),
     consumoAtribuido: suma(redimidas, (t) => t.economia?.consumo ?? 0),
     comision: suma(redimidas, (t) => t.economia?.comision ?? 0),
@@ -245,10 +320,20 @@ export function informeSemanal(
     satisfaccionMedia: notas.length
       ? Math.round((notas.reduce((a, b) => a + b, 0) / notas.length) * 10) / 10
       : null,
-    incidencias: redimidas.filter((t) => t.seguimiento?.incidencia).length,
+    incidencias: opiniones.filter((t) => t.seguimiento?.incidencia).length,
+    integridad,
     faltantes,
     sinEconomia,
-    filas: [CABECERA_CONCILIACION, ...redimidas.map(filaConciliacion)],
+    /* TODOS los movimientos de la semana, no solo los que facturan:
+       con activaciones y cierres dentro, la semana se puede
+       reconstruir entera desde estas filas. */
+    filas: [
+      CABECERA_CONCILIACION,
+      ...[...activadas, ...redimidas, ...cerradas]
+        .filter((t, i, lista) => lista.findIndex((o) => o.codigo === t.codigo) === i)
+        .sort((a, b) => a.activadoEn.localeCompare(b.activadoEn))
+        .map(filaConciliacion),
+    ],
     avisos,
   };
 }
@@ -265,19 +350,26 @@ export function conciliacionCuadra(informe: Informe): {
   estado: EstadoInforme;
   detalle: string;
 } {
-  if (informe.faltantes.length) {
-    return {
-      cuadra: false,
-      estado: 'INCOMPLETO',
-      detalle: `Faltan ${informe.faltantes.length} registro(s) que el índice nombra. No se puede liquidar.`,
-    };
-  }
-  if (informe.sinEconomia.length) {
-    return {
-      cuadra: false,
-      estado: 'INCOMPLETO',
-      detalle: `${informe.sinEconomia.length} redención(es) sin consumo guardado.`,
-    };
+  /* Primero lo que impide demostrar que los datos estan completos.
+     Un descuadre aritmetico sobre datos incompletos no dice nada. */
+  const i = informe.integridad;
+  const problemas: [string, string[]][] = [
+    ['registro(s) que el índice nombra y no se pueden leer', i.faltantes],
+    ['transacción(es) que ningún índice nombra', i.sinIndice],
+    ['crédito(s) referenciados que no existen', i.creditosFaltantes],
+    ['id(s) ajenos dentro de un índice de transacciones', i.contaminados],
+    ['transacción(es) con índice y estado contradictorios', i.indicesDivergentes],
+    ['transacción(es) con retención divergente de su índice', i.ttlDivergente],
+    ['redención(es) sin consumo guardado', informe.sinEconomia],
+  ];
+  for (const [que, lista] of problemas) {
+    if (lista.length) {
+      return {
+        cuadra: false,
+        estado: 'INCOMPLETO',
+        detalle: `${lista.length} ${que}. No se puede liquidar hasta resolverlo.`,
+      };
+    }
   }
   if (!informe.redenciones) {
     /* Cero no es cuadrar: es que no hay nada que cuadrar. Decir

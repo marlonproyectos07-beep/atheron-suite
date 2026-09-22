@@ -170,21 +170,18 @@ import { RUTAS } from '../../../data/api-red';
       $('[data-consumo]')!.textContent = pesos(t.consumo);
       $('[data-credito]')!.textContent = pesos(t.credito ?? 0);
 
-      /* El estado sale del libro de creditos, no de la cifra: hasta
-         que exista vinculacion, lo honesto es "generado, pendiente".
-         Prometer "te lo aplicamos cuando reserves" seria prometer
-         algo que hoy no se puede cumplir, porque no hay forma de
-         saber que quien reserva es quien consumio. */
-      const credito = t.creditoVista;
+      /* Lo unico verdadero que se le puede decir hoy: generado y
+         pendiente de vinculacion. Prometer "te lo aplicamos cuando
+         reserves" seria prometer algo que el sistema no puede
+         cumplir, porque no hay forma de saber que quien reserva es
+         quien consumio. Y el identificador y el saldo del credito no
+         se ensenan: conocer un codigo no puede dar acceso a un saldo
+         que todavia no es de nadie. */
       const insigniaCredito = $('[data-estado-credito]')!;
-      insigniaCredito.textContent = credito?.etiqueta ?? 'Generado';
-      insigniaCredito.className =
-        `piloto__estado piloto__estado--${credito?.estado === 'DISPONIBLE' ? 'redimido' : 'activado'}`;
-
-      $('[data-vigencia-credito]')!.textContent = credito
-        ? `${COPY_CREDITO.pendiente} Vale hasta el ${credito.expiraEn.slice(0, 10)}.`
-        : COPY_CREDITO.pendiente;
-      $('[data-codigo-credito]')!.textContent = credito ? `Referencia: ${credito.id}` : '';
+      insigniaCredito.textContent = 'Generado, pendiente de vinculación';
+      insigniaCredito.className = 'piloto__estado piloto__estado--activado';
+      $('[data-vigencia-credito]')!.textContent = COPY_CREDITO.pendiente;
+      $('[data-codigo-credito]')!.textContent = COPY_CREDITO.comoReclamar;
 
       ($('[data-ir-seguimiento]') as HTMLAnchorElement).href =
         `${RUTAS.seguimiento}?c=${encodeURIComponent(t.codigo)}`;

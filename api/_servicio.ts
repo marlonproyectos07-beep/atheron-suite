@@ -64,15 +64,39 @@ import {
   type MotivoRechazo,
   type Transaccion,
 } from '../src/data/transacciones-red.ts';
-import { informeSemanal, semanaDe, conciliacionCuadra, type Informe } from '../src/data/reporte-aliado.ts';
+import {
+  informeSemanal,
+  semanaDe,
+  conciliacionCuadra,
+  type EstadoInforme,
+  type Informe,
+  type Integridad,
+} from '../src/data/reporte-aliado.ts';
 import { almacen, type Almacen } from './_almacen.ts';
 
 const TX = 'tx';
 const CR = 'cr';
 
-/** Indices: uno por dia de activacion y otro por dia de redencion. */
-const idxActivacion = (dia: string): string => `act:${dia}`;
-const idxRedencion = (dia: string): string => `red:${dia}`;
+/* ------------------------------------------------------------
+   LOS INDICES LLEVAN EL TIPO DENTRO DEL NOMBRE
+
+   La reauditoria encontro que los creditos ATH-CR-* acababan en el
+   mismo indice que las transacciones, "act:<dia>". El informe leia
+   ese indice esperando transacciones, no encontraba las de los
+   creditos -porque estan en otro sitio- y daba una venta normal por
+   INCOMPLETA.
+
+   Ahora cada entidad tiene su prefijo y no comparten ninguno. Un
+   credito no puede aparecer en un indice de transacciones ni al
+   reves, y si alguna vez apareciera, el informe lo detecta como
+   contaminacion en vez de tratarlo como una transaccion perdida.
+   ------------------------------------------------------------ */
+const idxActivacion = (dia: string): string => `tx:act:${dia}`;
+const idxRedencion = (dia: string): string => `tx:red:${dia}`;
+const idxCredito = (dia: string): string => `cr:gen:${dia}`;
+
+/** Un id de transaccion es ATH-TRI-XXXXX; uno de credito, ATH-CR-... */
+const ES_TRANSACCION = /^ATH-[A-Z]{3}-[A-Z0-9]{5}$/;
 
 /* ------------------------------------------------------------
    LAS DOS VISTAS — lista blanca, no lista negra
@@ -91,24 +115,27 @@ export interface VistaCliente {
   activadoEn: string;
   redimidoEn?: string;
   vigente: boolean;
-  /** Solo lo que le importa: lo que pago y lo que gana. */
+  /** Solo lo que le importa: lo que pagó y cuánto crédito ganó. */
   consumo?: number;
   credito?: number;
-  creditoId?: string;
-  /** Si dejo su WhatsApp para el seguimiento. Sin el numero. */
-  seguimientoConsentido: boolean;
+  /* Mientras no exista vinculacion, lo unico verdadero que se le
+     puede decir. Ni saldo, ni identificador, ni movimientos: quien
+     tenga el codigo no tiene por que ver el estado de un saldo que
+     todavia no es de nadie. */
+  creditoPendienteVinculacion?: boolean;
   tieneOpinion: boolean;
-  /* El credito, tal como esta en su libro. Se lee de verdad en vez
-     de deducirlo del importe: mientras no exista vinculacion, lo que
-     el cliente tiene que ver es "generado, pendiente", y eso solo lo
-     sabe el credito. */
-  creditoVista?: CreditoVista;
 }
 
-export interface VistaOperador extends VistaCliente {
+export interface VistaOperador {
+  codigo: string;
+  estado: Transaccion['estado'];
+  activadoEn: string;
+  redimidoEn?: string;
+  vigente: boolean;
   fuente: Fuente;
   personas?: number;
   personasPrevistas?: number;
+  consumo?: number;
   /** El operador sí ve la comisión: es lo que su local le debe a Atheron. */
   comision?: number;
 }
@@ -122,24 +149,28 @@ export function vistaCliente(t: Transaccion, ahora = new Date()): VistaCliente {
     vigente: estaVigente(new Date(t.activadoEn), ahora),
     consumo: t.economia?.consumo,
     credito: t.economia?.credito,
-    creditoId: t.creditoId,
-    seguimientoConsentido: t.consentimiento?.seguimiento === true,
+    creditoPendienteVinculacion: t.creditoId ? true : undefined,
     tieneOpinion: Boolean(t.seguimiento),
   };
 }
 
 export const vistaOperador = (t: Transaccion, ahora = new Date()): VistaOperador => ({
-  ...vistaCliente(t, ahora),
+  codigo: t.codigo,
+  estado: t.estado,
+  activadoEn: t.activadoEn,
+  redimidoEn: t.redimidoEn,
+  vigente: estaVigente(new Date(t.activadoEn), ahora),
   fuente: t.fuente,
   personas: t.personas,
   personasPrevistas: t.personasPrevistas,
+  consumo: t.economia?.consumo,
   comision: t.economia?.comision,
 });
 
 /* Lo que NUNCA sale de aqui, por si alguien viene a anadir un campo:
-   consentimiento.contacto, nota (es del local, no del cliente),
-   seguimiento.comentario (es del cliente, no del local), margen,
-   eventos y version. */
+   consentimiento (ni el numero ni si lo dio: al cliente no le aporta
+   y al local no le incumbe), nota, seguimiento.comentario, margen,
+   identificador y saldo del credito, eventos y version. */
 
 export interface Respuesta<T> {
   ok: boolean;
@@ -233,15 +264,17 @@ export async function consultar(
   const transaccion = await deposito.lee<Transaccion>(TX, codigo);
   if (!transaccion) return rechaza('NO_EXISTE');
 
-  const base = opciones.operador ? vistaOperador(transaccion, ahora) : vistaCliente(transaccion, ahora);
-  if (transaccion.creditoId) {
-    const credito = await creditoDe(transaccion.creditoId, deposito, ahora);
-    if (credito) base.creditoVista = credito;
-  }
-  return { ok: true, datos: base };
+  return {
+    ok: true,
+    datos: opciones.operador ? vistaOperador(transaccion, ahora) : vistaCliente(transaccion, ahora),
+  };
 }
 
-/** El credito de una visita, para la pantalla del cliente. */
+/**
+ * El credito, entero. NO lo sirve ningun endpoint publico: mientras
+ * no exista vinculacion, conocer un codigo no puede dar acceso al
+ * estado de un saldo. Lo usan la conciliacion y las pruebas.
+ */
 export async function creditoDe(
   creditoId: string,
   deposito: Almacen = almacen(),
@@ -266,25 +299,28 @@ export interface EntradaRedimir {
 }
 
 /** Emite el credito de una venta. Idempotente: si ya existe, no pasa nada. */
-async function emiteCredito(
-  transaccion: Transaccion,
-  deposito: Almacen,
-  ahora: Date,
-): Promise<boolean> {
+async function emiteCredito(transaccion: Transaccion, deposito: Almacen): Promise<boolean> {
   const importe = transaccion.economia?.credito ?? 0;
   if (!transaccion.creditoId || importe <= 0) return true;
   try {
+    /* EL MOMENTO COMERCIAL ES LA REDENCION, no el instante en que se
+       ejecuta esta funcion. Si el credito se emite tarde -porque el
+       primer intento fallo y se repara en el siguiente-, su
+       vencimiento sigue contando desde que el cliente consumio. */
+    const momentoComercial = new Date(transaccion.redimidoEn ?? transaccion.activadoEn);
+
     const credito = generaCredito({
       id: transaccion.creditoId,
       valor: importe,
       origen: { piloto: transaccion.piloto, aliado: transaccion.aliado, codigo: transaccion.codigo },
       ambitos: AMBITOS_PREVISTOS,
       reglaVersion: transaccion.economia?.reglaVersion ?? REGLA.version,
-      ahora,
+      momentoComercial,
     });
-    /* crea() devuelve false si ya estaba: eso es exito, no error. Es
-       lo que hace que reintentar repare una emision a medias. */
-    await deposito.crea(CR, credito, [idxActivacion(credito.generadoEn.slice(0, 10))]);
+    /* Su propio indice, nunca el de transacciones. crea() devuelve
+       false si ya estaba: eso es exito, no error, y es lo que hace
+       que reintentar repare una emision a medias. */
+    await deposito.crea(CR, credito, [idxCredito(credito.generadoEn.slice(0, 10))]);
     return true;
   } catch (error) {
     registra('emitir el crédito', error);
@@ -304,7 +340,7 @@ export async function redimir(
      devuelve lo mismo de la primera vez, y de paso se comprueba que
      su credito exista. */
   if (guardada.estado === 'REDIMIDO') {
-    const emitido = await emiteCredito(guardada, deposito, ahora);
+    const emitido = await emiteCredito(guardada, deposito);
     return {
       ok: true,
       yaRedimida: true,
@@ -327,6 +363,14 @@ export async function redimir(
   });
   if (!resultado.ok || !resultado.transaccion) return rechaza(resultado.motivo ?? 'CONSUMO_INVALIDO');
 
+  /* Credito de cero -un consumo tan pequeno que el 5% redondea a
+     nada- no genera credito, asi que tampoco deja una referencia a
+     un credito que no existe: eso descuadraria la conciliacion por
+     un crédito "faltante" que nunca debio existir. */
+  if ((resultado.transaccion.economia?.credito ?? 0) <= 0) {
+    delete resultado.transaccion.creditoId;
+  }
+
   const cambio = await deposito.cambia(TX, resultado.transaccion, [
     idxRedencion(resultado.transaccion.redimidoEn!.slice(0, 10)),
   ]);
@@ -337,7 +381,7 @@ export async function redimir(
        una redencion repetida; si la cerro, esta cerrada. */
     const actual = await deposito.lee<Transaccion>(TX, entrada.codigo);
     if (actual?.estado === 'REDIMIDO') {
-      const emitido = await emiteCredito(actual, deposito, ahora);
+      const emitido = await emiteCredito(actual, deposito);
       return {
         ok: true,
         yaRedimida: true,
@@ -349,10 +393,23 @@ export async function redimir(
     if (actual?.estado === 'NO_REDIMIDO') return rechaza('CERRADA');
     return rechaza('CONFLICTO');
   }
-  if (cambio === 'NO_EXISTE') return rechaza('NO_EXISTE');
-  if (cambio === 'ILEGIBLE') return { ok: false, motivo: 'ERROR', explicacion: 'Registro ilegible.' };
+  /* Cualquier desenlace que no sea OK es un NO: aqui estaba el
+     agujero que encontro la reauditoria. Un ILEGIBLE o un
+     INCONSISTENTE se colaban por debajo de los "if" y la funcion
+     seguia como si hubiera escrito, devolviendo un 200 sobre una
+     venta que no existe. Ahora se enumeran los casos conocidos y
+     todo lo demas se rechaza en vez de continuar. */
+  if (cambio !== 'OK') {
+    if (cambio === 'NO_EXISTE') return rechaza('NO_EXISTE');
+    registra('registrar la redención', new Error(`El almacén respondió ${cambio}.`));
+    return {
+      ok: false,
+      motivo: 'ERROR',
+      explicacion: 'El registro no se pudo escribir. No se ha confirmado ninguna venta.',
+    };
+  }
 
-  const emitido = await emiteCredito(resultado.transaccion, deposito, ahora);
+  const emitido = await emiteCredito(resultado.transaccion, deposito);
   const e = resultado.transaccion.economia;
   await avisa('redencion', {
     codigo: resultado.transaccion.codigo,
@@ -399,7 +456,11 @@ export async function cerrar(
     if (actual?.estado === 'NO_REDIMIDO') return { ok: true, datos: vistaOperador(actual, ahora) };
     return rechaza('CONFLICTO');
   }
-  if (cambio !== 'OK') return rechaza('NO_EXISTE');
+  if (cambio !== 'OK') {
+    if (cambio === 'NO_EXISTE') return rechaza('NO_EXISTE');
+    registra('cerrar la visita', new Error(`El almacén respondió ${cambio}.`));
+    return { ok: false, motivo: 'ERROR', explicacion: 'El registro no se pudo escribir.' };
+  }
 
   return { ok: true, datos: vistaOperador(resultado.transaccion, ahora) };
 }
@@ -436,7 +497,10 @@ export async function opinar(
       });
       return { ok: true, datos: vistaCliente(actualizada, ahora) };
     }
-    if (cambio !== 'CONFLICTO') return rechaza('NO_EXISTE');
+    if (cambio !== 'CONFLICTO') {
+      registra('anotar el seguimiento', new Error(`El almacén respondió ${cambio}.`));
+      return { ok: false, motivo: 'ERROR', explicacion: 'No se pudo guardar la respuesta.' };
+    }
     /* Conflicto: alguien escribio entremedias. Se vuelve a leer y se
        funde otra vez, que es exactamente lo que hay que hacer con
        datos que se fusionan en vez de reemplazarse. */
@@ -445,22 +509,36 @@ export async function opinar(
 }
 
 /* ------------------------------------------------------------
-   INFORME SEMANAL
+   INTEGRIDAD — LO QUE HAY QUE PODER DEMOSTRAR ANTES DE FACTURAR
 
-   Se leen los dos indices de cada dia de la semana: el de
-   activaciones y el de redenciones. Antes se recorrian catorce dias
-   a ojo porque solo existia el indice de activacion; ahora una
-   redencion se indexa el dia que ocurre, que es el dia por el que se
-   factura.
+   La reauditoria borro las referencias de una venta: habia 300.000
+   reales, el informe encontro 200.000 y dijo "cuadra". Cuadraba
+   consigo mismo, que no es lo mismo que cuadrar.
 
-   Lo que se le pasa al informe incluye los FALTANTES: ids que el
-   indice nombra y que no estan. Una lista incompleta no puede
-   presentarse como cuadrada.
+   Detectar "indice nombra algo que no esta" no basta. Hay que
+   comprobar las dos direcciones y todo lo que cuelga:
+
+     indice  -> objeto     un id que no se puede leer
+     objeto  -> indice     una transaccion que ningun indice nombra
+     objeto  -> credito    un creditoId que apunta a nada
+     indice  != estado     algo en el indice de redenciones sin redimir
+     indice  contaminado   un ATH-CR-* dentro de un indice de tx
+     TTL     divergente    el objeto y su indice caducan en momentos
+                           distintos, asi que uno desaparecera antes
+
+   Si cualquiera de esas falla, el informe NO cuadra. Una liquidacion
+   sobre datos que no se pueden demostrar completos es peor que no
+   tener liquidacion: la primera se firma.
    ------------------------------------------------------------ */
+/* Un dia de diferencia entre el TTL del registro y el de su indice es
+   normal: se tocan en momentos distintos y cada escritura lo renueva.
+   Mas que eso significa que uno se va a quedar sin el otro. */
+const TOLERANCIA_TTL_SEGUNDOS = 24 * 60 * 60;
+
 export async function informe(
   fecha: string,
   deposito: Almacen = almacen(),
-): Promise<Respuesta<Informe & { cuadra: boolean; detalleConciliacion: string }>> {
+): Promise<Respuesta<Informe & { cuadra: boolean; estado: EstadoInforme; detalleConciliacion: string }>> {
   const semana = semanaDe(fecha);
   const dias: string[] = [];
   const desde = new Date(`${semana.lunes}T12:00:00Z`);
@@ -470,18 +548,102 @@ export async function informe(
     dias.push(d.toISOString().slice(0, 10));
   }
 
-  const listas = await Promise.all([
-    ...dias.map((d) => deposito.indice(idxActivacion(d))),
-    ...dias.map((d) => deposito.indice(idxRedencion(d))),
+  /* Se leen los dos indices de transacciones de cada dia. El de
+     creditos NO entra aqui: es de otra entidad y se comprueba
+     aparte, contra las transacciones que lo referencian. */
+  const [listasAct, listasRed] = await Promise.all([
+    Promise.all(dias.map((d) => deposito.indice(idxActivacion(d)))),
+    Promise.all(dias.map((d) => deposito.indice(idxRedencion(d)))),
   ]);
-  const ids = [...new Set(listas.flat())];
+
+  const enActivacion = new Set(listasAct.flat());
+  const enRedencion = new Set(listasRed.flat());
+  const todos = [...new Set([...enActivacion, ...enRedencion])];
+
+  /* Lo que no tiene forma de codigo de transaccion no se intenta
+     cargar como tal: se declara contaminacion del indice. */
+  const contaminados = todos.filter((id) => !ES_TRANSACCION.test(id));
+  const ids = todos.filter((id) => ES_TRANSACCION.test(id));
 
   const { encontrados, faltantes } = await deposito.leeVarios<Transaccion>(TX, ids);
-  const resultado = informeSemanal(encontrados, semana, faltantes);
+
+  /* MIRAR DESDE EL OTRO LADO.
+     Una transaccion a la que ningun indice apunta es invisible si
+     solo se leen los indices, y es exactamente lo que deja una
+     escritura a medias. Se recorre el almacen y se leen las que no
+     estaban en ningun indice -normalmente, ninguna-. */
+  const escaneo = await deposito.escanea(TX);
+  const conocidas = new Set(ids);
+  const huerfanas = escaneo.ids.filter((id) => !conocidas.has(id)).slice(0, 500);
+  const { encontrados: sueltas } = huerfanas.length
+    ? await deposito.leeVarios<Transaccion>(TX, huerfanas)
+    : { encontrados: [] as Transaccion[] };
+
+  const sinIndice: string[] = [];
+  /* De las sueltas, solo importan las de ESTA semana: las de otras
+     semanas no descuadran este informe. */
+  for (const t of sueltas) {
+    const dActivacion = t.activadoEn.slice(0, 10);
+    const dCierre = t.redimidoEn?.slice(0, 10);
+    if (dias.includes(dActivacion) || (dCierre && dias.includes(dCierre))) sinIndice.push(t.codigo);
+  }
+  if (escaneo.truncado) {
+    /* No se pudo recorrer entero: se dice, en vez de dar por bueno
+       lo que se alcanzo a mirar. */
+    sinIndice.push('(recuento incompleto: el almacén tiene más registros de los que se recorrieron)');
+  }
+  const indicesDivergentes: string[] = [];
+  const creditosFaltantes: string[] = [];
+  const ttlDivergente: string[] = [];
+
+  for (const t of encontrados) {
+    const diaActivacion = t.activadoEn.slice(0, 10);
+    if (dias.includes(diaActivacion) && !enActivacion.has(t.codigo)) sinIndice.push(t.codigo);
+
+    if (t.redimidoEn) {
+      const diaCierre = t.redimidoEn.slice(0, 10);
+      if (dias.includes(diaCierre) && !enRedencion.has(t.codigo)) sinIndice.push(t.codigo);
+    }
+    /* Al reves: si esta en el indice de redenciones, tiene que estar
+       redimida o cerrada. Si no, los dos lados se contradicen. */
+    if (enRedencion.has(t.codigo) && t.estado !== 'REDIMIDO' && t.estado !== 'NO_REDIMIDO') {
+      indicesDivergentes.push(t.codigo);
+    }
+
+    if (t.creditoId && !(await deposito.lee(CR, t.creditoId))) creditosFaltantes.push(t.creditoId);
+
+    try {
+      const vidaTx = await deposito.vida(TX, t.codigo);
+      const vidaIdx = await deposito.vidaIndice(idxActivacion(diaActivacion));
+      if (vidaTx >= 0 && vidaIdx >= 0 && Math.abs(vidaTx - vidaIdx) > TOLERANCIA_TTL_SEGUNDOS) {
+        ttlDivergente.push(t.codigo);
+      }
+    } catch (error) {
+      /* Si no se puede leer el TTL, no se finge que cuadra. */
+      registra('comprobar la retención', error);
+      ttlDivergente.push(t.codigo);
+    }
+  }
+
+  const integridad: Integridad = {
+    faltantes,
+    sinIndice: [...new Set(sinIndice)],
+    creditosFaltantes,
+    indicesDivergentes,
+    contaminados,
+    ttlDivergente,
+  };
+
+  const resultado = informeSemanal([...encontrados, ...sueltas.filter((t) => sinIndice.includes(t.codigo))], semana, integridad);
   const conciliacion = conciliacionCuadra(resultado);
   return {
     ok: true,
-    datos: { ...resultado, cuadra: conciliacion.cuadra, detalleConciliacion: conciliacion.detalle },
+    datos: {
+      ...resultado,
+      cuadra: conciliacion.cuadra,
+      estado: conciliacion.estado,
+      detalleConciliacion: conciliacion.detalle,
+    },
   };
 }
 

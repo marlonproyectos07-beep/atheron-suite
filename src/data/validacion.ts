@@ -53,33 +53,43 @@ export interface Lectura<T> {
 const AUSENTE: Lectura<never> = { fallo: 'AUSENTE' };
 
 /* ------------------------------------------------------------
-   ENTEROS
+   ENTEROS — SOLO NUMEROS, NI SIQUIERA CADENAS DE DIGITOS
 
-   Se admite el numero entero, y la cadena de digitos -porque un
-   formulario HTML manda texto y un JSON hecho a mano tambien-. Nada
-   mas: ni booleanos, ni arrays, ni null, ni cadenas con espacios
-   raros, ni "1e3", ni "0x10".
+   La primera version admitia "100000" porque un formulario HTML
+   manda texto. La reauditoria lo senalo, y tenia razon: el cuerpo de
+   estas peticiones es JSON, no un formulario, y quien lo construye
+   -nuestra propia pantalla- manda numeros. Admitir la cadena solo
+   servia para que un cliente descuidado o malicioso metiera algo que
+   PARECE un numero.
+
+   Convertir en la frontera es la costumbre que produjo el problema
+   original: quien convierte acaba aceptando true, [100000] y "1e3".
+   Aqui no se convierte nada. Si no es un number, es TIPO.
+
+   Si algun dia hace falta leer un formulario de verdad, se usa
+   enteroDeTexto, que esta abajo y se llama distinto a proposito.
    ------------------------------------------------------------ */
 export function entero(bruto: unknown, min: number, max: number): Lectura<number> {
+  if (bruto === undefined || bruto === null) return AUSENTE;
+  /* true, "100000", [100000], {}: todo esto es TIPO, no RANGO. */
+  if (typeof bruto !== 'number') return { fallo: 'TIPO' };
+  if (!Number.isFinite(bruto)) return { fallo: 'TIPO' };
+  if (!Number.isInteger(bruto)) return { fallo: 'NO_ENTERO' };
+  if (bruto < min || bruto > max) return { fallo: 'RANGO' };
+  return { valor: bruto };
+}
+
+/**
+ * Para entradas que de verdad vienen como texto (un formulario
+ * clasico, un parametro de la direccion). Hoy no la usa la API: esta
+ * aqui para que, cuando haga falta, se elija a proposito y no por
+ * descuido.
+ */
+export function enteroDeTexto(bruto: unknown, min: number, max: number): Lectura<number> {
   if (bruto === undefined || bruto === null || bruto === '') return AUSENTE;
-
-  let n: number;
-  if (typeof bruto === 'number') {
-    n = bruto;
-  } else if (typeof bruto === 'string') {
-    /* Solo digitos, con un signo menos opcional para poder decir
-       "negativo" en vez de "no es un numero": el mensaje importa. */
-    if (!/^-?\d+$/.test(bruto.trim())) return { fallo: 'TIPO' };
-    n = Number(bruto.trim());
-  } else {
-    /* true, [100000], {}, null: todo esto es TIPO, no RANGO. */
-    return { fallo: 'TIPO' };
-  }
-
-  if (!Number.isFinite(n)) return { fallo: 'TIPO' };
-  if (!Number.isInteger(n)) return { fallo: 'NO_ENTERO' };
-  if (n < min || n > max) return { fallo: 'RANGO' };
-  return { valor: n };
+  if (typeof bruto !== 'string') return { fallo: 'TIPO' };
+  if (!/^-?\d+$/.test(bruto.trim())) return { fallo: 'TIPO' };
+  return entero(Number(bruto.trim()), min, max);
 }
 
 /** Un importe en pesos colombianos enteros. Cero no es un importe. */
@@ -112,9 +122,15 @@ export function booleano(bruto: unknown): boolean {
    saber si el dia existe de verdad en ese mes.
    ------------------------------------------------------------ */
 export function fechaIso(bruto: unknown): Lectura<string> {
-  const leida = texto(bruto, 10);
-  if (!leida.valor) return leida as Lectura<string>;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(leida.valor)) return { fallo: 'TIPO' };
+  if (bruto === undefined || bruto === null || bruto === '') return AUSENTE;
+  if (typeof bruto !== 'string') return { fallo: 'TIPO' };
+
+  /* La cadena ENTERA, sin recortar a diez caracteres: recortar
+     convertia "2026-09-22-malformed" en una fecha valida, que es
+     aceptar basura con buena cara. */
+  const crudo = bruto.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(crudo)) return { fallo: 'TIPO' };
+  const leida = { valor: crudo };
 
   const [a, m, d] = leida.valor.split('-').map(Number);
   const fecha = new Date(Date.UTC(a, m - 1, d));

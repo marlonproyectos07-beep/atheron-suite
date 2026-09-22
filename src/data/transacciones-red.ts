@@ -62,7 +62,7 @@
    el build si alguien escribe uno. Registrar no es pagar.
    ============================================================ */
 
-import { calculaEconomia, REGLA, type Economia } from './economia-red.ts';
+import { calculaEconomia, instantanea, type Economia, type ReglaAplicable } from './economia-red.ts';
 import { PILOTO, selloColombiano, type EstadoReferido } from './piloto-la-triada.ts';
 import { entero, esClaveDe, pesosEnteros, texto, type Fallo } from './validacion.ts';
 
@@ -139,6 +139,11 @@ export interface Transaccion {
   personasPrevistas?: number;
   personas?: number;
 
+  /* La regla que se le mostro al cliente AL ACTIVAR. La redencion
+     usa esta, no la configuracion del momento: el trato se cierra
+     cuando el cliente acepta, no cuando el local cobra. */
+  regla: ReglaAplicable;
+
   /** Solo en REDIMIDO. Lleva dentro la regla con la que se calculo. */
   economia?: Economia;
   /** El credito que genero esta venta, si lo genero. */
@@ -187,6 +192,7 @@ export function creaActivacion(datos: DatosActivacion): Transaccion {
     originador: ORIGINADOR_LA_TRIADA,
     estado: 'ACTIVADO',
     activadoEn: sello,
+    regla: instantanea(),
     personasPrevistas: personas,
     /* Sin consentimiento no se guarda contacto. Y con consentimiento
        pero sin numero tampoco se marca que lo haya: seria un
@@ -271,7 +277,11 @@ export function redime(transaccion: Transaccion, consumoBruto: unknown, opciones
 
   const ahora = opciones.ahora ?? new Date();
   const sello = selloColombiano(ahora);
-  const economia = calculaEconomia(consumo.valor, REGLA);
+  /* La regla de la activacion, no la de ahora. Si falta -una
+     transaccion escrita antes de que esto existiera-, se cae a la
+     vigente y el informe lo vera como regla distinta, que es
+     exactamente lo que hay que ver. */
+  const economia = calculaEconomia(consumo.valor, transaccion.regla ?? instantanea());
 
   const eventos: Evento[] = [
     ...transaccion.eventos,

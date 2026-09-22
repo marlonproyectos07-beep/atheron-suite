@@ -49,10 +49,11 @@ const { default: operadorApi } = await import('../api/operador.ts');
 const { almacen } = await import('../api/_almacen.ts');
 const { generaCredito, gasta, reversa, vincula, estadoDe, cuadraCredito, asientaVencimiento } =
   await import('../src/data/credito-ledger.ts');
-const { informeSemanal, semanaDe, conciliacionCuadra } = await import('../src/data/reporte-aliado.ts');
+const { informeSemanal, semanaDe, conciliacionCuadra, INTEGRIDAD_LIMPIA } =
+  await import('../src/data/reporte-aliado.ts');
 const { creaActivacion, esFuente } = await import('../src/data/transacciones-red.ts');
 const { calculaEconomia, REGLA } = await import('../src/data/economia-red.ts');
-const { entero, fechaIso, pesosEnteros, objetoPlano } = await import('../src/data/validacion.ts');
+const { entero, enteroDeTexto, fechaIso, pesosEnteros, objetoPlano } = await import('../src/data/validacion.ts');
 const deposito = almacen();
 
 let hechas = 0;
@@ -259,7 +260,10 @@ desdeIp('10.0.0.2');
   ok('el cliente no ve la comisión', !('comision' in (cliente.cuerpo.datos as object)));
   ok('el operador sí ve la comisión', 'comision' in (operador.cuerpo.datos as object));
   ok('el cliente no ve cuántas personas declaró el local', !('personas' in (cliente.cuerpo.datos as object)));
-  ok('el cliente sí sabe que dejó consentimiento', (cliente.cuerpo.datos as { seguimientoConsentido: boolean }).seguimientoConsentido === true);
+  /* Ni siquiera si dio consentimiento: al cliente no le aporta y al
+     local no le incumbe. La lista blanca lo deja fuera. */
+  ok('tampoco se publica si dejó consentimiento', !('seguimientoConsentido' in (cliente.cuerpo.datos as object)));
+  ok('ni el identificador ni el saldo del crédito', !cliente.texto.includes('ATH-CR-'), cliente.texto);
 
   /* Seguimiento vacio: no puede borrar lo anterior. */
   await pide('/api/seguimiento', { metodo: 'POST', cuerpo: { codigo } });
@@ -343,7 +347,8 @@ desdeIp('10.0.0.4');
   ok('entero() rechaza un array', entero([5], 1, 10).fallo === 'TIPO');
   ok('entero() rechaza 1.5 como NO_ENTERO', entero(1.5, 1, 10).fallo === 'NO_ENTERO');
   ok('entero() rechaza fuera de rango', entero(99, 1, 10).fallo === 'RANGO');
-  ok('entero() acepta "7"', entero('7', 1, 10).valor === 7);
+  ok('entero() RECHAZA la cadena "7"', entero('7', 1, 10).fallo === 'TIPO');
+  ok('enteroDeTexto() sí la acepta, y hay que pedirlo a propósito', enteroDeTexto('7', 1, 10).valor === 7);
   ok('pesosEnteros() no acepta cero', pesosEnteros(0, 100).fallo !== undefined);
 
   ok('esFuente() no acepta "constructor"', !esFuente('constructor'));
@@ -372,8 +377,15 @@ desdeIp('10.0.0.41');
   const roto = await pide('/api/redimir', { metodo: 'POST', crudo: '{esto no', credencial: CREDENCIAL });
   ok('un JSON roto tampoco rompe el servidor', roto.estado === 400);
 
+  /* Una fecha imposible es un 400, no la semana de hoy: sustituirla
+     en silencio devolveria un informe correcto de OTRA semana y
+     quien lo firme no tendria forma de saberlo. */
   const fechaImposible = await pide('/api/reporte?fecha=2026-02-31', { credencial: ADMIN });
-  ok('una fecha imposible en el informe no revienta', fechaImposible.estado === 200);
+  ok('una fecha imposible en el informe da 400', fechaImposible.estado === 400, `${fechaImposible.estado}`);
+  const fechaSucia = await pide('/api/reporte?fecha=2026-09-22-malformed', { credencial: ADMIN });
+  ok('una fecha con basura detrás no se recorta: 400', fechaSucia.estado === 400, `${fechaSucia.estado}`);
+  const sinFecha = await pide('/api/reporte', { credencial: ADMIN });
+  ok('sin fecha, la semana de hoy', sinFecha.estado === 200);
 }
 
 /* ============================================================
@@ -473,8 +485,12 @@ desdeIp('10.0.0.7');
     cuerpo: { codigo, consumo: 100000 },
     credencial: CREDENCIAL,
   });
-  const creditoId = (redimida.cuerpo.datos as { creditoId?: string }).creditoId;
+  /* El identificador del credito NO viaja en ninguna respuesta: se
+     lee del almacen, que es donde vive. */
+  const tx = await deposito.lee<{ creditoId?: string }>('tx', codigo);
+  const creditoId = tx?.creditoId;
   ok('una venta emite un crédito de verdad', Boolean(creditoId));
+  ok('y su identificador no viaja en la respuesta', !redimida.texto.includes('ATH-CR-'), redimida.texto);
 
   const credito = await deposito.lee<Record<string, unknown>>('cr', creditoId!);
   ok('  con su importe', credito!.valor === 5000);
@@ -484,13 +500,11 @@ desdeIp('10.0.0.7');
   ok('  y sin titular inventado', credito!.titular === null);
   ok('  con su movimiento de generación', (credito!.movimientos as unknown[]).length === 1);
 
-  const vista = (redimida.cuerpo.datos as { creditoVista?: unknown }).creditoVista;
-  ok('el crédito no viaja entero en la respuesta', vista === undefined || !JSON.stringify(vista).includes('movimientos'));
-
   const consulta = await pide(`/api/transaccion?c=${codigo}`);
-  const creditoVista = (consulta.cuerpo.datos as { creditoVista: { estado: string; etiqueta: string } }).creditoVista;
-  ok('el cliente ve el estado real del crédito', creditoVista.estado === 'GENERADO', creditoVista.estado);
-  ok('y la etiqueta dice que está pendiente de vinculación', creditoVista.etiqueta.includes('pendiente'));
+  const vistaCli = consulta.cuerpo.datos as { credito?: number; creditoPendienteVinculacion?: boolean };
+  ok('el cliente ve cuánto crédito generó', vistaCli.credito === 5000);
+  ok('y que está pendiente de vinculación', vistaCli.creditoPendienteVinculacion === true);
+  ok('pero no su saldo ni su estado interno', !consulta.texto.includes('saldo'), consulta.texto);
 
   /* Reintentar no emite un segundo credito. */
   await pide('/api/redimir', { metodo: 'POST', cuerpo: { codigo, consumo: 100000 }, credencial: CREDENCIAL });
@@ -503,6 +517,7 @@ desdeIp('10.0.0.7');
     valor: 5000,
     origen: { piloto: 'ATH-PILOT-001', aliado: 'la-triada', codigo: 'ATH-TRI-K7M2Q' },
     ambitos: ['HOSPEDAJE'],
+    momentoComercial: new Date(),
   });
 
   ok('un crédito nace GENERADO, no disponible', estadoDe(base) === 'GENERADO');
@@ -554,7 +569,10 @@ console.log('\n A7 · Informe y conciliación');
   ok('una semana vacía NO se declara cuadrada', cuadre.cuadra === false);
   ok('  y se distingue como SIN_DATOS', cuadre.estado === 'SIN_DATOS', cuadre.estado);
 
-  const incompleto = informeSemanal([], semanaDe('2026-09-23'), ['ATH-TRI-AAAAA']);
+  const incompleto = informeSemanal([], semanaDe('2026-09-23'), {
+    ...INTEGRIDAD_LIMPIA,
+    faltantes: ['ATH-TRI-AAAAA'],
+  });
   ok('con registros que faltan, el estado es INCOMPLETO', conciliacionCuadra(incompleto).estado === 'INCOMPLETO');
 }
 

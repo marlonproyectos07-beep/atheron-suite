@@ -93,11 +93,40 @@ function coincide(recibido: string, esperadoHex: string): boolean {
   return timingSafeEqual(sha256(recibido), esperado);
 }
 
-/** Saca la credencial de la cabecera. Nunca de la direccion. */
-export function credencialDe(cabeceras: Record<string, string | string[] | undefined>): string {
+/* ------------------------------------------------------------
+   LA CABECERA
+
+   Tres casos distintos, y se distinguen porque merecen respuestas
+   distintas: no hay credencial (401), hay algo que no tiene forma de
+   credencial (400: el cliente esta mal escrito, no es que le falten
+   permisos), o hay una credencial que se puede comprobar.
+
+   Se exige el formato Bearer de forma estricta. Aceptar la cabecera
+   "a pelo" parece amable y lo que hace es tragarse cualquier cosa
+   que llegue, incluida una cookie o un token de otro sistema.
+   ------------------------------------------------------------ */
+export type Cabecera =
+  | { tipo: 'AUSENTE' }
+  | { tipo: 'MALFORMADA' }
+  | { tipo: 'PRESENTE'; valor: string };
+
+export function credencialDe(cabeceras: Record<string, string | string[] | undefined>): Cabecera {
   const bruta = cabeceras.authorization ?? cabeceras.Authorization;
-  const texto = Array.isArray(bruta) ? bruta[0] : (bruta ?? '');
-  return texto.replace(/^Bearer\s+/i, '').trim();
+  /* Una cabecera repetida llega como lista. Dos credenciales no son
+     una credencial: se rechaza por malformada en vez de elegir una,
+     que es como se cuelan las peticiones ambiguas. */
+  if (Array.isArray(bruta)) return bruta.length === 1 ? analizaCabecera(bruta[0]) : { tipo: 'MALFORMADA' };
+  if (bruta === undefined || bruta === null) return { tipo: 'AUSENTE' };
+  if (typeof bruta !== 'string') return { tipo: 'MALFORMADA' };
+  return analizaCabecera(bruta);
+}
+
+function analizaCabecera(bruta: string): Cabecera {
+  const texto = bruta.trim();
+  if (!texto) return { tipo: 'AUSENTE' };
+  const encaja = /^Bearer\s+(\S+)$/i.exec(texto);
+  if (!encaja) return { tipo: 'MALFORMADA' };
+  return { tipo: 'PRESENTE', valor: encaja[1] };
 }
 
 /**
@@ -169,10 +198,19 @@ export const LIMITES: Record<string, Limite> = {
   credencial: { max: 10, ventana: 900 },
 };
 
+const cubeta = (endpoint: string, quien: string, ahora: Date): string => {
+  /* La ventana entra en la clave: asi caduca sola y no hay que
+     acordarse de reiniciar contadores. */
+  const limite = LIMITES[endpoint];
+  return `${endpoint}:${quien}:${Math.floor(ahora.getTime() / (limite.ventana * 1000))}`;
+};
+
 /**
- * Suma uno y dice si se ha pasado.
- * Si el almacen falla, NO se bloquea la peticion: un contador caido
- * no puede dejar sin registrar una venta que ya ocurrio.
+ * Suma uno y dice si se ha pasado. Para endpoints de trafico normal.
+ *
+ * Si el contador falla, NO se bloquea la peticion: un contador caido
+ * no puede dejar sin registrar una venta que ya ocurrio. Para las
+ * credenciales la decision es la contraria, y esta abajo.
  */
 export async function pasaLimite(
   deposito: Almacen,
@@ -182,13 +220,117 @@ export async function pasaLimite(
 ): Promise<boolean> {
   const limite = LIMITES[endpoint];
   if (!limite) return true;
-  /* La ventana entra en la clave: asi caduca sola y no hay que
-     acordarse de reiniciar contadores. */
-  const cubo = Math.floor(ahora.getTime() / (limite.ventana * 1000));
   try {
-    const n = await deposito.contador(`${endpoint}:${quien}:${cubo}`, limite.ventana);
+    const n = await deposito.contador(cubeta(endpoint, quien, ahora), limite.ventana);
     return n <= limite.max;
   } catch {
     return true;
   }
 }
+
+/* ============================================================
+   LA POLITICA UNICA DE AUTENTICACION
+
+   La reauditoria encontro que el contador de credenciales fallidas
+   se incrementaba pero su resultado se ignoraba: el intento numero
+   once seguia llegando a comprobar la credencial. Y /api/transaccion
+   permitia probar credenciales sin contabilizarlas igual que el
+   resto.
+
+   Ahora hay UNA funcion, y todos los endpoints protegidos pasan por
+   ella. El orden importa y es este:
+
+     1. Mirar cuantos fallos lleva quien llama, SIN sumar.
+     2. Si ya se paso, cortar AQUI. No se comprueba la credencial.
+     3. Comprobar.
+     4. Si falla, sumar uno.
+     5. Si acierta, no sumar nada: un operador con trabajo no puede
+        agotarse su propio cupo acertando.
+
+   QUE PASA SI EL CONTADOR NO RESPONDE: FAIL-CLOSED
+
+   Aqui NO se deja pasar. Y no es una postura dura por gusto: el
+   contador vive en el MISMO almacen donde hay que escribir la venta.
+   Si no responde, la redencion tampoco se iba a poder guardar, asi
+   que dejar pasar la autenticacion no salvaria ninguna operacion;
+   solo abriria la puerta a probar credenciales justo cuando el
+   sistema esta ciego.
+
+   Lo que si se respeta: una venta YA confirmada no se toca ni se
+   deshace por esto. El fallo corta autenticaciones nuevas, no
+   registros existentes.
+   ============================================================ */
+export type Veredicto = 'OK' | 'AUSENTE' | 'MALFORMADA' | 'INVALIDA' | 'BLOQUEADO' | 'ALMACEN';
+
+export async function autoriza(
+  deposito: Almacen,
+  cabeceras: Record<string, string | string[] | undefined>,
+  papel: Papel,
+  aliado: string,
+  ahora = new Date(),
+): Promise<Veredicto> {
+  const cabecera = credencialDe(cabeceras);
+  if (cabecera.tipo === 'AUSENTE') return 'AUSENTE';
+  if (cabecera.tipo === 'MALFORMADA') return 'MALFORMADA';
+
+  const quien = quienLlama(cabeceras);
+  const clave = cubeta('credencial', quien, ahora);
+  const limite = LIMITES.credencial;
+
+  let fallos: number;
+  try {
+    fallos = await deposito.cuenta(clave);
+  } catch {
+    return 'ALMACEN';
+  }
+  if (fallos >= limite.max) return 'BLOQUEADO';
+
+  const vale = papel === 'ADMIN' ? esAdmin(cabecera.valor) : esOperador(cabecera.valor, aliado);
+  if (vale) return 'OK';
+
+  try {
+    await deposito.contador(clave, limite.ventana);
+  } catch {
+    /* No se pudo anotar el fallo. Se rechaza igual: lo que no puede
+       pasar es que un contador caido convierta un intento fallido en
+       un intento gratis. */
+    return 'ALMACEN';
+  }
+  return 'INVALIDA';
+}
+
+/** La respuesta HTTP que corresponde a cada veredicto. */
+export const RESPUESTA_AUTORIZACION: Record<Exclude<Veredicto, 'OK'>, { estado: number; cuerpo: unknown }> = {
+  AUSENTE: {
+    estado: 401,
+    cuerpo: {
+      ok: false,
+      motivo: 'NO_AUTORIZADO',
+      explicacion: 'Esta pantalla es del personal del local. Hace falta su credencial.',
+    },
+  },
+  MALFORMADA: {
+    estado: 400,
+    cuerpo: {
+      ok: false,
+      motivo: 'CABECERA_INVALIDA',
+      explicacion: 'La credencial se manda como «Authorization: Bearer <credencial>», una sola vez.',
+    },
+  },
+  INVALIDA: {
+    estado: 401,
+    cuerpo: { ok: false, motivo: 'NO_AUTORIZADO', explicacion: 'Esa credencial no es la de este local.' },
+  },
+  BLOQUEADO: {
+    estado: 429,
+    cuerpo: {
+      ok: false,
+      motivo: 'DEMASIADAS_PETICIONES',
+      explicacion: 'Demasiados intentos fallidos. Espera un rato antes de volver a intentarlo.',
+    },
+  },
+  ALMACEN: {
+    estado: 503,
+    cuerpo: { ok: false, motivo: 'ALMACEN_INCIERTO' },
+  },
+};

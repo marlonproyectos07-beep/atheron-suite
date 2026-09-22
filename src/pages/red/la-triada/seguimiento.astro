@@ -150,8 +150,12 @@ const CARAS = [
     error.hidden = true;
     form.hidden = true;
     $('[data-gracias]')!.hidden = false;
+    /* Nada de "te espera para cuando reserves": el credito existe,
+       pero todavia no hay forma de vincularlo a una persona, asi que
+       prometerlo seria mentir en la ultima pantalla del recorrido,
+       que es donde mas se recuerda. */
     $('[data-mensaje-gracias]')!.textContent = incidencia
       ? 'Lo miramos y te escribimos si nos dejaste tu WhatsApp.'
-      : 'Tu Crédito Atheron te espera para cuando reserves con nosotros.';
+      : 'Tu Crédito Atheron queda generado, pendiente de vinculación.';
   });
 </script>

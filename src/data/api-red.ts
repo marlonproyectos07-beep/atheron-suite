@@ -31,7 +31,6 @@
    ============================================================ */
 
 import type { Fuente } from './transacciones-red.ts';
-import type { CreditoVista } from './credito-ledger.ts';
 
 export const RUTAS = {
   activar: '/red/la-triada',
@@ -61,10 +60,11 @@ export interface TransaccionVista {
   vigente: boolean;
   consumo?: number;
   credito?: number;
-  creditoId?: string;
-  creditoVista?: CreditoVista;
-  seguimientoConsentido: boolean;
-  tieneOpinion: boolean;
+  /* Lo unico que se puede decir del credito mientras no exista
+     vinculacion. Ni identificador, ni saldo, ni estado detallado:
+     conocer un codigo no puede dar acceso a un saldo. */
+  creditoPendienteVinculacion?: boolean;
+  tieneOpinion?: boolean;
   /* Solo con credencial de operador. */
   fuente?: Fuente;
   personas?: number;
@@ -168,6 +168,24 @@ export const opinar = (datos: {
    Se teclea una vez y se queda en la memoria de ESA pestana. No en
    localStorage: una credencial que sobrevive a cerrar el navegador
    es una credencial que se queda en un movil prestado.
+
+   EL RIESGO QUE ESTO TIENE, DICHO
+
+   sessionStorage lo puede leer cualquier JavaScript que llegue a
+   ejecutarse en esta pagina. Si alguna vez entrara un script ajeno
+   -un XSS-, se llevaria la credencial del local mientras la pestana
+   siga abierta. Se asume a sabiendas porque estas paginas no cargan
+   nada de terceros, no aceptan HTML de nadie y duran lo que dura un
+   turno.
+
+   Lo que lo cerraria de verdad es una cookie HttpOnly emitida por el
+   servidor, que el JavaScript no puede leer. Eso necesita sesiones,
+   y sesiones necesitan decidir su duracion y su cierre: es trabajo
+   de la siguiente fase, no de este piloto, y queda anotado como tal
+   en docs/loop-002-la-triada.md.
+
+   Mientras tanto: la credencial se borra al cerrar la pestana, y la
+   pantalla ofrece salir a mano.
    ------------------------------------------------------------ */
 export const CLAVE_CREDENCIAL = 'atheron.red.operador.v1';
 

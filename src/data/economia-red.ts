@@ -165,8 +165,41 @@ export interface Economia {
   reglaVersion: string;
 }
 
-export function calculaEconomia(consumo: number, regla: ReglaEconomica = REGLA): Economia {
+/* ------------------------------------------------------------
+   LA REGLA QUE SE APLICA A UNA VENTA
+
+   No es la regla entera: es lo justo para calcular y para poder
+   auditarlo despues. Cada transaccion guarda una copia de esto EN LA
+   ACTIVACION, y la redencion usa esa copia aunque la configuracion
+   haya cambiado entremedias.
+
+   POR QUE EN LA ACTIVACION Y NO EN LA REDENCION
+
+   Porque es cuando se le ensena la oferta al cliente. Si activa
+   viendo un 5% y consume dos horas despues, cobrarle segun un
+   reparto nuevo seria cambiarle el trato despues de aceptarlo. El
+   momento contractual de este piloto es la activacion, y esta
+   escrito aqui para que no dependa de quien lea el codigo.
+   ------------------------------------------------------------ */
+export type ReglaAplicable = Pick<
+  ReglaEconomica,
+  'version' | 'comisionPct' | 'creditoPct' | 'margenPct'
+>;
+
+export const instantanea = (regla: ReglaEconomica = REGLA): ReglaAplicable => ({
+  version: regla.version,
+  comisionPct: regla.comisionPct,
+  creditoPct: regla.creditoPct,
+  margenPct: regla.margenPct,
+});
+
+export function calculaEconomia(consumo: number, regla: ReglaAplicable = REGLA): Economia {
   if (!Number.isFinite(consumo) || consumo < 0) throw new Error('Consumo no válido.');
+  /* Una instantanea guardada hace semanas tambien tiene que cuadrar:
+     si no, alguien la edito a mano en el almacen. */
+  if (Math.round((regla.creditoPct + regla.margenPct) * 100) !== Math.round(regla.comisionPct * 100)) {
+    throw new Error(`ECONOMIA: la regla ${regla.version} no cuadra: crédito + margen ≠ comisión.`);
+  }
   const base = Math.round(consumo);
   const comision = Math.round((base * regla.comisionPct) / 100);
   const credito = Math.round((base * regla.creditoPct) / 100);

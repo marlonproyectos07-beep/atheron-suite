@@ -151,12 +151,21 @@ export function generaCredito(entrada: {
   origen: { piloto: string; aliado: string; codigo: string };
   ambitos: AmbitoCredito[];
   reglaVersion?: string;
-  ahora?: Date;
+  /* EL MOMENTO COMERCIAL: cuando se consumio, no cuando se escribio
+     este registro. La reauditoria encontro que una emision reparada
+     tarde movia el vencimiento hacia adelante, regalando dias que el
+     cliente no habia ganado -y, al reves, un reintento podria
+     acortarlos-. El credito nace de una visita, y su reloj empieza
+     con la visita. */
+  momentoComercial: Date;
 }): Credito {
   if (!Number.isInteger(entrada.valor) || entrada.valor <= 0) {
     throw new Error('Un crédito de cero o con decimales no se emite.');
   }
-  const ahora = entrada.ahora ?? new Date();
+  const ahora = entrada.momentoComercial;
+  if (!(ahora instanceof Date) || Number.isNaN(ahora.getTime())) {
+    throw new Error('Un crédito sin momento comercial no se emite: su vigencia sería inventada.');
+  }
   const expira = new Date(ahora.getTime() + VIGENCIA_CREDITO_DIAS * 24 * 60 * 60 * 1000);
 
   return {
@@ -185,11 +194,20 @@ export function generaCredito(entrada: {
    ------------------------------------------------------------ */
 export function estadoDe(credito: Credito, ahora = new Date()): EstadoCredito {
   if (credito.reversado) return 'REVERSADO';
+
+  /* VENCIDO y AGOTADO no son lo mismo, y confundirlos le dice al
+     cliente que "usó" un crédito que en realidad se le caducó. La
+     diferencia se lee en el libro: si el ultimo movimiento que dejo
+     el saldo a cero fue un VENCIMIENTO, esta vencido; si fue un
+     GASTO, lo uso. */
+  const caducado = new Date(credito.expiraEn).getTime() <= ahora.getTime();
+  const asentadoVencido = credito.movimientos.some((m) => m.tipo === 'VENCIMIENTO');
+  if (asentadoVencido) return 'VENCIDO';
   if (credito.saldo <= 0) return 'AGOTADO';
-  /* El vencimiento se mira por fecha, sin depender de que ningun
-     proceso haya pasado a marcarlo: un credito vencido no puede
-     parecer disponible porque nadie ejecuto la limpieza. */
-  if (new Date(credito.expiraEn).getTime() <= ahora.getTime()) return 'VENCIDO';
+  /* Se mira por fecha, sin depender de que ningun proceso haya
+     pasado a marcarlo: un credito vencido no puede parecer
+     disponible porque nadie ejecuto la limpieza. */
+  if (caducado) return 'VENCIDO';
   if (!credito.titular) return 'GENERADO';
   return credito.saldo === credito.valor ? 'DISPONIBLE' : 'PARCIAL';
 }
@@ -209,6 +227,7 @@ export const esGastable = (credito: Credito, ahora = new Date()): boolean => {
    ------------------------------------------------------------ */
 export type FalloCredito =
   | 'NO_GASTABLE'
+  | 'REFERENCIA_AUSENTE'
   | 'SALDO_INSUFICIENTE'
   | 'IMPORTE_INVALIDO'
   | 'YA_VINCULADO'
@@ -219,6 +238,8 @@ export interface ResultadoCredito {
   ok: boolean;
   fallo?: FalloCredito;
   credito?: Credito;
+  /** true si esa referencia ya se había gastado: no se gasta otra vez. */
+  repetido?: boolean;
 }
 
 const siguiente = (c: Credito, m: Movimiento, cambios: Partial<Credito>): Credito => ({
@@ -243,7 +264,20 @@ export function vincula(credito: Credito, referencia: string, ahora = new Date()
   };
 }
 
-/** Gasta parte o todo. Es lo que impide el doble uso, junto al CAS. */
+/**
+ * Gasta parte o todo.
+ *
+ * LA REFERENCIA ES OBLIGATORIA, Y ES LO QUE IMPIDE EL DOBLE GASTO
+ *
+ * El compare-and-set protege de dos escrituras a la vez, pero no de
+ * esto: leer la version nueva y volver a aplicar el MISMO gasto. La
+ * reauditoria lo reprodujo. Con la referencia -el numero de reserva,
+ * el pedido, lo que sea- el libro sabe que ese gasto ya esta dentro
+ * y devuelve el credito sin tocar, marcado como repetido.
+ *
+ * Es la misma idea que hace segura la redencion: reintentar tiene
+ * que ser inofensivo, porque las conexiones se caen a mitad.
+ */
 export function gasta(
   credito: Credito,
   importe: number,
@@ -251,6 +285,13 @@ export function gasta(
   ahora = new Date(),
 ): ResultadoCredito {
   if (!Number.isInteger(importe) || importe <= 0) return { ok: false, fallo: 'IMPORTE_INVALIDO', credito };
+  if (!referencia?.trim()) return { ok: false, fallo: 'REFERENCIA_AUSENTE', credito };
+
+  const yaGastada = credito.movimientos.some(
+    (m) => m.tipo === 'GASTO' && m.referencia === referencia.trim(),
+  );
+  if (yaGastada) return { ok: true, repetido: true, credito };
+
   if (!esGastable(credito, ahora)) return { ok: false, fallo: 'NO_GASTABLE', credito };
   if (importe > credito.saldo) return { ok: false, fallo: 'SALDO_INSUFICIENTE', credito };
 
@@ -258,7 +299,7 @@ export function gasta(
     ok: true,
     credito: siguiente(
       credito,
-      { tipo: 'GASTO', importe: -importe, sello: selloColombiano(ahora), referencia },
+      { tipo: 'GASTO', importe: -importe, sello: selloColombiano(ahora), referencia: referencia.trim() },
       { saldo: credito.saldo - importe },
     ),
   };

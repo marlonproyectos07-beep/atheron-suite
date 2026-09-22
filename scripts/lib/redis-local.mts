@@ -101,6 +101,13 @@ export interface RedisLocal {
   url: string;
   /** Pone el puente en modo averiado: contesta 200 con {} . */
   averia(valor: boolean): void;
+  /**
+   * Hace que el puente conteste EXACTAMENTE este cuerpo, sea cual
+   * sea la orden. null lo devuelve a la normalidad. Sirve para
+   * probar que respuestas raras -true, [1], "1"- no se toman por
+   * escrituras correctas.
+   */
+  responde(cuerpoCrudo: string | null): void;
   cierra(): void;
 }
 
@@ -130,11 +137,16 @@ export async function levanta(puertoRedis: number, puertoHttp: number): Promise<
   await redis.manda(['FLUSHALL']);
 
   let averiado = false;
+  let cuerpoFijo: string | null = null;
   const puente = http.createServer(async (peticion, respuesta) => {
     const trozos: Buffer[] = [];
     for await (const t of peticion) trozos.push(t as Buffer);
     respuesta.setHeader('content-type', 'application/json');
 
+    if (cuerpoFijo !== null) {
+      respuesta.writeHead(200).end(cuerpoFijo);
+      return;
+    }
     if (averiado) {
       respuesta.writeHead(200).end('{}');
       return;
@@ -154,6 +166,9 @@ export async function levanta(puertoRedis: number, puertoHttp: number): Promise<
     url: `http://127.0.0.1:${puertoHttp}`,
     averia: (valor: boolean) => {
       averiado = valor;
+    },
+    responde: (cuerpoCrudo: string | null) => {
+      cuerpoFijo = cuerpoCrudo;
     },
     cierra: () => {
       redis!.cierra();

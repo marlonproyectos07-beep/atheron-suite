@@ -5,9 +5,9 @@
 > (Issue #48, PR #51) sigue como está: ver [piloto-la-triada.md](piloto-la-triada.md).
 > Documento interno: **no se publica**.
 >
-> **Corregido el 22 de septiembre de 2026** tras una auditoría independiente adversarial
-> (veredicto C: correcciones obligatorias antes de provisionar el almacén). Lo que encontró
-> y lo que se hizo está en §«Después de la auditoría», al final.
+> **Corregido dos veces el 22 de septiembre de 2026**, tras dos auditorías independientes
+> adversariales (las dos con veredicto C). Lo que encontraron y lo que se hizo está en
+> §«Después de la auditoría» y §«Después de la reauditoría», al final.
 
 ## Qué cambia respecto al piloto técnico
 
@@ -347,9 +347,10 @@ queda anotado como decisión pendiente.
 ## Pruebas
 
 ```bash
-npm run prueba-adversarial    103 · una por cada hallazgo de la auditoría, por HTTP real
+npm run prueba-reauditoria     90 · prueba de oro + una regresión por hallazgo de la 2ª auditoría
+npm run prueba-adversarial    108 · una por cada hallazgo de la 1ª auditoría, por HTTP real
 npm run prueba-almacen         24 · el almacén contra un Redis DE VERDAD
-npm run prueba-loop002         86 · economía, transacciones, backend, informe
+npm run prueba-loop002         87 · economía, transacciones, backend, informe
 npm run prueba-humo-loop002    recorrido completo en iPhone contra la API y Redis reales
 npm run prueba-piloto          48 (ATH-PILOT-001, siguen pasando)
 npm run prueba-qr              17
@@ -419,6 +420,70 @@ decisión de identidad que no se puede asumir (gate 3). La reversión parcial ne
 (gate 6). Y el QR inverso sigue siendo **atribución parcial**: registra de dónde vino la
 persona, pero no cierra el circuito La Triada → venta Atheron, porque para eso hace falta la
 misma identidad que todavía no existe.
+
+---
+
+## Después de la reauditoría
+
+La segunda auditoría confirmó como corregidos la autorización, la concurrencia, el cierre
+frente a la redención, el compare-and-set, la filtración de texto libre y el seguimiento; y
+encontró siete cosas más. Todas eran reales.
+
+| # | Hallazgo | Corrección |
+|---|---|---|
+| B1 | Los créditos entraban en el índice de transacciones, y una venta normal salía INCOMPLETA | Cada entidad tiene su prefijo: `tx:act:`, `tx:red:`, `cr:gen:`. El informe no intenta cargar un `ATH-CR-*` como transacción, y si alguno aparece lo declara contaminación |
+| B2 | `EVAL` aísla, pero **no deshace**: con un índice de tipo equivocado, el script escribía el objeto y reventaba después | Los scripts comprueban el tipo de **todas** las claves antes de tocar ninguna. Si algo no encaja devuelven −3 sin haber escrito. Y cualquier resultado que no sea OK deja de contarse como venta: ahí había un 200 sobre algo que no se guardó |
+| B3 | `{"result":true}`, `["1"]` y `"1"` se convertían con `Number()` y pasaban por éxito | Sin conversiones: tipo exacto, entero, y dentro de los códigos que ese script puede devolver. Doce respuestas raras probadas, ninguna se acepta |
+| B4 | Con las referencias de una venta borradas, el informe encontraba 200.000 de 300.000 y decía «cuadra» | Integridad en las dos direcciones: índice→objeto, **objeto→índice** (recorriendo el almacén, porque desde los índices eso es invisible), crédito referenciado, índices contradictorios, contaminación y TTL divergente. Cualquiera de ellas ⇒ INCOMPLETO |
+| B5 | El contador de credenciales sumaba pero nadie miraba el resultado | Una sola política de autenticación: se mira el cupo **antes** de comprobar nada, y se aplica igual en `/redimir`, `/reporte`, `/operador` y `/transaccion`. Si el contador no responde, **fail-closed** |
+| B6 | Se aceptaba `"100000"`, `personas: "3"`, y una fecha imposible se sustituía por la semana actual | Sin coerción: los enteros son `number`. Una fecha inválida es **400**, no la semana de hoy; un opcional inválido también, en vez de descartarse en silencio |
+| B7 | Vencimiento movido al reparar, VENCIDO etiquetado como «usado», doble gasto con el mismo pedido, crédito cero con referencia falsa, y la regla la ponía la redención | Ver abajo |
+
+### El crédito, en detalle
+
+- **El vencimiento sale de la redención**, no de cuándo se escribe el registro. Reparar un
+  crédito tres días después ya no regala tres días de vigencia.
+- **VENCIDO no es AGOTADO.** Se distinguen leyendo el libro: si el saldo llegó a cero por un
+  asiento de vencimiento, está vencido; si fue por un gasto, se usó.
+- **Cada gasto exige una referencia** (el pedido, la reserva). Repetir la misma no vuelve a
+  gastar: devuelve el crédito intacto marcado como repetido. El compare-and-set protege de
+  dos escrituras a la vez; esto protege de reaplicar la misma dos veces, que es distinto.
+- **Crédito cero no deja referencia** a un crédito que no existe.
+- **La regla se fija en la activación.** Es el momento contractual de este piloto: si el
+  cliente activa viendo un 5% y consume dos horas después, se le aplica el 5% aunque la
+  configuración haya cambiado entremedias. Cambiarle el trato después de aceptarlo no es una
+  opción, y ahora está probado con la configuración cambiada a 6/4 a mitad.
+
+### El informe
+
+Las filas reconstruyen **activaciones, cierres y redenciones**, no sólo lo que factura. La
+satisfacción se cuenta como **evento de la semana** —por el sello del seguimiento—, así que
+una opinión escrita hoy no cambia la media de una semana ya liquidada. Y la conversión es de
+**cohorte**: de las activaciones de esta semana, cuántas acabaron consumiéndose. Mezclar
+«redenciones de la semana» con «activaciones de la semana» daba porcentajes por encima de
+100 en cuanto se consumía algo activado el domingo anterior.
+
+El servicio devuelve el estado explícito —`CUADRA`, `NO_CUADRA`, `SIN_DATOS`, `INCOMPLETO`—
+y la pantalla lo pinta; no lo deduce por su cuenta.
+
+### Privacidad, ajustes de esta ronda
+
+- La vista del cliente ya no dice si dejó consentimiento, ni el identificador, ni el saldo
+  del crédito: conocer un código no puede dar acceso a un saldo que todavía no es de nadie.
+  Sólo cuánto generó y que está pendiente de vinculación.
+- Una cabecera `Authorization` repetida o sin `Bearer` es **400**, nunca 500.
+- La credencial del local sigue en `sessionStorage`, con su riesgo escrito en
+  `src/data/api-red.ts`: cualquier JavaScript que llegara a ejecutarse en la página podría
+  leerla mientras la pestaña esté abierta. Se asume porque estas páginas no cargan nada de
+  terceros y la pestaña dura un turno. Cerrarlo del todo es una cookie `HttpOnly` emitida por
+  el servidor, y eso son sesiones: siguiente fase.
+
+### La prueba de oro
+
+`npm run prueba-reauditoria` empieza por el recorrido entero contra Redis real y los
+endpoints reales: activar → redimir $100.000 → crédito $5.000 en su libro → informe. Termina
+en **CUADRA**, con comisión 10.000, margen 5.000, el cliente pagando 100.000 y sin un solo id
+que no se pueda demostrar. Si eso falla, lo demás da igual.
 
 ## Lo que deliberadamente no se hizo
 

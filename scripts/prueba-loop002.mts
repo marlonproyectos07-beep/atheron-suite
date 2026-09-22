@@ -166,7 +166,9 @@ console.log('\n Transacciones y datos personales');
   });
   const publica = vistaCliente(t);
   ok('la vista pública no lleva el contacto', !JSON.stringify(publica).includes('3188983167'), JSON.stringify(publica));
-  ok('pero sí dice que hay consentimiento', publica.seguimientoConsentido === true);
+  /* Tampoco sale si dio consentimiento: al cliente no le aporta nada
+     y al local no le incumbe. La lista blanca lo deja fuera. */
+  ok('y tampoco dice si dejó consentimiento', !('seguimientoConsentido' in publica));
 
   const redimida = redime(t, 100000).transaccion!;
   const fila = filaConciliacion(redimida);
@@ -226,7 +228,9 @@ const almacen = new AlmacenMemoria();
   ok('se redime', primera.ok);
   igual('  consumo', primera.datos!.consumo, 100000);
   igual('  comisión', primera.datos!.comision, 10000);
-  igual('  crédito', primera.datos!.credito, 5000);
+  /* El credito del cliente no viaja al operador: no es asunto suyo
+     cuanto se lleva el cliente, solo cuanto debe su local. */
+  ok('  el crédito del cliente no sale hacia el operador', !('credito' in primera.datos!));
   /* El margen NO viaja al operador: es cuenta interna de Atheron.
      Que no este aqui es la lista blanca funcionando. */
   ok('  el margen no sale hacia el operador', !('margen' in primera.datos!));
@@ -317,10 +321,17 @@ console.log('\n Informe semanal y conciliación');
   igual('comisión de la semana', inf.comision, 35000);
   igual('crédito generado', inf.creditoGenerado, 17500);
   igual('margen', inf.margen, 17500);
-  igual('conversión sobre las activaciones de la semana', inf.conversion, 100);
+  /* Cohorte: de las DOS activaciones de la semana, una se redimió.
+     Contar "redenciones de la semana / activaciones de la semana"
+     daría 100% mezclando la activación del domingo anterior. */
+  igual('conversión de la cohorte de la semana', inf.conversion, 50);
+  igual('  y el numerador se ve', inf.cohorteRedimida, 1);
   igual('personas atendidas', inf.personasAtendidas, 4);
   ok('la fila de cabecera va primero', inf.filas[0] === CABECERA_CONCILIACION);
-  igual('una fila por redención', inf.filas.length, 3);
+  /* Cabecera + las tres transacciones de la semana: activaciones,
+     redenciones y cierres. Con solo las redenciones no se puede
+     reconstruir la semana. */
+  igual('las filas reconstruyen la semana entera', inf.filas.length, 4);
   ok('avisa de que el reparto es una hipótesis', inf.avisos.some((a) => a.includes('hipótesis')));
   ok('avisa de que el originador no se liquida', inf.avisos.some((a) => a.includes('originador')));
 
