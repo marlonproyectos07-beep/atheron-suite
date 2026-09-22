@@ -1,0 +1,157 @@
+---
+/* ============================================================
+   SEGUIMIENTO — "¿Como te fue en La Triada?"
+
+   CIERRA EL CIRCUITO. Sin esto, el piloto sabe cuanto se consumio y
+   no sabe si la experiencia fue buena, que es justo lo que decide si
+   La Triada sigue siendo un aliado recomendable.
+
+   NADIE RECIBE UN MENSAJE POR ABRIR ESTA PAGINA
+
+   Se llega desde la propia pantalla del cliente despues de consumir,
+   o desde un enlace que Atheron mande A QUIEN DIO SU WHATSAPP A
+   PROPOSITO. Este archivo no envia nada: recoge la respuesta. Enviar
+   mensajes automaticos es una decision con consentimiento detras, y
+   esta pendiente de direccion.
+
+   CINCO CARAS Y UN CAMPO LIBRE
+
+   No hay escala de diez, ni NPS, ni matriz. Una persona que acaba de
+   comer contesta una pregunta, no un cuestionario. Y la casilla de
+   incidencia esta separada de la nota baja a proposito: "estuvo
+   flojo" y "me cobraron de mas" no son el mismo problema ni los
+   atiende la misma persona.
+   ============================================================ */
+import Base from '../../../layouts/Base.astro';
+import RedPie from '../../../components/RedPie.astro';
+import { PILOTO } from '../../../data/piloto-la-triada';
+import { RUTAS } from '../../../data/api-red';
+
+const CARAS = [
+  { valor: 1, cara: '😞', texto: 'Mal' },
+  { valor: 2, cara: '🙁', texto: 'Regular' },
+  { valor: 3, cara: '😐', texto: 'Normal' },
+  { valor: 4, cara: '🙂', texto: 'Bien' },
+  { valor: 5, cara: '😄', texto: 'Muy bien' },
+];
+---
+
+<Base
+  titulo={`¿Cómo te fue en ${PILOTO.aliado}? | Red Atheron`}
+  descripcion="Página interna del piloto Atheron × La Triada. No es una página pública del sitio."
+  ruta={RUTAS.seguimiento}
+  indexable={false}
+  seguirEnlaces={false}
+  jsonLd={null}
+  avisoBorrador={`Piloto interno ${PILOTO.id} · ATH-LOOP-002.`}
+  hojasExtra={['piloto']}
+>
+  <main id="contenido" class="piloto">
+    <h1 class="piloto__titulo">¿Cómo te fue en {PILOTO.aliado}?</h1>
+    <p class="piloto__entrada">Una respuesta y ya. Nos sirve para saber a quién recomendamos.</p>
+
+    <form class="piloto__tarjeta" data-form novalidate>
+      <fieldset class="piloto__caritas">
+        <legend>Tu visita</legend>
+        {CARAS.map((c) => (
+          <label class="piloto__carita">
+            <input type="radio" name="satisfaccion" value={c.valor} required />
+            <span aria-hidden="true">{c.cara}</span>
+            <span class="piloto__carita-texto">{c.texto}</span>
+          </label>
+        ))}
+      </fieldset>
+
+      <label class="piloto__campo">
+        <span>¿Algo que contarnos? (opcional)</span>
+        <textarea name="comentario" rows="3" maxlength="500"></textarea>
+      </label>
+
+      <label class="piloto__consentimiento">
+        <input type="checkbox" name="incidencia" />
+        <span>Hubo un problema y quiero que Atheron lo mire.</span>
+      </label>
+
+      <button class="piloto__boton piloto__boton--grande" type="submit">Enviar</button>
+    </form>
+
+    <div class="piloto__tarjeta" data-gracias hidden>
+      <h2>Gracias</h2>
+      <p data-mensaje-gracias></p>
+    </div>
+
+    <div class="piloto__resultado piloto__resultado--no" data-error hidden role="status" aria-live="polite"></div>
+
+    <noscript>
+      <div class="piloto__tarjeta">
+        <h2>Hace falta JavaScript</h2>
+        <p>Sin JavaScript esta página no puede enviar tu respuesta.</p>
+      </div>
+    </noscript>
+
+    <RedPie actual={RUTAS.seguimiento} />
+  </main>
+</Base>
+
+<script>
+  import { leerCodigo } from '../../../data/codigos-referido';
+  import { PILOTO } from '../../../data/piloto-la-triada';
+  import { opinar, recordado } from '../../../data/api-red';
+
+  const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel);
+  const form = $<HTMLFormElement>('[data-form]')!;
+  const error = $('[data-error]')!;
+
+  const avisa = (texto: string): void => {
+    error.hidden = false;
+    error.textContent = texto;
+  };
+
+  /* El codigo viene en la direccion o del propio navegador del
+     cliente. Si no hay ninguno, no se puede asociar la respuesta a
+     una visita, y una opinion sin visita no sirve para nada. */
+  const enDireccion = new URLSearchParams(location.search).get('c') ?? '';
+  const codigo = leerCodigo(enDireccion || recordado() || '', PILOTO.codigoAliado);
+
+  if (!codigo.valido) {
+    form.hidden = true;
+    avisa('Abre este enlace desde la pantalla de tu beneficio, para saber de qué visita hablas.');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!codigo.valido) return;
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    const datos = new FormData(form);
+    const boton = form.querySelector('button')!;
+    boton.disabled = true;
+    boton.textContent = 'Enviando…';
+
+    const incidencia = datos.get('incidencia') === 'on';
+    const respuesta = await opinar({
+      codigo: codigo.codigo,
+      satisfaccion: Number(datos.get('satisfaccion')),
+      comentario: String(datos.get('comentario') ?? ''),
+      incidencia,
+    });
+
+    boton.disabled = false;
+    boton.textContent = 'Enviar';
+
+    if (!respuesta.ok) {
+      avisa(respuesta.explicacion ?? 'No se pudo enviar. Inténtalo otra vez.');
+      return;
+    }
+
+    error.hidden = true;
+    form.hidden = true;
+    $('[data-gracias]')!.hidden = false;
+    $('[data-mensaje-gracias]')!.textContent = incidencia
+      ? 'Lo miramos y te escribimos si nos dejaste tu WhatsApp.'
+      : 'Tu Crédito Atheron te espera para cuando reserves con nosotros.';
+  });
+</script>

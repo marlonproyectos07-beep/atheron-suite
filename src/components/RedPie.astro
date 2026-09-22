@@ -1,0 +1,73 @@
+---
+/* ============================================================
+   PIE DE LAS PANTALLAS DE LA RED (ATH-LOOP-002)
+
+   POR QUE NO ES EL MISMO DE /piloto
+
+   El pie del piloto tecnico enumera, en letra normal, todo lo que
+   aquel montaje no garantizaba. Estaba bien alli: lo leia quien
+   montaba la prueba.
+
+   Aqui lo lee un cliente con hambre, de pie, delante de un
+   restaurante. Contarle que el localStorage no se sincroniza entre
+   dispositivos no le sirve de nada y le roba la pantalla. La orden
+   lo dice: fuera los textos tecnicos del recorrido comercial, y que
+   sigan estando en la documentacion y en las pantallas de
+   administracion.
+
+   Por eso este componente tiene dos caras. Con tecnico={false} -el
+   cliente- solo deja una linea discreta. Con tecnico={true} -el
+   local y Atheron- dice lo que hace falta saber para operar.
+   ============================================================ */
+import { PILOTO } from '../data/piloto-la-triada';
+import { REGLA } from '../data/economia-red';
+import { RUTAS } from '../data/api-red';
+
+interface Props {
+  actual: string;
+  /** true en las pantallas de operacion. false en la del cliente. */
+  tecnico?: boolean;
+}
+
+const { actual, tecnico = false } = Astro.props;
+
+const enlaces = [
+  { ruta: RUTAS.activar, texto: 'Activar' },
+  { ruta: RUTAS.validar, texto: 'Validar en el local' },
+  { ruta: RUTAS.informe, texto: 'Informe semanal' },
+].filter((e) => e.ruta !== actual);
+---
+
+{tecnico ? (
+  <section class="piloto__limites" aria-labelledby="notas-red">
+    <h2 id="notas-red">Cómo funciona por dentro</h2>
+    <ul>
+      <li>
+        <strong>El registro es del servidor.</strong> Una transacción se redime una sola vez;
+        repetir la confirmación devuelve lo mismo, no cobra dos veces. El navegador no decide
+        nada.
+      </li>
+      <li>
+        <strong>La comisión es del {REGLA.comisionPct}% y la aplica el sistema.</strong> El local
+        no teclea porcentajes ni calcula nada: sólo el valor de la cuenta.
+      </li>
+      <li>
+        <strong>El reparto de esa comisión es una hipótesis del piloto</strong>
+        ({REGLA.creditoPct}% crédito al cliente / {REGLA.margenPct}% margen Atheron), no una
+        política aprobada. Se cambia en un sitio.
+      </li>
+      <li>
+        <strong>WhatsApp y correo son avisos, no el registro.</strong> Nadie copia ni pega nada:
+        la conciliación sale del informe semanal.
+      </li>
+    </ul>
+    <p>Detalle completo en <code>docs/loop-002-la-triada.md</code>.</p>
+    <nav class="piloto__navegacion" aria-label="Pantallas de la red">
+      {enlaces.map((e) => <a href={e.ruta}>{e.texto}</a>)}
+    </nav>
+  </section>
+) : (
+  <p class="piloto__pie-dato piloto__firma">
+    Red Atheron · {PILOTO.aliado}, Zipaquirá
+  </p>
+)}

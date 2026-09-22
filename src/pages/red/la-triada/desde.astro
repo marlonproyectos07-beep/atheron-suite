@@ -1,0 +1,104 @@
+---
+/* ============================================================
+   QR INVERSO — La Triada -> Atheron
+
+   EL LOOP AL REVES. Hasta aqui, Atheron manda gente a La Triada.
+   Esto es lo otro: un QR pegado en la mesa o en la cuenta, para
+   quien ya esta comiendo alli y no conoce Atheron.
+
+   POR QUE IMPORTA QUE SEA UNA PAGINA Y NO UN ENLACE SUELTO
+
+   Porque lo que hay que conservar es DE DONDE VINO esa persona. Si
+   el QR llevara directo a /hospedajes, esa visita entraria como
+   trafico directo y, si reserva tres semanas despues, nadie podria
+   decirle a La Triada que ese huesped salio de su mesa. Aqui la
+   fuente se guarda al entrar (fuente "qr-local") y viaja con lo que
+   la persona haga despues.
+
+   LO QUE NO SE FIJA AQUI, Y ES DELIBERADO
+
+   Ninguna comision inversa. Que La Triada cobre algo por mandar un
+   huesped a Atheron -y cuanto- es una decision de direccion que no
+   se ha tomado. Lo que se deja montado es la ATRIBUCION, que es la
+   parte que no se puede reconstruir a posteriori: el dia que haya
+   politica, los datos ya estaran.
+   ============================================================ */
+import Base from '../../../layouts/Base.astro';
+import RedPie from '../../../components/RedPie.astro';
+import { PILOTO } from '../../../data/piloto-la-triada';
+import { RUTAS } from '../../../data/api-red';
+import { qrSvg } from '../../../data/qr';
+import { ATRIBUTOS_WHATSAPP, enlaceWhatsApp } from '../../../data/whatsapp';
+
+/* El QR de papel apunta al dominio oficial: se imprime una vez y
+   tiene que seguir sirviendo. Sale al construir, no en el navegador. */
+const url = new URL(`${RUTAS.desde}?f=qr-local`, Astro.site).href;
+const qr = qrSvg(url, `Abrir ${url}`).replace('<svg ', '<svg class="piloto__qr" ');
+
+/* El mensaje lleva la fuente dentro: es lo unico que sobrevive si la
+   persona escribe hoy y reserva dentro de un mes. */
+const mensaje = enlaceWhatsApp(
+  'Hola, os conocí en La Triada (Zipaquirá) y quiero consultar disponibilidad.\n\n' +
+    'Fecha de llegada:\n' +
+    'Fecha de salida:\n' +
+    'Número de huéspedes:\n\n' +
+    'Referencia: RED-TRI',
+);
+---
+
+<Base
+  titulo={`¿Te alojas en Zipaquirá? | Red Atheron × ${PILOTO.aliado}`}
+  descripcion="Página interna del piloto Atheron × La Triada. No es una página pública del sitio."
+  ruta={RUTAS.desde}
+  indexable={false}
+  seguirEnlaces={false}
+  jsonLd={null}
+  avisoBorrador={`Piloto interno ${PILOTO.id} · ATH-LOOP-002. QR inverso.`}
+  hojasExtra={['piloto']}
+>
+  <main id="contenido" class="piloto">
+    <h1 class="piloto__titulo">¿Te quedas en Zipaquirá?</h1>
+    <p class="piloto__entrada">
+      Atheron tiene siete hospedajes en Zipaquirá y Cogua. {PILOTO.aliado} es aliado de
+      nuestra red.
+    </p>
+
+    <div class="piloto__botones">
+      <a class="piloto__boton piloto__boton--grande" href={`/hospedajes?f=qr-local`}>
+        Ver los hospedajes
+      </a>
+      <a class="piloto__boton piloto__boton--whatsapp" href={mensaje} {...ATRIBUTOS_WHATSAPP}>
+        Consultar por WhatsApp
+      </a>
+      <a class="piloto__boton piloto__boton--secundario" href={`${RUTAS.activar}?f=qr-local`}>
+        Activar mi beneficio de hoy
+      </a>
+    </div>
+
+    {/* --- El QR que se imprime --- */}
+    <div class="piloto__tarjeta piloto__solo-admin">
+      <h2>El QR que va en la mesa</h2>
+      <Fragment set:html={qr} />
+      <p class="piloto__pie-dato">{url}</p>
+      <p>
+        Lleva a esta misma página con la fuente <code>qr-local</code> dentro. Apunta al dominio
+        oficial, así que <strong>sólo funciona una vez publicado allí</strong>: imprimirlo antes
+        es repartir un papel que lleva a un 404.
+      </p>
+      <p>
+        No fija ninguna comisión inversa: registra de dónde viene la persona. Cuánto, si algo,
+        cobra {PILOTO.aliado} por un huésped que llegue así, lo decide dirección.
+      </p>
+    </div>
+
+    <RedPie actual={RUTAS.desde} />
+  </main>
+</Base>
+
+<script>
+  import { guardaFuente } from '../../../data/api-red';
+
+  /* Se guarda al entrar, no al pulsar: quien llega por el QR y se va
+     a mirar los hospedajes ya trae su origen puesto. */
+  guardaFuente('qr-local');
+</script>

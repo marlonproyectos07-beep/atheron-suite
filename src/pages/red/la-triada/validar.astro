@@ -1,0 +1,280 @@
+---
+/* ============================================================
+   RED ATHERON x LA TRIADA — PANTALLA DEL LOCAL (ATH-LOOP-002)
+
+   ESCANEAR, ESCRIBIR EL VALOR, CONFIRMAR. Ese es el trabajo entero
+   de quien atiende, y no se le puede pedir nada mas.
+
+   LO QUE SE LE QUITO RESPECTO AL PILOTO TECNICO
+
+   - Teclear el porcentaje. La comision esta confirmada, asi que la
+     aplica el sistema. Que la escriba el local es pedirle que haga
+     de calculadora de un acuerdo que no es suyo, y un dia escribira
+     un 1 en vez de un 10.
+   - Copiar la linea del registro.
+   - Mandar el WhatsApp. El registro lo guarda el servidor en el
+     momento de confirmar; el aviso a Atheron sale solo.
+
+   PERSONAS: SI VIENE, NO SE PREGUNTA
+
+   Si el cliente dijo cuantos eran al activar, el campo llega
+   relleno y el local solo lo corrige si hace falta. Preguntar dos
+   veces el mismo dato es la definicion de friccion.
+
+   REINTENTAR ES SEGURO
+
+   Si la conexion se cae despues de confirmar, volver a pulsar no
+   cobra dos veces: el servidor devuelve la misma redencion y la
+   pantalla lo dice. Esa garantia es del backend, no de este
+   archivo, y es la razon de que exista el backend.
+   ============================================================ */
+import Base from '../../../layouts/Base.astro';
+import RedPie from '../../../components/RedPie.astro';
+import { PILOTO } from '../../../data/piloto-la-triada';
+import { REGLA } from '../../../data/economia-red';
+import { MAX_PERSONAS } from '../../../data/transacciones-red';
+import { RUTAS } from '../../../data/api-red';
+---
+
+<Base
+  titulo={`Confirmar consumo | Red Atheron × ${PILOTO.aliado}`}
+  descripcion="Página interna del piloto Atheron × La Triada. No es una página pública del sitio."
+  ruta={RUTAS.validar}
+  indexable={false}
+  seguirEnlaces={false}
+  jsonLd={null}
+  avisoBorrador={`Piloto interno ${PILOTO.id} · ATH-LOOP-002. Pantalla del aliado.`}
+  hojasExtra={['piloto']}
+>
+  <main id="contenido" class="piloto">
+    <p class="piloto__interna">{PILOTO.aliado} · Red Atheron</p>
+    <h1 class="piloto__titulo">Confirmar consumo</h1>
+
+    {/* --- Sin codigo en la direccion: se teclea --- */}
+    <form class="piloto__tarjeta" data-form-codigo novalidate>
+      <label class="piloto__campo piloto__campo--codigo">
+        <span>Código del cliente</span>
+        <input
+          name="codigo"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          placeholder="ATH-TRI-K7M2Q"
+          maxlength="16"
+          required
+        />
+        <span class="piloto__ayuda">Escanea su QR, o teclea el código. Nunca lleva O, I, L, 0 ni 1.</span>
+      </label>
+      <button class="piloto__boton" type="submit">Buscar</button>
+    </form>
+
+    <div class="piloto__resultado" data-resultado hidden role="status" aria-live="polite"></div>
+
+    {/* --- El unico dato que se pide --- */}
+    <form class="piloto__tarjeta" data-form-cuenta hidden novalidate>
+      <label class="piloto__campo piloto__campo--importe">
+        <span>Valor de la cuenta</span>
+        <input
+          name="consumo"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="50000000"
+          step="1"
+          placeholder="120000"
+          required
+        />
+        <span class="piloto__ayuda">En pesos, sin puntos. El cliente paga la cuenta completa.</span>
+      </label>
+
+      <label class="piloto__campo">
+        <span>Personas</span>
+        <input name="personas" type="number" inputmode="numeric" min="1" max={MAX_PERSONAS} />
+        <span class="piloto__ayuda" data-ayuda-personas>Opcional.</span>
+      </label>
+
+      <button class="piloto__boton piloto__boton--grande" type="submit">Confirmar consumo</button>
+      <button class="piloto__boton piloto__boton--secundario" type="button" data-sin-consumo>
+        No consumió
+      </button>
+    </form>
+
+    {/* --- Hecho --- */}
+    <div class="piloto__tarjeta" data-hecho hidden>
+      <h2 data-titulo-hecho>Consumo registrado</h2>
+      <p><span class="piloto__estado" data-insignia></span></p>
+      <ul class="piloto__cuenta">
+        <li><span>Cuenta del cliente</span> <strong data-consumo></strong></li>
+        <li><span>Comisión Atheron ({REGLA.comisionPct}%)</span> <strong data-comision></strong></li>
+      </ul>
+      <p class="piloto__pie-dato">
+        Queda registrado en Atheron. No hay que enviar nada: entra en la conciliación semanal.
+      </p>
+      <div class="piloto__botones">
+        <a class="piloto__boton piloto__boton--secundario" href={RUTAS.validar}>Atender a otro cliente</a>
+      </div>
+    </div>
+
+    <noscript>
+      <div class="piloto__tarjeta">
+        <h2>Hace falta JavaScript</h2>
+        <p>Esta pantalla consulta el código en el servidor y sin JavaScript no puede hacerlo.</p>
+      </div>
+    </noscript>
+
+    <RedPie actual={RUTAS.validar} tecnico={true} />
+  </main>
+</Base>
+
+<script>
+  import { leerCodigo } from '../../../data/codigos-referido';
+  import { ETIQUETA_ESTADO, PILOTO, pesos } from '../../../data/piloto-la-triada';
+  import {
+    consultar,
+    redimir,
+    cerrarSinConsumo,
+    type TransaccionVista,
+  } from '../../../data/api-red';
+
+  const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel);
+
+  const formCodigo = $<HTMLFormElement>('[data-form-codigo]')!;
+  const formCuenta = $<HTMLFormElement>('[data-form-cuenta]')!;
+  const hecho = $('[data-hecho]')!;
+  const resultado = $('[data-resultado]')!;
+  const entrada = formCodigo.elements.namedItem('codigo') as HTMLInputElement;
+  const campoConsumo = formCuenta.elements.namedItem('consumo') as HTMLInputElement;
+  const campoPersonas = formCuenta.elements.namedItem('personas') as HTMLInputElement;
+  const enviar = formCuenta.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+
+  let codigo = '';
+
+  function muestra(ok: boolean, lineas: string[]): void {
+    resultado.hidden = false;
+    resultado.className = `piloto__resultado piloto__resultado--${ok ? 'si' : 'no'}`;
+    resultado.innerHTML = '';
+    for (const linea of lineas.filter(Boolean)) {
+      const p = document.createElement('p');
+      p.textContent = linea;
+      resultado.append(p);
+    }
+  }
+
+  /* ---------- Buscar el codigo ---------- */
+  async function busca(texto: string): Promise<void> {
+    const lectura = leerCodigo(texto, PILOTO.codigoAliado);
+    if (!lectura.valido) {
+      formCuenta.hidden = true;
+      muestra(false, ['No se puede aceptar este código.', lectura.explicacion ?? '']);
+      return;
+    }
+
+    muestra(true, ['Consultando…']);
+    const respuesta = await consultar(lectura.codigo);
+
+    if (!respuesta.ok || !respuesta.datos) {
+      formCuenta.hidden = true;
+      muestra(false, [respuesta.explicacion ?? 'No se pudo consultar el código.']);
+      return;
+    }
+
+    const t = respuesta.datos;
+    codigo = t.codigo;
+
+    if (t.estado === 'REDIMIDO') {
+      formCuenta.hidden = true;
+      muestra(false, ['Este código ya se usó.', 'Solo vale una vez.']);
+      cierra(t, 'Ya estaba registrado');
+      return;
+    }
+    if (t.estado === 'NO_REDIMIDO') {
+      formCuenta.hidden = true;
+      muestra(false, ['Este código se cerró sin consumo.']);
+      return;
+    }
+    if (t.vigente === false) {
+      formCuenta.hidden = true;
+      muestra(false, ['Este código caducó.', 'Vale hasta el final del día en que se activa.']);
+      return;
+    }
+
+    const previstas = t.personasPrevistas;
+    muestra(true, [
+      'Cliente Atheron verificado.',
+      previstas ? `Dijo que venían ${previstas}.` : '',
+    ]);
+    if (previstas) {
+      campoPersonas.value = String(previstas);
+      $('[data-ayuda-personas]')!.textContent = 'Lo dijo el cliente al activar. Corrígelo si cambió.';
+    }
+    formCuenta.hidden = false;
+    hecho.hidden = true;
+    campoConsumo.focus();
+  }
+
+  formCodigo.addEventListener('submit', (e) => {
+    e.preventDefault();
+    void busca(entrada.value);
+  });
+
+  /* ---------- Confirmar ---------- */
+  function cierra(t: TransaccionVista, titulo = 'Consumo registrado'): void {
+    $('[data-titulo-hecho]')!.textContent = titulo;
+    const insignia = $('[data-insignia]')!;
+    insignia.textContent = ETIQUETA_ESTADO[t.estado];
+    insignia.className = `piloto__estado piloto__estado--${t.estado === 'REDIMIDO' ? 'redimido' : 'no-redimido'}`;
+    $('[data-consumo]')!.textContent = t.economia ? pesos(t.economia.consumo) : '—';
+    $('[data-comision]')!.textContent = t.economia ? pesos(t.economia.comision) : '—';
+    formCuenta.hidden = true;
+    hecho.hidden = false;
+    hecho.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  formCuenta.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!codigo || !formCuenta.checkValidity()) {
+      formCuenta.reportValidity();
+      return;
+    }
+
+    enviar.disabled = true;
+    enviar.textContent = 'Confirmando…';
+    const personas = Number(campoPersonas.value);
+    const respuesta = await redimir({
+      codigo,
+      consumo: Number(campoConsumo.value),
+      personas: Number.isFinite(personas) && personas > 0 ? personas : undefined,
+    });
+    enviar.disabled = false;
+    enviar.textContent = 'Confirmar consumo';
+
+    if (respuesta.ok && respuesta.datos) {
+      /* Si ya estaba redimida, no es un error: alguien reintento, o
+         la conexion se cayo justo despues de la primera vez. */
+      muestra(true, [respuesta.yaRedimida ? 'Ya estaba registrado. No se ha cobrado dos veces.' : 'Registrado.']);
+      cierra(respuesta.datos, respuesta.yaRedimida ? 'Ya estaba registrado' : 'Consumo registrado');
+      return;
+    }
+    muestra(false, [respuesta.explicacion ?? 'No se pudo registrar.']);
+  });
+
+  $('[data-sin-consumo]')!.addEventListener('click', async () => {
+    if (!codigo) return;
+    const respuesta = await cerrarSinConsumo(codigo);
+    if (respuesta.ok && respuesta.datos) {
+      muestra(true, ['Cerrado sin consumo.']);
+      cierra(respuesta.datos, 'Cerrado sin consumo');
+      return;
+    }
+    muestra(false, [respuesta.explicacion ?? 'No se pudo cerrar.']);
+  });
+
+  /* ---------- Entrada por QR ---------- */
+  const delQr = new URLSearchParams(location.search).get('c');
+  if (delQr) {
+    entrada.value = delQr.toUpperCase();
+    void busca(delQr);
+  }
+</script>

@@ -1,0 +1,244 @@
+/* ============================================================
+   ECONOMIA DE LA RED ATHERON — ATH-LOOP-002
+
+   QUE CAMBIA RESPECTO AL PILOTO TECNICO (ATH-PILOT-001)
+
+   En el piloto no habia condicion confirmada, asi que el porcentaje
+   lo tecleaba el local y no se anunciaba nada. Ahora el CEO ha
+   confirmado la condicion, y ademas ha cambiado de naturaleza:
+
+     ANTES (supuesto):  10% de descuento al cliente.
+     AHORA (confirmado): 10% de COMISION de La Triada a Atheron.
+
+   No es un matiz. Con descuento, el cliente paga 90.000 de una
+   cuenta de 100.000. Con comision, el cliente paga 100.000 y La
+   Triada le debe 10.000 a Atheron. El dinero sale del mismo sitio
+   pero la cuenta del restaurante, la factura y lo que ve el cliente
+   son distintos, y confundirlos produce un descuadre que nadie
+   detecta hasta la conciliacion.
+
+   ============================================================
+   EL REPARTO DE ESA COMISION ES HIPOTESIS, NO POLITICA
+   ============================================================
+
+   Direccion quiere PROBAR este reparto:
+
+     5% del consumo -> Credito Atheron para el cliente
+     5% del consumo -> margen bruto de Atheron
+
+   La orden dice, literalmente, que no se convierta todavia en
+   politica permanente. Por eso vive aqui como un parametro con su
+   estado al lado, y no como un numero suelto repartido por el
+   codigo: cambiarlo el dia que direccion decida otra cosa es tocar
+   una linea, no buscar cinco.
+
+   Mientras el reparto siga en HIPOTESIS:
+
+     - las paginas del piloto siguen siendo internas y sin enlazar;
+     - el credito se calcula y se registra, pero no se publica como
+       promesa en ninguna pagina del sitio publico.
+
+   La comision en si (el 10%) SI esta confirmada, y por eso el local
+   ya no tiene que teclear ningun porcentaje.
+
+   ============================================================
+   POR QUE LA SUMA TIENE QUE CUADRAR, Y LO COMPRUEBA UN GUARDIAN
+   ============================================================
+
+   Credito + margen tienen que dar exactamente la comision. Si no,
+   Atheron estaria regalando mas de lo que cobra -o quedandose mas de
+   lo acordado- y el error viviria en silencio dentro de cada
+   transaccion. El guardian de abajo rompe la construccion: un aviso
+   se ignora, un build roto no.
+   ============================================================ */
+
+/** Que respaldo tiene cada cifra. No se mezclan. */
+export type EstadoRegla =
+  | 'CONFIRMADA POR CEO'
+  | 'HIPÓTESIS — NO ES POLÍTICA'
+  | 'PENDIENTE POLÍTICA CEO';
+
+export interface ReglaEconomica {
+  /** Comision del aliado a Atheron, en % del consumo bruto. */
+  comisionPct: number;
+  estadoComision: EstadoRegla;
+  /** Donde consta la condicion. Sin esto no se aplica nada. */
+  evidenciaComision: string;
+
+  /** Parte del consumo que vuelve al cliente como Credito Atheron. */
+  creditoPct: number;
+  /** Parte del consumo que queda como margen bruto de Atheron. */
+  margenPct: number;
+  estadoReparto: EstadoRegla;
+
+  /** Comision del originador comercial. Sin politica: no se calcula. */
+  originadorPct: number | null;
+  estadoOriginador: EstadoRegla;
+}
+
+export const REGLA: ReglaEconomica = {
+  comisionPct: 10,
+  estadoComision: 'CONFIRMADA POR CEO',
+  evidenciaComision:
+    'Decisión del CEO comunicada en la orden ATH-LOOP-002 (22 de septiembre de 2026): ' +
+    'La Triada reconoce a Atheron una comisión del 10% sobre el consumo atribuido y validado.',
+
+  creditoPct: 5,
+  margenPct: 5,
+  estadoReparto: 'HIPÓTESIS — NO ES POLÍTICA',
+
+  originadorPct: null,
+  estadoOriginador: 'PENDIENTE POLÍTICA CEO',
+};
+
+/** El reparto solo se publica cuando deja de ser hipotesis. */
+export const REPARTO_CONFIRMADO = REGLA.estadoReparto === 'CONFIRMADA POR CEO';
+
+/* ------------------------------------------------------------
+   EL GUARDIAN
+   ------------------------------------------------------------ */
+function comprueba(r: ReglaEconomica): void {
+  const rango = (n: number): boolean => Number.isFinite(n) && n >= 0 && n <= 100;
+
+  if (!rango(r.comisionPct) || r.comisionPct === 0) {
+    throw new Error(`ECONOMIA: comisionPct fuera de rango (${r.comisionPct}).`);
+  }
+  if (r.estadoComision === 'CONFIRMADA POR CEO' && !r.evidenciaComision.trim()) {
+    throw new Error('ECONOMIA: una comisión confirmada sin evidencia escrita no se aplica.');
+  }
+  if (!rango(r.creditoPct) || !rango(r.margenPct)) {
+    throw new Error('ECONOMIA: el reparto tiene porcentajes fuera de rango.');
+  }
+  /* Comparacion en centesimas para no pelearse con los decimales
+     binarios: 2.5 + 7.5 tiene que dar 10 sin discusion. */
+  const suma = Math.round((r.creditoPct + r.margenPct) * 100);
+  if (suma !== Math.round(r.comisionPct * 100)) {
+    throw new Error(
+      `ECONOMIA: el reparto no cuadra. Crédito ${r.creditoPct}% + margen ${r.margenPct}% = ` +
+        `${r.creditoPct + r.margenPct}%, y la comisión es ${r.comisionPct}%. ` +
+        'Crédito y margen SON la comisión repartida: no pueden sumar otra cosa.',
+    );
+  }
+  if (r.originadorPct !== null && r.estadoOriginador !== 'CONFIRMADA POR CEO') {
+    throw new Error(
+      `ECONOMIA: hay comisión de originador escrita (${r.originadorPct}%) con estado ` +
+        `"${r.estadoOriginador}". Modelar al originador no es pagarle.`,
+    );
+  }
+}
+comprueba(REGLA);
+
+/* ------------------------------------------------------------
+   EL CALCULO
+
+   Pesos colombianos, sin decimales. Dos reglas que evitan los dos
+   descuadres tipicos:
+
+   1. El margen NO se calcula: es la comision menos el credito. Si
+      se calculara aparte, dos redondeos independientes dejarian un
+      peso suelto que no cuadra con nada.
+   2. El cliente paga el consumo entero. La comision no es un
+      descuento y no se le resta a nadie en la mesa.
+   ------------------------------------------------------------ */
+export interface Economia {
+  /** Lo que el cliente paga en el local. Sin descuento. */
+  consumo: number;
+  /** Lo que La Triada le debe a Atheron. */
+  comision: number;
+  /** Lo que el cliente recibe como Credito Atheron. */
+  credito: number;
+  /** Lo que le queda a Atheron. comision - credito, exacto. */
+  margen: number;
+  /** Copia de los porcentajes con los que se calculo esta fila. */
+  comisionPct: number;
+  creditoPct: number;
+}
+
+export function calculaEconomia(consumo: number, regla: ReglaEconomica = REGLA): Economia {
+  if (!Number.isFinite(consumo) || consumo < 0) throw new Error('Consumo no válido.');
+  const base = Math.round(consumo);
+  const comision = Math.round((base * regla.comisionPct) / 100);
+  const credito = Math.round((base * regla.creditoPct) / 100);
+  return {
+    consumo: base,
+    comision,
+    /* El credito nunca puede pasarse de la comision: con un reparto
+       raro y un redondeo desfavorable, Atheron pagaria de su bolsillo
+       sin enterarse. */
+    credito: Math.min(credito, comision),
+    margen: comision - Math.min(credito, comision),
+    comisionPct: regla.comisionPct,
+    creditoPct: regla.creditoPct,
+  };
+}
+
+/* ------------------------------------------------------------
+   EL CREDITO ATHERON NO ES CREDITO DE HOTEL
+
+   Nace del consumo en un aliado, asi que amarrarlo a hospedaje lo
+   haria inservible para quien ya vive en Zipaquira o viene solo a
+   comer. Se modela como credito del ECOSISTEMA desde el primer dia:
+   ampliar el ambito despues obligaria a reescribir los creditos ya
+   emitidos, y eso son promesas hechas que hay que cambiar.
+
+   Los ambitos de abajo son el MODELO, no una oferta publicada.
+   Cuales estan realmente abiertos y con que condiciones es decision
+   de direccion (ver estadoReparto).
+   ------------------------------------------------------------ */
+export type AmbitoCredito = 'HOSPEDAJE' | 'SECURITY' | 'EXPERIENCIAS' | 'ALIADOS';
+
+export const AMBITOS: Record<AmbitoCredito, { etiqueta: string; nota: string }> = {
+  HOSPEDAJE: {
+    etiqueta: 'Hospedajes Atheron',
+    nota: 'Los siete hospedajes de Zipaquirá y Cogua.',
+  },
+  SECURITY: {
+    etiqueta: 'Atheron Security',
+    nota: 'Productos y servicios elegibles. Cuáles, lo define dirección.',
+  },
+  EXPERIENCIAS: {
+    etiqueta: 'Experiencias Atheron',
+    nota: 'Las que se publiquen en la guía.',
+  },
+  ALIADOS: {
+    etiqueta: 'Aliados de la Red',
+    nota: 'Incluida La Triada. Requiere acuerdo con cada aliado.',
+  },
+};
+
+/** Donde se podra redimir. Modelo abierto; la apertura real la decide direccion. */
+export const AMBITOS_PREVISTOS: AmbitoCredito[] = ['HOSPEDAJE', 'SECURITY', 'EXPERIENCIAS', 'ALIADOS'];
+
+/* Cuanto dura un credito. Un credito sin caducidad es un pasivo
+   abierto para siempre en la contabilidad de Atheron; uno de una
+   semana no le da tiempo a nadie a volver. Noventa dias es el
+   parametro de partida del piloto, no una politica. */
+export const VIGENCIA_CREDITO_DIAS = 90;
+
+export type EstadoCredito = 'GENERADO' | 'DISPONIBLE' | 'USADO' | 'CADUCADO' | 'ANULADO';
+
+export const ETIQUETA_CREDITO: Record<EstadoCredito, string> = {
+  GENERADO: 'Generado',
+  DISPONIBLE: 'Disponible',
+  USADO: 'Usado',
+  CADUCADO: 'Caducado',
+  ANULADO: 'Anulado',
+};
+
+/* ------------------------------------------------------------
+   TEXTOS DEL CLIENTE
+
+   Una sola frase, en un sitio, para que ninguna pantalla se invente
+   otra. No lleva letra pequena ni explica de donde sale el dinero:
+   el cliente no tiene por que entender la comision del aliado.
+   ------------------------------------------------------------ */
+export const COPY_CREDITO = {
+  titulo: 'Crédito Atheron',
+  queEs: `El ${REGLA.creditoPct}% de lo que consumas vuelve a ti como Crédito Atheron.`,
+  donde: 'Se usa en hospedajes Atheron y en el resto de la red.',
+  vigencia: `Vale ${VIGENCIA_CREDITO_DIAS} días desde tu visita.`,
+  /* Lo unico que se dice del estado del acuerdo, y solo dentro del
+     piloto interno: es una prueba, y prometer permanencia seria
+     exactamente lo que direccion pidio no hacer. */
+  provisional: 'Condiciones del piloto: pueden cambiar mientras dure la prueba.',
+} as const;
