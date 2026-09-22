@@ -1,0 +1,268 @@
+---
+/* ============================================================
+   PILOTO — REGISTRO Y TRAZABILIDAD (pantalla de Atheron)
+
+   Tres cosas, y las tres son para despues del servicio:
+
+     1. El QR impreso que abre el piloto. Se dibuja AL CONSTRUIR,
+        contra el dominio oficial, porque va a papel.
+     2. Lo que se haya registrado en ESTE aparato, listo para copiar
+        de una vez a la hoja de control.
+     3. La correspondencia con Odoo, campo a campo, para que la
+        importacion no dependa de que alguien recuerde el criterio.
+
+   LO QUE ESTA PANTALLA NO ES
+
+   No es el registro del piloto. Es lo que vio este navegador. El
+   registro es la conversacion de WhatsApp de Atheron mas la hoja de
+   control. Se dice aqui, arriba del todo, y no en letra pequena.
+   ============================================================ */
+import Base from '../../../layouts/Base.astro';
+import PilotoPie from '../../../components/PilotoPie.astro';
+import { PILOTO, CABECERA_REGISTRO, BENEFICIO } from '../../../data/piloto-la-triada';
+import { qrSvg } from '../../../data/qr';
+import { fechaLarga } from '../../../data/fechas';
+
+/* El QR de papel lleva la direccion oficial, no la del preview: se
+   imprime una vez y tiene que seguir sirviendo despues. */
+const urlActivar = new URL(PILOTO.rutas.activar, Astro.site).href;
+const qr = qrSvg(urlActivar, `Abrir ${urlActivar}`).replace('<svg ', '<svg class="piloto__qr" ');
+
+/* ------------------------------------------------------------
+   MAPEO A ODOO
+
+   Solo modelos y campos ESTANDAR de Odoo. Donde no existe un campo
+   estandar se dice que hace falta uno propio; no se inventa ninguno
+   ni se da por hecho que ya este creado.
+   ------------------------------------------------------------ */
+const MAPEO = [
+  {
+    columna: 'codigo',
+    modelo: 'sale.order',
+    campo: 'client_order_ref',
+    nota: 'Campo estándar de texto. Es donde vive la referencia del cliente.',
+  },
+  {
+    columna: 'piloto',
+    modelo: 'utm.campaign',
+    campo: 'name',
+    nota: 'Campaña «ATH-PILOT-001», enlazada en sale.order.campaign_id.',
+  },
+  {
+    columna: 'aliado',
+    modelo: 'utm.source',
+    campo: 'name',
+    nota: 'Origen «Atheron — Guía Zipaquirá», en sale.order.source_id.',
+  },
+  {
+    columna: 'sello',
+    modelo: 'sale.order',
+    campo: 'date_order',
+    nota: 'Lleva el desfase −05:00 escrito: Odoo guarda en UTC y lo convierte solo.',
+  },
+  {
+    columna: 'consumo_cop',
+    modelo: 'sale.order.line',
+    campo: 'price_unit',
+    nota: 'O la suma de las líneas, si el consumo se desglosa por producto.',
+  },
+  {
+    columna: 'descuento_pct',
+    modelo: 'sale.order.line',
+    campo: 'discount',
+    nota: 'Porcentaje, que es exactamente lo que el campo espera.',
+  },
+  {
+    columna: 'total_cop',
+    modelo: 'sale.order',
+    campo: 'amount_total',
+    nota: 'Calculado por Odoo. Sirve para cuadrar, no se importa.',
+  },
+  {
+    columna: 'nota',
+    modelo: 'sale.order',
+    campo: 'note',
+    nota: 'Texto libre del pedido.',
+  },
+];
+---
+
+<Base
+  titulo={`Registro del piloto | ${PILOTO.id}`}
+  descripcion="Página interna del piloto Atheron × La Triada. No es una página pública del sitio."
+  ruta={PILOTO.rutas.registro}
+  indexable={false}
+  seguirEnlaces={false}
+  jsonLd={null}
+  avisoBorrador={`Piloto interno ${PILOTO.id}. Pantalla de control.`}
+  hojasExtra={['piloto']}
+>
+  <main id="contenido" class="piloto">
+    <p class="piloto__interna">Piloto {PILOTO.id} · control</p>
+    <h1 class="piloto__titulo">Registro y trazabilidad</h1>
+    <p class="piloto__entrada">
+      Prueba física prevista para el {fechaLarga(PILOTO.fechaPrueba)} en {PILOTO.aliado}.
+    </p>
+
+    <div class="piloto__condicion" role="note">
+      <strong>Esto no es el registro del piloto</strong>
+      Es lo que vio este navegador. El registro que cuenta son los mensajes de WhatsApp
+      recibidos en el número de Atheron y la hoja de control. Borrar los datos de este
+      navegador borra esta lista y nada más.
+    </div>
+
+    {/* --- QR de papel --- */}
+    <div class="piloto__tarjeta">
+      <h2>QR de entrada</h2>
+      <Fragment set:html={qr} />
+      <p class="piloto__pie-dato">{urlActivar}</p>
+      <p>
+        Este es el que se imprime. Lleva dentro la dirección del dominio oficial, así que
+        <strong>solo funciona cuando el piloto esté publicado ahí</strong>. Para la prueba
+        sobre una vista previa, se abre la dirección del preview a mano: el QR que ve el
+        huésped en su móvil sí se genera contra el sitio en el que esté corriendo.
+      </p>
+    </div>
+
+    {/* --- Lo registrado en este aparato --- */}
+    <div class="piloto__tarjeta">
+      <h2>Movimientos de este dispositivo</h2>
+      <p data-vacio>Todavía no hay ninguno en este navegador.</p>
+      <ul class="piloto__lista" data-lista hidden></ul>
+      <div class="piloto__botones" data-acciones hidden>
+        <button class="piloto__boton piloto__boton--secundario" type="button" data-copiar-todo>
+          Copiar todo para la hoja de control
+        </button>
+        <button class="piloto__boton piloto__boton--secundario" type="button" data-borrar>
+          Borrar esta lista del navegador
+        </button>
+      </div>
+      <p class="piloto__pie-dato" data-aviso role="status" aria-live="polite"></p>
+      <pre class="piloto__registro" data-volcado>{CABECERA_REGISTRO}</pre>
+    </div>
+
+    {/* --- Condicion comercial --- */}
+    <div class="piloto__tarjeta">
+      <h2>Condición comercial</h2>
+      <p>
+        Estado: <strong>{BENEFICIO.estado}</strong>
+      </p>
+      {BENEFICIO.estado !== 'VERIFICADO' && (
+        <p>
+          No consta evidencia verificable del acuerdo con {PILOTO.aliado}: ni alcance, ni
+          base de cálculo, ni exclusiones, ni vigencia. Mientras siga así, el sitio no
+          publica ningún porcentaje y el que se aplique se teclea y se registra en el
+          momento. Verificarlo es una decisión de dirección, no un cambio de código.
+        </p>
+      )}
+    </div>
+
+    {/* --- Odoo --- */}
+    <div class="piloto__tarjeta">
+      <h2>Correspondencia con Odoo</h2>
+      <p>
+        No hay ninguna integración: nada de esto escribe en Odoo. Lo que hay es el mapeo
+        exacto, con campos estándar, para importar cuando dirección lo autorice.
+      </p>
+      <ul class="piloto__lista">
+        {MAPEO.map((m) => (
+          <li>
+            <code>{m.columna}</code> → <strong>{m.modelo}.{m.campo}</strong>
+            <br />
+            <span class="piloto__ayuda">{m.nota}</span>
+          </li>
+        ))}
+      </ul>
+      <p>
+        El estado del referido no tiene campo estándar y <strong>no se inventa uno</strong>:
+        se lee del propio pedido. Presupuesto en borrador o enviado = validado; pedido
+        confirmado = redimido; cancelado = no redimido. Si más adelante hace falta el estado
+        como dato propio, es un campo de Studio (<code>x_</code>) y una decisión de dirección.
+      </p>
+      <p>El detalle completo está en <code>docs/piloto-la-triada.md</code>.</p>
+    </div>
+
+    <PilotoPie actual={PILOTO.rutas.registro} />
+  </main>
+</Base>
+
+<script>
+  import {
+    CLAVE_REGISTRO,
+    CABECERA_REGISTRO,
+    ETIQUETA_ESTADO,
+    lineaRegistro,
+    pesos,
+    type Movimiento,
+  } from '../../../data/piloto-la-triada';
+
+  const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel);
+
+  const lee = (): Movimiento[] => {
+    try {
+      const crudo = localStorage.getItem(CLAVE_REGISTRO);
+      const lista = crudo ? (JSON.parse(crudo) as Movimiento[]) : [];
+      return Array.isArray(lista) ? lista : [];
+    } catch {
+      return [];
+    }
+  };
+
+  function pinta(): void {
+    const lista = lee();
+    const ul = $('[data-lista]')!;
+    const acciones = $('[data-acciones]')!;
+    const vacio = $('[data-vacio]')!;
+
+    vacio.hidden = lista.length > 0;
+    ul.hidden = lista.length === 0;
+    acciones.hidden = lista.length === 0;
+    ul.innerHTML = '';
+
+    for (const m of lista) {
+      const li = document.createElement('li');
+      const codigo = document.createElement('code');
+      codigo.textContent = m.codigo;
+      const detalle = document.createElement('span');
+      detalle.className = 'piloto__ayuda';
+      detalle.textContent =
+        `${ETIQUETA_ESTADO[m.estado]} · ${m.sello}` +
+        (m.consumo === undefined
+          ? ''
+          : ` · ${pesos(m.consumo)} − ${m.porcentaje ?? 0}% = ${pesos(m.total ?? 0)}`) +
+        (m.nota ? ` · ${m.nota}` : '');
+      li.append(codigo, document.createElement('br'), detalle);
+      ul.append(li);
+    }
+
+    $('[data-volcado]')!.textContent = [CABECERA_REGISTRO, ...lista.map(lineaRegistro)].join('\n');
+  }
+
+  $('[data-copiar-todo]')!.addEventListener('click', async () => {
+    const aviso = $('[data-aviso]')!;
+    try {
+      await navigator.clipboard.writeText($('[data-volcado]')!.textContent ?? '');
+      aviso.textContent = 'Copiado. Pégalo en la hoja de control.';
+    } catch {
+      aviso.textContent = 'Este navegador no deja copiar solo: selecciona el bloque de abajo.';
+    }
+  });
+
+  /* Borrar es irreversible y no toca nada de Atheron, solo este
+     navegador. Se pregunta, y se dice exactamente eso. */
+  $('[data-borrar]')!.addEventListener('click', () => {
+    const seguro = confirm(
+      'Esto borra la lista de este navegador. Los mensajes ya enviados a Atheron no se tocan. ¿Seguir?',
+    );
+    if (!seguro) return;
+    try {
+      localStorage.removeItem(CLAVE_REGISTRO);
+    } catch {
+      /* Si no deja borrar, la lista sigue ahi y se vuelve a pintar. */
+    }
+    pinta();
+    $('[data-aviso]')!.textContent = 'Lista borrada de este navegador.';
+  });
+
+  pinta();
+</script>

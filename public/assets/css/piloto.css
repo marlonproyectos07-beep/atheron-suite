@@ -1,0 +1,377 @@
+/* ============================================================
+   PILOTO ATHERON x LA TRIADA — estilos de las tres páginas
+
+   NO ES UNA PÁGINA DEL SITIO, Y SE NOTA A PROPÓSITO
+
+   Esto se usa de pie, en un restaurante, con una mano, por alguien
+   que tiene delante a un cliente esperando. No es una página para
+   leer: es una herramienta. Por eso no hay hero, ni fotos, ni nada
+   que haya que desplazar para llegar al botón.
+
+   LAS TRES DECISIONES QUE MANDAN AQUÍ
+
+   1. Móvil primero de verdad. Todo se diseña para una columna de
+      360 px. Lo ancho es la excepción, y va al final.
+   2. Nada que tocar mide menos de 48 px de alto, que es lo que
+      recomienda la guía de accesibilidad para un dedo. Los campos,
+      16 px de letra: por debajo, Safari en iPhone hace zoom solo al
+      enfocar y descoloca la página entera.
+   3. El estado se ve sin leer. El color no va solo: cada estado
+      lleva además su palabra, porque el color no llega a quien no
+      lo distingue.
+
+   Las variables (--color-*, --esp-*, --radio-*) salen de base.css.
+   ============================================================ */
+
+.piloto {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: var(--esp-3) var(--esp-2) var(--esp-6);
+}
+
+.piloto__interna {
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-gris-700);
+  margin: 0 0 var(--esp-1);
+}
+
+.piloto__titulo {
+  font-family: var(--fuente-titulo);
+  font-size: 1.6rem;
+  line-height: 1.2;
+  margin: 0 0 var(--esp-2);
+}
+
+.piloto__entrada {
+  margin: 0 0 var(--esp-3);
+  color: var(--color-gris-700);
+}
+
+/* ------------------------------------------------------------
+   TARJETA — cada paso del flujo va en una
+   ------------------------------------------------------------ */
+.piloto__tarjeta {
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  padding: var(--esp-3) var(--esp-2);
+  margin: 0 0 var(--esp-3);
+  background: var(--color-blanco);
+}
+
+.piloto__tarjeta h2 {
+  font-size: 1.15rem;
+  margin: 0 0 var(--esp-2);
+}
+
+.piloto__tarjeta p {
+  margin: 0 0 var(--esp-2);
+}
+
+.piloto__tarjeta p:last-child {
+  margin-bottom: 0;
+}
+
+/* ------------------------------------------------------------
+   AVISO DE CONDICIÓN NO VERIFICADA
+
+   Es el bloque más importante de la página y por eso no se parece a
+   ningún otro. Mientras el acuerdo no conste, todo el que abra esto
+   tiene que verlo antes de pulsar nada.
+   ------------------------------------------------------------ */
+.piloto__condicion {
+  border-left: 4px solid var(--acento-texto);
+  background: #fdf6e3;
+  color: #4a3a05;
+  border-radius: var(--radio-sm);
+  padding: var(--esp-2);
+  margin: 0 0 var(--esp-3);
+  font-size: 0.95rem;
+}
+
+.piloto__condicion strong {
+  display: block;
+  margin-bottom: var(--esp-1);
+}
+
+/* ------------------------------------------------------------
+   EL CÓDIGO — lo que se lee en voz alta o se teclea
+   ------------------------------------------------------------ */
+.piloto__codigo {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: clamp(1.7rem, 9vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: center;
+  margin: var(--esp-2) 0;
+  color: var(--color-noche);
+  word-break: break-all;
+}
+
+.piloto__qr {
+  display: block;
+  width: min(15rem, 62vw);
+  height: auto;
+  margin: 0 auto var(--esp-2);
+  border: 8px solid var(--color-blanco);
+  border-radius: var(--radio-sm);
+  box-shadow: var(--sombra-sm);
+}
+
+.piloto__pie-dato {
+  text-align: center;
+  color: var(--color-gris-700);
+  font-size: 0.9rem;
+}
+
+/* ------------------------------------------------------------
+   ESTADOS — color y palabra, siempre juntos
+   ------------------------------------------------------------ */
+.piloto__estado {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+}
+
+.piloto__estado--activado { color: #1f4b7a; background: #eaf2fb; }
+.piloto__estado--validado { color: #1f5c46; background: #e7f4ee; }
+.piloto__estado--redimido { color: #14532d; background: #dcfce7; }
+.piloto__estado--no-redimido { color: #7a1f1f; background: #fbeaea; }
+
+/* ------------------------------------------------------------
+   FORMULARIO
+   ------------------------------------------------------------ */
+.piloto__campo {
+  display: block;
+  margin: 0 0 var(--esp-2);
+}
+
+.piloto__campo > span {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.piloto__campo input,
+.piloto__campo textarea {
+  width: 100%;
+  /* 16px exactos: por debajo, iOS hace zoom al enfocar. */
+  font-size: 1rem;
+  min-height: 3rem;
+  padding: 0.7rem 0.8rem;
+  border: 2px solid var(--color-gris-200);
+  border-radius: var(--radio-sm);
+  background: var(--color-blanco);
+  color: var(--texto);
+}
+
+.piloto__campo input:focus-visible,
+.piloto__campo textarea:focus-visible {
+  outline: 3px solid var(--color-marca);
+  outline-offset: 1px;
+}
+
+.piloto__campo--codigo input {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 1.3rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.piloto__ayuda {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--color-gris-700);
+}
+
+/* ------------------------------------------------------------
+   BOTONES — grandes, y el principal ocupa todo el ancho
+   ------------------------------------------------------------ */
+.piloto__boton {
+  display: block;
+  width: 100%;
+  min-height: 3.25rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: inherit;
+  padding: 0.9rem 1rem;
+  border: 2px solid var(--color-marca);
+  border-radius: var(--radio-sm);
+  background: var(--color-marca);
+  color: var(--color-blanco);
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+
+.piloto__boton:focus-visible {
+  outline: 3px solid var(--color-noche);
+  outline-offset: 2px;
+}
+
+.piloto__boton[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.piloto__boton--secundario {
+  background: var(--color-blanco);
+  color: var(--color-marca);
+}
+
+.piloto__boton--whatsapp {
+  background: #128c7e;
+  border-color: #0b6b60;
+}
+
+.piloto__botones > * + * {
+  margin-top: var(--esp-2);
+}
+
+/* ------------------------------------------------------------
+   RESULTADO DE LA VALIDACIÓN
+   ------------------------------------------------------------ */
+.piloto__resultado {
+  border-radius: var(--radio-sm);
+  padding: var(--esp-2);
+  margin: var(--esp-2) 0 0;
+  border: 2px solid transparent;
+}
+
+.piloto__resultado--si {
+  border-color: #14532d;
+  background: #dcfce7;
+  color: #14532d;
+}
+
+.piloto__resultado--no {
+  border-color: #7a1f1f;
+  background: #fbeaea;
+  color: #7a1f1f;
+}
+
+.piloto__resultado p {
+  margin: 0 0 var(--esp-1);
+}
+
+.piloto__resultado p:last-child {
+  margin-bottom: 0;
+}
+
+/* ------------------------------------------------------------
+   CUENTA
+   ------------------------------------------------------------ */
+.piloto__cuenta {
+  list-style: none;
+  margin: var(--esp-2) 0 0;
+  padding: 0;
+  border-top: 1px solid var(--borde);
+}
+
+.piloto__cuenta li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--esp-2);
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.piloto__cuenta li strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.piloto__cuenta li:last-child {
+  font-size: 1.15rem;
+}
+
+/* ------------------------------------------------------------
+   REGISTRO
+   ------------------------------------------------------------ */
+.piloto__registro {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  min-height: 9rem;
+  padding: var(--esp-2);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  background: var(--color-gris-100);
+  color: var(--texto);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.piloto__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.piloto__lista li {
+  border-bottom: 1px solid var(--borde);
+  padding: var(--esp-2) 0;
+}
+
+.piloto__lista li:last-child {
+  border-bottom: 0;
+}
+
+.piloto__lista code {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------
+   LÍMITES — lo que este montaje NO puede hacer
+
+   Va al pie de las tres páginas y en letra normal, no en gris
+   diminuto: quien use esto tiene que saber qué no le está
+   garantizando antes de apoyarse en ello.
+   ------------------------------------------------------------ */
+.piloto__limites {
+  margin-top: var(--esp-4);
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--borde);
+  font-size: 0.9rem;
+  color: var(--color-gris-700);
+}
+
+.piloto__limites h2 {
+  font-size: 1rem;
+  margin: 0 0 var(--esp-1);
+}
+
+.piloto__limites ul {
+  margin: 0 0 var(--esp-2);
+  padding-left: 1.2rem;
+}
+
+.piloto__limites li {
+  margin-bottom: 0.4rem;
+}
+
+.piloto__navegacion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  margin-top: var(--esp-3);
+  font-size: 0.95rem;
+}
+
+@media (min-width: 40rem) {
+  .piloto {
+    padding: var(--esp-5) var(--esp-3) var(--esp-7);
+  }
+
+  .piloto__titulo {
+    font-size: 2rem;
+  }
+}

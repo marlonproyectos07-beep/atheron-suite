@@ -25,49 +25,20 @@
    EL CODIGO DE REFERENCIA — ATH-TRI-xxxxx
    ============================================================
 
-   Cada solicitud lleva una referencia con esta forma:
+   Vive en src/data/codigos-referido.ts, que es el mismo modulo que
+   usa el piloto Atheron x La Triada. Aqui solo se reexporta lo que
+   ya importaban otras partes del sitio.
 
-     ATH-<ALIADO>-<5 caracteres>     ATH-TRI-K7M2Q
-
-   El aliado dice DE DONDE vino el grupo (TRI = La Triada, GUI = la
-   guia sin comercio concreto). Los cinco caracteres se generan en el
-   navegador: identifican la solicitud dentro de la conversacion de
-   WhatsApp, que es donde luego se cruza a mano.
-
-   LO QUE ESTE CODIGO NO ES, Y NO DEBE LEERSE COMO
-
-   - No es un registro de comision. Ninguna condicion comercial con
-     ningun comercio se publica ni se calcula aqui.
-   - No es unico garantizado: sin servidor no hay quien lo compruebe.
-   - No es un descuento ni una prueba de que existe un convenio.
-
-   Es solo la semilla de la atribucion futura: cuando haya backend,
-   el mismo formato pasa a ser un identificador real sin cambiar lo
-   que ya circula en los mensajes.
+   Desde el piloto, el quinto caracter es de control: detecta una
+   letra mal copiada y el intercambio de dos contiguas. El formato no
+   cambia. Lo que el codigo NO es -registro de comision, unicidad
+   garantizada, prueba de convenio- esta explicado alli, y sigue
+   siendo cierto.
    ============================================================ */
 
 import { NUMERO } from './whatsapp';
 
-/** Aliados con codigo propio. El resto usa GUI. */
-export const CODIGOS_ORIGEN: Record<string, string> = {
-  'la-triada': 'TRI',
-};
-export const CODIGO_POR_DEFECTO = 'GUI';
-
-/* Sin 0/O ni 1/I/L: se leen por telefono y se copian a mano. */
-const ALFABETO = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-
-export function generarCodigo(origen: string): string {
-  const aliado = CODIGOS_ORIGEN[origen] ?? CODIGO_POR_DEFECTO;
-  const aleatorio = new Uint32Array(5);
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    crypto.getRandomValues(aleatorio);
-  } else {
-    for (let i = 0; i < 5; i++) aleatorio[i] = Math.floor(Math.random() * 4294967296);
-  }
-  const cola = Array.from(aleatorio, (n) => ALFABETO[n % ALFABETO.length]).join('');
-  return `ATH-${aliado}-${cola}`;
-}
+export { CODIGOS_ORIGEN, CODIGO_POR_DEFECTO, generarCodigo } from './codigos-referido';
 
 export interface SolicitudGrupo {
   codigo: string;
