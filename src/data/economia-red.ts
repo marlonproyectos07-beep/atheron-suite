@@ -59,6 +59,11 @@ export type EstadoRegla =
   | 'PENDIENTE POLÍTICA CEO';
 
 export interface ReglaEconomica {
+  /* Identificador estable de ESTA version de la regla. Cada
+     transaccion guarda el suyo, y el informe reconstruye la historia
+     con la regla que se aplico entonces, no con la de hoy. Cambiar
+     un porcentaje sin cambiar esto reescribiria el pasado. */
+  version: string;
   /** Comision del aliado a Atheron, en % del consumo bruto. */
   comisionPct: number;
   estadoComision: EstadoRegla;
@@ -77,6 +82,7 @@ export interface ReglaEconomica {
 }
 
 export const REGLA: ReglaEconomica = {
+  version: '2026-09-22.v1',
   comisionPct: 10,
   estadoComision: 'CONFIRMADA POR CEO',
   evidenciaComision:
@@ -98,6 +104,7 @@ export const REPARTO_CONFIRMADO = REGLA.estadoReparto === 'CONFIRMADA POR CEO';
    EL GUARDIAN
    ------------------------------------------------------------ */
 function comprueba(r: ReglaEconomica): void {
+  if (!r.version.trim()) throw new Error('ECONOMIA: la regla necesita versión para poder auditarla.');
   const rango = (n: number): boolean => Number.isFinite(n) && n >= 0 && n <= 100;
 
   if (!rango(r.comisionPct) || r.comisionPct === 0) {
@@ -149,9 +156,13 @@ export interface Economia {
   credito: number;
   /** Lo que le queda a Atheron. comision - credito, exacto. */
   margen: number;
-  /** Copia de los porcentajes con los que se calculo esta fila. */
+  /* Copia de la regla con la que se calculo ESTA fila. No es
+     redundancia: es lo unico que permite reconstruir una liquidacion
+     de hace tres semanas cuando el reparto ya ha cambiado. */
   comisionPct: number;
   creditoPct: number;
+  margenPct: number;
+  reglaVersion: string;
 }
 
 export function calculaEconomia(consumo: number, regla: ReglaEconomica = REGLA): Economia {
@@ -169,6 +180,8 @@ export function calculaEconomia(consumo: number, regla: ReglaEconomica = REGLA):
     margen: comision - Math.min(credito, comision),
     comisionPct: regla.comisionPct,
     creditoPct: regla.creditoPct,
+    margenPct: regla.margenPct,
+    reglaVersion: regla.version,
   };
 }
 
@@ -234,9 +247,16 @@ export const ETIQUETA_CREDITO: Record<EstadoCredito, string> = {
    ------------------------------------------------------------ */
 export const COPY_CREDITO = {
   titulo: 'Crédito Atheron',
-  queEs: `El ${REGLA.creditoPct}% de lo que consumas vuelve a ti como Crédito Atheron.`,
+  queEs: `El ${REGLA.creditoPct}% de lo que consumas se te acredita como Crédito Atheron.`,
   donde: 'Se usa en hospedajes Atheron y en el resto de la red.',
   vigencia: `Vale ${VIGENCIA_CREDITO_DIAS} días desde tu visita.`,
+  /* Mientras no exista una cuenta de cliente a la que atarlo, el
+     credito se genera y queda esperando. Decirle "te lo aplicamos
+     cuando reserves" seria prometer algo que hoy no se puede
+     cumplir: no hay forma de saber que quien reserva es quien
+     consumio. Ver src/data/credito-ledger.ts. */
+  pendiente: 'Queda guardado a nombre de este código hasta que puedas vincularlo a tu cuenta.',
+  comoReclamar: 'Guarda tu código: es el que identifica tu crédito.',
   /* Lo unico que se dice del estado del acuerdo, y solo dentro del
      piloto interno: es una prueba, y prometer permanencia seria
      exactamente lo que direccion pidio no hacer. */

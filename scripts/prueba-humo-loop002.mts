@@ -5,11 +5,12 @@
      npm run prueba-humo-loop002
 
    Lo que la hace distinta de las otras: aqui el navegador habla con
-   la API DE VERDAD. El servidor de pruebas sirve dist/ y ademas
-   ejecuta los mismos endpoints de /api contra un almacen en
-   memoria. No hay imitaciones: si el cliente activa, es el servicio
-   real el que genera el codigo, y si el local confirma dos veces, es
-   la idempotencia real la que lo evita.
+   la API DE VERDAD, montada tal cual desde /api, y detras hay un
+   Redis real. No hay imitaciones en ninguna capa: si el cliente
+   activa, es el endpoint real el que responde; si el local confirma
+   dos veces, es la idempotencia real la que lo evita; y si alguien
+   intenta redimir sin credencial, es la autorizacion real la que lo
+   corta.
 
    QUE SE RECORRE
 
@@ -28,15 +29,19 @@
 import http from 'node:http';
 import { readFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { join, extname } from 'node:path';
-import { AlmacenDePrueba } from '../api/_almacen.ts';
-import { activar, consultar, redimir, cerrar, opinar } from '../api/_servicio.ts';
+import { createHash } from 'node:crypto';
+import { hayRedis, levanta } from './lib/redis-local.mts';
 import { leerCodigo } from '../src/data/codigos-referido.ts';
-import { PILOTO } from '../src/data/piloto-la-triada.ts';
 
 const RAIZ = 'dist';
 if (!existsSync(join(RAIZ, 'red/la-triada/index.html'))) {
   console.error('\n  No hay dist/ construido. Ejecuta antes: npm run build\n');
   process.exit(1);
+}
+
+if (!hayRedis()) {
+  console.log('\n  (omitida: no hay redis-server en esta máquina)\n');
+  process.exit(0);
 }
 
 let chromium: typeof import('playwright').chromium;
@@ -67,9 +72,32 @@ const SALIDA = process.env.SALIDA_HUMO ?? 'dist/.humo-loop002';
 mkdirSync(SALIDA, { recursive: true });
 
 /* ------------------------------------------------------------
-   EL SERVIDOR: estatico + los endpoints reales
+   EL SERVIDOR: estatico + los endpoints REALES sobre Redis real
    ------------------------------------------------------------ */
-const almacen = new AlmacenDePrueba();
+const local = await levanta(6393, 6392);
+process.env.KV_REST_API_URL = local.url;
+process.env.KV_REST_API_TOKEN = 'prueba';
+
+/** La credencial del local, guardada hasheada como en produccion. */
+const CREDENCIAL = 'credencial-de-humo-larga-y-aleatoria-0001';
+process.env.ATHERON_OPERADOR_LA_TRIADA = createHash('sha256').update(CREDENCIAL).digest('hex');
+
+const { default: activarApi } = await import('../api/activar.ts');
+const { default: transaccionApi } = await import('../api/transaccion.ts');
+const { default: redimirApi } = await import('../api/redimir.ts');
+const { default: seguimientoApi } = await import('../api/seguimiento.ts');
+const { default: operadorApi } = await import('../api/operador.ts');
+const { almacen } = await import('../api/_almacen.ts');
+const deposito = almacen();
+
+type Handler = (p: unknown, c: unknown) => Promise<void>;
+const API: Record<string, Handler> = {
+  '/api/activar': activarApi as Handler,
+  '/api/transaccion': transaccionApi as Handler,
+  '/api/redimir': redimirApi as Handler,
+  '/api/seguimiento': seguimientoApi as Handler,
+  '/api/operador': operadorApi as Handler,
+};
 
 const TIPOS: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -85,68 +113,33 @@ const TIPOS: Record<string, string> = {
   '.mp4': 'video/mp4',
 };
 
-const leeCuerpo = async (peticion: http.IncomingMessage): Promise<Record<string, unknown>> => {
-  const trozos: Buffer[] = [];
-  for await (const t of peticion) trozos.push(t as Buffer);
-  try {
-    return JSON.parse(Buffer.concat(trozos).toString('utf8') || '{}') as Record<string, unknown>;
-  } catch {
-    return {};
-  }
-};
-
 const servidor = http.createServer(async (peticion, respuesta) => {
   const url = new URL(peticion.url ?? '/', 'http://local');
+  const handler = API[url.pathname];
 
-  if (url.pathname.startsWith('/api/')) {
-    const cuerpo = peticion.method === 'POST' ? await leeCuerpo(peticion) : {};
-    const codigoPedido = String(cuerpo.codigo ?? url.searchParams.get('c') ?? '');
-    const lectura = leerCodigo(codigoPedido, PILOTO.codigoAliado);
-    let salida: unknown = { ok: false, motivo: 'ERROR' };
-    let estado = 200;
-
-    if (url.pathname === '/api/activar') {
-      salida = await activar(
-        {
-          fuente: cuerpo.fuente as never,
-          personasPrevistas: Number(cuerpo.personas) || undefined,
-          contacto: cuerpo.contacto as string | undefined,
-          consienteSeguimiento: cuerpo.consienteSeguimiento === true,
+  if (handler) {
+    const trozos: Buffer[] = [];
+    for await (const t of peticion) trozos.push(t as Buffer);
+    await handler(
+      {
+        method: peticion.method,
+        url: peticion.url,
+        headers: peticion.headers,
+        body: trozos.length ? Buffer.concat(trozos).toString('utf8') : undefined,
+      },
+      {
+        status(codigo: number) {
+          respuesta.statusCode = codigo;
+          return this;
         },
-        almacen,
-      );
-      estado = 201;
-    } else if (!lectura.valido) {
-      salida = { ok: false, motivo: 'CODIGO_INVALIDO', explicacion: lectura.explicacion };
-      estado = 400;
-    } else if (url.pathname === '/api/transaccion') {
-      salida = await consultar(lectura.codigo, almacen);
-    } else if (url.pathname === '/api/redimir') {
-      salida =
-        cuerpo.cerrar === true
-          ? await cerrar(lectura.codigo, almacen)
-          : await redimir(
-              {
-                codigo: lectura.codigo,
-                consumo: Number(cuerpo.consumo),
-                personas: Number(cuerpo.personas) || undefined,
-              },
-              almacen,
-            );
-    } else if (url.pathname === '/api/seguimiento') {
-      salida = await opinar(
-        {
-          codigo: lectura.codigo,
-          satisfaccion: Number(cuerpo.satisfaccion) || undefined,
-          comentario: String(cuerpo.comentario ?? ''),
-          incidencia: cuerpo.incidencia === true,
+        setHeader(nombre: string, valor: string) {
+          respuesta.setHeader(nombre, valor);
         },
-        almacen,
-      );
-    }
-
-    respuesta.writeHead(estado, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
-    respuesta.end(JSON.stringify(salida));
+        json(cuerpo: unknown) {
+          respuesta.end(JSON.stringify(cuerpo));
+        },
+      },
+    );
     return;
   }
 
@@ -212,11 +205,24 @@ ok('el QR se decodifica', Boolean(leido));
 ok('y lleva la validación con el código', leido?.data === `${BASE}/red/la-triada/validar?c=${codigo}`, leido?.data);
 
 /* ---------- 3. El local: escanear, valor, confirmar ---------- */
-const local = await navegador.newContext({ ...devices['iPhone 13'] });
-const pagLocal = await local.newPage();
+const contextoLocal = await navegador.newContext({ ...devices['iPhone 13'] });
+const pagLocal = await contextoLocal.newPage();
 pagLocal.on('pageerror', (e) => errores.push(String(e)));
 
 await pagLocal.goto(leido!.data, { waitUntil: 'networkidle' });
+
+/* Sin credencial, la pantalla del local no ensena ni el campo del
+   codigo: el QR identifica al cliente, no autoriza a cobrar. */
+ok('sin credencial no se puede ni buscar el código', await pagLocal.locator('[data-form-codigo]').isHidden());
+ok('y se pide la credencial del local', await pagLocal.locator('[data-form-credencial]').isVisible());
+
+await pagLocal.locator('input[name="credencial"]').fill('esta-no-es');
+await pagLocal.getByRole('button', { name: 'Entrar' }).click();
+await pagLocal.waitForFunction(() => (document.querySelector('[data-error-credencial]')?.textContent ?? '').length > 0);
+ok('una credencial equivocada se rechaza en el momento', (await pagLocal.locator('[data-error-credencial]').innerText()).length > 0);
+
+await pagLocal.locator('input[name="credencial"]').fill(CREDENCIAL);
+await pagLocal.getByRole('button', { name: 'Entrar' }).click();
 await pagLocal.waitForSelector('.piloto__resultado--si');
 ok('el local ve el cliente verificado', (await pagLocal.locator('[data-resultado]').innerText()).includes('verificado'));
 ok('desde otro dispositivo distinto al del cliente', true);
@@ -248,8 +254,8 @@ await pagLocal.getByRole('button', { name: 'Buscar' }).click();
 await pagLocal.waitForSelector('.piloto__resultado--no');
 ok('un código mal copiado se rechaza antes de llamar al servidor', await pagLocal.locator('[data-form-cuenta]').isHidden());
 
-const otro = await activar({ fuente: 'directo' }, almacen);
-await pagLocal.goto(`${BASE}/red/la-triada/validar?c=${otro.datos!.codigo}`, { waitUntil: 'networkidle' });
+const otra = await fetch(`${BASE}/api/activar`, { method: 'POST' }).then((r) => r.json() as Promise<{ datos: { codigo: string } }>);
+await pagLocal.goto(`${BASE}/red/la-triada/validar?c=${otra.datos.codigo}`, { waitUntil: 'networkidle' });
 await pagLocal.waitForSelector('[data-form-cuenta]:not([hidden])');
 await pagLocal.locator('input[name="consumo"]').fill('0');
 await pagLocal.getByRole('button', { name: 'Confirmar consumo' }).click();
@@ -273,7 +279,7 @@ ok('la carita marca su radio', await pagina.locator('input[name="satisfaccion"][
 await pagina.getByRole('button', { name: 'Enviar' }).click();
 await pagina.waitForSelector('[data-gracias]:not([hidden])');
 ok('la opinión se envía y se agradece', await pagina.locator('[data-gracias]').isVisible());
-const guardada = await almacen.lee(codigo);
+const guardada = await deposito.lee<{ seguimiento?: { satisfaccion?: number } }>('tx', codigo);
 ok('y queda registrada en el servidor', guardada?.seguimiento?.satisfaccion === 5, JSON.stringify(guardada?.seguimiento));
 await pagina.screenshot({ path: join(SALIDA, '6-seguimiento.png'), fullPage: true });
 
@@ -322,5 +328,6 @@ ok('no hubo errores de consola', errores.length === 0, errores.join(' | '));
 
 await navegador.close();
 servidor.close();
+local.cierra();
 console.log(fallos ? `\nFALLOS: ${fallos}\n` : '\nTodo correcto.\n');
 process.exit(fallos ? 1 : 0);

@@ -21,6 +21,14 @@
    relleno y el local solo lo corrige si hace falta. Preguntar dos
    veces el mismo dato es la definicion de friccion.
 
+   ESTA PANTALLA PIDE CREDENCIAL, Y ES EL CAMBIO MAS IMPORTANTE
+
+   Declarar un consumo genera una comision y un credito: es mover
+   dinero. Antes bastaba con conocer el codigo del cliente, que es
+   publico para cualquiera que vea su movil. Ahora hace falta la
+   credencial del local, que se teclea una vez por pestana y viaja en
+   cabecera. El QR sigue sin llevar ningun secreto.
+
    REINTENTAR ES SEGURO
 
    Si la conexion se cae despues de confirmar, volver a pulsar no
@@ -50,8 +58,29 @@ import { RUTAS } from '../../../data/api-red';
     <p class="piloto__interna">{PILOTO.aliado} · Red Atheron</p>
     <h1 class="piloto__titulo">Confirmar consumo</h1>
 
+    {/* --- La credencial del local, una vez por pestana ---
+         Se pinta VISIBLE desde el HTML, sin esperar al guion: es el
+         estado real de una pestana recien abierta, que es el caso
+         normal. Pintarla oculta y descubrirla con JavaScript movia
+         la pagina al cargar, y eso -ademas de verse mal- cuenta como
+         desplazamiento de diseno en la medida de rendimiento. */}
+    <form class="piloto__tarjeta" data-form-credencial novalidate>
+      <h2>Credencial de {PILOTO.aliado}</h2>
+      <p>
+        Esta pantalla registra consumos y comisiones, así que es del personal del local.
+        Pídele la credencial a Atheron si no la tienes.
+      </p>
+      <label class="piloto__campo">
+        <span>Credencial</span>
+        <input name="credencial" type="password" autocomplete="off" required />
+        <span class="piloto__ayuda">Se queda en esta pestaña. Al cerrarla, se borra.</span>
+      </label>
+      <button class="piloto__boton" type="submit">Entrar</button>
+      <p class="piloto__pie-dato" data-error-credencial role="status" aria-live="polite"></p>
+    </form>
+
     {/* --- Sin codigo en la direccion: se teclea --- */}
-    <form class="piloto__tarjeta" data-form-codigo novalidate>
+    <form class="piloto__tarjeta" data-form-codigo hidden novalidate>
       <label class="piloto__campo piloto__campo--codigo">
         <span>Código del cliente</span>
         <input
@@ -115,6 +144,7 @@ import { RUTAS } from '../../../data/api-red';
       <div class="piloto__botones">
         <a class="piloto__boton piloto__boton--secundario" href={RUTAS.validar}>Atender a otro cliente</a>
       </div>
+      <p class="piloto__pie-dato" data-credito-pendiente hidden></p>
     </div>
 
     <noscript>
@@ -132,7 +162,11 @@ import { RUTAS } from '../../../data/api-red';
   import { leerCodigo } from '../../../data/codigos-referido';
   import { ETIQUETA_ESTADO, PILOTO, pesos } from '../../../data/piloto-la-triada';
   import {
+    compruebaCredencial,
     consultar,
+    credencialGuardada,
+    guardaCredencial,
+    olvidaCredencial,
     redimir,
     cerrarSinConsumo,
     type TransaccionVista,
@@ -140,6 +174,7 @@ import { RUTAS } from '../../../data/api-red';
 
   const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel);
 
+  const formCredencial = $<HTMLFormElement>('[data-form-credencial]')!;
   const formCodigo = $<HTMLFormElement>('[data-form-codigo]')!;
   const formCuenta = $<HTMLFormElement>('[data-form-cuenta]')!;
   const hecho = $('[data-hecho]')!;
@@ -150,6 +185,47 @@ import { RUTAS } from '../../../data/api-red';
   const enviar = formCuenta.querySelector<HTMLButtonElement>('button[type="submit"]')!;
 
   let codigo = '';
+  let credencial = credencialGuardada();
+
+  /* ---------- La credencial manda ----------
+     Sin ella no se pinta ni el campo del codigo: la pantalla no
+     existe para quien no es del local. */
+  function pideCredencial(mensaje = ''): void {
+    credencial = '';
+    olvidaCredencial();
+    formCredencial.hidden = false;
+    formCodigo.hidden = true;
+    formCuenta.hidden = true;
+    hecho.hidden = true;
+    $('[data-error-credencial]')!.textContent = mensaje;
+  }
+
+  function entra(): void {
+    formCredencial.hidden = true;
+    formCodigo.hidden = false;
+  }
+
+  formCredencial.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const campo = formCredencial.elements.namedItem('credencial') as HTMLInputElement;
+    const boton = formCredencial.querySelector('button')!;
+    if (!campo.value.trim()) return;
+
+    boton.disabled = true;
+    const respuesta = await compruebaCredencial(campo.value.trim());
+    boton.disabled = false;
+
+    if (!respuesta.ok) {
+      $('[data-error-credencial]')!.textContent =
+        respuesta.explicacion ?? 'No se pudo comprobar la credencial.';
+      return;
+    }
+    credencial = campo.value.trim();
+    guardaCredencial(credencial);
+    campo.value = '';
+    entra();
+    if (delQr) void busca(delQr);
+  });
 
   function muestra(ok: boolean, lineas: string[]): void {
     resultado.hidden = false;
@@ -172,8 +248,12 @@ import { RUTAS } from '../../../data/api-red';
     }
 
     muestra(true, ['Consultando…']);
-    const respuesta = await consultar(lectura.codigo);
+    const respuesta = await consultar(lectura.codigo, credencial);
 
+    if (respuesta.motivo === 'NO_AUTORIZADO') {
+      pideCredencial('La credencial ha caducado. Vuelve a entrar.');
+      return;
+    }
     if (!respuesta.ok || !respuesta.datos) {
       formCuenta.hidden = true;
       muestra(false, [respuesta.explicacion ?? 'No se pudo consultar el código.']);
@@ -225,8 +305,11 @@ import { RUTAS } from '../../../data/api-red';
     const insignia = $('[data-insignia]')!;
     insignia.textContent = ETIQUETA_ESTADO[t.estado];
     insignia.className = `piloto__estado piloto__estado--${t.estado === 'REDIMIDO' ? 'redimido' : 'no-redimido'}`;
-    $('[data-consumo]')!.textContent = t.economia ? pesos(t.economia.consumo) : '—';
-    $('[data-comision]')!.textContent = t.economia ? pesos(t.economia.comision) : '—';
+    /* La vista del operador viene plana desde el servidor -consumo y
+       comision sueltos-, no con la transaccion entera dentro: es la
+       lista blanca, y por eso aqui no hay ningun objeto "economia". */
+    $('[data-consumo]')!.textContent = t.consumo === undefined ? '—' : pesos(t.consumo);
+    $('[data-comision]')!.textContent = t.comision === undefined ? '—' : pesos(t.comision);
     formCuenta.hidden = true;
     hecho.hidden = false;
     hecho.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -242,19 +325,31 @@ import { RUTAS } from '../../../data/api-red';
     enviar.disabled = true;
     enviar.textContent = 'Confirmando…';
     const personas = Number(campoPersonas.value);
-    const respuesta = await redimir({
-      codigo,
-      consumo: Number(campoConsumo.value),
-      personas: Number.isFinite(personas) && personas > 0 ? personas : undefined,
-    });
+    const respuesta = await redimir(
+      {
+        codigo,
+        consumo: Number(campoConsumo.value),
+        personas: Number.isFinite(personas) && personas > 0 ? personas : undefined,
+      },
+      credencial,
+    );
     enviar.disabled = false;
     enviar.textContent = 'Confirmar consumo';
 
+    if (respuesta.motivo === 'NO_AUTORIZADO') {
+      pideCredencial('La credencial ha caducado. Vuelve a entrar y repite el registro.');
+      return;
+    }
     if (respuesta.ok && respuesta.datos) {
       /* Si ya estaba redimida, no es un error: alguien reintento, o
          la conexion se cayo justo despues de la primera vez. */
       muestra(true, [respuesta.yaRedimida ? 'Ya estaba registrado. No se ha cobrado dos veces.' : 'Registrado.']);
       cierra(respuesta.datos, respuesta.yaRedimida ? 'Ya estaba registrado' : 'Consumo registrado');
+      /* Si la venta quedo registrada pero su credito no se pudo
+         emitir, se dice: es un pendiente de Atheron, no del local. */
+      const aviso = $('[data-credito-pendiente]')!;
+      aviso.hidden = respuesta.creditoPendiente !== true;
+      aviso.textContent = 'El consumo está registrado. El crédito del cliente quedó pendiente de emisión.';
       return;
     }
     muestra(false, [respuesta.explicacion ?? 'No se pudo registrar.']);
@@ -262,7 +357,11 @@ import { RUTAS } from '../../../data/api-red';
 
   $('[data-sin-consumo]')!.addEventListener('click', async () => {
     if (!codigo) return;
-    const respuesta = await cerrarSinConsumo(codigo);
+    const respuesta = await cerrarSinConsumo(codigo, credencial);
+    if (respuesta.motivo === 'NO_AUTORIZADO') {
+      pideCredencial('La credencial ha caducado. Vuelve a entrar.');
+      return;
+    }
     if (respuesta.ok && respuesta.datos) {
       muestra(true, ['Cerrado sin consumo.']);
       cierra(respuesta.datos, 'Cerrado sin consumo');
@@ -271,10 +370,16 @@ import { RUTAS } from '../../../data/api-red';
     muestra(false, [respuesta.explicacion ?? 'No se pudo cerrar.']);
   });
 
-  /* ---------- Entrada por QR ---------- */
+  /* ---------- Entrada por QR ----------
+     El codigo del QR se deja escrito, pero no se consulta nada hasta
+     que haya credencial: el QR identifica al cliente, no autoriza. */
   const delQr = new URLSearchParams(location.search).get('c');
-  if (delQr) {
-    entrada.value = delQr.toUpperCase();
-    void busca(delQr);
+  if (delQr) entrada.value = delQr.toUpperCase();
+
+  if (credencial) {
+    entra();
+    if (delQr) void busca(delQr);
+  } else {
+    pideCredencial();
   }
 </script>

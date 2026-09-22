@@ -30,7 +30,8 @@
    transaccion entera.
    ============================================================ */
 
-import type { Fuente, Transaccion } from './transacciones-red.ts';
+import type { Fuente } from './transacciones-red.ts';
+import type { CreditoVista } from './credito-ledger.ts';
 
 export const RUTAS = {
   activar: '/red/la-triada',
@@ -46,13 +47,30 @@ const API = {
   redimir: '/api/redimir',
   seguimiento: '/api/seguimiento',
   reporte: '/api/reporte',
+  operador: '/api/operador',
 } as const;
 
-/** La transaccion tal como la devuelve el servidor: sin datos personales. */
-export type TransaccionVista = Omit<Transaccion, 'consentimiento'> & {
-  consentimiento: { seguimiento: boolean };
-  vigente?: boolean;
-};
+/* La vista que devuelve el servidor. NO es la transaccion completa:
+   el servidor la construye por lista blanca y esto es su reflejo. Si
+   aqui apareciera un campo de mas, seria mentira: no llega. */
+export interface TransaccionVista {
+  codigo: string;
+  estado: 'ACTIVADO' | 'VALIDADO' | 'REDIMIDO' | 'NO_REDIMIDO';
+  activadoEn: string;
+  redimidoEn?: string;
+  vigente: boolean;
+  consumo?: number;
+  credito?: number;
+  creditoId?: string;
+  creditoVista?: CreditoVista;
+  seguimientoConsentido: boolean;
+  tieneOpinion: boolean;
+  /* Solo con credencial de operador. */
+  fuente?: Fuente;
+  personas?: number;
+  personasPrevistas?: number;
+  comision?: number;
+}
 
 export interface RespuestaApi<T> {
   ok: boolean;
@@ -60,6 +78,8 @@ export interface RespuestaApi<T> {
   motivo?: string;
   explicacion?: string;
   yaRedimida?: boolean;
+  /** La venta quedó registrada, pero su crédito no se pudo emitir. */
+  creditoPendiente?: boolean;
   /** true cuando el fallo es de conexion o de configuracion, no del dato. */
   sinServidor?: boolean;
 }
@@ -70,13 +90,18 @@ export const SIN_SERVIDOR =
 
 async function llama<T>(
   ruta: string,
-  opciones: { metodo?: 'GET' | 'POST'; cuerpo?: unknown } = {},
+  opciones: { metodo?: 'GET' | 'POST'; cuerpo?: unknown; credencial?: string } = {},
 ): Promise<RespuestaApi<T>> {
   let respuesta: Response;
+  const cabeceras: Record<string, string> = {};
+  if (opciones.cuerpo) cabeceras['content-type'] = 'application/json';
+  /* La credencial va en cabecera, nunca en la direccion: las
+     direcciones acaban en registros, historiales y capturas. */
+  if (opciones.credencial) cabeceras.authorization = `Bearer ${opciones.credencial}`;
   try {
     respuesta = await fetch(ruta, {
       method: opciones.metodo ?? 'GET',
-      headers: opciones.cuerpo ? { 'content-type': 'application/json' } : undefined,
+      headers: Object.keys(cabeceras).length ? cabeceras : undefined,
       body: opciones.cuerpo ? JSON.stringify(opciones.cuerpo) : undefined,
     });
   } catch {
@@ -112,18 +137,23 @@ export interface DatosActivar {
 export const activar = (datos: DatosActivar = {}): Promise<RespuestaApi<TransaccionVista>> =>
   llama(API.activar, { metodo: 'POST', cuerpo: datos });
 
-export const consultar = (codigo: string): Promise<RespuestaApi<TransaccionVista>> =>
-  llama(`${API.transaccion}?c=${encodeURIComponent(codigo)}`);
+export const consultar = (codigo: string, credencial?: string): Promise<RespuestaApi<TransaccionVista>> =>
+  llama(`${API.transaccion}?c=${encodeURIComponent(codigo)}`, { credencial });
 
-export const redimir = (datos: {
-  codigo: string;
-  consumo: number;
-  personas?: number;
-  nota?: string;
-}): Promise<RespuestaApi<TransaccionVista>> => llama(API.redimir, { metodo: 'POST', cuerpo: datos });
+/* Redimir y cerrar son del operador del aliado. Sin credencial, el
+   servidor responde 401: no es que la pantalla lo esconda, es que la
+   accion no existe para quien no es el local. */
+export const redimir = (
+  datos: { codigo: string; consumo: number; personas?: number; nota?: string },
+  credencial: string,
+): Promise<RespuestaApi<TransaccionVista>> =>
+  llama(API.redimir, { metodo: 'POST', cuerpo: datos, credencial });
 
-export const cerrarSinConsumo = (codigo: string): Promise<RespuestaApi<TransaccionVista>> =>
-  llama(API.redimir, { metodo: 'POST', cuerpo: { codigo, cerrar: true } });
+export const cerrarSinConsumo = (
+  codigo: string,
+  credencial: string,
+): Promise<RespuestaApi<TransaccionVista>> =>
+  llama(API.redimir, { metodo: 'POST', cuerpo: { codigo, cerrar: true }, credencial });
 
 export const opinar = (datos: {
   codigo: string;
@@ -131,6 +161,43 @@ export const opinar = (datos: {
   comentario?: string;
   incidencia?: boolean;
 }): Promise<RespuestaApi<TransaccionVista>> => llama(API.seguimiento, { metodo: 'POST', cuerpo: datos });
+
+/* ------------------------------------------------------------
+   LA CREDENCIAL DEL LOCAL
+
+   Se teclea una vez y se queda en la memoria de ESA pestana. No en
+   localStorage: una credencial que sobrevive a cerrar el navegador
+   es una credencial que se queda en un movil prestado.
+   ------------------------------------------------------------ */
+export const CLAVE_CREDENCIAL = 'atheron.red.operador.v1';
+
+/** ¿Sirve esta credencial? Se pregunta al teclearla, no al cobrar. */
+export const compruebaCredencial = (credencial: string): Promise<RespuestaApi<never>> =>
+  llama(API.operador, { credencial });
+
+export const guardaCredencial = (valor: string): void => {
+  try {
+    sessionStorage.setItem(CLAVE_CREDENCIAL, valor);
+  } catch {
+    /* Se tecleara otra vez. */
+  }
+};
+
+export const credencialGuardada = (): string => {
+  try {
+    return sessionStorage.getItem(CLAVE_CREDENCIAL) ?? '';
+  } catch {
+    return '';
+  }
+};
+
+export const olvidaCredencial = (): void => {
+  try {
+    sessionStorage.removeItem(CLAVE_CREDENCIAL);
+  } catch {
+    /* Nada que hacer. */
+  }
+};
 
 /** El informe pide token. Se manda en cabecera, nunca en la direccion. */
 export async function informe<T>(fecha: string, token: string): Promise<RespuestaApi<T>> {

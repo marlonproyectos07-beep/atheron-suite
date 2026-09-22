@@ -99,7 +99,9 @@ import { RUTAS } from '../../../data/api-red';
         <li><span>Tu consumo</span> <strong data-consumo></strong></li>
         <li><span>Tu Crédito Atheron</span> <strong data-credito></strong></li>
       </ul>
+      <p class="piloto__pie-dato"><span class="piloto__estado" data-estado-credito></span></p>
       <p data-vigencia-credito></p>
+      <p class="piloto__pie-dato" data-codigo-credito></p>
       <div class="piloto__botones">
         <a class="piloto__boton" data-ir-seguimiento href={RUTAS.seguimiento}>¿Cómo te fue?</a>
       </div>
@@ -125,7 +127,7 @@ import { RUTAS } from '../../../data/api-red';
 <script>
   import { qrSvg } from '../../../data/qr';
   import { ETIQUETA_ESTADO, caducaEl, pesos } from '../../../data/piloto-la-triada';
-  import { VIGENCIA_CREDITO_DIAS } from '../../../data/economia-red';
+  import { COPY_CREDITO } from '../../../data/economia-red';
   import { esFuente } from '../../../data/transacciones-red';
   import {
     activar,
@@ -163,12 +165,27 @@ import { RUTAS } from '../../../data/api-red';
     error.hidden = true;
     for (const p of Object.values(pasos)) p.hidden = true;
 
-    if (t.estado === 'REDIMIDO' && t.economia) {
+    if (t.estado === 'REDIMIDO' && t.consumo !== undefined) {
       pasos.listo.hidden = false;
-      $('[data-consumo]')!.textContent = pesos(t.economia.consumo);
-      $('[data-credito]')!.textContent = pesos(t.economia.credito);
-      $('[data-vigencia-credito]')!.textContent =
-        `Tu crédito vale ${VIGENCIA_CREDITO_DIAS} días. Te lo aplicamos cuando reserves con Atheron.`;
+      $('[data-consumo]')!.textContent = pesos(t.consumo);
+      $('[data-credito]')!.textContent = pesos(t.credito ?? 0);
+
+      /* El estado sale del libro de creditos, no de la cifra: hasta
+         que exista vinculacion, lo honesto es "generado, pendiente".
+         Prometer "te lo aplicamos cuando reserves" seria prometer
+         algo que hoy no se puede cumplir, porque no hay forma de
+         saber que quien reserva es quien consumio. */
+      const credito = t.creditoVista;
+      const insigniaCredito = $('[data-estado-credito]')!;
+      insigniaCredito.textContent = credito?.etiqueta ?? 'Generado';
+      insigniaCredito.className =
+        `piloto__estado piloto__estado--${credito?.estado === 'DISPONIBLE' ? 'redimido' : 'activado'}`;
+
+      $('[data-vigencia-credito]')!.textContent = credito
+        ? `${COPY_CREDITO.pendiente} Vale hasta el ${credito.expiraEn.slice(0, 10)}.`
+        : COPY_CREDITO.pendiente;
+      $('[data-codigo-credito]')!.textContent = credito ? `Referencia: ${credito.id}` : '';
+
       ($('[data-ir-seguimiento]') as HTMLAnchorElement).href =
         `${RUTAS.seguimiento}?c=${encodeURIComponent(t.codigo)}`;
       return;

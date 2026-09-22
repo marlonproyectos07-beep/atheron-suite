@@ -10,6 +10,8 @@
     "prueba-jornadas": "node --experimental-strip-types --no-warnings scripts/prueba-jornadas.mts",
     "prueba-piloto": "node --experimental-strip-types --no-warnings scripts/prueba-piloto.mts",
     "prueba-loop002": "node --experimental-strip-types --no-warnings scripts/prueba-loop002.mts",
+    "prueba-almacen": "node --experimental-strip-types --no-warnings scripts/prueba-almacen-real.mts",
+    "prueba-adversarial": "node --experimental-strip-types --no-warnings scripts/prueba-adversarial.mts",
     "prueba-qr": "node --experimental-strip-types --no-warnings scripts/prueba-qr.mts",
     "prueba-humo-piloto": "node scripts/prueba-humo-piloto.mjs",
     "prueba-humo-loop002": "node --experimental-strip-types --no-warnings scripts/prueba-humo-loop002.mts",

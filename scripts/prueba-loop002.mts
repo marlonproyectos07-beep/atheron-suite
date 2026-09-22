@@ -27,8 +27,8 @@
    proposito. Sin servidor levantado y sin red.
    ============================================================ */
 
-import { AlmacenDePrueba } from '../api/_almacen.ts';
-import { activar, consultar, redimir, cerrar, opinar, informe, sinDatosPersonales } from '../api/_servicio.ts';
+import { AlmacenMemoria } from '../api/_almacen.ts';
+import { activar, consultar, redimir, cerrar, opinar, informe, vistaCliente } from '../api/_servicio.ts';
 import { calculaEconomia, REGLA, VIGENCIA_CREDITO_DIAS, type ReglaEconomica } from '../src/data/economia-red.ts';
 import {
   CABECERA_CONCILIACION,
@@ -120,6 +120,8 @@ console.log('\n Economía de la red');
     margen: 0,
     comisionPct: 10,
     creditoPct: 5,
+    margenPct: 5,
+    reglaVersion: REGLA.version,
   });
   ok('el crédito tiene vigencia declarada', VIGENCIA_CREDITO_DIAS > 0);
 }
@@ -162,9 +164,9 @@ console.log('\n Transacciones y datos personales');
     codigo: 'ATH-TRI-K7M2Q',
     consentimiento: { seguimiento: true, contacto: '3188983167' },
   });
-  const publica = sinDatosPersonales(t);
+  const publica = vistaCliente(t);
   ok('la vista pública no lleva el contacto', !JSON.stringify(publica).includes('3188983167'), JSON.stringify(publica));
-  ok('pero sí dice que hay consentimiento', publica.consentimiento.seguimiento === true);
+  ok('pero sí dice que hay consentimiento', publica.seguimientoConsentido === true);
 
   const redimida = redime(t, 100000).transaccion!;
   const fila = filaConciliacion(redimida);
@@ -189,7 +191,7 @@ console.log('\n Transacciones y datos personales');
    ============================================================ */
 console.log('\n Backend: unicidad, idempotencia y caducidad');
 
-const almacen = new AlmacenDePrueba();
+const almacen = new AlmacenMemoria();
 
 {
   const r = await activar({ fuente: 'ficha-la-triada', personasPrevistas: 2 }, almacen);
@@ -222,15 +224,17 @@ const almacen = new AlmacenDePrueba();
 
   const primera = await redimir({ codigo, consumo: 100000 }, almacen);
   ok('se redime', primera.ok);
-  igual('  consumo', primera.datos!.economia!.consumo, 100000);
-  igual('  comisión', primera.datos!.economia!.comision, 10000);
-  igual('  crédito', primera.datos!.economia!.credito, 5000);
-  igual('  margen', primera.datos!.economia!.margen, 5000);
+  igual('  consumo', primera.datos!.consumo, 100000);
+  igual('  comisión', primera.datos!.comision, 10000);
+  igual('  crédito', primera.datos!.credito, 5000);
+  /* El margen NO viaja al operador: es cuenta interna de Atheron.
+     Que no este aqui es la lista blanca funcionando. */
+  ok('  el margen no sale hacia el operador', !('margen' in primera.datos!));
   igual('  las personas previstas se heredan si no se corrigen', primera.datos!.personas, 3);
 
   const segunda = await redimir({ codigo, consumo: 900000 }, almacen);
   ok('la segunda vez NO cobra otra comisión', segunda.yaRedimida === true);
-  igual('  y devuelve el mismo consumo de la primera', segunda.datos!.economia!.consumo, 100000);
+  igual('  y devuelve el mismo consumo de la primera', segunda.datos!.consumo, 100000);
   ok('  sin tratarlo como error', segunda.ok === true);
 
   /* Dos aparatos a la vez: el cerrojo deja pasar a uno. */
@@ -262,8 +266,18 @@ const almacen = new AlmacenDePrueba();
 
   await redimir({ codigo: r.datos!.codigo, consumo: 80000 }, almacen);
   const con = await opinar({ codigo: r.datos!.codigo, satisfaccion: 4, comentario: 'Muy bien', incidencia: false }, almacen);
-  igual('después de redimir, sí', con.datos!.seguimiento!.satisfaccion, 4);
-  igual('una satisfacción fuera de escala no se guarda', (await opinar({ codigo: r.datos!.codigo, satisfaccion: 9 }, almacen)).datos!.seguimiento!.satisfaccion, undefined);
+  ok('después de redimir, sí', con.ok && con.datos!.tieneOpinion === true);
+
+  /* Se comprueba contra el almacen, no contra la respuesta: la vista
+     del cliente no devuelve el comentario a proposito. */
+  const guardada = await almacen.lee<Transaccion>('tx', r.datos!.codigo);
+  igual('  y queda guardada la nota', guardada!.seguimiento!.satisfaccion, 4);
+  ok('  y el comentario no sale en la respuesta', !JSON.stringify(con.datos).includes('Muy bien'));
+
+  await opinar({ codigo: r.datos!.codigo, satisfaccion: 9 }, almacen);
+  const tras = await almacen.lee<Transaccion>('tx', r.datos!.codigo);
+  igual('una satisfacción fuera de escala no pisa la anterior', tras!.seguimiento!.satisfaccion, 4);
+  igual('  ni borra el comentario', tras!.seguimiento!.comentario, 'Muy bien');
 }
 
 /* ============================================================
@@ -313,14 +327,18 @@ console.log('\n Informe semanal y conciliación');
   const cuadre = conciliacionCuadra(inf);
   ok('la conciliación cuadra', cuadre.cuadra, cuadre.detalle);
 
-  const roto = conciliacionCuadra({ ...inf, creditoGenerado: 1 });
-  ok('y detecta un descuadre si alguien toca una cifra', !roto.cuadra);
+  const roto = conciliacionCuadra({
+    ...inf,
+    porRegla: inf.porRegla.map((b) => ({ ...b, credito: 1 })),
+  });
+  ok('y detecta un descuadre si alguien toca una cifra', !roto.cuadra, roto.detalle);
 }
 
 {
   const inf = await informe('2026-09-23', almacen);
   ok('el informe del backend responde', inf.ok);
   ok('y trae su comprobación de conciliación', typeof inf.datos!.cuadra === 'boolean');
+  ok('y no declara cuadrada una semana sin redenciones', inf.datos!.redenciones > 0 || !inf.datos!.cuadra);
   ok('ninguna fila del informe lleva un teléfono', !inf.datos!.filas.join('\n').match(/\b57\d{10}\b/));
 }
 

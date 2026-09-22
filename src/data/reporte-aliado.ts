@@ -29,6 +29,30 @@
    Recibe una lista y devuelve numeros. Asi el mismo calculo sirve
    para la API, para la pantalla y para las pruebas, y el informe no
    puede decir una cosa en un sitio y otra en otro.
+
+   ============================================================
+   LO QUE CAMBIO TRAS LA AUDITORIA
+   ============================================================
+
+   1. NO SE RECALCULA LA HISTORIA CON LA REGLA DE HOY. Cada
+      transaccion guarda los porcentajes con los que se calculo y su
+      version de regla. El informe suma lo guardado y comprueba cada
+      version por separado. Si manana el reparto pasa de 5/5 a 6/4,
+      las liquidaciones de esta semana siguen diciendo lo mismo.
+
+   2. UNA LISTA VACIA YA NO "CUADRA". Antes, cero transacciones
+      daban cero descuadre y por tanto un visto bueno. Ahora una
+      semana sin datos se declara SIN_DATOS, que es distinto de
+      cuadrada, y se ve en la pantalla.
+
+   3. LOS REGISTROS QUE FALTAN SE CUENTAN. El almacen dice que ids
+      nombraba el indice y no aparecieron. Con uno solo que falte, el
+      informe NO cuadra: una liquidacion sobre datos incompletos es
+      peor que no tener liquidacion.
+
+   4. SE CUENTAN LOS CIERRES. Una visita que se cierra sin consumo
+      es informacion comercial -es la que dice cuanta gente activa y
+      no consume-, y antes desaparecia del informe.
    ============================================================ */
 
 import { REGLA } from './economia-red.ts';
@@ -80,30 +104,52 @@ export const enSemana = (fecha: string, semana: Semana): boolean =>
 /* ------------------------------------------------------------
    EL INFORME
    ------------------------------------------------------------ */
+
+/** Resumen por version de regla economica: lo que permite auditar. */
+export interface BloqueRegla {
+  reglaVersion: string;
+  comisionPct: number;
+  creditoPct: number;
+  redenciones: number;
+  consumo: number;
+  comision: number;
+  credito: number;
+  margen: number;
+}
+
+export type EstadoInforme = 'CUADRA' | 'NO_CUADRA' | 'SIN_DATOS' | 'INCOMPLETO';
+
 export interface Informe {
   semana: Semana;
   activaciones: number;
   personasPrevistas: number;
   redenciones: number;
   cerradasSinConsumo: number;
-  /** Redenciones / activaciones de la semana, en %. Una cifra, no una fraccion. */
+  /** Redenciones / activaciones de la semana, en %. */
   conversion: number;
   personasAtendidas: number;
   consumoAtribuido: number;
   comision: number;
   creditoGenerado: number;
   margen: number;
-  /** Activaciones por fuente, de mas a menos. */
   porFuente: { fuente: Fuente; etiqueta: string; activaciones: number; redenciones: number }[];
+  /** Un bloque por regla economica aplicada. Casi siempre sera uno. */
+  porRegla: BloqueRegla[];
   satisfaccionMedia: number | null;
   incidencias: number;
-  /** Las transacciones que sostienen las cifras de arriba. */
+  /** Ids que el indice nombraba y no se pudieron leer. */
+  faltantes: string[];
+  /** Redenciones sin economia guardada: no se pueden facturar. */
+  sinEconomia: string[];
   filas: string[];
-  /** Avisos que hay que leer antes de facturar. */
   avisos: string[];
 }
 
-export function informeSemanal(transacciones: Transaccion[], semana: Semana): Informe {
+export function informeSemanal(
+  transacciones: Transaccion[],
+  semana: Semana,
+  faltantes: string[] = [],
+): Informe {
   const activadas = transacciones.filter((t) => enSemana(soloFecha(t.activadoEn), semana));
   const redimidas = transacciones.filter(
     (t) => t.estado === 'REDIMIDO' && t.redimidoEn && enSemana(soloFecha(t.redimidoEn), semana),
@@ -127,9 +173,35 @@ export function informeSemanal(transacciones: Transaccion[], semana: Semana): In
     fuentes.set(t.fuente, f);
   }
 
+  /* Un bloque por regla aplicada. Si alguien cambia el reparto a
+     mitad de semana, se ve: dos bloques, cada uno con lo suyo. */
+  const reglas = new Map<string, BloqueRegla>();
+  for (const t of redimidas) {
+    const e = t.economia;
+    if (!e) continue;
+    const bloque = reglas.get(e.reglaVersion) ?? {
+      reglaVersion: e.reglaVersion,
+      comisionPct: e.comisionPct,
+      creditoPct: e.creditoPct,
+      redenciones: 0,
+      consumo: 0,
+      comision: 0,
+      credito: 0,
+      margen: 0,
+    };
+    bloque.redenciones++;
+    bloque.consumo += e.consumo;
+    bloque.comision += e.comision;
+    bloque.credito += e.credito;
+    bloque.margen += e.margen;
+    reglas.set(e.reglaVersion, bloque);
+  }
+
   const notas = redimidas
     .map((t) => t.seguimiento?.satisfaccion)
     .filter((n): n is number => typeof n === 'number');
+
+  const sinEconomia = redimidas.filter((t) => !t.economia).map((t) => t.codigo);
 
   const avisos: string[] = [];
   if (REGLA.estadoReparto !== 'CONFIRMADA POR CEO') {
@@ -141,9 +213,17 @@ export function informeSemanal(transacciones: Transaccion[], semana: Semana): In
   if (REGLA.originadorPct === null) {
     avisos.push('El originador comercial se registra, pero no se liquida: no hay política aprobada.');
   }
-  const sinConsumo = redimidas.filter((t) => !t.economia);
-  if (sinConsumo.length) {
-    avisos.push(`${sinConsumo.length} redención(es) sin consumo registrado: revisar antes de facturar.`);
+  if (faltantes.length) {
+    avisos.push(
+      `${faltantes.length} registro(s) que el índice nombra no se pudieron leer. ` +
+        'Este informe está incompleto y NO sirve para liquidar hasta resolverlo.',
+    );
+  }
+  if (sinEconomia.length) {
+    avisos.push(`${sinEconomia.length} redención(es) sin consumo guardado: revisar antes de facturar.`);
+  }
+  if (reglas.size > 1) {
+    avisos.push('En esta semana se aplicó más de una regla económica. Cada bloque se liquida con la suya.');
   }
 
   return {
@@ -161,10 +241,13 @@ export function informeSemanal(transacciones: Transaccion[], semana: Semana): In
     porFuente: [...fuentes.entries()]
       .map(([fuente, n]) => ({ fuente, etiqueta: ETIQUETA_FUENTE[fuente], ...n }))
       .sort((a, b) => b.activaciones - a.activaciones || a.fuente.localeCompare(b.fuente)),
+    porRegla: [...reglas.values()].sort((a, b) => a.reglaVersion.localeCompare(b.reglaVersion)),
     satisfaccionMedia: notas.length
       ? Math.round((notas.reduce((a, b) => a + b, 0) / notas.length) * 10) / 10
       : null,
     incidencias: redimidas.filter((t) => t.seguimiento?.incidencia).length,
+    faltantes,
+    sinEconomia,
     filas: [CABECERA_CONCILIACION, ...redimidas.map(filaConciliacion)],
     avisos,
   };
@@ -174,29 +257,77 @@ export function informeSemanal(transacciones: Transaccion[], semana: Semana): In
    LA COMPROBACION QUE SE HACE ANTES DE FACTURAR
 
    Cuadrar dos veces el mismo numero parece redundante hasta el dia
-   en que no cuadra. Esto recalcula los totales desde cero y dice si
-   coinciden con los del informe: si alguien toca el calculo y se
-   descuadra, se ve aqui y no en la reunion con el aliado.
+   en que no cuadra. Cada bloque se comprueba con SU regla, no con la
+   de hoy: esa era la trampa que encontro la auditoria.
    ------------------------------------------------------------ */
-export function conciliacionCuadra(informe: Informe): { cuadra: boolean; detalle: string } {
-  const esperada = Math.round((informe.consumoAtribuido * REGLA.comisionPct) / 100);
-  const reparto = informe.creditoGenerado + informe.margen;
+export function conciliacionCuadra(informe: Informe): {
+  cuadra: boolean;
+  estado: EstadoInforme;
+  detalle: string;
+} {
+  if (informe.faltantes.length) {
+    return {
+      cuadra: false,
+      estado: 'INCOMPLETO',
+      detalle: `Faltan ${informe.faltantes.length} registro(s) que el índice nombra. No se puede liquidar.`,
+    };
+  }
+  if (informe.sinEconomia.length) {
+    return {
+      cuadra: false,
+      estado: 'INCOMPLETO',
+      detalle: `${informe.sinEconomia.length} redención(es) sin consumo guardado.`,
+    };
+  }
+  if (!informe.redenciones) {
+    /* Cero no es cuadrar: es que no hay nada que cuadrar. Decir
+       "cuadra" aqui es exactamente como se firma una liquidacion
+       vacia sin que nadie se entere. */
+    return {
+      cuadra: false,
+      estado: 'SIN_DATOS',
+      detalle: informe.activaciones
+        ? `${informe.activaciones} activación(es) y ninguna redención en la semana.`
+        : 'No hay ninguna transacción en esta semana.',
+    };
+  }
 
-  if (reparto !== informe.comision) {
+  for (const bloque of informe.porRegla) {
+    if (bloque.credito + bloque.margen !== bloque.comision) {
+      return {
+        cuadra: false,
+        estado: 'NO_CUADRA',
+        detalle: `Regla ${bloque.reglaVersion}: crédito (${bloque.credito}) + margen (${bloque.margen}) no suman la comisión (${bloque.comision}).`,
+      };
+    }
+    /* Cada fila se redondea por su cuenta, asi que la suma puede
+       separarse del calculo sobre el total en unos pocos pesos: uno
+       por redencion es normal, mas que eso es un error de calculo. */
+    const esperada = Math.round((bloque.consumo * bloque.comisionPct) / 100);
+    if (Math.abs(esperada - bloque.comision) > Math.max(1, bloque.redenciones)) {
+      return {
+        cuadra: false,
+        estado: 'NO_CUADRA',
+        detalle: `Regla ${bloque.reglaVersion}: la comisión suma ${bloque.comision} y sobre el consumo daría ${esperada}.`,
+      };
+    }
+  }
+
+  const total = informe.porRegla.reduce((n, b) => n + b.comision, 0);
+  if (total !== informe.comision) {
     return {
       cuadra: false,
-      detalle: `Crédito (${informe.creditoGenerado}) + margen (${informe.margen}) = ${reparto}, y la comisión suma ${informe.comision}.`,
+      estado: 'NO_CUADRA',
+      detalle: `Los bloques por regla suman ${total} y el total dice ${informe.comision}.`,
     };
   }
-  /* La comision total puede separarse de la del consumo total por
-     unos pocos pesos: cada fila se redondea por su cuenta. Un peso
-     por redencion es normal; mas que eso es un error de calculo. */
-  const holgura = Math.max(1, informe.redenciones);
-  if (Math.abs(esperada - informe.comision) > holgura) {
-    return {
-      cuadra: false,
-      detalle: `La comisión suma ${informe.comision} y sobre el consumo total daría ${esperada}.`,
-    };
-  }
-  return { cuadra: true, detalle: 'Los totales cuadran con el consumo atribuido.' };
+
+  return {
+    cuadra: true,
+    estado: 'CUADRA',
+    detalle:
+      informe.porRegla.length === 1
+        ? `Los totales cuadran con el consumo atribuido (regla ${informe.porRegla[0].reglaVersion}).`
+        : 'Los totales cuadran en cada bloque de regla.',
+  };
 }

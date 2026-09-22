@@ -24,7 +24,9 @@
       que la pantalla pueda decir exactamente eso.
    ============================================================ */
 
-import { SinAlmacen } from './_almacen.ts';
+import { RespuestaInvalida, SinAlmacen } from './_almacen.ts';
+import { objetoPlano } from '../src/data/validacion.ts';
+import { registra } from './_servicio.ts';
 
 /* Tipos minimos de la peticion y la respuesta de Vercel. Se
    declaran aqui para no anadir @vercel/node solo por los tipos: en
@@ -46,27 +48,23 @@ export interface Contestacion {
 export const parametros = (peticion: Peticion): URLSearchParams =>
   new URL(peticion.url ?? '/', 'http://local').searchParams;
 
-/** El cuerpo como objeto. Vercel ya lo analiza; si llega en texto, se analiza aqui. */
+/**
+ * El cuerpo como objeto plano. Vercel ya lo analiza; si llega en
+ * texto, se analiza aqui. Un array o un numero tambien son JSON
+ * valido y ninguno es un cuerpo de peticion: se descartan, igual que
+ * las claves que ensucian el prototipo.
+ */
 export function cuerpo(peticion: Peticion): Record<string, unknown> {
   const crudo = peticion.body;
-  if (!crudo) return {};
-  if (typeof crudo === 'object') return crudo as Record<string, unknown>;
   if (typeof crudo === 'string') {
     try {
-      const analizado: unknown = JSON.parse(crudo);
-      return analizado && typeof analizado === 'object' ? (analizado as Record<string, unknown>) : {};
+      return objetoPlano(JSON.parse(crudo));
     } catch {
-      return {};
+      return objetoPlano(null);
     }
   }
-  return {};
+  return objetoPlano(crudo);
 }
-
-/** Texto de un campo, recortado. Nunca devuelve undefined por sorpresa. */
-export const texto = (datos: Record<string, unknown>, campo: string, max = 200): string =>
-  typeof datos[campo] === 'string' ? (datos[campo] as string).trim().slice(0, max) : '';
-
-export const numero = (datos: Record<string, unknown>, campo: string): number => Number(datos[campo]);
 
 /**
  * Envuelve un endpoint: comprueba el metodo, no cachea, y traduce
@@ -94,35 +92,34 @@ export function maneja(
         contestacion.status(503).json({ ok: false, motivo: error.codigo, explicacion: error.message });
         return;
       }
-      console.error('[atheron/api]', error);
+      if (error instanceof RespuestaInvalida) {
+        /* El almacen contesto algo que no se puede tratar como exito.
+           503 y no 500: no es un fallo del codigo, es que el registro
+           no consta, y quien llama tiene que poder reintentar. */
+        registra('hablar con el almacén', error);
+        contestacion.status(503).json({ ok: false, motivo: 'ALMACEN_INCIERTO' });
+        return;
+      }
+      /* Nunca el error entero: los registros se leen, se exportan y a
+         veces se reenvian. Solo el sitio y el tipo. */
+      registra('atender la petición', error);
       contestacion.status(500).json({ ok: false, motivo: 'ERROR' });
     }
   };
 }
 
 /* ------------------------------------------------------------
-   AUTORIZACION DEL INFORME
+   LIMITE DE ABUSO
 
-   El informe lleva cifras de negocio del aliado, asi que no es
-   publico. Se protege con un token en cabecera, comparado en tiempo
-   constante: comparar cadenas con === filtra por cuanto tarda, y
-   aunque aqui el riesgo sea pequeno, hacerlo bien cuesta cinco
-   lineas.
-
-   Si no hay token configurado, el informe NO se sirve. Nunca "abierto
-   porque no se ha configurado": eso es como acaban abiertos.
+   Se comprueba en el endpoint, no aqui, porque cada uno tiene su
+   ventana y porque necesita el almacen. Lo que si vive aqui es la
+   respuesta, para que sea igual en todos.
    ------------------------------------------------------------ */
-export function autorizado(peticion: Peticion): boolean {
-  const esperado = process.env.ATHERON_TOKEN_ADMIN;
-  if (!esperado) return false;
-
-  const cabecera = peticion.headers.authorization;
-  const recibido = (Array.isArray(cabecera) ? cabecera[0] : cabecera ?? '').replace(/^Bearer\s+/i, '');
-  if (recibido.length !== esperado.length) return false;
-
-  let diferencia = 0;
-  for (let i = 0; i < esperado.length; i++) {
-    diferencia |= recibido.charCodeAt(i) ^ esperado.charCodeAt(i);
-  }
-  return diferencia === 0;
-}
+export const DEMASIADAS = {
+  estado: 429,
+  cuerpo: {
+    ok: false,
+    motivo: 'DEMASIADAS_PETICIONES',
+    explicacion: 'Demasiadas peticiones seguidas. Espera un momento y vuelve a intentarlo.',
+  },
+} as const;
