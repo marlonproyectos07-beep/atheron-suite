@@ -281,14 +281,21 @@ export const ETIQUETA_CREDITO: Record<EstadoCredito, string> = {
 export const COPY_CREDITO = {
   titulo: 'Crédito Atheron',
   queEs: `El ${REGLA.creditoPct}% de lo que consumas se te acredita como Crédito Atheron.`,
-  donde: 'Se usa en hospedajes Atheron y en el resto de la red.',
-  vigencia: `Vale ${VIGENCIA_CREDITO_DIAS} días desde tu visita.`,
+  /* EN FUTURO, NO EN PRESENTE, Y SIN PROMETER AUTOMATISMO.
+     La tercera auditoria senalo que estos dos textos se leian como
+     una promesa: "se usa" y "vale" dan por hecho que el credito ya
+     se puede gastar y que se aplicara solo. Hoy el credito se
+     REGISTRA -existe, con su importe y su vencimiento- pero no hay
+     mecanismo de vinculacion ni de aplicacion automatica, y decir lo
+     contrario es prometer algo que no se puede cumplir. */
+  donde: 'Está previsto para hospedajes Atheron y el resto de la red.',
+  vigencia: `Se registra con ${VIGENCIA_CREDITO_DIAS} días de vigencia desde tu visita.`,
   /* Mientras no exista una cuenta de cliente a la que atarlo, el
      credito se genera y queda esperando. Decirle "te lo aplicamos
      cuando reserves" seria prometer algo que hoy no se puede
      cumplir: no hay forma de saber que quien reserva es quien
      consumio. Ver src/data/credito-ledger.ts. */
-  pendiente: 'Queda guardado a nombre de este código hasta que puedas vincularlo a tu cuenta.',
+  pendiente: 'Queda registrado a nombre de este código. No se aplica solo: habrá que vincularlo.',
   comoReclamar: 'Guarda tu código: es el que identifica tu crédito.',
   /* Lo unico que se dice del estado del acuerdo, y solo dentro del
      piloto interno: es una prueba, y prometer permanencia seria

@@ -97,6 +97,12 @@ const idxCredito = (dia: string): string => `cr:gen:${dia}`;
 
 /** Un id de transaccion es ATH-TRI-XXXXX; uno de credito, ATH-CR-... */
 const ES_TRANSACCION = /^ATH-[A-Z]{3}-[A-Z0-9]{5}$/;
+/* Los dos patrones son mutuamente excluyentes a proposito: en
+   ATH-CR-XXXXXXXX el tercer grupo no son tres letras, asi que un
+   credito nunca pasa por transaccion ni una transaccion por credito.
+   Por eso un id de transaccion dentro de cr:gen se detecta como
+   contaminacion en vez de leerse y contarse como credito. */
+const ES_CREDITO = /^ATH-CR-[A-Z0-9]{8}$/;
 
 /* ------------------------------------------------------------
    LAS DOS VISTAS — lista blanca, no lista negra
@@ -526,6 +532,31 @@ export async function opinar(
      TTL     divergente    el objeto y su indice caducan en momentos
                            distintos, asi que uno desaparecera antes
 
+   Y LAS MISMAS CUATRO, OTRA VEZ, PARA EL LIBRO DE CREDITOS
+
+   La tercera auditoria encontro que todo esto se comprobaba para las
+   transacciones y no para los creditos: cr:gen se recorria de ida
+   -si una venta nombraba un credito, se miraba que existiera- pero
+   nunca de vuelta. Un credito escrito sin entrar en su indice era
+   invisible, y el informe declaraba CUADRA sin haberlo mirado.
+
+     cr:gen -> objeto      el indice nombra un credito que no esta
+     objeto -> cr:gen      el credito existe y ningun indice lo nombra
+     cr:gen contaminado    un id de transaccion, un id invalido, una
+                           entidad que no es un credito o una
+                           referencia malformada dentro de cr:gen
+     TTL    divergente     objeto credito, cr:gen y tx:red, no solo
+                           tx:act
+
+   Y UNA MAS, QUE ES LA QUE LO SOSTIENE TODO: EL ALCANCE
+
+   Recorrer el almacen con SCAN puede quedarse corto. Si se queda
+   corto, lo que se miro no demuestra nada sobre lo que no se miro,
+   por muy vacias que salgan las listas. Por eso el recuento
+   incompleto se declara aparte y tumba el CUADRA por si solo: el
+   informe no puede afirmar que el universo inspeccionado este
+   completo si no lo esta.
+
    Si cualquiera de esas falla, el informe NO cuadra. Una liquidacion
    sobre datos que no se pueden demostrar completos es peor que no
    tener liquidacion: la primera se firma.
@@ -534,6 +565,11 @@ export async function opinar(
    normal: se tocan en momentos distintos y cada escritura lo renueva.
    Mas que eso significa que uno se va a quedar sin el otro. */
 const TOLERANCIA_TTL_SEGUNDOS = 24 * 60 * 60;
+
+/* Cuantos registros sueltos -los que el recorrido encuentra y ningun
+   indice nombraba- se leen de una vez. Si se llega al tope, la
+   inspeccion se declara incompleta en vez de darse por terminada. */
+const TOPE_COMPROBACION = 500;
 
 export async function informe(
   fecha: string,
@@ -548,12 +584,13 @@ export async function informe(
     dias.push(d.toISOString().slice(0, 10));
   }
 
-  /* Se leen los dos indices de transacciones de cada dia. El de
-     creditos NO entra aqui: es de otra entidad y se comprueba
-     aparte, contra las transacciones que lo referencian. */
-  const [listasAct, listasRed] = await Promise.all([
+  /* Se leen los TRES indices de cada dia. El de creditos ya no se da
+     por bueno porque una transaccion lo nombre: se recorre igual que
+     el de transacciones, y en los dos sentidos. */
+  const [listasAct, listasRed, listasCr] = await Promise.all([
     Promise.all(dias.map((d) => deposito.indice(idxActivacion(d)))),
     Promise.all(dias.map((d) => deposito.indice(idxRedencion(d)))),
+    Promise.all(dias.map((d) => deposito.indice(idxCredito(d)))),
   ]);
 
   const enActivacion = new Set(listasAct.flat());
@@ -574,10 +611,27 @@ export async function informe(
      estaban en ningun indice -normalmente, ninguna-. */
   const escaneo = await deposito.escanea(TX);
   const conocidas = new Set(ids);
-  const huerfanas = escaneo.ids.filter((id) => !conocidas.has(id)).slice(0, 500);
+  const huerfanasTodas = escaneo.ids.filter((id) => !conocidas.has(id));
+  const huerfanas = huerfanasTodas.slice(0, TOPE_COMPROBACION);
   const { encontrados: sueltas } = huerfanas.length
     ? await deposito.leeVarios<Transaccion>(TX, huerfanas)
     : { encontrados: [] as Transaccion[] };
+
+  /* EL ALCANCE SE DECLARA APARTE.
+     Antes, que el recorrido se quedara corto se colaba dentro de la
+     lista de transacciones sin indice, disfrazado de id. Eso mezcla
+     dos cosas distintas: "he mirado y falta esto" y "no he podido
+     mirar entero". La segunda no es un hallazgo, es la ausencia de
+     prueba, y tiene que poder distinguirse de la primera. */
+  const recuentoIncompleto: string[] = [];
+  if (escaneo.truncado) {
+    recuentoIncompleto.push('El almacén tiene más transacciones de las que se pudieron recorrer.');
+  }
+  if (huerfanasTodas.length > TOPE_COMPROBACION) {
+    recuentoIncompleto.push(
+      `Se encontraron ${huerfanasTodas.length} transacciones fuera de índice y solo se comprobaron ${TOPE_COMPROBACION}.`,
+    );
+  }
 
   const sinIndice: string[] = [];
   /* De las sueltas, solo importan las de ESTA semana: las de otras
@@ -586,11 +640,6 @@ export async function informe(
     const dActivacion = t.activadoEn.slice(0, 10);
     const dCierre = t.redimidoEn?.slice(0, 10);
     if (dias.includes(dActivacion) || (dCierre && dias.includes(dCierre))) sinIndice.push(t.codigo);
-  }
-  if (escaneo.truncado) {
-    /* No se pudo recorrer entero: se dice, en vez de dar por bueno
-       lo que se alcanzo a mirar. */
-    sinIndice.push('(recuento incompleto: el almacén tiene más registros de los que se recorrieron)');
   }
   const indicesDivergentes: string[] = [];
   const creditosFaltantes: string[] = [];
@@ -612,11 +661,22 @@ export async function informe(
 
     if (t.creditoId && !(await deposito.lee(CR, t.creditoId))) creditosFaltantes.push(t.creditoId);
 
+    /* RETENCION: el objeto y TODOS los indices que lo nombran. Antes
+       solo se comparaba contra tx:act. Una transaccion redimida vive
+       tambien en tx:red, y si ese indice caduca antes, la semana
+       siguiente la venta deja de aparecer donde se factura sin que
+       nada falle a la vista. */
     try {
       const vidaTx = await deposito.vida(TX, t.codigo);
-      const vidaIdx = await deposito.vidaIndice(idxActivacion(diaActivacion));
-      if (vidaTx >= 0 && vidaIdx >= 0 && Math.abs(vidaTx - vidaIdx) > TOLERANCIA_TTL_SEGUNDOS) {
+      const vidaAct = await deposito.vidaIndice(idxActivacion(diaActivacion));
+      if (vidaTx >= 0 && vidaAct >= 0 && Math.abs(vidaTx - vidaAct) > TOLERANCIA_TTL_SEGUNDOS) {
         ttlDivergente.push(t.codigo);
+      }
+      if (t.redimidoEn) {
+        const vidaRed = await deposito.vidaIndice(idxRedencion(t.redimidoEn.slice(0, 10)));
+        if (vidaTx >= 0 && vidaRed >= 0 && Math.abs(vidaTx - vidaRed) > TOLERANCIA_TTL_SEGUNDOS) {
+          ttlDivergente.push(t.codigo);
+        }
       }
     } catch (error) {
       /* Si no se puede leer el TTL, no se finge que cuadra. */
@@ -625,13 +685,88 @@ export async function informe(
     }
   }
 
+  /* ============================================================
+     EL LIBRO DE CREDITOS, EN LOS DOS SENTIDOS
+     ============================================================ */
+
+  /* IDA: cr:gen -> objeto.
+     Lo primero es separar lo que ni siquiera tiene forma de credito.
+     Un id de transaccion, un id inventado, una entidad de otro tipo
+     o una referencia malformada NO se intentan leer como credito: se
+     declaran contaminacion del indice. Intentar leerlos los
+     convertiria en "creditos que faltan", que es un diagnostico
+     distinto y llevaria a buscar donde no hay nada. */
+  const enCredito = new Set(listasCr.flat());
+  const creditosContaminados = [...enCredito].filter((id) => !ES_CREDITO.test(id));
+  const idsCredito = [...enCredito].filter((id) => ES_CREDITO.test(id));
+
+  const { encontrados: creditos, faltantes: creditosSinObjeto } = await deposito.leeVarios<Credito>(
+    CR,
+    idsCredito,
+  );
+
+  /* VUELTA: objeto -> cr:gen.
+     No basta con recorrer cr:gen. Un credito escrito sin llegar a
+     entrar en su indice no aparece por ahi por definicion, y es
+     justo lo que deja una emision a medias. La unica forma de verlo
+     es recorrer el almacen de creditos y preguntar, de cada uno, si
+     alguien lo nombra. */
+  const escaneoCr = await deposito.escanea(CR);
+  const creditosConocidos = new Set(idsCredito);
+  const sueltosTodos = escaneoCr.ids.filter((id) => !creditosConocidos.has(id));
+  const sospechosos = sueltosTodos.slice(0, TOPE_COMPROBACION);
+  const { encontrados: creditosSueltos } = sospechosos.length
+    ? await deposito.leeVarios<Credito>(CR, sospechosos)
+    : { encontrados: [] as Credito[] };
+
+  if (escaneoCr.truncado) {
+    recuentoIncompleto.push('El almacén tiene más créditos de los que se pudieron recorrer.');
+  }
+  if (sueltosTodos.length > TOPE_COMPROBACION) {
+    recuentoIncompleto.push(
+      `Se encontraron ${sueltosTodos.length} créditos fuera de índice y solo se comprobaron ${TOPE_COMPROBACION}.`,
+    );
+  }
+
+  const creditosSinIndice: string[] = [];
+  for (const c of creditosSueltos) {
+    /* Igual que con las transacciones: solo descuadran esta semana
+       los creditos generados en ella. */
+    if (typeof c.generadoEn === 'string' && dias.includes(c.generadoEn.slice(0, 10))) {
+      creditosSinIndice.push(c.id);
+    }
+  }
+
+  /* RETENCION DEL CREDITO: objeto contra su propio indice. Si cr:gen
+     caduca antes que el credito, el credito se queda sin nadie que
+     lo nombre y la vuelta de arriba lo dara por huerfano; si caduca
+     despues, el indice nombrara un credito que ya no esta. Las dos
+     cosas rompen la reconstruccion, asi que divergir ya es el fallo. */
+  for (const c of creditos) {
+    const diaGeneracion = typeof c.generadoEn === 'string' ? c.generadoEn.slice(0, 10) : '';
+    try {
+      const vidaCr = await deposito.vida(CR, c.id);
+      const vidaIdx = diaGeneracion ? await deposito.vidaIndice(idxCredito(diaGeneracion)) : -2;
+      if (vidaCr >= 0 && vidaIdx >= 0 && Math.abs(vidaCr - vidaIdx) > TOLERANCIA_TTL_SEGUNDOS) {
+        ttlDivergente.push(c.id);
+      }
+    } catch (error) {
+      registra('comprobar la retención del crédito', error);
+      ttlDivergente.push(c.id);
+    }
+  }
+
   const integridad: Integridad = {
     faltantes,
     sinIndice: [...new Set(sinIndice)],
-    creditosFaltantes,
     indicesDivergentes,
     contaminados,
-    ttlDivergente,
+    creditosFaltantes: [...new Set(creditosFaltantes)],
+    creditosSinObjeto,
+    creditosSinIndice: [...new Set(creditosSinIndice)],
+    creditosContaminados,
+    ttlDivergente: [...new Set(ttlDivergente)],
+    recuentoIncompleto,
   };
 
   const resultado = informeSemanal([...encontrados, ...sueltas.filter((t) => sinIndice.includes(t.codigo))], semana, integridad);

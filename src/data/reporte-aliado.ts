@@ -70,27 +70,52 @@ import { REGLA } from './economia-red.ts';
    decide que significan es este archivo.
    ------------------------------------------------------------ */
 export interface Integridad {
+  /* --- Transacciones --- */
   /** El índice los nombra y no se pudieron leer. */
   faltantes: string[];
   /** Existen pero ningún índice de los que les tocan los nombra. */
   sinIndice: string[];
-  /** Apuntan a un crédito que no existe. */
-  creditosFaltantes: string[];
   /** Están en el índice de redenciones sin estar redimidas ni cerradas. */
   indicesDivergentes: string[];
   /** Ids que no son de transacción dentro de un índice de transacciones. */
   contaminados: string[];
-  /** El registro y su índice caducan en momentos muy distintos. */
+
+  /* --- Créditos ---
+     El libro de créditos se concilia igual que las transacciones y
+     en los mismos dos sentidos. La tercera auditoría lo pidió por
+     escrito: un crédito es una deuda de Atheron con un cliente, y
+     una deuda que no se puede demostrar completa no se liquida. */
+  /** Una transacción apunta a un crédito que no existe. */
+  creditosFaltantes: string[];
+  /** El índice cr:gen los nombra y el objeto no está. */
+  creditosSinObjeto: string[];
+  /** El crédito existe y ningún índice cr:gen lo nombra. */
+  creditosSinIndice: string[];
+  /** Ids que no son créditos dentro de un índice de créditos. */
+  creditosContaminados: string[];
+
+  /* --- Retención --- */
+  /** Registro e índice que caducan en momentos muy distintos. */
   ttlDivergente: string[];
+
+  /* --- Alcance de la inspección ---
+     Si no se pudo recorrer el almacén entero, el universo
+     inspeccionado NO está completo y nada de lo de arriba prueba
+     nada. Se dice, en vez de dar por bueno lo que se alcanzó a ver. */
+  recuentoIncompleto: string[];
 }
 
 export const INTEGRIDAD_LIMPIA: Integridad = {
   faltantes: [],
   sinIndice: [],
-  creditosFaltantes: [],
   indicesDivergentes: [],
   contaminados: [],
+  creditosFaltantes: [],
+  creditosSinObjeto: [],
+  creditosSinIndice: [],
+  creditosContaminados: [],
   ttlDivergente: [],
+  recuentoIncompleto: [],
 };
 import {
   CABECERA_CONCILIACION,
@@ -285,7 +310,19 @@ export function informeSemanal(
     avisos.push(`${integridad.sinIndice.length} transacción(es) que ningún índice nombra: el informe puede estar dejándose ventas fuera.`);
   }
   if (integridad.creditosFaltantes.length) {
-    avisos.push(`${integridad.creditosFaltantes.length} crédito(s) referenciados que no existen en el libro.`);
+    avisos.push(`${integridad.creditosFaltantes.length} crédito(s) referenciados por una venta que no existen en el libro.`);
+  }
+  if (integridad.creditosSinObjeto.length) {
+    avisos.push(`${integridad.creditosSinObjeto.length} crédito(s) que el índice nombra y no están.`);
+  }
+  if (integridad.creditosSinIndice.length) {
+    avisos.push(`${integridad.creditosSinIndice.length} crédito(s) que existen y ningún índice nombra.`);
+  }
+  if (integridad.creditosContaminados.length) {
+    avisos.push(`${integridad.creditosContaminados.length} id(s) que no son créditos dentro de un índice de créditos.`);
+  }
+  if (integridad.recuentoIncompleto.length) {
+    avisos.push('No se pudo recorrer el almacén entero: este informe no puede declararse completo.');
   }
   if (integridad.contaminados.length) {
     avisos.push(`${integridad.contaminados.length} id(s) que no son transacciones dentro de un índice de transacciones.`);
@@ -294,7 +331,7 @@ export function informeSemanal(
     avisos.push(`${integridad.indicesDivergentes.length} transacción(es) en el índice de redenciones sin estar redimidas ni cerradas.`);
   }
   if (integridad.ttlDivergente.length) {
-    avisos.push(`${integridad.ttlDivergente.length} transacción(es) cuyo registro y su índice caducan en momentos distintos.`);
+    avisos.push(`${integridad.ttlDivergente.length} registro(s) cuyo objeto y su índice caducan en momentos distintos.`);
   }
   if (reglas.size > 1) {
     avisos.push('En esta semana se aplicó más de una regla económica. Cada bloque se liquida con la suya.');
@@ -354,12 +391,18 @@ export function conciliacionCuadra(informe: Informe): {
      Un descuadre aritmetico sobre datos incompletos no dice nada. */
   const i = informe.integridad;
   const problemas: [string, string[]][] = [
+    /* El alcance va primero: si no se pudo mirar entero, lo demas no
+       demuestra nada, por mucho que salga vacio. */
+    ['motivo(s) por los que el recuento no está completo', i.recuentoIncompleto],
     ['registro(s) que el índice nombra y no se pueden leer', i.faltantes],
     ['transacción(es) que ningún índice nombra', i.sinIndice],
-    ['crédito(s) referenciados que no existen', i.creditosFaltantes],
     ['id(s) ajenos dentro de un índice de transacciones', i.contaminados],
     ['transacción(es) con índice y estado contradictorios', i.indicesDivergentes],
-    ['transacción(es) con retención divergente de su índice', i.ttlDivergente],
+    ['crédito(s) referenciados por una venta que no existen', i.creditosFaltantes],
+    ['crédito(s) que el índice nombra y no están', i.creditosSinObjeto],
+    ['crédito(s) que existen y ningún índice nombra', i.creditosSinIndice],
+    ['id(s) ajenos dentro de un índice de créditos', i.creditosContaminados],
+    ['registro(s) con retención divergente de su índice', i.ttlDivergente],
     ['redención(es) sin consumo guardado', informe.sinEconomia],
   ];
   for (const [que, lista] of problemas) {

@@ -347,7 +347,7 @@ queda anotado como decisión pendiente.
 ## Pruebas
 
 ```bash
-npm run prueba-reauditoria     90 · prueba de oro + una regresión por hallazgo de la 2ª auditoría
+npm run prueba-reauditoria    136 · prueba de oro + una regresión por hallazgo de la 2ª y la 3ª auditoría
 npm run prueba-adversarial    108 · una por cada hallazgo de la 1ª auditoría, por HTTP real
 npm run prueba-almacen         24 · el almacén contra un Redis DE VERDAD
 npm run prueba-loop002         87 · economía, transacciones, backend, informe
@@ -484,6 +484,56 @@ y la pantalla lo pinta; no lo deduce por su cuenta.
 endpoints reales: activar → redimir $100.000 → crédito $5.000 en su libro → informe. Termina
 en **CUADRA**, con comisión 10.000, margen 5.000, el cliente pagando 100.000 y sin un solo id
 que no se pueda demostrar. Si eso falla, lo demás da igual.
+
+## Después de la tercera auditoría
+
+La tercera revisión independiente cerró con **«no apto todavía para provisionar almacén»**, y
+el bloqueo estaba concentrado en un sitio: **el índice de créditos `cr:gen` se recorría de
+ida y nunca de vuelta**. Todo lo que se había construido para las transacciones —las dos
+direcciones, la contaminación, la retención— no existía para el libro de créditos. Un crédito
+escrito sin llegar a entrar en su índice era invisible, y el informe declaraba `CUADRA` sin
+haber mirado la mitad de lo que estaba liquidando.
+
+Esta ronda no rediseña nada de lo anterior. Cierra eso.
+
+| Caso | Qué pasaba | Qué se comprueba ahora |
+|---|---|---|
+| Crédito fantasma | `cr:gen` nombraba un crédito cuyo objeto no existía y nadie lo miraba | `creditosSinObjeto`: se lee cada id del índice y el que no esté se declara |
+| Crédito huérfano | El crédito existía y ningún `cr:gen` lo nombraba: **desde el índice eso no se ve nunca** | `creditosSinIndice`: se recorre el almacén de créditos y se pregunta, de cada uno, si alguien lo nombra |
+| `cr:gen` contaminado | Un id de transacción, un id mal formado, otra entidad o una referencia rota dentro del índice de créditos | `creditosContaminados`: lo que no tiene forma de crédito **no se intenta leer como crédito**, se declara basura del índice |
+| Retención | Sólo se comparaba el TTL del registro contra `tx:act` | Ahora también objeto crédito contra `cr:gen`, y transacción contra `tx:red` |
+| Alcance | Un `SCAN` truncado se colaba como un id falso dentro de «transacciones sin índice» | `recuentoIncompleto`, lista propia, que **tumba el `CUADRA` por sí sola** aunque las demás salgan vacías |
+
+### Por qué el alcance va primero
+
+Es la diferencia entre «he mirado y falta esto» y «no he podido mirar entero». La segunda no
+es un hallazgo: es la ausencia de prueba. Si el recorrido queda corto, que las listas salgan
+vacías no demuestra nada sobre lo que no se miró, así que el informe no puede afirmar que el
+universo inspeccionado esté completo. Por eso `recuentoIncompleto` se evalúa antes que
+cualquier descuadre aritmético, y por eso `INCOMPLETO` no se confunde con `NO_CUADRA`,
+`SIN_DATOS` ni `CUADRA`.
+
+### Las pruebas
+
+`npm run prueba-reauditoria` añade el bloque **B8**, contra el Redis de verdad que levanta el
+propio archivo. Cada caso rompe el almacén a mano —`SADD`, `SET`, `EXPIRE`— comprueba que el
+informe lo ve y **deja el día como estaba**; el último vuelve a hacer el recorrido completo
+—activar → redimir $100.000 → crédito $5.000— y exige `CUADRA` con todas las listas de
+integridad vacías. No hay ningún doble que reproduzca la lógica esperada: el único punto
+donde se envuelve el almacén es para decirle que el recorrido quedó corto, y hasta ahí los
+datos, los índices y el cálculo siguen siendo reales.
+
+De paso, el bloque B4 —que rompía el día a propósito— ahora **deshace su destrozo**. Lo que
+no se restaura lo arrastran los bloques siguientes y acaba tapando un fallo de verdad con un
+resto de una prueba anterior.
+
+### Textos: lo que se dejó de prometer
+
+El Crédito Atheron **se registra**; no se aplica solo, porque no hay mecanismo de vinculación
+ni de aplicación automática. Los textos reutilizables decían «se usa en hospedajes Atheron» y
+«vale 90 días», que se leen como una promesa de algo que hoy no se puede cumplir. Ahora dicen
+«está previsto para» y «se registra con 90 días de vigencia», y el aviso de pendiente dice
+explícitamente que **no se aplica solo**.
 
 ## Lo que deliberadamente no se hizo
 

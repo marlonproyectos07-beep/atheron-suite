@@ -43,9 +43,9 @@ const { default: redimirApi } = await import('../api/redimir.ts');
 const { default: seguimientoApi } = await import('../api/seguimiento.ts');
 const { default: reporteApi } = await import('../api/reporte.ts');
 const { default: operadorApi } = await import('../api/operador.ts');
-const { almacen, AlmacenMemoria } = await import('../api/_almacen.ts');
+const { almacen, AlmacenMemoria, RETENCION_SEGUNDOS } = await import('../api/_almacen.ts');
 const { autoriza } = await import('../api/_autorizacion.ts');
-const { activar, redimir } = await import('../api/_servicio.ts');
+const { activar, redimir, informe: informeServicio } = await import('../api/_servicio.ts');
 const { generaCredito, gasta, vincula, estadoDe, asientaVencimiento } = await import(
   '../src/data/credito-ledger.ts'
 );
@@ -408,6 +408,21 @@ const informeDeHoy = async (): Promise<{
   const ttl = await informeDeHoy();
   ok('un registro que caduca mucho antes que su índice se detecta', ttl.integridad.ttlDivergente.includes(codigos[0]));
   ok('  y tampoco cuadra', ttl.cuadra === false);
+
+  /* SE DESHACE EL DESTROZO.
+     Este bloque rompe el dia a proposito, y el dia es compartido:
+     lo que no se restaure aqui lo arrastran los bloques siguientes y
+     acaba tapando un fallo de verdad con un resto de una prueba. Se
+     devuelve la retencion del registro y se saca de cr:gen el
+     credito que este bloque borro. */
+  await local.redis.manda(['EXPIRE', `ath:tx:${codigos[0]}`, String(RETENCION_SEGUNDOS)]);
+  await local.redis.manda(['SREM', `ath:idx:cr:gen:${dia}`, tx!.creditoId]);
+  const limpio = await informeDeHoy();
+  ok(
+    'restaurado lo que esta prueba rompió, el día vuelve a cuadrar',
+    limpio.cuadra === true,
+    `${limpio.estado}: ${JSON.stringify(limpio.integridad)}`,
+  );
 }
 
 {
@@ -656,6 +671,307 @@ desdeIp('10.1.0.8');
   ok('activado con 5/5 y redimido con la config en 6/4: manda el 5/5', tx!.economia.credito === 5000, String(tx!.economia.credito));
   ok('  el margen también', tx!.economia.margen === 5000, String(tx!.economia.margen));
   ok('  y queda escrito con qué versión se calculó', tx!.economia.reglaVersion === guardados.version, tx!.economia.reglaVersion);
+}
+
+/* ============================================================
+   B8 — CONCILIACION COMPLETA DEL INDICE DE CREDITOS cr:gen
+
+   La tercera auditoria dijo lo que faltaba con precision: cr:gen se
+   recorria de ida y nunca de vuelta, la contaminacion solo se
+   buscaba en los indices de transacciones, y el TTL solo se
+   comparaba contra tx:act. Mientras eso siguiera asi, el informe
+   podia declarar CUADRA sin haber mirado la mitad del libro.
+
+   Los cinco casos de abajo se ejecutan contra el Redis de verdad que
+   levanta este archivo, no contra un doble: cada uno rompe el
+   almacen a mano -SADD, SET, EXPIRE- y despues lo deja como estaba.
+   Un mock que reprodujera la logica esperada demostraria que la
+   logica se parece a si misma, que es exactamente lo que no hace
+   falta demostrar.
+   ============================================================ */
+console.log('\n B8 · Conciliación bidireccional del libro de créditos');
+desdeIp('10.1.0.9');
+
+/* Vista completa del informe, con TODAS las listas de integridad. */
+const integridadDeHoy = async (): Promise<{
+  cuadra: boolean;
+  estado: string;
+  consumoAtribuido: number;
+  comision: number;
+  creditoGenerado: number;
+  margen: number;
+  detalleConciliacion: string;
+  integridad: {
+    faltantes: string[];
+    sinIndice: string[];
+    indicesDivergentes: string[];
+    contaminados: string[];
+    creditosFaltantes: string[];
+    creditosSinObjeto: string[];
+    creditosSinIndice: string[];
+    creditosContaminados: string[];
+    ttlDivergente: string[];
+    recuentoIncompleto: string[];
+  };
+}> => {
+  const r = await pide(`/api/reporte?fecha=${hoy()}`, { credencial: ADMIN });
+  return r.cuerpo.datos as never;
+};
+
+const IDX_CR = (): string => `ath:idx:cr:gen:${hoy()}`;
+const IDX_RED = (): string => `ath:idx:tx:red:${hoy()}`;
+const IDX_ACT = (): string => `ath:idx:tx:act:${hoy()}`;
+
+/* Punto de partida: el dia tiene que estar limpio antes de romperlo.
+   Si ya viniera sucio, los casos de abajo no demostrarian nada. */
+{
+  const inf = await integridadDeHoy();
+  ok(
+    'el día arranca sin nada pendiente de demostrar',
+    Object.values(inf.integridad).every((l) => l.length === 0),
+    JSON.stringify(inf.integridad),
+  );
+}
+
+/* ------------------------------------------------------------
+   CASO 1 — cr:gen nombra un credito que no existe
+   ------------------------------------------------------------ */
+{
+  await local.redis.manda(['SADD', IDX_CR(), 'ATH-CR-FANTASMA']);
+  const inf = await integridadDeHoy();
+
+  ok(
+    'un crédito que el índice nombra y no está se detecta',
+    inf.integridad.creditosSinObjeto.includes('ATH-CR-FANTASMA'),
+    JSON.stringify(inf.integridad.creditosSinObjeto),
+  );
+  ok('  y no se confunde con contaminación', inf.integridad.creditosContaminados.length === 0);
+  ok('  ni con un crédito que una venta reclame', inf.integridad.creditosFaltantes.length === 0);
+  ok('  el informe NO se liquida', inf.cuadra === false && inf.estado === 'INCOMPLETO', inf.estado);
+
+  await local.redis.manda(['SREM', IDX_CR(), 'ATH-CR-FANTASMA']);
+  ok('  y al quitarlo vuelve a cuadrar', (await integridadDeHoy()).cuadra === true);
+}
+
+/* ------------------------------------------------------------
+   CASO 2 — EL CREDITO EXISTE Y NINGUN INDICE LO NOMBRA
+
+   Este es el que obliga a recorrer al reves. Un credito fuera de su
+   indice no aparece leyendo cr:gen por definicion: si la
+   conciliacion solo recorriera cr:gen, este caso saldria limpio.
+   Por eso se comprueba ADEMAS que creditosSinObjeto siga vacio: la
+   unica forma de haberlo encontrado es haber mirado desde el objeto.
+   ------------------------------------------------------------ */
+{
+  const huerfano = {
+    id: 'ATH-CR-HUERFANO',
+    version: 1,
+    origen: { piloto: 'ATH-PILOT-001', aliado: 'La Triada', codigo: 'ATH-TRI-ZZZZZ' },
+    valor: 5000,
+    saldo: 5000,
+    ambitos: ['HOSPEDAJE'],
+    generadoEn: `${hoy()}T13:00:00-05:00`,
+    expiraEn: `${hoy()}T13:00:00-05:00`,
+    reglaVersion: REGLA.version,
+    titular: null,
+    reversado: false,
+    movimientos: [],
+  };
+  await local.redis.manda([
+    'SET',
+    'ath:cr:ATH-CR-HUERFANO',
+    JSON.stringify(huerfano),
+    'EX',
+    String(RETENCION_SEGUNDOS),
+  ]);
+
+  const inf = await integridadDeHoy();
+  ok(
+    'un crédito que existe y ningún índice nombra se descubre al revés',
+    inf.integridad.creditosSinIndice.includes('ATH-CR-HUERFANO'),
+    JSON.stringify(inf.integridad.creditosSinIndice),
+  );
+  ok(
+    '  recorrer solo cr:gen no lo habría visto: el índice no lo nombra',
+    inf.integridad.creditosSinObjeto.length === 0,
+    JSON.stringify(inf.integridad.creditosSinObjeto),
+  );
+  ok('  el informe NO se liquida', inf.cuadra === false && inf.estado === 'INCOMPLETO', inf.estado);
+
+  await local.redis.manda(['DEL', 'ath:cr:ATH-CR-HUERFANO']);
+  ok('  y al borrarlo vuelve a cuadrar', (await integridadDeHoy()).cuadra === true);
+}
+
+/* ------------------------------------------------------------
+   CASO 3 — cr:gen CONTAMINADO
+
+   Cuatro basuras distintas, que es como llegan de verdad: un id de
+   transaccion, un id de credito mal formado, una entidad de otro
+   tipo y una referencia que ni siquiera es un id. Ninguna se intenta
+   leer como credito: si se intentara, saldrian como "creditos que
+   faltan" y mandarian a buscar donde no hay nada.
+   ------------------------------------------------------------ */
+{
+  const codigoReal = await nuevoCodigo();
+  const basura = [codigoReal, 'ATH-CR-CORTO', 'LIM-ABUSO-0001', 'ath:cr:ATH-CR-RAROQUE1'];
+  for (const x of basura) await local.redis.manda(['SADD', IDX_CR(), x]);
+
+  const inf = await integridadDeHoy();
+  for (const x of basura) {
+    ok(
+      `  «${x}» se declara contaminación del índice de créditos`,
+      inf.integridad.creditosContaminados.includes(x),
+      JSON.stringify(inf.integridad.creditosContaminados),
+    );
+  }
+  ok(
+    '  y ninguna se cuenta como crédito perdido',
+    inf.integridad.creditosSinObjeto.length === 0,
+    JSON.stringify(inf.integridad.creditosSinObjeto),
+  );
+  ok(
+    '  el id de transacción no se cuenta dos veces: no es una tx perdida',
+    !inf.integridad.sinIndice.includes(codigoReal) && !inf.integridad.faltantes.includes(codigoReal),
+  );
+  ok('  el informe NO se liquida', inf.cuadra === false && inf.estado === 'INCOMPLETO', inf.estado);
+
+  for (const x of basura) await local.redis.manda(['SREM', IDX_CR(), x]);
+  ok('  y al limpiarlo vuelve a cuadrar', (await integridadDeHoy()).cuadra === true);
+}
+
+/* ------------------------------------------------------------
+   CASO 4 — RETENCION: EL OBJETO Y TODOS SUS INDICES
+
+   Dos divergencias que antes no se miraban porque solo se comparaba
+   contra tx:act: la del credito con su propio cr:gen, y la de una
+   venta con tx:red. Las dos terminan igual -uno desaparece antes que
+   el otro- y las dos se ven solo si se comprueban.
+   ------------------------------------------------------------ */
+{
+  const codigo = await nuevoCodigo();
+  await pide('/api/redimir', { metodo: 'POST', cuerpo: { codigo, consumo: 80000 }, credencial: CREDENCIAL });
+  const tx = await deposito.lee<{ creditoId: string }>('tx', codigo);
+  const creditoId = tx!.creditoId;
+
+  /* 4a — cr:gen caduca mucho antes que el crédito que nombra. */
+  await local.redis.manda(['EXPIRE', IDX_CR(), '3600']);
+  const a = await integridadDeHoy();
+  ok(
+    'un crédito y su cr:gen que caducan en momentos distintos se detecta',
+    a.integridad.ttlDivergente.includes(creditoId),
+    JSON.stringify(a.integridad.ttlDivergente),
+  );
+  ok('  el informe NO se liquida', a.cuadra === false && a.estado === 'INCOMPLETO', a.estado);
+  await local.redis.manda(['EXPIRE', IDX_CR(), String(RETENCION_SEGUNDOS)]);
+  ok('  restaurada la retención, vuelve a cuadrar', (await integridadDeHoy()).cuadra === true);
+
+  /* 4b — tx:red caduca antes que la venta, con tx:act intacto.
+     Si la comprobación siguiera mirando solo tx:act, esto pasaría. */
+  await local.redis.manda(['EXPIRE', IDX_RED(), '3600']);
+  const vidaAct = Number(await local.redis.manda(['TTL', IDX_ACT()]));
+  ok(
+    '  tx:act sigue con su retención normal: la divergencia solo puede venir de tx:red',
+    vidaAct > RETENCION_SEGUNDOS - 3600,
+    String(vidaAct),
+  );
+  const b = await integridadDeHoy();
+  ok(
+    'una venta y su índice de redenciones que caducan distinto se detecta',
+    b.integridad.ttlDivergente.includes(codigo),
+    JSON.stringify(b.integridad.ttlDivergente),
+  );
+  ok('  el informe NO se liquida', b.cuadra === false && b.estado === 'INCOMPLETO', b.estado);
+  await local.redis.manda(['EXPIRE', IDX_RED(), String(RETENCION_SEGUNDOS)]);
+  ok('  restaurada la retención, vuelve a cuadrar', (await integridadDeHoy()).cuadra === true);
+}
+
+/* ------------------------------------------------------------
+   CASO 4 BIS — UN RECORRIDO TRUNCADO NO ES UN RECORRIDO LIMPIO
+
+   Si SCAN no llega al final, lo que se miro no dice nada de lo que
+   no se miro. Antes eso se colaba como un id falso dentro de la
+   lista de transacciones sin indice -mezclando "falta esto" con "no
+   he podido mirar"-; ahora se declara aparte y tumba el CUADRA por
+   si solo, aunque TODAS las demas listas salgan vacias.
+
+   Se envuelve el almacen de verdad y se le cambia UNA cosa: que
+   diga que el recorrido quedo corto. Todo lo demas -los datos, los
+   indices, el calculo- sigue siendo real.
+   ------------------------------------------------------------ */
+{
+  /* Delegacion explicita, no un spread: el almacen es una clase y
+     sus metodos viven en el prototipo, asi que copiar propiedades
+     dejaria un objeto sin ninguno. */
+  const truncando: typeof deposito = Object.assign(Object.create(Object.getPrototypeOf(deposito)), deposito, {
+    escanea: async (ns: string, limite?: number) => {
+      const r = await deposito.escanea(ns, limite);
+      return { ids: r.ids, truncado: true };
+    },
+  });
+
+  const r = await informeServicio(hoy(), truncando);
+  const d = r.datos!;
+  ok('un recorrido truncado se declara incompleto', d.integridad.recuentoIncompleto.length > 0, JSON.stringify(d.integridad.recuentoIncompleto));
+  ok('  y por sí solo impide liquidar', d.cuadra === false && d.estado === 'INCOMPLETO', d.estado);
+  ok(
+    '  sin disfrazarse de transacción perdida',
+    d.integridad.sinIndice.every((id) => /^ATH-[A-Z]{3}-[A-Z0-9]{5}$/.test(id)),
+    JSON.stringify(d.integridad.sinIndice),
+  );
+  ok(
+    '  y sin confundirse con NO_CUADRA ni con SIN_DATOS',
+    d.estado !== 'NO_CUADRA' && d.estado !== 'SIN_DATOS' && d.estado !== 'CUADRA',
+    d.estado,
+  );
+
+  const normal = await informeServicio(hoy(), deposito);
+  ok('  con el recorrido entero, el mismo día cuadra', normal.datos!.cuadra === true, normal.datos!.detalleConciliacion);
+}
+
+/* ------------------------------------------------------------
+   CASO 5 — DESPUES DE TODO LO ANTERIOR, EL RECORRIDO DE ORO
+
+   Las cifras del CEO, medidas como incremento: el día ya lleva
+   ventas de los bloques anteriores, así que el total absoluto no es
+   100.000 y decir que lo es sería falsear la prueba. Lo que tiene
+   que salir exacto es lo que aporta ESTA venta.
+   ------------------------------------------------------------ */
+{
+  const antes = await integridadDeHoy();
+  const codigo = await nuevoCodigo({ fuente: 'ficha-la-triada', personas: 2 });
+  const venta = await pide('/api/redimir', {
+    metodo: 'POST',
+    cuerpo: { codigo, consumo: 100000 },
+    credencial: CREDENCIAL,
+  });
+  ok('ACTIVAR → REDIMIR 100.000 responde', venta.estado === 200, String(venta.estado));
+
+  const tx = await deposito.lee<{ creditoId: string; economia: { credito: number } }>('tx', codigo);
+  const credito = await deposito.lee<{ valor: number; saldo: number }>('cr', tx!.creditoId);
+  ok('  el crédito de 5.000 está en su libro', credito?.valor === 5000 && credito.saldo === 5000);
+  ok(
+    '  y su cr:gen lo nombra',
+    (await miembros(`cr:gen:${hoy()}`)).includes(tx!.creditoId),
+  );
+
+  const d = await integridadDeHoy();
+  ok('el informe CUADRA', d.cuadra === true, `${d.estado}: ${d.detalleConciliacion}`);
+  ok('  estado explícito CUADRA', d.estado === 'CUADRA', d.estado);
+  ok('  consumo +100.000', d.consumoAtribuido - antes.consumoAtribuido === 100000, String(d.consumoAtribuido - antes.consumoAtribuido));
+  ok('  comisión +10.000', d.comision - antes.comision === 10000, String(d.comision - antes.comision));
+  ok('  crédito +5.000', d.creditoGenerado - antes.creditoGenerado === 5000, String(d.creditoGenerado - antes.creditoGenerado));
+  ok('  margen +5.000', d.margen - antes.margen === 5000, String(d.margen - antes.margen));
+  ok('  el cliente paga los 100.000 enteros', tx!.economia.credito === 5000);
+
+  ok('  sin créditos huérfanos', d.integridad.creditosSinIndice.length === 0 && d.integridad.creditosSinObjeto.length === 0);
+  ok('  sin contaminación en ningún índice', d.integridad.creditosContaminados.length === 0 && d.integridad.contaminados.length === 0);
+  ok('  sin divergencias de retención', d.integridad.ttlDivergente.length === 0);
+  ok('  sin ids que falten', d.integridad.faltantes.length === 0 && d.integridad.creditosFaltantes.length === 0);
+  ok(
+    '  y el recuento se declara completo',
+    d.integridad.recuentoIncompleto.length === 0,
+    JSON.stringify(d.integridad.recuentoIncompleto),
+  );
 }
 
 /* ------------------------------------------------------------ */
