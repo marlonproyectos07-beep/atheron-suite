@@ -99,6 +99,37 @@ export const CATEGORIA_ATHERON = 'Atheron Suite';
 
 export const articulos: Articulo[] = [
   {
+    ruta: '/eventos/circuito-salinas-rock-festival-zipaquira-2026',
+    titulo: 'Circuito de Salinas Rock Festival 2026 en Zipaquirá: fecha, lugar y bandas',
+    tituloCorto: 'Circuito de Salinas Rock Festival 2026',
+    rotulo: 'Agenda cultural verificada',
+    descripcion:
+      'Consulta la fecha, hora, lugar y bandas del Segundo Circuito de Salinas Rock Festival 2026 en la Estación del Tren de Zipaquirá.',
+    autor: 'Atheron Suite',
+    publicado: '2026-09-22',
+    modificado: '2026-09-22',
+    categoria: CATEGORIA_ZIPAQUIRA,
+    imagen: null,
+    imagenAlt: null,
+    fuentes: [
+      {
+        titulo: 'Mesa de Rock de Zipaquirá — convocatoria del Segundo Circuito de Salinas Rock Festival 2026',
+        url: 'https://www.instagram.com/zipamesaderock/p/Ddh0cCpoxz4/',
+      },
+      {
+        titulo: 'Cultura Zipaquirá — difusión institucional de la programación cultural',
+        url: 'https://www.instagram.com/culturazipaquira/p/DdjgIpsRvS0/',
+      },
+    ],
+    enlacesInternos: [
+      { texto: 'Guía Atheron de Zipaquirá', href: '/guia-zipaquira' },
+      { texto: 'Hospedajes en Zipaquirá', href: '/hospedajes' },
+      { texto: 'Alojamiento para grupos', href: '/grupos' },
+    ],
+    cta: { texto: 'Consultar hospedaje para mi grupo', href: '/grupos' },
+    publicadoEnSitio: true,
+  },
+  {
     ruta: '/eventos/dia-mundial-del-turismo-zipaquira-2026',
     titulo: 'Día Mundial del Turismo en Zipaquirá 2026: free tour e inscripción',
     tituloCorto: 'Día Mundial del Turismo: free tour en Zipaquirá',
