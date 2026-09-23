@@ -348,7 +348,7 @@ queda anotado como decisión pendiente.
 
 ```bash
 npm run prueba-reauditoria    136 · prueba de oro + una regresión por hallazgo de la 2ª y la 3ª auditoría
-npm run prueba-vercel          52 · el empaquetado real de las funciones, en un /var/task simulado
+npm run prueba-vercel          56 · el empaquetado real de las funciones, en un /var/task simulado
 npm run prueba-adversarial    108 · una por cada hallazgo de la 1ª auditoría, por HTTP real
 npm run prueba-almacen         24 · el almacén contra un Redis DE VERDAD
 npm run prueba-loop002        102 · economía, transacciones, backend, informe, clases de fallo
@@ -634,6 +634,25 @@ transacción ya activada. `/api/seguimiento` no sirve tal cual: exige estado `RE
 regla está ahí a propósito. Improvisar esa ruta la noche antes del piloto era más riesgo que
 beneficio, así que los campos se quedan antes del botón pero **fuera del camino**. Queda
 anotado como el siguiente paso.
+
+### Las dos parejas de credenciales del almacén
+
+El mismo Redis se conecta de dos maneras y cada una pone sus nombres de variable:
+`KV_REST_API_URL` / `KV_REST_API_TOKEN` (Vercel KV y el Marketplace) o
+`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (la integración directa de Upstash). Es
+el mismo protocolo REST y el mismo servidor: sólo cambia el nombre.
+
+El almacén aceptaba **sólo la primera**. Conectado por el otro camino, la API habría contestado
+«no hay almacén» con el almacén puesto y funcionando — otra vez un diagnóstico que acusa al
+sitio equivocado, justo lo que esta ronda venía a quitar. Ahora acepta las dos, **pareja
+completa o nada**: una dirección sin su token apuntaría al servidor correcto con la llave
+equivocada, y eso saldría como un 401 raro en la primera escritura.
+
+`prueba-vercel` lo comprueba por el **motivo**, no por el código de estado: los dos casos acaban
+en 503, pero uno es `ALMACEN_INCIERTO` (hay almacén y no contesta) y el otro
+`ALMACEN_NO_CONFIGURADO` (no hay almacén). Esa diferencia es la que hay que demostrar.
+
+Ninguna credencial está escrita en el repositorio: sólo el nombre de dónde se buscan.
 
 ### Medición
 

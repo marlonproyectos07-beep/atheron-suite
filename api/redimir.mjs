@@ -7,7 +7,7 @@ var SinAlmacen = class extends Error {
   codigo = "ALMACEN_NO_CONFIGURADO";
   constructor() {
     super(
-      "Faltan KV_REST_API_URL y KV_REST_API_TOKEN. La API no guarda nada hasta que direcci\xF3n autorice y configure el almac\xE9n."
+      "Faltan las credenciales del almac\xE9n (KV_REST_API_URL y KV_REST_API_TOKEN, o bien UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN). La API no guarda nada hasta que direcci\xF3n autorice y configure el almac\xE9n."
     );
   }
 };
@@ -255,11 +255,17 @@ function analiza(crudo, donde) {
   }
   return dato;
 }
+var PAREJAS = [
+  ["KV_REST_API_URL", "KV_REST_API_TOKEN"],
+  ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"]
+];
 function almacen() {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
-  if (!url || !token) throw new SinAlmacen();
-  return new RedisHttp(url, token);
+  for (const [nombreUrl, nombreToken] of PAREJAS) {
+    const url = process.env[nombreUrl];
+    const token = process.env[nombreToken];
+    if (url && token) return new RedisHttp(url, token);
+  }
+  throw new SinAlmacen();
 }
 
 // src/data/validacion.ts

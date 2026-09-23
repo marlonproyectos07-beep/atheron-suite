@@ -122,7 +122,8 @@ export class SinAlmacen extends Error {
   readonly codigo = 'ALMACEN_NO_CONFIGURADO';
   constructor() {
     super(
-      'Faltan KV_REST_API_URL y KV_REST_API_TOKEN. La API no guarda nada hasta que ' +
+      'Faltan las credenciales del almacén (KV_REST_API_URL y KV_REST_API_TOKEN, o bien ' +
+        'UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN). La API no guarda nada hasta que ' +
         'dirección autorice y configure el almacén.',
     );
   }
@@ -588,9 +589,43 @@ export class AlmacenMemoria implements Almacen {
 
 const id = (r: Registro): string => r.id;
 
+/* ------------------------------------------------------------
+   DE DONDE SALEN LAS CREDENCIALES DEL ALMACEN
+
+   Dos parejas de nombres, porque hay dos formas de conectar el mismo
+   Redis y cada una pone los suyos:
+
+     KV_REST_API_URL / KV_REST_API_TOKEN              Vercel KV y el
+                                                      Marketplace
+     UPSTASH_REDIS_REST_URL / ..._REST_TOKEN          la integracion
+                                                      directa de Upstash
+
+   Es el MISMO protocolo REST y el mismo servidor: solo cambia como se
+   llama la variable. Aceptar una sola pareja significa que el dia que
+   el almacen se conecte por el otro camino, la API contesta "no hay
+   almacen" con el almacen puesto y funcionando, y nadie entiende por
+   que. Ya paso algo asi con el mensaje de error: un diagnostico que
+   acusa al sitio equivocado cuesta mas que no tener diagnostico.
+
+   No se lee ninguna otra: REDIS_URL y compania son la conexion por
+   TCP, que este cliente no habla. Aceptarlas seria fingir que sirven.
+
+   Aqui no hay ninguna credencial escrita, solo el nombre de donde se
+   buscan.
+   ------------------------------------------------------------ */
+const PAREJAS: [string, string][] = [
+  ['KV_REST_API_URL', 'KV_REST_API_TOKEN'],
+  ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'],
+];
+
 export function almacen(): Almacen {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
-  if (!url || !token) throw new SinAlmacen();
-  return new RedisHttp(url, token);
+  for (const [nombreUrl, nombreToken] of PAREJAS) {
+    const url = process.env[nombreUrl];
+    const token = process.env[nombreToken];
+    /* Las dos, de la misma pareja. Mezclar la direccion de una con el
+       token de otra apuntaria a un servidor con la llave equivocada, y
+       el fallo saldria como un 401 raro en la primera escritura. */
+    if (url && token) return new RedisHttp(url, token);
+  }
+  throw new SinAlmacen();
 }

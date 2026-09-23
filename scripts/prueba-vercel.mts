@@ -183,6 +183,61 @@ for (const n of nombres) {
 }
 
 /* ------------------------------------------------------------
+   LAS DOS PAREJAS DE CREDENCIALES DEL ALMACEN
+
+   El mismo Redis se conecta de dos maneras, y cada una pone sus
+   nombres de variable. Si solo se aceptara una, el dia que el almacen
+   entre por el otro camino la API dira "no hay almacen" con el
+   almacen puesto: un diagnostico que acusa al sitio equivocado, que
+   es justo lo que esta ronda vino a quitar.
+
+   Se prueba contra la funcion empaquetada, que es la que corre en
+   Vercel, y con una direccion que no existe: lo que se mira es si la
+   funcion ACEPTA las credenciales, no si el servidor contesta.
+   ------------------------------------------------------------ */
+{
+  const modulo = (await import(pathToFileURL(path.join(task, 'activar.mjs')).href)) as {
+    default: (p: unknown, c: unknown) => Promise<void>;
+  };
+
+  const conVariables = async (vars: Record<string, string>): Promise<string> => {
+    for (const [k, v] of Object.entries(vars)) process.env[k] = v;
+    try {
+      const { peticion, respuesta } = falsa('POST', '/api/activar', {});
+      await modulo.default(peticion, respuesta);
+      return (respuesta.datos as { motivo?: string })?.motivo ?? `HTTP_${respuesta.estado}`;
+    } finally {
+      for (const k of Object.keys(vars)) delete process.env[k];
+    }
+  };
+
+  /* 127.0.0.1:1 no escucha nadie, asi que la llamada falla al
+     conectar. Lo que se mira NO es el codigo de estado -los dos casos
+     acaban en 503- sino el motivo: si la pareja se leyo, el fallo es
+     ALMACEN_INCIERTO (hay almacen y no contesta); si no se leyo, es
+     ALMACEN_NO_CONFIGURADO (no hay almacen). Son dos diagnosticos
+     distintos y esa diferencia es justo lo que hay que demostrar. */
+  const inalcanzable = 'http://127.0.0.1:1';
+
+  const conKv = await conVariables({ KV_REST_API_URL: inalcanzable, KV_REST_API_TOKEN: 'x' });
+  ok('se aceptan las credenciales KV_REST_API_*', conKv === 'ALMACEN_INCIERTO', conKv);
+
+  const conUpstash = await conVariables({
+    UPSTASH_REDIS_REST_URL: inalcanzable,
+    UPSTASH_REDIS_REST_TOKEN: 'x',
+  });
+  ok('y también las UPSTASH_REDIS_REST_*', conUpstash === 'ALMACEN_INCIERTO', conUpstash);
+
+  /* Media pareja no vale: una direccion sin su token apuntaria al
+     servidor correcto con la llave equivocada. */
+  const aMedias = await conVariables({ KV_REST_API_URL: inalcanzable });
+  ok('media pareja NO cuenta como almacén configurado', aMedias === 'ALMACEN_NO_CONFIGURADO', aMedias);
+
+  const cruzada = await conVariables({ KV_REST_API_URL: inalcanzable, UPSTASH_REDIS_REST_TOKEN: 'x' });
+  ok('ni una pareja cruzada entre las dos formas de conectar', cruzada === 'ALMACEN_NO_CONFIGURADO', cruzada);
+}
+
+/* ------------------------------------------------------------
    Y LA COMPROBACION DE QUE ESTA PRUEBA SIRVE
 
    Una prueba que no ha fallado nunca no ha demostrado que detecte
