@@ -30,6 +30,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { construye, endpoints, SALIDA } from './construye-api.mjs';
+import { generaCredencial, hashDe, variableDe } from './credencial-operador.mjs';
+import { hayRedis, levanta } from './lib/redis-local.mts';
 
 let hechas = 0;
 const fallos: string[] = [];
@@ -235,6 +237,70 @@ for (const n of nombres) {
 
   const cruzada = await conVariables({ KV_REST_API_URL: inalcanzable, UPSTASH_REDIS_REST_TOKEN: 'x' });
   ok('ni una pareja cruzada entre las dos formas de conectar', cruzada === 'ALMACEN_NO_CONFIGURADO', cruzada);
+}
+
+/* ------------------------------------------------------------
+   LA CREDENCIAL DEL OPERADOR, CONTRA LA FUNCION QUE SE DESPLIEGA
+
+   La prueba fisica se paro en "Credencial de La Triada". Lo que hay
+   que poder afirmar antes de tocar un panel es que un hash generado
+   por scripts/credencial-operador.mjs, puesto en la variable de
+   entorno que calcula ese mismo script, lo acepta EL ARTEFACTO QUE
+   SE SUBE -no las fuentes-.
+
+   Si esta comprobacion pasa y el Preview sigue rechazando la
+   credencial, el problema no es el formato del hash ni el nombre de
+   la variable: es que la variable no llego a ese despliegue. Sirve
+   para saber donde NO mirar, que a media prueba vale tanto como
+   saber donde mirar.
+
+   La credencial se genera aqui, se usa en memoria y muere con el
+   proceso: no se imprime ni se guarda.
+   ------------------------------------------------------------ */
+if (hayRedis()) {
+  const local = await levanta(6399, 6398);
+  process.env.KV_REST_API_URL = local.url;
+  process.env.KV_REST_API_TOKEN = 'prueba';
+
+  const credencial = generaCredencial();
+  const variable = variableDe('la-triada');
+  ok('el script calcula el nombre de variable del servidor', variable === 'ATHERON_OPERADOR_LA_TRIADA', variable);
+
+  const hash = hashDe(credencial);
+  ok('y un hash de 64 caracteres hexadecimales', /^[0-9a-f]{64}$/.test(hash), `${hash.length} caracteres`);
+
+  process.env[variable] = hash;
+
+  const { default: operador } = (await import(
+    pathToFileURL(path.join(task, 'operador.mjs')).href
+  )) as { default: (p: unknown, c: unknown) => Promise<void> };
+
+  const llama = async (cabecera?: string): Promise<number> => {
+    const { peticion, respuesta } = falsa('GET', '/api/operador');
+    if (cabecera !== undefined) (peticion.headers as Record<string, string>).authorization = cabecera;
+    await operador(peticion, respuesta);
+    return respuesta.estado;
+  };
+
+  ok('la función desplegada acepta la credencial generada', (await llama(`Bearer ${credencial}`)) === 200);
+  ok('  y rechaza otra distinta con 401', (await llama('Bearer NO-ES-ESTA-CREDENCIAL')) === 401);
+  ok('  sin credencial, 401', (await llama()) === 401);
+  ok('  con una cabecera sin Bearer, 400', (await llama(credencial)) === 400);
+
+  /* Con el hash mal puesto -por ejemplo, pegando la credencial en
+     claro en vez de su hash- NO se entra. Es el error tipico al
+     rellenar el panel, y tiene que fallar cerrado. */
+  process.env[variable] = credencial;
+  ok('  la credencial en claro en la variable NO abre nada', (await llama(`Bearer ${credencial}`)) === 401);
+
+  delete process.env[variable];
+  ok('  y sin variable configurada tampoco', (await llama(`Bearer ${credencial}`)) === 401);
+
+  local.cierra();
+  delete process.env.KV_REST_API_URL;
+  delete process.env.KV_REST_API_TOKEN;
+} else {
+  console.log('  (omitida la comprobación de credencial: falta redis-server)');
 }
 
 /* ------------------------------------------------------------

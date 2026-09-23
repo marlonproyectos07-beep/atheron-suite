@@ -348,7 +348,7 @@ queda anotado como decisión pendiente.
 
 ```bash
 npm run prueba-reauditoria    136 · prueba de oro + una regresión por hallazgo de la 2ª y la 3ª auditoría
-npm run prueba-vercel          56 · el empaquetado real de las funciones, en un /var/task simulado
+npm run prueba-vercel          64 · el empaquetado real, en un /var/task simulado, y la credencial
 npm run prueba-adversarial    108 · una por cada hallazgo de la 1ª auditoría, por HTTP real
 npm run prueba-almacen         24 · el almacén contra un Redis DE VERDAD
 npm run prueba-loop002        102 · economía, transacciones, backend, informe, clases de fallo
@@ -664,6 +664,50 @@ Lighthouse móvil sobre el build comprimido, tras los cambios: `/red/la-triada` 
 100** con **CLS 0**; `/red/la-triada/validar` igual; `/piloto/la-triada` igual. SEO 66 por el
 `noindex`, que es lo buscado. (Best practices marca 96 en este entorno porque el proxy bloquea
 el script de analítica; no es del sitio.)
+
+## La credencial del operador
+
+La pantalla del local pide «Credencial de La Triada». No es una contraseña guardada en ningún
+sitio del repositorio: el entorno guarda su **SHA-256 en hexadecimal**, y la credencial en claro
+sólo existe en la cabeza de quien la teclea.
+
+| | |
+|---|---|
+| Variable | `ATHERON_OPERADOR_LA_TRIADA` |
+| Valor | SHA-256 de la credencial, en hex, 64 caracteres |
+| La calcula | `npm run credencial` |
+| Entorno | **Preview** para las pruebas. Production es otra decisión |
+
+```bash
+npm run credencial            # la genera para la-triada
+npm run credencial -- otro-aliado
+```
+
+Imprime la credencial —para teclearla— y el hash —para pegarlo en el panel—, y **no escribe
+ninguno de los dos en ningún archivo**. Si la credencial se pierde, no se recupera: se genera
+otra y se cambia la variable.
+
+**Por qué el entorno guarda un hash.** Quien pueda leer las variables del proyecto —un panel,
+un volcado de configuración, una captura en una reunión— no se queda con algo que sirva para
+cobrar. Con el hash no se puede iniciar sesión: sólo se puede comprobar una credencial que
+alguien ya haya tecleado. La comparación es de 32 bytes con `timingSafeEqual`, así que la
+longitud de la credencial tampoco se deduce del tiempo que tarda en fallar.
+
+**Por qué la genera la máquina.** Una credencial elegida a mano acaba siendo el nombre del
+restaurante y el año. Ésta sale de `crypto.randomInt`, sin sesgo, sobre un alfabeto sin
+caracteres que se confundan al dictarla: sin `I`, `L`, `O`, `U`, ni `0` ni `1`. Y no se teclea
+en la línea de órdenes, porque lo que se escribe ahí queda en el historial del shell, y un
+historial es un archivo.
+
+**Hay que volver a desplegar.** Vercel fija las variables de entorno **en el momento del
+despliegue**. Añadirla no cambia un despliegue que ya existe: hasta que no haya uno nuevo, la
+función sigue viendo lo que veía.
+
+`prueba-vercel` lo comprueba contra **la función empaquetada**, no contra las fuentes: un hash
+generado por el script abre, otro distinto da 401, sin cabecera 401, sin `Bearer` 400, y
+—el error típico al rellenar el panel— **pegar la credencial en claro en vez de su hash no abre
+nada**. Si esa comprobación pasa y el Preview sigue rechazando la credencial, el problema no es
+el formato ni el nombre: es que la variable no llegó a ese despliegue.
 
 ## Lo que deliberadamente no se hizo
 

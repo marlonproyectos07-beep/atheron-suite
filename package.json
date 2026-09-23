@@ -7,6 +7,7 @@
     "dev": "astro dev",
     "comprueba": "node scripts/comprueba-contenido.mjs && node scripts/comprueba-jornadas.mjs",
     "api": "node scripts/construye-api.mjs",
+    "credencial": "node scripts/credencial-operador.mjs",
     "prueba": "node scripts/prueba-minimo-publicable.mjs",
     "prueba-jornadas": "node --experimental-strip-types --no-warnings scripts/prueba-jornadas.mts",
     "prueba-piloto": "node --experimental-strip-types --no-warnings scripts/prueba-piloto.mts",
