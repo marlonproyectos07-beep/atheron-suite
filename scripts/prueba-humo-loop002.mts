@@ -190,7 +190,22 @@ pagina.on('console', (m) => {
 });
 
 /* ---------- 1. El cliente: UNA pulsacion ---------- */
-await pagina.goto(`${BASE}/red/la-triada?f=ficha-la-triada`, { waitUntil: 'networkidle' });
+/* ---------- 0. El turista llega por la ficha pública de La Triada ---------- */
+await pagina.goto(`${BASE}/guia-zipaquira/restaurantes-y-cafes/la-triada`, { waitUntil: 'domcontentloaded' });
+{
+  const textoFicha = await pagina.locator('main').innerText();
+  ok('la ficha ya no dice "en construcción"', !/en construcci[oó]n/i.test(textoFicha));
+  ok('la ficha muestra "Beneficio Atheron"', /beneficio atheron/i.test(textoFicha));
+  ok('la ficha no enseña comisión ni margen', !/comisi[oó]n|margen|10\s?%/i.test(textoFicha));
+  const primerCta = pagina.getByRole('link', { name: 'Activar mi 5%' }).first();
+  ok('"Activar mi 5%" se ve sin desplazar en el móvil', await primerCta.isVisible() && ((await primerCta.boundingBox())?.y ?? 9999) < (pagina.viewportSize()?.height ?? 0));
+  await pagina.screenshot({ path: join(SALIDA, '0-ficha.png') });
+  await pagina.locator('#beneficio').screenshot({ path: join(SALIDA, '0b-ficha-beneficio.png') });
+  await primerCta.click();
+  await pagina.waitForURL(/\/red\/la-triada\?f=ficha-la-triada$/);
+  ok('el CTA lleva a la activación real con la fuente de la ficha', pagina.url() === `${BASE}/red/la-triada?f=ficha-la-triada`, pagina.url());
+  await pagina.waitForLoadState('networkidle');
+}
 
 const textoCliente = await pagina.locator('main').innerText();
 ok('se ve lo que gana, en grande', (await pagina.locator('.piloto__premio-cifra').innerText()).includes('5'));
@@ -216,6 +231,10 @@ await pagina.getByRole('button', { name: 'Activar mi 5%' }).click();
 await pagina.waitForSelector('[data-paso="codigo"]:not([hidden])');
 const codigo = (await pagina.locator('[data-codigo]').innerText()).trim();
 ok('el servidor devolvió un código válido', leerCodigo(codigo, 'TRI').valido, codigo);
+{
+  const tx = await deposito.lee<{ fuente?: string }>('tx', codigo);
+  igual('la activación queda atribuida a la ficha (fuente ficha-la-triada)', tx?.fuente, 'ficha-la-triada');
+}
 
 /* Y despues del toque, UNA instruccion. Si hubiera que leer un
    parrafo para saber que hacer con el codigo, no serviria. */

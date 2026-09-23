@@ -222,6 +222,32 @@ for (const pagina of ['red/la-triada/validar', 'red/la-triada', 'red/la-triada/s
   }
 }
 
+/* ---------- Ficha publica de La Triada -> beneficio real ---------- */
+console.log('\nFicha pública de La Triada');
+{
+  const archivo = ['dist/guia-zipaquira/restaurantes-y-cafes/la-triada.html', 'dist/guia-zipaquira/restaurantes-y-cafes/la-triada/index.html'].find((a) => existsSync(a));
+  if (!archivo) console.log('  (sin dist/: se omite)');
+  else {
+    const html = readFileSync(archivo, 'utf8');
+    const visible = textoVisible(html);
+    ok('ya no dice "en construcción"', !/en construcci[oó]n/i.test(visible));
+    ok('sección "Beneficio Atheron"', visible.includes('Beneficio Atheron'));
+    ok('"Recibe el 5% de tu consumo en Crédito Atheron."', /Recibe el\s+5%\s+de tu consumo en Crédito Atheron\./.test(visible.replace(/\s+/g, ' ')));
+    const enlaces = [...html.matchAll(/<a[^>]*href="([^"]*)"[^>]*>\s*Activar mi 5%\s*<\/a>/g)].map((m) => m[1]);
+    ok('"Activar mi 5%" existe', enlaces.length >= 1, String(enlaces.length));
+    ok('  y lleva a la activación REAL con la fuente de la ficha', enlaces.length > 0 && enlaces.every((h) => h === '/red/la-triada?f=ficha-la-triada'), enlaces.join(' '));
+    ok('explica el QR antes de pedir la cuenta', visible.includes('Actívalo antes de pedir la cuenta'));
+    ok('"¿Vienes con un grupo?" sigue, como secundario', /class="boton boton--claro" href="#grupo"/.test(html));
+    ok('  y el formulario de grupos sigue', html.includes('id="grupo"'));
+    ok('el CTA principal del hero es el beneficio', html.indexOf('Activar mi 5%') < html.indexOf('¿Vienes con un grupo?'));
+    for (const dato of ['Calle 1 # 7-81', 'Lunes a domingo', '12:00 m. – 5:00 p. m.', 'Comida típica colombiana', 'Frijoles con chicharrón', 'Plato típico zipaquireño', 'Ajiaco', 'Rollo de pollo albardado', 'Lomo al trapo', 'cóctel de chicharrón', '$ 35.000 – $ 62.000 COP', 'Zona infantil', 'Pet friendly', 'Parqueadero', 'hasta unas 180 personas']) {
+      ok(`  dato confirmado: ${dato}`, visible.includes(dato));
+    }
+    const prohibido = visible.match(/comisi[oó]n|margen|10\s?%|conciliaci[oó]n|reparto/i);
+    ok('la ficha no enseña comisión, margen, 10% ni conciliación', !prohibido, prohibido?.[0]);
+  }
+}
+
 console.log('');
 if (fallos.length) {
   console.error(`PRUEBAS FALLIDAS: ${fallos.length} de ${hechas}`);
