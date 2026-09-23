@@ -82,11 +82,16 @@ process.env.KV_REST_API_TOKEN = 'prueba';
 const CREDENCIAL = 'credencial-de-humo-larga-y-aleatoria-0001';
 process.env.ATHERON_OPERADOR_LA_TRIADA = createHash('sha256').update(CREDENCIAL).digest('hex');
 
-const { default: activarApi } = await import('../servidor/activar.ts');
-const { default: transaccionApi } = await import('../servidor/transaccion.ts');
-const { default: redimirApi } = await import('../servidor/redimir.ts');
-const { default: seguimientoApi } = await import('../servidor/seguimiento.ts');
-const { default: operadorApi } = await import('../servidor/operador.ts');
+/* LAS FUNCIONES EMPAQUETADAS, NO LAS FUENTES.
+   El 500 de la prueba fisica no lo vio ninguna prueba porque todas
+   importaban servidor/*.ts, con el repositorio entero disponible.
+   Aqui se monta exactamente lo que Vercel sirve: los .mjs de /api. Si
+   a uno le faltara algo, este recorrido no llega ni a empezar. */
+const { default: activarApi } = await import('../api/activar.mjs');
+const { default: transaccionApi } = await import('../api/transaccion.mjs');
+const { default: redimirApi } = await import('../api/redimir.mjs');
+const { default: seguimientoApi } = await import('../api/seguimiento.mjs');
+const { default: operadorApi } = await import('../api/operador.mjs');
 const { almacen } = await import('../servidor/_almacen.ts');
 const deposito = almacen();
 

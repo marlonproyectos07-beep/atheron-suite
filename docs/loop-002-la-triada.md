@@ -590,6 +590,10 @@ equivocado, 503 `ALMACEN_NO_CONFIGURADO` sin almacén — nunca un 500).
 Y una quinta: fabrica a propósito el fallo original y **exige que reviente igual**. Una prueba
 que no ha fallado nunca no ha demostrado que detecte nada.
 
+Además, el recorrido completo en iPhone 13 (`prueba-humo-loop002`) ya no monta las fuentes
+TypeScript: monta **los `.mjs` de `/api`**, que es exactamente lo que Vercel sirve. Si a una
+función le faltara algo, el recorrido no llega ni a empezar.
+
 ### El mensaje: no acusar al sitio equivocado
 
 El cliente vio «falta configurar el almacén» porque `api-red.ts` metía en el mismo saco todo lo
