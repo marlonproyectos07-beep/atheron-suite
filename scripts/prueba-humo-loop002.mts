@@ -82,12 +82,12 @@ process.env.KV_REST_API_TOKEN = 'prueba';
 const CREDENCIAL = 'credencial-de-humo-larga-y-aleatoria-0001';
 process.env.ATHERON_OPERADOR_LA_TRIADA = createHash('sha256').update(CREDENCIAL).digest('hex');
 
-const { default: activarApi } = await import('../api/activar.ts');
-const { default: transaccionApi } = await import('../api/transaccion.ts');
-const { default: redimirApi } = await import('../api/redimir.ts');
-const { default: seguimientoApi } = await import('../api/seguimiento.ts');
-const { default: operadorApi } = await import('../api/operador.ts');
-const { almacen } = await import('../api/_almacen.ts');
+const { default: activarApi } = await import('../servidor/activar.ts');
+const { default: transaccionApi } = await import('../servidor/transaccion.ts');
+const { default: redimirApi } = await import('../servidor/redimir.ts');
+const { default: seguimientoApi } = await import('../servidor/seguimiento.ts');
+const { default: operadorApi } = await import('../servidor/operador.ts');
+const { almacen } = await import('../servidor/_almacen.ts');
 const deposito = almacen();
 
 type Handler = (p: unknown, c: unknown) => Promise<void>;
@@ -192,10 +192,33 @@ ok(
 const botones = await pagina.locator('main button:visible, main a.piloto__boton:visible').count();
 ok('hay una sola acción visible al llegar', botones === 1, `${botones} acciones`);
 
-await pagina.getByRole('button', { name: 'Activar beneficio Atheron' }).click();
+/* LO QUE LA PRUEBA FISICA ENSENO: no basta con que los campos sean
+   opcionales. Al llegar no puede haber NI UNO a la vista, porque
+   cualquier campo junto al boton parece parte de la accion. */
+ok('no hay ni un campo que rellenar al llegar', (await pagina.locator('main input:visible').count()) === 0);
+ok(
+  'el botón dice exactamente qué se activa',
+  (await pagina.getByRole('button', { name: 'Activar mi 5%' }).innerText()).trim() === 'Activar mi 5%',
+);
+
+await pagina.getByRole('button', { name: 'Activar mi 5%' }).click();
 await pagina.waitForSelector('[data-paso="codigo"]:not([hidden])');
 const codigo = (await pagina.locator('[data-codigo]').innerText()).trim();
 ok('el servidor devolvió un código válido', leerCodigo(codigo, 'TRI').valido, codigo);
+
+/* Y despues del toque, UNA instruccion. Si hubiera que leer un
+   parrafo para saber que hacer con el codigo, no serviria. */
+ok(
+  'después del toque hay una sola instrucción, y es la correcta',
+  (await pagina.locator('.piloto__instruccion').innerText()).trim() === 'Muéstralo en La Triada al pedir la cuenta',
+);
+{
+  /* El QR se mira desde el otro lado de una mesa: tiene que ocupar
+     de verdad el ancho del movil, no ser una miniatura. */
+  const caja = await pagina.locator('svg.piloto__qr').boundingBox();
+  const ancho = (await pagina.viewportSize())?.width ?? 0;
+  ok('el QR es grande de verdad', (caja?.width ?? 0) >= ancho * 0.7, `${caja?.width} de ${ancho}`);
+}
 await pagina.screenshot({ path: join(SALIDA, '1-cliente.png'), fullPage: true });
 
 /* ---------- 2. El QR lleva a la validación ---------- */
@@ -320,7 +343,7 @@ const aislado = await navegador.newContext({ ...devices['iPhone 13'] });
 const pag4 = await aislado.newPage();
 await pag4.route('**/api/**', (ruta) => ruta.fulfill({ status: 503, contentType: 'application/json', body: '{"ok":false,"motivo":"ALMACEN_NO_CONFIGURADO"}' }));
 await pag4.goto(`${BASE}/red/la-triada`, { waitUntil: 'networkidle' });
-await pag4.getByRole('button', { name: 'Activar beneficio Atheron' }).click();
+await pag4.getByRole('button', { name: 'Activar mi 5%' }).click();
 await pag4.waitForSelector('[data-error]:not([hidden])');
 ok('si el almacén no está configurado, se dice y no se finge', (await pag4.locator('[data-error]').innerText()).includes('no está configurado'));
 

@@ -27,8 +27,8 @@
    proposito. Sin servidor levantado y sin red.
    ============================================================ */
 
-import { AlmacenMemoria } from '../api/_almacen.ts';
-import { activar, consultar, redimir, cerrar, opinar, informe, vistaCliente } from '../api/_servicio.ts';
+import { AlmacenMemoria } from '../servidor/_almacen.ts';
+import { activar, consultar, redimir, cerrar, opinar, informe, vistaCliente } from '../servidor/_servicio.ts';
 import { calculaEconomia, REGLA, VIGENCIA_CREDITO_DIAS, type ReglaEconomica } from '../src/data/economia-red.ts';
 import {
   CABECERA_CONCILIACION,
@@ -382,6 +382,107 @@ console.log('\n Lo que no se publica');
 
   const sitemap = readFileSync('src/pages/sitemap.xml.ts', 'utf8');
   ok('el sitemap no menciona el piloto', !sitemap.includes('/red/') && !sitemap.includes('/piloto/'));
+}
+
+/* ============================================================
+   CLASIFICACION DE FALLOS — LO QUE VE EL CLIENTE CUANDO ALGO FALLA
+
+   En la prueba fisica, la funcion de Vercel devolvio un 500 con una
+   pagina de error HTML, y el cliente leyo que "el registro central
+   todavia no esta configurado". Era falso: Redis ya estaba puesto.
+   El mensaje mandaba a arreglar lo que no estaba roto.
+
+   Aqui se comprueban las cuatro clases contra el clasificador de
+   verdad. Lo unico que se sustituye es el transporte -fetch-, que
+   es la parte que no se puede provocar de otra manera; la decision,
+   que es lo que fallaba, es la real.
+   ============================================================ */
+console.log('\n Cuando algo falla, se acusa al sitio correcto');
+{
+  const { activar: pideActivar, MENSAJE_FALLO, SIN_ALMACEN_CONFIGURADO } = await import('../src/data/api-red.ts');
+  const originalFetch = globalThis.fetch;
+
+  const con = async (
+    responder: () => Response | Promise<Response> | never,
+  ): Promise<{ clase?: string; explicacion?: string; ok: boolean; motivo?: string }> => {
+    globalThis.fetch = (async () => responder()) as typeof fetch;
+    try {
+      return await pideActivar({});
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  };
+
+  const json = (estado: number, cuerpo: unknown): Response =>
+    new Response(JSON.stringify(cuerpo), { status: estado, headers: { 'content-type': 'application/json' } });
+  const html = (estado: number): Response =>
+    new Response('<!doctype html><title>500</title>', { status: estado, headers: { 'content-type': 'text/html' } });
+
+  /* 1. El movil no llego a salir. */
+  {
+    const r = await con(() => {
+      throw new TypeError('Failed to fetch');
+    });
+    igual('sin red, el fallo es de RED', r.clase, 'RED');
+    ok('  y se le dice que revise la conexión', r.explicacion === MENSAJE_FALLO.RED, r.explicacion);
+  }
+
+  /* 2. EL FALLO DE LA PRUEBA FISICA, exactamente. */
+  {
+    const r = await con(() => html(500));
+    igual('un 500 con HTML es fallo de SERVIDOR', r.clase, 'SERVIDOR');
+    ok(
+      '  y NO se le dice que falte configurar el almacén',
+      !(r.explicacion ?? '').includes('no está configurado'),
+      r.explicacion,
+    );
+    ok('  el mensaje no lleva jerga técnica', !/500|módulo|module|deploy|bundle/i.test(r.explicacion ?? ''), r.explicacion);
+  }
+
+  /* 3. La funcion ni existe en este despliegue. */
+  {
+    const r = await con(() => html(404));
+    igual('un 404 es fallo de API, no de almacén', r.clase, 'API');
+    ok('  con mensaje de "vuelve a intentarlo"', r.explicacion === MENSAJE_FALLO.API, r.explicacion);
+  }
+
+  /* 4. El almacen de verdad no esta configurado: aqui SI se dice. */
+  {
+    const r = await con(() => json(503, { ok: false, motivo: 'ALMACEN_NO_CONFIGURADO' }));
+    igual('el almacén sin configurar se clasifica como ALMACEN', r.clase, 'ALMACEN');
+    ok('  y ese sí lleva la explicación completa', r.explicacion === SIN_ALMACEN_CONFIGURADO, r.explicacion);
+  }
+
+  /* 5. El almacen existe y contesto mal: se reintenta, no se
+        manda a configurar nada. */
+  {
+    const r = await con(() => json(503, { ok: false, motivo: 'ALMACEN_INCIERTO' }));
+    igual('un almacén que contesta mal también es ALMACEN', r.clase, 'ALMACEN');
+    ok(
+      '  pero NO dice que falte configurarlo: eso ya está hecho',
+      r.explicacion === MENSAJE_FALLO.ALMACEN,
+      r.explicacion,
+    );
+  }
+
+  /* 6. Un problema del dato conserva lo que dijo el servidor. */
+  {
+    const r = await con(() => json(400, { ok: false, motivo: 'PERSONAS_INVALIDAS', explicacion: 'Dime cuántos sois.' }));
+    ok('un 400 con explicación propia la conserva', r.explicacion === 'Dime cuántos sois.', r.explicacion);
+    ok('  y no se marca como fallo de servidor', r.clase === undefined, String(r.clase));
+  }
+
+  /* 7. Y un 429 sin texto no acusa a nadie. */
+  {
+    const r = await con(() => json(429, { ok: false, motivo: 'DEMASIADAS_PETICIONES' }));
+    igual('un rechazo sin texto se clasifica como DATOS', r.clase, 'DATOS');
+  }
+
+  /* 8. Lo que va bien, pasa intacto. */
+  {
+    const r = await con(() => json(201, { ok: true, datos: { codigo: 'ATH-TRI-K7M2Q' } }));
+    ok('una respuesta correcta pasa sin tocarse', r.ok === true && r.clase === undefined);
+  }
 }
 
 console.log('');

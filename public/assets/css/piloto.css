@@ -111,7 +111,10 @@
 
 .piloto__qr {
   display: block;
-  width: min(15rem, 62vw);
+  /* Grande a proposito. Esto se lee desde el otro lado de una mesa,
+     con un movil que no es el tuyo y con la luz de un restaurante.
+     15rem era comodo de maquetar y justo de leer. */
+  width: min(20rem, 82vw);
   height: auto;
   margin: 0 auto var(--esp-2);
   border: 8px solid var(--color-blanco);
@@ -570,4 +573,48 @@
 .piloto__solo-admin {
   margin-top: var(--esp-5);
   background: var(--color-gris-100);
+}
+
+/* ------------------------------------------------------------
+   LA PANTALLA DE SALIDA DEL CLIENTE
+
+   Una cifra, un boton, y despues una instruccion. Lo que sobre
+   compite con lo unico que hay que hacer.
+   ------------------------------------------------------------ */
+.piloto__pie-dato--bajo-boton {
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+}
+
+/* La instruccion de despues del QR: una linea, grande, sin adornos.
+   Es lo que el cliente le va a decir al camarero. */
+.piloto__instruccion {
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 var(--esp-2);
+  color: var(--color-noche);
+}
+
+/* Lo opcional NO puede parecer un paso del camino: sin caja, en
+   gris y en letra pequena. Sigue teniendo 48 px de alto para el
+   dedo, que eso no se negocia. */
+.piloto__opcional--discreto {
+  border: 0;
+  padding: 0;
+  margin-top: var(--esp-3);
+}
+
+.piloto__opcional--discreto > summary {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-gris-700);
+  text-align: center;
+  text-decoration: underline;
+}
+
+.piloto__opcional--discreto[open] > summary {
+  border-bottom: 0;
+  margin-bottom: var(--esp-2);
 }

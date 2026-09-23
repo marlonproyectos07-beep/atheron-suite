@@ -10,19 +10,17 @@
    igual desde el movil del cliente y desde el del restaurante.
 
    ============================================================
-   SI NO HAY SERVIDOR, SE DICE. NO SE FINGE
+   SI ALGO FALLA, SE DICE QUE FALLO. NO SE FINGE, Y NO SE MIENTE
    ============================================================
 
-   El almacen todavia no esta autorizado ni configurado (es un gate
-   de direccion: credenciales y coste). Mientras no lo este, la API
-   responde 503 y estas pantallas lo dicen con todas las letras y no
-   dejan seguir.
+   No se cae al navegador "mientras tanto": seria repetir, con mas
+   pasos, el problema que este modulo viene a resolver -dos moviles
+   que no se ven y una redencion que se puede hacer dos veces-. Para
+   probar sin servidor ya estan las paginas de /piloto, que dicen
+   exactamente lo que son.
 
-   La tentacion seria caer en el navegador "mientras tanto". Seria
-   repetir, con mas pasos, el problema que este modulo viene a
-   resolver: dos moviles que no se ven y una redencion que se puede
-   hacer dos veces. Para probar sin servidor ya estan las paginas de
-   /piloto, que dicen exactamente lo que son.
+   Pero tampoco se le echa la culpa al sitio equivocado. Mas abajo
+   estan las cuatro clases de fallo y por que hubo que separarlas.
 
    El unico dato que se guarda en el navegador es el codigo propio
    del cliente, para poder volver a ensenarselo. No es la fuente de
@@ -80,13 +78,60 @@ export interface RespuestaApi<T> {
   yaRedimida?: boolean;
   /** La venta quedó registrada, pero su crédito no se pudo emitir. */
   creditoPendiente?: boolean;
-  /** true cuando el fallo es de conexion o de configuracion, no del dato. */
+  /** true cuando no hubo respuesta util del servidor (red o API). */
   sinServidor?: boolean;
+  /** Que tipo de problema fue. Lo mira quien depura, no el cliente. */
+  clase?: ClaseDeFallo;
 }
 
-export const SIN_SERVIDOR =
+/* ============================================================
+   POR QUE UN FALLO NO ES "EL ALMACEN NO ESTA CONFIGURADO"
+
+   En la prueba fisica el cliente vio, palabra por palabra, que el
+   registro central no estaba configurado. Era mentira: Redis ya
+   estaba provisionado y conectado. Lo que habia fallado era el
+   empaquetado de la funcion, que devolvio un 500 con una pagina de
+   error de Vercel; como no era JSON, este modulo lo metia en el
+   mismo saco que "no hay almacen" y enseñaba ese texto.
+
+   Un mensaje que acusa al sitio equivocado es peor que uno generico:
+   manda a arreglar lo que no esta roto. Asi que ahora se distinguen
+   cuatro cosas, que son cuatro problemas distintos con cuatro
+   soluciones distintas:
+
+     RED          el movil no llego a salir. Lo arregla el cliente.
+     API          la direccion no existe o no contesta JSON: el
+                  despliegue esta mal. Lo arregla quien despliega.
+     ALMACEN      el servidor contesta, y dice que no puede guardar.
+                  Lo arregla quien configura el almacen.
+     SERVIDOR     el servidor contesta y se rompe por dentro. Lo
+                  arregla quien programa.
+
+   Y ninguno de los cuatro le cuenta al cliente de que va: lee una
+   frase corta y sabe si puede reintentar. El detalle tecnico va en
+   `motivo`, que es lo que mira quien depura, no quien cena.
+   ============================================================ */
+export type ClaseDeFallo = 'RED' | 'API' | 'ALMACEN' | 'SERVIDOR' | 'DATOS';
+
+/** Lo que ve el cliente. Corto, sin jerga y sin culpar a nadie. */
+export const MENSAJE_FALLO: Record<ClaseDeFallo, string> = {
+  RED: 'No hay conexión. Revisa tus datos o el wifi y vuelve a intentarlo.',
+  API: 'Esto no está disponible en este momento. Vuelve a intentarlo en un minuto.',
+  ALMACEN: 'No podemos guardarlo ahora mismo. Vuelve a intentarlo en un minuto.',
+  SERVIDOR: 'Algo falló de nuestro lado. Vuelve a intentarlo en un minuto.',
+  DATOS: 'Revisa lo que has escrito y vuelve a intentarlo.',
+};
+
+/* El unico texto que sigue explicando de verdad lo que pasa, porque
+   es el unico caso en el que no hay nada que reintentar: el almacen
+   no esta configurado. Solo se usa cuando el SERVIDOR lo dice con
+   ese codigo exacto, nunca por descarte. */
+export const SIN_ALMACEN_CONFIGURADO =
   'El registro central de la Red Atheron todavía no está configurado, así que esto no puede ' +
   'guardarse. No es un fallo de la pantalla: falta autorizar y provisionar el almacén.';
+
+/** Nombre antiguo, mantenido para no romper lo que ya lo importaba. */
+export const SIN_SERVIDOR = SIN_ALMACEN_CONFIGURADO;
 
 async function llama<T>(
   ruta: string,
@@ -98,6 +143,7 @@ async function llama<T>(
   /* La credencial va en cabecera, nunca en la direccion: las
      direcciones acaban en registros, historiales y capturas. */
   if (opciones.credencial) cabeceras.authorization = `Bearer ${opciones.credencial}`;
+
   try {
     respuesta = await fetch(ruta, {
       method: opciones.metodo ?? 'GET',
@@ -105,24 +151,58 @@ async function llama<T>(
       body: opciones.cuerpo ? JSON.stringify(opciones.cuerpo) : undefined,
     });
   } catch {
-    /* Sin red, o la API no existe en este despliegue. */
-    return { ok: false, sinServidor: true, motivo: 'SIN_CONEXION', explicacion: SIN_SERVIDOR };
+    /* fetch solo lanza si la peticion no llego a completarse: sin
+       red, DNS caido, el navegador la corto. Nunca por un 500. */
+    return falla('RED', 'SIN_CONEXION');
   }
 
-  let cuerpo: RespuestaApi<T>;
+  let cuerpo: RespuestaApi<T> | null = null;
   try {
     cuerpo = (await respuesta.json()) as RespuestaApi<T>;
   } catch {
-    /* Un 404 de HTML cuando la API no esta desplegada: se distingue
-       de un error de datos para no culpar a quien teclea. */
-    return { ok: false, sinServidor: true, motivo: 'SIN_API', explicacion: SIN_SERVIDOR };
+    /* No es JSON. Toda nuestra API contesta JSON siempre, asi que
+       esto es una pagina de error de la plataforma. El codigo de
+       estado dice cual de los dos problemas es. */
+    cuerpo = null;
   }
 
-  if (respuesta.status === 503 || cuerpo.motivo === 'ALMACEN_NO_CONFIGURADO') {
-    return { ...cuerpo, ok: false, sinServidor: true, explicacion: SIN_SERVIDOR };
+  if (cuerpo === null || typeof cuerpo !== 'object') {
+    if (respuesta.status === 404 || respuesta.status === 405) return falla('API', `HTTP_${respuesta.status}`);
+    if (respuesta.status >= 500) return falla('SERVIDOR', `HTTP_${respuesta.status}`);
+    return falla('API', `HTTP_${respuesta.status}`);
+  }
+
+  /* A partir de aqui el servidor contesto JSON: es NUESTRA respuesta,
+     y su motivo manda sobre el codigo de estado. */
+  if (cuerpo.motivo === 'ALMACEN_NO_CONFIGURADO') {
+    return { ...cuerpo, ok: false, clase: 'ALMACEN', sinServidor: true, explicacion: SIN_ALMACEN_CONFIGURADO };
+  }
+  if (cuerpo.motivo === 'ALMACEN_INCIERTO') {
+    /* El almacen existe y no contesto lo que debia. Se puede
+       reintentar, y NO se le dice al cliente que falte configurar
+       nada: eso mandaria a tocar lo que ya esta bien. */
+    return { ...cuerpo, ok: false, clase: 'ALMACEN', explicacion: MENSAJE_FALLO.ALMACEN };
+  }
+  if (respuesta.status >= 500) {
+    return { ...cuerpo, ok: false, clase: 'SERVIDOR', explicacion: cuerpo.explicacion ?? MENSAJE_FALLO.SERVIDOR };
+  }
+  if (!respuesta.ok && cuerpo.explicacion === undefined) {
+    /* 400, 401, 404, 409, 429 sin texto: es un problema del dato o
+       del momento, no de la maquina. */
+    return { ...cuerpo, ok: false, clase: 'DATOS', explicacion: MENSAJE_FALLO.DATOS };
   }
   return cuerpo;
 }
+
+const falla = <T>(clase: ClaseDeFallo, motivo: string): RespuestaApi<T> => ({
+  ok: false,
+  clase,
+  motivo,
+  explicacion: MENSAJE_FALLO[clase],
+  /* Se mantiene porque hay pantallas que lo miran, pero ya no
+     significa "no hay almacen": significa "no hubo respuesta util". */
+  sinServidor: clase === 'RED' || clase === 'API',
+});
 
 /* ------------------------------------------------------------
    LAS CUATRO LLAMADAS
@@ -218,18 +298,8 @@ export const olvidaCredencial = (): void => {
 };
 
 /** El informe pide token. Se manda en cabecera, nunca en la direccion. */
-export async function informe<T>(fecha: string, token: string): Promise<RespuestaApi<T>> {
-  try {
-    const respuesta = await fetch(`${API.reporte}?fecha=${encodeURIComponent(fecha)}`, {
-      headers: { authorization: `Bearer ${token}` },
-    });
-    const cuerpo = (await respuesta.json()) as RespuestaApi<T>;
-    if (respuesta.status === 503) return { ...cuerpo, ok: false, sinServidor: true, explicacion: SIN_SERVIDOR };
-    return cuerpo;
-  } catch {
-    return { ok: false, sinServidor: true, explicacion: SIN_SERVIDOR };
-  }
-}
+export const informe = <T>(fecha: string, token: string): Promise<RespuestaApi<T>> =>
+  llama<T>(`${API.reporte}?fecha=${encodeURIComponent(fecha)}`, { credencial: token });
 
 /* ------------------------------------------------------------
    EL RECUERDO DEL CODIGO — comodidad, no registro

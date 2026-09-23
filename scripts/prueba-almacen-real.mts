@@ -36,8 +36,8 @@
    ============================================================ */
 
 import { hayRedis, levanta } from './lib/redis-local.mts';
-import { AlmacenMemoria, RespuestaInvalida, almacen, type Almacen } from '../api/_almacen.ts';
-import { activar, redimir, cerrar } from '../api/_servicio.ts';
+import { AlmacenMemoria, RespuestaInvalida, almacen, type Almacen } from '../servidor/_almacen.ts';
+import { activar, redimir, cerrar } from '../servidor/_servicio.ts';
 import type { Transaccion } from '../src/data/transacciones-red.ts';
 
 if (!hayRedis()) {

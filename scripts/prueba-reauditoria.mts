@@ -37,15 +37,15 @@ const ADMIN = 'token-admin-reauditoria-largo-1';
 process.env.ATHERON_OPERADOR_LA_TRIADA = createHash('sha256').update(CREDENCIAL).digest('hex');
 process.env.ATHERON_TOKEN_ADMIN = createHash('sha256').update(ADMIN).digest('hex');
 
-const { default: activarApi } = await import('../api/activar.ts');
-const { default: transaccionApi } = await import('../api/transaccion.ts');
-const { default: redimirApi } = await import('../api/redimir.ts');
-const { default: seguimientoApi } = await import('../api/seguimiento.ts');
-const { default: reporteApi } = await import('../api/reporte.ts');
-const { default: operadorApi } = await import('../api/operador.ts');
-const { almacen, AlmacenMemoria, RETENCION_SEGUNDOS } = await import('../api/_almacen.ts');
-const { autoriza } = await import('../api/_autorizacion.ts');
-const { activar, redimir, informe: informeServicio } = await import('../api/_servicio.ts');
+const { default: activarApi } = await import('../servidor/activar.ts');
+const { default: transaccionApi } = await import('../servidor/transaccion.ts');
+const { default: redimirApi } = await import('../servidor/redimir.ts');
+const { default: seguimientoApi } = await import('../servidor/seguimiento.ts');
+const { default: reporteApi } = await import('../servidor/reporte.ts');
+const { default: operadorApi } = await import('../servidor/operador.ts');
+const { almacen, AlmacenMemoria, RETENCION_SEGUNDOS } = await import('../servidor/_almacen.ts');
+const { autoriza } = await import('../servidor/_autorizacion.ts');
+const { activar, redimir, informe: informeServicio } = await import('../servidor/_servicio.ts');
 const { generaCredito, gasta, vincula, estadoDe, asientaVencimiento } = await import(
   '../src/data/credito-ledger.ts'
 );

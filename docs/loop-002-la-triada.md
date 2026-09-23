@@ -118,7 +118,7 @@ se ha cambiado el modo de construcción, y las páginas se siguen generando igua
 Redimir y cerrar exigen **credencial de operador**; el informe, token de administración. Los
 demás son públicos y llevan límite de abuso.
 
-La lógica no vive en los endpoints: está en `api/_servicio.ts`, y por eso se prueba entera
+La lógica no vive en los endpoints: está en `servidor/_servicio.ts`, y por eso se prueba entera
 sin levantar un servidor.
 
 ### Autorización: quién puede declarar una venta
@@ -348,9 +348,10 @@ queda anotado como decisión pendiente.
 
 ```bash
 npm run prueba-reauditoria    136 · prueba de oro + una regresión por hallazgo de la 2ª y la 3ª auditoría
+npm run prueba-vercel          52 · el empaquetado real de las funciones, en un /var/task simulado
 npm run prueba-adversarial    108 · una por cada hallazgo de la 1ª auditoría, por HTTP real
 npm run prueba-almacen         24 · el almacén contra un Redis DE VERDAD
-npm run prueba-loop002         87 · economía, transacciones, backend, informe
+npm run prueba-loop002        102 · economía, transacciones, backend, informe, clases de fallo
 npm run prueba-humo-loop002    recorrido completo en iPhone contra la API y Redis reales
 npm run prueba-piloto          48 (ATH-PILOT-001, siguen pasando)
 npm run prueba-qr              17
@@ -534,6 +535,109 @@ ni de aplicación automática. Los textos reutilizables decían «se usa en hosp
 «vale 90 días», que se leen como una promesa de algo que hoy no se puede cumplir. Ahora dicen
 «está previsto para» y «se registra con 90 días de vigencia», y el aviso de pendiente dice
 explícitamente que **no se aplica solo**.
+
+## Después de la primera prueba física
+
+El 22 de septiembre, con Redis ya provisionado y conectado en Vercel, el CEO probó el flujo
+desde su celular. `POST /api/activar` devolvió **500**:
+
+```
+ERR_MODULE_NOT_FOUND
+Cannot find module '/var/task/api/_http.ts'
+imported from /var/task/api/activar.js
+```
+
+Y el cliente leyó en pantalla que *«el registro central todavía no está configurado»*, que era
+**falso**. Dos fallos distintos, y los dos importan.
+
+### El empaquetado: por qué fallaba y por qué no bastaba un parche
+
+Vercel compila cada `api/*.ts` a `api/*.js` **pero no reescribe los especificadores de
+import**. El `'./_http.ts'` sobrevivía tal cual dentro del `.js` y apuntaba a un archivo que ya
+no existía con ese nombre. Además, media lógica vivía en `../src/data/*.ts`, fuera de `/api`,
+que el empaquetado de funciones no tiene por qué incluir.
+
+Eso afectaba a **las seis funciones por igual**, no sólo a `activar`. Cambiar una extensión
+habría hecho desaparecer el primer mensaje y aparecer el segundo.
+
+La corrección no arregla la resolución de módulos: **la elimina**.
+
+- Las fuentes viven ahora en **`/servidor`**. Ni un `.ts` queda dentro de `/api`.
+- `scripts/construye-api.mts` las empaqueta con esbuild en **un solo archivo por endpoint**,
+  ESM, sin un solo import relativo. Lo que queda en `/api` son seis `.mjs` autocontenidos.
+- Se ejecuta en `prebuild`, así que cada despliegue los regenera.
+- **Se versionan**, porque Vercel decide qué es una función mirando el repositorio, no el
+  resultado del build. Un `.mjs` generado durante el build podría no llegar a existir como
+  función.
+- Son `.mjs` y no `.js` para que la interpretación no dependa de que el `package.json` de la
+  raíz llegue dentro del paquete de la función. Con `.mjs` es ESM siempre.
+
+### La prueba que lo habría atrapado
+
+`npm run prueba-vercel` (52 comprobaciones). Ninguna prueba local lo vio, y no por descuido:
+todas importaban las fuentes directamente, con el repositorio entero disponible. Vercel ejecuta
+un `/var/task` con lo que el empaquetado metió dentro.
+
+Así que la prueba copia **sólo** los `.mjs` a un directorio vacío —sin `node_modules`, sin
+`package.json`, sin `/servidor` y sin `/src`— y los ejecuta desde ahí. Comprueba cuatro cosas
+que fallan por separado: que lo versionado coincide con las fuentes de hoy, que en `/api` no
+queda ningún `.ts`, que cada función **carga** aislada, y que **responde** (405 al método
+equivocado, 503 `ALMACEN_NO_CONFIGURADO` sin almacén — nunca un 500).
+
+Y una quinta: fabrica a propósito el fallo original y **exige que reviente igual**. Una prueba
+que no ha fallado nunca no ha demostrado que detecte nada.
+
+### El mensaje: no acusar al sitio equivocado
+
+El cliente vio «falta configurar el almacén» porque `api-red.ts` metía en el mismo saco todo lo
+que no fuera JSON válido. Un mensaje que acusa al sitio equivocado es peor que uno genérico:
+manda a arreglar lo que no está roto.
+
+Ahora se distinguen cuatro clases, que son cuatro problemas con cuatro responsables distintos:
+
+| Clase | Qué pasó | Quién lo arregla |
+|---|---|---|
+| `RED` | El móvil no llegó a salir | El cliente |
+| `API` | La dirección no existe o no contesta JSON | Quien despliega |
+| `ALMACEN` | El servidor contesta y dice que no puede guardar | Quien configura el almacén |
+| `SERVIDOR` | El servidor contesta y se rompe por dentro | Quien programa |
+
+El texto largo de «falta autorizar y provisionar el almacén» sólo aparece cuando el **servidor
+lo dice con ese código exacto**, nunca por descarte. Un `ALMACEN_INCIERTO` —el almacén existe y
+contestó mal— dice «vuelve a intentarlo», porque no hay nada que configurar. Y ninguno de los
+cuatro le cuenta al cliente de qué va: lee una frase corta y sabe si puede reintentar.
+
+### La pantalla del cliente: un toque
+
+El CEO reportó demasiada fricción: al pulsar vio personas, WhatsApp, consentimiento y después un
+error, y tuvo que adivinar qué rellenar. Da igual que los campos fueran opcionales y estuvieran
+plegados: estaban **ahí**, junto a la acción principal, y cualquier cosa junto a la acción
+principal parece parte de ella.
+
+La pantalla de salida tiene ahora exactamente dos cosas: **5%** y **«Activar mi 5%»**. Ni un
+campo a la vista. Debajo, en gris y subrayado, un «Opcional: somos varios o quiero que me
+escriban» que hay que querer abrir. Después del toque: **QR grande** —de `15rem` a `20rem`, un
+82% del ancho del móvil— y **una sola instrucción**: «Muéstralo en La Triada al pedir la
+cuenta». Estado de carga en el propio botón, con `aria-busy`, y el error anterior se borra al
+reintentar.
+
+El recorrido en iPhone 13 lo comprueba: cero campos visibles al llegar, una sola acción, el
+texto exacto del botón, la instrucción después del código y que el QR ocupe de verdad la
+pantalla.
+
+**Lo que no se hizo, y por qué:** mover personas y WhatsApp a *después* de generar el código
+—como pedía la orden «preferiblemente»— necesita que el servidor acepte añadirlos a una
+transacción ya activada. `/api/seguimiento` no sirve tal cual: exige estado `REDIMIDO`, y esa
+regla está ahí a propósito. Improvisar esa ruta la noche antes del piloto era más riesgo que
+beneficio, así que los campos se quedan antes del botón pero **fuera del camino**. Queda
+anotado como el siguiente paso.
+
+### Medición
+
+Lighthouse móvil sobre el build comprimido, tras los cambios: `/red/la-triada` **100 / 100 /
+100** con **CLS 0**; `/red/la-triada/validar` igual; `/piloto/la-triada` igual. SEO 66 por el
+`noindex`, que es lo buscado. (Best practices marca 96 en este entorno porque el proxy bloquea
+el script de analítica; no es del sitio.)
 
 ## Lo que deliberadamente no se hizo
 

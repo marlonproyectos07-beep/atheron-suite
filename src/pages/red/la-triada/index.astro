@@ -2,14 +2,26 @@
 /* ============================================================
    RED ATHERON x LA TRIADA — PANTALLA DEL CLIENTE (ATH-LOOP-002)
 
-   UNA ACCION. Llegar y pulsar "Activar". Nada mas.
+   UN TOQUE. Llegar, ver lo que gana, pulsar. Nada mas.
 
-   Lo que antes se le pedia al cliente -y ahora no- estaba ahi por
-   comodidad nuestra: personas, telefono, consentimiento. Todo eso
-   vive debajo del boton, plegado y opcional. Quien quiera darlo lo
-   da; quien no, activa igual y el beneficio funciona igual. Un campo
-   obligatorio de mas, en una pantalla que se abre de pie en la calle,
-   es gente que no activa.
+   ============================================================
+   LO QUE LA PRUEBA FISICA ENSENO
+   ============================================================
+
+   En la prueba real, el cliente pulso el boton y lo que vio fue:
+   personas, WhatsApp, consentimiento y un error. Tuvo que adivinar
+   que rellenar. Da igual que los campos fueran opcionales y que
+   estuvieran plegados: estaban AHI, junto a la accion principal, y
+   cualquier cosa junto a la accion principal parece parte de ella.
+
+   Asi que ahora la pantalla de salida tiene exactamente dos cosas:
+   el 5% y un boton que dice "Activar mi 5%". Ni un campo, ni un
+   desplegable, ni una pregunta. Lo opcional esta debajo, como un
+   enlace discreto que hay que querer abrir, y no aparece hasta que
+   se ha visto el beneficio.
+
+   La medida es la de la orden: un nino tiene que entender que hacer
+   sin que nadie se lo explique.
 
    QUE VE, Y QUE NO
 
@@ -22,10 +34,12 @@
    DE DONDE SALE EL CODIGO
 
    Del servidor, no del navegador. Por eso es unico de verdad y por
-   eso esta pantalla no puede funcionar sin API: si el almacen no
-   esta configurado, lo dice y no deja seguir. Fingir que activa
+   eso esta pantalla no puede funcionar sin API. Fingir que activa
    -guardando en el navegador "mientras tanto"- seria volver a los
    dos moviles que no se ven que este trabajo viene a arreglar.
+
+   Si algo falla, se dice en una frase que se puede leer de pie, y
+   sin jerga: la clasificacion del fallo esta en src/data/api-red.ts.
    ============================================================ */
 import Base from '../../../layouts/Base.astro';
 import RedPie from '../../../components/RedPie.astro';
@@ -48,24 +62,25 @@ import { RUTAS } from '../../../data/api-red';
   <main id="contenido" class="piloto">
     <h1 class="piloto__titulo">Tu beneficio en {PILOTO.aliado}</h1>
 
-    {/* --- Lo que gana, en tres lineas --- */}
+    {/* --- Lo que gana. Una cifra y una linea: nada mas --- */}
     <div class="piloto__premio">
       <p class="piloto__premio-cifra">{REGLA.creditoPct}%</p>
-      <p class="piloto__premio-texto">{COPY_CREDITO.queEs}</p>
-      <p class="piloto__premio-pie">{COPY_CREDITO.donde} {COPY_CREDITO.vigencia}</p>
+      <p class="piloto__premio-texto">de lo que consumas, para ti</p>
     </div>
 
-    {/* --- LA accion --- */}
+    {/* --- LA accion. Sola. --- */}
     <div data-paso="inicio">
       <button class="piloto__boton piloto__boton--grande" type="button" data-activar>
-        Activar beneficio Atheron
+        Activar mi {REGLA.creditoPct}%
       </button>
+      <p class="piloto__pie-dato piloto__pie-dato--bajo-boton">Un toque. No hay que rellenar nada.</p>
 
-      {/* Opcional, plegado y despues del boton: no puede estorbar. */}
-      <details class="piloto__opcional">
-        <summary>¿Vienen varias personas? ¿Quieres que te avisemos?</summary>
+      {/* Lo opcional: debajo, discreto y cerrado. Abrirlo es una
+          decision de quien quiera, no un paso del camino. */}
+      <details class="piloto__opcional piloto__opcional--discreto">
+        <summary>Opcional: somos varios o quiero que me escriban</summary>
         <label class="piloto__campo">
-          <span>Personas (opcional)</span>
+          <span>¿Cuántos sois? (opcional)</span>
           <input name="personas" type="number" inputmode="numeric" min="1" max={MAX_PERSONAS} />
           <span class="piloto__ayuda">Así {PILOTO.aliado} sabe cuántos sois.</span>
         </label>
@@ -83,13 +98,14 @@ import { RUTAS } from '../../../data/api-red';
       </details>
     </div>
 
-    {/* --- Ya activado --- */}
+    {/* --- Ya activado: el QR manda, y debajo una sola instruccion --- */}
     <div class="piloto__tarjeta" data-paso="codigo" hidden>
-      <p class="piloto__codigo" data-codigo aria-live="polite"></p>
       <div data-qr></div>
-      <p class="piloto__pie-dato">Enséñalo al pedir la cuenta.</p>
+      <p class="piloto__instruccion">Muéstralo en {PILOTO.aliado} al pedir la cuenta</p>
+      <p class="piloto__codigo" data-codigo aria-live="polite"></p>
       <p class="piloto__pie-dato" data-caducidad></p>
       <p class="piloto__pie-dato"><span class="piloto__estado" data-insignia></span></p>
+      <p class="piloto__pie-dato">{COPY_CREDITO.donde} {COPY_CREDITO.vigencia}</p>
     </div>
 
     {/* --- Ya consumido --- */}
@@ -136,6 +152,7 @@ import { RUTAS } from '../../../data/api-red';
     fuenteGuardada,
     recuerda,
     recordado,
+    MENSAJE_FALLO,
     RUTAS,
     type TransaccionVista,
   } from '../../../data/api-red';
@@ -217,10 +234,16 @@ import { RUTAS } from '../../../data/api-red';
   }
 
   const boton = $<HTMLButtonElement>('[data-activar]')!;
+  const TEXTO_BOTON = boton.textContent ?? '';
 
   boton.addEventListener('click', async () => {
+    /* Cargando: el boton lo dice, se desactiva para que dos toques
+       no generen dos codigos, y el error anterior se borra -dejarlo
+       debajo de un "Activando…" es contarle dos historias a la vez. */
     boton.disabled = true;
+    boton.setAttribute('aria-busy', 'true');
     boton.textContent = 'Activando…';
+    error.hidden = true;
 
     const personas = Number(($('input[name="personas"]') as HTMLInputElement).value);
     const contacto = ($('input[name="contacto"]') as HTMLInputElement).value;
@@ -234,13 +257,16 @@ import { RUTAS } from '../../../data/api-red';
     });
 
     boton.disabled = false;
-    boton.textContent = 'Activar beneficio Atheron';
+    boton.removeAttribute('aria-busy');
+    boton.textContent = TEXTO_BOTON;
 
     if (respuesta.ok && respuesta.datos) {
       pinta(respuesta.datos);
       return;
     }
-    avisa(respuesta.explicacion ?? 'No se pudo activar. Vuelve a intentarlo.');
+    /* Nunca un mensaje tecnico: api-red.ts ya ha traducido el fallo a
+       una frase que se puede leer de pie en un restaurante. */
+    avisa(respuesta.explicacion ?? MENSAJE_FALLO.SERVIDOR);
   });
 
   /* Al volver a la pantalla -tipicamente despues de que el local
