@@ -32,6 +32,7 @@ import { join, extname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { hayRedis, levanta } from './lib/redis-local.mts';
 import { leerCodigo } from '../src/data/codigos-referido.ts';
+import { qrSvg } from '../src/data/qr.ts';
 
 const RAIZ = 'dist';
 if (!existsSync(join(RAIZ, 'red/la-triada/index.html'))) {
@@ -235,16 +236,61 @@ const leido = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
 ok('el QR se decodifica', Boolean(leido));
 ok('y lleva la validación con el código', leido?.data === `${BASE}/red/la-triada/validar?c=${codigo}`, leido?.data);
 
-/* ---------- 3. El local: escanear, valor, confirmar ---------- */
+/* ---------- 3. El local: escanear, valor, confirmar ----------
+   LA CAMARA SIMULADA. getUserMedia se sustituye por un canvas que
+   pinta el QR -el mismo SVG que ve el cliente- y lo emite como video.
+   La pagina lo decodifica con su propio lector (jsQR: Chromium en
+   Linux no trae BarcodeDetector), exactamente como en un telefono.
+   window.__camara decide el caso: 'ok', 'rechazada' o 'sin'. */
+const qrComoImagen = (texto: string): string =>
+  `data:image/svg+xml;base64,${Buffer.from(qrSvg(texto, 'qr').replace('<svg ', '<svg width="400" height="400" ')).toString('base64')}`;
+
 const contextoLocal = await navegador.newContext({ ...devices['iPhone 13'] });
+await contextoLocal.addInitScript(() => {
+  const w = window as unknown as { __camara?: string; __qrImagen?: string; __fotogramas?: number };
+  w.__camara = 'ok';
+  navigator.mediaDevices.getUserMedia = async () => {
+    if (w.__camara === 'rechazada') throw new DOMException('Permiso denegado', 'NotAllowedError');
+    if (w.__camara === 'sin') throw new DOMException('Sin cámara', 'NotFoundError');
+    const lienzo = document.createElement('canvas');
+    lienzo.width = 480;
+    lienzo.height = 480;
+    const ctx = lienzo.getContext('2d')!;
+    let src = '';
+    let img: HTMLImageElement | null = null;
+    const pinta = () => {
+      if (w.__qrImagen && w.__qrImagen !== src) {
+        src = w.__qrImagen;
+        img = new Image();
+        img.src = src;
+      }
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, 480, 480);
+      if (img?.complete) ctx.drawImage(img, 40, 40, 400, 400);
+      w.__fotogramas = (w.__fotogramas ?? 0) + 1;
+    };
+    pinta();
+    setInterval(pinta, 80);
+    return lienzo.captureStream(12);
+  };
+});
 const pagLocal = await contextoLocal.newPage();
 pagLocal.on('pageerror', (e) => errores.push(String(e)));
+const camara = (modo: string, texto?: string) =>
+  pagLocal.evaluate(([m, img]) => {
+    const w = window as unknown as { __camara?: string; __qrImagen?: string };
+    w.__camara = m;
+    if (img) w.__qrImagen = img;
+  }, [modo, texto ? qrComoImagen(texto) : ''] as const);
 
-await pagLocal.goto(leido!.data, { waitUntil: 'networkidle' });
+/* La cajera abre la pantalla del local UNA vez, sin ?c=: el QR se
+   lee desde dentro, con el boton grande. */
+await pagLocal.goto(`${BASE}/red/la-triada/validar`, { waitUntil: 'networkidle' });
 
 /* Sin credencial, la pantalla del local no ensena ni el campo del
    codigo: el QR identifica al cliente, no autoriza a cobrar. */
 ok('sin credencial no se puede ni buscar el código', await pagLocal.locator('[data-form-codigo]').isHidden());
+ok('ni escanear', await pagLocal.locator('[data-inicio]').isHidden());
 ok('y se pide la credencial del local', await pagLocal.locator('[data-form-credencial]').isVisible());
 
 await pagLocal.locator('input[name="credencial"]').fill('esta-no-es');
@@ -254,9 +300,63 @@ ok('una credencial equivocada se rechaza en el momento', (await pagLocal.locator
 
 await pagLocal.locator('input[name="credencial"]').fill(CREDENCIAL);
 await pagLocal.getByRole('button', { name: 'Entrar' }).click();
-await pagLocal.waitForSelector('.piloto__resultado--si');
-ok('el local ve el cliente verificado', (await pagLocal.locator('[data-resultado]').innerText()).includes('verificado'));
+await pagLocal.waitForSelector('[data-inicio]:not([hidden])');
+await pagLocal.screenshot({ path: join(SALIDA, '3a-inicio-local.png'), fullPage: true });
+
+ok('la acción principal es "Escanear QR del cliente"', await pagLocal.getByRole('button', { name: 'Escanear QR del cliente' }).isVisible());
+ok('el código manual es la alternativa', await pagLocal.getByRole('button', { name: 'Ingresar código manualmente' }).isVisible());
+ok('y el campo del código no está a la vista', await pagLocal.locator('[data-form-codigo]').isHidden());
+
+/* Camara rechazada: se ofrece el codigo manual, sin callejon. */
+await camara('rechazada');
+await pagLocal.getByRole('button', { name: 'Escanear QR del cliente' }).click();
+await pagLocal.waitForSelector('[data-form-codigo]:not([hidden])');
+ok('cámara rechazada -> se abre el código manual', await pagLocal.locator('input[name="codigo"]').isVisible());
+ok('  diciendo por qué', (await pagLocal.locator('[data-resultado]').innerText()).includes('permiso'));
+
+/* Sin camara: igual. */
+await camara('sin');
+await pagLocal.locator('[data-form-codigo]').getByRole('button', { name: 'Escanear QR del cliente' }).click();
+await pagLocal.waitForFunction(() => (document.querySelector('[data-resultado]')?.textContent ?? '').includes('no tiene una cámara'));
+ok('sin cámara -> también el código manual', await pagLocal.locator('input[name="codigo"]').isVisible());
+
+/* Un QR de otro sitio: se dice, y la camara sigue mirando. */
+await camara('ok', `https://otro-sitio.example/red/la-triada/validar?c=${codigo}`);
+await pagLocal.locator('[data-form-codigo]').getByRole('button', { name: 'Escanear QR del cliente' }).click();
+await pagLocal.waitForFunction(() => (document.querySelector('[data-escaner-estado]')?.textContent ?? '').includes('no es de Atheron'), null, { timeout: 15000 });
+ok('un QR de otro origen falla de forma clara', true);
+await pagLocal.screenshot({ path: join(SALIDA, '3b-escaner.png'), fullPage: true });
+ok('  y no busca nada en el servidor', await pagLocal.locator('[data-form-cuenta]').isHidden());
+
+/* Un QR que no es de cliente (texto cualquiera, como una promo). */
+await camara('ok', 'PROMO 2X1 MARTES');
+await pagLocal.waitForFunction(() => (document.querySelector('[data-escaner-estado]')?.textContent ?? '').includes('no es un código de cliente'), null, { timeout: 15000 });
+ok('un QR inválido falla de forma clara', true);
+
+/* Y el QR bueno: el mismo que genero la pantalla del cliente. */
+await camara('ok', leido!.data);
+await pagLocal.waitForSelector('.piloto__resultado--si:has-text("verificado")', { timeout: 15000 });
+ok('el escaneo válido identifica al cliente', (await pagLocal.locator('[data-resultado]').innerText()).includes('Cliente Atheron verificado'));
+ok('  y la cámara se cierra', await pagLocal.locator('[data-escaner]').isHidden());
+ok('  y sin pasar por la URL', !pagLocal.url().includes('?c='));
 ok('desde otro dispositivo distinto al del cliente', true);
+
+/* EL CAMPO DEL VALOR EMPIEZA VACIO DE VERDAD */
+igual('el valor de la cuenta empieza vacío', await pagLocal.locator('input[name="consumo"]').inputValue(), '');
+igual('  el ejemplo es solo placeholder', await pagLocal.locator('input[name="consumo"]').getAttribute('placeholder'), 'Ej: $ 100.000');
+igual('  y "Continuar" se ve apagado', await pagLocal.locator('[data-continuar]').getAttribute('aria-disabled'), 'true');
+/* force: aria-disabled no impide el toque en un navegador real, pero
+   Playwright lo trata como deshabilitado y no pulsaria. */
+await pagLocal.getByRole('button', { name: 'Continuar' }).click({ force: true });
+igual(
+  'continuar sin monto dice qué falta',
+  (await pagLocal.locator('[data-error-cuenta]').innerText()).trim(),
+  'Ingresa el valor total de la cuenta para continuar.',
+);
+igual('  con el borde en rojo (aria-invalid)', await pagLocal.locator('input[name="consumo"]').getAttribute('aria-invalid'), 'true');
+ok('  y el foco en el campo', await pagLocal.evaluate(() => document.activeElement?.getAttribute('name') === 'consumo'));
+ok('  sin pasar a la confirmación', await pagLocal.locator('[data-confirmar]').isHidden());
+await pagLocal.screenshot({ path: join(SALIDA, '3c-sin-valor.png'), fullPage: true });
 
 const camposLocal = await pagLocal.locator('[data-form-cuenta] input:visible').count();
 ok('sólo se le piden dos datos: valor y personas', camposLocal === 2, `${camposLocal} campos`);
@@ -266,6 +366,8 @@ ok('no se le pide ningún porcentaje', !(await pagLocal.locator('[data-form-cuen
    en vivo actue de verdad, y personas = 5. */
 await pagLocal.locator('input[name="consumo"]').pressSequentially('100000');
 igual('100000 se ve como $ 100.000 mientras se escribe', await pagLocal.locator('input[name="consumo"]').inputValue(), '$ 100.000');
+ok('  y el error desaparece al escribir', await pagLocal.locator('[data-error-cuenta]').isHidden());
+igual('  y "Continuar" se enciende', await pagLocal.locator('[data-continuar]').getAttribute('aria-disabled'), 'false');
 await pagLocal.locator('input[name="personas"]').fill('5');
 await pagLocal.screenshot({ path: join(SALIDA, '3-local.png'), fullPage: true });
 
@@ -303,21 +405,21 @@ ok('el crédito del cliente se ve: $ 5.000', (await pagLocal.locator('[data-cred
 }
 await pagLocal.screenshot({ path: join(SALIDA, '4-confirmado.png'), fullPage: true });
 
-/* ---------- 3b. Atender otro cliente: no hereda nada ---------- */
+/* ---------- 3b. Escanear siguiente cliente: no hereda nada ---------- */
 {
   const siguiente = await fetch(`${BASE}/api/activar`, { method: 'POST' }).then((r) => r.json() as Promise<{ datos: { codigo: string } }>);
-  await pagLocal.getByRole('button', { name: 'Atender otro cliente' }).click();
-  await pagLocal.waitForSelector('[data-form-codigo]:not([hidden])');
-  ok('"Atender otro cliente" vuelve a la búsqueda', await pagLocal.locator('[data-form-codigo]').isVisible());
-  igual('  con el código vacío', await pagLocal.locator('input[name="codigo"]').inputValue(), '');
-  ok('  sin el resultado anterior', await pagLocal.locator('[data-resultado]').isHidden());
+  ok('tras registrar, la acción principal es "Escanear siguiente cliente"', await pagLocal.getByRole('button', { name: 'Escanear siguiente cliente' }).isVisible());
+  ok('  con el código manual como alternativa', await pagLocal.locator('[data-hecho]').getByRole('button', { name: 'Ingresar código manualmente' }).isVisible());
+  await camara('ok', `${BASE}/red/la-triada/validar?c=${siguiente.datos.codigo}`);
+  await pagLocal.getByRole('button', { name: 'Escanear siguiente cliente' }).click();
+  ok('"Escanear siguiente cliente" abre el lector', await pagLocal.locator('[data-escaner]').isVisible() || (await pagLocal.locator('[data-resultado]').innerText()).includes('verificado'));
+  await pagLocal.waitForSelector('[data-form-cuenta]:not([hidden])', { timeout: 15000 });
+  ok('  y lee al siguiente cliente sin teclear', (await pagLocal.locator('[data-resultado]').innerText()).includes('verificado'));
   ok('  sin la tarjeta de registrado', await pagLocal.locator('[data-hecho]').isHidden());
   ok('  y sin ?c= en la dirección', !pagLocal.url().includes('?c='), pagLocal.url());
-  await pagLocal.locator('input[name="codigo"]').fill(siguiente.datos.codigo);
-  await pagLocal.getByRole('button', { name: 'Buscar' }).click();
-  await pagLocal.waitForSelector('[data-form-cuenta]:not([hidden])');
   igual('el segundo cliente no hereda el valor', await pagLocal.locator('input[name="consumo"]').inputValue(), '');
   igual('ni las personas', await pagLocal.locator('input[name="personas"]').inputValue(), '');
+  igual('ni el error ni el aviso', await pagLocal.locator('input[name="consumo"]').getAttribute('aria-invalid'), null);
   await pagLocal.locator('input[name="consumo"]').pressSequentially('1000000');
   igual('1000000 se ve como $ 1.000.000', await pagLocal.locator('input[name="consumo"]').inputValue(), '$ 1.000.000');
   await pagLocal.getByRole('button', { name: 'Continuar' }).click();
@@ -328,6 +430,17 @@ await pagLocal.screenshot({ path: join(SALIDA, '4-confirmado.png'), fullPage: tr
   igual('y su crédito es $ 50.000', (await pagLocal.locator('[data-credito]').innerText()).trim(), '$ 50.000');
   const g1 = await deposito.lee<{ economia?: { consumo?: number } }>('tx', codigo);
   igual('el primero sigue con 100000', g1?.economia?.consumo, 100000);
+
+  /* Plan B tras registrar: el codigo manual sigue funcionando. */
+  const tercero = await fetch(`${BASE}/api/activar`, { method: 'POST' }).then((r) => r.json() as Promise<{ datos: { codigo: string } }>);
+  await pagLocal.locator('[data-hecho]').getByRole('button', { name: 'Ingresar código manualmente' }).click();
+  await pagLocal.waitForSelector('[data-form-codigo]:not([hidden])');
+  igual('el código manual empieza vacío', await pagLocal.locator('input[name="codigo"]').inputValue(), '');
+  await pagLocal.locator('input[name="codigo"]').fill(tercero.datos.codigo);
+  await pagLocal.getByRole('button', { name: 'Buscar' }).click();
+  await pagLocal.waitForSelector('[data-form-cuenta]:not([hidden])');
+  ok('el código manual sigue funcionando', (await pagLocal.locator('[data-resultado]').innerText()).includes('verificado'));
+  igual('  y tampoco hereda el valor', await pagLocal.locator('input[name="consumo"]').inputValue(), '');
 }
 
 /* ---------- 4. Doble redención ---------- */
@@ -338,6 +451,7 @@ ok('y no vuelve a pedir el valor de la cuenta', await pagLocal.locator('[data-fo
 
 /* ---------- 5. Código inválido y consumo cero ---------- */
 await pagLocal.goto(`${BASE}/red/la-triada/validar`, { waitUntil: 'networkidle' });
+await pagLocal.getByRole('button', { name: 'Ingresar código manualmente' }).click();
 const roto = `${codigo.slice(0, 8)}${codigo[8] === 'K' ? 'M' : 'K'}${codigo.slice(9)}`;
 await pagLocal.locator('input[name="codigo"]').fill(roto);
 await pagLocal.getByRole('button', { name: 'Buscar' }).click();
@@ -348,11 +462,11 @@ const otra = await fetch(`${BASE}/api/activar`, { method: 'POST' }).then((r) => 
 await pagLocal.goto(`${BASE}/red/la-triada/validar?c=${otra.datos.codigo}`, { waitUntil: 'networkidle' });
 await pagLocal.waitForSelector('[data-form-cuenta]:not([hidden])');
 await pagLocal.locator('input[name="consumo"]').fill('0');
-await pagLocal.getByRole('button', { name: 'Continuar' }).click();
+await pagLocal.getByRole('button', { name: 'Continuar' }).click({ force: true });
 await pagLocal.waitForTimeout(300);
 ok('un consumo de cero no se registra', await pagLocal.locator('[data-hecho]').isHidden());
 ok('  ni llega a la confirmación', await pagLocal.locator('[data-confirmar]').isHidden());
-ok('  y se dice qué falta', (await pagLocal.locator('[data-error-cuenta]').innerText()).includes('valor'));
+ok('  y se dice qué falta', (await pagLocal.locator('[data-error-cuenta]').innerText()).includes('valor total'));
 
 /* Un error del servidor se sigue diciendo claro: la misma pantalla
    contra un backend que responde 409 con explicacion. */

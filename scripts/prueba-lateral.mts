@@ -25,6 +25,9 @@ import { AlmacenMemoria } from '../servidor/_almacen.ts';
 import { activar, redimir, eventoRedencion } from '../servidor/_servicio.ts';
 import { digitos, formatoCop, formateaMientrasEscribe, valorEntero } from '../src/data/importe.ts';
 import type { Transaccion } from '../src/data/transacciones-red.ts';
+import { codigoDeQr } from '../src/data/lector-qr.ts';
+import { clasificaFallo, MENSAJE_CAMARA } from '../src/data/escaner.ts';
+import { generarCodigo } from '../src/data/codigos-referido.ts';
 import { existsSync, readFileSync } from 'node:fs';
 
 let hechas = 0;
@@ -56,6 +59,46 @@ igual('una coma no crea decimales', valorEntero('100,5'), 1005);
 igual('ceros a la izquierda fuera', digitos('000120000'), '120000');
 igual('formatoCop sin decimales', formatoCop(5000), '$ 5.000');
 ok('el entero nunca es fraccionario', Number.isInteger(valorEntero('$ 99.999')!));
+
+igual('el placeholder no es un valor: campo vacío -> sin valor', valorEntero(''), undefined);
+igual('120000 se ve $ 120.000', formateaMientrasEscribe('120000'), '$ 120.000');
+
+/* ---------- Lector de QR ---------- */
+console.log('\nLector de QR');
+{
+  const ORIGEN = 'https://atheron-suite-git-x.vercel.app';
+  const OFICIAL = 'https://hotelesatheron.com';
+  const cod = generarCodigo('la-triada');
+  const lee = (t: string) => codigoDeQr(t, ORIGEN, OFICIAL, 'TRI', '/red/la-triada/validar');
+  const bien = lee(`${ORIGEN}/red/la-triada/validar?c=${cod}`);
+  ok('un QR de este sitio da el código', bien.ok && bien.codigo === cod, JSON.stringify(bien));
+  const oficial = lee(`${OFICIAL}/red/la-triada/validar?c=${cod}`);
+  ok('un QR del dominio oficial también', oficial.ok);
+  ok('  y con www', lee(`https://www.hotelesatheron.com/red/la-triada/validar?c=${cod}`).ok);
+  ok('el código suelto también', lee(cod).ok);
+  const ajeno = lee(`https://evil.example.com/red/la-triada/validar?c=${cod}`);
+  ok('un QR de otro origen se rechaza', !ajeno.ok && ajeno.motivo === 'OTRO_ORIGEN');
+  ok('  diciendo que no es de Atheron', !ajeno.ok && ajeno.explicacion.includes('no es de Atheron'));
+  const carta = lee('https://restaurante.example/menu.pdf');
+  ok('la carta del restaurante no se busca', !carta.ok);
+  const wifi = lee('WIFI:T:WPA;S:LaTriada;P:clave;;');
+  ok('un QR de wifi no se busca', !wifi.ok);
+  const roto = lee(`${ORIGEN}/red/la-triada/validar?c=ATH-TRI-AAAAA`);
+  ok('un código con control malo se rechaza', !roto.ok && roto.motivo === 'INVALIDO');
+  const otraRuta = lee(`${ORIGEN}/red/la-triada?c=${cod}`);
+  ok('un QR de Atheron que no es de cliente se rechaza', !otraRuta.ok);
+  ok('texto basura se rechaza', !lee('hola').ok);
+  ok('vacío se rechaza', !lee('   ').ok);
+}
+
+/* ---------- Fallos de camara ---------- */
+console.log('\nCámara');
+igual('permiso rechazado -> PERMISO', clasificaFallo({ name: 'NotAllowedError' }), 'PERMISO');
+igual('sin cámara -> SIN_CAMARA', clasificaFallo({ name: 'NotFoundError' }), 'SIN_CAMARA');
+igual('sin trasera -> SIN_CAMARA', clasificaFallo({ name: 'OverconstrainedError' }), 'SIN_CAMARA');
+igual('ocupada -> EN_USO', clasificaFallo({ name: 'NotReadableError' }), 'EN_USO');
+igual('otra cosa -> ERROR', clasificaFallo(new Error('x')), 'ERROR');
+ok('todos los mensajes ofrecen el código manual', Object.values(MENSAJE_CAMARA).every((m) => /manualmente/.test(m)));
 
 /* ---------- 2-4. Backend: enteros, personas, comision interna, credito congelado ---------- */
 console.log('\nBackend');
@@ -147,7 +190,11 @@ for (const pagina of ['red/la-triada/validar', 'red/la-triada', 'red/la-triada/s
   const archivo = ['dist/red/la-triada/validar/index.html', 'dist/red/la-triada/validar.html'].find((a) => existsSync(a)) ?? '';
   if (archivo) {
     const html = readFileSync(archivo, 'utf8');
-    ok('la pantalla del local tiene "Atender otro cliente"', html.includes('Atender otro cliente'));
+    ok('la pantalla del local tiene "Escanear siguiente cliente"', html.includes('Escanear siguiente cliente'));
+    ok('el QR es la acción principal', html.includes('Escanear QR del cliente'));
+    ok('el código manual queda como alternativa', html.includes('Ingresar código manualmente'));
+    ok('el campo del valor no trae value', !/name="consumo"[^>]*value=/.test(html));
+    ok('y su ejemplo es placeholder', /name="consumo"[^>]*placeholder="Ej: \$ 100\.000"/.test(html) || /placeholder="Ej: \$ 100\.000"[^>]*name="consumo"/.test(html));
     ok('y "Crédito Atheron generado"', html.includes('Crédito Atheron generado'));
     ok('y el campo de personas', /name="personas"/.test(html));
   }

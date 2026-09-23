@@ -618,3 +618,75 @@
   border-bottom: 0;
   margin-bottom: var(--esp-2);
 }
+
+/* ------------------------------------------------------------
+   PANTALLA DEL LOCAL — escáner, enlace secundario y error de valor
+   ------------------------------------------------------------ */
+.piloto__enlace {
+  display: block;
+  width: 100%;
+  min-height: 3rem;
+  margin-top: var(--esp-2);
+  padding: 0.6rem 1rem;
+  border: 0;
+  background: none;
+  color: var(--color-marca);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.piloto__enlace:focus-visible {
+  outline: 3px solid var(--color-noche);
+  outline-offset: 2px;
+}
+
+.piloto__visor {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--radio-sm);
+  background: #000;
+}
+
+.piloto__visor video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.piloto__mira {
+  position: absolute;
+  inset: 15%;
+  border: 3px solid rgb(255 255 255 / 0.85);
+  border-radius: var(--radio-sm);
+  pointer-events: none;
+}
+
+.piloto__escaner .piloto__instruccion {
+  margin: var(--esp-2) 0;
+}
+
+.piloto__campo input::placeholder {
+  color: var(--color-gris-700);
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.piloto__campo input[aria-invalid="true"] {
+  border-color: #b42318;
+  background: #fff5f4;
+}
+
+.piloto__error {
+  margin: var(--esp-1) 0 var(--esp-2);
+  font-weight: 700;
+  color: #7a1f1f;
+}
+
+.piloto__boton[aria-disabled="true"] {
+  opacity: 0.55;
+}

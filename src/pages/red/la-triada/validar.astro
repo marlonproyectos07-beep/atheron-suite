@@ -87,7 +87,26 @@ import { RUTAS } from '../../../data/api-red';
       <p class="piloto__pie-dato" data-error-credencial role="status" aria-live="polite"></p>
     </form>
 
-    {/* --- Paso 1: escanear o teclear el codigo --- */}
+    {/* --- Paso 1: ESCANEAR. El QR es el camino; teclear, el plan B --- */}
+    <div class="piloto__tarjeta" data-inicio hidden>
+      <button class="piloto__boton piloto__boton--grande" type="button" data-escanear>
+        Escanear QR del cliente
+      </button>
+      <button class="piloto__enlace" type="button" data-manual>Ingresar código manualmente</button>
+    </div>
+
+    {/* El lector. La imagen no sale del telefono: ver src/data/escaner.ts. */}
+    <div class="piloto__tarjeta piloto__escaner" data-escaner hidden>
+      <div class="piloto__visor">
+        <video data-video muted playsinline aria-label="Cámara para leer el QR del cliente"></video>
+        <span class="piloto__mira" aria-hidden="true"></span>
+      </div>
+      <p class="piloto__instruccion" data-escaner-estado>Apunta la cámara al QR del cliente</p>
+      <button class="piloto__boton piloto__boton--secundario" type="button" data-cancelar-escaneo>Cancelar</button>
+      <button class="piloto__enlace" type="button" data-manual>Ingresar código manualmente</button>
+    </div>
+
+    {/* Plan B: teclear el codigo. */}
     <form class="piloto__tarjeta" data-form-codigo hidden novalidate>
       <label class="piloto__campo piloto__campo--codigo">
         <span>Código del cliente</span>
@@ -102,9 +121,10 @@ import { RUTAS } from '../../../data/api-red';
           maxlength="16"
           required
         />
-        <span class="piloto__ayuda">Escanea su QR con la cámara, o teclea el código.</span>
+        <span class="piloto__ayuda">Está debajo del QR, en el teléfono del cliente.</span>
       </label>
       <button class="piloto__boton" type="submit">Buscar</button>
+      <button class="piloto__enlace" type="button" data-escanear>Escanear QR del cliente</button>
     </form>
 
     <div class="piloto__resultado" data-resultado hidden role="status" aria-live="polite"></div>
@@ -119,8 +139,9 @@ import { RUTAS } from '../../../data/api-red';
           inputmode="numeric"
           autocomplete="off"
           enterkeyhint="next"
-          placeholder="$ 120.000"
+          placeholder="Ej: $ 100.000"
           maxlength="14"
+          aria-describedby="error-cuenta"
           required
         />
         <span class="piloto__ayuda">Escribe solo números. El cliente paga la cuenta completa.</span>
@@ -132,9 +153,12 @@ import { RUTAS } from '../../../data/api-red';
         <span class="piloto__ayuda" data-ayuda-personas>Cuántas personas comieron en la mesa.</span>
       </label>
 
-      <p class="piloto__pie-dato" data-error-cuenta role="alert" hidden></p>
+      <p class="piloto__error" id="error-cuenta" data-error-cuenta role="alert" hidden></p>
 
-      <button class="piloto__boton piloto__boton--grande" type="submit">Continuar</button>
+      {/* aria-disabled y no disabled: parece apagado mientras no hay
+          valor, pero pulsarlo SI hace algo -decir que falta el valor-,
+          que es mejor que un boton muerto que no explica nada. */}
+      <button class="piloto__boton piloto__boton--grande" type="submit" data-continuar aria-disabled="true">Continuar</button>
       <button class="piloto__boton piloto__boton--secundario" type="button" data-sin-consumo>
         No consumió
       </button>
@@ -162,7 +186,8 @@ import { RUTAS } from '../../../data/api-red';
       </ul>
       <p class="piloto__pie-dato" data-credito-pendiente hidden></p>
       <div class="piloto__botones">
-        <button class="piloto__boton piloto__boton--grande" type="button" data-otro-cliente>Atender otro cliente</button>
+        <button class="piloto__boton piloto__boton--grande" type="button" data-otro-cliente>Escanear siguiente cliente</button>
+        <button class="piloto__enlace" type="button" data-otro-manual>Ingresar código manualmente</button>
       </div>
     </div>
 
@@ -181,7 +206,10 @@ import { RUTAS } from '../../../data/api-red';
   import { leerCodigo } from '../../../data/codigos-referido';
   import { PILOTO } from '../../../data/piloto-la-triada';
   import { formatoCop, formateaMientrasEscribe, valorEntero } from '../../../data/importe';
+  import { codigoDeQr } from '../../../data/lector-qr';
+  import { MENSAJE_CAMARA, escanear, type Escaneo, type FalloCamara } from '../../../data/escaner';
   import { MAX_CONSUMO } from '../../../data/transacciones-red';
+  import { DOMINIO } from '../../../data/seo';
   import {
     compruebaCredencial,
     consultar,
@@ -195,8 +223,13 @@ import { RUTAS } from '../../../data/api-red';
   } from '../../../data/api-red';
 
   const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel);
+  const $$ = (sel: string) => [...document.querySelectorAll<HTMLElement>(sel)];
 
   const formCredencial = $<HTMLFormElement>('[data-form-credencial]')!;
+  const inicio = $('[data-inicio]')!;
+  const escaner = $('[data-escaner]')!;
+  const video = $<HTMLVideoElement>('[data-video]')!;
+  const estadoEscaner = $('[data-escaner-estado]')!;
   const formCodigo = $<HTMLFormElement>('[data-form-codigo]')!;
   const formCuenta = $<HTMLFormElement>('[data-form-cuenta]')!;
   const confirmar = $('[data-confirmar]')!;
@@ -204,27 +237,54 @@ import { RUTAS } from '../../../data/api-red';
   const resultado = $('[data-resultado]')!;
   const errorCuenta = $('[data-error-cuenta]')!;
   const avisoCredito = $('[data-credito-pendiente]')!;
+  const continuar = $<HTMLButtonElement>('[data-continuar]')!;
   const entrada = formCodigo.elements.namedItem('codigo') as HTMLInputElement;
   const campoConsumo = formCuenta.elements.namedItem('consumo') as HTMLInputElement;
   const campoPersonas = formCuenta.elements.namedItem('personas') as HTMLInputElement;
   const registrar = $<HTMLButtonElement>('[data-registrar]')!;
   const AYUDA_PERSONAS = $('[data-ayuda-personas]')!.textContent ?? '';
+  const MENSAJE_SIN_VALOR = 'Ingresa el valor total de la cuenta para continuar.';
 
   /* EL ESTADO DEL CLIENTE QUE SE ESTA ATENDIENDO. Todo lo de un
-     cliente vive aqui y "Atender otro cliente" lo vacia entero. El
-     turno invalida respuestas que lleguen tarde de un cliente anterior:
-     sin el, una consulta lenta del cliente A podria pintarse encima
-     del cliente B. */
+     cliente vive aqui y "Escanear siguiente cliente" lo vacia entero.
+     El turno invalida respuestas que lleguen tarde de un cliente
+     anterior: sin el, una consulta lenta del cliente A podria
+     pintarse encima del cliente B. */
   let codigo = '';
   let pendiente: { consumo: number; personas?: number } | null = null;
   let turno = 0;
   let credencial = credencialGuardada();
+  let escaneo: Escaneo | null = null;
+
+  function paraCamara(): void {
+    escaneo?.detener();
+    escaneo = null;
+  }
 
   function ocultaTodo(): void {
+    paraCamara();
+    inicio.hidden = true;
+    escaner.hidden = true;
     formCodigo.hidden = true;
     formCuenta.hidden = true;
     confirmar.hidden = true;
     hecho.hidden = true;
+  }
+
+  function muestra(ok: boolean, lineas: string[]): void {
+    resultado.hidden = false;
+    resultado.className = `piloto__resultado piloto__resultado--${ok ? 'si' : 'no'}`;
+    resultado.innerHTML = '';
+    for (const linea of lineas.filter(Boolean)) {
+      const p = document.createElement('p');
+      p.textContent = linea;
+      resultado.append(p);
+    }
+  }
+
+  function limpiaResultado(): void {
+    resultado.hidden = true;
+    resultado.innerHTML = '';
   }
 
   /* ---------- La credencial manda ---------- */
@@ -236,9 +296,11 @@ import { RUTAS } from '../../../data/api-red';
     $('[data-error-credencial]')!.textContent = mensaje;
   }
 
-  function entra(): void {
+  /** La pantalla de partida: un boton grande para escanear. */
+  function vuelveAlInicio(): void {
+    ocultaTodo();
     formCredencial.hidden = true;
-    formCodigo.hidden = false;
+    inicio.hidden = false;
   }
 
   formCredencial.addEventListener('submit', async (e) => {
@@ -259,22 +321,60 @@ import { RUTAS } from '../../../data/api-red';
     credencial = campo.value.trim();
     guardaCredencial(credencial);
     campo.value = '';
-    entra();
+    vuelveAlInicio();
     if (delQr) void busca(delQr);
   });
 
-  function muestra(ok: boolean, lineas: string[]): void {
-    resultado.hidden = false;
-    resultado.className = `piloto__resultado piloto__resultado--${ok ? 'si' : 'no'}`;
-    resultado.innerHTML = '';
-    for (const linea of lineas.filter(Boolean)) {
-      const p = document.createElement('p');
-      p.textContent = linea;
-      resultado.append(p);
+  /* ---------- Paso 1a: escanear ---------- */
+  function abreManual(motivo?: string): void {
+    ocultaTodo();
+    if (motivo) muestra(false, [motivo]);
+    formCodigo.hidden = false;
+    entrada.focus();
+  }
+
+  async function abreEscaner(): Promise<void> {
+    ocultaTodo();
+    limpiaResultado();
+    escaner.hidden = false;
+    estadoEscaner.textContent = 'Abriendo la cámara…';
+    const mio = turno;
+    let leido = false;
+    try {
+      const abierto = await escanear(video, (texto) => {
+        if (leido || mio !== turno) return;
+        const lectura = codigoDeQr(texto, location.origin, DOMINIO, PILOTO.codigoAliado, RUTAS.validar);
+        if (!lectura.ok) {
+          /* Se sigue mirando: puede que enfocara la carta. Se dice
+             que ese QR no vale, sin cerrar la camara. */
+          estadoEscaner.textContent = lectura.explicacion;
+          escaner.dataset.rechazo = lectura.motivo;
+          return;
+        }
+        leido = true;
+        paraCamara();
+        escaner.hidden = true;
+        entrada.value = lectura.codigo;
+        void busca(lectura.codigo);
+      });
+      if (mio !== turno || escaner.hidden) {
+        abierto.detener();
+        return;
+      }
+      escaneo = abierto;
+      estadoEscaner.textContent = 'Apunta la cámara al QR del cliente';
+    } catch (fallo) {
+      if (mio !== turno) return;
+      const clase = (typeof fallo === 'string' ? fallo : 'ERROR') as FalloCamara;
+      abreManual(MENSAJE_CAMARA[clase] ?? MENSAJE_CAMARA.ERROR);
     }
   }
 
-  /* ---------- Paso 1: buscar el codigo ---------- */
+  for (const b of $$('[data-escanear]')) b.addEventListener('click', () => void abreEscaner());
+  for (const b of $$('[data-manual]')) b.addEventListener('click', () => abreManual());
+  $('[data-cancelar-escaneo]')!.addEventListener('click', vuelveAlInicio);
+
+  /* ---------- Paso 1b: buscar el codigo ---------- */
   async function busca(texto: string): Promise<void> {
     const mio = turno;
     const lectura = leerCodigo(texto, PILOTO.codigoAliado);
@@ -295,6 +395,7 @@ import { RUTAS } from '../../../data/api-red';
     if (!respuesta.ok || !respuesta.datos) {
       formCuenta.hidden = true;
       muestra(false, [respuesta.explicacion ?? 'No se pudo consultar el código.']);
+      inicio.hidden = false;
       return;
     }
 
@@ -310,11 +411,13 @@ import { RUTAS } from '../../../data/api-red';
     if (t.estado === 'NO_REDIMIDO') {
       formCuenta.hidden = true;
       muestra(false, ['Este código se cerró sin consumo.']);
+      inicio.hidden = false;
       return;
     }
     if (t.vigente === false) {
       formCuenta.hidden = true;
       muestra(false, ['Este código caducó.', 'Vale hasta el final del día en que se activa.']);
+      inicio.hidden = false;
       return;
     }
 
@@ -324,10 +427,9 @@ import { RUTAS } from '../../../data/api-red';
       campoPersonas.value = String(previstas);
       $('[data-ayuda-personas]')!.textContent = 'Lo dijo el cliente al activar. Corrígelo si cambió.';
     }
-    formCodigo.hidden = true;
+    ocultaTodo();
     formCuenta.hidden = false;
-    confirmar.hidden = true;
-    hecho.hidden = true;
+    marcaValor();
     campoConsumo.focus();
   }
 
@@ -336,24 +438,48 @@ import { RUTAS } from '../../../data/api-red';
     void busca(entrada.value);
   });
 
-  /* ---------- Paso 2: el valor, formateado mientras se escribe ----------
-     El campo muestra "$ 100.000"; el entero se saca de los digitos. */
+  /* ---------- Paso 2: el valor ----------
+     El campo empieza VACIO de verdad: el "Ej: $ 100.000" es un
+     placeholder, no un valor, y valorEntero('') es undefined. */
+  function valorValido(): number | undefined {
+    const v = valorEntero(campoConsumo.value);
+    return v !== undefined && v >= 1 && v <= MAX_CONSUMO ? v : undefined;
+  }
+
+  function marcaValor(): void {
+    continuar.setAttribute('aria-disabled', valorValido() === undefined ? 'true' : 'false');
+  }
+
+  function errorDeValor(texto: string): void {
+    errorCuenta.hidden = false;
+    errorCuenta.textContent = texto;
+    campoConsumo.setAttribute('aria-invalid', 'true');
+    campoConsumo.focus();
+  }
+
+  function limpiaErrorDeValor(): void {
+    errorCuenta.hidden = true;
+    errorCuenta.textContent = '';
+    campoConsumo.removeAttribute('aria-invalid');
+  }
+
   campoConsumo.addEventListener('input', () => {
     campoConsumo.value = formateaMientrasEscribe(campoConsumo.value);
-    errorCuenta.hidden = true;
+    limpiaErrorDeValor();
+    marcaValor();
   });
 
   formCuenta.addEventListener('submit', (e) => {
     e.preventDefault();
     if (!codigo) return;
-    const consumo = valorEntero(campoConsumo.value);
-    if (consumo === undefined || consumo < 1 || consumo > MAX_CONSUMO) {
-      errorCuenta.hidden = false;
-      errorCuenta.textContent =
-        consumo !== undefined && consumo > MAX_CONSUMO
+    const bruto = valorEntero(campoConsumo.value);
+    const consumo = valorValido();
+    if (consumo === undefined) {
+      errorDeValor(
+        bruto !== undefined && bruto > MAX_CONSUMO
           ? `El valor no puede pasar de ${formatoCop(MAX_CONSUMO)}.`
-          : 'Escribe el valor de la cuenta.';
-      campoConsumo.focus();
+          : MENSAJE_SIN_VALOR,
+      );
       return;
     }
     if (!campoPersonas.checkValidity()) {
@@ -389,9 +515,7 @@ import { RUTAS } from '../../../data/api-red';
     const credito = t.credito;
     $('[data-fila-credito]')!.hidden = credito === undefined;
     $('[data-credito]')!.textContent = credito === undefined ? '' : formatoCop(credito);
-    formCodigo.hidden = true;
-    formCuenta.hidden = true;
-    confirmar.hidden = true;
+    ocultaTodo();
     hecho.hidden = false;
     hecho.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -441,10 +565,9 @@ import { RUTAS } from '../../../data/api-red';
   });
 
   /* ---------- Paso 4: el siguiente cliente ----------
-     Vacia TODO lo del anterior y vuelve a la busqueda. Tambien quita
-     ?c= de la direccion: recargar no debe traer de vuelta al cliente
-     que ya se fue. */
-  $('[data-otro-cliente]')!.addEventListener('click', () => {
+     Vacia TODO lo del anterior. Tambien quita ?c= de la direccion:
+     recargar no debe traer de vuelta al cliente que ya se fue. */
+  function olvidaCliente(): void {
     turno++;
     codigo = '';
     pendiente = null;
@@ -452,25 +575,38 @@ import { RUTAS } from '../../../data/api-red';
     campoConsumo.value = '';
     campoPersonas.value = '';
     $('[data-ayuda-personas]')!.textContent = AYUDA_PERSONAS;
-    errorCuenta.hidden = true;
+    limpiaErrorDeValor();
+    marcaValor();
     avisoCredito.hidden = true;
-    resultado.hidden = true;
-    resultado.innerHTML = '';
+    limpiaResultado();
     history.replaceState(null, '', RUTAS.validar);
-    ocultaTodo();
-    formCodigo.hidden = false;
     window.scrollTo({ top: 0 });
-    entrada.focus();
+  }
+
+  $('[data-otro-cliente]')!.addEventListener('click', () => {
+    olvidaCliente();
+    void abreEscaner();
+  });
+  $('[data-otro-manual]')!.addEventListener('click', () => {
+    olvidaCliente();
+    abreManual();
   });
 
-  /* ---------- Entrada por QR ----------
-     El codigo del QR se deja escrito, pero no se consulta nada hasta
-     que haya credencial: el QR identifica al cliente, no autoriza. */
+  /* Si la pestana se va a segundo plano, la camara se suelta. */
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && escaneo) vuelveAlInicio();
+  });
+
+  /* ---------- Entrada por QR desde la camara del sistema ----------
+     Si el empleado escanea con la app de camara del telefono, llega
+     aqui con ?c=. El codigo se deja escrito, pero no se consulta nada
+     hasta que haya credencial: el QR identifica al cliente, no
+     autoriza. */
   const delQr = new URLSearchParams(location.search).get('c');
   if (delQr) entrada.value = delQr.toUpperCase();
 
   if (credencial) {
-    entra();
+    vuelveAlInicio();
     if (delQr) void busca(delQr);
   } else {
     pideCredencial();
