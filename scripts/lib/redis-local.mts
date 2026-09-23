@@ -5,7 +5,7 @@
    HTTP que habla el protocolo REST de Upstash / Vercel KV: se manda
    la orden como array JSON y se contesta {"result": ...}.
 
-   Con esto, el codigo de produccion -api/_almacen.ts- se ejecuta sin
+   Con esto, el codigo de produccion -servidor/_almacen.ts- se ejecuta sin
    cambiar una linea contra un Redis real, incluidos sus scripts Lua.
    Eso es lo que permite demostrar la atomicidad en vez de afirmarla:
    quien ejecuta el compare-and-set es Redis, no una imitacion

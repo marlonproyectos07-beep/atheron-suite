@@ -12,7 +12,7 @@
 
    1. CUALQUIERA PODIA DECLARAR UNA VENTA.
       Redimir y cerrar exigen ahora credencial de operador del
-      aliado (api/_autorizacion.ts). El codigo del cliente identifica
+      aliado (servidor/_autorizacion.ts). El codigo del cliente identifica
       una visita; no autoriza a mover dinero.
 
    2. DOS REDENCIONES SIMULTANEAS PASABAN LAS DOS.
