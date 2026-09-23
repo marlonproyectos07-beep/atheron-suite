@@ -29,6 +29,21 @@
    credencial del local, que se teclea una vez por pestana y viaja en
    cabecera. El QR sigue sin llevar ningun secreto.
 
+   LO QUE VE EL EMPLEADO, Y LO QUE NO (prueba lateral, sept. 2026)
+
+   Ve: cliente verificado, el valor que escribe ya formateado, una
+   confirmacion con ese valor en grande, "Consumo registrado" y el
+   Credito Atheron que gano el cliente, para decirselo en voz alta.
+   No ve: la comision, el margen, el reparto, la conciliacion ni
+   ninguna explicacion de como funciona por dentro. Todo eso sigue
+   calculandose y guardandose en el servidor; solo sale de aqui.
+
+   EL VALOR SE ESCRIBE COMO EN UNA CALCULADORA
+
+   100000 se pinta "$ 100.000" mientras se teclea. Lo que viaja al
+   servidor es el entero que se congela al pulsar "Continuar", no el
+   texto del campo: ver src/data/importe.ts.
+
    REINTENTAR ES SEGURO
 
    Si la conexion se cae despues de confirmar, volver a pulsar no
@@ -39,37 +54,30 @@
 import Base from '../../../layouts/Base.astro';
 import RedPie from '../../../components/RedPie.astro';
 import { PILOTO } from '../../../data/piloto-la-triada';
-import { REGLA } from '../../../data/economia-red';
 import { MAX_PERSONAS } from '../../../data/transacciones-red';
 import { RUTAS } from '../../../data/api-red';
 ---
 
 <Base
-  titulo={`Confirmar consumo | Red Atheron × ${PILOTO.aliado}`}
-  descripcion="Página interna del piloto Atheron × La Triada. No es una página pública del sitio."
+  titulo={`Registrar consumo | ${PILOTO.aliado} · Atheron`}
+  descripcion="Pantalla del personal de La Triada. No es una página pública del sitio."
   ruta={RUTAS.validar}
   indexable={false}
   seguirEnlaces={false}
   jsonLd={null}
-  avisoBorrador={`Piloto interno ${PILOTO.id} · ATH-LOOP-002. Pantalla del aliado.`}
   hojasExtra={['piloto']}
 >
   <main id="contenido" class="piloto">
-    <p class="piloto__interna">{PILOTO.aliado} · Red Atheron</p>
-    <h1 class="piloto__titulo">Confirmar consumo</h1>
+    <p class="piloto__interna">{PILOTO.aliado} · Atheron</p>
+    <h1 class="piloto__titulo">Registrar consumo</h1>
 
     {/* --- La credencial del local, una vez por pestana ---
          Se pinta VISIBLE desde el HTML, sin esperar al guion: es el
-         estado real de una pestana recien abierta, que es el caso
-         normal. Pintarla oculta y descubrirla con JavaScript movia
-         la pagina al cargar, y eso -ademas de verse mal- cuenta como
-         desplazamiento de diseno en la medida de rendimiento. */}
+         estado real de una pestana recien abierta. Pintarla oculta y
+         descubrirla con JavaScript movia la pagina al cargar. */}
     <form class="piloto__tarjeta" data-form-credencial novalidate>
       <h2>Credencial de {PILOTO.aliado}</h2>
-      <p>
-        Esta pantalla registra consumos y comisiones, así que es del personal del local.
-        Pídele la credencial a Atheron si no la tienes.
-      </p>
+      <p>Esta pantalla es del personal del local. Pídele la credencial a Atheron si no la tienes.</p>
       <label class="piloto__campo">
         <span>Credencial</span>
         <input name="credencial" type="password" autocomplete="off" required />
@@ -79,7 +87,7 @@ import { RUTAS } from '../../../data/api-red';
       <p class="piloto__pie-dato" data-error-credencial role="status" aria-live="polite"></p>
     </form>
 
-    {/* --- Sin codigo en la direccion: se teclea --- */}
+    {/* --- Paso 1: escanear o teclear el codigo --- */}
     <form class="piloto__tarjeta" data-form-codigo hidden novalidate>
       <label class="piloto__campo piloto__campo--codigo">
         <span>Código del cliente</span>
@@ -94,57 +102,68 @@ import { RUTAS } from '../../../data/api-red';
           maxlength="16"
           required
         />
-        <span class="piloto__ayuda">Escanea su QR, o teclea el código. Nunca lleva O, I, L, 0 ni 1.</span>
+        <span class="piloto__ayuda">Escanea su QR con la cámara, o teclea el código.</span>
       </label>
       <button class="piloto__boton" type="submit">Buscar</button>
     </form>
 
     <div class="piloto__resultado" data-resultado hidden role="status" aria-live="polite"></div>
 
-    {/* --- El unico dato que se pide --- */}
+    {/* --- Paso 2: valor de la cuenta y personas --- */}
     <form class="piloto__tarjeta" data-form-cuenta hidden novalidate>
       <label class="piloto__campo piloto__campo--importe">
         <span>Valor de la cuenta</span>
         <input
           name="consumo"
-          type="number"
+          type="text"
           inputmode="numeric"
-          min="1"
-          max="50000000"
-          step="1"
-          placeholder="120000"
+          autocomplete="off"
+          enterkeyhint="next"
+          placeholder="$ 120.000"
+          maxlength="14"
           required
         />
-        <span class="piloto__ayuda">En pesos, sin puntos. El cliente paga la cuenta completa.</span>
+        <span class="piloto__ayuda">Escribe solo números. El cliente paga la cuenta completa.</span>
       </label>
 
       <label class="piloto__campo">
         <span>Personas</span>
         <input name="personas" type="number" inputmode="numeric" min="1" max={MAX_PERSONAS} />
-        <span class="piloto__ayuda" data-ayuda-personas>Opcional.</span>
+        <span class="piloto__ayuda" data-ayuda-personas>Cuántas personas comieron en la mesa.</span>
       </label>
 
-      <button class="piloto__boton piloto__boton--grande" type="submit">Confirmar consumo</button>
+      <p class="piloto__pie-dato" data-error-cuenta role="alert" hidden></p>
+
+      <button class="piloto__boton piloto__boton--grande" type="submit">Continuar</button>
       <button class="piloto__boton piloto__boton--secundario" type="button" data-sin-consumo>
         No consumió
       </button>
     </form>
 
-    {/* --- Hecho --- */}
+    {/* --- Paso 3: confirmar lo que se va a registrar --- */}
+    <div class="piloto__tarjeta" data-confirmar hidden>
+      <h2>Revisa antes de registrar</h2>
+      <ul class="piloto__cuenta">
+        <li><span>Valor de la cuenta</span> <strong data-confirmar-consumo></strong></li>
+        <li><span>Personas</span> <strong data-confirmar-personas></strong></li>
+      </ul>
+      <div class="piloto__botones">
+        <button class="piloto__boton piloto__boton--grande" type="button" data-registrar>Confirmar consumo</button>
+        <button class="piloto__boton piloto__boton--secundario" type="button" data-corregir>Corregir</button>
+      </div>
+    </div>
+
+    {/* --- Paso 4: hecho --- */}
     <div class="piloto__tarjeta" data-hecho hidden>
       <h2 data-titulo-hecho>Consumo registrado</h2>
-      <p><span class="piloto__estado" data-insignia></span></p>
       <ul class="piloto__cuenta">
         <li><span>Cuenta del cliente</span> <strong data-consumo></strong></li>
-        <li><span>Comisión Atheron ({REGLA.comisionPct}%)</span> <strong data-comision></strong></li>
+        <li data-fila-credito><span>Crédito Atheron generado</span> <strong data-credito></strong></li>
       </ul>
-      <p class="piloto__pie-dato">
-        Queda registrado en Atheron. No hay que enviar nada: entra en la conciliación semanal.
-      </p>
-      <div class="piloto__botones">
-        <a class="piloto__boton piloto__boton--secundario" href={RUTAS.validar}>Atender a otro cliente</a>
-      </div>
       <p class="piloto__pie-dato" data-credito-pendiente hidden></p>
+      <div class="piloto__botones">
+        <button class="piloto__boton piloto__boton--grande" type="button" data-otro-cliente>Atender otro cliente</button>
+      </div>
     </div>
 
     <noscript>
@@ -154,13 +173,15 @@ import { RUTAS } from '../../../data/api-red';
       </div>
     </noscript>
 
-    <RedPie actual={RUTAS.validar} tecnico={true} />
+    <RedPie actual={RUTAS.validar} />
   </main>
 </Base>
 
 <script>
   import { leerCodigo } from '../../../data/codigos-referido';
-  import { ETIQUETA_ESTADO, PILOTO, pesos } from '../../../data/piloto-la-triada';
+  import { PILOTO } from '../../../data/piloto-la-triada';
+  import { formatoCop, formateaMientrasEscribe, valorEntero } from '../../../data/importe';
+  import { MAX_CONSUMO } from '../../../data/transacciones-red';
   import {
     compruebaCredencial,
     consultar,
@@ -169,6 +190,7 @@ import { RUTAS } from '../../../data/api-red';
     olvidaCredencial,
     redimir,
     cerrarSinConsumo,
+    RUTAS,
     type TransaccionVista,
   } from '../../../data/api-red';
 
@@ -177,26 +199,40 @@ import { RUTAS } from '../../../data/api-red';
   const formCredencial = $<HTMLFormElement>('[data-form-credencial]')!;
   const formCodigo = $<HTMLFormElement>('[data-form-codigo]')!;
   const formCuenta = $<HTMLFormElement>('[data-form-cuenta]')!;
+  const confirmar = $('[data-confirmar]')!;
   const hecho = $('[data-hecho]')!;
   const resultado = $('[data-resultado]')!;
+  const errorCuenta = $('[data-error-cuenta]')!;
+  const avisoCredito = $('[data-credito-pendiente]')!;
   const entrada = formCodigo.elements.namedItem('codigo') as HTMLInputElement;
   const campoConsumo = formCuenta.elements.namedItem('consumo') as HTMLInputElement;
   const campoPersonas = formCuenta.elements.namedItem('personas') as HTMLInputElement;
-  const enviar = formCuenta.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+  const registrar = $<HTMLButtonElement>('[data-registrar]')!;
+  const AYUDA_PERSONAS = $('[data-ayuda-personas]')!.textContent ?? '';
 
+  /* EL ESTADO DEL CLIENTE QUE SE ESTA ATENDIENDO. Todo lo de un
+     cliente vive aqui y "Atender otro cliente" lo vacia entero. El
+     turno invalida respuestas que lleguen tarde de un cliente anterior:
+     sin el, una consulta lenta del cliente A podria pintarse encima
+     del cliente B. */
   let codigo = '';
+  let pendiente: { consumo: number; personas?: number } | null = null;
+  let turno = 0;
   let credencial = credencialGuardada();
 
-  /* ---------- La credencial manda ----------
-     Sin ella no se pinta ni el campo del codigo: la pantalla no
-     existe para quien no es del local. */
+  function ocultaTodo(): void {
+    formCodigo.hidden = true;
+    formCuenta.hidden = true;
+    confirmar.hidden = true;
+    hecho.hidden = true;
+  }
+
+  /* ---------- La credencial manda ---------- */
   function pideCredencial(mensaje = ''): void {
     credencial = '';
     olvidaCredencial();
+    ocultaTodo();
     formCredencial.hidden = false;
-    formCodigo.hidden = true;
-    formCuenta.hidden = true;
-    hecho.hidden = true;
     $('[data-error-credencial]')!.textContent = mensaje;
   }
 
@@ -238,8 +274,9 @@ import { RUTAS } from '../../../data/api-red';
     }
   }
 
-  /* ---------- Buscar el codigo ---------- */
+  /* ---------- Paso 1: buscar el codigo ---------- */
   async function busca(texto: string): Promise<void> {
+    const mio = turno;
     const lectura = leerCodigo(texto, PILOTO.codigoAliado);
     if (!lectura.valido) {
       formCuenta.hidden = true;
@@ -249,6 +286,7 @@ import { RUTAS } from '../../../data/api-red';
 
     muestra(true, ['Consultando…']);
     const respuesta = await consultar(lectura.codigo, credencial);
+    if (mio !== turno) return;
 
     if (respuesta.motivo === 'NO_AUTORIZADO') {
       pideCredencial('La credencial ha caducado. Vuelve a entrar.');
@@ -281,15 +319,14 @@ import { RUTAS } from '../../../data/api-red';
     }
 
     const previstas = t.personasPrevistas;
-    muestra(true, [
-      'Cliente Atheron verificado.',
-      previstas ? `Dijo que venían ${previstas}.` : '',
-    ]);
+    muestra(true, ['Cliente Atheron verificado.', previstas ? `Dijo que venían ${previstas}.` : '']);
     if (previstas) {
       campoPersonas.value = String(previstas);
       $('[data-ayuda-personas]')!.textContent = 'Lo dijo el cliente al activar. Corrígelo si cambió.';
     }
+    formCodigo.hidden = true;
     formCuenta.hidden = false;
+    confirmar.hidden = true;
     hecho.hidden = true;
     campoConsumo.focus();
   }
@@ -299,57 +336,88 @@ import { RUTAS } from '../../../data/api-red';
     void busca(entrada.value);
   });
 
-  /* ---------- Confirmar ---------- */
+  /* ---------- Paso 2: el valor, formateado mientras se escribe ----------
+     El campo muestra "$ 100.000"; el entero se saca de los digitos. */
+  campoConsumo.addEventListener('input', () => {
+    campoConsumo.value = formateaMientrasEscribe(campoConsumo.value);
+    errorCuenta.hidden = true;
+  });
+
+  formCuenta.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!codigo) return;
+    const consumo = valorEntero(campoConsumo.value);
+    if (consumo === undefined || consumo < 1 || consumo > MAX_CONSUMO) {
+      errorCuenta.hidden = false;
+      errorCuenta.textContent =
+        consumo !== undefined && consumo > MAX_CONSUMO
+          ? `El valor no puede pasar de ${formatoCop(MAX_CONSUMO)}.`
+          : 'Escribe el valor de la cuenta.';
+      campoConsumo.focus();
+      return;
+    }
+    if (!campoPersonas.checkValidity()) {
+      campoPersonas.reportValidity();
+      return;
+    }
+    const personas = Number(campoPersonas.value);
+    /* Se congela AQUI: lo que se confirma es exactamente lo que se ve. */
+    pendiente = {
+      consumo,
+      personas: campoPersonas.value && Number.isInteger(personas) && personas > 0 ? personas : undefined,
+    };
+    $('[data-confirmar-consumo]')!.textContent = formatoCop(consumo);
+    $('[data-confirmar-personas]')!.textContent = pendiente.personas ? String(pendiente.personas) : '—';
+    formCuenta.hidden = true;
+    confirmar.hidden = false;
+    registrar.focus();
+  });
+
+  $('[data-corregir]')!.addEventListener('click', () => {
+    pendiente = null;
+    confirmar.hidden = true;
+    formCuenta.hidden = false;
+    campoConsumo.focus();
+  });
+
+  /* ---------- Paso 3: registrar ---------- */
   function cierra(t: TransaccionVista, titulo = 'Consumo registrado'): void {
     $('[data-titulo-hecho]')!.textContent = titulo;
-    const insignia = $('[data-insignia]')!;
-    insignia.textContent = ETIQUETA_ESTADO[t.estado];
-    insignia.className = `piloto__estado piloto__estado--${t.estado === 'REDIMIDO' ? 'redimido' : 'no-redimido'}`;
-    /* La vista del operador viene plana desde el servidor -consumo y
-       comision sueltos-, no con la transaccion entera dentro: es la
-       lista blanca, y por eso aqui no hay ningun objeto "economia". */
-    $('[data-consumo]')!.textContent = t.consumo === undefined ? '—' : pesos(t.consumo);
-    $('[data-comision]')!.textContent = t.comision === undefined ? '—' : pesos(t.comision);
+    $('[data-consumo]')!.textContent = t.consumo === undefined ? '—' : formatoCop(t.consumo);
+    /* El credito sale de la economia guardada de ESTA transaccion
+       (regla congelada al activar). No se recalcula aqui. */
+    const credito = t.credito;
+    $('[data-fila-credito]')!.hidden = credito === undefined;
+    $('[data-credito]')!.textContent = credito === undefined ? '' : formatoCop(credito);
+    formCodigo.hidden = true;
     formCuenta.hidden = true;
+    confirmar.hidden = true;
     hecho.hidden = false;
     hecho.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  formCuenta.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!codigo || !formCuenta.checkValidity()) {
-      formCuenta.reportValidity();
-      return;
-    }
-
-    enviar.disabled = true;
-    enviar.textContent = 'Confirmando…';
-    const personas = Number(campoPersonas.value);
-    const respuesta = await redimir(
-      {
-        codigo,
-        consumo: Number(campoConsumo.value),
-        personas: Number.isFinite(personas) && personas > 0 ? personas : undefined,
-      },
-      credencial,
-    );
-    enviar.disabled = false;
-    enviar.textContent = 'Confirmar consumo';
+  registrar.addEventListener('click', async () => {
+    if (!codigo || !pendiente) return;
+    const mio = turno;
+    registrar.disabled = true;
+    registrar.textContent = 'Registrando…';
+    const respuesta = await redimir({ codigo, consumo: pendiente.consumo, personas: pendiente.personas }, credencial);
+    registrar.disabled = false;
+    registrar.textContent = 'Confirmar consumo';
+    if (mio !== turno) return;
 
     if (respuesta.motivo === 'NO_AUTORIZADO') {
       pideCredencial('La credencial ha caducado. Vuelve a entrar y repite el registro.');
       return;
     }
     if (respuesta.ok && respuesta.datos) {
-      /* Si ya estaba redimida, no es un error: alguien reintento, o
-         la conexion se cayo justo despues de la primera vez. */
+      /* Si ya estaba redimida no es un error: alguien reintento, o la
+         conexion se cayo justo despues de la primera vez. */
       muestra(true, [respuesta.yaRedimida ? 'Ya estaba registrado. No se ha cobrado dos veces.' : 'Registrado.']);
       cierra(respuesta.datos, respuesta.yaRedimida ? 'Ya estaba registrado' : 'Consumo registrado');
-      /* Si la venta quedo registrada pero su credito no se pudo
-         emitir, se dice: es un pendiente de Atheron, no del local. */
-      const aviso = $('[data-credito-pendiente]')!;
-      aviso.hidden = respuesta.creditoPendiente !== true;
-      aviso.textContent = 'El consumo está registrado. El crédito del cliente quedó pendiente de emisión.';
+      avisoCredito.hidden = respuesta.creditoPendiente !== true;
+      avisoCredito.textContent = 'El consumo está registrado. El crédito del cliente se emitirá más tarde.';
+      pendiente = null;
       return;
     }
     muestra(false, [respuesta.explicacion ?? 'No se pudo registrar.']);
@@ -357,7 +425,9 @@ import { RUTAS } from '../../../data/api-red';
 
   $('[data-sin-consumo]')!.addEventListener('click', async () => {
     if (!codigo) return;
+    const mio = turno;
     const respuesta = await cerrarSinConsumo(codigo, credencial);
+    if (mio !== turno) return;
     if (respuesta.motivo === 'NO_AUTORIZADO') {
       pideCredencial('La credencial ha caducado. Vuelve a entrar.');
       return;
@@ -368,6 +438,29 @@ import { RUTAS } from '../../../data/api-red';
       return;
     }
     muestra(false, [respuesta.explicacion ?? 'No se pudo cerrar.']);
+  });
+
+  /* ---------- Paso 4: el siguiente cliente ----------
+     Vacia TODO lo del anterior y vuelve a la busqueda. Tambien quita
+     ?c= de la direccion: recargar no debe traer de vuelta al cliente
+     que ya se fue. */
+  $('[data-otro-cliente]')!.addEventListener('click', () => {
+    turno++;
+    codigo = '';
+    pendiente = null;
+    entrada.value = '';
+    campoConsumo.value = '';
+    campoPersonas.value = '';
+    $('[data-ayuda-personas]')!.textContent = AYUDA_PERSONAS;
+    errorCuenta.hidden = true;
+    avisoCredito.hidden = true;
+    resultado.hidden = true;
+    resultado.innerHTML = '';
+    history.replaceState(null, '', RUTAS.validar);
+    ocultaTodo();
+    formCodigo.hidden = false;
+    window.scrollTo({ top: 0 });
+    entrada.focus();
   });
 
   /* ---------- Entrada por QR ----------

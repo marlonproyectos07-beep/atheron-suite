@@ -647,13 +647,34 @@ var vistaOperador = (t, ahora = /* @__PURE__ */ new Date()) => ({
   personas: t.personas,
   personasPrevistas: t.personasPrevistas,
   consumo: t.economia?.consumo,
-  comision: t.economia?.comision
+  comision: t.economia?.comision,
+  credito: t.economia?.credito
 });
 var rechaza = (motivo) => ({
   ok: false,
   motivo,
   explicacion: EXPLICACION_RECHAZO[motivo]
 });
+function eventoRedencion(t, creditoEmitido) {
+  const e = t.economia;
+  return {
+    aliado: PILOTO.slugAliado,
+    codigo: t.codigo,
+    creditoId: t.creditoId ?? null,
+    redimidoEn: t.redimidoEn ?? null,
+    fuente: t.fuente,
+    personas: t.personas ?? null,
+    consumo: e?.consumo ?? null,
+    comision: e?.comision ?? null,
+    credito: e?.credito ?? null,
+    margen: e?.margen ?? null,
+    comisionPct: e?.comisionPct ?? null,
+    creditoPct: e?.creditoPct ?? null,
+    margenPct: e?.margenPct ?? null,
+    reglaVersion: e?.reglaVersion ?? null,
+    creditoEmitido
+  };
+}
 async function avisa(evento, datos) {
   const destino = process.env.ATHERON_WEBHOOK_EVENTOS;
   if (!destino) return;
@@ -742,16 +763,7 @@ async function redimir(entrada, deposito = almacen(), ahora = /* @__PURE__ */ ne
     };
   }
   const emitido = await emiteCredito(resultado.transaccion, deposito);
-  const e = resultado.transaccion.economia;
-  await avisa("redencion", {
-    codigo: resultado.transaccion.codigo,
-    fuente: resultado.transaccion.fuente,
-    personas: resultado.transaccion.personas ?? null,
-    consumo: e?.consumo ?? null,
-    comision: e?.comision ?? null,
-    credito: e?.credito ?? null,
-    creditoEmitido: emitido
-  });
+  await avisa("redencion", eventoRedencion(resultado.transaccion, emitido));
   return { ok: true, creditoPendiente: !emitido, datos: vistaOperador(resultado.transaccion, ahora) };
 }
 async function cerrar(codigo, deposito = almacen(), ahora = /* @__PURE__ */ new Date()) {

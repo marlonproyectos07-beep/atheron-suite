@@ -142,8 +142,15 @@ export interface VistaOperador {
   personas?: number;
   personasPrevistas?: number;
   consumo?: number;
-  /** El operador sí ve la comisión: es lo que su local le debe a Atheron. */
+  /* La comision sigue viajando por la API del operador (la usa la
+     conciliacion y la prueba adversarial), pero la PANTALLA del local
+     no la pinta: es cuenta entre empresas, no dato de mostrador. */
   comision?: number;
+  /* El credito que gana el cliente, tal y como lo calculo la regla
+     congelada de ESA transaccion. Es lo que el empleado le dice al
+     cliente al cerrar la cuenta ("te ganaste $ 5.000"), asi que se
+     lee de la economia guardada y no se recalcula en la pantalla. */
+  credito?: number;
 }
 
 export function vistaCliente(t: Transaccion, ahora = new Date()): VistaCliente {
@@ -171,6 +178,7 @@ export const vistaOperador = (t: Transaccion, ahora = new Date()): VistaOperador
   personasPrevistas: t.personasPrevistas,
   consumo: t.economia?.consumo,
   comision: t.economia?.comision,
+  credito: t.economia?.credito,
 });
 
 /* Lo que NUNCA sale de aqui, por si alguien viene a anadir un campo:
@@ -204,6 +212,28 @@ const rechaza = <T>(motivo: MotivoRechazo): Respuesta<T> => ({
    No se envia WhatsApp ni correo a nadie desde aqui, y menos al
    cliente: eso necesita consentimiento y decision de direccion.
    ------------------------------------------------------------ */
+/** Carga del evento interno de redencion. Exportada para probarla. */
+export function eventoRedencion(t: Transaccion, creditoEmitido: boolean): Record<string, unknown> {
+  const e = t.economia;
+  return {
+    aliado: PILOTO.slugAliado,
+    codigo: t.codigo,
+    creditoId: t.creditoId ?? null,
+    redimidoEn: t.redimidoEn ?? null,
+    fuente: t.fuente,
+    personas: t.personas ?? null,
+    consumo: e?.consumo ?? null,
+    comision: e?.comision ?? null,
+    credito: e?.credito ?? null,
+    margen: e?.margen ?? null,
+    comisionPct: e?.comisionPct ?? null,
+    creditoPct: e?.creditoPct ?? null,
+    margenPct: e?.margenPct ?? null,
+    reglaVersion: e?.reglaVersion ?? null,
+    creditoEmitido,
+  };
+}
+
 async function avisa(evento: string, datos: Record<string, unknown>): Promise<void> {
   const destino = process.env.ATHERON_WEBHOOK_EVENTOS;
   if (!destino) return;
@@ -416,16 +446,12 @@ export async function redimir(
   }
 
   const emitido = await emiteCredito(resultado.transaccion, deposito);
-  const e = resultado.transaccion.economia;
-  await avisa('redencion', {
-    codigo: resultado.transaccion.codigo,
-    fuente: resultado.transaccion.fuente,
-    personas: resultado.transaccion.personas ?? null,
-    consumo: e?.consumo ?? null,
-    comision: e?.comision ?? null,
-    credito: e?.credito ?? null,
-    creditoEmitido: emitido,
-  });
+  /* El evento INTERNO de la redencion lleva todo lo que Atheron
+     necesita para conciliar sin volver a leer la transaccion: aliado,
+     venta, comision, credito, margen, personas, hora e identificadores.
+     Sale solo si ATHERON_WEBHOOK_EVENTOS esta configurada; sin ella no
+     se envia nada a ningun sitio (ni WhatsApp ni correo). */
+  await avisa('redencion', eventoRedencion(resultado.transaccion, emitido));
 
   return { ok: true, creditoPendiente: !emitido, datos: vistaOperador(resultado.transaccion, ahora) };
 }

@@ -17,6 +17,7 @@
     "prueba-reauditoria": "node --experimental-strip-types --no-warnings scripts/prueba-reauditoria.mts",
     "prueba-vercel": "node --experimental-strip-types --no-warnings scripts/prueba-vercel.mts",
     "prueba-qr": "node --experimental-strip-types --no-warnings scripts/prueba-qr.mts",
+    "prueba-lateral": "node --experimental-strip-types --no-warnings scripts/prueba-lateral.mts",
     "prueba-humo-piloto": "node scripts/prueba-humo-piloto.mjs",
     "prueba-humo-loop002": "node --experimental-strip-types --no-warnings scripts/prueba-humo-loop002.mts",
     "redespliegue-necesario": "node scripts/necesita-redespliegue.mjs",

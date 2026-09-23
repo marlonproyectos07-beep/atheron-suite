@@ -718,3 +718,31 @@ el formato ni el nombre: es que la variable no llegó a ese despliegue.
 - **No se tocó Odoo**, ni se supuso ninguna credencial.
 - **No se fijó ninguna condición que el CEO no haya confirmado**, y lo que es hipótesis se
   llama hipótesis en el código, en la pantalla de control y en el informe.
+
+## Prueba lateral en La Triada (23-sep-2026)
+
+Cambios de pantalla, sin tocar la arquitectura transaccional:
+
+- **Valor de la cuenta** se escribe como en calculadora y se ve en COP
+  (`100000` -> `$ 100.000`). Al servidor viaja el entero congelado al pulsar
+  "Continuar" (`src/data/importe.ts`). Paso de confirmación con el valor en
+  grande antes de registrar.
+- **Personas** se mantiene.
+- **Privacidad comercial**: la pantalla del local ya no muestra comisión,
+  margen, reparto, conciliación ni "Cómo funciona por dentro". Las pantallas
+  del cliente y del local tampoco llevan el aviso "Piloto interno". Todo
+  sigue calculándose y guardándose en el servidor; `/api/redimir` sigue
+  devolviendo la comisión al operador (lo exige la prueba adversarial), pero
+  la pantalla no la pinta.
+- **Resultado**: "Consumo registrado" + "Crédito Atheron generado", leído de
+  la economía guardada de esa transacción (regla congelada), no de un 5% fijo.
+  Para eso `vistaOperador` ahora incluye `credito` (antes no; se actualizó esa
+  aserción en `prueba-loop002`).
+- **Atender otro cliente** limpia todo el estado del anterior (y `?c=`) y
+  vuelve a la búsqueda; un contador de turno descarta respuestas tardías.
+- **Evento interno de redención** (`eventoRedencion`): aliado, venta,
+  comisión, crédito, margen, porcentajes, versión de regla, personas,
+  `redimidoEn`, código de transacción y `creditoId`. Solo se envía si existe
+  `ATHERON_WEBHOOK_EVENTOS`; no hay WhatsApp ni correo automático configurado.
+
+Regresiones: `npm run prueba-lateral` y el recorrido `prueba-humo-loop002`.

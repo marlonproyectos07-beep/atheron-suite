@@ -507,7 +507,8 @@ var vistaOperador = (t, ahora = /* @__PURE__ */ new Date()) => ({
   personas: t.personas,
   personasPrevistas: t.personasPrevistas,
   consumo: t.economia?.consumo,
-  comision: t.economia?.comision
+  comision: t.economia?.comision,
+  credito: t.economia?.credito
 });
 var rechaza = (motivo) => ({
   ok: false,

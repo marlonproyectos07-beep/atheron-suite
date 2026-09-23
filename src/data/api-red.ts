@@ -67,6 +67,8 @@ export interface TransaccionVista {
   fuente?: Fuente;
   personas?: number;
   personasPrevistas?: number;
+  /* Llega con credencial de operador pero la pantalla del local NO
+     la pinta: es cuenta interna entre Atheron y el aliado. */
   comision?: number;
 }
 

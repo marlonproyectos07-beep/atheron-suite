@@ -228,9 +228,10 @@ const almacen = new AlmacenMemoria();
   ok('se redime', primera.ok);
   igual('  consumo', primera.datos!.consumo, 100000);
   igual('  comisión', primera.datos!.comision, 10000);
-  /* El credito del cliente no viaja al operador: no es asunto suyo
-     cuanto se lleva el cliente, solo cuanto debe su local. */
-  ok('  el crédito del cliente no sale hacia el operador', !('credito' in primera.datos!));
+  /* Antes el credito no viajaba al operador. Para la prueba lateral
+     (sept. 2026) direccion pidio lo contrario: el empleado le dice al
+     cliente cuanto credito gano. Viaja el de la regla congelada. */
+  igual('  el crédito del cliente sí sale hacia el operador (regla congelada)', primera.datos!.credito, 5000);
   /* El margen NO viaja al operador: es cuenta interna de Atheron.
      Que no este aqui es la lista blanca funcionando. */
   ok('  el margen no sale hacia el operador', !('margen' in primera.datos!));

@@ -171,6 +171,9 @@ const ok = (nombre: string, condicion: boolean, detalle = ''): void => {
   console.log(`  ${condicion ? 'ok  ' : 'FALLA'} ${nombre}${condicion || !detalle ? '' : `\n        ${detalle}`}`);
   if (!condicion) fallos++;
 };
+const igual = (nombre: string, real: unknown, esperado: unknown): void => {
+  ok(nombre, Object.is(real, esperado), `esperado ${JSON.stringify(esperado)}, llegó ${JSON.stringify(real)}`);
+};
 
 console.log('\n Recorrido comercial completo en un iPhone 13, contra la API real');
 
@@ -259,14 +262,73 @@ const camposLocal = await pagLocal.locator('[data-form-cuenta] input:visible').c
 ok('sólo se le piden dos datos: valor y personas', camposLocal === 2, `${camposLocal} campos`);
 ok('no se le pide ningún porcentaje', !(await pagLocal.locator('[data-form-cuenta]').innerText()).includes('%'));
 
-await pagLocal.locator('input[name="consumo"]').fill('100000');
+/* Se teclea como una persona -digito a digito- para que el formato
+   en vivo actue de verdad, y personas = 5. */
+await pagLocal.locator('input[name="consumo"]').pressSequentially('100000');
+igual('100000 se ve como $ 100.000 mientras se escribe', await pagLocal.locator('input[name="consumo"]').inputValue(), '$ 100.000');
+await pagLocal.locator('input[name="personas"]').fill('5');
 await pagLocal.screenshot({ path: join(SALIDA, '3-local.png'), fullPage: true });
+
+/* Lo que viaja al servidor tiene que ser el ENTERO, no el texto. */
+const cuerpos: unknown[] = [];
+pagLocal.on('request', (r) => {
+  if (r.url().endsWith('/api/redimir') && r.method() === 'POST') cuerpos.push(r.postDataJSON());
+});
+
+await pagLocal.getByRole('button', { name: 'Continuar' }).click();
+await pagLocal.waitForSelector('[data-confirmar]:not([hidden])');
+igual('antes de registrar se muestra el valor que se confirma', (await pagLocal.locator('[data-confirmar-consumo]').innerText()).trim(), '$ 100.000');
+igual('y las personas', (await pagLocal.locator('[data-confirmar-personas]').innerText()).trim(), '5');
 await pagLocal.getByRole('button', { name: 'Confirmar consumo' }).click();
 await pagLocal.waitForSelector('[data-hecho]:not([hidden])');
 
+{
+  const c = cuerpos[0] as { consumo?: unknown; personas?: unknown } | undefined;
+  ok('el backend recibe consumo = 100000 como número entero', c?.consumo === 100000, JSON.stringify(c));
+  ok('y personas = 5 como número entero', c?.personas === 5, JSON.stringify(c));
+  const g = await deposito.lee<{ personas?: number; economia?: { comision?: number; margen?: number } }>('tx', codigo);
+  ok('la comisión se sigue calculando internamente (10.000)', g?.economia?.comision === 10000, JSON.stringify(g?.economia));
+  ok('y el margen interno (5.000)', g?.economia?.margen === 5000);
+  ok('y las personas quedan guardadas', g?.personas === 5);
+}
+
+igual('dice "Consumo registrado"', (await pagLocal.locator('[data-titulo-hecho]').innerText()).trim(), 'Consumo registrado');
 ok('la cuenta del cliente sale entera', (await pagLocal.locator('[data-consumo]').innerText()).includes('100.000'));
-ok('y la comisión Atheron es de 10.000', (await pagLocal.locator('[data-comision]').innerText()).includes('10.000'));
+ok('el crédito del cliente se ve: $ 5.000', (await pagLocal.locator('[data-credito]').innerText()).trim() === '$ 5.000');
+{
+  const visible = await pagLocal.locator('body').innerText();
+  ok('la comisión NO aparece en la pantalla del local', !/comisi[oó]n|10\.000/i.test(visible), visible.slice(0, 300));
+  ok('el margen NO aparece', !/margen/i.test(visible));
+  ok('ni el reparto, la hipótesis o la conciliación', !/reparto|hip[oó]tesis|conciliaci[oó]n|por dentro/i.test(visible));
+}
 await pagLocal.screenshot({ path: join(SALIDA, '4-confirmado.png'), fullPage: true });
+
+/* ---------- 3b. Atender otro cliente: no hereda nada ---------- */
+{
+  const siguiente = await fetch(`${BASE}/api/activar`, { method: 'POST' }).then((r) => r.json() as Promise<{ datos: { codigo: string } }>);
+  await pagLocal.getByRole('button', { name: 'Atender otro cliente' }).click();
+  await pagLocal.waitForSelector('[data-form-codigo]:not([hidden])');
+  ok('"Atender otro cliente" vuelve a la búsqueda', await pagLocal.locator('[data-form-codigo]').isVisible());
+  igual('  con el código vacío', await pagLocal.locator('input[name="codigo"]').inputValue(), '');
+  ok('  sin el resultado anterior', await pagLocal.locator('[data-resultado]').isHidden());
+  ok('  sin la tarjeta de registrado', await pagLocal.locator('[data-hecho]').isHidden());
+  ok('  y sin ?c= en la dirección', !pagLocal.url().includes('?c='), pagLocal.url());
+  await pagLocal.locator('input[name="codigo"]').fill(siguiente.datos.codigo);
+  await pagLocal.getByRole('button', { name: 'Buscar' }).click();
+  await pagLocal.waitForSelector('[data-form-cuenta]:not([hidden])');
+  igual('el segundo cliente no hereda el valor', await pagLocal.locator('input[name="consumo"]').inputValue(), '');
+  igual('ni las personas', await pagLocal.locator('input[name="personas"]').inputValue(), '');
+  await pagLocal.locator('input[name="consumo"]').pressSequentially('1000000');
+  igual('1000000 se ve como $ 1.000.000', await pagLocal.locator('input[name="consumo"]').inputValue(), '$ 1.000.000');
+  await pagLocal.getByRole('button', { name: 'Continuar' }).click();
+  await pagLocal.getByRole('button', { name: 'Confirmar consumo' }).click();
+  await pagLocal.waitForSelector('[data-hecho]:not([hidden])');
+  const g2 = await deposito.lee<{ economia?: { consumo?: number } }>('tx', siguiente.datos.codigo);
+  igual('se registra 1000000 en el segundo, no en el primero', g2?.economia?.consumo, 1000000);
+  igual('y su crédito es $ 50.000', (await pagLocal.locator('[data-credito]').innerText()).trim(), '$ 50.000');
+  const g1 = await deposito.lee<{ economia?: { consumo?: number } }>('tx', codigo);
+  igual('el primero sigue con 100000', g1?.economia?.consumo, 100000);
+}
 
 /* ---------- 4. Doble redención ---------- */
 await pagLocal.goto(`${BASE}/red/la-triada/validar?c=${codigo}`, { waitUntil: 'networkidle' });
@@ -286,9 +348,25 @@ const otra = await fetch(`${BASE}/api/activar`, { method: 'POST' }).then((r) => 
 await pagLocal.goto(`${BASE}/red/la-triada/validar?c=${otra.datos.codigo}`, { waitUntil: 'networkidle' });
 await pagLocal.waitForSelector('[data-form-cuenta]:not([hidden])');
 await pagLocal.locator('input[name="consumo"]').fill('0');
-await pagLocal.getByRole('button', { name: 'Confirmar consumo' }).click();
+await pagLocal.getByRole('button', { name: 'Continuar' }).click();
 await pagLocal.waitForTimeout(300);
 ok('un consumo de cero no se registra', await pagLocal.locator('[data-hecho]').isHidden());
+ok('  ni llega a la confirmación', await pagLocal.locator('[data-confirmar]').isHidden());
+ok('  y se dice qué falta', (await pagLocal.locator('[data-error-cuenta]').innerText()).includes('valor'));
+
+/* Un error del servidor se sigue diciendo claro: la misma pantalla
+   contra un backend que responde 409 con explicacion. */
+await pagLocal.route('**/api/redimir', (ruta) =>
+  ruta.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ ok: false, motivo: 'CADUCADA', explicacion: 'Este código caducó.' }) }),
+);
+await pagLocal.locator('input[name="consumo"]').fill('');
+await pagLocal.locator('input[name="consumo"]').pressSequentially('50000');
+await pagLocal.getByRole('button', { name: 'Continuar' }).click();
+await pagLocal.getByRole('button', { name: 'Confirmar consumo' }).click();
+await pagLocal.waitForSelector('.piloto__resultado--no');
+ok('un error del backend se muestra con su explicación', (await pagLocal.locator('[data-resultado]').innerText()).includes('caducó'));
+ok('  y no se da por registrado', await pagLocal.locator('[data-hecho]').isHidden());
+await pagLocal.unroute('**/api/redimir');
 
 /* ---------- 6. El cliente ve su crédito ---------- */
 await pagina.bringToFront();
