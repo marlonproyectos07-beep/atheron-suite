@@ -107,18 +107,27 @@ import { RUTAS } from '../../../data/api-red';
       <p class="piloto__pie-dato">{COPY_CREDITO.donde} {COPY_CREDITO.vigencia}</p>
     </div>
 
-    {/* --- Ya consumido --- */}
-    <div class="piloto__tarjeta" data-paso="listo" hidden>
-      <h2>Listo</h2>
+    {/* --- Ya consumido ---
+         Aparece SOLO cuando el servidor dice REDIMIDO: sin recargar,
+         porque la pantalla del QR pregunta a /api/estado mientras
+         espera. Solo consumo, credito, vigencia y estado del
+         beneficio: ni comision, ni margen, ni nada del local. */}
+    <div class="piloto__tarjeta piloto__listo" data-paso="listo" hidden tabindex="-1">
+      <h2 data-titulo-listo><span aria-hidden="true">🎉</span> ¡Tu visita fue registrada!</h2>
+      <p class="piloto__listo-gano">Ganaste</p>
+      <p class="piloto__listo-cifra" data-credito></p>
+      <p class="piloto__listo-gano">en Crédito Atheron</p>
       <ul class="piloto__cuenta">
-        <li><span>Tu consumo</span> <strong data-consumo></strong></li>
-        <li><span>Tu Crédito Atheron</span> <strong data-credito></strong></li>
+        <li><span>Tu consumo en {PILOTO.aliado}</span> <strong data-consumo></strong></li>
       </ul>
+      <p>Tu Crédito Atheron quedó registrado.<br /><span data-vigencia-credito></span></p>
       <p class="piloto__pie-dato"><span class="piloto__estado" data-estado-credito></span></p>
-      <p data-vigencia-credito></p>
-      <p class="piloto__pie-dato" data-codigo-credito></p>
       <div class="piloto__botones">
-        <a class="piloto__boton" data-ir-seguimiento href={RUTAS.seguimiento}>¿Cómo te fue?</a>
+        <button class="piloto__boton" type="button" disabled aria-describedby="guardar-pronto">
+          Guardar mi Crédito Atheron
+        </button>
+        <p class="piloto__pie-dato" id="guardar-pronto">Próximamente podrás vincularlo a tu cuenta Atheron.</p>
+        <a class="piloto__boton piloto__boton--secundario" data-ir-seguimiento href={RUTAS.seguimiento}>¿Cómo te fue?</a>
       </div>
     </div>
 
@@ -142,11 +151,12 @@ import { RUTAS } from '../../../data/api-red';
 <script>
   import { qrSvg } from '../../../data/qr';
   import { ETIQUETA_ESTADO, caducaEl, pesos } from '../../../data/piloto-la-triada';
-  import { COPY_CREDITO } from '../../../data/economia-red';
+  import { VIGENCIA_CREDITO_DIAS } from '../../../data/economia-red';
   import { esFuente } from '../../../data/transacciones-red';
   import {
     activar,
     consultar,
+    estadoPublico,
     guardaFuente,
     fuenteGuardada,
     recuerda,
@@ -182,25 +192,8 @@ import { RUTAS } from '../../../data/api-red';
     for (const p of Object.values(pasos)) p.hidden = true;
 
     if (t.estado === 'REDIMIDO' && t.consumo !== undefined) {
-      pasos.listo.hidden = false;
-      $('[data-consumo]')!.textContent = pesos(t.consumo);
-      $('[data-credito]')!.textContent = pesos(t.credito ?? 0);
-
-      /* Lo unico verdadero que se le puede decir hoy: generado y
-         pendiente de vinculacion. Prometer "te lo aplicamos cuando
-         reserves" seria prometer algo que el sistema no puede
-         cumplir, porque no hay forma de saber que quien reserva es
-         quien consumio. Y el identificador y el saldo del credito no
-         se ensenan: conocer un codigo no puede dar acceso a un saldo
-         que todavia no es de nadie. */
-      const insigniaCredito = $('[data-estado-credito]')!;
-      insigniaCredito.textContent = 'Generado, pendiente de vinculación';
-      insigniaCredito.className = 'piloto__estado piloto__estado--activado';
-      $('[data-vigencia-credito]')!.textContent = COPY_CREDITO.pendiente;
-      $('[data-codigo-credito]')!.textContent = COPY_CREDITO.comoReclamar;
-
-      ($('[data-ir-seguimiento]') as HTMLAnchorElement).href =
-        `${RUTAS.seguimiento}?c=${encodeURIComponent(t.codigo)}`;
+      paraEspera();
+      pintaListo(t.codigo, t.consumo, t.credito ?? 0);
       return;
     }
 
@@ -230,7 +223,101 @@ import { RUTAS } from '../../../data/api-red';
       `${location.origin}${RUTAS.validar}?c=${encodeURIComponent(t.codigo)}`,
       `Código ${t.codigo}`,
     ).replace('<svg ', '<svg class="piloto__qr" ');
+
+    if (t.vigente !== false) esperaRegistro(t.codigo);
   }
+
+  /* El cierre de la visita, con los datos REALES de la transaccion.
+     Lo unico verdadero que se puede decir del credito hoy: registrado
+     a nombre de este codigo y pendiente de vinculacion. Decir que es
+     "tuyo" o que "se aplica solo" seria prometer algo que el sistema
+     todavia no puede cumplir. */
+  function pintaListo(codigo: string, consumo: number, credito: number, dias = VIGENCIA_CREDITO_DIAS): void {
+    const yaVisible = !pasos.listo.hidden;
+    for (const p of Object.values(pasos)) p.hidden = true;
+    $('[data-qr]')!.innerHTML = '';
+    pasos.listo.hidden = false;
+    $('[data-consumo]')!.textContent = pesos(consumo);
+    $('[data-credito]')!.textContent = pesos(credito);
+    $('[data-vigencia-credito]')!.textContent = `Vigencia: ${dias} días.`;
+    const insigniaCredito = $('[data-estado-credito]')!;
+    insigniaCredito.textContent = 'Generado, pendiente de vinculación';
+    insigniaCredito.className = 'piloto__estado piloto__estado--activado';
+    ($('[data-ir-seguimiento]') as HTMLAnchorElement).href =
+      `${RUTAS.seguimiento}?c=${encodeURIComponent(codigo)}`;
+    /* Si cambia delante del cliente, el foco va al resultado: asi lo
+       anuncia tambien un lector de pantalla. */
+    if (!yaVisible) pasos.listo.focus();
+  }
+
+  /* ---------- ESPERAR A QUE EL LOCAL REGISTRE ----------
+     Mientras el QR esta en pantalla se pregunta a /api/estado cada
+     pocos segundos. Se para cuando la visita queda REDIMIDA o cerrada,
+     cuando el codigo caduca o no existe, y se pausa con la pestana en
+     segundo plano (al volver se reanuda). Si la red falla, se espacia
+     y se reintenta: un fallo de red no es un final. Si el cliente
+     cierra la pagina, no pasa nada: el registro es del servidor. */
+  const CADA_MS = 4000;
+  const CADA_MS_LENTO = 15000;
+  let esperando: string | null = null;
+  let temporizador: ReturnType<typeof setTimeout> | undefined;
+
+  function paraEspera(): void {
+    esperando = null;
+    clearTimeout(temporizador);
+  }
+
+  function programa(ms: number): void {
+    clearTimeout(temporizador);
+    if (esperando && !document.hidden) temporizador = setTimeout(() => void pregunta(), ms);
+  }
+
+  function esperaRegistro(codigo: string): void {
+    if (esperando === codigo) return;
+    esperando = codigo;
+    programa(CADA_MS);
+  }
+
+  async function pregunta(): Promise<void> {
+    const codigo = esperando;
+    if (!codigo) return;
+    const r = await estadoPublico(codigo);
+    if (esperando !== codigo) return;
+    if (r.ok && r.datos) {
+      const e = r.datos;
+      if (e.estado === 'REDIMIDO' && e.consumo !== undefined) {
+        paraEspera();
+        pintaListo(e.codigo, e.consumo, e.credito ?? 0, e.vigenciaCreditoDias ?? VIGENCIA_CREDITO_DIAS);
+        return;
+      }
+      if (e.estado === 'NO_REDIMIDO') {
+        paraEspera();
+        for (const p of Object.values(pasos)) p.hidden = true;
+        pasos.inicio.hidden = false;
+        avisa('Ese código se cerró sin consumo. Puedes activar otro.');
+        return;
+      }
+      if (e.vigente === false) {
+        paraEspera();
+        avisa('Este código caducó. Puedes activar otro mañana.');
+        return;
+      }
+      programa(CADA_MS);
+      return;
+    }
+    /* 404 o codigo invalido: definitivo, no se insiste. */
+    if (r.motivo === 'NO_EXISTE' || r.motivo === 'CODIGO_INVALIDO') {
+      paraEspera();
+      return;
+    }
+    /* Red caida, servidor ocupado o demasiadas peticiones: mas despacio. */
+    programa(CADA_MS_LENTO);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) clearTimeout(temporizador);
+    else if (esperando) programa(0);
+  });
 
   const boton = $<HTMLButtonElement>('[data-activar]')!;
   const TEXTO_BOTON = boton.textContent ?? '';

@@ -51,7 +51,8 @@ console.log('\n Empaquetado de las funciones de Vercel');
    1. LO VERSIONADO ES LO QUE SALE DE LAS FUENTES
    ------------------------------------------------------------ */
 const nombres = await endpoints();
-ok('hay un endpoint por cada fuente de /servidor', nombres.length === 6, nombres.join(', '));
+/* 7 desde que existe /api/estado (la pantalla del cliente que espera con el QR). */
+ok('hay un endpoint por cada fuente de /servidor', nombres.length === 7, nombres.join(', '));
 
 const antes = new Map<string, string>();
 for (const n of nombres) antes.set(n, await readFile(path.join(SALIDA, `${n}.mjs`), 'utf8'));
@@ -141,6 +142,7 @@ const METODO: Record<string, 'GET' | 'POST'> = {
   redimir: 'POST',
   seguimiento: 'POST',
   transaccion: 'GET',
+  estado: 'GET',
   reporte: 'GET',
   operador: 'GET',
 };

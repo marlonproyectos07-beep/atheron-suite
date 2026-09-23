@@ -268,25 +268,56 @@ function almacen() {
   throw new SinAlmacen();
 }
 
-// src/data/validacion.ts
-var AUSENTE = { fallo: "AUSENTE" };
-function fechaIso(bruto) {
-  if (bruto === void 0 || bruto === null || bruto === "") return AUSENTE;
-  if (typeof bruto !== "string") return { fallo: "TIPO" };
-  const crudo = bruto.trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(crudo)) return { fallo: "TIPO" };
-  const leida = { valor: crudo };
-  const [a, m, d] = leida.valor.split("-").map(Number);
-  const fecha = new Date(Date.UTC(a, m - 1, d));
-  const existe = fecha.getUTCFullYear() === a && fecha.getUTCMonth() === m - 1 && fecha.getUTCDate() === d;
-  if (!existe) return { fallo: "RANGO" };
-  if (a < 2020 || a > 2100) return { fallo: "RANGO" };
-  return { valor: leida.valor };
-}
-
 // src/data/codigos-referido.ts
 var ALFABETO = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 var MODULO = ALFABETO.length;
+var AZAR = 4;
+function semilla(aliado) {
+  let h = 7;
+  for (const c of aliado) h = (h * 33 + c.charCodeAt(0)) % MODULO;
+  return h;
+}
+function caracterControl(aliado, cola) {
+  let suma = semilla(aliado);
+  for (let i = 0; i < cola.length; i++) {
+    const valor = ALFABETO.indexOf(cola[i]);
+    if (valor < 0) throw new Error(`Caracter fuera del alfabeto: ${cola[i]}`);
+    suma = (suma + (i + 2) * valor) % MODULO;
+  }
+  return ALFABETO[suma];
+}
+var EXPLICACION = {
+  vacio: "Escribe el c\xF3digo que aparece en el m\xF3vil del hu\xE9sped.",
+  formato: "Un c\xF3digo tiene esta forma: ATH-TRI-K7M2Q. Revisa que est\xE9n los ocho caracteres despu\xE9s de ATH.",
+  aliado: "Ese c\xF3digo no es de este aliado.",
+  caracter: "Hay un car\xE1cter que los c\xF3digos no usan. Nunca llevan O, I, L, 0 ni 1: mira si es una Q, una J, una S o un 5.",
+  control: "El c\xF3digo no cuadra. Casi siempre es una letra cambiada o dos caracteres al rev\xE9s: vuelve a leerlo del m\xF3vil."
+};
+function normalizar(texto2) {
+  return texto2.trim().toUpperCase().replace(/[\s-]+/g, "");
+}
+function leerCodigo(texto2, aliadoEsperado) {
+  const plano = normalizar(texto2);
+  if (!plano) return { valido: false, codigo: "", motivo: "vacio", explicacion: EXPLICACION.vacio };
+  const encaja = /^ATH([A-Z]{3})([A-Z0-9]{5})$/.exec(plano);
+  if (!encaja) return { valido: false, codigo: plano, motivo: "formato", explicacion: EXPLICACION.formato };
+  const [, aliado, cuerpo] = encaja;
+  const bonito = `ATH-${aliado}-${cuerpo}`;
+  if (aliadoEsperado && aliado !== aliadoEsperado) {
+    return { valido: false, codigo: bonito, aliado, motivo: "aliado", explicacion: EXPLICACION.aliado };
+  }
+  const azar = cuerpo.slice(0, AZAR);
+  const control = cuerpo[AZAR];
+  for (const c of cuerpo) {
+    if (!ALFABETO.includes(c)) {
+      return { valido: false, codigo: bonito, aliado, motivo: "caracter", explicacion: EXPLICACION.caracter };
+    }
+  }
+  if (caracterControl(aliado, azar) !== control) {
+    return { valido: false, codigo: bonito, aliado, motivo: "control", explicacion: EXPLICACION.control };
+  }
+  return { valido: true, codigo: bonito, aliado };
+}
 
 // src/data/whatsapp.ts
 var NUMERO = "573188983167";
@@ -368,6 +399,11 @@ var DESFASE_COLOMBIA_MS = 5 * 60 * 60 * 1e3;
 function diaColombiano(instante) {
   return new Date(instante.getTime() - DESFASE_COLOMBIA_MS).toISOString().slice(0, 10);
 }
+function caducaEl(activadoEn) {
+  const [a, m, d] = diaColombiano(activadoEn).split("-").map(Number);
+  return new Date(Date.UTC(a, m - 1, d + 1, 4, 59, 59, 999));
+}
+var estaVigente = (activadoEn, ahora) => ahora.getTime() <= caducaEl(activadoEn).getTime();
 
 // src/data/economia-red.ts
 var REGLA = {
@@ -434,14 +470,6 @@ var COPY_CREDITO = {
 };
 
 // src/data/transacciones-red.ts
-var ETIQUETA_FUENTE = {
-  "ficha-la-triada": "Ficha de La Triada",
-  "guia-restaurantes": "Gu\xEDa de restaurantes",
-  blog: "Blog",
-  hospedaje: "Hu\xE9sped de Atheron",
-  "qr-local": "QR f\xEDsico en La Triada",
-  directo: "Entrada directa"
-};
 var MAX_PERSONAS = 60;
 var EXPLICACION_RECHAZO = {
   CODIGO_INVALIDO: "Ese c\xF3digo no est\xE1 bien copiado. Vuelve a leerlo del m\xF3vil.",
@@ -453,393 +481,50 @@ var EXPLICACION_RECHAZO = {
   PERSONAS_INVALIDAS: `El n\xFAmero de personas tiene que estar entre 1 y ${MAX_PERSONAS}.`,
   CONFLICTO: "Otro dispositivo estaba registrando esta misma cuenta. Vuelve a consultarla."
 };
-var CABECERA_CONCILIACION = "piloto|codigo|aliado|fuente|originador|activado|redimido|estado|personas|consumo_cop|comision_pct|comision_cop|credito_cop|margen_cop|regla|credito_id|satisfaccion|incidencia";
-var limpio = (t) => t.replace(/[|\r\n]+/g, " ").trim();
-function filaConciliacion(t) {
-  const e = t.economia;
-  return [
-    t.piloto,
-    t.codigo,
-    t.aliado,
-    t.fuente,
-    limpio(t.originador ?? ""),
-    t.activadoEn,
-    t.redimidoEn ?? "",
-    t.estado,
-    t.personas ?? t.personasPrevistas ?? "",
-    e?.consumo ?? "",
-    e?.comisionPct ?? "",
-    e?.comision ?? "",
-    e?.credito ?? "",
-    e?.margen ?? "",
-    e?.reglaVersion ?? "",
-    t.creditoId ?? "",
-    t.seguimiento?.satisfaccion ?? "",
-    t.seguimiento?.incidencia ? "SI" : ""
-  ].join("|");
-}
-
-// src/data/reporte-aliado.ts
-var INTEGRIDAD_LIMPIA = {
-  faltantes: [],
-  sinIndice: [],
-  indicesDivergentes: [],
-  contaminados: [],
-  creditosFaltantes: [],
-  creditosSinObjeto: [],
-  creditosSinIndice: [],
-  creditosContaminados: [],
-  ttlDivergente: [],
-  recuentoIncompleto: []
-};
-var aMediodia = (iso) => /* @__PURE__ */ new Date(`${iso}T12:00:00Z`);
-var soloFecha = (sello) => sello.slice(0, 10);
-function semanaDe(fecha) {
-  const d = aMediodia(fecha);
-  const dia = d.getUTCDay();
-  const atras = dia === 0 ? 6 : dia - 1;
-  const lunes = new Date(d);
-  lunes.setUTCDate(d.getUTCDate() - atras);
-  const domingo = new Date(lunes);
-  domingo.setUTCDate(lunes.getUTCDate() + 6);
-  return { lunes: lunes.toISOString().slice(0, 10), domingo: domingo.toISOString().slice(0, 10) };
-}
-var enSemana = (fecha, semana) => fecha >= semana.lunes && fecha <= semana.domingo;
-function informeSemanal(transacciones, semana, integridad = INTEGRIDAD_LIMPIA) {
-  const faltantes = integridad.faltantes;
-  const activadas = transacciones.filter((t) => enSemana(soloFecha(t.activadoEn), semana));
-  const redimidas = transacciones.filter(
-    (t) => t.estado === "REDIMIDO" && t.redimidoEn && enSemana(soloFecha(t.redimidoEn), semana)
-  );
-  const cerradas = transacciones.filter(
-    (t) => t.estado === "NO_REDIMIDO" && t.redimidoEn && enSemana(soloFecha(t.redimidoEn), semana)
-  );
-  const suma = (lista, f) => lista.reduce((n, t) => n + f(t), 0);
-  const fuentes = /* @__PURE__ */ new Map();
-  for (const t of activadas) {
-    const f = fuentes.get(t.fuente) ?? { activaciones: 0, redenciones: 0 };
-    f.activaciones++;
-    fuentes.set(t.fuente, f);
-  }
-  for (const t of redimidas) {
-    const f = fuentes.get(t.fuente) ?? { activaciones: 0, redenciones: 0 };
-    f.redenciones++;
-    fuentes.set(t.fuente, f);
-  }
-  const reglas = /* @__PURE__ */ new Map();
-  for (const t of redimidas) {
-    const e = t.economia;
-    if (!e) continue;
-    const bloque = reglas.get(e.reglaVersion) ?? {
-      reglaVersion: e.reglaVersion,
-      comisionPct: e.comisionPct,
-      creditoPct: e.creditoPct,
-      redenciones: 0,
-      consumo: 0,
-      comision: 0,
-      credito: 0,
-      margen: 0
-    };
-    bloque.redenciones++;
-    bloque.consumo += e.consumo;
-    bloque.comision += e.comision;
-    bloque.credito += e.credito;
-    bloque.margen += e.margen;
-    reglas.set(e.reglaVersion, bloque);
-  }
-  const opiniones = transacciones.filter(
-    (t) => t.seguimiento?.sello && enSemana(soloFecha(t.seguimiento.sello), semana)
-  );
-  const notas = opiniones.map((t) => t.seguimiento?.satisfaccion).filter((n) => typeof n === "number");
-  const sinEconomia = redimidas.filter((t) => !t.economia).map((t) => t.codigo);
-  const cohorteRedimida = activadas.filter((t) => t.estado === "REDIMIDO").length;
-  const avisos = [];
-  if (REGLA.estadoReparto !== "CONFIRMADA POR CEO") {
-    avisos.push(
-      `El reparto de la comisi\xF3n (${REGLA.creditoPct}% cr\xE9dito / ${REGLA.margenPct}% margen) es una hip\xF3tesis del piloto, no una pol\xEDtica aprobada. La comisi\xF3n total s\xED est\xE1 confirmada.`
-    );
-  }
-  if (REGLA.originadorPct === null) {
-    avisos.push("El originador comercial se registra, pero no se liquida: no hay pol\xEDtica aprobada.");
-  }
-  if (faltantes.length) {
-    avisos.push(
-      `${faltantes.length} registro(s) que el \xEDndice nombra no se pudieron leer. Este informe est\xE1 incompleto y NO sirve para liquidar hasta resolverlo.`
-    );
-  }
-  if (sinEconomia.length) {
-    avisos.push(`${sinEconomia.length} redenci\xF3n(es) sin consumo guardado: revisar antes de facturar.`);
-  }
-  if (integridad.sinIndice.length) {
-    avisos.push(`${integridad.sinIndice.length} transacci\xF3n(es) que ning\xFAn \xEDndice nombra: el informe puede estar dej\xE1ndose ventas fuera.`);
-  }
-  if (integridad.creditosFaltantes.length) {
-    avisos.push(`${integridad.creditosFaltantes.length} cr\xE9dito(s) referenciados por una venta que no existen en el libro.`);
-  }
-  if (integridad.creditosSinObjeto.length) {
-    avisos.push(`${integridad.creditosSinObjeto.length} cr\xE9dito(s) que el \xEDndice nombra y no est\xE1n.`);
-  }
-  if (integridad.creditosSinIndice.length) {
-    avisos.push(`${integridad.creditosSinIndice.length} cr\xE9dito(s) que existen y ning\xFAn \xEDndice nombra.`);
-  }
-  if (integridad.creditosContaminados.length) {
-    avisos.push(`${integridad.creditosContaminados.length} id(s) que no son cr\xE9ditos dentro de un \xEDndice de cr\xE9ditos.`);
-  }
-  if (integridad.recuentoIncompleto.length) {
-    avisos.push("No se pudo recorrer el almac\xE9n entero: este informe no puede declararse completo.");
-  }
-  if (integridad.contaminados.length) {
-    avisos.push(`${integridad.contaminados.length} id(s) que no son transacciones dentro de un \xEDndice de transacciones.`);
-  }
-  if (integridad.indicesDivergentes.length) {
-    avisos.push(`${integridad.indicesDivergentes.length} transacci\xF3n(es) en el \xEDndice de redenciones sin estar redimidas ni cerradas.`);
-  }
-  if (integridad.ttlDivergente.length) {
-    avisos.push(`${integridad.ttlDivergente.length} registro(s) cuyo objeto y su \xEDndice caducan en momentos distintos.`);
-  }
-  if (reglas.size > 1) {
-    avisos.push("En esta semana se aplic\xF3 m\xE1s de una regla econ\xF3mica. Cada bloque se liquida con la suya.");
-  }
-  return {
-    semana,
-    activaciones: activadas.length,
-    personasPrevistas: suma(activadas, (t) => t.personasPrevistas ?? 0),
-    redenciones: redimidas.length,
-    cerradasSinConsumo: cerradas.length,
-    conversion: activadas.length ? Math.round(cohorteRedimida / activadas.length * 1e3) / 10 : 0,
-    cohorteRedimida,
-    personasAtendidas: suma(redimidas, (t) => t.personas ?? 0),
-    consumoAtribuido: suma(redimidas, (t) => t.economia?.consumo ?? 0),
-    comision: suma(redimidas, (t) => t.economia?.comision ?? 0),
-    creditoGenerado: suma(redimidas, (t) => t.economia?.credito ?? 0),
-    margen: suma(redimidas, (t) => t.economia?.margen ?? 0),
-    porFuente: [...fuentes.entries()].map(([fuente, n]) => ({ fuente, etiqueta: ETIQUETA_FUENTE[fuente], ...n })).sort((a, b) => b.activaciones - a.activaciones || a.fuente.localeCompare(b.fuente)),
-    porRegla: [...reglas.values()].sort((a, b) => a.reglaVersion.localeCompare(b.reglaVersion)),
-    satisfaccionMedia: notas.length ? Math.round(notas.reduce((a, b) => a + b, 0) / notas.length * 10) / 10 : null,
-    incidencias: opiniones.filter((t) => t.seguimiento?.incidencia).length,
-    integridad,
-    faltantes,
-    sinEconomia,
-    /* TODOS los movimientos de la semana, no solo los que facturan:
-       con activaciones y cierres dentro, la semana se puede
-       reconstruir entera desde estas filas. */
-    filas: [
-      CABECERA_CONCILIACION,
-      ...[...activadas, ...redimidas, ...cerradas].filter((t, i, lista) => lista.findIndex((o) => o.codigo === t.codigo) === i).sort((a, b) => a.activadoEn.localeCompare(b.activadoEn)).map(filaConciliacion)
-    ],
-    avisos
-  };
-}
-function conciliacionCuadra(informe2) {
-  const i = informe2.integridad;
-  const problemas = [
-    /* El alcance va primero: si no se pudo mirar entero, lo demas no
-       demuestra nada, por mucho que salga vacio. */
-    ["motivo(s) por los que el recuento no est\xE1 completo", i.recuentoIncompleto],
-    ["registro(s) que el \xEDndice nombra y no se pueden leer", i.faltantes],
-    ["transacci\xF3n(es) que ning\xFAn \xEDndice nombra", i.sinIndice],
-    ["id(s) ajenos dentro de un \xEDndice de transacciones", i.contaminados],
-    ["transacci\xF3n(es) con \xEDndice y estado contradictorios", i.indicesDivergentes],
-    ["cr\xE9dito(s) referenciados por una venta que no existen", i.creditosFaltantes],
-    ["cr\xE9dito(s) que el \xEDndice nombra y no est\xE1n", i.creditosSinObjeto],
-    ["cr\xE9dito(s) que existen y ning\xFAn \xEDndice nombra", i.creditosSinIndice],
-    ["id(s) ajenos dentro de un \xEDndice de cr\xE9ditos", i.creditosContaminados],
-    ["registro(s) con retenci\xF3n divergente de su \xEDndice", i.ttlDivergente],
-    ["redenci\xF3n(es) sin consumo guardado", informe2.sinEconomia]
-  ];
-  for (const [que, lista] of problemas) {
-    if (lista.length) {
-      return {
-        cuadra: false,
-        estado: "INCOMPLETO",
-        detalle: `${lista.length} ${que}. No se puede liquidar hasta resolverlo.`
-      };
-    }
-  }
-  if (!informe2.redenciones) {
-    return {
-      cuadra: false,
-      estado: "SIN_DATOS",
-      detalle: informe2.activaciones ? `${informe2.activaciones} activaci\xF3n(es) y ninguna redenci\xF3n en la semana.` : "No hay ninguna transacci\xF3n en esta semana."
-    };
-  }
-  for (const bloque of informe2.porRegla) {
-    if (bloque.credito + bloque.margen !== bloque.comision) {
-      return {
-        cuadra: false,
-        estado: "NO_CUADRA",
-        detalle: `Regla ${bloque.reglaVersion}: cr\xE9dito (${bloque.credito}) + margen (${bloque.margen}) no suman la comisi\xF3n (${bloque.comision}).`
-      };
-    }
-    const esperada = Math.round(bloque.consumo * bloque.comisionPct / 100);
-    if (Math.abs(esperada - bloque.comision) > Math.max(1, bloque.redenciones)) {
-      return {
-        cuadra: false,
-        estado: "NO_CUADRA",
-        detalle: `Regla ${bloque.reglaVersion}: la comisi\xF3n suma ${bloque.comision} y sobre el consumo dar\xEDa ${esperada}.`
-      };
-    }
-  }
-  const total = informe2.porRegla.reduce((n, b) => n + b.comision, 0);
-  if (total !== informe2.comision) {
-    return {
-      cuadra: false,
-      estado: "NO_CUADRA",
-      detalle: `Los bloques por regla suman ${total} y el total dice ${informe2.comision}.`
-    };
-  }
-  return {
-    cuadra: true,
-    estado: "CUADRA",
-    detalle: informe2.porRegla.length === 1 ? `Los totales cuadran con el consumo atribuido (regla ${informe2.porRegla[0].reglaVersion}).` : "Los totales cuadran en cada bloque de regla."
-  };
-}
 
 // servidor/_servicio.ts
 var TX = "tx";
-var CR = "cr";
-var idxActivacion = (dia) => `tx:act:${dia}`;
-var idxRedencion = (dia) => `tx:red:${dia}`;
-var idxCredito = (dia) => `cr:gen:${dia}`;
-var ES_TRANSACCION = /^ATH-[A-Z]{3}-[A-Z0-9]{5}$/;
-var ES_CREDITO = /^ATH-CR-[A-Z0-9]{8}$/;
-var TOLERANCIA_TTL_SEGUNDOS = 24 * 60 * 60;
-var TOPE_COMPROBACION = 500;
-async function informe(fecha, deposito = almacen()) {
-  const semana = semanaDe(fecha);
-  const dias = [];
-  const desde = /* @__PURE__ */ new Date(`${semana.lunes}T12:00:00Z`);
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(desde);
-    d.setUTCDate(desde.getUTCDate() + i);
-    dias.push(d.toISOString().slice(0, 10));
-  }
-  const [listasAct, listasRed, listasCr] = await Promise.all([
-    Promise.all(dias.map((d) => deposito.indice(idxActivacion(d)))),
-    Promise.all(dias.map((d) => deposito.indice(idxRedencion(d)))),
-    Promise.all(dias.map((d) => deposito.indice(idxCredito(d))))
-  ]);
-  const enActivacion = new Set(listasAct.flat());
-  const enRedencion = new Set(listasRed.flat());
-  const todos = [.../* @__PURE__ */ new Set([...enActivacion, ...enRedencion])];
-  const contaminados = todos.filter((id) => !ES_TRANSACCION.test(id));
-  const ids = todos.filter((id) => ES_TRANSACCION.test(id));
-  const { encontrados, faltantes } = await deposito.leeVarios(TX, ids);
-  const escaneo = await deposito.escanea(TX);
-  const conocidas = new Set(ids);
-  const huerfanasTodas = escaneo.ids.filter((id) => !conocidas.has(id));
-  const huerfanas = huerfanasTodas.slice(0, TOPE_COMPROBACION);
-  const { encontrados: sueltas } = huerfanas.length ? await deposito.leeVarios(TX, huerfanas) : { encontrados: [] };
-  const recuentoIncompleto = [];
-  if (escaneo.truncado) {
-    recuentoIncompleto.push("El almac\xE9n tiene m\xE1s transacciones de las que se pudieron recorrer.");
-  }
-  if (huerfanasTodas.length > TOPE_COMPROBACION) {
-    recuentoIncompleto.push(
-      `Se encontraron ${huerfanasTodas.length} transacciones fuera de \xEDndice y solo se comprobaron ${TOPE_COMPROBACION}.`
-    );
-  }
-  const sinIndice = [];
-  for (const t of sueltas) {
-    const dActivacion = t.activadoEn.slice(0, 10);
-    const dCierre = t.redimidoEn?.slice(0, 10);
-    if (dias.includes(dActivacion) || dCierre && dias.includes(dCierre)) sinIndice.push(t.codigo);
-  }
-  const indicesDivergentes = [];
-  const creditosFaltantes = [];
-  const ttlDivergente = [];
-  for (const t of encontrados) {
-    const diaActivacion = t.activadoEn.slice(0, 10);
-    if (dias.includes(diaActivacion) && !enActivacion.has(t.codigo)) sinIndice.push(t.codigo);
-    if (t.redimidoEn) {
-      const diaCierre = t.redimidoEn.slice(0, 10);
-      if (dias.includes(diaCierre) && !enRedencion.has(t.codigo)) sinIndice.push(t.codigo);
-    }
-    if (enRedencion.has(t.codigo) && t.estado !== "REDIMIDO" && t.estado !== "NO_REDIMIDO") {
-      indicesDivergentes.push(t.codigo);
-    }
-    if (t.creditoId && !await deposito.lee(CR, t.creditoId)) creditosFaltantes.push(t.creditoId);
-    try {
-      const vidaTx = await deposito.vida(TX, t.codigo);
-      const vidaAct = await deposito.vidaIndice(idxActivacion(diaActivacion));
-      if (vidaTx >= 0 && vidaAct >= 0 && Math.abs(vidaTx - vidaAct) > TOLERANCIA_TTL_SEGUNDOS) {
-        ttlDivergente.push(t.codigo);
-      }
-      if (t.redimidoEn) {
-        const vidaRed = await deposito.vidaIndice(idxRedencion(t.redimidoEn.slice(0, 10)));
-        if (vidaTx >= 0 && vidaRed >= 0 && Math.abs(vidaTx - vidaRed) > TOLERANCIA_TTL_SEGUNDOS) {
-          ttlDivergente.push(t.codigo);
-        }
-      }
-    } catch (error) {
-      registra("comprobar la retenci\xF3n", error);
-      ttlDivergente.push(t.codigo);
-    }
-  }
-  const enCredito = new Set(listasCr.flat());
-  const creditosContaminados = [...enCredito].filter((id) => !ES_CREDITO.test(id));
-  const idsCredito = [...enCredito].filter((id) => ES_CREDITO.test(id));
-  const { encontrados: creditos, faltantes: creditosSinObjeto } = await deposito.leeVarios(
-    CR,
-    idsCredito
-  );
-  const escaneoCr = await deposito.escanea(CR);
-  const creditosConocidos = new Set(idsCredito);
-  const sueltosTodos = escaneoCr.ids.filter((id) => !creditosConocidos.has(id));
-  const sospechosos = sueltosTodos.slice(0, TOPE_COMPROBACION);
-  const { encontrados: creditosSueltos } = sospechosos.length ? await deposito.leeVarios(CR, sospechosos) : { encontrados: [] };
-  if (escaneoCr.truncado) {
-    recuentoIncompleto.push("El almac\xE9n tiene m\xE1s cr\xE9ditos de los que se pudieron recorrer.");
-  }
-  if (sueltosTodos.length > TOPE_COMPROBACION) {
-    recuentoIncompleto.push(
-      `Se encontraron ${sueltosTodos.length} cr\xE9ditos fuera de \xEDndice y solo se comprobaron ${TOPE_COMPROBACION}.`
-    );
-  }
-  const creditosSinIndice = [];
-  for (const c of creditosSueltos) {
-    if (typeof c.generadoEn === "string" && dias.includes(c.generadoEn.slice(0, 10))) {
-      creditosSinIndice.push(c.id);
-    }
-  }
-  for (const c of creditos) {
-    const diaGeneracion = typeof c.generadoEn === "string" ? c.generadoEn.slice(0, 10) : "";
-    try {
-      const vidaCr = await deposito.vida(CR, c.id);
-      const vidaIdx = diaGeneracion ? await deposito.vidaIndice(idxCredito(diaGeneracion)) : -2;
-      if (vidaCr >= 0 && vidaIdx >= 0 && Math.abs(vidaCr - vidaIdx) > TOLERANCIA_TTL_SEGUNDOS) {
-        ttlDivergente.push(c.id);
-      }
-    } catch (error) {
-      registra("comprobar la retenci\xF3n del cr\xE9dito", error);
-      ttlDivergente.push(c.id);
-    }
-  }
-  const integridad = {
-    faltantes,
-    sinIndice: [...new Set(sinIndice)],
-    indicesDivergentes,
-    contaminados,
-    creditosFaltantes: [...new Set(creditosFaltantes)],
-    creditosSinObjeto,
-    creditosSinIndice: [...new Set(creditosSinIndice)],
-    creditosContaminados,
-    ttlDivergente: [...new Set(ttlDivergente)],
-    recuentoIncompleto
-  };
-  const resultado = informeSemanal([...encontrados, ...sueltas.filter((t) => sinIndice.includes(t.codigo))], semana, integridad);
-  const conciliacion = conciliacionCuadra(resultado);
+function vistaCliente(t, ahora = /* @__PURE__ */ new Date()) {
   return {
-    ok: true,
-    datos: {
-      ...resultado,
-      cuadra: conciliacion.cuadra,
-      estado: conciliacion.estado,
-      detalleConciliacion: conciliacion.detalle
-    }
+    codigo: t.codigo,
+    estado: t.estado,
+    activadoEn: t.activadoEn,
+    redimidoEn: t.redimidoEn,
+    vigente: estaVigente(new Date(t.activadoEn), ahora),
+    consumo: t.economia?.consumo,
+    credito: t.economia?.credito,
+    creditoPendienteVinculacion: t.creditoId ? true : void 0,
+    tieneOpinion: Boolean(t.seguimiento)
   };
 }
-var hoyColombiano = () => diaColombiano(/* @__PURE__ */ new Date());
+var vistaOperador = (t, ahora = /* @__PURE__ */ new Date()) => ({
+  codigo: t.codigo,
+  estado: t.estado,
+  activadoEn: t.activadoEn,
+  redimidoEn: t.redimidoEn,
+  vigente: estaVigente(new Date(t.activadoEn), ahora),
+  fuente: t.fuente,
+  personas: t.personas,
+  personasPrevistas: t.personasPrevistas,
+  consumo: t.economia?.consumo,
+  comision: t.economia?.comision,
+  credito: t.economia?.credito
+});
+var rechaza = (motivo) => ({
+  ok: false,
+  motivo,
+  explicacion: EXPLICACION_RECHAZO[motivo]
+});
+async function consultar(codigo, deposito = almacen(), opciones = {}) {
+  const ahora = opciones.ahora ?? /* @__PURE__ */ new Date();
+  const transaccion = await deposito.lee(TX, codigo);
+  if (!transaccion) return rechaza("NO_EXISTE");
+  return {
+    ok: true,
+    datos: opciones.operador ? vistaOperador(transaccion, ahora) : vistaCliente(transaccion, ahora)
+  };
+}
+var TOLERANCIA_TTL_SEGUNDOS = 24 * 60 * 60;
 function registra(donde, error) {
   const tipo = error instanceof Error ? error.name : typeof error;
   const codigo = error?.codigo;
@@ -886,44 +571,6 @@ var DEMASIADAS = {
 
 // servidor/_autorizacion.ts
 import { createHash, timingSafeEqual } from "node:crypto";
-var variableDe = (aliado) => `ATHERON_OPERADOR_${aliado.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}`;
-var sha256 = (texto2) => createHash("sha256").update(texto2, "utf8").digest();
-function coincide(recibido, esperadoHex) {
-  let esperado;
-  try {
-    esperado = Buffer.from(esperadoHex.trim(), "hex");
-  } catch {
-    return false;
-  }
-  if (esperado.length !== 32) return false;
-  return timingSafeEqual(sha256(recibido), esperado);
-}
-function credencialDe(cabeceras) {
-  const bruta = cabeceras.authorization ?? cabeceras.Authorization;
-  if (Array.isArray(bruta)) return bruta.length === 1 ? analizaCabecera(bruta[0]) : { tipo: "MALFORMADA" };
-  if (bruta === void 0 || bruta === null) return { tipo: "AUSENTE" };
-  if (typeof bruta !== "string") return { tipo: "MALFORMADA" };
-  return analizaCabecera(bruta);
-}
-function analizaCabecera(bruta) {
-  const texto2 = bruta.trim();
-  if (!texto2) return { tipo: "AUSENTE" };
-  const encaja = /^Bearer\s+(\S+)$/i.exec(texto2);
-  if (!encaja) return { tipo: "MALFORMADA" };
-  return { tipo: "PRESENTE", valor: encaja[1] };
-}
-function esOperador(credencial, aliado) {
-  if (!credencial) return false;
-  const esperado = process.env[variableDe(aliado)];
-  if (!esperado) return false;
-  return coincide(credencial, esperado);
-}
-function esAdmin(credencial) {
-  if (!credencial) return false;
-  const esperado = process.env.ATHERON_TOKEN_ADMIN;
-  if (!esperado) return false;
-  return coincide(credencial, esperado);
-}
 function quienLlama(cabeceras) {
   const bruta = cabeceras["x-forwarded-for"] ?? cabeceras["x-real-ip"];
   const texto2 = Array.isArray(bruta) ? bruta[0] : bruta ?? "";
@@ -960,86 +607,35 @@ async function pasaLimite(deposito, endpoint, quien, ahora = /* @__PURE__ */ new
     return true;
   }
 }
-async function autoriza(deposito, cabeceras, papel, aliado, ahora = /* @__PURE__ */ new Date()) {
-  const cabecera = credencialDe(cabeceras);
-  if (cabecera.tipo === "AUSENTE") return "AUSENTE";
-  if (cabecera.tipo === "MALFORMADA") return "MALFORMADA";
-  const quien = quienLlama(cabeceras);
-  const clave2 = cubeta("credencial", quien, ahora);
-  const limite = LIMITES.credencial;
-  let fallos;
-  try {
-    fallos = await deposito.cuenta(clave2);
-  } catch {
-    return "ALMACEN";
-  }
-  if (fallos >= limite.max) return "BLOQUEADO";
-  const vale = papel === "ADMIN" ? esAdmin(cabecera.valor) : esOperador(cabecera.valor, aliado);
-  if (vale) return "OK";
-  try {
-    await deposito.contador(clave2, limite.ventana);
-  } catch {
-    return "ALMACEN";
-  }
-  return "INVALIDA";
-}
-var RESPUESTA_AUTORIZACION = {
-  AUSENTE: {
-    estado: 401,
-    cuerpo: {
-      ok: false,
-      motivo: "NO_AUTORIZADO",
-      explicacion: "Esta pantalla es del personal del local. Hace falta su credencial."
-    }
-  },
-  MALFORMADA: {
-    estado: 400,
-    cuerpo: {
-      ok: false,
-      motivo: "CABECERA_INVALIDA",
-      explicacion: "La credencial se manda como \xABAuthorization: Bearer <credencial>\xBB, una sola vez."
-    }
-  },
-  INVALIDA: {
-    estado: 401,
-    cuerpo: { ok: false, motivo: "NO_AUTORIZADO", explicacion: "Esa credencial no es la de este local." }
-  },
-  BLOQUEADO: {
-    estado: 429,
-    cuerpo: {
-      ok: false,
-      motivo: "DEMASIADAS_PETICIONES",
-      explicacion: "Demasiados intentos fallidos. Espera un rato antes de volver a intentarlo."
-    }
-  },
-  ALMACEN: {
-    estado: 503,
-    cuerpo: { ok: false, motivo: "ALMACEN_INCIERTO" }
-  }
-};
 
-// servidor/reporte.ts
-var reporte_default = maneja("GET", async (peticion) => {
+// servidor/estado.ts
+var estadoPublico = (v) => ({
+  codigo: v.codigo,
+  estado: v.estado,
+  vigente: v.vigente,
+  consumo: v.consumo,
+  credito: v.credito,
+  vigenciaCreditoDias: v.credito !== void 0 && v.credito > 0 ? VIGENCIA_CREDITO_DIAS : void 0
+});
+var estado_default = maneja("GET", async (peticion) => {
   const deposito = almacen();
   const quien = quienLlama(peticion.headers);
-  if (!await pasaLimite(deposito, "reporte", quien)) return DEMASIADAS;
-  const veredicto = await autoriza(deposito, peticion.headers, "ADMIN", "");
-  if (veredicto !== "OK") return RESPUESTA_AUTORIZACION[veredicto];
-  const pedida = parametros(peticion).get("fecha");
-  if (pedida === null) return { cuerpo: await informe(hoyColombiano(), deposito) };
-  const fecha = fechaIso(pedida);
-  if (fecha.valor === void 0) {
+  const lectura = leerCodigo(parametros(peticion).get("c") ?? "", PILOTO.codigoAliado);
+  if (!lectura.valido) {
     return {
       estado: 400,
-      cuerpo: {
-        ok: false,
-        motivo: "FECHA_INVALIDA",
-        explicacion: "La fecha se escribe AAAA-MM-DD y tiene que existir en el calendario."
-      }
+      cuerpo: { ok: false, motivo: "CODIGO_INVALIDO", explicacion: lectura.explicacion ?? EXPLICACION_RECHAZO.CODIGO_INVALIDO }
     };
   }
-  return { cuerpo: await informe(fecha.valor, deposito) };
+  if (!await pasaLimite(deposito, "estado", quien)) return DEMASIADAS;
+  if (!await pasaLimite(deposito, "estadoCodigo", `${quien}:${lectura.codigo}`)) return DEMASIADAS;
+  const resultado = await consultar(lectura.codigo, deposito, { operador: false });
+  if (!resultado.ok || !resultado.datos) {
+    return { estado: 404, cuerpo: { ok: false, motivo: resultado.motivo, explicacion: resultado.explicacion } };
+  }
+  return { estado: 200, cuerpo: { ok: true, datos: estadoPublico(resultado.datos) } };
 });
 export {
-  reporte_default as default
+  estado_default as default,
+  estadoPublico
 };

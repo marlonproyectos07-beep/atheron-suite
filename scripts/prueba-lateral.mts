@@ -22,7 +22,8 @@
    ============================================================ */
 
 import { AlmacenMemoria } from '../servidor/_almacen.ts';
-import { activar, redimir, eventoRedencion } from '../servidor/_servicio.ts';
+import { activar, redimir, eventoRedencion, consultar, type VistaCliente } from '../servidor/_servicio.ts';
+import { estadoPublico } from '../servidor/estado.ts';
 import { digitos, formatoCop, formateaMientrasEscribe, valorEntero } from '../src/data/importe.ts';
 import type { Transaccion } from '../src/data/transacciones-red.ts';
 import { codigoDeQr } from '../src/data/lector-qr.ts';
@@ -162,6 +163,27 @@ console.log('\nBackend');
   ok('  y con una explicación legible', typeof r.explicacion === 'string' && r.explicacion.length > 10);
   const n = await redimir({ codigo: 'ATH-TRI-ZZZZZ', consumo: 1000 }, almacen);
   ok('un código que no existe se dice', !n.ok && n.motivo === 'NO_EXISTE');
+}
+
+/* ---------- Estado publico para la pantalla del cliente ---------- */
+console.log('\nEstado público');
+{
+  const almacen = new AlmacenMemoria();
+  const a = await activar({ fuente: 'hospedaje', personasPrevistas: 2, contacto: '3001234567', consienteSeguimiento: true }, almacen);
+  const codigo = a.datos!.codigo;
+  const antes = estadoPublico((await consultar(codigo, almacen)).datos as VistaCliente);
+  igual('antes de consumir: ACTIVADO', antes.estado, 'ACTIVADO');
+  ok('  sin consumo ni crédito', antes.consumo === undefined && antes.credito === undefined && antes.vigenciaCreditoDias === undefined);
+  await redimir({ codigo, consumo: 100000, personas: 3 }, almacen);
+  const despues = estadoPublico((await consultar(codigo, almacen)).datos as VistaCliente);
+  igual('después: REDIMIDO', despues.estado, 'REDIMIDO');
+  igual('  consumo 100000', despues.consumo, 100000);
+  igual('  crédito 5000', despues.credito, 5000);
+  igual('  vigencia 90 días', despues.vigenciaCreditoDias, 90);
+  igual('  solo campos públicos', Object.keys(despues).sort().join(','), 'codigo,consumo,credito,estado,vigenciaCreditoDias,vigente');
+  ok('  sin comisión, margen, personas, fuente ni contacto', !/comision|margen|personas|fuente|contacto|3001234567/.test(JSON.stringify(despues)));
+  const tx = await almacen.lee<Transaccion>('tx', codigo);
+  igual('  y consultar no crea otra transacción ni cambia la redimida', tx?.economia?.consumo, 100000);
 }
 
 /* ---------- 3. Lo que la pantalla NO dice ---------- */

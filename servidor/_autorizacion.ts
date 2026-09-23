@@ -190,6 +190,12 @@ export interface Limite {
 export const LIMITES: Record<string, Limite> = {
   activar: { max: 20, ventana: 600 },
   transaccion: { max: 60, ventana: 600 },
+  /* /api/estado: la pantalla del cliente pregunta cada ~4 s mientras
+     espera con el QR abierto. Por IP y codigo, 200 en 10 min cubre
+     de sobra 10 minutos de espera; por IP, 1.000 deja sitio a varios
+     clientes en el mismo wifi y sigue cortando a quien recorra codigos. */
+  estado: { max: 1000, ventana: 600 },
+  estadoCodigo: { max: 200, ventana: 600 },
   redimir: { max: 60, ventana: 600 },
   seguimiento: { max: 10, ventana: 600 },
   reporte: { max: 30, ventana: 600 },

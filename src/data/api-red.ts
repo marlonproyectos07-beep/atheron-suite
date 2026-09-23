@@ -41,6 +41,7 @@ export const RUTAS = {
 const API = {
   activar: '/api/activar',
   transaccion: '/api/transaccion',
+  estado: '/api/estado',
   redimir: '/api/redimir',
   seguimiento: '/api/seguimiento',
   reporte: '/api/reporte',
@@ -221,6 +222,20 @@ export const activar = (datos: DatosActivar = {}): Promise<RespuestaApi<Transacc
 
 export const consultar = (codigo: string, credencial?: string): Promise<RespuestaApi<TransaccionVista>> =>
   llama(`${API.transaccion}?c=${encodeURIComponent(codigo)}`, { credencial });
+
+/* Lo que ve el cliente que espera con el QR abierto. Solo lectura y
+   solo lo suyo: ni comision, ni margen, ni nada del operador. */
+export interface EstadoPublico {
+  codigo: string;
+  estado: TransaccionVista['estado'];
+  vigente: boolean;
+  consumo?: number;
+  credito?: number;
+  vigenciaCreditoDias?: number;
+}
+
+export const estadoPublico = (codigo: string): Promise<RespuestaApi<EstadoPublico>> =>
+  llama(`${API.estado}?c=${encodeURIComponent(codigo)}`);
 
 /* Redimir y cerrar son del operador del aliado. Sin credencial, el
    servidor responde 401: no es que la pantalla lo esconda, es que la

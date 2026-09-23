@@ -690,3 +690,32 @@
 .piloto__boton[aria-disabled="true"] {
   opacity: 0.55;
 }
+
+/* ------------------------------------------------------------
+   PANTALLA DEL CLIENTE — cierre de la visita, sin recargar
+   ------------------------------------------------------------ */
+.piloto__listo {
+  text-align: center;
+}
+
+.piloto__listo:focus {
+  outline: none;
+}
+
+.piloto__listo .piloto__cuenta {
+  text-align: left;
+}
+
+.piloto__listo-gano {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-gris-700);
+}
+
+.piloto__listo-cifra {
+  font-family: var(--fuente-titulo);
+  font-size: clamp(3rem, 16vw, 4.25rem);
+  line-height: 1.1;
+  margin: 0.25rem 0;
+  color: var(--color-marca);
+}

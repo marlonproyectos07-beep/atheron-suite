@@ -93,6 +93,7 @@ const { default: transaccionApi } = await import('../api/transaccion.mjs');
 const { default: redimirApi } = await import('../api/redimir.mjs');
 const { default: seguimientoApi } = await import('../api/seguimiento.mjs');
 const { default: operadorApi } = await import('../api/operador.mjs');
+const { default: estadoApi } = await import('../api/estado.mjs');
 const { almacen } = await import('../servidor/_almacen.ts');
 const deposito = almacen();
 
@@ -103,6 +104,7 @@ const API: Record<string, Handler> = {
   '/api/redimir': redimirApi as Handler,
   '/api/seguimiento': seguimientoApi as Handler,
   '/api/operador': operadorApi as Handler,
+  '/api/estado': estadoApi as Handler,
 };
 
 const TIPOS: Record<string, string> = {
@@ -236,6 +238,17 @@ const leido = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
 ok('el QR se decodifica', Boolean(leido));
 ok('y lleva la validación con el código', leido?.data === `${BASE}/red/la-triada/validar?c=${codigo}`, leido?.data);
 
+/* El cliente deja el QR abierto. Desde aqui se cuenta cualquier
+   navegacion de su pagina: el cierre tiene que llegar SIN recargar. */
+let navegacionesCliente = 0;
+pagina.on('framenavigated', (f) => {
+  if (f === pagina.mainFrame()) navegacionesCliente++;
+});
+const peticionesEstado: string[] = [];
+pagina.on('request', (r) => {
+  if (r.url().includes('/api/estado')) peticionesEstado.push(r.url());
+});
+
 /* ---------- 3. El local: escanear, valor, confirmar ----------
    LA CAMARA SIMULADA. getUserMedia se sustituye por un canvas que
    pinta el QR -el mismo SVG que ve el cliente- y lo emite como video.
@@ -368,7 +381,7 @@ await pagLocal.locator('input[name="consumo"]').pressSequentially('100000');
 igual('100000 se ve como $ 100.000 mientras se escribe', await pagLocal.locator('input[name="consumo"]').inputValue(), '$ 100.000');
 ok('  y el error desaparece al escribir', await pagLocal.locator('[data-error-cuenta]').isHidden());
 igual('  y "Continuar" se enciende', await pagLocal.locator('[data-continuar]').getAttribute('aria-disabled'), 'false');
-await pagLocal.locator('input[name="personas"]').fill('5');
+await pagLocal.locator('input[name="personas"]').fill('3');
 await pagLocal.screenshot({ path: join(SALIDA, '3-local.png'), fullPage: true });
 
 /* Lo que viaja al servidor tiene que ser el ENTERO, no el texto. */
@@ -380,18 +393,18 @@ pagLocal.on('request', (r) => {
 await pagLocal.getByRole('button', { name: 'Continuar' }).click();
 await pagLocal.waitForSelector('[data-confirmar]:not([hidden])');
 igual('antes de registrar se muestra el valor que se confirma', (await pagLocal.locator('[data-confirmar-consumo]').innerText()).trim(), '$ 100.000');
-igual('y las personas', (await pagLocal.locator('[data-confirmar-personas]').innerText()).trim(), '5');
+igual('y las personas', (await pagLocal.locator('[data-confirmar-personas]').innerText()).trim(), '3');
 await pagLocal.getByRole('button', { name: 'Confirmar consumo' }).click();
 await pagLocal.waitForSelector('[data-hecho]:not([hidden])');
 
 {
   const c = cuerpos[0] as { consumo?: unknown; personas?: unknown } | undefined;
   ok('el backend recibe consumo = 100000 como número entero', c?.consumo === 100000, JSON.stringify(c));
-  ok('y personas = 5 como número entero', c?.personas === 5, JSON.stringify(c));
+  ok('y personas = 3 como número entero', c?.personas === 3, JSON.stringify(c));
   const g = await deposito.lee<{ personas?: number; economia?: { comision?: number; margen?: number } }>('tx', codigo);
   ok('la comisión se sigue calculando internamente (10.000)', g?.economia?.comision === 10000, JSON.stringify(g?.economia));
   ok('y el margen interno (5.000)', g?.economia?.margen === 5000);
-  ok('y las personas quedan guardadas', g?.personas === 5);
+  ok('y las personas quedan guardadas', g?.personas === 3);
 }
 
 igual('dice "Consumo registrado"', (await pagLocal.locator('[data-titulo-hecho]').innerText()).trim(), 'Consumo registrado');
@@ -404,6 +417,41 @@ ok('el crédito del cliente se ve: $ 5.000', (await pagLocal.locator('[data-cred
   ok('ni el reparto, la hipótesis o la conciliación', !/reparto|hip[oó]tesis|conciliaci[oó]n|por dentro/i.test(visible));
 }
 await pagLocal.screenshot({ path: join(SALIDA, '4-confirmado.png'), fullPage: true });
+
+/* ---------- 3a. EL CLIENTE SE ENTERA SOLO ----------
+   Su pantalla seguia con el QR abierto. Sin recargar, tiene que pasar
+   del QR al cierre con los datos reales. */
+{
+  await pagina.waitForSelector('[data-paso="listo"]:not([hidden])', { timeout: 15000 });
+  ok('se enteró preguntando a /api/estado', peticionesEstado.length > 0, `${peticionesEstado.length} consultas`);
+  igual('el cliente NO recargó la página', navegacionesCliente, 0);
+  ok('el QR desaparece', await pagina.locator('[data-paso="codigo"]').isHidden());
+  igual('  y no queda ningún QR dibujado', await pagina.locator('svg.piloto__qr').count(), 0);
+  ok('dice "¡Tu visita fue registrada!"', (await pagina.locator('[data-titulo-listo]').innerText()).includes('¡Tu visita fue registrada!'));
+  igual('ganaste $ 5.000 en Crédito Atheron', (await pagina.locator('[data-credito]').innerText()).trim(), '$ 5.000');
+  igual('tu consumo en La Triada: $ 100.000', (await pagina.locator('[data-consumo]').innerText()).trim(), '$ 100.000');
+  ok('vigencia: 90 días', (await pagina.locator('[data-vigencia-credito]').innerText()).includes('Vigencia: 90 días'));
+  ok('"Guardar mi Crédito Atheron" está, pero deshabilitado', await pagina.getByRole('button', { name: 'Guardar mi Crédito Atheron' }).isDisabled());
+  ok('  y dice que la vinculación es próximamente', (await pagina.locator('main').innerText()).includes('Próximamente podrás vincularlo a tu cuenta Atheron.'));
+  const visible = await pagina.locator('body').innerText();
+  ok('el cliente nunca ve comisión, margen ni porcentajes internos', !/comisi[oó]n|margen|10\s?%|10\.000|conciliaci|reparto|operador|credencial/i.test(visible), visible.slice(0, 400));
+  ok('ni personas ni fuente', !/personas|ficha-la-triada/i.test(visible.replace('¿Cuántos sois? (opcional)', '')));
+  const antes = peticionesEstado.length;
+  await pagina.waitForTimeout(9000);
+  igual('al quedar redimida, deja de preguntar', peticionesEstado.length, antes);
+  await pagina.screenshot({ path: join(SALIDA, '4b-cliente-sin-recargar.png'), fullPage: true });
+
+  /* Lo que devuelve /api/estado, crudo: solo lo del cliente. */
+  const crudo = (await fetch(`${BASE}/api/estado?c=${codigo}`).then((r) => r.json())) as { datos: Record<string, unknown> };
+  igual('/api/estado devuelve solo codigo, estado, vigente, consumo, crédito y vigencia', Object.keys(crudo.datos).sort().join(','), 'codigo,consumo,credito,estado,vigenciaCreditoDias,vigente');
+  ok('  sin comisión ni margen en el JSON', !/comision|margen|Pct|regla|fuente|personas|contacto/.test(JSON.stringify(crudo)));
+  const conCredencial = await fetch(`${BASE}/api/estado?c=${codigo}`, { headers: { authorization: `Bearer ${CREDENCIAL}` } }).then((r) => r.json());
+  ok('  y con credencial de operador tampoco da más', !/comision|margen/.test(JSON.stringify(conCredencial)));
+  const mala = await fetch(`${BASE}/api/estado?c=ATH-TRI-AAAAA`);
+  igual('  un código inválido es 400', mala.status, 400);
+  const escribir = await fetch(`${BASE}/api/estado?c=${codigo}`, { method: 'POST' });
+  ok('  y no se puede escribir por ahí', escribir.status === 405, String(escribir.status));
+}
 
 /* ---------- 3b. Escanear siguiente cliente: no hereda nada ---------- */
 {
