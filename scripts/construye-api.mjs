@@ -55,6 +55,15 @@
    Para que la interpretacion no dependa de que el package.json de la
    raiz llegue o no dentro del paquete de la funcion. Con .mjs es ESM
    siempre, diga lo que diga cualquier otra cosa.
+
+   Y POR QUE ESTE SCRIPT ES .mjs Y NO .mts
+
+   Porque lo ejecuta el "prebuild", y el prebuild corre en Vercel.
+   Leer TypeScript directamente necesita --experimental-strip-types,
+   que en Node 20 no existe: si el proyecto estuviera en Node 20, el
+   build entero fallaria y no se desplegaria nada. Un script de
+   construccion no puede depender de la version de Node que alguien
+   elija en un panel. Sin tipos, arranca en cualquiera.
    ============================================================ */
 import { build } from 'esbuild';
 import { readdir } from 'node:fs/promises';
@@ -66,7 +75,7 @@ export const FUENTES = path.join(RAIZ, 'servidor');
 export const SALIDA = path.join(RAIZ, 'api');
 
 /** Los endpoints publicos: todo lo que no empieza por guion bajo. */
-export async function endpoints(): Promise<string[]> {
+export async function endpoints() {
   const todo = await readdir(FUENTES);
   return todo
     .filter((f) => f.endsWith('.ts') && !f.startsWith('_'))
@@ -80,7 +89,7 @@ const CABECERA = [
   '   Lo comprueba: npm run prueba-vercel (falla si esto se queda viejo). */',
 ].join('\n');
 
-export async function construye(): Promise<string[]> {
+export async function construye() {
   const nombres = await endpoints();
   await build({
     entryPoints: nombres.map((n) => path.join(FUENTES, `${n}.ts`)),

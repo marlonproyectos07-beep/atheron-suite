@@ -29,7 +29,7 @@ import { cp, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { construye, endpoints, SALIDA } from './construye-api.mts';
+import { construye, endpoints, SALIDA } from './construye-api.mjs';
 
 let hechas = 0;
 const fallos: string[] = [];

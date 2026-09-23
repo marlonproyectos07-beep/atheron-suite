@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "comprueba": "node scripts/comprueba-contenido.mjs && node scripts/comprueba-jornadas.mjs",
-    "api": "node --experimental-strip-types --no-warnings scripts/construye-api.mts",
+    "api": "node scripts/construye-api.mjs",
     "prueba": "node scripts/prueba-minimo-publicable.mjs",
     "prueba-jornadas": "node --experimental-strip-types --no-warnings scripts/prueba-jornadas.mts",
     "prueba-piloto": "node --experimental-strip-types --no-warnings scripts/prueba-piloto.mts",
@@ -20,7 +20,7 @@
     "prueba-humo-loop002": "node --experimental-strip-types --no-warnings scripts/prueba-humo-loop002.mts",
     "redespliegue-necesario": "node scripts/necesita-redespliegue.mjs",
     "foto": "node scripts/optimiza-fotos.mjs",
-    "prebuild": "node scripts/comprueba-contenido.mjs && node scripts/comprueba-jornadas.mjs && node scripts/optimiza-selector.mjs && node --experimental-strip-types --no-warnings scripts/construye-api.mts",
+    "prebuild": "node scripts/comprueba-contenido.mjs && node scripts/comprueba-jornadas.mjs && node scripts/optimiza-selector.mjs && node scripts/construye-api.mjs",
     "build": "astro build",
     "preview": "astro preview"
   },

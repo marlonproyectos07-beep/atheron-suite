@@ -565,7 +565,10 @@ La corrección no arregla la resolución de módulos: **la elimina**.
 - Las fuentes viven ahora en **`/servidor`**. Ni un `.ts` queda dentro de `/api`.
 - `scripts/construye-api.mts` las empaqueta con esbuild en **un solo archivo por endpoint**,
   ESM, sin un solo import relativo. Lo que queda en `/api` son seis `.mjs` autocontenidos.
-- Se ejecuta en `prebuild`, así que cada despliegue los regenera.
+- Se ejecuta en `prebuild`, así que cada despliegue los regenera. El script es `.mjs` y no
+  `.mts` a propósito: leer TypeScript directamente necesita `--experimental-strip-types`, que
+  en Node 20 no existe, y un script de construcción no puede depender de qué versión de Node
+  haya elegido alguien en un panel.
 - **Se versionan**, porque Vercel decide qué es una función mirando el repositorio, no el
   resultado del build. Un `.mjs` generado durante el build podría no llegar a existir como
   función.
