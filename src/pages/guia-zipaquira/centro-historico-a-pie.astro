@@ -1,0 +1,191 @@
+---
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
+import { migaDePan, url, ORGANIZACION } from '../../data/seo';
+import { atributosWhatsApp } from '../../data/whatsapp';
+
+const RUTA = '/guia-zipaquira/centro-historico-a-pie';
+const PUBLICADO = '2026-09-22';
+const MODIFICADO = '2026-09-22';
+
+const fuentes = {
+  tiempo: 'https://www.eltiempo.com/vida/viajar/zipaquira-transforma-su-centro-historico-para-convertirlo-en-un-destino-que-se-recorre-a-pie-3587960',
+  gobernacion: 'https://www.cundinamarca.gov.co/noticias/zipaquira-ilumina-su-semana-santa-con-mapping-religioso-y-centro-historico-renovado',
+  pemp: 'https://normograma.mincultura.gov.co/compilacion/docs/resolucion_mincultura_3629_2015.htm',
+  estacion: 'https://www.zipaquira.travel/estacion-del-tren-2/',
+  plaza: 'https://www.zipaquira.travel/plaza-de-los-comuneros/',
+  palacio: 'https://www.zipaquira.travel/palacio-muncipal/',
+  gobierno: 'https://www.zipaquira.travel/casa-de-gobierno/',
+  museo: 'https://www.zipaquira.travel/casa-museo-guillermoquevedo-zornoza/',
+  centro: 'https://www.zipaquira.travel/centro_historico_zipaquira/',
+  pintuco: 'https://www.pintuco.com.co/noticias/zipaquira-desde-el-corazon-una-transformacion-que-conecta-color-patrimonio-e-identidad/',
+};
+
+const paradas = [
+  {
+    numero: '01',
+    titulo: 'Estación del Tren',
+    rotulo: 'Punto de partida sugerido',
+    texto: 'La antigua estación es una referencia patrimonial y hoy reúne servicios culturales y el Punto de Información Turística. Es un comienzo útil para confirmar actividades y orientarte antes de caminar.',
+    escucha: 'Empieza aquí para reconocer la relación de Zipaquirá con el ferrocarril y consultar información turística vigente antes de seguir hacia el centro.',
+    fuente: fuentes.estacion,
+  },
+  {
+    numero: '02',
+    titulo: 'Casa Museo Quevedo Zornoza',
+    rotulo: 'Memoria cultural',
+    texto: 'Una casa del siglo XVII que conserva recuerdos de generaciones vinculadas con la música, la pintura, la poesía y las letras. Los horarios de ingreso deben confirmarse antes de desplazarse.',
+    escucha: 'Esta parada recuerda que el patrimonio de una ciudad también vive en las familias, los oficios y las expresiones artísticas que pasan de una generación a otra.',
+    fuente: fuentes.museo,
+  },
+  {
+    numero: '03',
+    titulo: 'Plaza de los Comuneros',
+    rotulo: 'Corazón del recorrido',
+    texto: 'La plaza reúne vida cotidiana, arquitectura y memoria pública. Desde aquí se observan varios de los edificios que explican por qué el Centro Histórico funciona como un conjunto y no como una sola atracción.',
+    escucha: 'Detente un momento y mira alrededor: la plaza conecta el patrimonio religioso, el gobierno local, el comercio y la vida diaria de los habitantes.',
+    fuente: fuentes.plaza,
+  },
+  {
+    numero: '04',
+    titulo: 'Catedral Diocesana',
+    rotulo: 'Patrimonio religioso',
+    texto: 'Es la catedral ubicada en la Plaza de los Comuneros y no debe confundirse con la Catedral de Sal. Forma parte del paisaje urbano y religioso del centro.',
+    escucha: 'Esta es la Catedral Diocesana, el templo de la plaza principal. La Catedral de Sal es una atracción distinta, ubicada dentro del Parque de la Sal.',
+    fuente: fuentes.centro,
+  },
+  {
+    numero: '05',
+    titulo: 'Palacio Municipal y Casa de Gobierno',
+    rotulo: 'Arquitectura y ciudad',
+    texto: 'Ambos inmuebles forman parte del entorno institucional del centro. La recuperación de fachadas y espacios públicos busca hacer más legible el patrimonio y fortalecer el recorrido urbano.',
+    escucha: 'Aquí el patrimonio sigue teniendo uso cotidiano: no son solamente fachadas para observar, sino espacios vinculados con la administración y la vida de la ciudad.',
+    fuente: fuentes.palacio,
+    fuenteDos: fuentes.gobierno,
+  },
+  {
+    numero: '06',
+    titulo: 'Fachadas, sabores y comercio local',
+    rotulo: 'La ciudad que sigue viva',
+    texto: 'La estrategia “Zipaquirá desde el Corazón” intervino más de 20.000 m² de fachadas y vinculó estudios cromáticos, participación comunitaria y saberes locales. La ruta termina invitando a elegir con calma un café o restaurante verificado.',
+    escucha: 'El recorrido no termina en un monumento. Continúa en los sabores, las conversaciones y los negocios que mantienen vivo el Centro Histórico.',
+    fuente: fuentes.pintuco,
+  },
+];
+
+const ficha = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Article',
+      '@id': `${url(RUTA)}#articulo`,
+      url: url(RUTA),
+      headline: 'Zipaquirá a pie: ruta audiovisual por el Centro Histórico',
+      description: 'Ruta autoguiada de Atheron por el Centro Histórico de Zipaquirá, con paradas verificadas, contexto cultural y recomendaciones para planear la visita.',
+      inLanguage: 'es-CO',
+      datePublished: PUBLICADO,
+      dateModified: MODIFICADO,
+      author: { '@type': 'Organization', name: 'Atheron Suite' },
+      publisher: { '@id': ORGANIZACION['@id'] },
+      isPartOf: { '@id': `${url('/guia-zipaquira')}#pagina` },
+      citation: Object.values(fuentes),
+      breadcrumb: { '@id': `${url(RUTA)}#miga` },
+    },
+    ORGANIZACION,
+    migaDePan([
+      { nombre: 'Inicio', ruta: '/' },
+      { nombre: 'Guía de Zipaquirá', ruta: '/guia-zipaquira' },
+      { nombre: 'Centro Histórico a pie', ruta: RUTA },
+    ], `${url(RUTA)}#miga`),
+  ],
+};
+
+const WA = 'Hola, vi la ruta del Centro Histórico en la Guía Atheron y quiero consultar hospedaje en Zipaquirá.\n\nFecha de llegada:\nFecha de salida:\nNúmero de huéspedes:';
+---
+
+<Base
+  titulo="Centro Histórico de Zipaquirá a pie | Ruta Atheron"
+  descripcion="Recorre el Centro Histórico de Zipaquirá con una ruta autoguiada: Estación del Tren, Plaza de los Comuneros, patrimonio, sabores y hospedaje."
+  ruta={RUTA}
+  ogTipo="article"
+  imagen="/assets/img/portada/zipaquira-centro-historico-atardecer-1600.webp"
+  imagenAlt="Ilustración editorial de turistas recorriendo un centro histórico andino"
+  indexable={false}
+  seguirEnlaces={true}
+  avisoBorrador="Vista previa editorial · recorrido y material audiovisual en validación"
+  jsonLd={ficha}
+  hojasExtra={['guia', 'ruta-centro']}
+>
+  <Cabecera enlaces={menuHospedajes} cta={{ ...ctaDisponibilidad, origen: 'ruta_centro' }} actual="/guia-zipaquira" />
+
+  <main id="contenido">
+    <section class="ruta-hero">
+      <div class="contenedor ruta-hero__grid">
+        <div class="ruta-hero__texto">
+          <nav class="migas" aria-label="Ruta de navegación"><ol><li><a href="/">Inicio</a></li><li><a href="/guia-zipaquira">Guía de Zipaquirá</a></li><li aria-current="page">Centro Histórico a pie</li></ol></nav>
+          <span class="hero__etiqueta">Ruta autoguiada Atheron</span>
+          <h1>Zipaquirá a pie: descubre su Centro Histórico</h1>
+          <p>Una ruta pensada para mirar con calma, entender lo que tienes enfrente y conectar la Catedral de Sal con la arquitectura, la memoria y los sabores de la ciudad.</p>
+          <div class="grupo-botones"><a class="boton boton--acento boton--grande" href="#paradas">Comenzar la ruta</a><a class="boton boton--claro boton--grande" href="/hospedajes">Ver hospedajes</a></div>
+        </div>
+        <figure class="ruta-hero__visual">
+          <img src="/assets/img/portada/zipaquira-centro-historico-atardecer-1600.webp" width="1600" height="837" alt="Ilustración de ambientación del centro histórico de Zipaquirá al atardecer" fetchpriority="high" />
+          <figcaption>Imagen de ambientación generada con IA. No se presenta como fotografía documental del lugar.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="seccion seccion--estrecha">
+      <div class="contenedor guia__cuerpo">
+        <div class="respuesta-rapida"><strong>Antes de empezar:</strong> esta es una ruta editorial sugerida por Atheron, no un recorrido oficial ni una afirmación de que todas las calles sean peatonales. No publicamos todavía distancia o duración: deben medirse en terreno antes de lanzar la versión definitiva.</div>
+        <h2>Una guía que se usa mientras caminas</h2>
+        <p>Cada parada tendrá un microvideo y una narración breve creados con IA a partir de información verificada. Las imágenes conceptuales estarán identificadas; no se presentarán como fotografías reales del lugar.</p>
+        <ul class="ruta-claves"><li><strong>6 paradas</strong><span>Patrimonio, memoria y vida local</span></li><li><strong>Audio breve</strong><span>Para caminar sin leer textos largos</span></li><li><strong>Fuentes visibles</strong><span>Consulta siempre el origen</span></li></ul>
+      </div>
+    </section>
+
+    <section class="seccion seccion--alterna" id="paradas">
+      <div class="contenedor">
+        <div class="encabezado-seccion"><span class="etiqueta">Recorrido propuesto</span><h2>Seis paradas para leer la ciudad</h2><p class="texto-suave">El orden definitivo se validará con tiempo, distancia, accesibilidad y condiciones reales de caminata.</p></div>
+        <ol class="ruta-paradas">
+          {paradas.map((p) => (
+            <li class="ruta-parada">
+              <div class="ruta-parada__numero" aria-hidden="true">{p.numero}</div>
+              <div class="ruta-parada__cuerpo">
+                <p class="ruta-parada__rotulo">{p.rotulo}</p><h3>{p.titulo}</h3><p>{p.texto}</p>
+                <details><summary>Escuchar: guion del microvideo</summary><p>{p.escucha}</p></details>
+                <p class="ruta-parada__fuente">Información base: <a href={p.fuente} target="_blank" rel="noopener noreferrer">consultar fuente</a>{p.fuenteDos && <><span> y </span><a href={p.fuenteDos} target="_blank" rel="noopener noreferrer">segunda fuente</a></>}.</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <div class="contenedor ruta-produccion">
+        <div><span class="etiqueta">Versión audiovisual</span><h2>Así se construirá con IA</h2><p>Un video de bienvenida y seis cápsulas verticales, con narración, subtítulos y mapas ilustrados. Antes de publicarlos verificaremos nombres, orden, accesos y contexto. Cuando exista material propio autorizado, podrá sustituir gradualmente las recreaciones.</p></div>
+        <ol><li><strong>Bienvenida</strong><span>Qué vas a descubrir y cómo usar la guía.</span></li><li><strong>Microvideos</strong><span>Una cápsula por parada, sin inventar lo que se ve.</span></li><li><strong>Audio y subtítulos</strong><span>Accesibles, claros y reutilizables en redes.</span></li><li><strong>Mapa</strong><span>Se activa cuando la ruta sea medida y comprobada.</span></li></ol>
+      </div>
+    </section>
+
+    <section class="seccion seccion--oscura">
+      <div class="contenedor bloque-doble">
+        <div class="bloque-doble__texto"><span class="etiqueta">Qué hay detrás de la transformación</span><h2>Zipaquirá desde el Corazón</h2><p class="texto-suave">La intervención reúne recuperación de fachadas, estudios de color, participación ciudadana y una mirada turística que conecta arquitectura, gastronomía y saberes locales. Fuentes recientes reportan más de 20.000 m² de fachadas intervenidas.</p><p class="texto-suave">Eso no significa que el centro sea enteramente peatonal. Significa que existe una oportunidad para recorrerlo con más contexto y convertir una visita rápida en una experiencia de ciudad.</p><div class="grupo-botones"><a class="boton boton--claro" href={fuentes.tiempo} target="_blank" rel="noopener noreferrer">Leer la noticia de origen</a><a class="boton boton--claro" href={fuentes.pemp} target="_blank" rel="noopener noreferrer">Consultar fuente patrimonial</a></div></div>
+        <aside class="ruta-nota"><strong>Interpretación editorial de Atheron</strong><p>La Catedral de Sal puede ser el comienzo del viaje. El Centro Histórico permite continuarlo caminando, conversando y descubriendo la ciudad que existe alrededor de su principal atractivo.</p></aside>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <div class="contenedor cta-final"><h2>¿Quieres vivir Zipaquirá sin correr?</h2><p>Revisa nuestros hospedajes o cuéntanos tus fechas y número de viajeros. Te ayudamos a elegir dónde quedarte; la ruta es gratuita y no incluye entradas, transporte ni reservas en terceros.</p><div class="grupo-botones grupo-botones--centrado"><a class="boton boton--acento boton--grande" href="/hospedajes">Comparar hospedajes</a><a class="boton boton--whatsapp boton--grande" {...atributosWhatsApp(WA, { origen: 'ruta_centro_final' })}>Consultar por WhatsApp</a></div></div>
+    </section>
+
+    <section class="seccion seccion--estrecha"><div class="contenedor guia__cuerpo"><h2>Fuentes consultadas</h2><ul class="ruta-fuentes"><li><a href={fuentes.tiempo} target="_blank" rel="noopener noreferrer">El Tiempo — transformación del Centro Histórico, 22 de septiembre de 2026</a></li><li><a href={fuentes.gobernacion} target="_blank" rel="noopener noreferrer">Gobernación de Cundinamarca — Centro Histórico renovado</a></li><li><a href={fuentes.pemp} target="_blank" rel="noopener noreferrer">Ministerio de Cultura — PEMP del Centro Histórico de Zipaquirá</a></li><li><a href={fuentes.pintuco} target="_blank" rel="noopener noreferrer">Pintuco — intervención, memoria cromática y participación comunitaria</a></li><li><a href={fuentes.centro} target="_blank" rel="noopener noreferrer">Zipaquirá Travel — atractivos del Centro Histórico</a></li></ul><p class="guia__fuente">Investigación consultada el 22 de septiembre de 2026. Confirma horarios, accesos y condiciones directamente con cada entidad antes de desplazarte.</p></div></section>
+  </main>
+
+  <Pie />
+  <BotonFlotante mensaje={WA} origen="ruta_centro_flotante" texto="Planear mi estadía" />
+</Base>
