@@ -177,13 +177,12 @@ export interface ExperienciaLocal {
    Estuvo vacia hasta el 19 de septiembre de 2026, y sigue el mismo
    criterio: un lugar entra solo con lo que se puede sostener.
 
-   LA TRIADA — INFORMATIVO, Y SOLO CON TRES DATOS
-   Nombre, categoria y ciudad. Aparece como "Restaurante La Triada" en
-   el listado de turismo del Gobierno de Cundinamarca (Detour). Ni la
-   direccion, ni los horarios, ni la carta, ni los precios, ni la
-   capacidad, ni los servicios para familias o grupos estan
-   confirmados POR EL LOCAL: cuando los confirme, se anaden aqui y
-   la ficha los pinta sola. Ver docs/red-atheron-zipaquira.md.
+   LA TRIADA — DATOS CONFIRMADOS POR EL LOCAL (23-sep-2026)
+   Direccion, horario, especialidad, platos, precio por persona y
+   servicios los confirmo el local a Atheron el 23 de septiembre de
+   2026. Viven aqui (direccion, horario) y en src/data/fichas-lugares.ts
+   (el resto). Aparece ademas como "Restaurante La Triada" en el
+   listado de turismo del Gobierno de Cundinamarca (Detour).
 
    ESTADO ALIADO, por decision de direccion del 19 de septiembre de
    2026: existe una relacion comercial confirmada con el propietario.
@@ -196,8 +195,10 @@ export interface ExperienciaLocal {
    Ser aliado no convierte un sitio en recomendado: esa es la regla
    que sostiene la guia entera.
 
-   SIN BENEFICIO. No hay ninguno acordado que publicar, asi que el
-   objeto beneficio no existe y su bloque no se pinta.
+   BENEFICIO: el Credito Atheron de la Red (ATH-LOOP-002). No usa el
+   objeto beneficio de esta tabla -pensado para el Atheron Pass, que
+   no existe-, sino el circuito real de /red: se activa desde la ficha
+   con FichaExtra.beneficioRed. Ni comision ni margen se publican.
 
    TEXTO AUTORIZADO, literal y sin una palabra de mas:
    "Establecimiento aliado de la Red Atheron Zipaquira."
@@ -209,12 +210,17 @@ export const experienciasLocales: ExperienciaLocal[] = [
     categoria: 'Restaurante',
     ciudad: 'Zipaquirá',
     descripcion:
-      'Restaurante en Zipaquirá. Esta ficha está en construcción: publicaremos la carta, ' +
-      'los horarios y los servicios para familias y grupos cuando el local los confirme.',
+      'Comida típica colombiana, casera y auténtica, en el centro de Zipaquirá. ' +
+      'Frijoles con chicharrón, ajiaco y el plato típico zipaquireño.',
+    direccion: 'Calle 1 # 7-81, Zipaquirá',
+    horarios: [{ dia: 'Lunes a domingo', horas: '12:00 m. – 5:00 p. m.' }],
     estadoComercial: 'ALIADO',
     divulgacionComercial: 'Establecimiento aliado de la Red Atheron Zipaquirá.',
-    fechaUltimaVerificacion: '2026-09-19',
-    fuentes: ['Listado «Restaurante La Triada» en Detour Cundinamarca (Gobierno de Cundinamarca)'],
+    fechaUltimaVerificacion: '2026-09-23',
+    fuentes: [
+      'Información confirmada por La Triada a Atheron',
+      'Listado «Restaurante La Triada» en Detour Cundinamarca (Gobierno de Cundinamarca)',
+    ],
     estadoPublicacion: 'PUBLICADO',
     rutaFicha: '/guia-zipaquira/restaurantes-y-cafes/la-triada',
   },

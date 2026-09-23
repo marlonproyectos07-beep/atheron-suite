@@ -47,7 +47,21 @@ export interface FichaExtra {
   /** false = noindex,follow y fuera del sitemap. */
   indexable: boolean;
   intro?: string[];
+  /** Lo que cocina, en una linea. */
+  especialidad?: string;
   platosDestacados?: string[];
+  /** Lo que el local recomienda pedir. Solo lo que el local dijo. */
+  recomendaciones?: { etiqueta: string; texto: string }[];
+  /** Rango confirmado por el local, con su fecha. Sin fecha no se pinta. */
+  precioPorPersona?: { rango: string; fecha: string };
+  /** Servicios confirmados por el local. */
+  servicios?: string[];
+  /* El beneficio de la Red Atheron -Credito Atheron por consumir- que
+     se activa en /red. true solo si el aliado tiene el circuito real
+     funcionando (activacion, QR, registro en caja). El enlace y la
+     fuente de atribucion salen de src/data/api-red.ts y
+     transacciones-red.ts, no se escriben aqui. */
+  beneficioRed?: boolean;
   menu?: {
     enlace?: string;
     /** AAAA-MM-DD. Obligatoria para mostrar precios. */
@@ -65,9 +79,41 @@ export interface FichaExtra {
 }
 
 export const fichasExtra: Record<string, FichaExtra> = {
+  /* Datos confirmados por La Triada a Atheron el 23 de septiembre de
+     2026 (direccion: Marlon, CEO). Nada de lo que sigue es deduccion
+     ni texto de ejemplo: si el local cambia algo, se cambia aqui. */
   'la-triada': {
     indexable: false,
-    modificado: '2026-09-19',
+    modificado: '2026-09-23',
+    intro: [
+      'La Triada rescata los sabores, aromas y tradiciones de la cocina colombiana: comida casera y auténtica, en el centro de Zipaquirá.',
+    ],
+    especialidad: 'Comida típica colombiana',
+    platosDestacados: [
+      'Frijoles con chicharrón',
+      'Plato típico zipaquireño',
+      'Ajiaco',
+      'Rollo de pollo albardado',
+      'Lomo al trapo',
+    ],
+    recomendaciones: [
+      { etiqueta: 'Para tu primera visita', texto: 'Frijoles con chicharrón, con una entrada de cóctel de chicharrón.' },
+      { etiqueta: 'Plato especial', texto: 'Plato típico zipaquireño.' },
+    ],
+    precioPorPersona: { rango: '$ 35.000 – $ 62.000 COP', fecha: '2026-09-23' },
+    servicios: [
+      'Reservas, también por WhatsApp',
+      'Grupos de hasta unas 180 personas',
+      'Eventos y cumpleaños',
+      'Menús para grupos',
+      'Parqueadero',
+      'WiFi',
+      'Pet friendly',
+      'Acceso para movilidad reducida',
+      'Pago con tarjeta',
+      'Zona infantil',
+    ],
+    beneficioRed: true,
   },
 };
 

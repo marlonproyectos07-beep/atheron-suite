@@ -164,3 +164,58 @@
   outline: 3px solid var(--acento);
   outline-offset: 2px;
 }
+
+/* ------------------------------------------------------------
+   BENEFICIO ATHERON EN LA FICHA DE UN ALIADO (ATH-LOOP-002)
+   Oscuro y con el dorado de la marca: tiene que verse como la
+   seccion principal de la ficha en un movil, sin buscarla.
+   ------------------------------------------------------------ */
+.ficha__beneficio {
+  padding: var(--esp-4) var(--esp-3);
+  border-radius: var(--radio-md, 16px);
+  background: var(--color-noche);
+  color: var(--color-blanco);
+  text-align: center;
+  box-shadow: var(--sombra-md);
+}
+
+/* ".guia__cuerpo p" pinta gris-500: sobre fondo oscuro no llega al
+   contraste minimo. Cada parrafo del bloque declara su color con la
+   especificidad suficiente para ganarle. */
+.guia__cuerpo .ficha__beneficio p { color: var(--color-blanco); }
+
+.guia__cuerpo .ficha__beneficio .ficha__beneficio-etiqueta {
+  margin: 0 0 var(--esp-1);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--color-sal-claro);
+}
+
+.guia__cuerpo .ficha__beneficio .ficha__beneficio-titulo {
+  margin: 0 0 var(--esp-2);
+  font-family: var(--fuente-titulo);
+  font-size: clamp(1.45rem, 6vw, 1.9rem);
+  line-height: 1.25;
+}
+
+.ficha__beneficio-titulo strong {
+  color: var(--color-sal-claro);
+}
+
+.guia__cuerpo .ficha__beneficio .ficha__beneficio-texto {
+  margin: 0 0 var(--esp-3);
+  color: rgba(255, 255, 255, .85);
+}
+
+.ficha__beneficio-boton {
+  width: 100%;
+  max-width: 22rem;
+}
+
+.guia__cuerpo .ficha__beneficio .ficha__beneficio-nota {
+  margin: var(--esp-2) 0 0;
+  font-size: .9rem;
+  color: rgba(255, 255, 255, .75);
+}

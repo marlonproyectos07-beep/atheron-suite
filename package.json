@@ -6,21 +6,32 @@
   "scripts": {
     "dev": "astro dev",
     "comprueba": "node scripts/comprueba-contenido.mjs && node scripts/comprueba-jornadas.mjs",
+    "api": "node scripts/construye-api.mjs",
+    "credencial": "node scripts/credencial-operador.mjs",
     "prueba": "node scripts/prueba-minimo-publicable.mjs",
     "prueba-jornadas": "node --experimental-strip-types --no-warnings scripts/prueba-jornadas.mts",
     "prueba-piloto": "node --experimental-strip-types --no-warnings scripts/prueba-piloto.mts",
+    "prueba-loop002": "node --experimental-strip-types --no-warnings scripts/prueba-loop002.mts",
+    "prueba-almacen": "node --experimental-strip-types --no-warnings scripts/prueba-almacen-real.mts",
+    "prueba-adversarial": "node --experimental-strip-types --no-warnings scripts/prueba-adversarial.mts",
+    "prueba-reauditoria": "node --experimental-strip-types --no-warnings scripts/prueba-reauditoria.mts",
+    "prueba-vercel": "node --experimental-strip-types --no-warnings scripts/prueba-vercel.mts",
     "prueba-qr": "node --experimental-strip-types --no-warnings scripts/prueba-qr.mts",
+    "prueba-lateral": "node --experimental-strip-types --no-warnings scripts/prueba-lateral.mts",
     "prueba-humo-piloto": "node scripts/prueba-humo-piloto.mjs",
+    "prueba-humo-loop002": "node --experimental-strip-types --no-warnings scripts/prueba-humo-loop002.mts",
     "redespliegue-necesario": "node scripts/necesita-redespliegue.mjs",
     "foto": "node scripts/optimiza-fotos.mjs",
-    "prebuild": "node scripts/comprueba-contenido.mjs && node scripts/comprueba-jornadas.mjs && node scripts/optimiza-selector.mjs",
+    "prebuild": "node scripts/comprueba-contenido.mjs && node scripts/comprueba-jornadas.mjs && node scripts/optimiza-selector.mjs && node scripts/construye-api.mjs",
     "build": "astro build",
     "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "7.2.4"
+    "astro": "7.2.4",
+    "jsqr": "^1.4.0"
   },
   "devDependencies": {
+    "esbuild": "^0.28.2",
     "sharp": "^0.35.3"
   }
 }

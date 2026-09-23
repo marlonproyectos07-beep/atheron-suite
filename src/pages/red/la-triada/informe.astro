@@ -1,0 +1,285 @@
+---
+/* ============================================================
+   INFORME SEMANAL DEL ALIADO — pantalla de administracion
+
+   ES LA PANTALLA CON LA QUE SE FACTURA. Por eso no es publica: pide
+   el token de administracion, que viaja en cabecera y se queda en la
+   memoria de la pestana (sessionStorage), no en el disco. Cerrar la
+   pestana lo borra.
+
+   POR QUE SE PINTA AQUI Y NO SE MANDA UN PDF
+
+   Porque tiene que poder mirarse delante del aliado, en un movil, y
+   cuadrar en el momento. Y porque un informe que se genera y se
+   archiva deja de mirarse a la tercera semana.
+
+   LA COMPROBACION DE CONCILIACION SALE ARRIBA
+
+   Antes que las cifras. Si los totales no cuadran, eso es lo primero
+   que hay que saber: un informe descuadrado que parece correcto es
+   peor que uno que no se genera.
+   ============================================================ */
+import Base from '../../../layouts/Base.astro';
+import RedPie from '../../../components/RedPie.astro';
+import { PILOTO } from '../../../data/piloto-la-triada';
+import { REGLA } from '../../../data/economia-red';
+import { RUTAS } from '../../../data/api-red';
+---
+
+<Base
+  titulo={`Informe semanal | Red Atheron × ${PILOTO.aliado}`}
+  descripcion="Página interna del piloto Atheron × La Triada. No es una página pública del sitio."
+  ruta={RUTAS.informe}
+  indexable={false}
+  seguirEnlaces={false}
+  jsonLd={null}
+  avisoBorrador={`Piloto interno ${PILOTO.id} · ATH-LOOP-002. Pantalla de control.`}
+  hojasExtra={['piloto']}
+>
+  <main id="contenido" class="piloto">
+    <p class="piloto__interna">{PILOTO.aliado} · conciliación</p>
+    <h1 class="piloto__titulo">Informe semanal</h1>
+
+    <form class="piloto__tarjeta" data-form novalidate>
+      <label class="piloto__campo">
+        <span>Token de administración</span>
+        <input name="token" type="password" autocomplete="off" required />
+        <span class="piloto__ayuda">Se queda en esta pestaña. Al cerrarla, se borra.</span>
+      </label>
+      <label class="piloto__campo">
+        <span>Una fecha de la semana</span>
+        <input name="fecha" type="date" required />
+        <span class="piloto__ayuda">La semana va de lunes a domingo, hora de Colombia.</span>
+      </label>
+      <button class="piloto__boton" type="submit">Ver informe</button>
+    </form>
+
+    <div class="piloto__resultado piloto__resultado--no" data-error hidden role="status" aria-live="polite"></div>
+
+    <div data-informe hidden>
+      <div class="piloto__condicion" data-conciliacion role="note"></div>
+
+      <div class="piloto__tarjeta">
+        <h2 data-rango></h2>
+        <ul class="piloto__cuenta">
+          <li><span>Activaciones</span> <strong data-activaciones></strong></li>
+          <li><span>Personas previstas</span> <strong data-personas-previstas></strong></li>
+          <li><span>Redenciones</span> <strong data-redenciones></strong></li>
+          <li><span>Cerradas sin consumo</span> <strong data-cierres></strong></li>
+          <li><span>Conversión</span> <strong data-conversion></strong></li>
+          <li><span>Personas atendidas</span> <strong data-personas></strong></li>
+          <li><span>Consumo atribuido</span> <strong data-consumo></strong></li>
+          <li><span>Comisión Atheron ({REGLA.comisionPct}%)</span> <strong data-comision></strong></li>
+          <li><span>Crédito Atheron generado</span> <strong data-credito></strong></li>
+          <li><span>Margen Atheron</span> <strong data-margen></strong></li>
+          <li><span>Satisfacción media</span> <strong data-satisfaccion></strong></li>
+          <li><span>Incidencias</span> <strong data-incidencias></strong></li>
+        </ul>
+      </div>
+
+      <div class="piloto__tarjeta">
+        <h2>De dónde vinieron</h2>
+        <ul class="piloto__lista" data-fuentes></ul>
+      </div>
+
+      <div class="piloto__tarjeta">
+        <h2>Por regla económica</h2>
+        <p>
+          Cada bloque se liquida con la regla que se aplicó entonces, no con la de hoy.
+          Si aparece más de uno, es que el reparto cambió a mitad de semana.
+        </p>
+        <ul class="piloto__lista" data-reglas></ul>
+      </div>
+
+      <div class="piloto__tarjeta">
+        <h2>Conciliación, fila a fila</h2>
+        <p>Cada redención de la semana, con su consumo y su comisión.</p>
+        <pre class="piloto__registro" data-filas></pre>
+        <div class="piloto__botones">
+          <button class="piloto__boton piloto__boton--secundario" type="button" data-copiar>
+            Copiar
+          </button>
+        </div>
+        <p class="piloto__pie-dato" data-copiado role="status" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <RedPie actual={RUTAS.informe} tecnico={true} />
+  </main>
+</Base>
+
+<script>
+  import { pesos } from '../../../data/piloto-la-triada';
+  import { informe } from '../../../data/api-red';
+
+  const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel);
+  const form = $<HTMLFormElement>('[data-form]')!;
+  const error = $('[data-error]')!;
+  const caja = $('[data-informe]')!;
+
+  const CLAVE_TOKEN = 'atheron.red.token.v1';
+
+  interface Fila {
+    fuente: string;
+    etiqueta: string;
+    activaciones: number;
+    redenciones: number;
+  }
+  interface Bloque {
+    reglaVersion: string;
+    comisionPct: number;
+    creditoPct: number;
+    redenciones: number;
+    consumo: number;
+    comision: number;
+    credito: number;
+    margen: number;
+  }
+  interface Datos {
+    semana: { lunes: string; domingo: string };
+    cerradasSinConsumo: number;
+    porRegla: Bloque[];
+    faltantes: string[];
+    sinEconomia: string[];
+    activaciones: number;
+    personasPrevistas: number;
+    redenciones: number;
+    conversion: number;
+    personasAtendidas: number;
+    consumoAtribuido: number;
+    comision: number;
+    creditoGenerado: number;
+    margen: number;
+    porFuente: Fila[];
+    satisfaccionMedia: number | null;
+    incidencias: number;
+    filas: string[];
+    avisos: string[];
+    cuadra: boolean;
+    detalleConciliacion: string;
+  }
+
+  /* El token se recuerda solo mientras la pestana este abierta: es
+     una credencial, no una preferencia. */
+  try {
+    const guardado = sessionStorage.getItem(CLAVE_TOKEN);
+    if (guardado) (form.elements.namedItem('token') as HTMLInputElement).value = guardado;
+  } catch {
+    /* Sin sessionStorage se teclea cada vez, que tampoco es grave. */
+  }
+
+  /* La fecha por defecto es hoy en Colombia, no la del aparato: un
+     portatil en otro huso pediria la semana equivocada. */
+  const hoy = new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  (form.elements.namedItem('fecha') as HTMLInputElement).value = hoy;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+    const token = (form.elements.namedItem('token') as HTMLInputElement).value;
+    const fecha = (form.elements.namedItem('fecha') as HTMLInputElement).value;
+
+    const respuesta = await informe<Datos>(fecha, token);
+    if (!respuesta.ok || !respuesta.datos) {
+      caja.hidden = true;
+      error.hidden = false;
+      error.textContent =
+        respuesta.motivo === 'NO_AUTORIZADO'
+          ? 'Ese token no sirve, o todavía no se ha configurado ninguno en el servidor.'
+          : (respuesta.explicacion ?? 'No se pudo consultar el informe.');
+      return;
+    }
+
+    try {
+      sessionStorage.setItem(CLAVE_TOKEN, token);
+    } catch {
+      /* Da igual: el informe ya esta. */
+    }
+
+    const d = respuesta.datos;
+    error.hidden = true;
+    caja.hidden = false;
+
+    const conciliacion = $('[data-conciliacion]')!;
+    conciliacion.innerHTML = '';
+    const titulo = document.createElement('strong');
+    /* "No cuadra" y "no hay datos" no son lo mismo, y confundirlos es
+       como se firma una liquidación vacía sin que nadie se entere. */
+    titulo.textContent = d.cuadra
+      ? 'Los totales cuadran'
+      : d.faltantes.length || d.sinEconomia.length
+        ? 'INFORME INCOMPLETO: no se puede liquidar'
+        : d.redenciones === 0
+          ? 'Sin datos que cuadrar en esta semana'
+          : 'ATENCIÓN: los totales no cuadran';
+    conciliacion.append(titulo, document.createTextNode(` ${d.detalleConciliacion}`));
+    for (const aviso of d.avisos) {
+      const p = document.createElement('p');
+      p.textContent = aviso;
+      conciliacion.append(p);
+    }
+
+    const pon = (sel: string, valor: string) => ($(sel)!.textContent = valor);
+    pon('[data-rango]', `Del ${d.semana.lunes} al ${d.semana.domingo}`);
+    pon('[data-activaciones]', String(d.activaciones));
+    pon('[data-personas-previstas]', String(d.personasPrevistas));
+    pon('[data-redenciones]', String(d.redenciones));
+    pon('[data-cierres]', String(d.cerradasSinConsumo));
+    pon('[data-conversion]', `${d.conversion}%`);
+    pon('[data-personas]', String(d.personasAtendidas));
+    pon('[data-consumo]', pesos(d.consumoAtribuido));
+    pon('[data-comision]', pesos(d.comision));
+    pon('[data-credito]', pesos(d.creditoGenerado));
+    pon('[data-margen]', pesos(d.margen));
+    pon('[data-satisfaccion]', d.satisfaccionMedia === null ? '—' : `${d.satisfaccionMedia} / 5`);
+    pon('[data-incidencias]', String(d.incidencias));
+
+    const fuentes = $('[data-fuentes]')!;
+    fuentes.innerHTML = '';
+    if (!d.porFuente.length) {
+      const li = document.createElement('li');
+      li.textContent = 'Sin activaciones esta semana.';
+      fuentes.append(li);
+    }
+    for (const f of d.porFuente) {
+      const li = document.createElement('li');
+      li.textContent = `${f.etiqueta}: ${f.activaciones} activación(es), ${f.redenciones} redención(es)`;
+      fuentes.append(li);
+    }
+
+    const reglas = $('[data-reglas]')!;
+    reglas.innerHTML = '';
+    if (!d.porRegla.length) {
+      const li = document.createElement('li');
+      li.textContent = 'Sin redenciones esta semana.';
+      reglas.append(li);
+    }
+    for (const b of d.porRegla) {
+      const li = document.createElement('li');
+      const codigo = document.createElement('code');
+      codigo.textContent = b.reglaVersion;
+      const detalle = document.createElement('span');
+      detalle.className = 'piloto__ayuda';
+      detalle.textContent =
+        `${b.redenciones} redención(es) · comisión ${b.comisionPct}% · crédito ${b.creditoPct}% · ` +
+        `consumo ${pesos(b.consumo)} · comisión ${pesos(b.comision)} · crédito ${pesos(b.credito)} · margen ${pesos(b.margen)}`;
+      li.append(codigo, document.createElement('br'), detalle);
+      reglas.append(li);
+    }
+
+    $('[data-filas]')!.textContent = d.filas.join('\n');
+  });
+
+  $('[data-copiar]')!.addEventListener('click', async () => {
+    const aviso = $('[data-copiado]')!;
+    try {
+      await navigator.clipboard.writeText($('[data-filas]')!.textContent ?? '');
+      aviso.textContent = 'Copiado.';
+    } catch {
+      aviso.textContent = 'Este navegador no deja copiar solo: selecciona el bloque.';
+    }
+  });
+</script>

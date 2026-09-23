@@ -111,7 +111,10 @@
 
 .piloto__qr {
   display: block;
-  width: min(15rem, 62vw);
+  /* Grande a proposito. Esto se lee desde el otro lado de una mesa,
+     con un movil que no es el tuyo y con la luz de un restaurante.
+     15rem era comodo de maquetar y justo de leer. */
+  width: min(20rem, 82vw);
   height: auto;
   margin: 0 auto var(--esp-2);
   border: 8px solid var(--color-blanco);
@@ -374,4 +377,345 @@
   .piloto__titulo {
     font-size: 2rem;
   }
+}
+
+/* ============================================================
+   ATH-LOOP-002 — LO QUE AÑADE EL FLUJO COMERCIAL
+
+   La hoja de arriba viste el piloto técnico, que es una
+   herramienta. Lo de aquí viste el recorrido del cliente, que es
+   otra cosa: alguien con hambre, de pie, que decide en dos
+   segundos si esto vale la pena.
+
+   La regla que manda: lo que el cliente gana se ve antes que nada
+   y sin leer. Por eso el bloque del premio es lo más grande de la
+   pantalla, y por eso lo opcional va después del botón y plegado.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   EL PREMIO — la cifra primero
+
+   El porcentaje va en grande y solo. Una frase que empieza «el 5%
+   de tu consumo vuelve a ti…» obliga a leerla entera para saber de
+   qué va; la cifra sola se entiende de un vistazo y la frase la
+   explica después.
+   ------------------------------------------------------------ */
+.piloto__premio {
+  text-align: center;
+  padding: var(--esp-3) var(--esp-2);
+  margin: 0 0 var(--esp-3);
+  border-radius: var(--radio-md);
+  background: var(--color-noche);
+  color: var(--color-blanco);
+}
+
+.piloto__premio-cifra {
+  font-family: var(--fuente-titulo);
+  font-size: clamp(3rem, 18vw, 4.5rem);
+  line-height: 1;
+  margin: 0;
+  color: var(--color-sal-claro);
+}
+
+.piloto__premio-texto {
+  font-size: 1.05rem;
+  margin: var(--esp-1) 0 0;
+}
+
+.piloto__premio-pie {
+  margin: var(--esp-1) 0 0;
+  font-size: 0.9rem;
+  /* Sobre el azul noche, este gris da 7:1 largo. */
+  color: #cbd5e1;
+}
+
+.piloto__boton--grande {
+  min-height: 3.75rem;
+  font-size: 1.15rem;
+}
+
+/* ------------------------------------------------------------
+   LO OPCIONAL — después del botón, y plegado
+
+   Si esto estuviera arriba, sería un formulario con un botón al
+   final: exactamente lo que la orden pide evitar. Aquí es un
+   añadido que la mayoría no va a abrir, y está bien que no lo
+   abran.
+   ------------------------------------------------------------ */
+.piloto__opcional {
+  margin: var(--esp-3) 0 0;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  padding: 0 var(--esp-2);
+}
+
+.piloto__opcional > summary {
+  /* 48 px de alto para el dedo, como todo lo que se toca aquí. */
+  padding: 0.9rem 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.piloto__opcional[open] > summary {
+  border-bottom: 1px solid var(--borde);
+  margin-bottom: var(--esp-2);
+}
+
+.piloto__opcional > *:last-child {
+  margin-bottom: var(--esp-2);
+}
+
+.piloto__consentimiento {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  margin: 0 0 var(--esp-2);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.piloto__consentimiento input {
+  /* Una casilla de consentimiento pequeña es una casilla que se
+     marca sin querer. */
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.1rem;
+  flex: none;
+}
+
+.piloto__campo--importe input {
+  font-size: 1.6rem;
+  font-variant-numeric: tabular-nums;
+  min-height: 3.75rem;
+}
+
+/* ------------------------------------------------------------
+   LAS CINCO CARAS
+
+   Radios de verdad debajo: el teclado y el lector de pantalla los
+   recorren como lo que son, y sin ratón se navega con las flechas.
+   Lo que se ve es la carita; lo que existe es el radio.
+   ------------------------------------------------------------ */
+.piloto__caritas {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25rem;
+  border: 0;
+  padding: 0;
+  margin: 0 0 var(--esp-3);
+}
+
+.piloto__caritas legend {
+  font-weight: 600;
+  margin-bottom: var(--esp-1);
+}
+
+.piloto__carita {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 4.5rem;
+  padding: 0.5rem 0.2rem;
+  border: 2px solid var(--borde);
+  border-radius: var(--radio-sm);
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+
+.piloto__carita input {
+  /* Ocupa la tarjeta entera en vez de encogerse a cero: así el
+     área que se toca es la que se ve, y sigue siendo un radio de
+     verdad para el teclado y el lector de pantalla. Un input de
+     0×0 es invisible también para el dedo. */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.piloto__carita-texto {
+  font-size: 0.7rem;
+  color: var(--color-gris-700);
+  text-align: center;
+}
+
+.piloto__carita:has(input:checked) {
+  border-color: var(--color-marca);
+  background: #eaf2fb;
+}
+
+.piloto__carita:has(input:focus-visible) {
+  outline: 3px solid var(--color-marca);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------
+   PIE DEL CLIENTE — una línea y se acaba
+   ------------------------------------------------------------ */
+.piloto__firma {
+  margin-top: var(--esp-5);
+  padding-top: var(--esp-2);
+  border-top: 1px solid var(--borde);
+}
+
+.piloto__provisional {
+  margin-top: var(--esp-3);
+  font-size: 0.8rem;
+}
+
+/* Bloques que son para quien opera, no para quien consume. */
+.piloto__solo-admin {
+  margin-top: var(--esp-5);
+  background: var(--color-gris-100);
+}
+
+/* ------------------------------------------------------------
+   LA PANTALLA DE SALIDA DEL CLIENTE
+
+   Una cifra, un boton, y despues una instruccion. Lo que sobre
+   compite con lo unico que hay que hacer.
+   ------------------------------------------------------------ */
+.piloto__pie-dato--bajo-boton {
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+}
+
+/* La instruccion de despues del QR: una linea, grande, sin adornos.
+   Es lo que el cliente le va a decir al camarero. */
+.piloto__instruccion {
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 var(--esp-2);
+  color: var(--color-noche);
+}
+
+/* Lo opcional NO puede parecer un paso del camino: sin caja, en
+   gris y en letra pequena. Sigue teniendo 48 px de alto para el
+   dedo, que eso no se negocia. */
+.piloto__opcional--discreto {
+  border: 0;
+  padding: 0;
+  margin-top: var(--esp-3);
+}
+
+.piloto__opcional--discreto > summary {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-gris-700);
+  text-align: center;
+  text-decoration: underline;
+}
+
+.piloto__opcional--discreto[open] > summary {
+  border-bottom: 0;
+  margin-bottom: var(--esp-2);
+}
+
+/* ------------------------------------------------------------
+   PANTALLA DEL LOCAL — escáner, enlace secundario y error de valor
+   ------------------------------------------------------------ */
+.piloto__enlace {
+  display: block;
+  width: 100%;
+  min-height: 3rem;
+  margin-top: var(--esp-2);
+  padding: 0.6rem 1rem;
+  border: 0;
+  background: none;
+  color: var(--color-marca);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.piloto__enlace:focus-visible {
+  outline: 3px solid var(--color-noche);
+  outline-offset: 2px;
+}
+
+.piloto__visor {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--radio-sm);
+  background: #000;
+}
+
+.piloto__visor video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.piloto__mira {
+  position: absolute;
+  inset: 15%;
+  border: 3px solid rgb(255 255 255 / 0.85);
+  border-radius: var(--radio-sm);
+  pointer-events: none;
+}
+
+.piloto__escaner .piloto__instruccion {
+  margin: var(--esp-2) 0;
+}
+
+.piloto__campo input::placeholder {
+  color: var(--color-gris-700);
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.piloto__campo input[aria-invalid="true"] {
+  border-color: #b42318;
+  background: #fff5f4;
+}
+
+.piloto__error {
+  margin: var(--esp-1) 0 var(--esp-2);
+  font-weight: 700;
+  color: #7a1f1f;
+}
+
+.piloto__boton[aria-disabled="true"] {
+  opacity: 0.55;
+}
+
+/* ------------------------------------------------------------
+   PANTALLA DEL CLIENTE — cierre de la visita, sin recargar
+   ------------------------------------------------------------ */
+.piloto__listo {
+  text-align: center;
+}
+
+.piloto__listo:focus {
+  outline: none;
+}
+
+.piloto__listo .piloto__cuenta {
+  text-align: left;
+}
+
+.piloto__listo-gano {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-gris-700);
+}
+
+.piloto__listo-cifra {
+  font-family: var(--fuente-titulo);
+  font-size: clamp(3rem, 16vw, 4.25rem);
+  line-height: 1.1;
+  margin: 0.25rem 0;
+  color: var(--color-marca);
 }

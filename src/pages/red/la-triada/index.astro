@@ -1,0 +1,373 @@
+---
+/* ============================================================
+   RED ATHERON x LA TRIADA — PANTALLA DEL CLIENTE (ATH-LOOP-002)
+
+   UN TOQUE. Llegar, ver lo que gana, pulsar. Nada mas.
+
+   ============================================================
+   LO QUE LA PRUEBA FISICA ENSENO
+   ============================================================
+
+   En la prueba real, el cliente pulso el boton y lo que vio fue:
+   personas, WhatsApp, consentimiento y un error. Tuvo que adivinar
+   que rellenar. Da igual que los campos fueran opcionales y que
+   estuvieran plegados: estaban AHI, junto a la accion principal, y
+   cualquier cosa junto a la accion principal parece parte de ella.
+
+   Asi que ahora la pantalla de salida tiene exactamente dos cosas:
+   el 5% y un boton que dice "Activar mi 5%". Ni un campo, ni un
+   desplegable, ni una pregunta. Lo opcional esta debajo, como un
+   enlace discreto que hay que querer abrir, y no aparece hasta que
+   se ha visto el beneficio.
+
+   La medida es la de la orden: un nino tiene que entender que hacer
+   sin que nadie se lo explique.
+
+   QUE VE, Y QUE NO
+
+   Ve lo que gana: el Credito Atheron. No ve la comision del aliado,
+   ni el margen, ni el reparto. No es opacidad: es que el cliente no
+   tiene ninguna razon para entender como se reparte por dentro un
+   acuerdo entre dos empresas, y contarselo solo le quita sitio a lo
+   que si le importa.
+
+   DE DONDE SALE EL CODIGO
+
+   Del servidor, no del navegador. Por eso es unico de verdad y por
+   eso esta pantalla no puede funcionar sin API. Fingir que activa
+   -guardando en el navegador "mientras tanto"- seria volver a los
+   dos moviles que no se ven que este trabajo viene a arreglar.
+
+   Si algo falla, se dice en una frase que se puede leer de pie, y
+   sin jerga: la clasificacion del fallo esta en src/data/api-red.ts.
+   ============================================================ */
+import Base from '../../../layouts/Base.astro';
+import RedPie from '../../../components/RedPie.astro';
+import { PILOTO } from '../../../data/piloto-la-triada';
+import { COPY_CREDITO, REGLA, REPARTO_CONFIRMADO } from '../../../data/economia-red';
+import { MAX_PERSONAS } from '../../../data/transacciones-red';
+import { RUTAS } from '../../../data/api-red';
+---
+
+<Base
+  titulo={`Tu beneficio en ${PILOTO.aliado} | Red Atheron`}
+  descripcion="Página interna del piloto Atheron × La Triada. No es una página pública del sitio."
+  ruta={RUTAS.activar}
+  indexable={false}
+  seguirEnlaces={false}
+  jsonLd={null}
+  hojasExtra={['piloto']}
+>
+  <main id="contenido" class="piloto">
+    <h1 class="piloto__titulo">Tu beneficio en {PILOTO.aliado}</h1>
+
+    {/* --- Lo que gana. Una cifra y una linea: nada mas --- */}
+    <div class="piloto__premio">
+      <p class="piloto__premio-cifra">{REGLA.creditoPct}%</p>
+      <p class="piloto__premio-texto">de lo que consumas, en Crédito Atheron</p>
+    </div>
+
+    {/* --- LA accion. Sola. --- */}
+    <div data-paso="inicio">
+      <button class="piloto__boton piloto__boton--grande" type="button" data-activar>
+        Activar mi {REGLA.creditoPct}%
+      </button>
+      <p class="piloto__pie-dato piloto__pie-dato--bajo-boton">Un toque. No hay que rellenar nada.</p>
+
+      {/* Lo opcional: debajo, discreto y cerrado. Abrirlo es una
+          decision de quien quiera, no un paso del camino. */}
+      <details class="piloto__opcional piloto__opcional--discreto">
+        <summary>Opcional: somos varios o quiero que me escriban</summary>
+        <label class="piloto__campo">
+          <span>¿Cuántos sois? (opcional)</span>
+          <input name="personas" type="number" inputmode="numeric" min="1" max={MAX_PERSONAS} />
+          <span class="piloto__ayuda">Así {PILOTO.aliado} sabe cuántos sois.</span>
+        </label>
+        <label class="piloto__campo">
+          <span>WhatsApp (opcional)</span>
+          <input name="contacto" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" />
+        </label>
+        <label class="piloto__consentimiento">
+          <input type="checkbox" name="consiente" />
+          <span>
+            Quiero que Atheron me escriba una vez después de la visita para saber cómo me fue.
+            Sin esto, tu número no se guarda.
+          </span>
+        </label>
+      </details>
+    </div>
+
+    {/* --- Ya activado: el QR manda, y debajo una sola instruccion --- */}
+    <div class="piloto__tarjeta" data-paso="codigo" hidden>
+      <div data-qr></div>
+      <p class="piloto__instruccion">Muéstralo en {PILOTO.aliado} al pedir la cuenta</p>
+      <p class="piloto__codigo" data-codigo aria-live="polite"></p>
+      <p class="piloto__pie-dato" data-caducidad></p>
+      <p class="piloto__pie-dato"><span class="piloto__estado" data-insignia></span></p>
+      <p class="piloto__pie-dato">{COPY_CREDITO.donde} {COPY_CREDITO.vigencia}</p>
+    </div>
+
+    {/* --- Ya consumido ---
+         Aparece SOLO cuando el servidor dice REDIMIDO: sin recargar,
+         porque la pantalla del QR pregunta a /api/estado mientras
+         espera. Solo consumo, credito, vigencia y estado del
+         beneficio: ni comision, ni margen, ni nada del local. */}
+    <div class="piloto__tarjeta piloto__listo" data-paso="listo" hidden tabindex="-1">
+      <h2 data-titulo-listo><span aria-hidden="true">🎉</span> ¡Tu visita fue registrada!</h2>
+      <p class="piloto__listo-gano">Ganaste</p>
+      <p class="piloto__listo-cifra" data-credito></p>
+      <p class="piloto__listo-gano">en Crédito Atheron</p>
+      <ul class="piloto__cuenta">
+        <li><span>Tu consumo en {PILOTO.aliado}</span> <strong data-consumo></strong></li>
+      </ul>
+      <p>Tu Crédito Atheron quedó registrado.<br /><span data-vigencia-credito></span></p>
+      <p class="piloto__pie-dato"><span class="piloto__estado" data-estado-credito></span></p>
+      <div class="piloto__botones">
+        <button class="piloto__boton" type="button" disabled aria-describedby="guardar-pronto">
+          Guardar mi Crédito Atheron
+        </button>
+        <p class="piloto__pie-dato" id="guardar-pronto">Próximamente podrás vincularlo a tu cuenta Atheron.</p>
+        <a class="piloto__boton piloto__boton--secundario" data-ir-seguimiento href={RUTAS.seguimiento}>¿Cómo te fue?</a>
+      </div>
+    </div>
+
+    <div class="piloto__resultado piloto__resultado--no" data-error hidden role="status" aria-live="polite"></div>
+
+    {!REPARTO_CONFIRMADO && (
+      <p class="piloto__pie-dato piloto__provisional">{COPY_CREDITO.provisional}</p>
+    )}
+
+    <noscript>
+      <div class="piloto__tarjeta">
+        <h2>Hace falta JavaScript</h2>
+        <p>Actívalo y vuelve a cargar esta página para pedir tu beneficio.</p>
+      </div>
+    </noscript>
+
+    <RedPie actual={RUTAS.activar} />
+  </main>
+</Base>
+
+<script>
+  import { qrSvg } from '../../../data/qr';
+  import { ETIQUETA_ESTADO, caducaEl, pesos } from '../../../data/piloto-la-triada';
+  import { VIGENCIA_CREDITO_DIAS } from '../../../data/economia-red';
+  import { esFuente } from '../../../data/transacciones-red';
+  import {
+    activar,
+    consultar,
+    estadoPublico,
+    guardaFuente,
+    fuenteGuardada,
+    recuerda,
+    recordado,
+    MENSAJE_FALLO,
+    RUTAS,
+    type TransaccionVista,
+  } from '../../../data/api-red';
+
+  const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel);
+  const pasos = {
+    inicio: $('[data-paso="inicio"]')!,
+    codigo: $('[data-paso="codigo"]')!,
+    listo: $('[data-paso="listo"]')!,
+  };
+  const error = $('[data-error]')!;
+
+  /* La fuente llega por ?f= y se recuerda durante la visita: quien
+     entra por el QR del local puede activar dos pantallas despues. */
+  const parametros = new URLSearchParams(location.search);
+  const dePeticion = parametros.get('f') ?? '';
+  if (esFuente(dePeticion)) guardaFuente(dePeticion);
+  const fuente = esFuente(dePeticion) ? dePeticion : (fuenteGuardada() ?? undefined);
+
+  function avisa(texto: string): void {
+    error.hidden = false;
+    error.textContent = texto;
+  }
+
+  function pinta(t: TransaccionVista): void {
+    recuerda(t.codigo);
+    error.hidden = true;
+    for (const p of Object.values(pasos)) p.hidden = true;
+
+    if (t.estado === 'REDIMIDO' && t.consumo !== undefined) {
+      paraEspera();
+      pintaListo(t.codigo, t.consumo, t.credito ?? 0);
+      return;
+    }
+
+    if (t.estado === 'NO_REDIMIDO') {
+      pasos.inicio.hidden = false;
+      avisa('Ese código se cerró sin consumo. Puedes activar otro.');
+      return;
+    }
+
+    pasos.codigo.hidden = false;
+    $('[data-codigo]')!.textContent = t.codigo;
+
+    const insignia = $('[data-insignia]')!;
+    insignia.textContent = ETIQUETA_ESTADO[t.estado];
+    insignia.className = 'piloto__estado piloto__estado--activado';
+
+    const caduca = caducaEl(new Date(t.activadoEn));
+    $('[data-caducidad]')!.textContent = `Válido hasta las ${caduca.toLocaleTimeString('es-CO', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'America/Bogota',
+    })} de hoy.`;
+
+    /* El QR lleva la direccion de este mismo despliegue: en la prueba
+       esto corre en un preview, no en el dominio final. */
+    $('[data-qr]')!.innerHTML = qrSvg(
+      `${location.origin}${RUTAS.validar}?c=${encodeURIComponent(t.codigo)}`,
+      `Código ${t.codigo}`,
+    ).replace('<svg ', '<svg class="piloto__qr" ');
+
+    if (t.vigente !== false) esperaRegistro(t.codigo);
+  }
+
+  /* El cierre de la visita, con los datos REALES de la transaccion.
+     Lo unico verdadero que se puede decir del credito hoy: registrado
+     a nombre de este codigo y pendiente de vinculacion. Decir que es
+     "tuyo" o que "se aplica solo" seria prometer algo que el sistema
+     todavia no puede cumplir. */
+  function pintaListo(codigo: string, consumo: number, credito: number, dias = VIGENCIA_CREDITO_DIAS): void {
+    const yaVisible = !pasos.listo.hidden;
+    for (const p of Object.values(pasos)) p.hidden = true;
+    $('[data-qr]')!.innerHTML = '';
+    pasos.listo.hidden = false;
+    $('[data-consumo]')!.textContent = pesos(consumo);
+    $('[data-credito]')!.textContent = pesos(credito);
+    $('[data-vigencia-credito]')!.textContent = `Vigencia: ${dias} días.`;
+    const insigniaCredito = $('[data-estado-credito]')!;
+    insigniaCredito.textContent = 'Generado, pendiente de vinculación';
+    insigniaCredito.className = 'piloto__estado piloto__estado--activado';
+    ($('[data-ir-seguimiento]') as HTMLAnchorElement).href =
+      `${RUTAS.seguimiento}?c=${encodeURIComponent(codigo)}`;
+    /* Si cambia delante del cliente, el foco va al resultado: asi lo
+       anuncia tambien un lector de pantalla. */
+    if (!yaVisible) pasos.listo.focus();
+  }
+
+  /* ---------- ESPERAR A QUE EL LOCAL REGISTRE ----------
+     Mientras el QR esta en pantalla se pregunta a /api/estado cada
+     pocos segundos. Se para cuando la visita queda REDIMIDA o cerrada,
+     cuando el codigo caduca o no existe, y se pausa con la pestana en
+     segundo plano (al volver se reanuda). Si la red falla, se espacia
+     y se reintenta: un fallo de red no es un final. Si el cliente
+     cierra la pagina, no pasa nada: el registro es del servidor. */
+  const CADA_MS = 4000;
+  const CADA_MS_LENTO = 15000;
+  let esperando: string | null = null;
+  let temporizador: ReturnType<typeof setTimeout> | undefined;
+
+  function paraEspera(): void {
+    esperando = null;
+    clearTimeout(temporizador);
+  }
+
+  function programa(ms: number): void {
+    clearTimeout(temporizador);
+    if (esperando && !document.hidden) temporizador = setTimeout(() => void pregunta(), ms);
+  }
+
+  function esperaRegistro(codigo: string): void {
+    if (esperando === codigo) return;
+    esperando = codigo;
+    programa(CADA_MS);
+  }
+
+  async function pregunta(): Promise<void> {
+    const codigo = esperando;
+    if (!codigo) return;
+    const r = await estadoPublico(codigo);
+    if (esperando !== codigo) return;
+    if (r.ok && r.datos) {
+      const e = r.datos;
+      if (e.estado === 'REDIMIDO' && e.consumo !== undefined) {
+        paraEspera();
+        pintaListo(e.codigo, e.consumo, e.credito ?? 0, e.vigenciaCreditoDias ?? VIGENCIA_CREDITO_DIAS);
+        return;
+      }
+      if (e.estado === 'NO_REDIMIDO') {
+        paraEspera();
+        for (const p of Object.values(pasos)) p.hidden = true;
+        pasos.inicio.hidden = false;
+        avisa('Ese código se cerró sin consumo. Puedes activar otro.');
+        return;
+      }
+      if (e.vigente === false) {
+        paraEspera();
+        avisa('Este código caducó. Puedes activar otro mañana.');
+        return;
+      }
+      programa(CADA_MS);
+      return;
+    }
+    /* 404 o codigo invalido: definitivo, no se insiste. */
+    if (r.motivo === 'NO_EXISTE' || r.motivo === 'CODIGO_INVALIDO') {
+      paraEspera();
+      return;
+    }
+    /* Red caida, servidor ocupado o demasiadas peticiones: mas despacio. */
+    programa(CADA_MS_LENTO);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) clearTimeout(temporizador);
+    else if (esperando) programa(0);
+  });
+
+  const boton = $<HTMLButtonElement>('[data-activar]')!;
+  const TEXTO_BOTON = boton.textContent ?? '';
+
+  boton.addEventListener('click', async () => {
+    /* Cargando: el boton lo dice, se desactiva para que dos toques
+       no generen dos codigos, y el error anterior se borra -dejarlo
+       debajo de un "Activando…" es contarle dos historias a la vez. */
+    boton.disabled = true;
+    boton.setAttribute('aria-busy', 'true');
+    boton.textContent = 'Activando…';
+    error.hidden = true;
+
+    const personas = Number(($('input[name="personas"]') as HTMLInputElement).value);
+    const contacto = ($('input[name="contacto"]') as HTMLInputElement).value;
+    const consiente = ($('input[name="consiente"]') as HTMLInputElement).checked;
+
+    const respuesta = await activar({
+      fuente: fuente as never,
+      personas: Number.isFinite(personas) && personas > 0 ? personas : undefined,
+      contacto: consiente ? contacto : undefined,
+      consienteSeguimiento: consiente && Boolean(contacto.trim()),
+    });
+
+    boton.disabled = false;
+    boton.removeAttribute('aria-busy');
+    boton.textContent = TEXTO_BOTON;
+
+    if (respuesta.ok && respuesta.datos) {
+      pinta(respuesta.datos);
+      return;
+    }
+    /* Nunca un mensaje tecnico: api-red.ts ya ha traducido el fallo a
+       una frase que se puede leer de pie en un restaurante. */
+    avisa(respuesta.explicacion ?? MENSAJE_FALLO.SERVIDOR);
+  });
+
+  /* Al volver a la pantalla -tipicamente despues de que el local
+     confirme el consumo- se relee del servidor. El navegador no
+     decide nada: solo pregunta. */
+  async function refresca(): Promise<void> {
+    const mio = recordado();
+    if (!mio) return;
+    const respuesta = await consultar(mio);
+    if (respuesta.ok && respuesta.datos) pinta(respuesta.datos);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) void refresca();
+  });
+
+  void refresca();
+</script>

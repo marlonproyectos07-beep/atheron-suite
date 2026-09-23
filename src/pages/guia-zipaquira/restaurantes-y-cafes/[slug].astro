@@ -20,6 +20,10 @@
      valoracion, ni propia ni de terceros.
    - Precios sin fecha, capacidad, distancias sin medir.
 
+   EL BENEFICIO DE LA RED, CUANDO EXISTE, MANDA
+   Si el aliado tiene el circuito real (FichaExtra.beneficioRed), el
+   boton principal es "Activar mi 5%" y los grupos pasan a secundario.
+
    EL BLOQUE DE GRUPOS ES DE ATHERON, NO DEL LOCAL
    «¿Vienes con un grupo a Zipaquirá?» es nuestra cotizacion. No
    afirma que el local tenga menu de grupos, cupo ni tarifa. Lo que el
@@ -39,6 +43,9 @@ import { CIUDAD, WA_GUIA } from '../../../data/guia-zipaquira';
 import { extraDe, HUB_RESTAURANTES } from '../../../data/fichas-lugares';
 import { atributosRed, EVENTO_HOSPEDAJE } from '../../../data/eventos-red';
 import { fechaLarga } from '../../../data/fechas';
+import { RUTAS } from '../../../data/api-red';
+import { REGLA } from '../../../data/economia-red';
+import type { Fuente } from '../../../data/transacciones-red';
 
 export function getStaticPaths() {
   return experienciasDe(CIUDAD.nombre)
@@ -60,6 +67,13 @@ const RUTA = lugar.rutaFicha!;
 
 const hayFoto = Boolean(lugar.foto && lugar.fotoAlt);
 const esAliado = lugar.estadoComercial === 'ALIADO';
+/* EL BENEFICIO DE LA RED (ATH-LOOP-002). El boton lleva al circuito
+   REAL de activacion -el mismo que ya se probo en caja-, con la
+   fuente de la ficha para saber de donde vino cada visita. El
+   porcentaje sale de la regla vigente, no se escribe a mano. Al
+   visitante solo se le dice lo que gana: ni comision ni margen. */
+const FUENTE_FICHA: Fuente = 'ficha-la-triada';
+const activacionRed = esAliado && extra.beneficioRed ? `${RUTAS.activar}?f=${FUENTE_FICHA}` : null;
 /* Los precios de la carta solo salen con su fecha. */
 const platosConPrecio = extra.menu?.fechaPrecios && extra.menu.platos?.length ? extra.menu.platos : null;
 
@@ -119,7 +133,14 @@ const ficha = {
         <h1 class="hero__titulo">{lugar.nombre}</h1>
         <p class="hero__texto">{lugar.descripcion}</p>
         <div class="grupo-botones">
-          <a class="boton boton--acento boton--grande" href="#grupo">¿Vienes con un grupo?</a>
+          {activacionRed ? (
+            <>
+              <a class="boton boton--acento boton--grande" href={activacionRed} data-activar-beneficio>Activar mi {REGLA.creditoPct}%</a>
+              <a class="boton boton--claro" href="#grupo">¿Vienes con un grupo?</a>
+            </>
+          ) : (
+            <a class="boton boton--acento boton--grande" href="#grupo">¿Vienes con un grupo?</a>
+          )}
         </div>
       </div>
     </section>
@@ -152,19 +173,52 @@ const ficha = {
     )}
 
     {/* ============================================================
+         BENEFICIO ATHERON — el circuito real de la Red
+         Va antes que los datos: es lo que el visitante tiene que
+         entender en pocos segundos. Sin formulario delante: un toque
+         lleva a la activacion, que tampoco pide nada.
+         ============================================================ */}
+    {activacionRed && (
+      <section class="seccion seccion--estrecha" id="beneficio">
+        <div class="contenedor guia__cuerpo">
+          <div class="ficha__beneficio">
+            <p class="ficha__beneficio-etiqueta">Beneficio Atheron</p>
+            <p class="ficha__beneficio-titulo">
+              Recibe el <strong>{REGLA.creditoPct}%</strong> de tu consumo en Crédito Atheron.
+            </p>
+            <p class="ficha__beneficio-texto">
+              Pagas tu cuenta normalmente en {lugar.nombre} y te llevas Crédito Atheron.
+            </p>
+            <a class="boton boton--acento boton--grande ficha__beneficio-boton" href={activacionRed}>
+              Activar mi {REGLA.creditoPct}%
+            </a>
+            <p class="ficha__beneficio-nota">
+              Actívalo antes de pedir la cuenta. Te mostraremos un QR para que {lugar.nombre} registre tu visita.
+            </p>
+          </div>
+        </div>
+      </section>
+    )}
+
+    {/* ============================================================
          DATOS DEL LUGAR — cada uno solo si existe
          ============================================================ */}
-    {(hayFoto || extra.intro || lugar.direccion || lugar.horarios?.length || lugar.sitioOficial || lugar.mapa || lugar.telefono) && (
+    {(hayFoto || extra.intro || extra.especialidad || extra.precioPorPersona || lugar.direccion || lugar.horarios?.length || lugar.sitioOficial || lugar.mapa || lugar.telefono) && (
       <section class="seccion seccion--estrecha" id="datos">
         <div class="contenedor guia__cuerpo">
           <h2>Lo que sabemos de {lugar.nombre}</h2>
           {hayFoto && <Foto src={lugar.foto} alt={lugar.fotoAlt} medidas="(min-width: 900px) 40rem, 92vw" />}
           {extra.intro?.map((p) => <p>{p}</p>)}
           <ul class="red__datos">
+            {extra.especialidad && <li><span>Especialidad</span> <strong>{extra.especialidad}</strong></li>}
+            {extra.precioPorPersona && <li><span>Precio aproximado por persona</span> <strong>{extra.precioPorPersona.rango}</strong></li>}
             {lugar.direccion && <li><span>Dirección</span> <strong>{lugar.direccion}</strong></li>}
             {lugar.telefono && <li><span>Teléfono</span> <strong>{lugar.telefono}</strong></li>}
             {lugar.horarios?.map((h) => <li><span>{h.dia}</span> <strong>{h.horas}</strong></li>)}
           </ul>
+          {extra.precioPorPersona && (
+            <p class="guia__fuente">Precio confirmado por el local el {fechaLarga(extra.precioPorPersona.fecha)}. Puede cambiar: confirma en el local.</p>
+          )}
           {(lugar.sitioOficial || lugar.mapa) && (
             <p class="lugar__enlaces">
               {lugar.sitioOficial && <a href={lugar.sitioOficial} target="_blank" rel="noopener noreferrer">Sitio oficial</a>}
@@ -180,6 +234,26 @@ const ficha = {
         <div class="contenedor guia__cuerpo">
           <h2>Platos destacados</h2>
           <ul class="lista-check">{extra.platosDestacados.map((p) => <li>{p}</li>)}</ul>
+        </div>
+      </section>
+    ) : null}
+
+    {extra.recomendaciones?.length ? (
+      <section class="seccion seccion--estrecha" id="recomendaciones">
+        <div class="contenedor guia__cuerpo">
+          <h2>Qué pedir, según {lugar.nombre}</h2>
+          <ul class="red__datos">
+            {extra.recomendaciones.map((r) => <li><span>{r.etiqueta}</span> <strong>{r.texto}</strong></li>)}
+          </ul>
+        </div>
+      </section>
+    ) : null}
+
+    {extra.servicios?.length ? (
+      <section class="seccion seccion--alterna" id="servicios">
+        <div class="contenedor guia__cuerpo">
+          <h2>Servicios</h2>
+          <ul class="lista-check">{extra.servicios.map((sv) => <li>{sv}</li>)}</ul>
         </div>
       </section>
     ) : null}
