@@ -201,10 +201,10 @@ export const articulos: Articulo[] = [
     tituloCorto: 'Mes del Patrimonio 2026: agenda',
     rotulo: 'Agenda cultural',
     descripcion:
-      'Agenda verificada del Mes del Patrimonio Cultural de Zipaquirá 2026, con el Trueque de Yerbatería, la ruta Ciudad Patrimonial y enlaces a las fuentes organizadoras.',
+      'Fechas y lugares del Mes del Patrimonio Cultural de Zipaquirá 2026: Trueque de Yerbatería, rutas patrimoniales, Camino del Gone y Canelazo BiblioZipa.',
     autor: 'Atheron Suite',
     publicado: '2026-09-19',
-    modificado: '2026-09-19',
+    modificado: '2026-09-23',
     categoria: CATEGORIA_ZIPAQUIRA,
     imagen: null,
     imagenAlt: null,
@@ -214,12 +214,8 @@ export const articulos: Articulo[] = [
         url: 'https://www.facebook.com/61555818596506/posts/122323254218193953/',
       },
       {
-        titulo: 'Publicación de la programación en Instagram',
-        url: 'https://www.instagram.com/p/DdWktkxkcq1/',
-      },
-      {
-        titulo: 'Camino del Gone — contexto histórico regional',
-        url: 'https://www.conexionsabana360.com/play/videos/camino-del-gone-ecopasaporte-capitulo-2',
+        titulo: 'Alcaldía de Tocancipá — Camino del Gone',
+        url: 'https://www.tocancipa-cundinamarca.gov.co/atencion-servicios-ciudadania/portal-ninos/institucional-1/enterate/sitios-interes/camino-del-gone',
       },
     ],
     enlacesInternos: [

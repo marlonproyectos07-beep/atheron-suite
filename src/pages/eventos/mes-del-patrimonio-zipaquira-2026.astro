@@ -10,15 +10,18 @@ import { migaDePan, url, ORGANIZACION } from '../../data/seo';
 
 const articulo = articuloDe('/eventos/mes-del-patrimonio-zipaquira-2026')!;
 const fuentePrograma = 'https://www.facebook.com/61555818596506/posts/122323254218193953/';
+const fuenteHistoria = 'https://www.tocancipa-cundinamarca.gov.co/atencion-servicios-ciudadania/portal-ninos/institucional-1/enterate/sitios-interes/camino-del-gone';
 const agenda = [
-  { id: 'trueque-yerbateria', fecha: '2026-09-23', dia: '23 de septiembre', hora: '3:00 p. m.', titulo: 'Trueque de Yerbatería', lugar: 'Museo de Zipaquirá — Casa Quevedo Zornoza', condicion: 'La programación consultada no publica costo, cupos ni requisito de inscripción.' },
-  { id: 'ruta-ciudad-patrimonial', fecha: '2026-09-25', dia: '25 de septiembre', hora: '3:30 p. m.', titulo: 'Ruta patrimonial: Zipaquirá Ciudad Patrimonial', lugar: 'Salida desde la Estación del Ferrocarril', condicion: 'Requiere inscripción previa. La programación consultada no publica costo ni cupos.' },
+  { id: 'trueque-yerbateria', fecha: '2026-09-23', hora24: '15:00', dia: '23 de septiembre', hora: '3:00 p. m.', titulo: 'Trueque de Yerbatería', lugar: 'Museo de Zipaquirá — Casa Quevedo Zornoza', condicion: 'La programación consultada no publica costo, cupos ni requisito de inscripción.' },
+  { id: 'ruta-ciudad-patrimonial', fecha: '2026-09-25', hora24: '15:30', dia: '25 de septiembre', hora: '3:30 p. m.', titulo: 'Ruta patrimonial: Zipaquirá Ciudad Patrimonial', lugar: 'Salida desde la Estación del Ferrocarril', condicion: 'Requiere inscripción previa. La programación consultada no publica costo ni cupos.' },
+  { id: 'camino-del-gone', fecha: '2026-09-29', hora24: '07:00', dia: '29 de septiembre', hora: '7:00 a. m.', titulo: 'Recorrido por el Camino del Gone', lugar: 'Salida desde la Estación del Ferrocarril', condicion: 'Requiere inscripción previa. Costo, cupos, duración, dificultad y destino final no publicados.' },
+  { id: 'canelazo-bibliozipa', fecha: '2026-09-30', hora24: '18:00', dia: '30 de septiembre', hora: '6:00 p. m.', titulo: 'Canelazo BiblioZipa: letras, música y patrimonio cultural', lugar: 'Estación del Ferrocarril', condicion: 'Costo, cupos y requisito de inscripción no publicados.' },
 ];
 const ficha = {
   '@context': 'https://schema.org',
   '@graph': [
     { '@type': 'BlogPosting', '@id': `${url(articulo.ruta)}#articulo`, headline: articulo.titulo, description: articulo.descripcion, url: url(articulo.ruta), datePublished: articulo.publicado, dateModified: articulo.modificado, inLanguage: 'es-CO', author: { '@type': 'Organization', name: articulo.autor }, publisher: { '@id': ORGANIZACION['@id'] }, citation: articulo.fuentes.map((f) => f.url ?? f.titulo), mainEntityOfPage: url(articulo.ruta) },
-    ...agenda.map((a) => ({ '@type': 'Event', name: a.titulo, startDate: `${a.fecha}T${a.hora.startsWith('3:00') ? '15:00' : '15:30'}:00-05:00`, location: { '@type': 'Place', name: a.lugar, address: { '@type': 'PostalAddress', addressLocality: 'Zipaquirá', addressRegion: 'Cundinamarca', addressCountry: 'CO' } }, url: fuentePrograma })),
+    ...agenda.map((a) => ({ '@type': 'Event', name: a.titulo, startDate: `${a.fecha}T${a.hora24}:00-05:00`, location: { '@type': 'Place', name: a.lugar, address: { '@type': 'PostalAddress', addressLocality: 'Zipaquirá', addressRegion: 'Cundinamarca', addressCountry: 'CO' } }, url: fuentePrograma })),
     ORGANIZACION,
     migaDePan([{ nombre: 'Inicio', ruta: '/' }, { nombre: 'Blog', ruta: '/blog' }, { nombre: 'Mes del Patrimonio 2026', ruta: articulo.ruta }], `${url(articulo.ruta)}#miga`),
   ],
@@ -34,23 +37,25 @@ const WA = 'Hola, vi la agenda del Mes del Patrimonio en el blog de Atheron y qu
         <nav class="migas" aria-label="Ruta de navegación"><ol><li><a href="/">Inicio</a></li><li><a href="/blog">Blog</a></li><li aria-current="page">Mes del Patrimonio 2026</li></ol></nav>
         <span class="hero__etiqueta">Agenda cultural verificada</span>
         <h1>Mes del Patrimonio Cultural de Zipaquirá 2026</h1>
-        <p class="hero__texto">Fechas confirmadas, contexto para comprender cada encuentro y enlaces a las publicaciones de origen. Atheron organiza la información; la inscripción y las condiciones pertenecen a sus organizadores.</p>
+        <p class="hero__texto">Recorridos, memoria, música y encuentros para volver a mirar la ciudad. Explora la agenda, descubre la historia detrás de sus caminos y consulta cada actividad en la fuente de sus organizadores.</p>
         <span class="evento-hero__fecha">Programación hasta el 12 de octubre de 2026</span>
+        <span class="evento-hero__credito">Imagen recreada de Zipaquirá · Referencia visual, no registro de estas actividades</span>
       </div>
     </section>
 
     <section class="seccion"><div class="contenedor articulo">
       <p class="articulo__meta"><span>Verificado el <time datetime={articulo.modificado}>{fechaLarga(articulo.modificado)}</time></span><span>Por {articulo.autor}</span></p>
-      <div class="respuesta-rapida"><strong>En corto</strong> La agenda reúne actividades sobre memoria, recorridos y prácticas culturales. Para las dos próximas actividades verificadas, no se publicaron cupos ni valores; la ruta del 25 de septiembre sí anuncia inscripción previa.</div>
+      <p class="evento-entrada">La memoria de esta región también se cuenta en sus caminos. Según la <a href={fuenteHistoria} target="_blank" rel="noopener noreferrer">Alcaldía de Tocancipá</a>, el Camino del Gone conectó territorios donde se intercambiaban productos: las vasijas elaboradas en Tocancipá participaban en la producción de panes de sal en Zipaquirá y Nemocón. La agenda cultural de este mes invita a acercarse a ese patrimonio desde encuentros y recorridos de hoy, cada uno con su propia programación oficial.</p>
+      <div class="respuesta-rapida"><strong>En corto</strong> La agenda reúne encuentros sobre memoria, recorridos y prácticas culturales. Consulta la fecha antes de viajar: los eventos terminados se conservan aquí como registro. La ruta del 25 y el recorrido del 29 anuncian inscripción previa. La programación consultada no publica cupos ni valores.</div>
 
-      <h2>Próximas actividades verificadas</h2>
+      <h2>Agenda cultural del 23 al 30 de septiembre</h2>
       <div class="evento-agenda">
-        {agenda.map((a) => <article class="evento-dia" id={a.id}><div class="evento-dia__cuando"><time datetime={a.fecha}>{a.dia}</time><span class="evento-dia__hora">{a.hora}</span></div><div class="evento-dia__detalle"><h3>{a.titulo}</h3><p class="evento-dia__meta"><strong>Lugar:</strong> {a.lugar}<br/><strong>Condiciones:</strong> {a.condicion}</p><a class="boton boton--contorno evento-dia__accion" href={fuentePrograma} target="_blank" rel="noopener noreferrer">Consultar publicación de origen</a></div></article>)}
+        {agenda.map((a) => <article class="evento-dia" id={a.id}><div class="evento-dia__cuando"><time datetime={a.fecha}>{a.dia}</time><span class="evento-dia__hora">{a.hora}</span></div><div class="evento-dia__detalle"><h3>{a.titulo}</h3><p class="evento-dia__meta"><strong>Lugar:</strong> {a.lugar}<br/><strong>Condiciones:</strong> {a.condicion}</p><a class="boton boton--contorno evento-dia__accion" href={fuentePrograma} target="_blank" rel="noopener noreferrer">Consultar programación de origen</a></div></article>)}
       </div>
 
       <h2 id="contexto-del-trueque">El trueque: intercambiar también es encontrarse</h2>
       <p><strong>Interpretación editorial de Atheron:</strong> el trueque puede leerse como algo más que cambiar un objeto por otro. Es una forma de reconocer el conocimiento de la otra persona, conversar sobre el origen de lo que se ofrece y mantener vivos vínculos entre plantas, territorio y comunidad.</p>
-      <p>En la Sabana, la circulación de productos y saberes tiene una historia anterior a los mercados actuales. Una referencia regional sobre el Camino del Gone lo presenta como un corredor ancestral entre Tocancipá y Zipaquirá relacionado con el intercambio de sal y otros productos. Ese contexto ayuda a comprender por qué hablar hoy de trueque también abre una conversación sobre memoria y territorio.</p>
+      <p>La <a href={fuenteHistoria} target="_blank" rel="noopener noreferrer">Alcaldía de Tocancipá describe el Camino del Gone</a> como una ruta entre territorios de Tocancipá, Gachancipá, Nemocón y Zipaquirá utilizada para intercambiar productos. También explica que vasijas de barro elaboradas en Tocancipá se usaban para producir panes de sal en Zipaquirá y Nemocón. Ese antecedente permite hablar del intercambio como parte de la memoria regional, sin atribuirle al evento actual prácticas que su programa no describe.</p>
       <div class="evento-nota"><strong>Lo que no estamos afirmando:</strong> este contexto histórico no describe las reglas del evento del 23 de septiembre. La programación no indica que debas llevar plantas, semillas u objetos; consulta directamente con el organizador antes de asistir.</div>
 
       <h2>Atheron te ayuda a vivir la ciudad</h2>
@@ -59,7 +64,7 @@ const WA = 'Hola, vi la agenda del Mes del Patrimonio en el blog de Atheron y qu
       <aside class="evento-conversion"><div><h2>¿Te quedas en Zipaquirá?</h2><p>Consulta hospedajes para parejas, familias o grupos. No ofrecemos acceso preferencial ni cupos en estas actividades.</p></div><div class="evento-conversion__acciones"><a class="boton boton--primario" href="/hospedajes">Ver hospedajes</a><a class="boton boton--whatsapp" {...atributosWhatsApp(WA, { origen: 'evento_mes_patrimonio' })}>Consultar disponibilidad</a></div></aside>
 
       <h2>Fuentes</h2>
-      <ul class="evento-fuentes"><li><a href={fuentePrograma} target="_blank" rel="noopener noreferrer">Programación del Mes del Patrimonio Cultural</a></li><li><a href="https://www.instagram.com/p/DdWktkxkcq1/" target="_blank" rel="noopener noreferrer">Publicación complementaria de la agenda</a></li><li><a href="https://www.conexionsabana360.com/play/videos/camino-del-gone-ecopasaporte-capitulo-2" target="_blank" rel="noopener noreferrer">Camino del Gone — contexto histórico regional</a></li></ul>
+      <ul class="evento-fuentes"><li><a href={fuentePrograma} target="_blank" rel="noopener noreferrer">Programación del Mes del Patrimonio Cultural — IMCRDZ</a></li><li><a href={fuenteHistoria} target="_blank" rel="noopener noreferrer">Alcaldía de Tocancipá — historia del Camino del Gone</a></li></ul>
     </div></section>
   </main>
   <Pie />
