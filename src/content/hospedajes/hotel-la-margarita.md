@@ -177,7 +177,7 @@ comodidades:
   - Televisión en habitaciones
   - Mascotas bajo consulta
   - Parqueadero gratuito para motos
-  - Parqueadero aliado para carros
+mascotas: true
 actualizado: '2026-09-24'
 ---
 
