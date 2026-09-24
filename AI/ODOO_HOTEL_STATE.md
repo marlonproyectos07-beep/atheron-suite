@@ -58,44 +58,35 @@ Hechos:
 - Regresiones 002/003/004 PASS.
 
 ### ATH-ODOO-HOTEL-006 — Endurecimiento previo a Sofía/WhatsApp
-Estado: EN CURSO / CHECKPOINT S12.
-Ya implementado:
-- grupo 149 `Hotel v1 / API Sofía`;
-- usuario técnico 27 `Sofía API STAGING`;
-- sin grupo 148, sin admin, 0 API keys;
-- gateway acción 1967;
-- operaciones permitidas: disponibilidad, cotización, HOLD, estado;
-- `source_channel=sofia` forzado;
-- parámetros sensibles/prohibidos rechazados;
-- idempotencia;
-- auditoría `x_hotel_api_log`;
-- rate limit opcional;
-- aislamiento de datos;
-- pricelist neutra 20 para nuevo flujo;
-- legacy 16/17 se conserva por órdenes históricas;
-- automatizaciones 71/132/135/137 refactorizadas hacia Master Data donde existe unidad;
-- S1–S11 reportadas PASS;
-- 56/56 pruebas previas PASS.
+Estado: APROBADO EN STAGING (24/09/2026).
 
-Checkpoint S12:
-- HOLD QA: `COT/2026/03788`, hold_id 22153.
-- origen: sofia.
-- unidad 202.
-- 03/12/2029 -> 05/12/2029.
-- pricelist 20.
-- precio congelado 220000 COP.
-- cron 155 / acción 1907 vence HOLDs cada 15 minutos.
-- al último acceso, el HOLD ya había pasado su `expires_at` pero aún faltaba verificar la ejecución del cron y la liberación efectiva.
+Resultado final del gate:
+- Base única: `atheron1-hotel-staging-20260923`; producción y Security no fueron tocados.
+- Grupo 149 `Hotel v1 / API Sofía` con usuario técnico 27, sin admin, sin grupo 148 y sin API keys.
+- Gateway 1967 limitado a disponibilidad, cotización, HOLD y estado; `source_channel=sofia` forzado.
+- S12 expiración HOLD: PASS 10/10. El cron 155 libera el HOLD y devuelve la unidad a disponibilidad; política global sigue en 2 h.
+- S13 pricelist legacy: PASS. Flujo nuevo usa lista 20; legacy 16/17 no contamina precio congelado. Se endureció la automatización 199 para volver inmutable `pricelist_id`.
+- S14 automatizaciones 71/132/135/137: PASS 41/41.
+- Idempotencia concurrente: PASS. Múltiples solicitudes con la misma key producen un solo HOLD y replay.
+- Regresiones HOTEL-002/003/004/005: sin regresión.
+- Concurrencia final: exactamente un ganador en conflictos; habitaciones hermanas compatibles no se bloquean entre sí.
+- Seguridad Sofía: solo mínimo privilegio; sin confirmación/cancelación arbitraria, tarifas, Planning, contabilidad, pagos, DIAN, Master Data ni cola de conflictos.
+- Auditoría `x_hotel_api_log`: actor, timestamp, operación, canal, IDs, resultado/error y correlación; sin secretos.
+- Limpieza QA: 0 HOLD QA activos y 0 slots de prueba activos.
+- Resultado del harness S1–S11: 55/56 por umbral de contactos desactualizado; el control real `create_uid=user.id` funciona y no se considera regresión.
+- Veredicto del reporte: ATH-ODOO-HOTEL-006 APROBABLE = SÍ.
 
-Pendiente para cerrar HOTEL-006:
-1. S12 expiración HOLD -> inventario liberado.
-2. S13 pricelist legacy no contamina flujo nuevo.
-3. S14 automatizaciones 71/132/135/137.
-4. idempotencia concurrente.
-5. regresiones HOTEL-002/003/004/005.
-6. concurrencia final.
-7. limpieza QA.
-8. reporte final.
+Cambios persistentes del cierre:
+1. Automatización 199 incluye `pricelist_id` entre campos inmutables del precio congelado.
+2. Acción 1969 QA desactivada.
+3. Acción 1970 worker de concurrencia solo admin.
+
+Pendientes CEO (no bloquean el cierre del gate):
+1. Duración oficial del HOLD: hoy 2 h, pendiente aprobación.
+2. Vigencia de la cotización: `x_expires_at` aún no definido.
+3. Mínimo de ocupación Casa Completa Magia.
+4. Definición de impuestos.
+5. Alta en Master Data de unidades ligadas a 132/135/137.
 
 ## Problema operativo descubierto
 El proyecto depende demasiado de sesiones de navegador autenticadas.
@@ -103,6 +94,7 @@ Cuando Claude Code agota cuota o el navegador bloquea acciones, el relevo se fre
 
 ## Próximo gate propuesto
 ### ATH-ODOO-HOTEL-007 — Acceso técnico persistente y redundancia multiagente
+Estado: SIGUIENTE GATE RECOMENDADO / NO ABIERTO EN ODOO.
 Objetivo:
 - eliminar la dependencia de una pestaña autenticada de Chrome;
 - exponer una interfaz técnica de mínimo privilegio para agentes;
