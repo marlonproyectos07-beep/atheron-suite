@@ -1,31 +1,39 @@
 # Handoff activo
 
-## Tarea
-ORQ-001B — Saneamiento de memoria multiagente
+## Tarea principal
+ATH-ODOO-HOTEL-006 — Endurecimiento previo a Sofía/WhatsApp
 
-## Rama
+## Rama de memoria
 `chore/ai-orchestration-foundation`
 
-## Historial del relevo
-- ORQ-001 completado y aprobado por ChatGPT Plus (Agente B) el 13/09/2026.
-- Primera prueba formal de relevo ChatGPT → GitHub → OpenCode: SUPERADA.
-- Claude Code (Agente A) queda relevado sin intervención: solo usa GitHub como memoria.
+## Entorno funcional
+`atheron1-hotel-staging-20260923` — STAGING neutralizado.
 
 ## Agente actual
-OpenCode (Agente C)
+Cualquier agente aprobado que retome debe leer primero:
+1. `AI/ODOO_HOTEL_STATE.md`
+2. `AI/AGENTS.md`
+3. `AI/TASKS.md`
 
-## Hecho
-- ORQ-001 aprobado.
-- Prueba de relevo superada.
-- Capa AI/ creada y operativa (estado, tareas, decisiones, agentes, handoff).
-- ORQ-001B: saneamiento de memoria hasta el 13/09/2026.
+## Estado exacto
+- HOTEL-002: APROBADO.
+- HOTEL-003: motor técnico aprobado.
+- HOTEL-004: motor comercial probado.
+- HOTEL-005: APROBADO en modo APPROVED.
+- HOTEL-006: EN CURSO, detenido en S12.
+- S1–S11: PASS según checkpoint.
+- Pendiente: S12–S14, concurrencia/idempotencia, regresiones y limpieza.
 
-## Pendiente
-- Revisión de ORQ-001B por ChatGPT Plus (Agente B).
-- Después de su aprobación, avanzar a ORQ-002: redundancia de motores para OpenCode.
-
-## Riesgo
-Ninguno sobre producción: esta rama solo añade documentación de orquestación.
+## Restricciones
+- NO producción.
+- NO Atheron Security.
+- NO WhatsApp/Meta/Sofía real.
+- NO OTA real/DIAN/pagos.
+- NO secretos en chat/repositorio.
 
 ## Próxima acción exacta
-Aprobar ORQ-001B y diseñar/configurar la redundancia de motores para OpenCode sin modificar producción.
+Cerrar HOTEL-006 desde S12 cuando exista un ejecutor con acceso autenticado a staging.
+En paralelo, diseñar HOTEL-007 para eliminar la dependencia de navegador y habilitar relevo multiagente real.
+
+## Riesgo principal
+Dependencia actual de sesiones web autenticadas. Este riesgo es la razón de HOTEL-007.
