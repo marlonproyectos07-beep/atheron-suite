@@ -150,7 +150,7 @@ mapaBbox: ''
 mapaTitulo: ''
 enlaceMapa: https://share.google/ahqOT4EGauLT2ntoi
 nombreAnterior: ''
-mapaNota: Dirección pública confirmada: Calle 12 #9-31, Zipaquirá, Cundinamarca.
+mapaNota: 'Dirección pública confirmada: Calle 12 #9-31, Zipaquirá, Cundinamarca.'
 mapaNotaPendiente: false
 direccionPublica: true
 experiencias:
@@ -162,11 +162,11 @@ experiencias:
     pendiente: false
 tituloContacto: Consulta disponibilidad en Hotel La Margarita
 datosContacto:
-  - Calle 12 #9-31, Zipaquirá
+  - 'Calle 12 #9-31, Zipaquirá'
   - 20 habitaciones
   - Capacidad para grupos de hasta 52 personas
   - Reservas gestionadas por Atheron Suite
-calle: Calle 12 #9-31
+calle: 'Calle 12 #9-31'
 latitud: null
 longitud: null
 checkin: '14:00'
