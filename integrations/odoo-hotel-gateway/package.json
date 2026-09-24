@@ -1,0 +1,8 @@
+{
+  "name": "@atheron/odoo-hotel-gateway-contract",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
