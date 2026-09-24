@@ -42,19 +42,24 @@ Cada tarea debe tener:
 ## ODOO HOTEL — NUEVO FRENTE OPERATIVO
 
 ### ATH-ODOO-HOTEL-006 — Endurecimiento previo a Sofía/WhatsApp
-- Estado: EN CURSO / CHECKPOINT S12
+- Estado: COMPLETADO / APROBADO EN STAGING (24/09/2026)
 - Entorno: `atheron1-hotel-staging-20260923`
-- Producción: NO TOCAR
+- Producción: NO TOCADA
 - Memoria detallada: `AI/ODOO_HOTEL_STATE.md`
-- Ya aprobado: S1–S11, gateway mínimo privilegio, usuario técnico, aislamiento, pricelist neutra, auditoría.
-- Pendiente: S12–S14, idempotencia concurrente, regresiones 002–005, concurrencia final y limpieza QA.
-- Criterio de cierre: reporte final con veredicto SÍ/PARCIAL/NO.
+- S12: PASS 10/10.
+- S13: PASS; pricelist legacy aislada y `pricelist_id` endurecido.
+- S14: PASS 41/41.
+- Idempotencia concurrente: PASS.
+- Regresiones HOTEL-002/003/004/005: PASS.
+- Concurrencia: exactamente un ganador.
+- QA limpio: 0 HOLD activos de prueba.
+- Veredicto: APROBABLE = SÍ.
 
 ### ATH-ODOO-HOTEL-007 — Acceso técnico persistente y redundancia multiagente
-- Estado: PREPARADO / NO EJECUTADO
+- Estado: SIGUIENTE GATE / PREPARADO, NO ABIERTO EN ODOO
 - Objetivo: eliminar dependencia del navegador autenticado y permitir relevo real entre ChatGPT, Claude, Codex y OpenCode.
 - Restricción: mínimo privilegio; sin acceso administrativo general; secretos fuera de prompts/repositorio.
-- Dependencia lógica: cerrar o preservar checkpoint verificable de HOTEL-006.
+- Dependencia lógica: HOTEL-006 cerrada y aprobada.
 - Criterios de aceptación:
   - interfaz técnica autenticada;
   - disponibilidad/cotización/HOLD/estado;
