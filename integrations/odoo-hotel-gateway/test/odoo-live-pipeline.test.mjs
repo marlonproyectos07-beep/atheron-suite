@@ -84,10 +84,12 @@ test('LIVE: desempaqueta display_notification.params de la accion 1967', async (
       params: {
         title: 'HOTEL API',
         message: 'availability',
-        ok: true,
-        op: 'availability',
-        query_id: 'QRY-live-1',
-        data: { disponible: true },
+        result: {
+          ok: true,
+          op: 'availability',
+          query_id: 'QRY-live-1',
+          data: { disponible: true },
+        },
       },
     },
   });
@@ -113,9 +115,12 @@ test('LIVE: ok=false de Odoo se convierte en error del gateway', async () => {
       tag: 'display_notification',
       params: {
         title: 'HOTEL API',
-        message: 'No disponible',
-        ok: false,
-        error_code: 'UNAVAILABLE',
+        message: 'availability',
+        result: {
+          ok: false,
+          error_code: 'UNAVAILABLE',
+          message: 'No disponible',
+        },
       },
     },
   });
