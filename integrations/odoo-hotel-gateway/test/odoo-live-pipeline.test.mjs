@@ -15,15 +15,16 @@ import { ContractError } from '../src/contract.mjs';
  * `source_channel='sofia'` forzado por el propio gateway como si fuera un
  * intento de inyeccion del cliente. Estos tests demuestran, sin red y sin
  * credenciales reales, que:
- *   1. un request valido SI llega hasta el "borde Odoo" (execute_kw) con
- *      source_channel='sofia';
+ *   1. un request valido SI llega hasta el "borde Odoo" (execute_kw) usando
+ *      el contrato real HOTEL-006: context { op, payload }, con payload
+ *      mapeado a fecha_entrada/fecha_salida/personas;
  *   2. un source_channel enviado por el cliente sigue bloqueado, y nunca
  *      llega al transporte;
  *   3. el resto de campos prohibidos (price/discount/tax/admin/sudo/
  *      confirm/cancel/...) siguen bloqueados en el mismo camino LIVE.
  */
 
-test('LIVE: un request valido llega al borde Odoo (execute_kw) con source_channel=sofia forzado', async () => {
+test('LIVE: un request valido llega al borde Odoo con el contrato real op+payload', async () => {
   const transport = new FakeOdooTransport();
   const { gateway } = buildLiveTestGateway({ transport });
 
@@ -44,11 +45,18 @@ test('LIVE: un request valido llega al borde Odoo (execute_kw) con source_channe
   assert.equal(executeCall.args[4], 'run');
   assert.deepEqual(executeCall.args[5], [[1967]]);
 
-  const forwardedPayload = executeCall.args.at(-1).context.hotel_gateway_payload;
-  assert.equal(forwardedPayload.source_channel, 'sofia');
+  const forwardedContext = executeCall.args.at(-1).context;
+  assert.equal(forwardedContext.op, 'availability');
+  assert.deepEqual(forwardedContext.payload, {
+    fecha_entrada: '2026-12-01',
+    fecha_salida: '2026-12-02',
+    personas: 2,
+    correlation_id: envelope.correlation_id,
+  });
+  assert.equal('source_channel' in forwardedContext.payload, false, '1967 fuerza sofia del lado Odoo');
 });
 
-test('LIVE: hold idempotente tambien llega al borde Odoo con source_channel=sofia', async () => {
+test('LIVE: hold idempotente llega a Odoo como op=hold y payload minimo', async () => {
   const transport = new FakeOdooTransport();
   const { gateway } = buildLiveTestGateway({ transport });
 
@@ -60,8 +68,67 @@ test('LIVE: hold idempotente tambien llega al borde Odoo con source_channel=sofi
 
   assert.equal(envelope.ok, true, `esperaba exito, obtuve: ${JSON.stringify(envelope)}`);
   const [executeCall] = transport.executeKwCalls;
-  assert.equal(executeCall.args.at(-1).context.hotel_gateway_payload.source_channel, 'sofia');
-  assert.equal(executeCall.args.at(-1).context.hotel_gateway_operation, 'hold');
+  const forwardedContext = executeCall.args.at(-1).context;
+  assert.equal(forwardedContext.op, 'hold');
+  assert.equal(forwardedContext.payload.quote_id, 'Q-live-1');
+  assert.equal(forwardedContext.payload.idempotency_key, 'live-hold-1');
+  assert.equal('source_channel' in forwardedContext.payload, false);
+});
+
+
+test('LIVE: desempaqueta display_notification.params de la accion 1967', async () => {
+  const transport = new FakeOdooTransport({
+    result: {
+      type: 'ir.actions.client',
+      tag: 'display_notification',
+      params: {
+        title: 'HOTEL API',
+        message: 'availability',
+        ok: true,
+        op: 'availability',
+        query_id: 'QRY-live-1',
+        data: { disponible: true },
+      },
+    },
+  });
+  const { gateway } = buildLiveTestGateway({ transport });
+
+  const { status, envelope } = await gateway.handle({
+    operation: 'availability',
+    ...withIdentity(TEST_IDENTITIES.chatgpt),
+    body: { check_in: '2026-12-01', check_out: '2026-12-02', guests: 2 },
+  });
+
+  assert.equal(status, 200);
+  assert.equal(envelope.ok, true);
+  assert.equal(envelope.data.ok, true);
+  assert.equal(envelope.data.query_id, 'QRY-live-1');
+  assert.equal(envelope.data.data.disponible, true);
+});
+
+test('LIVE: ok=false de Odoo se convierte en error del gateway', async () => {
+  const transport = new FakeOdooTransport({
+    result: {
+      type: 'ir.actions.client',
+      tag: 'display_notification',
+      params: {
+        title: 'HOTEL API',
+        message: 'No disponible',
+        ok: false,
+        error_code: 'UNAVAILABLE',
+      },
+    },
+  });
+  const { gateway } = buildLiveTestGateway({ transport });
+
+  const { envelope, code } = await gateway.handle({
+    operation: 'availability',
+    ...withIdentity(TEST_IDENTITIES.chatgpt),
+    body: { check_in: '2026-12-01', check_out: '2026-12-02', guests: 2 },
+  });
+
+  assert.equal(envelope.ok, false);
+  assert.equal(code, 'UNAVAILABLE');
 });
 
 test('LIVE: source_channel enviado por el cliente sigue bloqueado y nunca llega al transporte', async () => {
