@@ -161,21 +161,29 @@ credenciales reales, y demuestra que `source_channel='sofia'` llega forzado
 al `execute_kw` mientras que un `source_channel` enviado por el cliente, o
 cualquier otro campo prohibido, nunca llega al transporte.
 
-**Estado real verificado contra `atheron1-hotel-staging-20260923` (25/09/2026):**
-- `availability`: PASS. Llamada real de solo lectura, `HttpOdooTransport`
-  real (no simulado), usuario técnico Sofía API STAGING (grupo 149, sin
-  admin). Devolvió disponibilidad real de las unidades piloto.
-- `status` de HOLD: contrato confirmado — Odoo espera `hold_id`, no
-  `operation_id` ni `order_id` (ambos devuelven `UNKNOWN_PARAM`). El adapter
-  ya traduce correctamente (ver `#callOdooAction1967` en
-  `src/odoo-adapter.mjs`).
-- `status` de una cotización (quote), `quote` real y `hold` real: **todavía
-  no probados contra staging** (`PENDIENTE_VERIFICAR_CONTRA_STAGING`). El
-  adapter incluye un fallback de solo lectura para `status` (intenta
-  `hold_id` primero, y solo si Odoo responde `NOT_FOUND`/`UNKNOWN_PARAM`
-  intenta `quote_id`), documentado en el código y probado con
-  `FakeOdooTransport`, pero el candidato `quote_id` en sí no está
-  confirmado contra un Odoo real todavía.
+**Estado real verificado contra `atheron1-hotel-staging-20260923` (25/09/2026),
+usuario técnico Sofía API STAGING (grupo 149, sin admin):**
+- `availability`: PASS (solo lectura).
+- `quote`: PASS. `quote_id=116`, precios reales por unidad (COP), y varios
+  campos que Odoo mismo marca como pendientes de aprobación del CEO
+  (`quote_expiration_status`, `hold_hours_status`, `tax_status`,
+  `policy_governance`) — coherente con los pendientes ya documentados en
+  `AI/ODOO_HOTEL_STATE.md`, no resueltos aquí.
+- `hold`: PASS. `hold_id=22216` sobre `quote_id=116` y `unit_id=1` (unidad
+  201). La misma solicitud repetida con la misma `idempotency_key` devolvió
+  el mismo `hold_id`, y Odoo mismo marcó la segunda respuesta con
+  `idempotent_replay: true` — idempotencia confirmada por el propio Odoo,
+  no solo por el store del gateway.
+- `status` de HOLD: PASS, vía `hold_id` (HOLD 22215 expirado y HOLD 22216
+  activo, ambos consultados con éxito).
+- `status` de una COTIZACIÓN: PASS, vía el fallback a `quote_id` (cotización
+  116). El fallback ya no es un candidato sin confirmar: se activó de
+  verdad contra staging y funcionó.
+- Anti-overbooking end-to-end: tras el HOLD, una nueva consulta de
+  `availability` mostró la unidad 201 como `no_disponible`.
+- Limpieza: el HOLD 22215 (de una prueba anterior) ya aparece `hold_expired`
+  por su cuenta; el HOLD 22216 nuevo expira solo en 2 h por la política
+  vigente — no se necesita ninguna acción de cancelación manual.
 
 ## Clientes técnicos (Fase 14 — relevo multiagente)
 

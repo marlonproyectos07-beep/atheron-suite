@@ -311,6 +311,71 @@ test('LIVE: status con hold_id -> NOT_FOUND (no UNKNOWN_PARAM) tambien dispara e
   assert.equal(transport.executeKwCalls.length, 2);
 });
 
+/**
+ * Regresion de forma real (25/09/2026, staging atheron1-hotel-staging-20260923):
+ * el HOLD 22216 se creo dos veces con la misma idempotency_key; Odoo mismo
+ * marco la segunda respuesta con `idempotent_replay: true`. Este test usa
+ * esa forma real (recortada, sin datos sensibles) para asegurar que el
+ * gateway nunca pierde ni corrompe campos reales al pasar la respuesta.
+ */
+test('LIVE (adapter directo): idempotent_replay real de Odoo pasa intacto en ambas llamadas', async () => {
+  // Reproduce exactamente el escenario real: dos llamadas AL ADAPTER (sin
+  // pasar por el IdempotencyStore propio del gateway, igual que el script
+  // de verificacion manual contra staging), donde es Odoo -no el gateway-
+  // quien marca la segunda como replay.
+  const holdResponseBody = (idempotent_replay) => ({
+    type: 'ir.actions.client',
+    tag: 'display_notification',
+    params: {
+      title: 'HOTEL API',
+      message: 'hold',
+      result: {
+        ok: true,
+        op: 'hold',
+        idempotency_key: 'gate5-hold-real',
+        idempotent_replay,
+        error_code: null,
+        data: {
+          hold_id: 22216,
+          hold_ref: 'COT/2026/03809',
+          status: 'hold',
+          hold_duration_status: 'PENDIENTE_APROBACION_CEO',
+          quote_id: 116,
+          unit_id: 1,
+          precio_total: 80000,
+          currency: 'COP',
+          tax_status: 'PENDING_TAX_DEFINITION',
+        },
+      },
+    },
+  });
+
+  const transport = new FakeOdooTransport({ results: [holdResponseBody(false), holdResponseBody(true)] });
+  const adapter = new OdooHotelAdapter({
+    dryRun: false,
+    config: { database: 'db', technicalUser: 'u', technicalSecret: 's' },
+    transport,
+  });
+
+  const holdPayload = {
+    quote_id: 116,
+    unit_id: 1,
+    idempotency_key: 'gate5-hold-real',
+    source_channel: 'sofia',
+  };
+
+  const first = await adapter.hold(holdPayload);
+  assert.equal(first.idempotent_replay, false);
+  assert.equal(first.data.hold_id, 22216);
+  assert.equal(first.data.hold_duration_status, 'PENDIENTE_APROBACION_CEO');
+
+  const second = await adapter.hold(holdPayload);
+  assert.equal(second.idempotent_replay, true, 'la segunda llamada real de Odoo debe traer idempotent_replay=true intacto');
+  assert.deepEqual(second.data, first.data, 'los datos del HOLD no deben cambiar entre el original y el replay');
+
+  assert.equal(transport.executeKwCalls.length, 2, 'ambas llamadas llegaron realmente a Odoo (sin cache propio aqui)');
+});
+
 test('LIVE: nunca se usan credenciales reales; el transporte real (HttpOdooTransport) no se ejercita en esta suite', async () => {
   // Verificacion explicita del alcance: esta suite entera pasa un
   // transporte simulado (FakeOdooTransport) via inyeccion de dependencias.

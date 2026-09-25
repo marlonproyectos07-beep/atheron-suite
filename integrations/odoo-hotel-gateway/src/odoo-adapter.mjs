@@ -19,10 +19,15 @@ import { HttpOdooTransport } from './odoo-transport.mjs';
  *  - LIVE (dryRun=false): llama a Odoo via JSON-RPC reutilizando la accion
  *    1967 como `ir.actions.server`. Requiere ODOO_BASE_URL/ODOO_DATABASE/
  *    ODOO_TECHNICAL_USER/ODOO_TECHNICAL_SECRET reales (fuera del repo, nunca
- *    en este repositorio). `availability` de solo lectura ya se probo con
- *    exito contra atheron1-hotel-staging-20260923 (25/09/2026). `quote` y
- *    `hold` reales, y el `status` de una cotizacion, siguen sin probar
- *    contra staging (PENDIENTE_VERIFICAR_CONTRA_STAGING).
+ *    en este repositorio).
+ *
+ *    Probado con exito de punta a punta contra atheron1-hotel-staging-20260923
+ *    (25/09/2026): availability, quote (quote_id 116), hold (hold_id 22216,
+ *    con replay idempotente confirmado por el propio Odoo:
+ *    idempotent_replay=true en la segunda llamada), status de HOLD (via
+ *    hold_id) y status de COTIZACION (via el fallback a quote_id, ver mas
+ *    abajo). Tras el HOLD, availability confirmo que la unidad quedo
+ *    `no_disponible` (anti-overbooking end-to-end verificado).
  */
 const ODOO_BUSINESS_ERROR_CODES = new Set([
   'UNKNOWN_OP',
@@ -293,18 +298,18 @@ export class OdooHotelAdapter {
     };
 
     if (operation === 'status') {
-      // Contrato CONFIRMADO contra staging real (25/09/2026, HOLD 22215):
-      //   hold_id      -> OK
-      //   operation_id -> UNKNOWN_PARAM
-      //   order_id     -> UNKNOWN_PARAM
-      // El contrato de status para una COTIZACION (quote) NO esta confirmado
-      // todavia contra staging (PENDIENTE_VERIFICAR_CONTRA_STAGING).
-      //
-      // Fallback READ-ONLY documentado (Gate 3, orden ATH-ODOO-HOTEL-007-LIVE):
-      // solo se activa si el primer intento (hold_id, el confirmado) devuelve
-      // NOT_FOUND o UNKNOWN_PARAM; nunca convierte un error real en exito
-      // (si el segundo intento tambien falla, se propaga ESE error real); y
-      // ambos intentos son de solo lectura contra la misma accion 1967.
+      // Contrato CONFIRMADO contra staging real (25/09/2026):
+      //   HOLD 22215 (expirado) y HOLD 22216 (activo) -> hold_id OK;
+      //   operation_id/order_id -> UNKNOWN_PARAM (bug original ya corregido);
+      //   COTIZACION 116 -> quote_id OK, via el mismo fallback de abajo.
+      // El gateway externo (`operation_id`) no distingue si el ID es de un
+      // HOLD o de una COTIZACION -- ambos son enteros de Odoo sin prefijo
+      // que los diferencie -- por eso el fallback sigue siendo el diseno
+      // correcto (no un parche temporal): se intenta hold_id primero (mas
+      // frecuente en status checks operativos) y solo se prueba quote_id si
+      // Odoo responde NOT_FOUND/UNKNOWN_PARAM. Nunca convierte un error real
+      // en exito (si el segundo intento tambien falla, se propaga ESE error
+      // real); ambos intentos son de solo lectura contra la misma accion 1967.
       try {
         return await runOnce(buildStatusPayload('hold_id', payload));
       } catch (firstError) {
@@ -315,9 +320,10 @@ export class OdooHotelAdapter {
 
         const result = await runOnce(buildStatusPayload('quote_id', payload));
         if (result && typeof result === 'object') {
-          // Trazabilidad: deja constancia de que se uso el candidato aun no
-          // confirmado, para que nadie lo lea como un contrato verificado.
-          result.status_lookup_fallback = 'quote_id (no confirmado contra staging)';
+          // Trazabilidad: deja constancia de que este operation_id resulto
+          // ser una cotizacion, no un HOLD (confirmado contra staging real
+          // el 25/09/2026 con la cotizacion 116).
+          result.status_lookup_fallback = 'quote_id';
         }
         return result;
       }
