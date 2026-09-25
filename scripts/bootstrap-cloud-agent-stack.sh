@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "== Atheron Cloud Agent Stack bootstrap =="
+# Version pinned on purpose (auditada el 2026-09-25): una sesion futura NO
+# debe ejecutar automaticamente una version de ruflo mas nueva sin que
+# alguien la revise primero. Para probar una version nueva, cambiar esta
+# variable a mano (o exportar RUFLO_VERSION antes de llamar al script) y
+# actualizar tambien .mcp.json a juego.
+RUFLO_VERSION="${RUFLO_VERSION:-3.45.0}"
+
+echo "== Atheron Cloud Agent Stack bootstrap (ruflo@${RUFLO_VERSION}) =="
 
 echo
 echo "[1/8] Runtime"
@@ -16,24 +23,30 @@ npx --yes skills add ruvnet/ruflo --skill ruflo --yes
 
 echo
 echo "[3/8] Ruflo project init"
-npx --yes ruflo@latest init
+npx --yes "ruflo@${RUFLO_VERSION}" init
 
 echo
-echo "[4/8] Register Ruflo MCP in Claude Code"
+echo "[4/8] Ruflo MCP en Claude Code"
+# 'ruflo init' ya escribe el registro canonico (clave "claude-flow") en el
+# .mcp.json del proyecto, versionado y con CLAUDE_FLOW_MCP_TOOLS filtrado.
+# NO volver a registrarlo con 'claude mcp add': eso crea un segundo
+# registro con otra clave ("ruflo") que ruflo doctor senala como
+# duplicado. Aqui solo se limpia ese duplicado legado si existe, por si
+# quedo de una ejecucion anterior a esta correccion.
 if command -v claude >/dev/null 2>&1; then
   claude mcp remove ruflo >/dev/null 2>&1 || true
-  claude mcp add ruflo -- npx ruflo@latest mcp start
+  echo "MCP registrado via .mcp.json (clave claude-flow). Aprobacion pendiente: requiere abrir 'claude' de forma interactiva una vez."
 else
-  echo "WARN: claude CLI not found; skip MCP registration in this runtime."
+  echo "WARN: claude CLI not found; el registro sigue quedando en .mcp.json para cuando este disponible."
 fi
 
 echo
 echo "[5/8] Ruflo diagnostics"
-npx --yes ruflo@latest doctor --fix || true
+npx --yes "ruflo@${RUFLO_VERSION}" doctor --fix || true
 
 echo
-echo "[6/8] 15-worker hierarchical-mesh swarm"
-npx --yes ruflo@latest swarm init --topology hierarchical-mesh --max-agents 15 --strategy specialized
+echo "[6/8] 15-worker hierarchical-mesh swarm (autoScale off — ver AI/CLOUD_AGENT_STACK.md)"
+npx --yes "ruflo@${RUFLO_VERSION}" swarm init --topology hierarchical-mesh --max-agents 15 --strategy specialized
 
 echo
 echo "[7/8] Graphify"
@@ -61,8 +74,8 @@ fi
 echo
 echo "== Verification =="
 echo "Ruflo:"
-npx --yes ruflo@latest --version || true
-npx --yes ruflo@latest doctor || true
+npx --yes "ruflo@${RUFLO_VERSION}" --version || true
+npx --yes "ruflo@${RUFLO_VERSION}" doctor || true
 
 echo
 echo "Graphify:"

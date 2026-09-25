@@ -24,14 +24,19 @@ No asumir que las instalaciones de una sesión Cloud anterior persisten en una s
 ### 1. Ruflo
 Objetivo: orquestación multiagente, memoria, hooks, tareas y handoffs.
 
-Comandos oficiales usados por este proyecto:
+Comandos oficiales usados por este proyecto. **Versión fijada a propósito**
+(auditada el 2026-09-25: `ruflo v3.45.0`) — no usar `@latest` en nada que una
+sesión de Cloud vaya a ejecutar sola, para que una versión nueva no auditada
+no entre sin revisión:
 
 ```bash
 npx skills add ruvnet/ruflo --skill ruflo --yes
-npx ruflo@latest init
-claude mcp add ruflo -- npx ruflo@latest mcp start
-npx ruflo@latest doctor --fix
-npx ruflo@latest swarm init --topology hierarchical-mesh --max-agents 15 --strategy specialized
+npx ruflo@3.45.0 init
+# 'ruflo init' ya escribe el MCP en .mcp.json (clave "claude-flow",
+# versionado). NO usar ademas 'claude mcp add': crea un registro duplicado
+# con otra clave que ruflo doctor marca como conflictivo.
+npx ruflo@3.45.0 doctor --fix
+npx ruflo@3.45.0 swarm init --topology hierarchical-mesh --max-agents 15 --strategy specialized
 ```
 
 ### 2. Graphify
@@ -174,3 +179,108 @@ verificado, no hipótesis:
 - **Nada tocado de**: dominio/DNS, producción, Odoo, Atheron Security,
   HOTEL-007. No se agregó ningún secreto al repo (verificado con búsqueda de
   patrones de claves/tokens sobre todo lo nuevo antes de commitear).
+
+## Fase 1 — hardening previo a aprobación interactiva del MCP (2026-09-25)
+
+Auditoría de ChatGPT sobre el HEAD `c88dd7f` detectó varios puntos a cerrar
+antes de que Marlon acepte el diálogo de confianza de Claude Code. Cambios
+aplicados, todos verificados, no hipótesis:
+
+1. **Versión de Ruflo fijada.** `.mcp.json` y
+   `scripts/bootstrap-cloud-agent-stack.sh` ya no usan `ruflo@latest`;
+   usan `ruflo@3.45.0` (el bootstrap lo hace vía `RUFLO_VERSION`, para
+   poder subir de versión a mano el día que corresponda, previa revisión).
+   Ninguna sesión futura arrancará una versión nueva sin que alguien la
+   audite primero.
+2. **Catálogo MCP filtrado.** `CLAUDE_FLOW_MCP_TOOLS=memory,swarm,agent,hooks`
+   en el `env` de `.mcp.json` y en `.claude/settings.json`. Medido con
+   `ruflo doctor`:
+   - **Antes**: 353 tools anunciadas, ≈65 835 tokens de esquema.
+   - **Después**: 90 tools anunciadas, ≈18 271 tokens de esquema (−72%).
+   No se habilitó github, hive-mind, browser, deployment ni herramientas
+   experimentales — Claude Code ya cubre Bash/Read/Write/Edit/Git.
+3. **Permisos MCP acotados.** `.claude/settings.json` ya no permite
+   `mcp__claude-flow__*` en bloque; ahora son cuatro globs exactos
+   (`memory_*`, `swarm_*`, `agent_*`, `hooks_*`), en línea con el filtro
+   del punto 2 — doble candado, no solo el que aplica el propio servidor.
+4. **Hooks automáticos auditados.** Clasificación de cada hook registrado
+   en `.claude/settings.json`:
+   - **(A) Locales, sin efecto real** — `pre-edit`, `post-bash`, `status`,
+     `notify` en `hook-handler.cjs`: no son comandos reconocidos por ese
+     script, no hacen nada. Sin cambios.
+   - **(B) Locales, escriben estado local** — `pre-bash` (valida el
+     comando contra una lista negra), `post-edit`/`pre-task`/`post-task`
+     (métricas de sesión, sqlite local), `route` (sugerencia de
+     enrutamiento, lee ficheros locales), `session-end`
+     (`intelligence.consolidate`), `auto-memory-hook.mjs`, `statusline.cjs`
+     (cachea 60 s, no llama a red). Se dejaron como están: son las que dan
+     valor sin tocar nada fuera del proyecto.
+   - **(C/D) Procesos detached / red implícita — DESACTIVADOS.** En
+     `session-restore`, `hook-handler.cjs` lanzaba dos `spawn(..., {detached:
+     true}).unref()` (`spawnDetachedFunnelRefresh` y
+     `spawnDetachedAdvisorRefresh`) que sobreviven al propio hook y pueden
+     hacer una petición HTTPS de "sponsored capacity" solo por abrir el
+     proyecto. Se comentaron esas dos líneas (parche quirúrgico de 2 líneas,
+     no se tocó el resto del archivo ni se reescribió lógica de terceros).
+     Además se puso `RUFLO_NO_AUTO_ENABLE=1` en el `env` de
+     `.claude/settings.json`, que es la propia variable de opt-out que trae
+     el paquete para `firstRunAutoEnableIfEligible()` (auto-activa
+     "spinner"/"announcements" la primera vez). Verificado en vivo: tras el
+     cambio, `session-restore` sigue funcionando igual (restaura sesión e
+     inteligencia) y ya no quedan procesos `refresh-funnel`/`refresh-advisor`
+     corriendo.
+   - `graphify hook-guard` (search/read) se deja igual: es un binario
+     local instalado por `uv`, sin evidencia de red, con timeout de 10 ms.
+5. **Graphify portable.** Las dos entradas de `.claude/settings.json` que
+   apuntaban a la ruta fija `/root/.local/bin/graphify` (específica de esta
+   máquina) ahora resuelven el binario por `PATH` (`command -v graphify`) y
+   no hacen nada (`exit 0`) si no está instalado, sin bloquear Claude Code.
+6. **Huella del init reducida.** Clasificación de los ~250 archivos que
+   trajo `ruflo init`, todos regenerables con `npx ruflo@3.45.0 init` si
+   hicieran falta de vuelta:
+   - **Necesario para el swarm Atheron (se queda):** skills `ruflo`,
+     `hooks-automation`, `swarm-advanced`, `swarm-orchestration`,
+     `pair-programming`, `skill-builder`, `verification-quality` (7);
+     comandos `agents/`, `coordination/`, `swarm/`, `memory/`, `hooks/` y
+     los tres `claude-flow-*.md` de nivel superior; agentes
+     `swarm/hierarchical-coordinator.md`, `swarm/mesh-coordinator.md`,
+     `swarm/adaptive-coordinator.md`, `testing/production-validator.md`,
+     `core/planner.md` (5) — corresponden a las categorías MCP aprobadas
+     (memory/swarm/agent/hooks) y a roles ya definidos en la lista de 15
+     trabajadores de Atheron (QA, planificación, coordinación).
+   - **No necesario ahora — eliminado del repo (no del historial de git,
+     recuperable con `git revert` o regenerable con `ruflo init`):**
+     skills `agentdb-*` (5), `github-*` (5), `v3-*` (9), `sparc-methodology`,
+     `reasoningbank-*` (2), `stream-chain`, `browser` — son herramientas
+     para desarrollar el propio Claude Flow (ADRs internos, DDD, consenso
+     bizantino) o para categorías que decidimos no habilitar (github,
+     browser); comandos `github/`, `sparc/`, `hive-mind/`, `analysis/`,
+     `automation/`, `monitoring/`, `optimization/`, `workflows/` (95
+     archivos, ~9 349 líneas — la mitad eran solo `commands/github`);
+     agentes `consensus/*` (7, protocolos Raft/Byzantine/gossip — no
+     aplican a un sitio de 7 hospedajes), `sparc/*` (4),
+     `browser/browser-agent.yaml`, `testing/tdd-london-swarm.md`.
+   - No se tocaron los 44 archivos de `.claude/helpers/`: son scripts que
+     solo corren si algo los invoca (no se anuncian en cada turno como
+     skills/agentes/comandos), así que su costo es únicamente espacio en
+     disco, no contexto. Quedan para una limpieza posterior si hace falta.
+7. **autoScale y daemon.** `.claude-flow/config.yaml`:
+   `swarm.autoScale` pasó de `true` a `false` (creaba agentes solo, sin
+   orden explícita) y se replicó como `CLAUDE_FLOW_AUTO_SCALE=false` en el
+   `env` de `.mcp.json`. `daemon.autoStart` ya estaba en `false` en
+   `.claude/settings.json` y sigue así — no se arranca un daemon
+   persistente. Verificado con `ruflo swarm status`: 0 agentes activos.
+8. **Hallazgo para reportar, no corregido por bootstrap:** en esta misma
+   sesión, al abrirse, el harness de Claude Code Cloud expuso igualmente
+   los ~353 (ahora ~90, tras el filtro) `mcp__claude-flow__*` como
+   herramientas disponibles para el agente, pese a que `claude mcp list`
+   seguía marcando el servidor `claude-flow` como **"Pending approval"**.
+   Es decir: el gate de aprobación interactiva que impide el arranque del
+   proceso puede no impedir que el esquema de herramientas ya se anuncie
+   en una sesión de Cloud. No se invocó ninguna herramienta `mcp__claude-flow__*`
+   durante esta tarea. Esto es información para Marlon/ChatGPT, no algo que
+   este bootstrap pueda arreglar por sí solo.
+
+Validación final con la versión fijada: `ruflo@3.45.0 --version`, `doctor` y
+`swarm status` — ver REPORTE PARA CHATGPT de esta tarea para los números
+exactos.

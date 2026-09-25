@@ -6,7 +6,10 @@ version: "3.0.0"
 swarm:
   topology: hierarchical-mesh
   maxAgents: 15
-  autoScale: true
+  # ATHERON Fase 1: 15 es el techo disponible, no el numero de agentes que
+  # deben arrancar solos. El orquestador decide cuantos activar; autoScale
+  # en true creaba agentes automaticamente sin una orden explicita.
+  autoScale: false
   coordinationStrategy: consensus
 
 memory:

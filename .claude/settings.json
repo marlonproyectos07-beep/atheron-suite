@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/root/.local/bin/graphify hook-guard search",
+            "command": "sh -c 'command -v graphify >/dev/null 2>&1 && exec graphify hook-guard search || exit 0'",
             "timeout": 10
           }
         ]
@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/root/.local/bin/graphify hook-guard read",
+            "command": "sh -c 'command -v graphify >/dev/null 2>&1 && exec graphify hook-guard read || exit 0'",
             "timeout": 10
           }
         ]
@@ -186,7 +186,10 @@
       "Bash(npx @claude-flow*)",
       "Bash(npx claude-flow*)",
       "Bash(node .claude/*)",
-      "mcp__claude-flow__*"
+      "mcp__claude-flow__memory_*",
+      "mcp__claude-flow__swarm_*",
+      "mcp__claude-flow__agent_*",
+      "mcp__claude-flow__hooks_*"
     ],
     "deny": [
       "Read(./.env)",
@@ -197,7 +200,9 @@
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "CLAUDE_FLOW_V3_ENABLED": "true",
-    "CLAUDE_FLOW_HOOKS_ENABLED": "true"
+    "CLAUDE_FLOW_HOOKS_ENABLED": "true",
+    "CLAUDE_FLOW_MCP_TOOLS": "memory,swarm,agent,hooks",
+    "RUFLO_NO_AUTO_ENABLE": "1"
   },
   "claudeFlow": {
     "version": "3.0.0",

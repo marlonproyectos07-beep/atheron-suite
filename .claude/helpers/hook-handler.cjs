@@ -510,14 +510,14 @@ const handlers = {
         console.log(`[INTELLIGENCE] Loaded ${initResult.nodes} patterns, ${initResult.edges} edges`);
       }
     }
-    // Warm the funnel message cache once per session (see
-    // spawnDetachedFunnelRefresh's doc comment for why this must happen
-    // here, detached, rather than as the statusline's own fire-and-forget).
-    spawnDetachedFunnelRefresh();
-    // ADR-316 co-pilot advisor tip — same detached pattern; cheap no-op
-    // when not consented or still within the 24h TTL (see refresh-advisor's
-    // own doc comment).
-    spawnDetachedAdvisorRefresh();
+    // ATHERON Fase 1 (auditoria previa a aprobacion MCP, 2026-09-25):
+    // desactivados a proposito. Ambas llamadas lanzaban procesos npx
+    // detached/unref (sobreviven a este hook) que pueden hacer una
+    // petición HTTPS saliente (funnel/advisor "sponsored capacity")
+    // solo por abrir el proyecto. No son necesarias para coordinacion,
+    // memoria o agentes. Ver AI/CLOUD_AGENT_STACK.md para el detalle.
+    // spawnDetachedFunnelRefresh();
+    // spawnDetachedAdvisorRefresh();
   },
 
   'session-end': async () => {
