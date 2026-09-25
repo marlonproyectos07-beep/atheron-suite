@@ -8,7 +8,49 @@ info:
 servers:
   - url: http://localhost:8787
     description: Local development only
+security:
+  - technicalIdentity: []
 paths:
+  /health:
+    get:
+      operationId: health
+      security: []
+      responses:
+        '200':
+          description: Liveness probe. Never requires credentials, never leaks secrets.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    const: ok
+  /ready:
+    get:
+      operationId: ready
+      security: []
+      responses:
+        '200':
+          description: Gateway ready to serve traffic.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ready]
+                properties:
+                  ready:
+                    const: true
+        '503':
+          description: Gateway not ready (e.g. LIVE mode without Odoo config).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ready]
+                properties:
+                  ready:
+                    const: false
   /hotel/availability:
     post:
       operationId: hotelAvailability
@@ -27,6 +69,10 @@ paths:
                 $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
   /hotel/quote:
     post:
       operationId: hotelQuote
@@ -45,6 +91,10 @@ paths:
                 $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
   /hotel/hold:
     post:
       operationId: hotelHold
@@ -63,6 +113,10 @@ paths:
                 $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
   /hotel/status:
     post:
       operationId: hotelStatus
@@ -81,10 +135,35 @@ paths:
                 $ref: '#/components/schemas/Envelope'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 components:
+  securitySchemes:
+    technicalIdentity:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >
+        Bearer <clave>. Se combina con el header X-Agent-Id. Identidad
+        tecnica revocable/rotable de minimo privilegio (Fase 3/5); nunca
+        credenciales de Odoo directamente.
   responses:
     BadRequest:
       description: Rejected request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Unauthorized:
+      description: Missing, unknown, revoked or invalid technical identity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    RateLimited:
+      description: Too many requests for this technical identity
       content:
         application/json:
           schema:
