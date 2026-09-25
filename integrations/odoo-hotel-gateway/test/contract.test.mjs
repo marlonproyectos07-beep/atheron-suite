@@ -48,9 +48,24 @@ test('rejects price injection', () => {
 
 test('hold requires idempotency key', () => {
   assert.throws(
-    () => validateRequest('hold', { quote_id: 'Q-1' }),
+    () => validateRequest('hold', { quote_id: 'Q-1', unit_id: 202 }),
     (error) => error instanceof ContractError && error.code === 'IDEMPOTENCY_KEY_REQUIRED'
   );
+});
+
+test('hold requires a quoted unit_id and accepts numeric Odoo ids', () => {
+  assert.throws(
+    () => validateRequest('hold', { quote_id: 115, idempotency_key: 'idem-no-unit' }),
+    (error) => error instanceof ContractError && error.code === 'INVALID_REQUEST'
+  );
+
+  const result = validateRequest('hold', {
+    quote_id: 115,
+    unit_id: 202,
+    idempotency_key: 'idem-numeric',
+  });
+  assert.equal(result.quote_id, 115);
+  assert.equal(result.unit_id, 202);
 });
 
 test('quote requires idempotency key', () => {

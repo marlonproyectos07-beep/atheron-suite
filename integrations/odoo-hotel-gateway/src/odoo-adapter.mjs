@@ -24,6 +24,105 @@ import { HttpOdooTransport } from './odoo-transport.mjs';
  *    (PENDIENTE_CREDENCIAL_SEGURA): antes de usarlo en staging real hay que
  *    validarlo contra la accion 1967 real.
  */
+const ODOO_BUSINESS_ERROR_CODES = new Set([
+  'UNKNOWN_OP',
+  'FORBIDDEN_PARAM',
+  'UNKNOWN_PARAM',
+  'RATE_LIMITED',
+  'IDEMPOTENCY_KEY_REQUIRED',
+  'IDEMPOTENCY_KEY_REUSED',
+  'NOT_FOUND',
+  'QUOTE_EXPIRED',
+  'NOT_QUOTED',
+  'UNAVAILABLE',
+  'INSUFFICIENT_CAPACITY',
+  'REQUIRES_MANUAL_CONFIRMATION',
+]);
+
+/**
+ * HOTEL-006 no usa el contrato HTTP externo directamente dentro de Odoo.
+ * La accion 1967 recibe `op + payload` y, para disponibilidad/cotizacion,
+ * usa los nombres comerciales en espanol que quedaron aprobados:
+ * `fecha_entrada`, `fecha_salida`, `personas`.
+ *
+ * `source_channel` NO se reenvia dentro del payload: 1967 lo fuerza a
+ * `sofia` del lado Odoo. Aun asi, assertSafeUpstreamPayload exige que el
+ * request validado llegue aqui con source_channel='sofia', como defensa
+ * fail-closed frente a llamadas directas al adapter.
+ */
+function toOdooPayload(operation, payload) {
+  if (operation === 'availability' || operation === 'quote') {
+    return {
+      fecha_entrada: payload.check_in,
+      fecha_salida: payload.check_out,
+      personas: payload.guests,
+      ...(payload.property_id !== undefined ? { property_id: payload.property_id } : {}),
+      ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
+      ...(operation === 'quote' && payload.idempotency_key
+        ? { idempotency_key: payload.idempotency_key }
+        : {}),
+    };
+  }
+
+  if (operation === 'hold') {
+    return {
+      quote_id: payload.quote_id,
+      unit_id: payload.unit_id,
+      idempotency_key: payload.idempotency_key,
+      ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
+    };
+  }
+
+  if (operation === 'status') {
+    return {
+      operation_id: payload.operation_id,
+      ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
+    };
+  }
+
+  throw new ContractError('OPERATION_NOT_ALLOWED', `Unsupported operation: ${operation}`);
+}
+
+function parseOdooResult(value) {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) return value;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return value;
+  }
+}
+
+function unwrapOdoo1967Response(raw) {
+  let result = raw;
+
+  if (
+    raw &&
+    typeof raw === 'object' &&
+    raw.type === 'ir.actions.client' &&
+    raw.tag === 'display_notification' &&
+    raw.params &&
+    typeof raw.params === 'object'
+  ) {
+    result = 'result' in raw.params ? parseOdooResult(raw.params.result) : raw.params;
+  }
+
+  if (result && typeof result === 'object' && result.ok === false) {
+    const upstreamCode =
+      typeof result.error_code === 'string' && ODOO_BUSINESS_ERROR_CODES.has(result.error_code)
+        ? result.error_code
+        : 'INTERNAL_ERROR';
+    const upstreamMessage =
+      typeof result.message === 'string' && result.message.trim() !== ''
+        ? result.message
+        : `Odoo HOTEL API rejected operation (${upstreamCode})`;
+    throw new ContractError(upstreamCode, upstreamMessage);
+  }
+
+  return result;
+}
+
 export class OdooHotelAdapter {
   #dryRun;
   #config;
@@ -131,8 +230,9 @@ export class OdooHotelAdapter {
   /**
    * Camino LIVE. Reutiliza la accion 1967 ya aprobada como
    * `ir.actions.server`, pasando la operacion y el payload validado por
-   * contexto -- incluyendo `source_channel: 'sofia'`, que Odoo necesita
-   * para aplicar las reglas ya aprobadas en HOTEL-006 para ese canal.
+   * contexto real aprobado por HOTEL-006: `{ op, payload }`. La accion 1967
+   * fuerza internamente `source_channel='sofia'`; el gateway no permite que
+   * el cliente lo controle y tampoco necesita reenviarlo dentro del payload.
    *
    * `assertSafeUpstreamPayload` es la ultima barrera fail-closed antes de
    * salir del proceso: bloquea cualquier campo prohibido que intentara
@@ -168,17 +268,21 @@ export class OdooHotelAdapter {
       throw new ContractError('UNAUTHORIZED', 'Odoo technical login failed');
     }
 
+    const odooPayload = toOdooPayload(operation, payload);
+
     try {
-      return await transport.call('object', 'execute_kw', [
+      const raw = await transport.call('object', 'execute_kw', [
         database,
         uid,
         technicalSecret,
         'ir.actions.server',
         'run',
         [[actionId]],
-        { context: { hotel_gateway_operation: operation, hotel_gateway_payload: payload } },
+        { context: { op: operation, payload: odooPayload } },
       ]);
-    } catch {
+      return unwrapOdoo1967Response(raw);
+    } catch (error) {
+      if (error instanceof ContractError) throw error;
       throw new ContractError('INTERNAL_ERROR', 'Odoo upstream error');
     }
   }
