@@ -37,7 +37,8 @@ HotelGateway (src/gateway.mjs)
   ▼
 OdooHotelAdapter (src/odoo-adapter.mjs)
   │  DRY_RUN=true  -> fixtures locales, HOLD nunca escribe en Odoo real
-  │  DRY_RUN=false -> Odoo real vía acción 1967 (no probado en este repo)
+  │  DRY_RUN=false -> acción 1967 vía transporte inyectable (probado con
+  │                    transporte simulado; Odoo real aún sin credenciales)
   ▼
 GATEWAY ODOO 1967 -> MASTER DATA / RATE ENGINE / INVENTARIO
 ```
@@ -152,9 +153,17 @@ Suite (ni tarifas, ni disponibilidad, ni capacidad reales). `hold` en DRY_RUN
 `DRY_RUN=false` activa el camino LIVE (`OdooHotelAdapter#callOdooAction1967`
 en `src/odoo-adapter.mjs`), que reutiliza la acción 1967 ya aprobada vía
 JSON-RPC (`common.login` + `object.execute_kw` sobre `ir.actions.server`).
-Este camino **no ha sido probado contra un Odoo real** en esta sesión por
-falta de credenciales (ver `PENDIENTE_CREDENCIAL_SEGURA` en `.env.example`);
-antes de usarlo en staging real hay que validarlo específicamente.
+El transporte JSON-RPC es inyectable (`src/odoo-transport.mjs`,
+`HttpOdooTransport` por defecto): `test/odoo-live-pipeline.test.mjs` prueba
+todo el pipeline LIVE (gateway → contrato → idempotencia → adapter → borde
+Odoo) con un transporte simulado (`FakeOdooTransport`), sin red y sin
+credenciales reales, y demuestra que `source_channel='sofia'` llega forzado
+al `execute_kw` mientras que un `source_channel` enviado por el cliente, o
+cualquier otro campo prohibido, nunca llega al transporte. Lo que **no** se
+ha probado en esta sesión, por no existir credenciales, es el
+`HttpOdooTransport` real contra un Odoo de verdad (ver
+`PENDIENTE_CREDENCIAL_SEGURA` en `.env.example`); eso es lo único que falta
+antes de usar este camino en staging real.
 
 ## Clientes técnicos (Fase 14 — relevo multiagente)
 
@@ -191,7 +200,7 @@ Ver `ROLLBACK.md`.
 
 ```bash
 cd integrations/odoo-hotel-gateway
-npm test        # 53/53 PASS al cierre de este gate
+npm test        # 63/63 PASS al cierre de esta corrección (incluye regresión LIVE simulada)
 npm start        # levanta el servidor (DRY_RUN=true por defecto, PORT=8787)
 ```
 

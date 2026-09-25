@@ -4,6 +4,7 @@ import {
   buildQuoteFixture,
   buildHoldFixture,
 } from '../fixtures/dry-run-fixtures.mjs';
+import { HttpOdooTransport } from './odoo-transport.mjs';
 
 /**
  * OdooHotelAdapter (Fase 4).
@@ -27,13 +28,23 @@ export class OdooHotelAdapter {
   #dryRun;
   #config;
   #clock;
+  #transport;
   #quotes = new Map(); // quote_id -> { ...quote, createdAt, expiresAt }
   #holds = new Map(); // hold_id -> { ...hold, createdAt }
 
-  constructor({ dryRun = true, config = {}, clock = () => Date.now() } = {}) {
+  /**
+   * @param {object} [options.transport] - transporte JSON-RPC inyectable
+   *   (debe exponer `call(service, method, args)`). Si no se pasa, se
+   *   construye un `HttpOdooTransport` real a partir de `config.baseUrl`
+   *   la primera vez que se necesita (modo LIVE). Los tests inyectan aqui
+   *   un transporte simulado para probar el pipeline LIVE sin red ni
+   *   credenciales reales.
+   */
+  constructor({ dryRun = true, config = {}, clock = () => Date.now(), transport = null } = {}) {
     this.#dryRun = dryRun;
     this.#config = config;
     this.#clock = clock;
+    this.#transport = transport;
   }
 
   get isDryRun() {
@@ -118,53 +129,57 @@ export class OdooHotelAdapter {
   }
 
   /**
-   * Camino LIVE, sin probar en esta sesion (ver nota de clase). Reutiliza la
-   * accion 1967 ya aprobada como `ir.actions.server`, pasando la operacion y
-   * el payload validado por contexto. Nunca reenvia campos prohibidos
-   * (assertSafeUpstreamPayload como ultima barrera fail-closed antes de
-   * salir del proceso).
+   * Camino LIVE. Reutiliza la accion 1967 ya aprobada como
+   * `ir.actions.server`, pasando la operacion y el payload validado por
+   * contexto -- incluyendo `source_channel: 'sofia'`, que Odoo necesita
+   * para aplicar las reglas ya aprobadas en HOTEL-006 para ese canal.
+   *
+   * `assertSafeUpstreamPayload` es la ultima barrera fail-closed antes de
+   * salir del proceso: bloquea cualquier campo prohibido que intentara
+   * colarse, y ADEMAS exige que `source_channel` sea exactamente 'sofia'
+   * (si no lo es, es señal de un bug o de un llamador que se salto
+   * `validateRequest`, y se corta ahi mismo en vez de dejarlo pasar).
+   *
+   * Contra un Odoo real esto sigue sin probarse en este repositorio
+   * (PENDIENTE_CREDENCIAL_SEGURA); lo que si esta probado end-to-end es el
+   * pipeline completo hasta el borde del transporte, con un transporte
+   * simulado inyectado (ver test/odoo-live-pipeline.test.mjs).
    */
   async #callOdooAction1967(operation, payload) {
     assertSafeUpstreamPayload(payload);
 
     const { baseUrl, database, technicalUser, technicalSecret, actionId = 1967 } = this.#config;
-    if (!baseUrl || !database || !technicalUser || !technicalSecret) {
+
+    const transport = this.#transport ?? (baseUrl ? new HttpOdooTransport({ baseUrl }) : null);
+    if (!transport || !database || !technicalUser || !technicalSecret) {
       throw new ContractError(
         'INTERNAL_ERROR',
-        'Odoo LIVE mode misconfigured: missing ODOO_BASE_URL/ODOO_DATABASE/ODOO_TECHNICAL_USER/ODOO_TECHNICAL_SECRET'
+        'Odoo LIVE mode misconfigured: missing transport/ODOO_DATABASE/ODOO_TECHNICAL_USER/ODOO_TECHNICAL_SECRET'
       );
     }
 
-    const rpc = async (service, method, args) => {
-      const response = await fetch(`${baseUrl.replace(/\/$/, '')}/jsonrpc`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          method: 'call',
-          params: { service, method, args },
-        }),
-      });
-      const json = await response.json();
-      if (json.error) {
-        throw new ContractError('INTERNAL_ERROR', 'Odoo upstream error');
-      }
-      return json.result;
-    };
-
-    const uid = await rpc('common', 'login', [database, technicalUser, technicalSecret]);
+    let uid;
+    try {
+      uid = await transport.call('common', 'login', [database, technicalUser, technicalSecret]);
+    } catch {
+      throw new ContractError('INTERNAL_ERROR', 'Odoo upstream error during login');
+    }
     if (!uid) {
       throw new ContractError('UNAUTHORIZED', 'Odoo technical login failed');
     }
 
-    return rpc('object', 'execute_kw', [
-      database,
-      uid,
-      technicalSecret,
-      'ir.actions.server',
-      'run',
-      [[actionId]],
-      { context: { hotel_gateway_operation: operation, hotel_gateway_payload: payload } },
-    ]);
+    try {
+      return await transport.call('object', 'execute_kw', [
+        database,
+        uid,
+        technicalSecret,
+        'ir.actions.server',
+        'run',
+        [[actionId]],
+        { context: { hotel_gateway_operation: operation, hotel_gateway_payload: payload } },
+      ]);
+    } catch {
+      throw new ContractError('INTERNAL_ERROR', 'Odoo upstream error');
+    }
   }
 }

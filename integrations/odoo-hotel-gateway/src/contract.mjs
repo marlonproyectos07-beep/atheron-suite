@@ -1,3 +1,11 @@
+/**
+ * Campos que el CLIENTE nunca puede enviar (Fase 7). `source_channel` vive
+ * aqui a proposito: ningun cliente puede setearlo. El propio gateway lo
+ * fuerza a 'sofia' mas abajo, en `validateRequest`, DESPUES de que este
+ * chequeo ya paso -- por eso un valor de cliente en source_channel sigue
+ * cayendo aqui con FORBIDDEN_FIELD, mientras que el valor forzado
+ * internamente nunca llega a esta lista de entrada.
+ */
 const COMMON_FORBIDDEN = new Set([
   'price',
   'precio',
@@ -27,6 +35,28 @@ const COMMON_FORBIDDEN = new Set([
   'rate_approval',
   'extra_capacity_approval',
 ]);
+
+/**
+ * Campos que jamas deben reenviarse aguas arriba (a Odoo), como defensa en
+ * profundidad si algo llamara al adapter sin pasar por `validateRequest`.
+ *
+ * BUG CORREGIDO (auditoria ChatGPT sobre PR #57, comentario
+ * https://github.com/marlonproyectos07-beep/atheron-suite/pull/57#issuecomment-5826163139):
+ * este set usaba COMMON_FORBIDDEN tal cual, y como `source_channel` esta en
+ * COMMON_FORBIDDEN, CUALQUIER payload valido (que siempre trae
+ * source_channel='sofia' forzado por el gateway) quedaba rechazado con
+ * FORBIDDEN_FIELD antes de llegar a la accion 1967. Eso bloqueaba TODO el
+ * camino LIVE, siempre, sin excepcion.
+ *
+ * La correccion distingue dos cosas que antes se confundian en un solo set:
+ *   - "el cliente no puede ENVIAR esto"      -> COMMON_FORBIDDEN (sin cambios)
+ *   - "esto no debe REENVIARSE a Odoo"       -> UPSTREAM_FORBIDDEN (nuevo)
+ * `source_channel` pertenece al primero pero no al segundo: el cliente
+ * jamas puede setearlo (sigue bloqueado, sin relajar nada), pero el valor
+ * 'sofia' que el propio gateway fuerza SI debe llegar al adapter/upstream,
+ * porque Odoo necesita saber que canal esta llamando (HOTEL-006).
+ */
+const UPSTREAM_FORBIDDEN = new Set([...COMMON_FORBIDDEN].filter((field) => field !== 'source_channel'));
 
 const OPERATIONS = Object.freeze({
   availability: new Set([
@@ -129,10 +159,20 @@ export function assertSafeUpstreamPayload(payload) {
   if (!isPlainObject(payload)) {
     throw new ContractError('INVALID_UPSTREAM_PAYLOAD', 'Upstream payload must be an object');
   }
-  for (const key of COMMON_FORBIDDEN) {
+  for (const key of UPSTREAM_FORBIDDEN) {
     if (key in payload) {
       throw new ContractError('FORBIDDEN_FIELD', `Gateway cannot forward field: ${key}`, { field: key });
     }
+  }
+  // Fail closed en la otra direccion: si por lo que sea el payload que llega
+  // aqui NO trae source_channel='sofia' ya forzado, es una senal de que
+  // alguien esta llamando al adapter sin pasar por validateRequest. Mejor
+  // frenar aqui que dejar que Odoo reciba un canal indefinido o distinto.
+  if (payload.source_channel !== 'sofia') {
+    throw new ContractError(
+      'INTERNAL_ERROR',
+      'source_channel must be forced to sofia by the gateway before reaching upstream Odoo'
+    );
   }
   return true;
 }
@@ -163,4 +203,5 @@ export const contract = Object.freeze({
   operations: Object.keys(OPERATIONS),
   forced_source_channel: 'sofia',
   forbidden_fields: [...COMMON_FORBIDDEN],
+  upstream_forbidden_fields: [...UPSTREAM_FORBIDDEN],
 });

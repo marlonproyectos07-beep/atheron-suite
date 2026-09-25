@@ -5,6 +5,7 @@ import {
   contract,
   validateRequest,
   errorEnvelope,
+  assertSafeUpstreamPayload,
 } from '../src/contract.mjs';
 
 test('only exposes the four approved operations', () => {
@@ -113,6 +114,36 @@ test('unsupported operations (confirm/cancel) are never in the whitelist', () =>
   assert.throws(
     () => validateRequest('cancel', { operation_id: 'OP-1' }),
     (error) => error instanceof ContractError && error.code === 'OPERATION_NOT_ALLOWED'
+  );
+});
+
+test('assertSafeUpstreamPayload lets the gateway-forced source_channel=sofia through', () => {
+  const validated = validateRequest('availability', {
+    check_in: '2026-11-16',
+    check_out: '2026-11-17',
+    guests: 2,
+  });
+  assert.equal(validated.source_channel, 'sofia');
+  assert.equal(assertSafeUpstreamPayload(validated), true);
+});
+
+test('assertSafeUpstreamPayload still blocks every other forbidden field from reaching Odoo', () => {
+  for (const field of ['price', 'discount', 'tax', 'admin', 'sudo', 'confirm', 'cancel', 'master_data_write']) {
+    assert.throws(
+      () => assertSafeUpstreamPayload({ source_channel: 'sofia', [field]: true }),
+      (error) => error instanceof ContractError && error.code === 'FORBIDDEN_FIELD'
+    );
+  }
+});
+
+test('assertSafeUpstreamPayload fails closed if source_channel was not forced to sofia', () => {
+  assert.throws(
+    () => assertSafeUpstreamPayload({ check_in: '2026-11-16' }), // sin source_channel
+    (error) => error instanceof ContractError && error.code === 'INTERNAL_ERROR'
+  );
+  assert.throws(
+    () => assertSafeUpstreamPayload({ source_channel: 'whatsapp' }), // valor distinto de sofia
+    (error) => error instanceof ContractError && error.code === 'INTERNAL_ERROR'
   );
 });
 
