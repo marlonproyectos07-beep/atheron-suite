@@ -204,6 +204,113 @@ test('LIVE: si algo llamara al adapter sin pasar por validateRequest (sin source
   assert.equal(transport.calls.length, 0, 'no debe intentar login ni execute_kw sin source_channel forzado');
 });
 
+/**
+ * Gate 3 (orden ATH-ODOO-HOTEL-007-LIVE): status confirmado contra staging
+ * real usa `hold_id` (25/09/2026, HOLD 22215). `operation_id`/`order_id`
+ * devuelven UNKNOWN_PARAM. El contrato de status de una cotizacion (quote)
+ * no esta confirmado: se prueba aqui el fallback documentado, que solo se
+ * activa sobre NOT_FOUND/UNKNOWN_PARAM y nunca convierte un error real en
+ * exito.
+ */
+function odooBusinessError(error_code, message = 'error') {
+  return {
+    type: 'ir.actions.client',
+    tag: 'display_notification',
+    params: { title: 'HOTEL API', message: 'status', result: { ok: false, error_code, message } },
+  };
+}
+
+function odooBusinessSuccess(data) {
+  return {
+    type: 'ir.actions.client',
+    tag: 'display_notification',
+    params: { title: 'HOTEL API', message: 'status', result: { ok: true, op: 'status', data } },
+  };
+}
+
+test('LIVE: status envia hold_id (contrato confirmado), no operation_id ni order_id', async () => {
+  const transport = new FakeOdooTransport({
+    results: [odooBusinessSuccess({ hold_id: 22215, estado: 'hold_active' })],
+  });
+  const { gateway } = buildLiveTestGateway({ transport });
+
+  const { envelope } = await gateway.handle({
+    operation: 'status',
+    ...withIdentity(TEST_IDENTITIES.claude),
+    body: { operation_id: 22215 },
+  });
+
+  assert.equal(envelope.ok, true, `esperaba exito, obtuve: ${JSON.stringify(envelope)}`);
+  assert.equal(transport.executeKwCalls.length, 1, 'un HOLD real se resuelve en un solo intento, sin fallback');
+
+  const forwardedPayload = transport.executeKwCalls[0].args.at(-1).context.payload;
+  assert.equal(forwardedPayload.hold_id, 22215);
+  assert.equal('operation_id' in forwardedPayload, false);
+  assert.equal('order_id' in forwardedPayload, false);
+});
+
+test('LIVE: status hace fallback READ-ONLY a quote_id cuando hold_id devuelve UNKNOWN_PARAM', async () => {
+  const transport = new FakeOdooTransport({
+    results: [
+      odooBusinessError('UNKNOWN_PARAM', 'hold_id no reconocido para este operation_id'),
+      odooBusinessSuccess({ quote_id: 'Q-900', estado: 'quoted' }),
+    ],
+  });
+  const { gateway } = buildLiveTestGateway({ transport });
+
+  const { envelope } = await gateway.handle({
+    operation: 'status',
+    ...withIdentity(TEST_IDENTITIES.claude),
+    body: { operation_id: 'Q-900' },
+  });
+
+  assert.equal(envelope.ok, true, `esperaba exito tras el fallback, obtuve: ${JSON.stringify(envelope)}`);
+  assert.equal(transport.executeKwCalls.length, 2, 'debe intentar hold_id primero y luego quote_id');
+
+  const [firstCall, secondCall] = transport.executeKwCalls;
+  assert.equal(firstCall.args.at(-1).context.payload.hold_id, 'Q-900');
+  assert.equal(secondCall.args.at(-1).context.payload.quote_id, 'Q-900');
+
+  // Trazabilidad: el candidato no confirmado queda marcado en la respuesta.
+  assert.match(envelope.data.status_lookup_fallback, /quote_id/);
+});
+
+test('LIVE: status con fallback a quote_id tambien fallando propaga el segundo error real (nunca finge exito)', async () => {
+  const transport = new FakeOdooTransport({
+    results: [
+      odooBusinessError('UNKNOWN_PARAM', 'hold_id no reconocido'),
+      odooBusinessError('NOT_FOUND', 'no existe ninguna cotizacion ni hold con ese id'),
+    ],
+  });
+  const { gateway } = buildLiveTestGateway({ transport });
+
+  const { envelope, code } = await gateway.handle({
+    operation: 'status',
+    ...withIdentity(TEST_IDENTITIES.claude),
+    body: { operation_id: 'no-existe' },
+  });
+
+  assert.equal(envelope.ok, false);
+  assert.equal(code, 'NOT_FOUND', 'debe propagar el error real del segundo intento, no inventar exito');
+  assert.equal(transport.executeKwCalls.length, 2);
+});
+
+test('LIVE: status con hold_id -> NOT_FOUND (no UNKNOWN_PARAM) tambien dispara el fallback documentado', async () => {
+  const transport = new FakeOdooTransport({
+    results: [odooBusinessError('NOT_FOUND', 'no existe'), odooBusinessSuccess({ quote_id: 'Q-1', estado: 'quoted' })],
+  });
+  const { gateway } = buildLiveTestGateway({ transport });
+
+  const { envelope } = await gateway.handle({
+    operation: 'status',
+    ...withIdentity(TEST_IDENTITIES.claude),
+    body: { operation_id: 'Q-1' },
+  });
+
+  assert.equal(envelope.ok, true);
+  assert.equal(transport.executeKwCalls.length, 2);
+});
+
 test('LIVE: nunca se usan credenciales reales; el transporte real (HttpOdooTransport) no se ejercita en esta suite', async () => {
   // Verificacion explicita del alcance: esta suite entera pasa un
   // transporte simulado (FakeOdooTransport) via inyeccion de dependencias.

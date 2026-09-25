@@ -159,11 +159,23 @@ todo el pipeline LIVE (gateway → contrato → idempotencia → adapter → bor
 Odoo) con un transporte simulado (`FakeOdooTransport`), sin red y sin
 credenciales reales, y demuestra que `source_channel='sofia'` llega forzado
 al `execute_kw` mientras que un `source_channel` enviado por el cliente, o
-cualquier otro campo prohibido, nunca llega al transporte. Lo que **no** se
-ha probado en esta sesión, por no existir credenciales, es el
-`HttpOdooTransport` real contra un Odoo de verdad (ver
-`PENDIENTE_CREDENCIAL_SEGURA` en `.env.example`); eso es lo único que falta
-antes de usar este camino en staging real.
+cualquier otro campo prohibido, nunca llega al transporte.
+
+**Estado real verificado contra `atheron1-hotel-staging-20260923` (25/09/2026):**
+- `availability`: PASS. Llamada real de solo lectura, `HttpOdooTransport`
+  real (no simulado), usuario técnico Sofía API STAGING (grupo 149, sin
+  admin). Devolvió disponibilidad real de las unidades piloto.
+- `status` de HOLD: contrato confirmado — Odoo espera `hold_id`, no
+  `operation_id` ni `order_id` (ambos devuelven `UNKNOWN_PARAM`). El adapter
+  ya traduce correctamente (ver `#callOdooAction1967` en
+  `src/odoo-adapter.mjs`).
+- `status` de una cotización (quote), `quote` real y `hold` real: **todavía
+  no probados contra staging** (`PENDIENTE_VERIFICAR_CONTRA_STAGING`). El
+  adapter incluye un fallback de solo lectura para `status` (intenta
+  `hold_id` primero, y solo si Odoo responde `NOT_FOUND`/`UNKNOWN_PARAM`
+  intenta `quote_id`), documentado en el código y probado con
+  `FakeOdooTransport`, pero el candidato `quote_id` en sí no está
+  confirmado contra un Odoo real todavía.
 
 ## Clientes técnicos (Fase 14 — relevo multiagente)
 
@@ -200,7 +212,7 @@ Ver `ROLLBACK.md`.
 
 ```bash
 cd integrations/odoo-hotel-gateway
-npm test        # 63/63 PASS al cierre de esta corrección (incluye regresión LIVE simulada)
+npm test        # 70/70 PASS (incluye regresion LIVE simulada + fallback de status)
 npm start        # levanta el servidor (DRY_RUN=true por defecto, PORT=8787)
 ```
 

@@ -6,9 +6,16 @@
  * `OdooHotelAdapter` no puede distinguir uno del otro.
  */
 export class FakeOdooTransport {
-  constructor({ uid = 7, result = { ok: true, mocked_by: 'FakeOdooTransport' } } = {}) {
+  /**
+   * @param {Array} [options.results] - una respuesta distinta por cada
+   *   llamada sucesiva a execute_kw (en orden), para simular secuencias
+   *   como el fallback de `status` (primer intento hold_id, segundo
+   *   quote_id). Si se agotan, se reusa `result` como valor por defecto.
+   */
+  constructor({ uid = 7, result = { ok: true, mocked_by: 'FakeOdooTransport' }, results = null } = {}) {
     this.uid = uid;
     this.result = result;
+    this.results = results;
     this.calls = [];
   }
 
@@ -18,6 +25,10 @@ export class FakeOdooTransport {
       return this.uid;
     }
     if (service === 'object' && method === 'execute_kw') {
+      if (this.results) {
+        const index = this.executeKwCalls.length - 1;
+        if (index < this.results.length) return this.results[index];
+      }
       return this.result;
     }
     throw new Error(`FakeOdooTransport: llamada inesperada ${service}.${method}`);

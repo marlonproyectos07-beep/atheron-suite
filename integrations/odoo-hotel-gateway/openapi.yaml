@@ -169,6 +169,17 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
   schemas:
+    Identifier:
+      description: >
+        Odoo puede devolver IDs numericos (unit_id, quote_id como ID de
+        registro) o el gateway puede generar IDs de cadena (DRY_RUN, IDs
+        externos). Ambos formatos son validos; ver requireIdentifier en
+        src/contract.mjs.
+      oneOf:
+        - type: string
+          minLength: 1
+        - type: integer
+          minimum: 1
     Common:
       type: object
       properties:
@@ -217,11 +228,12 @@ components:
       additionalProperties: false
     HoldRequest:
       type: object
-      required: [quote_id, idempotency_key]
+      required: [quote_id, unit_id, idempotency_key]
       properties:
         quote_id:
-          type: string
-          minLength: 1
+          $ref: '#/components/schemas/Identifier'
+        unit_id:
+          $ref: '#/components/schemas/Identifier'
         idempotency_key:
           type: string
           minLength: 1
@@ -233,8 +245,7 @@ components:
       required: [operation_id]
       properties:
         operation_id:
-          type: string
-          minLength: 1
+          $ref: '#/components/schemas/Identifier'
         correlation_id:
           type: string
       additionalProperties: false

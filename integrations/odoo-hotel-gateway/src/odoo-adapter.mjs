@@ -18,11 +18,11 @@ import { HttpOdooTransport } from './odoo-transport.mjs';
  *    deterministas. `hold` NUNCA escribe en Odoo real en este modo.
  *  - LIVE (dryRun=false): llama a Odoo via JSON-RPC reutilizando la accion
  *    1967 como `ir.actions.server`. Requiere ODOO_BASE_URL/ODOO_DATABASE/
- *    ODOO_TECHNICAL_USER/ODOO_TECHNICAL_SECRET reales (fuera del repo). Este
- *    camino esta escrito pero NO probado contra un Odoo real en esta sesion
- *    porque no existen credenciales reales disponibles aqui
- *    (PENDIENTE_CREDENCIAL_SEGURA): antes de usarlo en staging real hay que
- *    validarlo contra la accion 1967 real.
+ *    ODOO_TECHNICAL_USER/ODOO_TECHNICAL_SECRET reales (fuera del repo, nunca
+ *    en este repositorio). `availability` de solo lectura ya se probo con
+ *    exito contra atheron1-hotel-staging-20260923 (25/09/2026). `quote` y
+ *    `hold` reales, y el `status` de una cotizacion, siguen sin probar
+ *    contra staging (PENDIENTE_VERIFICAR_CONTRA_STAGING).
  */
 const ODOO_BUSINESS_ERROR_CODES = new Set([
   'UNKNOWN_OP',
@@ -73,14 +73,20 @@ function toOdooPayload(operation, payload) {
     };
   }
 
-  if (operation === 'status') {
-    return {
-      operation_id: payload.operation_id,
-      ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
-    };
-  }
-
   throw new ContractError('OPERATION_NOT_ALLOWED', `Unsupported operation: ${operation}`);
+}
+
+/**
+ * `status` NO usa `toOdooPayload`: el contrato externo (`operation_id`)
+ * tiene que traducirse a un campo Odoo distinto segun sea un HOLD o una
+ * COTIZACION, y solo el primero esta confirmado contra staging real
+ * (ver `#callOdooAction1967`, Gate 3 de la orden ATH-ODOO-HOTEL-007-LIVE).
+ */
+function buildStatusPayload(paramName, payload) {
+  return {
+    [paramName]: payload.operation_id,
+    ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
+  };
 }
 
 function parseOdooResult(value) {
@@ -268,22 +274,55 @@ export class OdooHotelAdapter {
       throw new ContractError('UNAUTHORIZED', 'Odoo technical login failed');
     }
 
-    const odooPayload = toOdooPayload(operation, payload);
+    const runOnce = async (odooPayload) => {
+      try {
+        const raw = await transport.call('object', 'execute_kw', [
+          database,
+          uid,
+          technicalSecret,
+          'ir.actions.server',
+          'run',
+          [[actionId]],
+          { context: { op: operation, payload: odooPayload } },
+        ]);
+        return unwrapOdoo1967Response(raw);
+      } catch (error) {
+        if (error instanceof ContractError) throw error;
+        throw new ContractError('INTERNAL_ERROR', 'Odoo upstream error');
+      }
+    };
 
-    try {
-      const raw = await transport.call('object', 'execute_kw', [
-        database,
-        uid,
-        technicalSecret,
-        'ir.actions.server',
-        'run',
-        [[actionId]],
-        { context: { op: operation, payload: odooPayload } },
-      ]);
-      return unwrapOdoo1967Response(raw);
-    } catch (error) {
-      if (error instanceof ContractError) throw error;
-      throw new ContractError('INTERNAL_ERROR', 'Odoo upstream error');
+    if (operation === 'status') {
+      // Contrato CONFIRMADO contra staging real (25/09/2026, HOLD 22215):
+      //   hold_id      -> OK
+      //   operation_id -> UNKNOWN_PARAM
+      //   order_id     -> UNKNOWN_PARAM
+      // El contrato de status para una COTIZACION (quote) NO esta confirmado
+      // todavia contra staging (PENDIENTE_VERIFICAR_CONTRA_STAGING).
+      //
+      // Fallback READ-ONLY documentado (Gate 3, orden ATH-ODOO-HOTEL-007-LIVE):
+      // solo se activa si el primer intento (hold_id, el confirmado) devuelve
+      // NOT_FOUND o UNKNOWN_PARAM; nunca convierte un error real en exito
+      // (si el segundo intento tambien falla, se propaga ESE error real); y
+      // ambos intentos son de solo lectura contra la misma accion 1967.
+      try {
+        return await runOnce(buildStatusPayload('hold_id', payload));
+      } catch (firstError) {
+        const canFallback =
+          firstError instanceof ContractError &&
+          (firstError.code === 'NOT_FOUND' || firstError.code === 'UNKNOWN_PARAM');
+        if (!canFallback) throw firstError;
+
+        const result = await runOnce(buildStatusPayload('quote_id', payload));
+        if (result && typeof result === 'object') {
+          // Trazabilidad: deja constancia de que se uso el candidato aun no
+          // confirmado, para que nadie lo lea como un contrato verificado.
+          result.status_lookup_fallback = 'quote_id (no confirmado contra staging)';
+        }
+        return result;
+      }
     }
+
+    return runOnce(toOdooPayload(operation, payload));
   }
 }
