@@ -16,7 +16,7 @@
         "CLAUDE_FLOW_MAX_AGENTS": "15",
         "CLAUDE_FLOW_AUTO_SCALE": "false",
         "CLAUDE_FLOW_MEMORY_BACKEND": "hybrid",
-        "CLAUDE_FLOW_MCP_TOOLS": "memory,swarm,agent,hooks"
+        "CLAUDE_FLOW_MCP_TOOLS": "swarm_init,swarm_status,swarm_shutdown,swarm_health,agent_spawn,agent_list,agent_status,agent_terminate,agent_health,memory_store,memory_retrieve,memory_search,memory_list,hooks_route,hooks_explain"
       },
       "autoStart": false
     }

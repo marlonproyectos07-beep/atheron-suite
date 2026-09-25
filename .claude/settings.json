@@ -183,13 +183,21 @@
   },
   "permissions": {
     "allow": [
-      "Bash(npx @claude-flow*)",
-      "Bash(npx claude-flow*)",
-      "Bash(node .claude/*)",
-      "mcp__claude-flow__memory_*",
-      "mcp__claude-flow__swarm_*",
-      "mcp__claude-flow__agent_*",
-      "mcp__claude-flow__hooks_*"
+      "mcp__claude-flow__swarm_init",
+      "mcp__claude-flow__swarm_status",
+      "mcp__claude-flow__swarm_shutdown",
+      "mcp__claude-flow__swarm_health",
+      "mcp__claude-flow__agent_spawn",
+      "mcp__claude-flow__agent_list",
+      "mcp__claude-flow__agent_status",
+      "mcp__claude-flow__agent_terminate",
+      "mcp__claude-flow__agent_health",
+      "mcp__claude-flow__memory_store",
+      "mcp__claude-flow__memory_retrieve",
+      "mcp__claude-flow__memory_search",
+      "mcp__claude-flow__memory_list",
+      "mcp__claude-flow__hooks_route",
+      "mcp__claude-flow__hooks_explain"
     ],
     "deny": [
       "Read(./.env)",
@@ -201,7 +209,7 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "CLAUDE_FLOW_V3_ENABLED": "true",
     "CLAUDE_FLOW_HOOKS_ENABLED": "true",
-    "CLAUDE_FLOW_MCP_TOOLS": "memory,swarm,agent,hooks",
+    "CLAUDE_FLOW_MCP_TOOLS": "swarm_init,swarm_status,swarm_shutdown,swarm_health,agent_spawn,agent_list,agent_status,agent_terminate,agent_health,memory_store,memory_retrieve,memory_search,memory_list,hooks_route,hooks_explain",
     "RUFLO_NO_AUTO_ENABLE": "1"
   },
   "claudeFlow": {

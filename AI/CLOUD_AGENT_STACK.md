@@ -117,8 +117,8 @@ bash scripts/bootstrap-cloud-agent-stack.sh
 ```
 
 Al terminar, guardar el reporte de:
-- `npx ruflo@latest doctor`
-- `npx ruflo@latest agent list`
+- `npx ruflo@3.45.0 doctor`
+- `npx ruflo@3.45.0 agent list`
 - `claude mcp list`
 - `codex --version`
 - `higgsfield --version`
@@ -140,9 +140,11 @@ verificado, no hipótesis:
   propósito, para no consumir recursos ni dejar procesos de fondo corriendo
   solos).
 - **MCP de Ruflo**: registrado en `.mcp.json` (project-scoped, versionado,
-  reproducible) bajo la clave canónica `claude-flow` — `npx -y ruflo@latest
-  mcp start`. Se detectó y eliminó un registro legado duplicado (`ruflo`) que
-  `ruflo doctor` señaló como conflictivo.
+  reproducible) bajo la clave canónica `claude-flow`. *Nota histórica: el
+  comando ejecutado ese día fue `npx -y ruflo@latest mcp start`, antes de
+  fijar versión; `.mcp.json` usa ahora `ruflo@3.45.0` — ver sección "Fase 1"
+  más abajo.* Se detectó y eliminó un registro legado duplicado (`ruflo`)
+  que `ruflo doctor` señaló como conflictivo.
   **Pendiente de aprobación humana:** Claude Code exige que una persona
   apruebe una vez, de forma interactiva (`claude` y aceptar el diálogo de
   confianza del proyecto), cualquier servidor MCP definido en `.mcp.json`
@@ -284,3 +286,60 @@ aplicados, todos verificados, no hipótesis:
 Validación final con la versión fijada: `ruflo@3.45.0 --version`, `doctor` y
 `swarm status` — ver REPORTE PARA CHATGPT de esta tarea para los números
 exactos.
+
+## Fase 2 — cierre final antes del Trust interactivo (2026-09-25)
+
+Tres ajustes finales pedidos por ChatGPT sobre `bdd4e6b`, todos verificados:
+
+1. **Permisos Bash amplios eliminados.** `.claude/settings.json` ya no
+   tiene `Bash(npx @claude-flow*)`, `Bash(npx claude-flow*)` ni
+   `Bash(node .claude/*)`. No se sustituyeron por otro comodín: un agente
+   ya no puede saltarse la versión fijada (3.45.0) invocando otro
+   `ruflo`/`claude-flow` por Bash autoaprobado, ni tiene autorización
+   general para ejecutar `node .claude/*`.
+2. **MCP a tools exactas, no categorías.** `CLAUDE_FLOW_MCP_TOOLS` y
+   `permissions.allow` ya no usan `memory,swarm,agent,hooks` (categorías
+   completas) ni los comodines `mcp__claude-flow__{memory,swarm,agent,hooks}_*`.
+   ChatGPT pidió 17 nombres exactos; **6 de esos 17 no existen** en
+   `ruflo@3.45.0` (`swarm_spawn`, `swarm_terminate`, `swarm_topology`,
+   `swarm_metrics`, `agent_stop`, `agent_metrics` — verificado contra el
+   esquema real del servidor, no adivinado). Se usó el equivalente real
+   más cercano en vez de inventar un nombre que no existe:
+   `swarm_terminate` → `swarm_shutdown`, `swarm_metrics`/`agent_metrics`
+   → `swarm_health`/`agent_health`, `agent_stop` → `agent_terminate`;
+   `swarm_spawn` (se cubre con `agent_spawn` + `swarmId`) y
+   `swarm_topology` (se fija en `swarm_init`, no es una tool aparte) no
+   tienen sustituto porque no hacen falta como tools independientes. Lista
+   final, 15 tools: `swarm_init, swarm_status, swarm_shutdown,
+   swarm_health, agent_spawn, agent_list, agent_status, agent_terminate,
+   agent_health, memory_store, memory_retrieve, memory_search,
+   memory_list, hooks_route, hooks_explain`. Medido con `ruflo doctor`:
+   **16 tools anunciadas** (una más que las 15 filtradas — el servidor
+   añade una tool de sistema fija) **≈3 532 tokens de esquema**
+   (353 → 90 → 16; ≈65 835 → ≈18 271 → ≈3 532 tokens).
+3. **Referencias ejecutables a `@latest` limpiadas.** Se corrigieron a
+   `ruflo@3.45.0`: `.claude/commands/claude-flow-help.md` (`npx -y
+   claude-flow@latest init --sparc`, el nombre viejo del paquete antes de
+   renombrarse a Ruflo) y dos mensajes de diagnóstico en
+   `.claude/helpers/auto-memory-hook.mjs` y `.claude/helpers/ruflo-hook.cjs`
+   que imprimían/ejecutaban un `npx ruflo@latest` copiable. Quedan sin
+   tocar, por ser explicación histórica claramente marcada como tal (no
+   instrucciones a copiar): la nota histórica en la sección "Estado tras
+   la ejecución" de este mismo documento, y el contraste "ya no usan
+   `ruflo@latest`" de la sección "Fase 1". Dos menciones sueltas en
+   `.claude-flow/CAPABILITIES.md` y `.claude-flow/metrics/v3-progress.json`
+   no se tocaron porque esos archivos **no están versionados** (son
+   estado local regenerado por `ruflo init`, excluidos por `.gitignore`),
+   así que no forman parte de este PR.
+
+**Métricas del PR — dos fuentes, explícitamente etiquetadas para no
+confundirlas:**
+- **GitHub PR #60** (autoritativa, vía API, medida sobre `bdd4e6b` antes
+  de este commit de cierre): base `chore/ai-orchestration-foundation`,
+  119 archivos cambiados, +24 648 líneas.
+- **Diff local** `git diff --shortstat` contra `origin/astro` (una
+  comparación distinta, contra otra rama, no la base real del PR — se
+  incluye solo como referencia adicional, no como sustituto del dato de
+  GitHub): 202 archivos, +29 555/−141 líneas.
+
+El reporte final de esta tarea usa el dato de GitHub como autoritativo.

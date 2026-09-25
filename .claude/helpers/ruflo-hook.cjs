@@ -212,7 +212,7 @@ function main() {
   // exists but cannot be resolved to an entrypoint still runs, via layer 2.
   if (resolveCommandPath('ruflo')) { invokeHook('ruflo', [], hookArgs, stdinData); done(); }
   if (resolveCommandPath('claude-flow')) { invokeHook('claude-flow', [], hookArgs, stdinData); done(); }
-  invokeHook('npx', ['--prefer-offline', '--yes', 'ruflo@latest'], hookArgs, stdinData);
+  invokeHook('npx', ['--prefer-offline', '--yes', 'ruflo@3.45.0'], hookArgs, stdinData);
   done();
 }
 
