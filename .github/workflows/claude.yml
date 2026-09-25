@@ -1,0 +1,40 @@
+name: Atheron Claude Dispatcher
+
+on:
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: atheron-claude-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  claude:
+    if: >
+      github.actor == 'marlonproyectos07-beep' &&
+      contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          settings: .claude/settings.json
+          trigger_phrase: '@claude'
+          claude_args: |
+            --max-turns 30
+            --append-system-prompt "Atheron autonomous execution: obey CLAUDE.md and AI/AUTONOMOUS_QUEUE.md. Never touch production, merge, force-push, spend money, expose secrets, or elevate privileges without explicit CEO approval. If blocked, record BLOCKED_HUMAN and continue with another safe task when one is explicitly included in the same work order."
