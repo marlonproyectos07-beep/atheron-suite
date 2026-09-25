@@ -65,3 +65,21 @@ public/assets/img/proyectos/casa-colonial-centro/*-800.avif
 public/assets/img/proyectos/casa-colonial-centro/*-800.webp
 public/assets/img/proyectos/casa-colonial-centro/*-1100.avif
 public/assets/img/proyectos/casa-colonial-centro/*-1100.webp
+
+# Ruflo local secrets and runtime data
+.env
+.env.local
+.env.*.local
+# Solo se versiona .claude-flow/config.yaml (config declarada); el resto
+# es estado de ejecucion o cache resuelto en esta maquina.
+.claude-flow/*
+!.claude-flow/config.yaml
+!.claude-flow/.gitignore
+.swarm/
+ruvector.db
+.claude/settings.json.graphify-bak
+.claude/proven-config.json
+.claude/.proven-config-version
+
+# Graphify knowledge graph (regenerable, machine-specific)
+graphify-out/
