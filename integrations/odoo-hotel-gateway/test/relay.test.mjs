@@ -57,7 +57,7 @@ test('relay: A cotiza y B consulta/crea HOLD/estado sobre el mismo backend', asy
     assert.notEqual(quoteB.data.quote_id, quoteId);
 
     // 5. Uno (A) crea el HOLD sobre la cotizacion de A
-    const hold = await clientA.hold({ quote_id: quoteId, idempotency_key: 'relay-hold-1' });
+    const hold = await clientA.hold({ quote_id: quoteId, unit_id: 'unit-301', idempotency_key: 'relay-hold-1' });
     assert.equal(hold.ok, true);
     const holdId = hold.data.hold_id;
     assert.ok(holdId);
