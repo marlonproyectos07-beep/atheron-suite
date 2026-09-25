@@ -82,6 +82,17 @@ function toOdooPayload(operation, payload) {
   throw new ContractError('OPERATION_NOT_ALLOWED', `Unsupported operation: ${operation}`);
 }
 
+function parseOdooResult(value) {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) return value;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return value;
+  }
+}
+
 function unwrapOdoo1967Response(raw) {
   let result = raw;
 
@@ -93,7 +104,7 @@ function unwrapOdoo1967Response(raw) {
     raw.params &&
     typeof raw.params === 'object'
   ) {
-    result = raw.params;
+    result = 'result' in raw.params ? parseOdooResult(raw.params.result) : raw.params;
   }
 
   if (result && typeof result === 'object' && result.ok === false) {
