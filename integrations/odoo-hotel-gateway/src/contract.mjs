@@ -76,6 +76,7 @@ const OPERATIONS = Object.freeze({
   ]),
   hold: new Set([
     'quote_id',
+    'unit_id',
     'idempotency_key',
     'correlation_id',
   ]),
@@ -92,6 +93,15 @@ function isPlainObject(value) {
 function requireString(body, key) {
   if (typeof body[key] !== 'string' || body[key].trim() === '') {
     throw new ContractError('INVALID_REQUEST', `${key} is required`);
+  }
+}
+
+function requireIdentifier(body, key) {
+  const value = body[key];
+  const validString = typeof value === 'string' && value.trim() !== '';
+  const validInteger = Number.isInteger(value) && value > 0;
+  if (!validString && !validInteger) {
+    throw new ContractError('INVALID_REQUEST', `${key} must be a non-empty string or positive integer`);
   }
 }
 
@@ -140,12 +150,13 @@ export function validateRequest(operation, body) {
   }
 
   if (operation === 'hold') {
-    requireString(body, 'quote_id');
+    requireIdentifier(body, 'quote_id');
+    requireIdentifier(body, 'unit_id');
     requireIdempotencyKey(body);
   }
 
   if (operation === 'status') {
-    requireString(body, 'operation_id');
+    requireIdentifier(body, 'operation_id');
   }
 
   return Object.freeze({
