@@ -10,10 +10,22 @@ const COMMON_FORBIDDEN = new Set([
   'extra_approved',
   'inventory_override',
   'preview',
+  'allow_preview',
+  'mode',
   'channel',
   'source_channel',
   'admin',
   'sudo',
+  // Defensa en profundidad: HOTEL-007 no expone confirm/cancel/Planning/Master
+  // Data aunque hoy ningun operation los declare como campo permitido.
+  'confirm',
+  'cancel',
+  'planning',
+  'planning_write',
+  'master_data',
+  'master_data_write',
+  'rate_approval',
+  'extra_capacity_approval',
 ]);
 
 const OPERATIONS = Object.freeze({
@@ -53,6 +65,12 @@ function requireString(body, key) {
   }
 }
 
+function requireIdempotencyKey(body) {
+  if (typeof body.idempotency_key !== 'string' || body.idempotency_key.trim() === '') {
+    throw new ContractError('IDEMPOTENCY_KEY_REQUIRED', 'idempotency_key is required for this operation');
+  }
+}
+
 export class ContractError extends Error {
   constructor(code, message, details = undefined) {
     super(message);
@@ -88,12 +106,12 @@ export function validateRequest(operation, body) {
   }
 
   if (operation === 'quote') {
-    requireString(body, 'idempotency_key');
+    requireIdempotencyKey(body);
   }
 
   if (operation === 'hold') {
     requireString(body, 'quote_id');
-    requireString(body, 'idempotency_key');
+    requireIdempotencyKey(body);
   }
 
   if (operation === 'status') {

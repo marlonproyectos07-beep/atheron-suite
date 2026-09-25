@@ -48,7 +48,7 @@ test('rejects price injection', () => {
 test('hold requires idempotency key', () => {
   assert.throws(
     () => validateRequest('hold', { quote_id: 'Q-1' }),
-    (error) => error instanceof ContractError && error.code === 'INVALID_REQUEST'
+    (error) => error instanceof ContractError && error.code === 'IDEMPOTENCY_KEY_REQUIRED'
   );
 });
 
@@ -59,7 +59,7 @@ test('quote requires idempotency key', () => {
       check_out: '2026-11-17',
       guests: 2,
     }),
-    (error) => error instanceof ContractError && error.code === 'INVALID_REQUEST'
+    (error) => error instanceof ContractError && error.code === 'IDEMPOTENCY_KEY_REQUIRED'
   );
 });
 
@@ -70,6 +70,49 @@ test('rejects unknown fields', () => {
       extra: true,
     }),
     (error) => error instanceof ContractError && error.code === 'UNKNOWN_FIELD'
+  );
+});
+
+test('rejects admin/sudo escalation attempts', () => {
+  for (const field of ['admin', 'sudo']) {
+    assert.throws(
+      () => validateRequest('status', { operation_id: 'OP-1', [field]: true }),
+      (error) => error instanceof ContractError && error.code === 'FORBIDDEN_FIELD'
+    );
+  }
+});
+
+test('rejects confirm/cancel/planning/master-data injection', () => {
+  for (const field of ['confirm', 'cancel', 'planning_write', 'master_data_write', 'rate_approval', 'extra_capacity_approval']) {
+    assert.throws(
+      () => validateRequest('status', { operation_id: 'OP-1', [field]: true }),
+      (error) => error instanceof ContractError && error.code === 'FORBIDDEN_FIELD'
+    );
+  }
+});
+
+test('rejects mode and allow_preview overrides', () => {
+  for (const field of ['mode', 'allow_preview']) {
+    assert.throws(
+      () => validateRequest('availability', {
+        check_in: '2026-11-16',
+        check_out: '2026-11-17',
+        guests: 2,
+        [field]: 'anything',
+      }),
+      (error) => error instanceof ContractError && error.code === 'FORBIDDEN_FIELD'
+    );
+  }
+});
+
+test('unsupported operations (confirm/cancel) are never in the whitelist', () => {
+  assert.throws(
+    () => validateRequest('confirm', { operation_id: 'OP-1' }),
+    (error) => error instanceof ContractError && error.code === 'OPERATION_NOT_ALLOWED'
+  );
+  assert.throws(
+    () => validateRequest('cancel', { operation_id: 'OP-1' }),
+    (error) => error instanceof ContractError && error.code === 'OPERATION_NOT_ALLOWED'
   );
 });
 
