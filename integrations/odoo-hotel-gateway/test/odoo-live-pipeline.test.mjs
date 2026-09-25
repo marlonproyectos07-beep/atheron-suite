@@ -63,14 +63,15 @@ test('LIVE: hold idempotente llega a Odoo como op=hold y payload minimo', async 
   const { envelope } = await gateway.handle({
     operation: 'hold',
     ...withIdentity(TEST_IDENTITIES.claude),
-    body: { quote_id: 'Q-live-1', idempotency_key: 'live-hold-1' },
+    body: { quote_id: 115, unit_id: 202, idempotency_key: 'live-hold-1' },
   });
 
   assert.equal(envelope.ok, true, `esperaba exito, obtuve: ${JSON.stringify(envelope)}`);
   const [executeCall] = transport.executeKwCalls;
   const forwardedContext = executeCall.args.at(-1).context;
   assert.equal(forwardedContext.op, 'hold');
-  assert.equal(forwardedContext.payload.quote_id, 'Q-live-1');
+  assert.equal(forwardedContext.payload.quote_id, 115);
+  assert.equal(forwardedContext.payload.unit_id, 202);
   assert.equal(forwardedContext.payload.idempotency_key, 'live-hold-1');
   assert.equal('source_channel' in forwardedContext.payload, false);
 });
