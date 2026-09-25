@@ -67,6 +67,7 @@ function toOdooPayload(operation, payload) {
   if (operation === 'hold') {
     return {
       quote_id: payload.quote_id,
+      unit_id: payload.unit_id,
       idempotency_key: payload.idempotency_key,
       ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
     };
