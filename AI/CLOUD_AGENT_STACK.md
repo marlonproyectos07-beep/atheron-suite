@@ -119,3 +119,58 @@ Al terminar, guardar el reporte de:
 - `higgsfield --version`
 
 No conectar Odoo en este bootstrap. HOTEL-007 sigue en su gate independiente.
+
+## Estado tras la ejecución (2026-09-25)
+
+Bootstrap ejecutado en una sesión de Claude Code Cloud sobre esta rama. Estado
+verificado, no hipótesis:
+
+- **Ruflo**: instalado (`ruflo v3.45.0`). `ruflo doctor` en verde (21 checks,
+  8 warnings — normales: daemon no arrancado, encriptación en reposo apagada,
+  paquetes opcionales `agentic-flow`/`@claude-flow/aidefence` no instalados).
+- **Swarm**: `ruflo swarm init --topology hierarchical-mesh --max-agents 15
+  --strategy specialized` ejecutado. Confirmado en `.claude-flow/config.yaml`
+  y `.claude/settings.json` (`claudeFlow.swarm.topology = hierarchical-mesh`,
+  `maxAgents = 15`). Sin agentes activos todavía (el daemon no se arrancó a
+  propósito, para no consumir recursos ni dejar procesos de fondo corriendo
+  solos).
+- **MCP de Ruflo**: registrado en `.mcp.json` (project-scoped, versionado,
+  reproducible) bajo la clave canónica `claude-flow` — `npx -y ruflo@latest
+  mcp start`. Se detectó y eliminó un registro legado duplicado (`ruflo`) que
+  `ruflo doctor` señaló como conflictivo.
+  **Pendiente de aprobación humana:** Claude Code exige que una persona
+  apruebe una vez, de forma interactiva (`claude` y aceptar el diálogo de
+  confianza del proyecto), cualquier servidor MCP definido en `.mcp.json`
+  antes de que arranque. Esto no se puede ni se debe automatizar desde un
+  bootstrap — es la misma barrera de seguridad que impide que un repo
+  ejecute procesos arbitrarios sin que alguien lo confirme. Cada sesión
+  nueva (incluidas las de Cloud) deberá aprobarlo una vez.
+- **Graphify**: instalado vía `uv tool install graphifyy` (no fue necesario
+  el fallback a pip). `graphify install` y `graphify claude install`
+  ejecutados: agregó una sección corta a este `CLAUDE.md` y un hook
+  `PreToolUse` ligero (10 ms) sobre `Bash|Grep` y `Read|Glob` para consultar
+  el grafo antes de releer el repo completo. No se generó `graphify-out/`
+  todavía (se genera con `/graphify .` o `graphify update .`, bajo demanda).
+- **Codex CLI**: instalado (`codex-cli 0.157.0`). Sin autenticar — no se
+  tocó `~/.codex` con credenciales.
+- **Higgsfield CLI**: instalado (`higgsfield 1.1.26`). Sin autenticar y sin
+  consumir créditos — no se invocó ningún comando de generación.
+- **Paquetes verificados en el registro antes de instalar** (nombre,
+  publicador, propósito) para descartar typosquatting: `ruflo` (ruvnet),
+  `skills` (vercel-labs, usado por `npx skills add`), `@openai/codex`
+  (openai-publisher), `@higgsfield/cli` (higgsfield.ai), `graphifyy` (PyPI).
+- **Qué se versiona y qué no**: `.mcp.json`, `skills-lock.json`,
+  `.agents/skills/ruflo/SKILL.md`, `.claude/settings.json`,
+  `.claude/skills/`, `.claude/agents/`, `.claude/commands/`,
+  `.claude/helpers/` y `.claude-flow/config.yaml` quedan versionados porque
+  son la configuración declarada y reproducible del stack. Se excluyeron
+  por `.gitignore` (estado de ejecución específico de esta máquina, no
+  configuración): `.swarm/` (bases sqlite de memoria), `ruvector.db`,
+  `.claude-flow/data|logs|sessions|metrics|security|policy|swarm`,
+  `.claude/proven-config.json` y `.claude/.proven-config-version`
+  (benchmark de enrutamiento con timestamp de esta ejecución),
+  `.claude/settings.json.graphify-bak` (backup transitorio de la
+  instalación) y `graphify-out/` (grafo regenerable).
+- **Nada tocado de**: dominio/DNS, producción, Odoo, Atheron Security,
+  HOTEL-007. No se agregó ningún secreto al repo (verificado con búsqueda de
+  patrones de claves/tokens sobre todo lo nuevo antes de commitear).
