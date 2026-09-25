@@ -22,108 +22,95 @@ ATH-ODOO-HOTEL-007 — Acceso técnico persistente y redundancia multiagente
 - HOTEL-004: motor comercial probado.
 - HOTEL-005: APROBADO en modo APPROVED.
 - HOTEL-006: APROBADO EN STAGING el 24/09/2026.
-- S12: PASS 10/10.
-- S13: PASS.
-- S14: PASS 41/41.
-- Idempotencia concurrente: PASS.
-- Regresiones 002–005: sin regresión.
-- Concurrencia: exactamente un ganador.
-- QA HOTEL-006: limpio.
+- HOTEL-007: contrato/DRY_RUN/LIVE SIMULADO APROBADOS por reauditoría ChatGPT.
+- PR #57 head auditado: `61a743163539b3e8af87824806fb1faa69ed5d54`.
+- Bloqueador `source_channel='sofia'`: CERRADO.
+- 63/63 tests reportados PASS por Claude; ejecución local, sin CI independiente.
+- LIVE real contra Odoo staging: PENDIENTE.
 
-## HOTEL-007 — estado al 24/09/2026
-PR #57 sigue abierto en DRAFT sobre `feature/ath-odoo-hotel-007-gateway`.
+## Corrección HOTEL-007 aprobada
+El cliente no puede enviar `source_channel`.
+El gateway fuerza internamente `source_channel='sofia'`.
+El payload interno puede llegar al adapter/upstream Odoo.
+Campos sensibles como price/discount/tax/admin/sudo/confirm/cancel/master_data_write continúan bloqueados.
+El pipeline LIVE se prueba con transporte Odoo simulado/injectable y falla cerrado ante bypass del contrato.
 
-Alcance local/DRY_RUN construido:
-- contrato;
-- autenticación técnica revocable/rotable por agente;
-- idempotencia;
-- rate limit;
-- auditoría;
-- adapter Odoo;
-- servidor Node;
-- clientes Claude + genérico;
-- documentación y rollback;
-- 53 tests declarados PASS por el constructor.
+## Autorización CEO vigente
+Marlon Parra AUTORIZA credencial técnica de Odoo exclusivamente para STAGING.
 
-Estado de aprobación:
-- HECHO: alcance local/DRY_RUN.
-- NO APROBADO todavía para LIVE.
-- PENDIENTE: validación LIVE real contra Odoo staging.
-- NO hay autorización para usar credencial técnica real hasta corregir el bloqueador detallado abajo.
+Entorno único permitido:
+`atheron1-hotel-staging-20260923`
 
-## Bloqueador de auditoría HOTEL-007
-Auditoría ChatGPT sobre head `a843e11121796ff5a0894711dd552458814954c7` encontró:
-
-1. `validateRequest()` fuerza `source_channel: 'sofia'`.
-2. La lista de campos prohibidos incluye `source_channel`.
-3. El camino LIVE ejecuta `assertSafeUpstreamPayload(payload)`.
-4. Por lo tanto, un request válido del gateway sería rechazado con `FORBIDDEN_FIELD` antes de llegar a la acción Odoo 1967.
-
-Corrección requerida antes de credencial LIVE:
-- separar campos prohibidos al cliente de campos internos forzados por el gateway;
-- mantener `source_channel='sofia'` inmutable para el cliente;
-- permitir que ese valor interno llegue al upstream;
-- añadir prueba de regresión LIVE con transporte Odoo simulado/injectable;
-- verificar que `source_channel`, `price`, `admin` y otros campos siguen bloqueados cuando vienen del cliente;
-- mantener `DRY_RUN=true` como default seguro.
-
-## Observaciones técnicas HOTEL-007
-- idempotencia, rate limit y audit log están en memoria; reinicios o múltiples instancias pierden ese estado local;
-- no hay GitHub Actions asociado al head actual; Vercel reporta success, pero no sustituye la reproducción independiente de los tests del paquete;
-- el camino LIVE contra Odoo real sigue sin probar;
-- no guardar secretos en chat ni en GitHub.
-
-## Decisión vigente sobre credencial técnica Odoo
-NO AUTORIZADA todavía.
-
-Condición para autorizar:
-1. corregir el bloqueador `source_channel`;
-2. agregar y pasar la prueba de regresión LIVE simulada;
-3. volver a auditar PR #57;
-4. solo entonces crear/cargar credencial técnica de mínimo privilegio fuera del repositorio y probar contra `atheron1-hotel-staging-20260923`.
-
-La prueba LIVE deberá limitarse a:
+Alcance autorizado:
 - availability;
 - quote;
 - hold;
 - status;
-- usuario/grupo equivalente a Hotel v1 / API Sofía;
-- sin admin;
-- sin grupo aprobador 148;
-- sin producción;
-- sin pagos, DIAN, WhatsApp/Meta ni OTA real.
+- verificar auditoría asociada;
+- limpiar HOLDs de prueba;
+- probar revocación/rollback.
 
-## Pendientes CEO que deben mantenerse como decisiones separadas
+La credencial debe:
+- tener mínimo privilegio;
+- equivaler al grupo 149 Hotel v1 / API Sofía;
+- NO ser admin;
+- NO pertenecer al grupo aprobador 148;
+- vivir fuera del repositorio, prompts, logs y chat;
+- poder revocarse/rotarse.
+
+## Gate LIVE REAL
+Ejecutar únicamente contra staging:
+1. provisionar credencial técnica mínima;
+2. cargar secreto solo en secret manager/variables de entorno del runtime de prueba;
+3. validar autenticación;
+4. availability;
+5. quote;
+6. HOLD idempotente;
+7. status;
+8. verificar auditoría Odoo y `source_channel=sofia`;
+9. verificar que privilegios/campos prohibidos siguen fallando;
+10. limpiar HOLDs de prueba;
+11. demostrar revocación/rollback;
+12. entregar reporte verificable.
+
+## Restricciones
+- NO producción.
+- NO Atheron Security.
+- NO pagos.
+- NO DIAN.
+- NO WhatsApp/Meta/Sofía real.
+- NO Booking/Airbnb/OTA real.
+- NO secretos en chat/repositorio.
+- NO merge de PR #57 durante el gate LIVE.
+
+## Observaciones técnicas abiertas
+- idempotencia, rate limit y audit log del gateway siguen in-memory;
+- no hay GitHub Actions independiente;
+- definir store compartido/persistente antes de multiinstancia real.
+
+## Frente paralelo ATH-OTA-001
+Draft PR #59 — `feature/ath-ota-001-audit`.
+
+Alcance operativo actual definido por CEO:
+- Hotel Atheron Suite — Booking ID 16559325.
+- Atheron Grand House Zipaquirá de 10 a 20 personas — Booking ID 16569053.
+- anuncios antiguos quedan fuera de alcance salvo interferencia real.
+
+Regla comercial:
+- Grand House = CASA COMPLETA;
+- Hotel Atheron Suite = habitaciones individuales;
+- venta CASA COMPLETA debe bloquear habitaciones;
+- venta de habitación debe bloquear CASA COMPLETA.
+
+## Pendientes CEO separados
 1. Duración oficial HOLD (actual: 2 h).
 2. Vigencia de cotización.
 3. Mínimo de ocupación Casa Completa Magia.
 4. Impuestos.
 5. Master Data para unidades ligadas a automatizaciones legacy.
 
-## Frente paralelo ATH-OTA-001
-Rama preparada:
-`feature/ath-ota-001-audit`
-
-Estado:
-- preparada;
-- sin commits nuevos respecto del punto base al último chequeo;
-- auditoría Booking/Airbnb aún no ejecutada en GitHub;
-- no modificar Booking/Airbnb durante el primer gate.
-
-## Restricciones
-- NO producción hasta gate y aprobación explícita.
-- NO Atheron Security.
-- NO WhatsApp/Meta/Sofía real todavía.
-- NO OTA real/DIAN/pagos.
-- NO secretos en chat/repositorio.
-
 ## Próxima acción exacta
-Corregir PR #57 y demostrar por test el camino LIVE simulado sin relajar el bloqueo de campos del cliente. Después, reauditar. Solo si pasa, habilitar credencial técnica segura y ejecutar prueba LIVE exclusivamente sobre staging.
-
-En paralelo puede arrancarse ATH-OTA-001 como auditoría de solo lectura, sin cambios en Booking/Airbnb.
-
-## Objetivo operacional
-Eliminar la dependencia de una sesión de navegador autenticada para que ChatGPT, Claude, Codex/OpenCode y posteriormente Sofía puedan relevarse sobre el mismo contrato técnico.
+Ejecutar ATH-ODOO-HOTEL-007 LIVE exclusivamente en staging con credencial técnica mínima autorizada, sin exponer secretos y sin tocar producción.
 
 ## Principio
 `IA conversa / orquesta; Odoo calcula y garantiza inventario.`
