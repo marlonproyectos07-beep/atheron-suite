@@ -251,10 +251,13 @@ export class OdooHotelAdapter {
    * (si no lo es, es señal de un bug o de un llamador que se salto
    * `validateRequest`, y se corta ahi mismo en vez de dejarlo pasar).
    *
-   * Contra un Odoo real esto sigue sin probarse en este repositorio
-   * (PENDIENTE_CREDENCIAL_SEGURA); lo que si esta probado end-to-end es el
-   * pipeline completo hasta el borde del transporte, con un transporte
-   * simulado inyectado (ver test/odoo-live-pipeline.test.mjs).
+   * Probado end-to-end contra staging real (25/09/2026, ver README.md):
+   * availability, quote (quote_id=116), hold (hold_id=22216, con
+   * idempotent_replay=true confirmado por el propio Odoo) y status (HOLD y
+   * COTIZACION). En este repositorio se prueba con un transporte simulado
+   * inyectado (ver test/odoo-live-pipeline.test.mjs), que reproduce
+   * exactamente las formas de request/response ya confirmadas contra Odoo
+   * real.
    */
   async #callOdooAction1967(operation, payload) {
     assertSafeUpstreamPayload(payload);

@@ -94,11 +94,11 @@ Propiedades:
   permitidos; `password`, `token`, `cookie`, `secret` y el prompt completo
   nunca se registran, aunque un llamador los envíe por error.
 - La conexión real a Odoo (`ODOO_BASE_URL`, `ODOO_DATABASE`,
-  `ODOO_TECHNICAL_USER`, `ODOO_TECHNICAL_SECRET`) es
-  **`PENDIENTE_CREDENCIAL_SEGURA`**: no existe en ningún entorno de este
-  proyecto todavía. Ver el bloque correspondiente en `.env.example` para
-  qué secreto hace falta, dónde cargarlo, con qué permisos mínimos y cómo
-  revocarlo.
+  `ODOO_TECHNICAL_USER`, `ODOO_TECHNICAL_SECRET`) ya se cargó y usó con
+  éxito una vez, únicamente en el equipo local de Marlon — nunca en este
+  repositorio ni en ningún entorno en la nube. Ver el bloque correspondiente
+  en `.env.example` para qué secreto hace falta, dónde cargarlo, con qué
+  permisos mínimos y cómo revocarlo.
 
 ## Idempotencia y concurrencia (Fase 6)
 
@@ -220,7 +220,7 @@ Ver `ROLLBACK.md`.
 
 ```bash
 cd integrations/odoo-hotel-gateway
-npm test        # 70/70 PASS (incluye regresion LIVE simulada + fallback de status)
+npm test        # 71/71 PASS (incluye regresion LIVE simulada + fallback de status)
 npm start        # levanta el servidor (DRY_RUN=true por defecto, PORT=8787)
 ```
 

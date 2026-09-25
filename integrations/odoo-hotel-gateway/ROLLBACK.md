@@ -42,15 +42,17 @@ gateway se apaga o se revoca por completo. No hay dependencia inversa.
 
 ## 4. Preservar reservas y HOLD
 
-- En **DRY_RUN** (el único modo probado en este repo), no existe ningún
-  HOLD real: los HOLD viven solo en memoria del proceso del gateway y
-  desaparecen al apagarlo. No hay nada que preservar ni limpiar en Odoo.
-- En modo **LIVE** (no probado aquí), cualquier HOLD creado ya vive dentro
-  de Odoo, gobernado por las mismas reglas de expiración/cron ya aprobadas
-  en HOTEL-002/006 (cron 155, duración vigente de 2 h). Apagar o revocar el
-  gateway no borra ni corrompe esos HOLD: Odoo sigue siendo la única fuente
-  de verdad y los libera con su propio mecanismo, igual que si hubieran sido
-  creados desde el navegador.
+- En **DRY_RUN** (el modo por defecto), no existe ningún HOLD real: los
+  HOLD viven solo en memoria del proceso del gateway y desaparecen al
+  apagarlo. No hay nada que preservar ni limpiar en Odoo.
+- En modo **LIVE**, ya probado con éxito contra staging real el 25/09/2026
+  (`hold_id=22216`), cualquier HOLD creado vive dentro de Odoo, gobernado
+  por las mismas reglas de expiración/cron ya aprobadas en HOTEL-002/006
+  (cron 155, duración vigente de 2 h — confirmado: `hold_id=22215` de una
+  prueba anterior ya expiró solo). Apagar o revocar el gateway no borra ni
+  corrompe esos HOLD: Odoo sigue siendo la única fuente de verdad y los
+  libera con su propio mecanismo, igual que si hubieran sido creados desde
+  el navegador.
 
 ## 5. Preservar logs
 

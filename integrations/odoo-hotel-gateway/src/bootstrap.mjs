@@ -8,9 +8,10 @@ import { createHotelGatewayServer } from './server.mjs';
 
 /**
  * Construye el gateway completo a partir de variables de entorno.
- * DRY_RUN=true (default) es el unico modo usado/probado en este repositorio;
- * DRY_RUN=false requiere credenciales reales fuera del repo y no ha sido
- * ejercitado contra un Odoo real en esta sesion (PENDIENTE_CREDENCIAL_SEGURA).
+ * DRY_RUN=true (default) no llama a Odoo. DRY_RUN=false requiere
+ * credenciales reales fuera del repo (nunca en este repositorio ni en
+ * ningun entorno en la nube); ya se probo con exito de punta a punta
+ * contra staging real el 25/09/2026 (ver README.md).
  */
 export function buildGatewayFromEnv(env = process.env) {
   const dryRun = env.DRY_RUN !== 'false';

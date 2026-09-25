@@ -206,11 +206,11 @@ test('LIVE: si algo llamara al adapter sin pasar por validateRequest (sin source
 
 /**
  * Gate 3 (orden ATH-ODOO-HOTEL-007-LIVE): status confirmado contra staging
- * real usa `hold_id` (25/09/2026, HOLD 22215). `operation_id`/`order_id`
- * devuelven UNKNOWN_PARAM. El contrato de status de una cotizacion (quote)
- * no esta confirmado: se prueba aqui el fallback documentado, que solo se
- * activa sobre NOT_FOUND/UNKNOWN_PARAM y nunca convierte un error real en
- * exito.
+ * real usa `hold_id` (25/09/2026, HOLD 22215/22216). `operation_id`/
+ * `order_id` devuelven UNKNOWN_PARAM. El status de una cotizacion (quote)
+ * tambien quedo confirmado contra staging real ese mismo dia (cotizacion
+ * 116) via el fallback documentado abajo, que solo se activa sobre
+ * NOT_FOUND/UNKNOWN_PARAM y nunca convierte un error real en exito.
  */
 function odooBusinessError(error_code, message = 'error') {
   return {
@@ -271,7 +271,8 @@ test('LIVE: status hace fallback READ-ONLY a quote_id cuando hold_id devuelve UN
   assert.equal(firstCall.args.at(-1).context.payload.hold_id, 'Q-900');
   assert.equal(secondCall.args.at(-1).context.payload.quote_id, 'Q-900');
 
-  // Trazabilidad: el candidato no confirmado queda marcado en la respuesta.
+  // Trazabilidad: se marca en la respuesta que el ID resulto ser una
+  // cotizacion, no un HOLD (confirmado contra staging real, cotizacion 116).
   assert.match(envelope.data.status_lookup_fallback, /quote_id/);
 });
 
