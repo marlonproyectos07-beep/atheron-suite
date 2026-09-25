@@ -10,6 +10,7 @@
 - Ejecutor cloud: Claude Code GitHub Action
 - Multiagente Ruflo: mejora posterior mediante PR #60; no es requisito para activar el bridge mínimo
 - Producción: BLOQUEADA por defecto
+- Bridge draft: PR #65
 
 ## RUNNING
 
@@ -39,7 +40,8 @@ Criterios:
 
 ## BLOCKED_HUMAN
 
-- Configurar autenticación de Claude Code Action como GitHub Actions Secret.
+- Claude GitHub App: presencia confirmada por `claude[bot]`; falta validar ejecución real.
+- Confirmar/configurar autenticación de Claude Code Action como GitHub Actions Secret.
 - Incorporar este workflow a la rama por defecto.
 - Merge, producción, pagos, credenciales externas, dominios/DNS y acciones irreversibles.
 
