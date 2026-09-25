@@ -73,9 +73,12 @@ Nunca pegar el valor en chat, issue, PR, commit o archivo versionado.
 
 ## Gate humano único de activación
 
-1. confirmar/instalar Claude GitHub App;
-2. guardar el token de autenticación como GitHub Actions Secret;
-3. aprobar merge de este pequeño workflow a `main`.
+**Claude GitHub App: presencia confirmada.** El bot `claude[bot]` reaccionó con 👀 a órdenes `@claude` publicadas por Marlon en PR #57 y PR #63. Esto confirma que la App está instalada/escuchando; no demuestra por sí solo que el GitHub Action esté ejecutando trabajos.
+
+Pendiente:
+1. confirmar que existe `CLAUDE_CODE_OAUTH_TOKEN` como GitHub Actions Secret (el conector no puede leer su valor ni debe hacerlo);
+2. aprobar merge de este pequeño workflow a `main`;
+3. ejecutar issue #64 y verificar un run real de GitHub Actions antes de declarar el bridge operativo.
 
 Después:
 - ChatGPT puede publicar la orden;
