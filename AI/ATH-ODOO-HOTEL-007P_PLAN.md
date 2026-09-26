@@ -44,6 +44,13 @@ Antes de modificar la copia fresca:
 
 **STOP** si la identidad de la base no es inequívoca.
 
+8. confirmar que la variable de entorno del ID de acción destino (hoy
+   `ODOO_ACTION_ID`) se va a definir explícitamente para la copia fresca:
+   el código ya aprobado de HOTEL-007 (`integrations/odoo-hotel-gateway/src/bootstrap.mjs`
+   y `src/odoo-adapter.mjs`) usa `1967` como valor por defecto si la
+   variable no está definida, y `1967` es el ID de la acción de la
+   staging antigua. No depender de ese valor por defecto.
+
 ## Fase P1 — Discovery administrativo controlado
 
 Usar una cuenta administradora humana solo para inventariar configuración.
@@ -198,6 +205,28 @@ SECRET_RISK
 
 Cero `PORTABILITY_RISK` y cero `SECRET_RISK` para aprobar.
 
+Incluir explícitamente en esta fase: confirmar que `ODOO_ACTION_ID` (o el
+nombre que tenga en el entorno destino) quedó definido con el ID real de la
+copia fresca, y no vacío/ausente — el código de HOTEL-007 no falla si falta,
+sino que reutiliza en silencio `1967` (ver hallazgo de auditoría abajo).
+
+## Hallazgo de auditoría de portabilidad — 2026-09-26 (ATH-NIGHT-001)
+
+Auditoría de referencias a la staging antigua (`atheron1-hotel-staging-20260923`)
+en todo el repositorio (no solo en este plan), clasificadas según el esquema
+de esta misma fase.
+
+| Referencia | Dónde | Clasificación |
+|---|---|---|
+| `1967`, holds `22215`/`22216`, quotes `115`/`116`, texto "staging" | `integrations/odoo-hotel-gateway/README.md`, `ROLLBACK.md`, `.env.example` (comentarios) | DOCUMENTATION_REFERENCE — evidencia narrada de la corrida LIVE del 25/09/2026, no configuración activa |
+| `1967`, holds/quotes de prueba, `technicalSecret: 'test-secret-not-real'` | `integrations/odoo-hotel-gateway/test/*.mjs` | EXPECTED_TEST_REFERENCE — fixtures explícitos de prueba, ningún secreto real |
+| "uid 27" | Solo en `AI/ODOO_HOTEL_PROMOTION_MANIFEST.md` (tabla de inventario) | DOCUMENTATION_REFERENCE |
+| `$ 80.000` / `$ 120.000` / `$ 150.000` en `src/content/hospedajes/hotel-atheron-suite.md` | Contenido publicado del sitio (tarifas reales del hospedaje) | Coincidencia numérica con los precios de prueba de Odoo, sin relación real — no es un hallazgo de staging |
+| `actionId = 1967` como valor por defecto del código | `integrations/odoo-hotel-gateway/src/odoo-adapter.mjs:265` y `src/bootstrap.mjs:32` | **PORTABILITY_RISK** — si `ODOO_ACTION_ID` no se define explícitamente en el entorno destino, el gateway reutiliza en silencio el ID de la acción de staging (1967) en vez de fallar. Contradice esta misma fase P5 ("no usar el número 1967 como requisito universal"). **BLOCKED_FOR_007P**: el fix pertenece al gateway de HOTEL-007 ya aprobado en PR #57 y no se modifica en esta rama; se cubrió en su lugar como requisito explícito de precheck y de PASS en este plan. |
+
+Ningún `SECRET_RISK` encontrado. Ningún `PORTABILITY_RISK` adicional al ya
+documentado arriba.
+
 ## Fase P8 — Rollback
 
 Antes de cada cambio registrar cómo revertirlo.
@@ -210,7 +239,10 @@ Requisitos mínimos:
 - revocar usuario técnico;
 - desactivar cron/automatizaciones nuevas;
 - revertir/importar personalización según mecanismo confirmado;
-- eliminar solo datos creados por el rehearsal cuando sea inequívoco.
+- eliminar solo datos creados por el rehearsal cuando sea inequívoco;
+- si `ODOO_ACTION_ID` quedó vacío y el gateway operó por el valor por
+  defecto (`1967`, ver hallazgo de auditoría), verificar qué acción de la
+  copia fresca se ejecutó realmente antes de decidir qué revertir.
 
 ## Criterio de PASS
 
@@ -219,6 +251,8 @@ Requisitos mínimos:
 - copia fresca confirmada;
 - paquete/mecanismo de promoción identificado;
 - ningún ID accidental de staging requerido;
+- `ODOO_ACTION_ID` (o equivalente) definido explícitamente para el entorno
+  destino, nunca dependiendo del valor por defecto `1967` del código;
 - secretos recreados;
 - datos de prueba excluidos;
 - HOTEL-002..007 vuelven a pasar;
