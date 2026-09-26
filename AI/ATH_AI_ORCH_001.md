@@ -75,10 +75,19 @@ Nunca pegar el valor en chat, issue, PR, commit o archivo versionado.
 
 **Claude GitHub App: presencia confirmada.** El bot `claude[bot]` reaccionó con 👀 a órdenes `@claude` publicadas por Marlon en PR #57 y PR #63. Esto confirma que la App está instalada/escuchando; no demuestra por sí solo que el GitHub Action esté ejecutando trabajos.
 
-Pendiente:
-1. confirmar que existe `CLAUDE_CODE_OAUTH_TOKEN` como GitHub Actions Secret (el conector no puede leer su valor ni debe hacerlo);
-2. aprobar merge de este pequeño workflow a `main`;
-3. ejecutar issue #64 y verificar un run real de GitHub Actions antes de declarar el bridge operativo.
+**Causa raíz confirmada de por qué esas órdenes nunca dispararon un run (ATH-AI-ORCH-001, auditoría 26/09/2026):** `WORKFLOW_NOT_ON_DEFAULT_BRANCH`. Evidencia directa, verificada esta sesión:
+- el repositorio tiene `default_branch = main` (confirmado vía API de GitHub);
+- `.github/workflows/claude.yml` no existe en `main` (confirmado leyendo el árbol de `main`: solo están `lighthouse-atheron-suite.yml` y `redespliegue-programado.yml`);
+- `issue_comment` es un evento de repositorio sin ref propio; GitHub solo activa workflows para ese tipo de evento si el archivo ya existe en la rama por defecto — el archivo de este PR, al vivir solo en `chore/ath-ai-orch-001-main`, nunca llegó a registrarse;
+- confirmado también por el listado de workflows del repo (solo 3 registrados, ninguno es el dispatcher) y por el historial de ejecuciones (37 runs totales, todos `schedule`/`push`, cero `issue_comment`);
+- se descartó como causa alternativa un problema de sintaxis YAML: la clave `on:` sin comillas se interpreta como booleano por parsers YAML estrictos (PyYAML), pero es la misma sintaxis que usan `lighthouse-atheron-suite.yml` y `redespliegue-programado.yml`, que sí generan runs reales — no es un defecto de este archivo, es una particularidad conocida de YAML que GitHub interpreta igual en los tres archivos.
+- las reacciones 👀 de `claude[bot]` vienen de la app oficial de Claude (mención nativa), un mecanismo independiente de este Action; no contradicen el diagnóstico.
+
+Pendiente (sin cambios de fondo, ahora con evidencia):
+1. confirmar que existe `CLAUDE_CODE_OAUTH_TOKEN` como GitHub Actions Secret — **no verificable desde esta sesión**: ninguna herramienta disponible aquí lista o consulta GitHub Actions Secrets (por diseño, para no exponer valores). Ver `BLOCKED_HUMAN` en `AI/AUTONOMOUS_QUEUE.md`;
+2. verificar la política de Actions del repositorio (Settings → Actions → General → "Allow actions and reusable workflows") permite ejecutar `anthropics/claude-code-action` — las dos acciones ya probadas en este repo (`actions/checkout`, `actions/setup-node`, `actions/upload-artifact`) son de la organización `actions`, no equivalen a probar que una acción de un tercero distinto esté permitida; esto tampoco es verificable desde esta sesión (no hay herramienta de configuración de repositorio disponible);
+3. aprobar merge de este pequeño workflow a `main`;
+4. ejecutar issue #64 y verificar un run real de GitHub Actions antes de declarar el bridge operativo.
 
 Después:
 - ChatGPT puede publicar la orden;

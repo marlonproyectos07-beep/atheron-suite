@@ -40,9 +40,26 @@ Criterios:
 
 ## BLOCKED_HUMAN
 
-- Claude GitHub App: presencia confirmada por `claude[bot]`; falta validar ejecución real.
-- Confirmar/configurar autenticación de Claude Code Action como GitHub Actions Secret.
-- Incorporar este workflow a la rama por defecto.
+- **Merge de PR #65 a `main`.** Causa raíz confirmada (auditoría ATH-AI-ORCH-001, 26/09/2026):
+  `WORKFLOW_NOT_ON_DEFAULT_BRANCH` — GitHub solo activa workflows por `issue_comment` si el
+  archivo ya existe en la rama por defecto (`main`), y `claude.yml` solo existe en esta rama.
+  Evidencia y detalle en `AI/ATH_AI_ORCH_001.md` § Gate humano. Requiere aprobación explícita
+  de Marlon para el merge; no se ejecuta desde ninguna sesión de Claude Code.
+- **BLOCKED_HUMAN_SECRET_CONFIGURATION — `CLAUDE_CODE_OAUTH_TOKEN`.**
+  - Secreto requerido: `CLAUDE_CODE_OAUTH_TOKEN` (GitHub Actions Secret, no variable de repo).
+  - Dónde configurarlo: Settings → Secrets and variables → Actions → Repository secrets, en
+    `marlonproyectos07-beep/atheron-suite`.
+  - Por qué se necesita: lo consume `claude.yml` como `with.claude_code_oauth_token` para que
+    `anthropics/claude-code-action` autentique la ejecución de Claude Code dentro del runner.
+  - Por qué queda `BLOCKED_HUMAN` y no verificado aquí: ninguna herramienta disponible en esta
+    sesión lista o consulta GitHub Actions Secrets (ni su existencia ni su valor); esto es
+    intencional — evita que un agente pueda enumerar secretos.
+  - Cómo comprobarlo después: tras el merge a `main`, publicar un comentario `@claude` de
+    prueba (issue #64) y revisar el run en Actions; si falla con un error de autenticación del
+    step "Claude Code", el secreto falta o es inválido — recién ahí corresponde revisarlo en
+    Settings, nunca pegando su valor en un chat, issue, PR o commit.
+- Verificar la política de Actions del repositorio permite ejecutar `anthropics/claude-code-action`
+  (acción de un tercero distinto de `actions/*`); no verificable desde esta sesión.
 - Merge, producción, pagos, credenciales externas, dominios/DNS y acciones irreversibles.
 
 ## Contrato de una orden
