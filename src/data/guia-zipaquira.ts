@@ -101,8 +101,9 @@ export const categorias: Categoria[] = [
   {
     id: 'centro-historico',
     titulo: 'Centro histórico',
-    texto: 'La plaza, la catedral diocesana y las calles que se recorren a pie.',
-    href: '#centro-historico',
+    texto: 'Ruta autoguiada por la plaza, el patrimonio, la memoria y los sabores.',
+    href: '/guia-zipaquira/centro-historico-a-pie',
+    externa: true,
   },
   {
     id: 'alrededores',
