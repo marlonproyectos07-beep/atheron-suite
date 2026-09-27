@@ -1,0 +1,56 @@
+---
+/* ============================================================
+   PIE DE LAS PAGINAS DEL PILOTO
+
+   Los limites van en las tres paginas y con el mismo texto. Si cada
+   una escribiera los suyos, tarde o temprano una se quedaria vieja
+   y diria que garantiza algo que no garantiza.
+
+   No es letra pequena a proposito: quien monta un piloto sobre esto
+   tiene que saber donde se apoya antes de apoyarse.
+   ============================================================ */
+import { PILOTO } from '../data/piloto-la-triada';
+
+interface Props {
+  /** Ruta de la pagina actual, para no enlazarse a si misma. */
+  actual: string;
+}
+
+const { actual } = Astro.props;
+
+const enlaces = [
+  { ruta: PILOTO.rutas.activar, texto: 'Activar beneficio' },
+  { ruta: PILOTO.rutas.validar, texto: 'Validar en el local' },
+  { ruta: PILOTO.rutas.registro, texto: 'Registro y trazabilidad' },
+].filter((e) => e.ruta !== actual);
+---
+
+<section class="piloto__limites" aria-labelledby="limites">
+  <h2 id="limites">Qué NO garantiza este montaje</h2>
+  <ul>
+    <li>
+      <strong>No hay servidor.</strong> El estado se guarda en el navegador de cada
+      dispositivo. Lo que active el huésped en su móvil no se ve en el del restaurante,
+      y borrar los datos del navegador lo borra.
+    </li>
+    <li>
+      <strong>El registro que perdura es el de WhatsApp.</strong> Mientras no exista
+      backend, una redención cuenta cuando el mensaje se ha enviado, no cuando la
+      pantalla dice «redimido».
+    </li>
+    <li>
+      <strong>El código no autentica.</strong> El carácter de control detecta una letra
+      mal copiada o dos caracteres cambiados de sitio. No demuestra que lo emitiera
+      Atheron, y sin registro central tampoco se puede garantizar que no se repita.
+    </li>
+    <li>
+      <strong>Nada de esto está conectado a Odoo.</strong> La correspondencia campo a
+      campo está preparada y documentada; la importación es manual hasta que dirección
+      autorice la integración.
+    </li>
+  </ul>
+
+  <nav class="piloto__navegacion" aria-label="Páginas del piloto">
+    {enlaces.map((e) => <a href={e.ruta}>{e.texto}</a>)}
+  </nav>
+</section>

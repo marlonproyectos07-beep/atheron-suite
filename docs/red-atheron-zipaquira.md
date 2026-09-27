@@ -6,6 +6,12 @@
 > Segunda tanda del mismo día: redespliegue programado preparado y **apagado**, y La Triada
 > pasada a aliado por decisión de dirección.
 > Este documento es interno: **no se publica** y no contiene condiciones comerciales.
+>
+> **22 de septiembre de 2026:** el piloto de redención con La Triada (ATH-PILOT-001,
+> Issue #48) se construyó aparte, en `pilot/atheron-la-triada-001`, y tiene su propio
+> documento: [piloto-la-triada.md](piloto-la-triada.md). No toca nada de lo de aquí: la
+> ficha pública de La Triada sigue exactamente igual y el piloto vive en tres páginas
+> internas sin enlazar.
 
 ## Qué se construyó
 

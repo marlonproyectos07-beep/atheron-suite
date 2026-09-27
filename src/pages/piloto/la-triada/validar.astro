@@ -1,0 +1,429 @@
+---
+/* ============================================================
+   PILOTO — PASO 2 Y 3: VALIDAR Y REGISTRAR (pantalla del local)
+
+   Esta la abre quien atiende en La Triada, con el movil del local o
+   con el del propio huesped. Hace tres cosas, en este orden:
+
+     1. Comprueba que el codigo esta bien copiado.
+     2. Recoge el consumo y el porcentaje que se aplica.
+     3. Deja constancia: registro en el aparato y mensaje a Atheron.
+
+   POR QUE EL PORCENTAJE SE TECLEA
+
+   Porque la condicion comercial no consta verificada (ver
+   src/data/piloto-la-triada.ts). Mientras no conste, Atheron no
+   anuncia una cifra: se registra la que el local aplico de verdad en
+   esa mesa. El dia que el acuerdo conste, el campo viene relleno y
+   bloqueado, y esta pagina no cambia de otra forma.
+
+   LA PANTALLA NO ES EL REGISTRO
+
+   Lo que vale es el mensaje de WhatsApp. La pagina lo dice sin
+   rodeos y no marca nada como enviado por su cuenta: quien pulsa
+   enviar es una persona. Es la misma regla que ya rige el formulario
+   de grupos, y viene de un formulario que decia "recibido" sin
+   enviar nada.
+
+   QUE NO HACE, Y NO PUEDE HACER
+
+   No sabe si ese codigo existe: no hay registro central. Puede decir
+   que esta bien formado y que no esta caducado -si se activo en este
+   mismo navegador-, y nada mas. La pantalla no afirma lo contrario
+   en ningun momento.
+   ============================================================ */
+import Base from '../../../layouts/Base.astro';
+import PilotoPie from '../../../components/PilotoPie.astro';
+import { PILOTO, AVISO_CONDICION, BENEFICIO, CABECERA_REGISTRO } from '../../../data/piloto-la-triada';
+---
+
+<Base
+  titulo={`Validar código Atheron | Piloto interno ${PILOTO.id}`}
+  descripcion="Página interna del piloto Atheron × La Triada. No es una página pública del sitio."
+  ruta={PILOTO.rutas.validar}
+  indexable={false}
+  seguirEnlaces={false}
+  jsonLd={null}
+  avisoBorrador={`Piloto interno ${PILOTO.id}. Pantalla del aliado.`}
+  hojasExtra={['piloto']}
+>
+  <main id="contenido" class="piloto">
+    <p class="piloto__interna">Piloto {PILOTO.id} · {PILOTO.aliado}</p>
+    <h1 class="piloto__titulo">Validar el código del huésped</h1>
+    <p class="piloto__entrada">
+      Escanea el código del móvil o teclea los ocho caracteres. Después se registra el
+      consumo y el descuento que se aplicó.
+    </p>
+
+    {AVISO_CONDICION && (
+      <div class="piloto__condicion" role="note">
+        <strong>Sin condición publicada</strong>
+        {AVISO_CONDICION}
+      </div>
+    )}
+
+    {/* --- 1. El codigo --- */}
+    <form class="piloto__tarjeta" data-form-codigo novalidate>
+      <h2>Paso 1 · Comprobar el código</h2>
+      <label class="piloto__campo piloto__campo--codigo">
+        <span>Código del huésped</span>
+        <input
+          name="codigo"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          placeholder="ATH-TRI-K7M2Q"
+          maxlength="16"
+          required
+        />
+        <span class="piloto__ayuda">
+          Los códigos nunca llevan O, I, L, 0 ni 1. Da igual que escribas los guiones.
+        </span>
+      </label>
+      <button class="piloto__boton" type="submit">Comprobar</button>
+      <div class="piloto__resultado" data-resultado hidden role="status" aria-live="polite"></div>
+    </form>
+
+    {/* --- 2. El consumo --- */}
+    <form class="piloto__tarjeta" data-form-cuenta hidden novalidate>
+      <h2>Paso 2 · Consumo y descuento</h2>
+
+      <label class="piloto__campo">
+        <span>Consumo antes del descuento (COP)</span>
+        <input
+          name="consumo"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          max="100000000"
+          step="1"
+          required
+        />
+      </label>
+
+      <label class="piloto__campo">
+        <span>Descuento aplicado (%)</span>
+        <input
+          name="porcentaje"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          max="100"
+          step="0.1"
+          required
+          value={BENEFICIO.estado === 'VERIFICADO' && BENEFICIO.porcentaje !== null ? String(BENEFICIO.porcentaje) : ''}
+          readonly={BENEFICIO.estado === 'VERIFICADO' && BENEFICIO.porcentaje !== null}
+        />
+        <span class="piloto__ayuda">
+          {BENEFICIO.estado === 'VERIFICADO'
+            ? 'Viene del acuerdo verificado.'
+            : 'El que el local aplicó en esta mesa. Queda registrado tal cual.'}
+        </span>
+      </label>
+
+      <label class="piloto__campo">
+        <span>Nota (opcional)</span>
+        <textarea name="nota" rows="2" maxlength="200"></textarea>
+      </label>
+
+      <ul class="piloto__cuenta" data-cuenta hidden>
+        <li><span>Consumo</span> <strong data-consumo></strong></li>
+        <li><span>Descuento</span> <strong data-descuento></strong></li>
+        <li><span>Total a cobrar</span> <strong data-total></strong></li>
+      </ul>
+
+      <div class="piloto__botones">
+        <button class="piloto__boton" type="submit">Registrar redención</button>
+        <button class="piloto__boton piloto__boton--secundario" type="button" data-sin-consumo>
+          Cerrar sin consumo
+        </button>
+      </div>
+    </form>
+
+    {/* --- 3. La constancia --- */}
+    <div class="piloto__tarjeta" data-cierre hidden>
+      <h2>Paso 3 · Dejar constancia</h2>
+      <p>
+        <span class="piloto__estado" data-insignia></span>
+      </p>
+      <p>
+        <strong>Esto todavía no está registrado en Atheron.</strong> Lo estará cuando el
+        mensaje se haya enviado por WhatsApp.
+      </p>
+      <div class="piloto__botones">
+        <a class="piloto__boton piloto__boton--whatsapp" data-whatsapp-piloto target="_blank" rel="noopener noreferrer">
+          Enviar a Atheron por WhatsApp
+        </a>
+        <button class="piloto__boton piloto__boton--secundario" type="button" data-copiar>
+          Copiar la línea del registro
+        </button>
+        <a class="piloto__boton piloto__boton--secundario" href={PILOTO.rutas.validar}>
+          Validar otro código
+        </a>
+      </div>
+      <p class="piloto__pie-dato" data-copiado role="status" aria-live="polite"></p>
+      <pre class="piloto__registro" data-linea>{CABECERA_REGISTRO}</pre>
+    </div>
+
+    <noscript>
+      <div class="piloto__tarjeta">
+        <h2>Hace falta JavaScript</h2>
+        <p>
+          La comprobación del código y el cálculo del descuento se hacen en el propio
+          teléfono. Sin JavaScript esta pantalla no puede validar nada.
+        </p>
+      </div>
+    </noscript>
+
+    <PilotoPie actual={PILOTO.rutas.validar} />
+  </main>
+</Base>
+
+<script>
+  import { leerCodigo } from '../../../data/codigos-referido';
+  import {
+    PILOTO,
+    CLAVE_ALMACEN,
+    CLAVE_REGISTRO,
+    CABECERA_REGISTRO,
+    ETIQUETA_ESTADO,
+    calculaCuenta,
+    pesos,
+    selloColombiano,
+    estaVigente,
+    lineaRegistro,
+    mensajeRedencion,
+    enlaceWhatsAppPiloto,
+    type EstadoReferido,
+    type Movimiento,
+  } from '../../../data/piloto-la-triada';
+
+  const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel);
+
+  const formCodigo = $<HTMLFormElement>('[data-form-codigo]')!;
+  const formCuenta = $<HTMLFormElement>('[data-form-cuenta]')!;
+  const cajaCierre = $('[data-cierre]')!;
+  const resultado = $('[data-resultado]')!;
+  const entrada = formCodigo.elements.namedItem('codigo') as HTMLInputElement;
+
+  const CLASE_ESTADO: Record<EstadoReferido, string> = {
+    ACTIVADO: 'piloto__estado--activado',
+    VALIDADO: 'piloto__estado--validado',
+    REDIMIDO: 'piloto__estado--redimido',
+    NO_REDIMIDO: 'piloto__estado--no-redimido',
+  };
+
+  let codigoValido = '';
+
+  /* ------------------------------------------------------------
+     ALMACEN — siempre entre try: un navegador puede tenerlo cerrado
+     ------------------------------------------------------------ */
+  interface Activacion {
+    codigo: string;
+    activadoEn: string;
+    estado: EstadoReferido;
+  }
+
+  const leeActivacion = (): Activacion | null => {
+    try {
+      const crudo = localStorage.getItem(CLAVE_ALMACEN);
+      return crudo ? (JSON.parse(crudo) as Activacion) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  /* Si el codigo se activo en ESTE navegador -el caso de la prueba
+     del CEO, que lleva los dos papeles con un solo movil-, su estado
+     se mueve tambien. Si se activo en otro, no hay nada que mover y
+     tampoco se finge que lo haya. */
+  const marcaActivacion = (codigo: string, estado: EstadoReferido): void => {
+    const dato = leeActivacion();
+    if (!dato || dato.codigo !== codigo) return;
+    try {
+      localStorage.setItem(CLAVE_ALMACEN, JSON.stringify({ ...dato, estado }));
+    } catch {
+      /* Que no se pueda guardar no invalida la redencion: el registro
+         que cuenta es el mensaje. */
+    }
+  };
+
+  const anota = (movimiento: Movimiento): void => {
+    try {
+      const crudo = localStorage.getItem(CLAVE_REGISTRO);
+      const lista = crudo ? (JSON.parse(crudo) as Movimiento[]) : [];
+      lista.push(movimiento);
+      localStorage.setItem(CLAVE_REGISTRO, JSON.stringify(lista));
+    } catch {
+      /* Igual que arriba. */
+    }
+  };
+
+  /* ------------------------------------------------------------
+     PASO 1 — comprobar el codigo
+     ------------------------------------------------------------ */
+  function muestraResultado(ok: boolean, lineas: string[]): void {
+    resultado.hidden = false;
+    resultado.className = `piloto__resultado piloto__resultado--${ok ? 'si' : 'no'}`;
+    resultado.innerHTML = '';
+    for (const texto of lineas) {
+      const p = document.createElement('p');
+      p.textContent = texto;
+      resultado.append(p);
+    }
+  }
+
+  function comprueba(texto: string): void {
+    const lectura = leerCodigo(texto, PILOTO.codigoAliado);
+
+    if (!lectura.valido) {
+      codigoValido = '';
+      formCuenta.hidden = true;
+      cajaCierre.hidden = true;
+      muestraResultado(false, ['No se puede aceptar este código.', lectura.explicacion ?? '']);
+      return;
+    }
+
+    codigoValido = lectura.codigo;
+    const lineas = [`${lectura.codigo} está bien formado y es de ${PILOTO.aliado}.`];
+
+    /* Si se activo en este mismo navegador, se puede decir algo mas. */
+    const activacion = leeActivacion();
+    if (activacion && activacion.codigo === lectura.codigo) {
+      if (!estaVigente(new Date(activacion.activadoEn), new Date())) {
+        lineas.push('Pero caducó: se activó otro día. Decide en el local si aun así se aplica.');
+      } else if (activacion.estado === 'REDIMIDO') {
+        lineas.push('Atención: en este aparato ya figura como redimido.');
+      } else {
+        lineas.push('Activado hoy en este mismo dispositivo.');
+      }
+    } else {
+      lineas.push(
+        'No hay registro central: esto comprueba que el código está bien copiado, no que Atheron lo emitiera.',
+      );
+    }
+
+    muestraResultado(true, lineas);
+    formCuenta.hidden = false;
+    cajaCierre.hidden = true;
+  }
+
+  formCodigo.addEventListener('submit', (e) => {
+    e.preventDefault();
+    comprueba(entrada.value);
+  });
+
+  /* ------------------------------------------------------------
+     PASO 2 — la cuenta, calculada mientras se teclea
+     ------------------------------------------------------------ */
+  const campoConsumo = formCuenta.elements.namedItem('consumo') as HTMLInputElement;
+  const campoPorcentaje = formCuenta.elements.namedItem('porcentaje') as HTMLInputElement;
+  const campoNota = formCuenta.elements.namedItem('nota') as HTMLTextAreaElement;
+  const listaCuenta = $('[data-cuenta]')!;
+
+  function cuentaActual(): { consumo: number; porcentaje: number; descuento: number; total: number } | null {
+    const consumo = Number(campoConsumo.value);
+    const porcentaje = Number(campoPorcentaje.value);
+    if (!campoConsumo.value || !campoPorcentaje.value) return null;
+    try {
+      return calculaCuenta(consumo, porcentaje);
+    } catch {
+      return null;
+    }
+  }
+
+  function pintaCuenta(): void {
+    const cuenta = cuentaActual();
+    listaCuenta.hidden = !cuenta;
+    if (!cuenta) return;
+    $('[data-consumo]')!.textContent = pesos(cuenta.consumo);
+    $('[data-descuento]')!.textContent = `− ${pesos(cuenta.descuento)} (${cuenta.porcentaje}%)`;
+    $('[data-total]')!.textContent = pesos(cuenta.total);
+  }
+
+  campoConsumo.addEventListener('input', pintaCuenta);
+  campoPorcentaje.addEventListener('input', pintaCuenta);
+
+  /* ------------------------------------------------------------
+     PASO 3 — la constancia
+     ------------------------------------------------------------ */
+  function cierra(estado: EstadoReferido, cuenta: ReturnType<typeof cuentaActual>): void {
+    const movimiento: Movimiento = {
+      piloto: PILOTO.id,
+      codigo: codigoValido,
+      aliado: PILOTO.slugAliado,
+      sello: selloColombiano(new Date()),
+      estado,
+      consumo: cuenta?.consumo,
+      porcentaje: cuenta?.porcentaje,
+      descuento: cuenta?.descuento,
+      total: cuenta?.total,
+      nota: campoNota.value,
+    };
+
+    anota(movimiento);
+    marcaActivacion(movimiento.codigo, estado);
+
+    const linea = lineaRegistro(movimiento);
+    $('[data-linea]')!.textContent = `${CABECERA_REGISTRO}\n${linea}`;
+
+    const insignia = $('[data-insignia]')!;
+    insignia.textContent = ETIQUETA_ESTADO[estado];
+    insignia.className = `piloto__estado ${CLASE_ESTADO[estado]}`;
+
+    const boton = $<HTMLAnchorElement>('[data-whatsapp-piloto]')!;
+    boton.href = enlaceWhatsAppPiloto(mensajeRedencion(movimiento));
+
+    ultimaLinea = linea;
+    formCuenta.hidden = true;
+    cajaCierre.hidden = false;
+    cajaCierre.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* El oyente de copiar se pone una sola vez, no dentro de cierra():
+     registrarlo en cada cierre acumularia uno por redencion. */
+  let ultimaLinea = '';
+  $('[data-copiar]')!.addEventListener('click', async () => {
+    const aviso = $('[data-copiado]')!;
+    if (!ultimaLinea) return;
+    try {
+      await navigator.clipboard.writeText(ultimaLinea);
+      aviso.textContent = 'Línea copiada.';
+    } catch {
+      /* Sin permiso de portapapeles -o sin HTTPS- no se puede copiar
+         solo. Se dice, en vez de quedarse callado. */
+      aviso.textContent = 'Este navegador no deja copiar solo: selecciona la línea de abajo.';
+    }
+  });
+
+  formCuenta.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!codigoValido) return;
+    if (!formCuenta.checkValidity()) {
+      formCuenta.reportValidity();
+      return;
+    }
+    const cuenta = cuentaActual();
+    if (!cuenta) {
+      campoConsumo.focus();
+      return;
+    }
+    cierra('REDIMIDO', cuenta);
+  });
+
+  $('[data-sin-consumo]')!.addEventListener('click', () => {
+    if (!codigoValido) return;
+    cierra('NO_REDIMIDO', null);
+  });
+
+  /* ------------------------------------------------------------
+     ENTRADA POR QR: /validar?c=ATH-TRI-XXXXX
+     ------------------------------------------------------------ */
+  const delQr = new URLSearchParams(location.search).get('c');
+  if (delQr) {
+    entrada.value = delQr.toUpperCase();
+    comprueba(delQr);
+  }
+</script>
