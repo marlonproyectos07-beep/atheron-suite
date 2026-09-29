@@ -14,9 +14,11 @@ BRANCH: night/ath-odoo-hotel-008-level1-20260929 (creada esta noche desde
   feature/ath-odoo-hotel-008a-live, sin perder ningun cambio previo)
 START_COMMIT: 38c3bec948b5b318f4949674aa26ea8775b75ee2 (HEAD sin cambios,
   todo lo de esta noche seguia sin commitear al momento de este reporte)
-END_COMMIT: ver el commit inmediatamente posterior a este archivo en el
-  historial de la rama night/ath-odoo-hotel-008-level1-20260929 (este
-  reporte se escribe y se agrega al MISMO commit)
+END_COMMIT: a6f8341 (rama night/ath-odoo-hotel-008-level1-20260929, local;
+  el push a origin quedo BLOQUEADO por el clasificador de seguridad del
+  harness -- "Out-of-Place Publication" -- no por decision propia. El
+  commit existe local y integro; falta que Marlon lo empuje el mismo o
+  autorice el push explicitamente en este chat).
 ```
 
 ## FILES_CREATED (esta noche, Workstreams A-N)
