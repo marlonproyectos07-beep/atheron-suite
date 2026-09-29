@@ -97,6 +97,43 @@ no por la IA)
   Gateway nunca lo reimplementa.
 - No concede descuentos: mismo bloqueo de contrato de arriba.
 
+## Actualizacion 2026-09-29 -- Frentes G-L construidos en laboratorio
+
+Construido y probado (todo SIMULADO, sin WhatsApp/Meta real, sin tocar
+produccion ni Odoo real):
+
+- `src/conversation-engine.mjs` -- maquina de estados conversacional
+  (`STATES`: NEW/COLLECTING_DATES/COLLECTING_GUESTS/
+  CHECKING_AVAILABILITY/OPTIONS_PRESENTED/QUOTING/
+  COLLECTING_GUEST_DATA/READY_FOR_HOLD/HOLD_CREATED/HUMAN_REQUIRED/
+  COMPLETED/EXPIRED). Recibe el mensaje YA PARSEADO (la capa de NLU
+  sigue fuera de alcance) y solo orquesta llamadas a las herramientas
+  de abajo -- nunca calcula disponibilidad/tarifa por su cuenta. 17
+  tests, cubriendo los 10 casos de conversacion pedidos por el CEO.
+- `src/ai-tool-adapters.mjs` -- `check_availability`/`quote`/
+  `create_hold` delegan en el Gateway real; `hold_status` reutiliza la
+  operacion real `status` (por `operation_id`); `cancel_hold`,
+  `create_reservation` y `reservation_status` estan marcados
+  `NOT_IMPLEMENTED_REQUIRES_HOTEL_009` porque el contrato real del
+  Gateway (`src/contract.mjs`) todavia no las define -- no se inventa
+  un comportamiento para ellas.
+- `src/human-handoff.mjs` -- arma el contexto estructurado para Angela/
+  Marlon (nombre/telefono/fechas/personas/opcion/precio cotizado/
+  motivo de escalamiento/ultimo mensaje), nunca inventa un dato que la
+  conversacion no trae.
+- `src/observability-events.mjs` -- constructores puros de los 8
+  eventos pedidos (`availability_checked`, `quote_generated`,
+  `option_selected`, `hold_created`, `hold_expired`, `human_handoff`,
+  `reservation_created`, `reservation_cancelled`), con trazabilidad
+  completa (`conversation_id`/`correlation_id`/`channel`/`timestamp`) y
+  nunca datos sensibles.
+- `scripts/whatsapp-simulator.mjs` (`npm run hotel:whatsapp-simulator`)
+  -- corre los 10 casos de conversacion end-to-end contra herramientas
+  falsas deterministas. 10/10 PASS.
+
 ## Estado
 
-Documentado, cero codigo nuevo activado. `WHATSAPP_CONNECTED: NO`.
+Documentado + motor conversacional/adaptadores/handoff/observabilidad/
+simulador construidos y probados en laboratorio (31 tests nuevos entre
+los 4 archivos de test, mas el simulador con sus 10 casos). Cero
+WhatsApp/Meta real conectado. `WHATSAPP_CONNECTED: NO`.

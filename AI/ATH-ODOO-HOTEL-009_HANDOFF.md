@@ -110,16 +110,55 @@ activado. Reutiliza integramente el Gateway de HOTEL-007/008 (mismo
 contrato `availability/quote/hold/status`, mismo `alternatives-engine`,
 mismo `sofia-adapter`), sin inventar nada nuevo.
 
-## Proximo paso exacto
+## Actualizacion 2026-09-29 -- turno autonomo (PROMPT MAESTRO)
 
-Necesito que abras, en una pestana de Chrome, sesion iniciada contra:
+Mientras la Fase 1 profunda seguia bloqueada por falta de sesion Odoo
+STAGING, se avanzo todo lo que no requiere esa sesion (regla de
+bloqueo del propio CEO: un frente bloqueado no detiene el turno):
 
-**Odoo STAGING (`atheron1-hotel-staging-20260923`)** -- no la de
-produccion "atheron1" que usaste en turnos anteriores.
+- **Frente A (diseno UX "modo Angela")**: completo, ver
+  `AI/ATH-ODOO-HOTEL-009_ANGELA_UX.md` -- colores/estados (reutilizando
+  `ANGELA_STATUSES`, ninguno inventado), layout HOME, cards por unidad,
+  evaluacion Kanban/Calendario/Lista/Cards/Dashboard.
+- **Frente C (read-model operativo)**: completo y probado,
+  `integrations/odoo-hotel-gateway/src/operational-read-model.mjs` (14
+  tests) -- TODAY/ARRIVALS/DEPARTURES/IN_HOUSE/HOLDS/PAYMENT_PENDING/
+  UPCOMING/AVAILABLE.
+- **Frente D (tablero gerencial)**: completo y probado,
+  `salesByChannel`/`salesByUnit`/`adr`/`managerDashboard` en
+  `financial-model.mjs` (9 tests nuevos).
+- **Frente B + E (reserva manual + prueba reina)**: diseno completo,
+  ver `AI/ATH-ODOO-HOTEL-009_RESERVA_MANUAL.md`; arnes anti-overbooking
+  SIMULADO y probado (`anti-overbooking-harness.mjs`, 6 tests) --
+  encontro que el Gateway real NO tiene operacion de cancelacion (ver
+  ese documento).
+- **Frente F (Casa Completa <-> habitaciones)**: cubierto por los
+  tests ya existentes de `odoo-hotel-ical` (28) mas el caso explicito
+  de Casa Completa dentro del arnes anti-overbooking.
+- **Frentes G-L (WhatsApp/IA de laboratorio)**: completos y probados,
+  ver la actualizacion 2026-09-29 en
+  `AI/ATH-ODOO-HOTEL-010_WHATSAPP_CONTRACT.md` -- motor conversacional,
+  adaptadores de herramientas, handoff humano, eventos de
+  observabilidad, simulador (10/10 casos PASS).
+- **Frente M (tests adicionales)**: cubiertos por los tests de los
+  puntos anteriores mas los ya existentes del Gateway (idempotencia,
+  rate limit, contrato, forma de respuesta desconocida/malformada,
+  reintentos) -- no se repite lo que ya estaba probado en HOTEL-007/008.
 
-Idealmente con un usuario que tenga acceso a Studio/vistas (para poder
-construir el tablero); si solo tienes el tecnico de minimo privilegio,
-avisame y ajusto el alcance de lo que se puede construir con eso.
+Suite completa del Gateway: **227/227 tests PASS** (167 antes de este
+turno + 60 nuevos).
 
-Con esa sesion completo Fase 1 profunda y empiezo Fase 2 (tablero de
-Angela) directamente.
+## Frente O -- bloqueo real para Marlon (una sola accion)
+
+Todo lo de arriba se pudo avanzar SIN tocar Odoo. Lo que sigue
+bloqueado (Fase 1 profunda, Fase 2-4/7: construir la UI real, conectar
+el read-model a datos reales) necesita **una sola cosa** de Marlon:
+
+> **Abrir, en una pestana de Chrome, una sesion iniciada contra Odoo
+> STAGING (`atheron1-hotel-staging-20260923`, NO produccion "atheron1"),
+> con un usuario que tenga acceso a Studio/vistas.**
+
+Con esa sesion se completa la Fase 1 profunda y se puede empezar a
+construir la UI real (Frente A/B) directamente sobre lo ya diseñado y
+probado en este documento y en `AI/ATH-ODOO-HOTEL-009_ANGELA_UX.md` /
+`AI/ATH-ODOO-HOTEL-009_RESERVA_MANUAL.md`.
