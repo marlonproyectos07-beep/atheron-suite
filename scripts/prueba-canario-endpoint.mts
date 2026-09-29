@@ -107,10 +107,15 @@ await verificar('sin HOTEL_WEB_AGENT_KEY -> 503 SERVICE_UNAVAILABLE, nunca inven
 console.log('\n4) el navegador nunca llama a Odoo/gateway directamente: solo este endpoint lo hace');
 await verificar('el POST llama fetch hacia HOTEL_GATEWAY_BASE_URL con la clave server-side, y la respuesta al navegador nunca la contiene', async () => {
   const originalFetch = globalThis.fetch;
-  const calls: Array<{ url: string; headers: Record<string, string> }> = [];
+  const calls: Array<{ url: string; headers: Record<string, string>; body: string }> = [];
   globalThis.fetch = (async (url: string, init: any) => {
-    calls.push({ url: String(url), headers: init.headers });
-    return new Response(JSON.stringify({ ok: true, available: true }), { status: 200 });
+    calls.push({ url: String(url), headers: init.headers, body: init.body });
+    // Forma real del gateway (src/contract.mjs): data.opciones por unit_id,
+    // nunca un {available} plano. unit_id "1" = habitacion 201.
+    return new Response(
+      JSON.stringify({ ok: true, data: { opciones: [{ unit_id: '1', estado: 'disponible' }] } }),
+      { status: 200 },
+    );
   }) as typeof fetch;
 
   try {
@@ -118,15 +123,21 @@ await verificar('el POST llama fetch hacia HOTEL_GATEWAY_BASE_URL con la clave s
     const body = await res.json();
     const rawBodyText = JSON.stringify(body);
 
-    assert.equal(calls.length >= 1, true, 'el endpoint deberia haber llamado al gateway');
+    assert.equal(calls.length, 1, 'la disponibilidad se consulta UNA sola vez (cacheada), aunque haya alternativas que revisar');
     assert.ok(calls.every((c) => c.url.startsWith('http://gateway.invalid')), 'toda llamada va al gateway configurado, nunca a otro host');
     assert.ok(
       calls.every((c) => c.headers.authorization === 'Bearer clave-de-prueba-nunca-real'),
       'la clave SI viaja del servidor al gateway (es el lugar correcto)',
     );
+    assert.equal(
+      calls.every((c) => !JSON.parse(c.body ?? '{}').unit_id),
+      true,
+      'availability nunca debe mandar unit_id (UNKNOWN_FIELD real, bug ya corregido)',
+    );
     assert.equal(rawBodyText.includes('clave-de-prueba-nunca-real'), false, 'la clave NUNCA debe llegar en la respuesta que recibe el navegador');
     assert.equal(res.status, 200);
     assert.equal(body.ok, true);
+    assert.equal(body.requested_available, true, '201 (unit_id 1) debe reportarse disponible con este fixture');
   } finally {
     globalThis.fetch = originalFetch;
   }

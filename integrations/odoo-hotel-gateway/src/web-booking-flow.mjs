@@ -14,14 +14,30 @@ import { requestAccommodationAlternatives } from './alternatives-engine.mjs';
  * @param {{unit: string, checkIn: string, checkOut: string, guests: number}} selection
  * @param {{client: {availability: Function, quote: Function, hold: Function}}} deps
  */
-export async function runWebBookingFlow({ unit, checkIn, checkOut, guests }, { client }) {
-  const checkAvailability = async (candidateUnit, ci, co) => {
-    const response = await client.availability({ check_in: ci, check_out: co, guests, unit_id: candidateUnit });
-    // Forma real de error del gateway: { ok:false, error:{ code, message } }
-    // (src/server.mjs), nunca un `error_code` plano.
+export async function runWebBookingFlow({ unit, checkIn, checkOut, guests }, { client, unitIdMap = {} }) {
+  // El contrato real de /hotel/availability y /hotel/quote (src/contract.mjs)
+  // NO acepta unit_id: es una consulta por PROPIEDAD (devuelve todas las
+  // unidades), y el llamador filtra localmente. Mandar unit_id ahi produce
+  // UNKNOWN_FIELD (bug real encontrado en ATH-ODOO-HOTEL-008, ver logs de
+  // Vercel). Solo /hotel/hold acepta unit_id.
+  let availabilityCache = null;
+  const fetchAvailabilityOnce = () => {
+    if (!availabilityCache) {
+      availabilityCache = client.availability({ check_in: checkIn, check_out: checkOut, guests });
+    }
+    return availabilityCache;
+  };
+
+  const checkAvailability = async (candidateUnit) => {
+    const response = await fetchAvailabilityOnce();
     if (response?.ok === false) throw new Error(`AVAILABILITY_FAILED: ${response?.error?.code ?? 'UNKNOWN'}`);
-    // El contrato real de Odoo decide "available"; aqui solo se propaga.
-    return Boolean(response?.available);
+    const data = response?.data ?? response;
+    const unitId = unitIdMap[candidateUnit];
+    const opciones = Array.isArray(data?.opciones) ? data.opciones : Array.isArray(data?.units) ? data.units : [];
+    const found = opciones.find((u) => String(u.unit_id) === String(unitId));
+    if (!found) return false;
+    if (typeof found.available === 'boolean') return found.available;
+    return found.estado === 'disponible';
   };
 
   const alternatives = await requestAccommodationAlternatives(
@@ -33,12 +49,12 @@ export async function runWebBookingFlow({ unit, checkIn, checkOut, guests }, { c
     return { step: 'availability', status: 'UNAVAILABLE', ...alternatives };
   }
 
-  const quote = await client.quote({ check_in: checkIn, check_out: checkOut, guests, unit_id: unit, idempotency_key: cryptoRandomKey() });
+  const quote = await client.quote({ check_in: checkIn, check_out: checkOut, guests, idempotency_key: cryptoRandomKey() });
   if (quote?.ok === false) {
     return { step: 'quote', status: 'FAILED', error_code: quote?.error?.code ?? 'UNKNOWN' };
   }
 
-  const hold = await client.hold({ quote_id: quote.quote_id, idempotency_key: cryptoRandomKey() });
+  const hold = await client.hold({ quote_id: quote.quote_id, unit_id: unitIdMap[unit], idempotency_key: cryptoRandomKey() });
   if (hold?.ok === false) {
     return { step: 'hold', status: 'FAILED', error_code: hold?.error?.code ?? 'UNKNOWN' };
   }

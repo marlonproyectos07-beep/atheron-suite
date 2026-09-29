@@ -19,6 +19,17 @@ export const prerender = false;
 const VALID_UNITS = new Set(['201', '202', '203', '301', '302', 'CASA_COMPLETA']);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+// Mapeo real confirmado por el CEO (no inventado, ver
+// AI/ATH-ODOO-HOTEL-008_OTA_MAP.md): 201=unit_id 1 ... CASA_COMPLETA=6.
+const UNIT_ID_MAP: Record<string, string> = {
+  201: '1',
+  202: '2',
+  203: '3',
+  301: '4',
+  302: '5',
+  CASA_COMPLETA: '6',
+};
+
 // Ventana deslizante en memoria, reutilizando el mismo limitador ya probado
 // del gateway (Fase 8 de HOTEL-007). Sobrevive mientras la funcion
 // serverless este "tibia"; no es una proteccion perfecta, es razonable
@@ -94,21 +105,37 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const client = new WebHotelClient(config);
 
   try {
-    const checkAvailability = async (candidateUnit: string, checkIn: string, checkOut: string) => {
-      const response = await client.availability({
-        check_in: checkIn,
-        check_out: checkOut,
-        guests: parsed.guests,
-        unit_id: candidateUnit,
-      });
+    // El contrato real de /hotel/availability (src/contract.mjs) NO acepta
+    // unit_id: es una consulta por PROPIEDAD que devuelve TODAS las
+    // unidades (data.opciones), y el llamador filtra localmente -- mismo
+    // patron ya probado en scripts/live-hotel-008a-runner.mjs. Mandar
+    // unit_id producia UNKNOWN_FIELD (bug real, encontrado via logs).
+    // Se cachea una sola llamada al gateway por request, no una por unidad.
+    let availabilityCache: Promise<any> | null = null;
+    const fetchAvailabilityOnce = () => {
+      if (!availabilityCache) {
+        availabilityCache = client.availability({
+          check_in: parsed.checkIn,
+          check_out: parsed.checkOut,
+          guests: parsed.guests,
+        });
+      }
+      return availabilityCache;
+    };
+
+    const checkAvailability = async (candidateUnit: string) => {
+      const response = await fetchAvailabilityOnce();
       // Forma real de error del gateway: { ok:false, error:{ code, message } }
-      // (src/server.mjs), NUNCA un `error_code` plano. Con la condicion
-      // anterior este chequeo nunca se disparaba sobre un error real del
-      // gateway; el resultado quedaba en `available: undefined` -> false,
-      // sin distinguir "no disponible" de "el gateway fallo".
+      // (src/server.mjs), NUNCA un `error_code` plano.
       if (response?.ok === false) throw new Error(`GATEWAY_AVAILABILITY_ERROR:${response?.error?.code ?? 'UNKNOWN'}`);
-      // Odoo decide "available"; este endpoint solo propaga el booleano.
-      return Boolean(response?.available);
+
+      const data = response?.data ?? response;
+      const unitId = UNIT_ID_MAP[candidateUnit];
+      const opciones: any[] = Array.isArray(data?.opciones) ? data.opciones : Array.isArray(data?.units) ? data.units : [];
+      const found = opciones.find((u) => String(u.unit_id) === String(unitId));
+      if (!found) return false; // no inventa disponibilidad si Odoo no devolvio la unidad
+      if (typeof found.available === 'boolean') return found.available;
+      return found.estado === 'disponible';
     };
 
     const result = await requestAccommodationAlternatives(
