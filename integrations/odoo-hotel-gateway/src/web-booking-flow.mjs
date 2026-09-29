@@ -17,7 +17,9 @@ import { requestAccommodationAlternatives } from './alternatives-engine.mjs';
 export async function runWebBookingFlow({ unit, checkIn, checkOut, guests }, { client }) {
   const checkAvailability = async (candidateUnit, ci, co) => {
     const response = await client.availability({ check_in: ci, check_out: co, guests, unit_id: candidateUnit });
-    if (response?.error_code) throw new Error(`AVAILABILITY_FAILED: ${response.error_code}`);
+    // Forma real de error del gateway: { ok:false, error:{ code, message } }
+    // (src/server.mjs), nunca un `error_code` plano.
+    if (response?.ok === false) throw new Error(`AVAILABILITY_FAILED: ${response?.error?.code ?? 'UNKNOWN'}`);
     // El contrato real de Odoo decide "available"; aqui solo se propaga.
     return Boolean(response?.available);
   };
@@ -32,13 +34,13 @@ export async function runWebBookingFlow({ unit, checkIn, checkOut, guests }, { c
   }
 
   const quote = await client.quote({ check_in: checkIn, check_out: checkOut, guests, unit_id: unit, idempotency_key: cryptoRandomKey() });
-  if (quote?.error_code) {
-    return { step: 'quote', status: 'FAILED', error_code: quote.error_code };
+  if (quote?.ok === false) {
+    return { step: 'quote', status: 'FAILED', error_code: quote?.error?.code ?? 'UNKNOWN' };
   }
 
   const hold = await client.hold({ quote_id: quote.quote_id, idempotency_key: cryptoRandomKey() });
-  if (hold?.error_code) {
-    return { step: 'hold', status: 'FAILED', error_code: hold.error_code };
+  if (hold?.ok === false) {
+    return { step: 'hold', status: 'FAILED', error_code: hold?.error?.code ?? 'UNKNOWN' };
   }
 
   return { step: 'hold', status: 'HELD', quote_id: quote.quote_id, hold_id: hold.hold_id };

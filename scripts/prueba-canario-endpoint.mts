@@ -133,10 +133,14 @@ await verificar('el POST llama fetch hacia HOTEL_GATEWAY_BASE_URL con la clave s
 });
 
 console.log('\n5) error del gateway nunca expone su mensaje real');
-await verificar('si el gateway responde error_code, el navegador solo ve AVAILABILITY_LOOKUP_FAILED (502), sin stack ni detalle interno', async () => {
+await verificar('si el gateway responde su forma real de error (ok:false, error:{code,message}), el navegador solo ve AVAILABILITY_LOOKUP_FAILED (502), sin stack ni detalle interno', async () => {
   const originalFetch = globalThis.fetch;
+  // Forma REAL de error del gateway (src/server.mjs): { ok:false, error:{code,message} }.
   globalThis.fetch = (async () =>
-    new Response(JSON.stringify({ error_code: 'INTERNAL_ERROR', internal_detail: 'stack trace secreto de Odoo' }), { status: 200 })) as typeof fetch;
+    new Response(
+      JSON.stringify({ ok: false, correlation_id: 'x', error: { code: 'INTERNAL_ERROR', message: 'stack trace secreto de Odoo' } }),
+      { status: 200 },
+    )) as typeof fetch;
   try {
     const res = await POST({ request: req(VALID_BODY), clientAddress: '10.0.0.3' } as any);
     const body = await res.json();

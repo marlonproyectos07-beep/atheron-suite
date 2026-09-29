@@ -101,7 +101,12 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
         guests: parsed.guests,
         unit_id: candidateUnit,
       });
-      if (response?.error_code) throw new Error('GATEWAY_AVAILABILITY_ERROR');
+      // Forma real de error del gateway: { ok:false, error:{ code, message } }
+      // (src/server.mjs), NUNCA un `error_code` plano. Con la condicion
+      // anterior este chequeo nunca se disparaba sobre un error real del
+      // gateway; el resultado quedaba en `available: undefined` -> false,
+      // sin distinguir "no disponible" de "el gateway fallo".
+      if (response?.ok === false) throw new Error(`GATEWAY_AVAILABILITY_ERROR:${response?.error?.code ?? 'UNKNOWN'}`);
       // Odoo decide "available"; este endpoint solo propaga el booleano.
       return Boolean(response?.available);
     };
