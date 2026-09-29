@@ -95,3 +95,4 @@ graphify-out/
 .env.local
 integrations/**/.env
 integrations/**/check-odoo.mjs
+.env*

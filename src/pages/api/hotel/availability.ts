@@ -120,8 +120,11 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       status: 200,
       headers: { 'content-type': 'application/json' },
     });
-  } catch {
-    // Nunca se reenvia el mensaje/stack real del gateway al navegador.
+  } catch (error) {
+    // Se registra SOLO en los logs server-side de Vercel (nunca en la
+    // respuesta al navegador) para poder diagnosticar sin exponer nada.
+    // eslint-disable-next-line no-console
+    console.error('[hotel/availability] fallo interno:', error instanceof Error ? error.message : String(error));
     return jsonError('AVAILABILITY_LOOKUP_FAILED', 502);
   }
 };
