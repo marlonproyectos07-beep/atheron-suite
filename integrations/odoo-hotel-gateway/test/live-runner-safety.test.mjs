@@ -95,6 +95,36 @@ test('all: real response shapes, three independent holds, persisted state, full 
   assert.equal((await executeSafeRun({ ...args, phase: 'verify-expiration' })).overall, 'PASS');
   assert.equal(JSON.parse(await readFile(stateFile, 'utf8')).cleanup_verified, true);
 });
+test('expired HOLD purged by Odoo is PASS only when expiry passed and availability is clean', async () => {
+  const adapter = backend();
+  adapter.status = async () => { throw new Error('GATEWAY_NOT_FOUND'); };
+  const c = { ...config(), propertyId: 1, unitIds: units, dates: { checkIn: '2099-03-10', checkOut: '2099-03-12' } };
+  const state = {
+    database: env.ODOO_DATABASE,
+    pending: null,
+    holds: [{ hold_id: 22219, expiration: '2000-01-01 00:00:00.000000', config: c }],
+  };
+  const result = await verifyJournal(adapter, state, { now: Date.parse('2000-01-02T00:00:00Z') });
+  assert.equal(result.overall, 'PASS');
+  assert.equal(result.results[0].status, 'hold_gone_after_expiration');
+  assert.equal(result.results[0].evidence, 'GATEWAY_NOT_FOUND+clean_availability');
+});
+
+test('missing HOLD before recorded expiry remains fail-closed', async () => {
+  const adapter = backend();
+  adapter.status = async () => { throw new Error('GATEWAY_NOT_FOUND'); };
+  const c = { ...config(), propertyId: 1, unitIds: units, dates: { checkIn: '2099-03-10', checkOut: '2099-03-12' } };
+  const state = {
+    database: env.ODOO_DATABASE,
+    pending: null,
+    holds: [{ hold_id: 22220, expiration: '2099-03-10 02:00:00.000000', config: c }],
+  };
+  const result = await verifyJournal(adapter, state, { now: Date.parse('2099-03-09T00:00:00Z') });
+  assert.equal(result.overall, 'PENDING_EXPIRY');
+  assert.equal(result.results[0].status, 'hold_not_found_before_expiration');
+  assert.equal(result.results[0].restored, false);
+});
+
 test('uncertain hold request cannot be treated as verified cleanup', async () => {
   await assert.rejects(verifyJournal(backend(), { database: env.ODOO_DATABASE, holds: [{}], pending: { operation: 'hold' } }), /UNRESOLVED/);
 });
