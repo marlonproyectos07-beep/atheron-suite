@@ -12,9 +12,12 @@
     "foto": "node scripts/optimiza-fotos.mjs",
     "prebuild": "node scripts/comprueba-contenido.mjs && node scripts/comprueba-jornadas.mjs && node scripts/optimiza-selector.mjs",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "prueba-canario": "node --experimental-strip-types --no-warnings scripts/prueba-canario-endpoint.mts",
+    "prueba-canario-seguridad": "node scripts/prueba-canario-seguridad.mjs"
   },
   "dependencies": {
+    "@astrojs/vercel": "^11.0.11",
     "astro": "7.2.4"
   },
   "devDependencies": {

@@ -1,0 +1,142 @@
+---
+/**
+ * ATH-ODOO-HOTEL-008 - canario WEB -> ODOO STAGING (Fase 4).
+ *
+ * Widget minimo, aislado del resto de la pagina: no toca ningun CTA, id
+ * ni seccion existente. Llama SIEMPRE al endpoint same-origin
+ * /api/hotel/availability (src/pages/api/hotel/availability.ts) -- nunca
+ * a Odoo ni al gateway directamente, y nunca lleva ninguna credencial en
+ * este archivo ni en el <script> del navegador.
+ *
+ * Prototipo/canario: no reemplaza el CTA de WhatsApp existente, se ofrece
+ * como una opcion adicional de "consultar disponibilidad real" mientras
+ * se valida el puente contra Odoo STAGING.
+ */
+const UNIDADES = [
+  { valor: '201', etiqueta: 'Habitación 201' },
+  { valor: '202', etiqueta: 'Habitación 202' },
+  { valor: '203', etiqueta: 'Habitación 203' },
+  { valor: '301', etiqueta: 'Habitación 301' },
+  { valor: '302', etiqueta: 'Habitación 302' },
+  { valor: 'CASA_COMPLETA', etiqueta: 'Casa completa' },
+];
+---
+
+<section class="seccion canario-disponibilidad" id="canario-disponibilidad-odoo">
+  <div class="contenedor">
+    <div class="encabezado-seccion aparecer">
+      <span class="etiqueta">Canario en prueba (staging)</span>
+      <h2>Consultar disponibilidad real (Odoo, solo prueba)</h2>
+      <p class="texto-suave" style="margin-top: var(--esp-2);">
+        Bloque de prueba interno: consulta el inventario real de Odoo (base
+        de staging) a traves de nuestro propio servidor. No sustituye a
+        WhatsApp todavia.
+      </p>
+    </div>
+
+    <form class="canario-form aparecer" data-canario-form novalidate>
+      <div class="canario-form__fila">
+        <div class="campo">
+          <label for="canario-llegada">Entrada</label>
+          <input type="date" id="canario-llegada" name="checkIn" required />
+        </div>
+        <div class="campo">
+          <label for="canario-salida">Salida</label>
+          <input type="date" id="canario-salida" name="checkOut" required />
+        </div>
+      </div>
+      <div class="canario-form__fila">
+        <div class="campo">
+          <label for="canario-personas">Personas</label>
+          <input type="number" id="canario-personas" name="guests" min="1" max="20" value="2" required />
+        </div>
+        <div class="campo">
+          <label for="canario-unidad">Unidad</label>
+          <select id="canario-unidad" name="unit" required>
+            {UNIDADES.map((u) => <option value={u.valor}>{u.etiqueta}</option>)}
+          </select>
+        </div>
+      </div>
+      <button class="boton boton--primario" type="submit">Consultar disponibilidad</button>
+      <div class="canario-resultado" data-canario-resultado role="status" aria-live="polite"></div>
+    </form>
+  </div>
+</section>
+
+<style>
+  .canario-disponibilidad {
+    background: var(--color-crema, #f7f3ec);
+  }
+  .canario-form {
+    display: grid;
+    gap: 1rem;
+    max-width: 520px;
+  }
+  .canario-form__fila {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .canario-resultado {
+    min-height: 1.5rem;
+    font-size: 0.95rem;
+  }
+  .canario-resultado[data-estado='disponible'] { color: #146c2e; font-weight: 600; }
+  .canario-resultado[data-estado='no-disponible'] { color: #8a3b00; font-weight: 600; }
+  .canario-resultado[data-estado='error'] { color: #a3242b; font-weight: 600; }
+</style>
+
+<script>
+  // Este script corre en el navegador. NUNCA importa el gateway ni lee
+  // ninguna variable de entorno de servidor: solo hace fetch same-origin
+  // a /api/hotel/availability, que es el UNICO lugar autorizado a hablar
+  // con Odoo/el gateway.
+  const form = document.querySelector<HTMLFormElement>('[data-canario-form]');
+  const resultadoEl = document.querySelector<HTMLDivElement>('[data-canario-resultado]');
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!resultadoEl) return;
+
+    const datos = new FormData(form);
+    const payload = {
+      unit: String(datos.get('unit')),
+      checkIn: String(datos.get('checkIn')),
+      checkOut: String(datos.get('checkOut')),
+      guests: Number(datos.get('guests')),
+    };
+
+    resultadoEl.removeAttribute('data-estado');
+    resultadoEl.textContent = 'Consultando disponibilidad real en Odoo...';
+
+    try {
+      const res = await fetch('/api/hotel/availability', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        resultadoEl.setAttribute('data-estado', 'error');
+        resultadoEl.textContent = 'No se pudo consultar disponibilidad en este momento. Escríbenos por WhatsApp.';
+        return;
+      }
+
+      if (data.requested_available) {
+        resultadoEl.setAttribute('data-estado', 'disponible');
+        resultadoEl.textContent = `${data.requested_unit} está disponible para esas fechas (dato real de Odoo).`;
+      } else if (data.alternatives?.length > 0) {
+        const opciones = data.alternatives.map((a: { unit: string }) => a.unit).join(', ');
+        resultadoEl.setAttribute('data-estado', 'no-disponible');
+        resultadoEl.textContent = `${data.requested_unit} no está disponible. Alternativas reales disponibles: ${opciones}.`;
+      } else {
+        resultadoEl.setAttribute('data-estado', 'no-disponible');
+        resultadoEl.textContent = `${data.requested_unit} no está disponible y no hay alternativas para esas fechas/personas.`;
+      }
+    } catch {
+      resultadoEl.setAttribute('data-estado', 'error');
+      resultadoEl.textContent = 'No se pudo consultar disponibilidad en este momento. Escríbenos por WhatsApp.';
+    }
+  });
+</script>

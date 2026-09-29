@@ -8,6 +8,7 @@ import Marca from '../../components/Marca.astro';
 import Foto from '../../components/Foto.astro';
 import { menuFicha, menuFichaMovil, ctaConsultarDe } from '../../data/navegacion';
 import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
+import CanarioDisponibilidad from '../../components/CanarioDisponibilidad.astro';
 import { formularioContactoActivo } from '../../data/ajustes';
 import { migaDePan, url, ORGANIZACION } from '../../data/seo';
 import { atributosWhatsApp } from '../../data/whatsapp';
@@ -759,6 +760,11 @@ function idHabitacion(nombre) {
         </div>
       </section>
     )}
+
+    {/* Canario ATH-ODOO-HOTEL-008: solo en esta ficha, mientras se prueba
+         el puente web -> Odoo staging. No reemplaza ningun CTA existente,
+         no toca IDs ni secciones de arriba. */}
+    {ficha.id === 'hotel-atheron-suite' && <CanarioDisponibilidad />}
 
     {hayGaleria && (
       <section class="seccion" id="galeria">
