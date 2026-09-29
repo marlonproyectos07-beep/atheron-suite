@@ -55,13 +55,62 @@ export async function baseline(adapter, config) {
   return units;
 }
 
-export async function verifyJournal(adapter, state) {
+function expirationPassed(expiration, now = Date.now()) {
+  if (!expiration) return false;
+  const raw = String(expiration).trim();
+  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(raw)
+    ? raw.replace(' ', 'T') + 'Z'
+    : raw;
+  const timestamp = Date.parse(normalized);
+  return Number.isFinite(timestamp) && timestamp <= now;
+}
+
+export async function verifyJournal(adapter, state, { now = Date.now() } = {}) {
   demand(state?.database === 'atheron1-hotel-staging-20260923' && state.holds?.length > 0, 'INVALID_JOURNAL');
   demand(!state.pending, 'UNRESOLVED_REQUEST_REQUIRES_RECONCILIATION');
   const results = [];
   for (const h of state.holds) {
     demand(h.hold_id && h.config?.dates && h.config?.propertyId, 'INCOMPLETE_HOLD_JOURNAL');
-    const status = data(await adapter.status({ operation_id: h.hold_id, source_channel: 'sofia' }));
+    let status;
+    try {
+      status = data(await adapter.status({ operation_id: h.hold_id, source_channel: 'sofia' }));
+    } catch (error) {
+      if (error?.message !== 'GATEWAY_NOT_FOUND') throw error;
+
+      // Odoo may purge expired HOLD rows, so status() can legitimately return
+      // NOT_FOUND after the expiry timestamp. Do not treat absence alone as PASS:
+      // require both (a) expiry time already passed and (b) the full inventory
+      // window is clean again. This keeps the verifier fail-closed.
+      if (!expirationPassed(h.expiration, now)) {
+        results.push({
+          hold_id: h.hold_id,
+          status: 'hold_not_found_before_expiration',
+          restored: false,
+          evidence: 'GATEWAY_NOT_FOUND',
+        });
+        continue;
+      }
+
+      try {
+        await baseline(adapter, h.config);
+        results.push({
+          hold_id: h.hold_id,
+          status: 'hold_gone_after_expiration',
+          restored: true,
+          evidence: 'GATEWAY_NOT_FOUND+clean_availability',
+        });
+      } catch (availabilityError) {
+        results.push({
+          hold_id: h.hold_id,
+          status: 'hold_gone_after_expiration',
+          restored: false,
+          evidence: 'GATEWAY_NOT_FOUND+availability_not_clean',
+          availability_error: availabilityError?.message ?? 'UNKNOWN_AVAILABILITY_ERROR',
+        });
+      }
+      continue;
+    }
+
     let restored = false;
     if (status.hold_id === h.hold_id && status.status === 'hold_expired') {
       await baseline(adapter, h.config);
