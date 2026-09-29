@@ -117,3 +117,87 @@ function computeUnreconciled(collectedToday, bankStatementLines) {
   const unmatched = collectedToday.filter((r) => !matchedRefs.has(r.external_reference));
   return sum(unmatched, (r) => r.collected);
 }
+
+const SIN_CANAL = 'SIN_CANAL_REGISTRADO';
+
+function groupBy(items, keyFn) {
+  const groups = new Map();
+  for (const item of items) {
+    const key = keyFn(item);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+  return [...groups.entries()].map(([key, group]) => ({
+    key,
+    count: group.length,
+    total: sum(group, (r) => r.gross_sale),
+  }));
+}
+
+/**
+ * ATH-ODOO-HOTEL-009, Frente D - ventas creadas hoy agrupadas por canal.
+ * `channel: null` (caso real de Jhon/Blanca/Monica, sin canal registrado
+ * en la fuente) se agrupa bajo SIN_CANAL_REGISTRADO en vez de inventar
+ * un canal ('RECEPCION' u otro) que la fuente no confirmo.
+ */
+export function salesByChannel(reservations, targetDate) {
+  const salesCreatedToday = reservations.filter((r) => r.reservation_date === targetDate);
+  return groupBy(salesCreatedToday, (r) => r.channel ?? SIN_CANAL).map(({ key, count, total }) => ({
+    channel: key,
+    count,
+    total,
+  }));
+}
+
+/** Ventas creadas hoy agrupadas por alojamiento. */
+export function salesByUnit(reservations, targetDate) {
+  const salesCreatedToday = reservations.filter((r) => r.reservation_date === targetDate);
+  return groupBy(salesCreatedToday, (r) => r.unit).map(({ key, count, total }) => ({
+    unit: key,
+    count,
+    total,
+  }));
+}
+
+function nightsOf(checkin, checkout) {
+  const ms = new Date(`${checkout}T00:00:00Z`) - new Date(`${checkin}T00:00:00Z`);
+  return Math.round(ms / 86400000);
+}
+
+/**
+ * ADR (tarifa promedio diaria) del dia: promedio de la tarifa NOCTURNA
+ * (gross_sale / noches de la reserva) entre las unidades ocupadas ese dia.
+ * null (no 0) si no hay ninguna unidad ocupada ese dia -- 0 implicaria
+ * "vendimos a $0", que no es lo mismo que "no hubo ocupacion".
+ */
+export function adr(reservations, targetDate) {
+  const staysToday = reservations.filter(
+    (r) =>
+      hasVerifiedDate(r.checkin) &&
+      hasVerifiedDate(r.checkout) &&
+      targetDate >= r.checkin &&
+      targetDate < r.checkout &&
+      r.gross_sale != null,
+  );
+  if (staysToday.length === 0) return null;
+  const nightlyRevenue = sum(staysToday, (r) => {
+    const nights = nightsOf(r.checkin, r.checkout);
+    return nights > 0 ? r.gross_sale / nights : r.gross_sale;
+  });
+  return nightlyRevenue / staysToday.length;
+}
+
+/**
+ * Tablero gerencial completo: extiende `dailyClose` (sin cambiar su forma,
+ * para no romper contratos ya probados) con las vistas por canal, por
+ * alojamiento y el ADR que pide el Frente D de HOTEL-009.
+ */
+export function managerDashboard(reservations, targetDate, options = {}) {
+  const close = dailyClose(reservations, targetDate, options);
+  return {
+    ...close,
+    sales_by_channel: salesByChannel(reservations, targetDate),
+    sales_by_unit: salesByUnit(reservations, targetDate),
+    adr: adr(reservations, targetDate),
+  };
+}
