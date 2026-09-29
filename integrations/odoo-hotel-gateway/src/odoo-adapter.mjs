@@ -1,0 +1,337 @@
+import { ContractError, assertSafeUpstreamPayload } from './contract.mjs';
+import {
+  buildAvailabilityFixture,
+  buildQuoteFixture,
+  buildHoldFixture,
+} from '../fixtures/dry-run-fixtures.mjs';
+import { HttpOdooTransport } from './odoo-transport.mjs';
+
+/**
+ * OdooHotelAdapter (Fase 4).
+ *
+ * Traduce el contrato externo del gateway hacia la puerta Odoo YA APROBADA
+ * (accion 1967, ver AI/ODOO_HOTEL_STATE.md / HOTEL-006). No reimplementa
+ * tarifas, disponibilidad, capacidad ni anti-overbooking: eso vive en Odoo.
+ *
+ * Dos modos:
+ *  - DRY_RUN (dryRun=true, default seguro): usa fixtures locales
+ *    deterministas. `hold` NUNCA escribe en Odoo real en este modo.
+ *  - LIVE (dryRun=false): llama a Odoo via JSON-RPC reutilizando la accion
+ *    1967 como `ir.actions.server`. Requiere ODOO_BASE_URL/ODOO_DATABASE/
+ *    ODOO_TECHNICAL_USER/ODOO_TECHNICAL_SECRET reales (fuera del repo, nunca
+ *    en este repositorio).
+ *
+ *    Probado con exito de punta a punta contra atheron1-hotel-staging-20260923
+ *    (25/09/2026): availability, quote (quote_id 116), hold (hold_id 22216,
+ *    con replay idempotente confirmado por el propio Odoo:
+ *    idempotent_replay=true en la segunda llamada), status de HOLD (via
+ *    hold_id) y status de COTIZACION (via el fallback a quote_id, ver mas
+ *    abajo). Tras el HOLD, availability confirmo que la unidad quedo
+ *    `no_disponible` (anti-overbooking end-to-end verificado).
+ */
+const ODOO_BUSINESS_ERROR_CODES = new Set([
+  'UNKNOWN_OP',
+  'FORBIDDEN_PARAM',
+  'UNKNOWN_PARAM',
+  'RATE_LIMITED',
+  'IDEMPOTENCY_KEY_REQUIRED',
+  'IDEMPOTENCY_KEY_REUSED',
+  'NOT_FOUND',
+  'QUOTE_EXPIRED',
+  'NOT_QUOTED',
+  'UNAVAILABLE',
+  'INSUFFICIENT_CAPACITY',
+  'REQUIRES_MANUAL_CONFIRMATION',
+]);
+
+/**
+ * HOTEL-006 no usa el contrato HTTP externo directamente dentro de Odoo.
+ * La accion 1967 recibe `op + payload` y, para disponibilidad/cotizacion,
+ * usa los nombres comerciales en espanol que quedaron aprobados:
+ * `fecha_entrada`, `fecha_salida`, `personas`.
+ *
+ * `source_channel` NO se reenvia dentro del payload: 1967 lo fuerza a
+ * `sofia` del lado Odoo. Aun asi, assertSafeUpstreamPayload exige que el
+ * request validado llegue aqui con source_channel='sofia', como defensa
+ * fail-closed frente a llamadas directas al adapter.
+ */
+function toOdooPayload(operation, payload) {
+  if (operation === 'availability' || operation === 'quote') {
+    return {
+      fecha_entrada: payload.check_in,
+      fecha_salida: payload.check_out,
+      personas: payload.guests,
+      ...(payload.property_id !== undefined ? { property_id: payload.property_id } : {}),
+      ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
+      ...(operation === 'quote' && payload.idempotency_key
+        ? { idempotency_key: payload.idempotency_key }
+        : {}),
+    };
+  }
+
+  if (operation === 'hold') {
+    return {
+      quote_id: payload.quote_id,
+      unit_id: payload.unit_id,
+      idempotency_key: payload.idempotency_key,
+      ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
+    };
+  }
+
+  throw new ContractError('OPERATION_NOT_ALLOWED', `Unsupported operation: ${operation}`);
+}
+
+/**
+ * `status` NO usa `toOdooPayload`: el contrato externo (`operation_id`)
+ * tiene que traducirse a un campo Odoo distinto segun sea un HOLD o una
+ * COTIZACION, y solo el primero esta confirmado contra staging real
+ * (ver `#callOdooAction1967`, Gate 3 de la orden ATH-ODOO-HOTEL-007-LIVE).
+ */
+function buildStatusPayload(paramName, payload) {
+  return {
+    [paramName]: payload.operation_id,
+    ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
+  };
+}
+
+function parseOdooResult(value) {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) return value;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return value;
+  }
+}
+
+function unwrapOdoo1967Response(raw) {
+  let result = raw;
+
+  if (
+    raw &&
+    typeof raw === 'object' &&
+    raw.type === 'ir.actions.client' &&
+    raw.tag === 'display_notification' &&
+    raw.params &&
+    typeof raw.params === 'object'
+  ) {
+    result = 'result' in raw.params ? parseOdooResult(raw.params.result) : raw.params;
+  }
+
+  if (result && typeof result === 'object' && result.ok === false) {
+    const upstreamCode =
+      typeof result.error_code === 'string' && ODOO_BUSINESS_ERROR_CODES.has(result.error_code)
+        ? result.error_code
+        : 'INTERNAL_ERROR';
+    const upstreamMessage =
+      typeof result.message === 'string' && result.message.trim() !== ''
+        ? result.message
+        : `Odoo HOTEL API rejected operation (${upstreamCode})`;
+    throw new ContractError(upstreamCode, upstreamMessage);
+  }
+
+  return result;
+}
+
+export class OdooHotelAdapter {
+  #dryRun;
+  #config;
+  #clock;
+  #transport;
+  #quotes = new Map(); // quote_id -> { ...quote, createdAt, expiresAt }
+  #holds = new Map(); // hold_id -> { ...hold, createdAt }
+
+  /**
+   * @param {object} [options.transport] - transporte JSON-RPC inyectable
+   *   (debe exponer `call(service, method, args)`). Si no se pasa, se
+   *   construye un `HttpOdooTransport` real a partir de `config.baseUrl`
+   *   la primera vez que se necesita (modo LIVE). Los tests inyectan aqui
+   *   un transporte simulado para probar el pipeline LIVE sin red ni
+   *   credenciales reales.
+   */
+  constructor({ dryRun = true, config = {}, clock = () => Date.now(), transport = null } = {}) {
+    this.#dryRun = dryRun;
+    this.#config = config;
+    this.#clock = clock;
+    this.#transport = transport;
+  }
+
+  get isDryRun() {
+    return this.#dryRun;
+  }
+
+  async availability(request) {
+    if (this.#dryRun) {
+      return buildAvailabilityFixture(request);
+    }
+    return this.#callOdooAction1967('availability', request);
+  }
+
+  async quote(request) {
+    if (this.#dryRun) {
+      const fixture = buildQuoteFixture(request);
+      const createdAt = this.#clock();
+      const expiresAt = createdAt + fixture.expires_at_offset_minutes * 60_000;
+      this.#quotes.set(fixture.quote_id, {
+        ...fixture,
+        createdAt,
+        expiresAt,
+        status: 'QUOTED',
+      });
+      return { ...fixture, expires_at: new Date(expiresAt).toISOString() };
+    }
+    return this.#callOdooAction1967('quote', request);
+  }
+
+  async hold(request) {
+    if (this.#dryRun) {
+      const existingQuote = this.#quotes.get(request.quote_id);
+      if (!existingQuote) {
+        throw new ContractError('NOT_QUOTED', `No active quote for quote_id ${request.quote_id}`);
+      }
+      if (this.#clock() > existingQuote.expiresAt) {
+        throw new ContractError('QUOTE_EXPIRED', `quote_id ${request.quote_id} expired`);
+      }
+
+      const fixture = buildHoldFixture(request);
+      const createdAt = this.#clock();
+      const holdRecord = {
+        ...fixture,
+        createdAt,
+        expiresAt: createdAt + fixture.hold_duration_minutes * 60_000,
+      };
+      this.#holds.set(fixture.hold_id, holdRecord);
+      existingQuote.status = 'HELD';
+      existingQuote.hold_id = fixture.hold_id;
+      return fixture;
+    }
+    return this.#callOdooAction1967('hold', request);
+  }
+
+  async status(request) {
+    if (this.#dryRun) {
+      const quote = this.#quotes.get(request.operation_id);
+      if (quote) {
+        return {
+          dry_run: true,
+          operation_id: request.operation_id,
+          type: 'quote',
+          status: quote.status,
+          quote_id: quote.quote_id,
+          hold_id: quote.hold_id ?? null,
+        };
+      }
+      const hold = this.#holds.get(request.operation_id);
+      if (hold) {
+        return {
+          dry_run: true,
+          operation_id: request.operation_id,
+          type: 'hold',
+          status: this.#clock() > hold.expiresAt ? 'EXPIRED' : hold.status,
+          hold_id: hold.hold_id,
+          quote_id: hold.quote_id,
+        };
+      }
+      throw new ContractError('NOT_FOUND', `No operation found for ${request.operation_id}`);
+    }
+    return this.#callOdooAction1967('status', request);
+  }
+
+  /**
+   * Camino LIVE. Reutiliza la accion 1967 ya aprobada como
+   * `ir.actions.server`, pasando la operacion y el payload validado por
+   * contexto real aprobado por HOTEL-006: `{ op, payload }`. La accion 1967
+   * fuerza internamente `source_channel='sofia'`; el gateway no permite que
+   * el cliente lo controle y tampoco necesita reenviarlo dentro del payload.
+   *
+   * `assertSafeUpstreamPayload` es la ultima barrera fail-closed antes de
+   * salir del proceso: bloquea cualquier campo prohibido que intentara
+   * colarse, y ADEMAS exige que `source_channel` sea exactamente 'sofia'
+   * (si no lo es, es señal de un bug o de un llamador que se salto
+   * `validateRequest`, y se corta ahi mismo en vez de dejarlo pasar).
+   *
+   * Probado end-to-end contra staging real (25/09/2026, ver README.md):
+   * availability, quote (quote_id=116), hold (hold_id=22216, con
+   * idempotent_replay=true confirmado por el propio Odoo) y status (HOLD y
+   * COTIZACION). En este repositorio se prueba con un transporte simulado
+   * inyectado (ver test/odoo-live-pipeline.test.mjs), que reproduce
+   * exactamente las formas de request/response ya confirmadas contra Odoo
+   * real.
+   */
+  async #callOdooAction1967(operation, payload) {
+    assertSafeUpstreamPayload(payload);
+
+    const { baseUrl, database, technicalUser, technicalSecret, actionId = 1967 } = this.#config;
+
+    const transport = this.#transport ?? (baseUrl ? new HttpOdooTransport({ baseUrl }) : null);
+    if (!transport || !database || !technicalUser || !technicalSecret) {
+      throw new ContractError(
+        'INTERNAL_ERROR',
+        'Odoo LIVE mode misconfigured: missing transport/ODOO_DATABASE/ODOO_TECHNICAL_USER/ODOO_TECHNICAL_SECRET'
+      );
+    }
+
+    let uid;
+    try {
+      uid = await transport.call('common', 'login', [database, technicalUser, technicalSecret]);
+    } catch {
+      throw new ContractError('INTERNAL_ERROR', 'Odoo upstream error during login');
+    }
+    if (!uid) {
+      throw new ContractError('UNAUTHORIZED', 'Odoo technical login failed');
+    }
+
+    const runOnce = async (odooPayload) => {
+      try {
+        const raw = await transport.call('object', 'execute_kw', [
+          database,
+          uid,
+          technicalSecret,
+          'ir.actions.server',
+          'run',
+          [[actionId]],
+          { context: { op: operation, payload: odooPayload } },
+        ]);
+        return unwrapOdoo1967Response(raw);
+      } catch (error) {
+        if (error instanceof ContractError) throw error;
+        throw new ContractError('INTERNAL_ERROR', 'Odoo upstream error');
+      }
+    };
+
+    if (operation === 'status') {
+      // Contrato CONFIRMADO contra staging real (25/09/2026):
+      //   HOLD 22215 (expirado) y HOLD 22216 (activo) -> hold_id OK;
+      //   operation_id/order_id -> UNKNOWN_PARAM (bug original ya corregido);
+      //   COTIZACION 116 -> quote_id OK, via el mismo fallback de abajo.
+      // El gateway externo (`operation_id`) no distingue si el ID es de un
+      // HOLD o de una COTIZACION -- ambos son enteros de Odoo sin prefijo
+      // que los diferencie -- por eso el fallback sigue siendo el diseno
+      // correcto (no un parche temporal): se intenta hold_id primero (mas
+      // frecuente en status checks operativos) y solo se prueba quote_id si
+      // Odoo responde NOT_FOUND/UNKNOWN_PARAM. Nunca convierte un error real
+      // en exito (si el segundo intento tambien falla, se propaga ESE error
+      // real); ambos intentos son de solo lectura contra la misma accion 1967.
+      try {
+        return await runOnce(buildStatusPayload('hold_id', payload));
+      } catch (firstError) {
+        const canFallback =
+          firstError instanceof ContractError &&
+          (firstError.code === 'NOT_FOUND' || firstError.code === 'UNKNOWN_PARAM');
+        if (!canFallback) throw firstError;
+
+        const result = await runOnce(buildStatusPayload('quote_id', payload));
+        if (result && typeof result === 'object') {
+          // Trazabilidad: deja constancia de que este operation_id resulto
+          // ser una cotizacion, no un HOLD (confirmado contra staging real
+          // el 25/09/2026 con la cotizacion 116).
+          result.status_lookup_fallback = 'quote_id';
+        }
+        return result;
+      }
+    }
+
+    return runOnce(toOdooPayload(operation, payload));
+  }
+}

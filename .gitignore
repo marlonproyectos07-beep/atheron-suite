@@ -89,3 +89,9 @@ public/assets/img/hospedajes/la-magia-de-zipaquira-301-camas-1100.webp
 # Claude Code: artefactos generados y preferencias locales
 graphify-out/
 .claude/settings.local.json
+
+# Secretos locales (Odoo, etc.). Nunca deben versionarse.
+.env
+.env.local
+integrations/**/.env
+integrations/**/check-odoo.mjs

@@ -1,0 +1,283 @@
+openapi: 3.1.0
+info:
+  title: Atheron Odoo Hotel Gateway
+  version: 0.1.0
+  description: >
+    Contrato mínimo para disponibilidad, cotización, HOLD y estado.
+    No confirma reservas ni permite mutar precios, impuestos o aprobaciones.
+servers:
+  - url: http://localhost:8787
+    description: Local development only
+security:
+  - technicalIdentity: []
+paths:
+  /health:
+    get:
+      operationId: health
+      security: []
+      responses:
+        '200':
+          description: Liveness probe. Never requires credentials, never leaks secrets.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    const: ok
+  /ready:
+    get:
+      operationId: ready
+      security: []
+      responses:
+        '200':
+          description: Gateway ready to serve traffic.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ready]
+                properties:
+                  ready:
+                    const: true
+        '503':
+          description: Gateway not ready (e.g. LIVE mode without Odoo config).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ready]
+                properties:
+                  ready:
+                    const: false
+  /hotel/availability:
+    post:
+      operationId: hotelAvailability
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityRequest'
+      responses:
+        '200':
+          description: Availability result from Odoo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /hotel/quote:
+    post:
+      operationId: hotelQuote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteRequest'
+      responses:
+        '200':
+          description: Deterministic quote from Odoo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /hotel/hold:
+    post:
+      operationId: hotelHold
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HoldRequest'
+      responses:
+        '200':
+          description: Idempotent HOLD result from Odoo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /hotel/status:
+    post:
+      operationId: hotelStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusRequest'
+      responses:
+        '200':
+          description: Status of an operation created through the gateway
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+components:
+  securitySchemes:
+    technicalIdentity:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >
+        Bearer <clave>. Se combina con el header X-Agent-Id. Identidad
+        tecnica revocable/rotable de minimo privilegio (Fase 3/5); nunca
+        credenciales de Odoo directamente.
+  responses:
+    BadRequest:
+      description: Rejected request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Unauthorized:
+      description: Missing, unknown, revoked or invalid technical identity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    RateLimited:
+      description: Too many requests for this technical identity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+  schemas:
+    Identifier:
+      description: >
+        Odoo puede devolver IDs numericos (unit_id, quote_id como ID de
+        registro) o el gateway puede generar IDs de cadena (DRY_RUN, IDs
+        externos). Ambos formatos son validos; ver requireIdentifier en
+        src/contract.mjs.
+      oneOf:
+        - type: string
+          minLength: 1
+        - type: integer
+          minimum: 1
+    Common:
+      type: object
+      properties:
+        correlation_id:
+          type: string
+          minLength: 1
+      additionalProperties: false
+    AvailabilityRequest:
+      type: object
+      required: [check_in, check_out, guests]
+      properties:
+        check_in:
+          type: string
+          format: date
+        check_out:
+          type: string
+          format: date
+        guests:
+          type: integer
+          minimum: 1
+        property_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: false
+    QuoteRequest:
+      type: object
+      required: [check_in, check_out, guests, idempotency_key]
+      properties:
+        check_in:
+          type: string
+          format: date
+        check_out:
+          type: string
+          format: date
+        guests:
+          type: integer
+          minimum: 1
+        property_id:
+          type: string
+        correlation_id:
+          type: string
+        idempotency_key:
+          type: string
+          minLength: 1
+      additionalProperties: false
+    HoldRequest:
+      type: object
+      required: [quote_id, unit_id, idempotency_key]
+      properties:
+        quote_id:
+          $ref: '#/components/schemas/Identifier'
+        unit_id:
+          $ref: '#/components/schemas/Identifier'
+        idempotency_key:
+          type: string
+          minLength: 1
+        correlation_id:
+          type: string
+      additionalProperties: false
+    StatusRequest:
+      type: object
+      required: [operation_id]
+      properties:
+        operation_id:
+          $ref: '#/components/schemas/Identifier'
+        correlation_id:
+          type: string
+      additionalProperties: false
+    Envelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok:
+          const: true
+        correlation_id:
+          type: [string, 'null']
+        query_id:
+          type: [string, 'null']
+        data: {}
+      additionalProperties: false
+    ErrorEnvelope:
+      type: object
+      required: [ok, error]
+      properties:
+        ok:
+          const: false
+        correlation_id:
+          type: [string, 'null']
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+          additionalProperties: false
+      additionalProperties: false
