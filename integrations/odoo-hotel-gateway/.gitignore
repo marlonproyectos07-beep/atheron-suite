@@ -1,0 +1,15 @@
+.env
+.env.local
+
+# Credential store local (ATH-ODOO-STAGING): el store real vive fuera del
+# repo, en %LOCALAPPDATA%\AtheronSecrets; esto es una segunda capa por si
+# alguien lo copia aqui por error.
+*.cred
+**/secure-store/*.local.*
+
+# Estado local del runner LIVE (solo IDs/timestamps, cero secretos, pero es
+# estado de una corrida real y no pertenece al historial del repo).
+scripts/live-runner-state.local.json
+scripts/*.local.json
+scripts/*.local.json.tmp
+scripts/*.local.json.lock

@@ -7,6 +7,8 @@
   },
   "scripts": {
     "test": "node --test",
-    "start": "node index.mjs"
+    "start": "node index.mjs",
+    "check-secrets": "node scripts/secure-store/scan-for-secret-leak.mjs",
+    "hotel:morning-smoke": "node scripts/morning-smoke.mjs"
   }
 }

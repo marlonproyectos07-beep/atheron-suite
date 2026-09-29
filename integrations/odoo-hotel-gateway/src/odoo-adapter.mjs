@@ -262,13 +262,14 @@ export class OdooHotelAdapter {
   async #callOdooAction1967(operation, payload) {
     assertSafeUpstreamPayload(payload);
 
-    const { baseUrl, database, technicalUser, technicalSecret, actionId = 1967 } = this.#config;
+    const { baseUrl, database, technicalUser, technicalSecret, actionId } = this.#config;
 
     const transport = this.#transport ?? (baseUrl ? new HttpOdooTransport({ baseUrl }) : null);
-    if (!transport || !database || !technicalUser || !technicalSecret) {
+    if (!transport || !database || !technicalUser || !technicalSecret || !actionId) {
       throw new ContractError(
         'INTERNAL_ERROR',
-        'Odoo LIVE mode misconfigured: missing transport/ODOO_DATABASE/ODOO_TECHNICAL_USER/ODOO_TECHNICAL_SECRET'
+        'Odoo LIVE mode misconfigured: missing transport/ODOO_DATABASE/ODOO_TECHNICAL_USER/ODOO_TECHNICAL_SECRET/ODOO_ACTION_ID ' +
+          '(HOTEL-008A exige ODOO_ACTION_ID explicito; no hay fallback silencioso a 1967)'
       );
     }
 

@@ -29,7 +29,9 @@ export function buildGatewayFromEnv(env = process.env) {
       database: env.ODOO_DATABASE,
       technicalUser: env.ODOO_TECHNICAL_USER,
       technicalSecret: env.ODOO_TECHNICAL_SECRET,
-      actionId: env.ODOO_ACTION_ID ? Number(env.ODOO_ACTION_ID) : 1967,
+      // HOTEL-008A (AI/ATH-ODOO-HOTEL-008A_LIVE.md): ODOO_ACTION_ID debe ser
+      // explicito en LIVE; no hay fallback silencioso a 1967.
+      actionId: env.ODOO_ACTION_ID ? Number(env.ODOO_ACTION_ID) : undefined,
     },
   });
   const auditLog = new AuditLog();

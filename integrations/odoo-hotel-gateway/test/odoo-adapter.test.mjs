@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { OdooHotelAdapter } from '../src/odoo-adapter.mjs';
 import { ContractError } from '../src/contract.mjs';
+import { FakeOdooTransport } from './fakes/odoo-transport.fake.mjs';
 
 test('dry-run availability never writes and is clearly marked as fixture', async () => {
   const adapter = new OdooHotelAdapter({ dryRun: true });
@@ -67,4 +68,32 @@ test('LIVE mode without real Odoo config fails closed with INTERNAL_ERROR, never
     () => adapter.availability({ check_in: '2026-12-01', check_out: '2026-12-02', guests: 2 }),
     (error) => error instanceof ContractError && error.code === 'INTERNAL_ERROR'
   );
+});
+
+/**
+ * HOTEL-008A (AI/ATH-ODOO-HOTEL-008A_LIVE.md): "ODOO_ACTION_ID debe ser
+ * explicito; no usar fallback". Con el resto de la config LIVE completa y un
+ * transporte real inyectado, la unica pieza que falta es actionId: si el
+ * adapter cayera de vuelta a 1967 en silencio, esta llamada llegaria al
+ * transporte (executeKwCalls.length seria 1). Debe fallar ANTES de tocar el
+ * transporte.
+ */
+test('LIVE mode without an explicit actionId fails closed, no silent fallback to 1967', async () => {
+  const transport = new FakeOdooTransport();
+  const adapter = new OdooHotelAdapter({
+    dryRun: false,
+    config: {
+      database: 'test-db-not-real',
+      technicalUser: 'test-user-not-real',
+      technicalSecret: 'test-secret-not-real',
+      // actionId deliberadamente ausente
+    },
+    transport,
+  });
+
+  await assert.rejects(
+    () => adapter.availability({ check_in: '2026-12-01', check_out: '2026-12-02', guests: 2 }),
+    (error) => error instanceof ContractError && error.code === 'INTERNAL_ERROR'
+  );
+  assert.equal(transport.executeKwCalls.length, 0, 'sin actionId explicito, el transporte nunca debe ser invocado');
 });

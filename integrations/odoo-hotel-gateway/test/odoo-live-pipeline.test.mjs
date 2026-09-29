@@ -354,7 +354,7 @@ test('LIVE (adapter directo): idempotent_replay real de Odoo pasa intacto en amb
   const transport = new FakeOdooTransport({ results: [holdResponseBody(false), holdResponseBody(true)] });
   const adapter = new OdooHotelAdapter({
     dryRun: false,
-    config: { database: 'db', technicalUser: 'u', technicalSecret: 's' },
+    config: { database: 'db', technicalUser: 'u', technicalSecret: 's', actionId: 1967 },
     transport,
   });
 

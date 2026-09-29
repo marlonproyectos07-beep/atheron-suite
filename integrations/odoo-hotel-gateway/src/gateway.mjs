@@ -50,7 +50,16 @@ export class HotelGateway {
 
       let data;
       if (IDEMPOTENT_OPERATIONS.has(operation)) {
-        data = await this.idempotencyStore.run(validated.idempotency_key, validated, () =>
+        // `correlation_id` es un campo de trazabilidad, no de identidad del
+        // request: si el cliente no lo manda, el gateway genera uno nuevo en
+        // CADA llamada (arriba). Si se incluyera en el hash de idempotencia,
+        // un reintento legitimo con la misma idempotency_key (el caso comun,
+        // cliente sin correlation_id propio) recibiria IDEMPOTENCY_KEY_REUSED
+        // en vez de un replay -- bug real, encontrado y corregido en la
+        // auditoria del 27/09/2026 (ver test/gateway.test.mjs). Se compara
+        // sin correlation_id; se ejecuta con el objeto completo.
+        const { correlation_id: _correlationId, ...payloadForIdempotency } = validated;
+        data = await this.idempotencyStore.run(validated.idempotency_key, payloadForIdempotency, () =>
           this.adapter[operation](validated)
         );
       } else {
