@@ -6,7 +6,10 @@ import { runWebBookingFlow } from '../src/web-booking-flow.mjs';
 const UNIT_ID_MAP = { 201: '1', 202: '2', 203: '3', 301: '4', 302: '5', CASA_COMPLETA: '6' };
 
 function fixtureAvailability(unavailableRoomCodes) {
-  // Forma real del gateway: data.opciones = [{unit_id, estado}], nunca
+  // Forma real del gateway (confirmada contra el Gateway real con la
+  // clave real, ATH-ODOO-HOTEL-008): DOBLEMENTE anidada -- el sobre HTTP
+  // envuelve el envelope propio del adapter, y opciones vive en
+  // response.data.data.opciones, no en response.data.opciones. Tampoco
   // acepta unit_id como filtro de entrada (bug real ya corregido).
   return async (req) => {
     assert.equal('unit_id' in req, false, 'availability nunca debe mandar unit_id (UNKNOWN_FIELD real)');
@@ -14,7 +17,7 @@ function fixtureAvailability(unavailableRoomCodes) {
       unit_id,
       estado: unavailableRoomCodes.includes(code) ? 'no_disponible' : 'disponible',
     }));
-    return { data: { opciones } };
+    return { ok: true, data: { ok: true, op: 'availability', data: { opciones } } };
   };
 }
 

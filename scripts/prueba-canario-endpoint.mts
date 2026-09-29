@@ -110,10 +110,11 @@ await verificar('el POST llama fetch hacia HOTEL_GATEWAY_BASE_URL con la clave s
   const calls: Array<{ url: string; headers: Record<string, string>; body: string }> = [];
   globalThis.fetch = (async (url: string, init: any) => {
     calls.push({ url: String(url), headers: init.headers, body: init.body });
-    // Forma real del gateway (src/contract.mjs): data.opciones por unit_id,
-    // nunca un {available} plano. unit_id "1" = habitacion 201.
+    // Forma real del gateway, confirmada contra el Gateway real con la
+    // clave real (ATH-ODOO-HOTEL-008): DOBLEMENTE anidada, nunca un
+    // {available} plano. unit_id "1" = habitacion 201.
     return new Response(
-      JSON.stringify({ ok: true, data: { opciones: [{ unit_id: '1', estado: 'disponible' }] } }),
+      JSON.stringify({ ok: true, data: { ok: true, op: 'availability', data: { opciones: [{ unit_id: '1', estado: 'disponible' }] } } }),
       { status: 200 },
     );
   }) as typeof fetch;

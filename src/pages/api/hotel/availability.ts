@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { WebHotelClient } from '../../../../integrations/odoo-hotel-gateway/clients/web-client.mjs';
 import { requestAccommodationAlternatives } from '../../../../integrations/odoo-hotel-gateway/src/alternatives-engine.mjs';
 import { RateLimiter } from '../../../../integrations/odoo-hotel-gateway/src/rate-limiter.mjs';
+import { findOpciones, unitAvailability } from '../../../../integrations/odoo-hotel-gateway/src/gateway-response-utils.mjs';
 
 /**
  * ATH-ODOO-HOTEL-008 — puente seguro NAVEGADOR -> este endpoint (same-origin,
@@ -129,13 +130,14 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       // (src/server.mjs), NUNCA un `error_code` plano.
       if (response?.ok === false) throw new Error(`GATEWAY_AVAILABILITY_ERROR:${response?.error?.code ?? 'UNKNOWN'}`);
 
-      const data = response?.data ?? response;
+      // La respuesta real viene DOBLEMENTE anidada (sobre HTTP + envelope
+      // propio del adapter); findOpciones busca sin asumir profundidad
+      // fija. Confirmado probando el Gateway directo con la clave real,
+      // no era una hipotesis.
+      const opciones = findOpciones(response);
       const unitId = UNIT_ID_MAP[candidateUnit];
-      const opciones: any[] = Array.isArray(data?.opciones) ? data.opciones : Array.isArray(data?.units) ? data.units : [];
-      const found = opciones.find((u) => String(u.unit_id) === String(unitId));
-      if (!found) return false; // no inventa disponibilidad si Odoo no devolvio la unidad
-      if (typeof found.available === 'boolean') return found.available;
-      return found.estado === 'disponible';
+      const available = unitAvailability(opciones, unitId);
+      return available === true; // null (no encontrada) o false -> no disponible, nunca se inventa
     };
 
     const result = await requestAccommodationAlternatives(

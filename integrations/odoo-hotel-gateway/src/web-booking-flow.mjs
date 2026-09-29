@@ -9,6 +9,7 @@
  * disponibilidad ni precio por su cuenta.
  */
 import { requestAccommodationAlternatives } from './alternatives-engine.mjs';
+import { findOpciones, unitAvailability } from './gateway-response-utils.mjs';
 
 /**
  * @param {{unit: string, checkIn: string, checkOut: string, guests: number}} selection
@@ -31,13 +32,10 @@ export async function runWebBookingFlow({ unit, checkIn, checkOut, guests }, { c
   const checkAvailability = async (candidateUnit) => {
     const response = await fetchAvailabilityOnce();
     if (response?.ok === false) throw new Error(`AVAILABILITY_FAILED: ${response?.error?.code ?? 'UNKNOWN'}`);
-    const data = response?.data ?? response;
+    const opciones = findOpciones(response);
     const unitId = unitIdMap[candidateUnit];
-    const opciones = Array.isArray(data?.opciones) ? data.opciones : Array.isArray(data?.units) ? data.units : [];
-    const found = opciones.find((u) => String(u.unit_id) === String(unitId));
-    if (!found) return false;
-    if (typeof found.available === 'boolean') return found.available;
-    return found.estado === 'disponible';
+    const available = unitAvailability(opciones, unitId);
+    return available === true; // null (unidad no encontrada) o false -> no disponible, nunca se inventa
   };
 
   const alternatives = await requestAccommodationAlternatives(
