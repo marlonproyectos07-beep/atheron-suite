@@ -1,0 +1,28 @@
+name: ATH Odoo Hotel 008 Readonly CI
+
+on:
+  pull_request:
+    paths:
+      - 'integrations/odoo-hotel-gateway/**'
+      - 'scripts/ath-cierre-gerencial.mjs'
+      - 'scripts/ath-cierre-gerencial.ps1'
+      - '.github/workflows/ath-odoo-hotel-008-readonly-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  readonly-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: node --check scripts/ath-cierre-gerencial.mjs
+      - name: Read-only guard tests
+        working-directory: integrations/odoo-hotel-gateway
+        run: node --test test/read-only-close.test.mjs
