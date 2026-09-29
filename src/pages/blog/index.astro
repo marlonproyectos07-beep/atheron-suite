@@ -30,6 +30,12 @@ import { articulosPublicados, proximosArticulos, fechaLarga } from '../../data/b
 import { atributosWhatsApp } from '../../data/whatsapp';
 
 const publicados = articulosPublicados();
+const eventoCajica = {
+  fecha: '2026-10-03T17:00:00-05:00',
+  caduca: '2026-10-04T00:00:00-05:00',
+  fuente: 'https://www.culturacajica.gov.co/eventos/mozart-y-salieri-orquesta-sinfonica-sociedad-coral-de-bogota-fosbo/',
+};
+const mostrarEventoCajica = Date.now() < Date.parse(eventoCajica.caduca);
 
 const WA_BLOG =
   'Hola, vengo del blog de Atheron y quiero información para planear mi estadía en Zipaquirá.\n\n' +
@@ -129,6 +135,30 @@ const fichaBlog = {
       </div>
     </section>
 
+    {mostrarEventoCajica && (
+      <section class="seccion seccion--alterna" id="agenda-sabana-centro" data-caduca={eventoCajica.caduca}>
+        <div class="contenedor">
+          <div class="encabezado-seccion">
+            <span class="etiqueta">Agenda de Sabana Centro</span>
+            <h2>Un plan cultural cerca de Zipaquirá</h2>
+          </div>
+          <article class="tarjeta" style="max-width: 52rem;">
+            <div class="tarjeta__cuerpo">
+              <p class="tarjeta-articulo__meta"><time datetime={eventoCajica.fecha}>Sábado 3 de octubre de 2026, 5:00 p. m.</time> · Cajicá, Cundinamarca</p>
+              <h3 class="tarjeta__titulo">Mozart y Salieri: música y teatro en Cajicá</h3>
+              <p>La Orquesta Sinfónica y la Sociedad Coral de Bogotá presentan una puesta en escena en el Auditorio Principal del Centro Cultural y de Convenciones Fernando Botero. La función tiene boletería; consulta precios y disponibilidad directamente con el organizador.</p>
+              <p><strong>Una idea de Atheron:</strong> si estás organizando varios días por la región, combina el plan cultural con tiempo para conocer Zipaquirá. La función y el hospedaje se contratan por separado.</p>
+              <div class="grupo-botones">
+                <a class="boton boton--acento" href={eventoCajica.fuente} target="_blank" rel="noopener noreferrer">Ver función y boletería oficial</a>
+                <a class="boton boton--contorno" href="/hospedajes">Explorar hospedajes en Zipaquirá</a>
+              </div>
+              <p class="texto-suave"><small>Fuente: Instituto Municipal de Cultura y Turismo de Cajicá. Verificado el 28 de septiembre de 2026. Confirma condiciones antes de viajar.</small></p>
+            </div>
+          </article>
+        </div>
+      </section>
+    )}
+
     <section class="seccion" id="articulos">
       <div class="contenedor">
         <div class="encabezado-seccion">
@@ -178,5 +208,9 @@ const fichaBlog = {
 
   <Pie />
   <BotonFlotante mensaje={WA_BLOG} origen="blog_flotante" />
+  <script>
+    const tarjetaRegional = document.querySelector<HTMLElement>('#agenda-sabana-centro[data-caduca]');
+    if (tarjetaRegional && Date.now() >= Date.parse(tarjetaRegional.dataset.caduca ?? '')) tarjetaRegional.remove();
+  </script>
 
 </Base>
