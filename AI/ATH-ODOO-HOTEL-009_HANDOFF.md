@@ -1,5 +1,11 @@
 # ATH-ODOO-HOTEL-009 — Handoff (2026-09-29)
 
+> **CERRADO 2026-09-30 -- HOTEL_009_FINAL_GATE: PASS**, aprobado por
+> Marlon. Cierre oficial en `AI/ATH-ODOO-HOTEL-009_FINAL_APPROVED.md`
+> (evidencia consolidada, XML final del Kanban registrado para
+> recuperacion). Este archivo queda como el historial de trabajo
+> completo del gate; el documento de cierre es la referencia autoritativa.
+>
 > Tablero operativo + reserva manual + control gerencial, sobre
 > `atheron1-hotel-staging-20260923` exclusivamente. Continua HOTEL-008
 > (APROBADO, ver `AI/ATH-ODOO-HOTEL-008_FINAL_APPROVED.md`). Nada de
