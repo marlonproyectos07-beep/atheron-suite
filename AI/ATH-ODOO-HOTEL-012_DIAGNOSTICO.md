@@ -109,3 +109,69 @@ un usuario con acceso a Studio/vistas. Con eso se puede:
 completar la auditoría de `project.task`, verificar Algarra/Neusa, y
 empezar a construir la vista real (guiado, sin editar recursos
 compartidos sin aprobación explícita en cada paso).
+
+## 6. Auditoría en vivo STAGING READ-ONLY (2026-09-30, gate autorizado por Marlon)
+
+Marlon autorizó explícitamente una sesión de solo lectura contra
+`atheron1-hotel-staging-20260923` (restricciones: no Production, no
+tocar nada de HOTEL-011, no guardar nada en Odoo, no Studio para
+escribir). Sesión ejecutada con Chrome ya autenticado (usuario
+ATHERON S.A.S). Hallazgos reales, verificados, que **resuelven varios
+puntos de la sección 4**:
+
+- **CASA ALGARRA y CASA NEUSA confirmadas SIN habitaciones individuales**:
+  `Hotel v1 — Unidades` tiene exactamente 8 registros (201/202/203/301/302
+  + 3 CASA COMPLETA, una por propiedad); las "Unidades hijas" de las
+  CASA COMPLETA de Algarra y Neusa están vacías. Coincide exactamente con
+  `BOARD_UNITS` ya implementado en `src/master-board-model.mjs` — **no
+  requiere ningún cambio de código**.
+- **Housekeeping ("Proyecto housekeeping" + 4 campos "Etapa X") solo está
+  configurado para HOTEL ATHERON SUITE**. En el formulario de propiedad
+  de CASA ALGARRA y CASA NEUSA esos 5 campos (Proyecto housekeeping,
+  Etapa LISTA, Etapa POR LIMPIAR, Etapa EN LIMPIEZA, Etapa INCIDENCIA)
+  están **vacíos** (confirmado por accesibilidad: sin botón "Enlace
+  interno", que solo aparece cuando el campo tiene valor). Hallazgo
+  nuevo, no documentado antes: housekeeping como lo pide HOTEL-012 hoy
+  **solo puede operar sobre Atheron Suite** hasta que alguien configure
+  el proyecto/etapas para las otras dos propiedades — eso es una
+  decisión/acción de Marlon en Studio, no de código.
+- **Automatizaciones reales relacionadas encontradas** (`Ajustes >
+  Técnico > Reglas de automatización`, modelo `sale.order` en los tres
+  casos):
+  - `Crear Tarea al Confirmar Reserva Atheron Suite` — condición "3
+    horas después de la última actualización" (temporizada, no
+    literalmente "al confirmar" pese al nombre), acción "Crear Tarea
+    con el nombre Tarea". Crea un `project.task` genérico; no se
+    inspeccionó con cuál proyecto/etapa ni si es el mismo de
+    housekeeping (siguiente sesión con más tiempo de UI estable).
+  - `Limpieza: Al entrar` — "Al guardar", acción "Limpieza: Marcar
+    recursos como ocupados".
+  - `Limpieza: Al salir` — "Al guardar", acción "Limpieza: Marcar
+    recursos como disponibles".
+  Estas tres YA EXISTEN y ya tocan el ciclo de vida de una reserva
+  hotelera con fines de housekeeping/recursos — antes de construir
+  cualquier automatización nueva para HOTEL-012, revisarlas a fondo
+  (qué recurso marcan, con qué dominio) para no duplicar lógica.
+- **Objeto compartido confirmado con HOTEL-011 (y con otra línea de
+  negocio)**: `sale.order` sigue siendo el mismo modelo único que usa
+  HOTEL-009, HOTEL-011 (piloto WhatsApp) y la línea de negocio
+  CCTV/Syscom de ATHERON S.A.S (ya documentado en HOTEL-009). No se
+  encontró, dentro de Odoo, ningún objeto exclusivo de HOTEL-011 (el
+  canal WhatsApp/Meta vive fuera de Odoo, en el Gateway/Vercel) — por lo
+  tanto HOTEL-012 no tiene más superficie de choque con HOTEL-011 de la
+  que ya existía desde HOTEL-009: **leer sí, escribir en `sale.order` no**
+  salvo por los botones de workflow nativos ya aprobados.
+- **Limitación real de esta sesión de automatización de navegador**:
+  igual que documentó HOTEL-009 ("comportamiento inestable... timeouts
+  de captura de pantalla"), esta sesión tuvo renderizados en blanco y
+  clics que aterrizaron en filas equivocadas de listas reintentadas
+  varias veces. Un clic aterrizó brevemente en el campo "Anticipo mínimo
+  por defecto (%)" de HOTEL ATHERON SUITE (foco, sin tipear nada) y se
+  salió con Escape + navegación por breadcrumb sin guardar — verificado
+  que no se disparó ningún prompt de "cambios sin guardar", o sea sin
+  alterar el dato. No se completó la auditoría profunda de campos de
+  `project.task` (asignación, vínculo a unidad/reserva) por esta
+  inestabilidad, no por bloqueo de permisos.
+
+**STUDIO_CHANGES_SAVED: NO. ODOO_RECORDS_CHANGED: NO. PRODUCTION_TOUCHED:
+NO. HOTEL_011_TOUCHED: NO.**
