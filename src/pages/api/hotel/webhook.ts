@@ -31,12 +31,15 @@ export const prerender = false;
 // (igual de razonable que el rate limiter en memoria de availability.ts
 // — no es persistencia garantizada entre cold starts, es la primera
 // capa de defensa).
+// Vercel Preview ya usa META_PHONE_NUMBER_ID; aceptar tambien el nombre
+// del adaptador evita duplicar un identificador en el panel.
+const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || process.env.META_PHONE_NUMBER_ID;
 const outboundReady = process.env.WHATSAPP_TEST_SEND_ENABLED === 'true'
   && Boolean(process.env.WHATSAPP_ACCESS_TOKEN)
-  && Boolean(process.env.WHATSAPP_PHONE_NUMBER_ID);
+  && Boolean(phoneNumberId);
 const provider = new WhatsAppCloudProvider(outboundReady ? {
   accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
-  phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
+  phoneNumberId,
   httpClient: fetch,
 } : {});
 
