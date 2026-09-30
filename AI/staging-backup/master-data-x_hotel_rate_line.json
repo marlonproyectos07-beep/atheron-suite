@@ -1,0 +1,1036 @@
+[
+  {
+    "id": 1,
+    "display_name": "1p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:13",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:13",
+    "x_name": "1p",
+    "x_guests": 1,
+    "x_price_night": 1100,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      18,
+      "QA-FX-201-OCC"
+    ]
+  },
+  {
+    "id": 2,
+    "display_name": "2p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:13",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:13",
+    "x_name": "2p",
+    "x_guests": 2,
+    "x_price_night": 2100,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      18,
+      "QA-FX-201-OCC"
+    ]
+  },
+  {
+    "id": 3,
+    "display_name": "1p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:13",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:13",
+    "x_name": "1p",
+    "x_guests": 1,
+    "x_price_night": 1200,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      19,
+      "QA-FX-202-OCC"
+    ]
+  },
+  {
+    "id": 4,
+    "display_name": "2p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:13",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:13",
+    "x_name": "2p",
+    "x_guests": 2,
+    "x_price_night": 2200,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      19,
+      "QA-FX-202-OCC"
+    ]
+  },
+  {
+    "id": 5,
+    "display_name": "3p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:13",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:13",
+    "x_name": "3p",
+    "x_guests": 3,
+    "x_price_night": 3200,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      19,
+      "QA-FX-202-OCC"
+    ]
+  },
+  {
+    "id": 6,
+    "display_name": "4p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:13",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:13",
+    "x_name": "4p",
+    "x_guests": 4,
+    "x_price_night": 4200,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      19,
+      "QA-FX-202-OCC"
+    ]
+  },
+  {
+    "id": 7,
+    "display_name": "1p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:13",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:13",
+    "x_name": "1p",
+    "x_guests": 1,
+    "x_price_night": 1300,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      20,
+      "QA-FX-203-OCC"
+    ]
+  },
+  {
+    "id": 8,
+    "display_name": "2p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:13",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:13",
+    "x_name": "2p",
+    "x_guests": 2,
+    "x_price_night": 2300,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      20,
+      "QA-FX-203-OCC"
+    ]
+  },
+  {
+    "id": 9,
+    "display_name": "3p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:13",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:13",
+    "x_name": "3p",
+    "x_guests": 3,
+    "x_price_night": 3300,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      20,
+      "QA-FX-203-OCC"
+    ]
+  },
+  {
+    "id": 10,
+    "display_name": "4p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:13",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:13",
+    "x_name": "4p",
+    "x_guests": 4,
+    "x_price_night": 4300,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      20,
+      "QA-FX-203-OCC"
+    ]
+  },
+  {
+    "id": 11,
+    "display_name": "1p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:14",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:14",
+    "x_name": "1p",
+    "x_guests": 1,
+    "x_price_night": 1400,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      21,
+      "QA-FX-301-OCC"
+    ]
+  },
+  {
+    "id": 12,
+    "display_name": "2p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:14",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:14",
+    "x_name": "2p",
+    "x_guests": 2,
+    "x_price_night": 2400,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      21,
+      "QA-FX-301-OCC"
+    ]
+  },
+  {
+    "id": 13,
+    "display_name": "3p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:14",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:14",
+    "x_name": "3p",
+    "x_guests": 3,
+    "x_price_night": 3400,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      21,
+      "QA-FX-301-OCC"
+    ]
+  },
+  {
+    "id": 14,
+    "display_name": "4p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:14",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:14",
+    "x_name": "4p",
+    "x_guests": 4,
+    "x_price_night": 4400,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      21,
+      "QA-FX-301-OCC"
+    ]
+  },
+  {
+    "id": 15,
+    "display_name": "5p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:14",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:14",
+    "x_name": "5p",
+    "x_guests": 5,
+    "x_price_night": 5400,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      21,
+      "QA-FX-301-OCC"
+    ]
+  },
+  {
+    "id": 16,
+    "display_name": "6p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:14",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:14",
+    "x_name": "6p",
+    "x_guests": 6,
+    "x_price_night": 6400,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      21,
+      "QA-FX-301-OCC"
+    ]
+  },
+  {
+    "id": 17,
+    "display_name": "7p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:14",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:14",
+    "x_name": "7p",
+    "x_guests": 7,
+    "x_price_night": 7400,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      21,
+      "QA-FX-301-OCC"
+    ]
+  },
+  {
+    "id": 18,
+    "display_name": "8p extra",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:14",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:14",
+    "x_name": "8p extra",
+    "x_guests": 8,
+    "x_price_night": 8400,
+    "x_requires_approval": true,
+    "x_rate_id": [
+      21,
+      "QA-FX-301-OCC"
+    ]
+  },
+  {
+    "id": 19,
+    "display_name": "1p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:14",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:14",
+    "x_name": "1p",
+    "x_guests": 1,
+    "x_price_night": 1500,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      22,
+      "QA-FX-302-OCC"
+    ]
+  },
+  {
+    "id": 20,
+    "display_name": "2p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:14",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:14",
+    "x_name": "2p",
+    "x_guests": 2,
+    "x_price_night": 2500,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      22,
+      "QA-FX-302-OCC"
+    ]
+  },
+  {
+    "id": 21,
+    "display_name": "3p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:14",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:14",
+    "x_name": "3p",
+    "x_guests": 3,
+    "x_price_night": 3500,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      22,
+      "QA-FX-302-OCC"
+    ]
+  },
+  {
+    "id": 22,
+    "display_name": "4p extra",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:14",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:14",
+    "x_name": "4p extra",
+    "x_guests": 4,
+    "x_price_night": 4500,
+    "x_requires_approval": true,
+    "x_rate_id": [
+      22,
+      "QA-FX-302-OCC"
+    ]
+  },
+  {
+    "id": 23,
+    "display_name": "1p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:15",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:15",
+    "x_name": "1p",
+    "x_guests": 1,
+    "x_price_night": 5000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      26,
+      "QA-FX-202-OCC-ALTA"
+    ]
+  },
+  {
+    "id": 24,
+    "display_name": "2p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:15",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:15",
+    "x_name": "2p",
+    "x_guests": 2,
+    "x_price_night": 10000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      26,
+      "QA-FX-202-OCC-ALTA"
+    ]
+  },
+  {
+    "id": 25,
+    "display_name": "3p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:15",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:15",
+    "x_name": "3p",
+    "x_guests": 3,
+    "x_price_night": 15000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      26,
+      "QA-FX-202-OCC-ALTA"
+    ]
+  },
+  {
+    "id": 26,
+    "display_name": "4p",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:14:15",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:14:15",
+    "x_name": "4p",
+    "x_guests": 4,
+    "x_price_night": 20000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      26,
+      "QA-FX-202-OCC-ALTA"
+    ]
+  },
+  {
+    "id": 27,
+    "display_name": "1 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "1 huésped(es)",
+    "x_guests": 1,
+    "x_price_night": 50000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      1,
+      "RATE-AHS-201-OCC"
+    ]
+  },
+  {
+    "id": 28,
+    "display_name": "2 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "2 huésped(es)",
+    "x_guests": 2,
+    "x_price_night": 80000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      1,
+      "RATE-AHS-201-OCC"
+    ]
+  },
+  {
+    "id": 29,
+    "display_name": "1 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "1 huésped(es)",
+    "x_guests": 1,
+    "x_price_night": 50000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      2,
+      "RATE-AHS-202-OCC"
+    ]
+  },
+  {
+    "id": 30,
+    "display_name": "2 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "2 huésped(es)",
+    "x_guests": 2,
+    "x_price_night": 80000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      2,
+      "RATE-AHS-202-OCC"
+    ]
+  },
+  {
+    "id": 31,
+    "display_name": "3 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "3 huésped(es)",
+    "x_guests": 3,
+    "x_price_night": 110000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      2,
+      "RATE-AHS-202-OCC"
+    ]
+  },
+  {
+    "id": 32,
+    "display_name": "4 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "4 huésped(es)",
+    "x_guests": 4,
+    "x_price_night": 140000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      2,
+      "RATE-AHS-202-OCC"
+    ]
+  },
+  {
+    "id": 33,
+    "display_name": "1 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "1 huésped(es)",
+    "x_guests": 1,
+    "x_price_night": 65000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      3,
+      "RATE-AHS-203-OCC"
+    ]
+  },
+  {
+    "id": 34,
+    "display_name": "2 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:36:04",
+    "x_name": "2 huésped(es)",
+    "x_guests": 2,
+    "x_price_night": 120000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      3,
+      "RATE-AHS-203-OCC"
+    ]
+  },
+  {
+    "id": 35,
+    "display_name": "3 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "3 huésped(es)",
+    "x_guests": 3,
+    "x_price_night": 140000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      3,
+      "RATE-AHS-203-OCC"
+    ]
+  },
+  {
+    "id": 36,
+    "display_name": "4 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "4 huésped(es)",
+    "x_guests": 4,
+    "x_price_night": 160000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      3,
+      "RATE-AHS-203-OCC"
+    ]
+  },
+  {
+    "id": 37,
+    "display_name": "1 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "1 huésped(es)",
+    "x_guests": 1,
+    "x_price_night": 80000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      4,
+      "RATE-AHS-301-OCC"
+    ]
+  },
+  {
+    "id": 38,
+    "display_name": "2 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "2 huésped(es)",
+    "x_guests": 2,
+    "x_price_night": 150000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      4,
+      "RATE-AHS-301-OCC"
+    ]
+  },
+  {
+    "id": 39,
+    "display_name": "3 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "3 huésped(es)",
+    "x_guests": 3,
+    "x_price_night": 175000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      4,
+      "RATE-AHS-301-OCC"
+    ]
+  },
+  {
+    "id": 40,
+    "display_name": "4 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "4 huésped(es)",
+    "x_guests": 4,
+    "x_price_night": 200000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      4,
+      "RATE-AHS-301-OCC"
+    ]
+  },
+  {
+    "id": 41,
+    "display_name": "5 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "5 huésped(es)",
+    "x_guests": 5,
+    "x_price_night": 250000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      4,
+      "RATE-AHS-301-OCC"
+    ]
+  },
+  {
+    "id": 42,
+    "display_name": "6 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "6 huésped(es)",
+    "x_guests": 6,
+    "x_price_night": 300000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      4,
+      "RATE-AHS-301-OCC"
+    ]
+  },
+  {
+    "id": 43,
+    "display_name": "7 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:26",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:26",
+    "x_name": "7 huésped(es)",
+    "x_guests": 7,
+    "x_price_night": 350000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      4,
+      "RATE-AHS-301-OCC"
+    ]
+  },
+  {
+    "id": 44,
+    "display_name": "1 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:27",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:27",
+    "x_name": "1 huésped(es)",
+    "x_guests": 1,
+    "x_price_night": 65000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      5,
+      "RATE-AHS-302-OCC"
+    ]
+  },
+  {
+    "id": 45,
+    "display_name": "2 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:27",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:27",
+    "x_name": "2 huésped(es)",
+    "x_guests": 2,
+    "x_price_night": 120000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      5,
+      "RATE-AHS-302-OCC"
+    ]
+  },
+  {
+    "id": 46,
+    "display_name": "3 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:27",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:27",
+    "x_name": "3 huésped(es)",
+    "x_guests": 3,
+    "x_price_night": 140000,
+    "x_requires_approval": false,
+    "x_rate_id": [
+      5,
+      "RATE-AHS-302-OCC"
+    ]
+  },
+  {
+    "id": 47,
+    "display_name": "4 huésped(es)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:27",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:27",
+    "x_name": "4 huésped(es)",
+    "x_guests": 4,
+    "x_price_night": 160000,
+    "x_requires_approval": true,
+    "x_rate_id": [
+      5,
+      "RATE-AHS-302-OCC"
+    ]
+  }
+]

@@ -1,0 +1,860 @@
+[
+  {
+    "id": 1705,
+    "name": "sale.order.list (orders)",
+    "inherit_id": [
+      1704,
+      "sale.order.list"
+    ],
+    "priority": 2,
+    "arch": "<list position=\"attributes\">\n                <attribute name=\"string\">Sales Orders</attribute>\n            </list>",
+    "active": true
+  },
+  {
+    "id": 1707,
+    "name": "sale.order.list (quotes)",
+    "inherit_id": [
+      1704,
+      "sale.order.list"
+    ],
+    "priority": 4,
+    "arch": "<data><list position=\"attributes\">\n                <attribute name=\"string\">Quotations</attribute>\n            </list>\n            <field name=\"date_order\" position=\"replace\">\n                <field name=\"create_date\" string=\"Creation Date\" optional=\"show\"/>\n            </field>\n            <field name=\"state\" position=\"attributes\">\n                <attribute name=\"optional\">show</attribute>\n            </field>\n            <field name=\"invoice_status\" position=\"attributes\">\n                <attribute name=\"optional\">hide</attribute>\n            </field>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 1817,
+    "name": "sale.order.form.sale.project",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 10,
+    "arch": "<data><button name=\"action_view_invoice\" position=\"before\">\n                <button name=\"action_view_project_ids\" type=\"object\" class=\"oe_stat_button\" icon=\"fa-puzzle-piece\" invisible=\"not show_project_button\" groups=\"project.group_project_user\">\n                    <div class=\"o_stat_info\">\n                        <div class=\"o_row\">\n                            <span class=\"o_stat_value order-first\">\n                                <field name=\"project_count\"/>\n                            </span>\n                            <span class=\"o_stat_text\"> Projects</span>\n                        </div>\n                        <div class=\"o_row\">\n                            <span class=\"o_stat_value order-first\">\n                                <field name=\"tasks_count\"/>\n                            </span>\n                            <span class=\"o_stat_text\"> Tasks</span>\n                        </div>\n                    </div>\n                </button>\n                <button name=\"action_view_milestone\" type=\"object\" class=\"oe_stat_button\" icon=\"fa-check-square-o\" invisible=\"not is_product_milestone or not project_ids or state == 'draft'\" groups=\"project.group_project_milestone\">\n                    <field name=\"milestone_count\" widget=\"statinfo\" string=\"Milestones\"/>\n                </button>\n            </button>\n            <field name=\"journal_id\" position=\"before\">\n                <field name=\"project_id\" groups=\"project.group_project_user\" context=\"{'default_allow_billable': True, 'default_partner_id': partner_id, 'order_id': id, 'order_state' : state}\"/>\n            </field>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 3150,
+    "name": "sale.order.view.form.inherit.sale.loyalty",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 10,
+    "arch": "<data><div name=\"button_box\" position=\"inside\">\n                <button name=\"action_view_gift_cards\" class=\"oe_stat_button\" type=\"object\" icon=\"fa-gift\" invisible=\"gift_card_count == 0\">\n                    <field string=\"Gift Cards\" name=\"gift_card_count\" widget=\"statinfo\"/>\n                </button>\n            </div>\n            <button name=\"action_open_discount_wizard\" position=\"before\">\n                <button string=\"Coupon Code\" name=\"708\" type=\"action\" class=\"btn btn-secondary\" invisible=\"locked or state == 'cancel'\"/>\n                <button string=\"Coupon Code\" name=\"708\" type=\"action\" class=\"btn btn-secondary\" disabled=\"1\" invisible=\"not (locked or state == 'cancel')\"/>\n                <button string=\"Reward\" name=\"action_open_reward_wizard\" type=\"object\" class=\"btn btn-secondary\" help=\"Update current promotional lines and select new rewards if applicable.\" invisible=\"locked or state == 'cancel'\"/>\n                <button string=\"Reward\" name=\"action_open_reward_wizard\" type=\"object\" class=\"btn btn-secondary\" help=\"Update current promotional lines and select new rewards if applicable.\" disabled=\"1\" invisible=\"not (locked or state == 'cancel')\"/>\n            </button>\n            <xpath expr=\"//list//field[@name='product_uom_qty']\" position=\"before\">\n                <field name=\"is_reward_line\" column_invisible=\"True\"/>\n            </xpath>\n            <xpath expr=\"//list//field[@name='product_uom_qty']\" position=\"attributes\">\n                <attribute name=\"readonly\" add=\"is_reward_line\" separator=\" or \"/>\n            </xpath>\n            <xpath expr=\"//list//field[@name='price_unit']\" position=\"attributes\">\n                <attribute name=\"readonly\" add=\"is_reward_line\" separator=\" or \"/>\n            </xpath>\n            <xpath expr=\"//list//field[@name='tax_ids']\" position=\"attributes\">\n                <attribute name=\"readonly\" add=\"is_reward_line and state in ['draft', 'sent']\" separator=\" or \"/>\n            </xpath>\n            <group name=\"note_group\" position=\"after\">\n                <group class=\"d-flex flex-row-reverse oe_subtotal_footer border-0\">\n                    <field name=\"loyalty_data\" widget=\"loyalty_data_field\" nolabel=\"1\" readonly=\"1\"/>\n                </group>\n            </group>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 6435,
+    "name": "sale.subscription.order.form",
+    "inherit_id": [
+      1764,
+      "sale.order.form.inherit.sale_management"
+    ],
+    "priority": 10,
+    "arch": "<data><sheet position=\"before\">\n                <div class=\"alert alert-warning p-3 text-center\" role=\"alert\" invisible=\"not user_pause_start or next_invoice_date &lt;= current_date\">\n                    <span>\n                        This subscription has been paused by the customer until <field name=\"next_invoice_date\" readonly=\"1\"/>\n                    </span>\n                </div>\n            </sheet>\n            <button id=\"create_invoice\" position=\"before\">\n                <button string=\"Resume\" name=\"resume_subscription\" type=\"object\" data-hotkey=\"r\" class=\"btn-primary\" invisible=\"subscription_state != '4_paused'\"/>\n            </button>\n            <button id=\"create_invoice\" position=\"attributes\">\n                <attribute name=\"invisible\">(not is_subscription and invoice_status != 'to invoice') or (is_subscription and (state != 'sale' or (next_invoice_date &gt; current_date and invoice_status != 'to invoice')))</attribute>\n            </button>\n            <button id=\"create_invoice\" position=\"after\">\n                <button id=\"create_invoice_sub\" name=\"549\" string=\"Create Invoice\" type=\"action\" class=\"btn-secondary\" data-hotkey=\"q\" invisible=\"(not is_subscription or state != 'sale') or (is_subscription and (invoice_status == 'to invoice') or (next_invoice_date &lt;= current_date))\"/>\n            </button>\n            <button id=\"create_invoice_percentage\" position=\"attributes\">\n                <attribute name=\"invisible\">is_subscription or invoice_status != 'no' or state != 'sale'</attribute>\n            </button>\n            <!-- FIXME ARJ shouldn't overwrite the existing value unless it's a primary view -->\n            <!-- <button name=\"action_cancel\" position=\"attributes\">\n                <attribute name=\"invisible\">not id or state not in ['draft', 'sent', 'sale']</attribute>\n            </button> -->\n            <button name=\"action_cancel\" position=\"before\">\n                <button string=\"Create Alternative\" name=\"create_alternative\" type=\"object\" invisible=\"subscription_state != '2_renewal' or state not in ['draft', 'sent']\"/>\n                <button string=\"Create Alternative\" name=\"create_alternative\" type=\"object\" context=\"{'default_subscription_state': '7_upsell'}\" invisible=\"subscription_state != '7_upsell' or state not in ['draft', 'sent']\"/>\n            </button>\n            <button name=\"action_cancel\" position=\"after\">\n                <button string=\"Upsell\" name=\"prepare_upsell_order\" type=\"object\" invisible=\"not is_subscription or subscription_state not in ['3_progress', '4_paused'] or state != 'sale'\" data-hotkey=\"e\"/>\n                <button string=\"Renew\" name=\"prepare_renewal_order\" type=\"object\" data-hotkey=\"w\" invisible=\"not is_subscription or subscription_state not in ['3_progress', '4_paused', '6_churn'] or state != 'sale'\"/>\n                <button string=\"Reopen\" name=\"reopen_order\" type=\"object\" data-hotkey=\"o\" invisible=\"not is_subscription or subscription_state != '6_churn' or state != 'sale'\"/>\n                <!--  Change the label of cancel button for subscription -->\n                <button name=\"1520\" type=\"action\" string=\"Close\" invisible=\"subscription_state not in ['3_progress', '4_paused'] or not id\" data-hotkey=\"z\"/>\n            </button>\n            <button name=\"action_unlock\" position=\"attributes\">\n                <attribute name=\"invisible\" add=\"subscription_state == '5_renewed'\" separator=\"or\"/>\n            </button>\n            <xpath expr=\"//sheet/div[hasclass('badge')]\" position=\"attributes\">\n                <attribute name=\"invisible\" add=\"subscription_state == '5_renewed'\" separator=\"or\"/>\n            </xpath>\n            <xpath expr=\"//sheet\" position=\"before\">\n                <div role=\"alert\" class=\"alert alert-info text-center\" invisible=\"not warn_system_closing\">\n                    <p class=\"mt-3\">This subscription is overdue and exceeds the auto-close limit of the recurring plan. It will be closed soon by the system.</p>\n                </div>\n            </xpath>\n            <div name=\"button_box\" position=\"inside\">\n                <button invisible=\"not is_renewing\" name=\"open_subscription_renewal\" class=\"oe_stat_button\" icon=\"fa-repeat\" type=\"object\">\n                    <field name=\"renewal_count\" widget=\"statinfo\" string=\"Renewal Quote\"/>\n                </button>\n                <button invisible=\"not is_upselling\" name=\"open_subscription_upsell\" class=\"oe_stat_button\" icon=\"fa-arrow-circle-o-up\" type=\"object\">\n                    <field name=\"upsell_count\" widget=\"statinfo\" string=\"Upsell Quote\"/>\n                </button>\n                <button invisible=\"history_count &lt; 2\" name=\"open_subscription_history\" class=\"oe_stat_button\" icon=\"fa-dollar\" type=\"object\">\n                    <field name=\"history_count\" widget=\"statinfo\" string=\"Sales History\"/>\n                </button>\n                <button invisible=\"not is_subscription or subscription_state in ['1_draft', '2_renewal'] or state == 'cancel'\" name=\"action_sale_order_log\" class=\"oe_stat_button\" icon=\"fa-line-chart\" type=\"object\">\n                    <div class=\"o_field_widget o_stat_info\">\n                        <span class=\"o_stat_value d-flex\">\n                            <field name=\"currency_id\" invisible=\"True\"/>\n                            <field name=\"recurring_monthly\"/>\n                        </span>\n                        <span class=\"o_stat_text\">MRR</span>\n                    </div>\n                 </button>\n            </div>\n            <div name=\"button_box\" position=\"after\">\n                <div class=\"px-2 rounded-pill text-bg-danger float-end\" invisible=\"not payment_exception\">Payment Failure</div>\n                <div class=\"px-2 rounded-pill text-bg-warning float-end\" invisible=\"not pending_transaction\">Pending transaction</div>\n                <field name=\"subscription_state\" widget=\"badge\" class=\"float-end\" invisible=\"subscription_state not in ['2_renewal', '5_renewed', '7_upsell'] or state not in ['draft', 'sent']\" decoration-info=\"subscription_state in ['2_renewal']\" decoration-primary=\"subscription_state in ['7_upsell']\" decoration-secondary=\"subscription_state in ['5_renewed']\"/>\n                <field name=\"subscription_state\" class=\"float-end\" invisible=\"subscription_state not in ['3_progress', '4_paused', '5_renewed', '6_churn'] or state == 'cancel'\" widget=\"badge\" decoration-info=\"subscription_state in ['1_draft']\" decoration-success=\"subscription_state in ['3_progress', '5_renewed']\" decoration-warning=\"subscription_state in ['4_paused']\" decoration-danger=\"subscription_state in ['6_churn']\"/>\n                <div name=\"subscription_quotation_pill\" class=\"float-end badge rounded-pill fw-bold text-bg-info\" invisible=\"subscription_state != '1_draft' or state not in ['draft', 'sent']\">Subscription Quotation</div>\n                <div name=\"late_pill\" invisible=\"not display_late\">\n                    <div name=\"subscription_to_renew\" class=\"float-end badge rounded-pill fw-bold text-bg-warning\" invisible=\"not payment_token_id and require_payment\">To Renew</div>\n                    <div name=\"subscription_waiting_payment\" class=\"float-end badge rounded-pill fw-bold text-bg-warning\" invisible=\"payment_token_id or not require_payment\">Waiting customer payment</div>\n                </div>\n                <div name=\"subscription_closing_pill\" class=\"o_field_badge float-end fs-6 mx-1\" invisible=\"not is_closing\">\n                    <span class=\"badge rounded-pill text-bg-warning\">Closing</span>\n                </div>\n            </div>\n            <field name=\"pricelist_id\" position=\"attributes\">\n                <attribute name=\"readonly\" separator=\"and\" add=\"subscription_state not in ['3_progress', '4_paused']\"/>\n            </field>\n            <label for=\"pricelist_id\" position=\"before\">\n                <label name=\"plan_label\" for=\"plan_id\" invisible=\"not plan_id and state in ['sale', 'cancel']\"/>\n                 <div name=\"plan_block\" class=\"o_row\" invisible=\"not plan_id and state in ['sale', 'cancel']\">\n                    <field name=\"plan_id\" groups=\"!sales_team.group_sale_manager\" readonly=\"subscription_state in ['3_progress', '4_paused', '5_renewed', '6_churn', '7_upsell']\" options=\"{'no_create': True}\" required=\"has_recurring_line\"/>\n                    <field name=\"plan_id\" groups=\"sales_team.group_sale_manager\" readonly=\"subscription_state == '7_upsell'\" options=\"{'no_create': True}\"/>\n                    <span invisible=\"not plan_id or subscription_state == '7_upsell'\">until</span>\n                    <field name=\"end_date\" invisible=\"not plan_id or subscription_state == '7_upsell'\"/>\n                </div>\n                <field name=\"next_invoice_date\" groups=\"!sales_team.group_sale_manager\" invisible=\"subscription_state not in ['3_progress', '4_paused'] or not plan_id\" readonly=\"True\" required=\"plan_id and state == 'sale'\"/>\n                <field name=\"next_invoice_date\" groups=\"sales_team.group_sale_manager\" invisible=\"subscription_state not in ['3_progress', '4_paused'] or not plan_id\" required=\"plan_id and state == 'sale'\"/>\n                <field name=\"close_reason_id\" groups=\"sales_team.group_sale_manager\" invisible=\"subscription_state != '6_churn'\"/>\n                <field name=\"close_reason_id\" groups=\"!sales_team.group_sale_manager\" invisible=\"subscription_state != '6_churn'\" readonly=\"True\"/>\n            </label>\n            <xpath expr=\"//field[@name='order_line']//list//field[@name='name']\" position=\"after\">\n                <field name=\"recurring_invoice\" column_invisible=\"True\"/>\n            </xpath>\n            <xpath expr=\"//field[@name='order_line']//list//field[@name='price_subtotal']\" position=\"attributes\">\n                <attribute name=\"decoration-info\">recurring_invoice</attribute>\n            </xpath>\n            <xpath expr=\"//field[@name='order_line']//list//field[@name='price_total']\" position=\"attributes\">\n                <attribute name=\"decoration-info\">recurring_invoice</attribute>\n            </xpath>\n            <field name=\"require_payment\" position=\"attributes\">\n                <attribute name=\"help\">Request a online payment from the customer to confirm the order. For a subscription, a payment will be required also before each renewal</attribute>\n            </field>\n            <page name=\"customer_signature\" position=\"after\">\n                <page string=\"Notes\" name=\"notes\">\n                    <field name=\"internal_note_display\" nolabel=\"1\" placeholder=\"Internal notes\"/>\n                </page>\n            </page>\n            <group name=\"sale_info\" position=\"before\">\n                <group name=\"subscription_info\" string=\"Subscription\" invisible=\"not is_subscription and subscription_state != '7_upsell'\">\n                    <field name=\"start_date\" groups=\"!sales_team.group_sale_manager\" readonly=\"subscription_state in ['2_renewal', '3_progress', '4_paused']\"/>\n                    <field name=\"start_date\" groups=\"sales_team.group_sale_manager\" required=\"subscription_state in ['3_progress', '4_paused']\" readonly=\"subscription_state == '2_renewal'\"/>\n                    <field name=\"first_contract_date\" invisible=\"not origin_order_id\"/>\n                    <field name=\"origin_order_id\" readonly=\"1\" invisible=\"not origin_order_id\"/>\n                    <field name=\"subscription_id\" groups=\"base.group_no_one\" readonly=\"1\"/>\n                    <field name=\"payment_token_id\" groups=\"base.group_no_one\" options=\"{'no_create': True}\"/>\n                    <field name=\"payment_exception\" groups=\"base.group_no_one\"/>\n                    <field name=\"pending_transaction\" groups=\"base.group_no_one\"/>\n                </group>\n            </group>\n            <field name=\"tax_totals\" position=\"after\">\n                <field name=\"recurring_details\" nolabel=\"1\" colspan=\"2\" invisible=\"not recurring_details\"/>\n            </field>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 4251,
+    "name": "sale.order.margin.view.form",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 15,
+    "arch": "<data><field name=\"tax_totals\" position=\"after\">\n                <div class=\"d-flex float-end\" colspan=\"2\">\n                    <label for=\"margin\"/>\n                    <div>\n                        <field name=\"margin\" class=\"oe_inline\"/>\n                        <field name=\"amount_untaxed\" invisible=\"1\"/>\n                        <span class=\"oe_inline\" invisible=\"amount_untaxed == 0\">\n                            (<field name=\"margin_percent\" nolabel=\"1\" class=\"oe_inline\" widget=\"percentage\"/>)\n                        </span>\n                    </div>\n                </div>\n            </field>\n            <xpath expr=\"//field[@name='order_line']//form//field[@name='price_unit']\" position=\"after\">\n                <field name=\"purchase_price\" groups=\"base.group_user\"/>\n            </xpath>\n           <xpath expr=\"//field[@name='order_line']//list//field[@name='price_unit']\" position=\"after\">\n                <field name=\"purchase_price\" optional=\"hide\"/>\n                <field name=\"margin\" optional=\"hide\"/>\n                <field name=\"margin_percent\" invisible=\"price_subtotal == 0\" optional=\"hide\" widget=\"percentage\"/>\n            </xpath>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 6724,
+    "name": "ATHERON - Alerta cotizacion mixta rama",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<data><xpath expr=\"//field[@name='order_line']\" position=\"before\"><field name=\"x_is_mixed_rama\" invisible=\"1\"/><div class=\"alert alert-warning\" role=\"alert\" invisible=\"not x_is_mixed_rama\" style=\"margin-bottom:8px;\">⚠️ Esta cotización <b>mezcla productos de CCTV y Hotel</b>. El almacén es único por orden, así que los productos de una rama saldrán del almacén de la otra. <b>Considera separarla en dos cotizaciones</b> (una de CCTV y una de Hotel) para que cada una use su almacén correcto.</div></xpath></data>",
+    "active": true
+  },
+  {
+    "id": 2831,
+    "name": "delivery.sale.order.form.view.with_carrier",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<data><header position=\"inside\">\n                <!-- modified through an onchange, must be present but not readonly -->\n                <field name=\"recompute_delivery_price\" invisible=\"1\"/>\n            </header>\n            <div name=\"so_button_below_order_lines\" position=\"inside\">\n                <button string=\"Add shipping\" name=\"action_open_delivery_wizard\" type=\"object\" invisible=\"is_all_service or not order_line or delivery_set\"/>\n                <button string=\"Update shipping cost\" name=\"action_open_delivery_wizard\" context=\"{'carrier_recompute':True}\" type=\"object\" class=\"text-warning btn-secondary\" invisible=\"is_all_service or not recompute_delivery_price or not delivery_set\"/>\n                <button string=\"Update shipping cost\" name=\"action_open_delivery_wizard\" context=\"{'carrier_recompute':True}\" type=\"object\" invisible=\"is_all_service or recompute_delivery_price or not delivery_set\"/>\n            </div>\n            <xpath expr=\"//field[@name='order_line']/list\" position=\"attributes\">\n                <attribute name=\"decoration-warning\" add=\"(recompute_delivery_price and is_delivery)\" separator=\"or\"/>\n            </xpath>\n            <label for=\"commitment_date\" position=\"before\">\n                <field name=\"shipping_weight\" readonly=\"True\"/>\n            </label>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 4406,
+    "name": "rental.order.form",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<data><header position=\"inside\">\n                <field name=\"is_rental_order\" invisible=\"1\"/>\n            </header>\n            <button name=\"action_quotation_send\" position=\"before\">\n                <button name=\"action_open_pickup\" type=\"object\" class=\"btn-primary\" string=\"Pickup\" data-hotkey=\"y\" invisible=\"not has_pickable_lines or state != 'sale'\"/>\n                <button name=\"action_open_return\" type=\"object\" class=\"btn-primary\" string=\"Return\" data-hotkey=\"k\" invisible=\"state != 'sale' or not has_returnable_lines or has_returnable_lines and has_pickable_lines\"/>\n                <button name=\"action_open_return\" type=\"object\" class=\"btn-secondary\" string=\"Return\" data-hotkey=\"k\" invisible=\"state != 'sale' or not has_returnable_lines or has_returnable_lines and not has_pickable_lines\"/>\n            </button>\n            <div name=\"button_box\" position=\"after\">\n                <div class=\"badge rounded-pill text-bg-success float-end border-0\" invisible=\"not has_rented_products or state != 'sale' or rental_status != 'pickup' or is_late\">Booked</div>\n                <div class=\"badge rounded-pill text-bg-danger float-end border-0\" invisible=\"not has_rented_products or state != 'sale' or rental_status != 'pickup' or not is_late\">Late Pickup</div>\n                <div class=\"badge rounded-pill text-bg-warning float-end border-0\" invisible=\"not has_rented_products or state != 'sale' or rental_status != 'return' or is_late\">Picked-up</div>\n                <div class=\"badge rounded-pill text-bg-danger float-end border-0\" invisible=\"not has_rented_products or state != 'sale' or rental_status != 'return' or not is_late\">Late Return</div>\n                <div class=\"badge rounded-pill text-bg-default float-end border-0\" invisible=\"not has_rented_products or state != 'sale' or rental_status != 'returned'\">Returned</div>\n            </div>\n            <field name=\"payment_term_id\" position=\"after\">\n                <field name=\"rental_return_date\" invisible=\"1\" required=\"has_rented_products\"/>\n                <field name=\"rental_start_date\" string=\"Rental period\" widget=\"daterange\" options=\"{'end_date_field': 'rental_return_date'}\" invisible=\"not is_rental_order\" required=\"has_rented_products\"/>\n                <field name=\"show_update_duration\" invisible=\"1\"/>\n                <label for=\"duration_days\" string=\"Duration\" invisible=\"not is_rental_order and not rental_start_date\"/>\n                <div class=\"o_row\" invisible=\"not is_rental_order and not rental_start_date\">\n                    <field class=\"oe_inline\" style=\"max-width: 2rem\" name=\"duration_days\" invisible=\"duration_days == 0\"/>\n                    <span invisible=\"duration_days != 1\"> day </span>\n                    <span invisible=\"duration_days in [0,1]\"> days </span>\n                    <span invisible=\"duration_days == 0 or remaining_hours == 0\">and </span>\n                    <field class=\"oe_inline\" style=\"max-width: 2rem\" name=\"remaining_hours\" invisible=\"remaining_hours == 0\"/>\n                    <span invisible=\"remaining_hours != 1\"> hour </span>\n                    <span invisible=\"remaining_hours in [0,1]\"> hours </span>\n                    <button name=\"action_update_rental_prices\" type=\"object\" string=\"Update Rental Prices\" help=\"Recompute all prices based on this duration\" class=\"btn-link mb-1 px-0\" icon=\"fa-refresh\" confirm=\"This will update the unit price of all rental products based on the new period.\" invisible=\"not show_update_duration or state in ['done', 'cancel']\"/>\n                </div>\n            </field>\n            <xpath expr=\"//field[@name='order_line']//list//field[@name='qty_delivered']\" position=\"after\">\n                <field name=\"qty_returned\" column_invisible=\"parent.state != 'sale' or not parent.is_rental_order\" invisible=\"not is_rental or not is_product_rentable\"/>\n            </xpath>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 6009,
+    "name": "rental.order.form",
+    "inherit_id": [
+      4406,
+      "rental.order.form"
+    ],
+    "priority": 16,
+    "arch": "<data><xpath expr=\"//field[@name='order_line']/list\" position=\"inside\">\n                <field name=\"planning_slot_ids\" column_invisible=\"1\"/> <!-- Needed to write on that field thanks to the context -->\n            </xpath>\n            <xpath expr=\"//field[@name='order_line']/kanban\" position=\"inside\">\n                <field name=\"planning_slot_ids\" invisible=\"1\"/> <!-- Needed to write on that field thanks to the context -->\n            </xpath>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 4439,
+    "name": "rental.order.form.inherit.stock",
+    "inherit_id": [
+      4407,
+      "rental.order.form"
+    ],
+    "priority": 16,
+    "arch": "<xpath expr=\"//field[@name='order_line']//list//field[@name='product_uom_qty']\" position=\"after\">\n                <field name=\"available_reserved_lots\" column_invisible=\"True\"/>\n                <field name=\"reserved_lot_ids\" optional=\"hide\" widget=\"many2many_tags\" groups=\"sale_stock_renting.group_rental_stock_picking\"/>\n            </xpath>",
+    "active": true
+  },
+  {
+    "id": 5982,
+    "name": "rental.order.form.stock",
+    "inherit_id": [
+      4406,
+      "rental.order.form"
+    ],
+    "priority": 16,
+    "arch": "<data><xpath expr=\"//field[@name='order_line']//list//field[@name='qty_delivered']\" position=\"attributes\">\n                <attribute name=\"readonly\" add=\"is_rental and tracking != 'none'\" separator=\"or\"/>\n            </xpath>\n            <xpath expr=\"//field[@name='order_line']//list//field[@name='qty_returned']\" position=\"attributes\">\n                <attribute name=\"readonly\">not is_rental or tracking != 'none'</attribute>\n            </xpath>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 4412,
+    "name": "rental.order.search.bis",
+    "inherit_id": [
+      4411,
+      "rental.order.search"
+    ],
+    "priority": 16,
+    "arch": "<filter name=\"rental_late_orders\" position=\"after\">\n                <separator/>\n                <filter string=\"To Pickup\" name=\"filter_to_pickup\" domain=\"[('rental_status', '=', 'pickup')]\"/>\n                <filter string=\"To Return\" name=\"filter_to_return\" domain=\"[('rental_status', '=', 'return')]\"/>\n            </filter>",
+    "active": true
+  },
+  {
+    "id": 4468,
+    "name": "rental.order.search.inherit.sale_renting_project",
+    "inherit_id": [
+      4411,
+      "rental.order.search"
+    ],
+    "priority": 16,
+    "arch": "<field name=\"order_line\" position=\"after\">\n                <field name=\"project_id\" groups=\"project.group_project_user\"/>\n            </field>",
+    "active": true
+  },
+  {
+    "id": 6460,
+    "name": "sale.order.calendar",
+    "inherit_id": [
+      1699,
+      "sale.order.calendar"
+    ],
+    "priority": 16,
+    "arch": "<data><field name=\"amount_total\" position=\"replace\">\n                <field name=\"recurring_monthly\" widget=\"monetary\"/>\n                <field name=\"plan_id\"/>\n            </field>\n            <calendar position=\"attributes\">\n                <attribute name=\"color\">subscription_state</attribute>\n            </calendar>\n            <field name=\"state\" position=\"replace\">\n                <field name=\"subscription_state\" filters=\"1\" invisible=\"1\"/>\n            </field>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 2999,
+    "name": "sale.order.ecommerce.search.view",
+    "inherit_id": [
+      1711,
+      "sale.order.list.select"
+    ],
+    "priority": 16,
+    "arch": "<filter name=\"my_sale_orders_filter\" position=\"before\">\n                <filter string=\"Confirmed\" name=\"order_confirmed\" domain=\"[('state', '=', 'sale')]\"/>\n                <filter string=\"Unpaid\" name=\"order_unpaid\" domain=\"[('state', '=', 'sent')]\"/>\n                <filter string=\"Abandoned\" name=\"order_abandoned\" domain=\"[('is_abandoned_cart', '=', True)]\"/>\n                <separator/>\n                <filter string=\"Order Date\" name=\"order_date\" date=\"date_order\"/>\n                <separator/>\n                <filter string=\"From Website\" name=\"from_website\" domain=\"[('website_id', '!=', False)]\"/>\n                <separator/>\n                <!-- Dashboard filter - used by context -->\n                <filter string=\"Last Week\" invisible=\"1\" name=\"week\" domain=\"[('date_order', '&gt;', 'today -7d')]\"/>\n                <filter string=\"Last Month\" invisible=\"1\" name=\"month\" domain=\"[('date_order', '&gt;', 'today -30d')]\"/>\n                <filter string=\"Last Year\" invisible=\"1\" name=\"year\" domain=\"[('date_order', '&gt;', 'today -365d')]\"/>\n            </filter>",
+    "active": true
+  },
+  {
+    "id": 6438,
+    "name": "sale.order.filter.subscription",
+    "inherit_id": [
+      1711,
+      "sale.order.list.select"
+    ],
+    "priority": 16,
+    "arch": "<filter name=\"my_sale_orders_filter\" position=\"after\">\n                <separator/>\n                <filter string=\"Recurring\" name=\"recurring\" domain=\"[('is_subscription', '=', True)]\"/>\n                <filter string=\"Not Recurring\" name=\"not_recurring\" domain=\"[('is_subscription', '=', False)]\"/>\n            </filter>",
+    "active": true
+  },
+  {
+    "id": 1779,
+    "name": "sale.order.form",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<div name=\"button_box\" position=\"inside\">\n                <button class=\"oe_stat_button\" type=\"object\" name=\"action_open_sale_order_spreadsheet\" icon=\"fa-th\" invisible=\"not spreadsheet_template_id or spreadsheet_id\">\n                    <field name=\"spreadsheet_template_id\" widget=\"statinfo\"/>\n                </button>\n                <button class=\"oe_stat_button\" type=\"object\" name=\"action_open_sale_order_spreadsheet\" icon=\"fa-th\" invisible=\"not spreadsheet_id\">\n                    <field name=\"spreadsheet_id\" widget=\"statinfo\" string=\"Quote calculator\"/>\n                </button>\n            </div>",
+    "active": true
+  },
+  {
+    "id": 3003,
+    "name": "sale.order.form",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<data><button name=\"action_quotation_send\" id=\"quotation_send_primary\" position=\"attributes\">\n                <attribute name=\"invisible\" separator=\"or\" add=\"is_abandoned_cart and not cart_recovery_email_sent\"/>\n            </button>\n            <button name=\"action_quotation_send\" position=\"after\">\n                <button name=\"action_recovery_email_send\" type=\"object\" string=\"Send a Recovery Email\" class=\"btn-primary\" data-hotkey=\"l\" invisible=\"not is_abandoned_cart or cart_recovery_email_sent\"/>\n            </button>\n            <button name=\"action_quotation_send\" id=\"quotation_send\" position=\"after\">\n                <button name=\"action_quotation_send\" id=\"send_by_email_bis\" string=\"Send by Email\" type=\"object\" invisible=\"not is_abandoned_cart or cart_recovery_email_sent or state != 'draft'\"/>\n            </button>\n            <field name=\"partner_id\" position=\"attributes\">\n                <attribute name=\"context\">{\n                    'display_website': True,\n                    'res_partner_search_mode': 'customer',\n                    'show_address': 1,\n                    'show_vat': True,\n                }</attribute>\n            </field>\n            <field name=\"team_id\" position=\"after\">\n                <field name=\"website_id\" invisible=\"not website_id\" groups=\"website.group_multi_website\"/>\n            </field>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 6001,
+    "name": "sale.order.form.from.task",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<data><header position=\"replace\"/>\n            <sheet position=\"after\">\n                <footer>\n                    <button string=\"Confirm &amp; Close\" special=\"save\" class=\"btn btn-primary\"/>\n                    <button string=\"Discard\" special=\"cancel\" class=\"btn btn-secondary\"/>\n                </footer>\n            </sheet>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 4097,
+    "name": "sale.order.form.inherit.event.sale",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<data><div name=\"button_box\" position=\"inside\">\n                <button name=\"action_view_attendee_list\" type=\"object\" class=\"oe_stat_button\" icon=\"fa-users\" invisible=\"attendee_count == 0\">\n                    <field name=\"attendee_count\" widget=\"statinfo\" string=\"Attendees\"/>\n                </button>\n            </div>\n            <xpath expr=\"//field[@name='order_line']//form//field[@name='product_id']\" position=\"after\">\n                <field name=\"event_id\" domain=\"[                         ('event_ticket_ids.product_id','=', product_id),                         ('date_end','&gt;=',time.strftime('%Y-%m-%d 00:00:00')),                         '|', ('company_id', '=', False), ('company_id', '=', parent.company_id)                     ]\" invisible=\"service_tracking != 'event'\" required=\"service_tracking == 'event'\" options=\"{'no_open': True, 'no_create': True}\"/>\n                <field name=\"event_slot_id\" domain=\"[('event_id','=', event_id)]\" invisible=\"not is_multi_slots or service_tracking != 'event'\" required=\"is_multi_slots and service_tracking == 'event'\" options=\"{'no_open': True, 'no_create': True}\"/>\n                <field name=\"event_ticket_id\" domain=\"[                         ('event_id', '=', event_id), ('product_id','=',product_id),                          '|', ('company_id', '=', False), ('company_id', '=', parent.company_id)                     ]\" invisible=\"service_tracking != 'event' or not event_id\" required=\"service_tracking == 'event' and event_id\" options=\"{'no_open': True, 'no_create': True}\"/>\n            </xpath>\n            <xpath expr=\"//field[@name='order_line']//list//field[@name='product_template_id']\" position=\"after\">\n                <field name=\"event_id\" column_invisible=\"True\" domain=\"[                         ('event_ticket_ids.product_id','=', product_id),                         ('date_end','&gt;=',time.strftime('%Y-%m-%d 00:00:00')),                         '|', ('company_id', '=', False), ('company_id', '=', parent.company_id)                     ]\" required=\"service_tracking == 'event'\" options=\"{'no_open': True, 'no_create': True}\" placeholder=\"All Events\"/>\n                <field name=\"event_slot_id\" column_invisible=\"True\" domain=\"[('event_id','=', event_id)]\" required=\"is_multi_slots and service_tracking == 'event'\" options=\"{'no_open': True, 'no_create': True}\"/>\n                <field name=\"event_ticket_id\" column_invisible=\"True\" domain=\"[                         ('event_id', '=', event_id), ('product_id','=',product_id),                          '|', ('company_id', '=', False), ('company_id', '=', parent.company_id)                     ]\" required=\"service_tracking == 'event' and event_id\" options=\"{'no_open': True, 'no_create': True}\"/>\n            </xpath>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 1754,
+    "name": "sale.order.form.inherit.sale",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<field name=\"origin\" position=\"after\">\n                <field name=\"opportunity_id\" groups=\"sales_team.group_sale_salesman\" context=\"{                     'default_campaign_id': campaign_id,                     'default_company_id': company_id,                     'default_medium_id': medium_id,                     'default_partner_id': partner_id,                     'default_source_id': source_id,                     'default_tag_ids': tag_ids,                     'default_type': 'opportunity',                 }\"/>\n                <field name=\"opportunity_id\" groups=\"!sales_team.group_sale_salesman\" context=\"{                     'default_campaign_id': campaign_id,                     'default_company_id': company_id,                     'default_medium_id': medium_id,                     'default_partner_id': partner_id,                     'default_source_id': source_id,                     'default_type': 'opportunity',                 }\"/>\n            </field>",
+    "active": true
+  },
+  {
+    "id": 4918,
+    "name": "sale.order.form.inherit.sale.expense",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<button name=\"action_view_invoice\" position=\"before\">\n                <button name=\"1069\" type=\"action\" class=\"oe_stat_button\" icon=\"fa-money\" invisible=\"expense_count == 0\">\n                    <field name=\"expense_count\" widget=\"statinfo\" string=\"Expenses\"/>\n                </button>\n            </button>",
+    "active": true
+  },
+  {
+    "id": 1764,
+    "name": "sale.order.form.inherit.sale_management",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<data><field name=\"partner_shipping_id\" position=\"after\">\n                <field name=\"sale_order_template_id\" options=\"{'no_create': True}\" readonly=\"state in ['cancel', 'sale']\" groups=\"sale_management.group_sale_order_template\"/>\n            </field>\n\n            <xpath expr=\"//form//div[@name='invoice_lines']\" position=\"before\">\n                <group>\n                    <field name=\"is_optional\" invisible=\"display_type not in ['line_section', 'line_subsection']\" readonly=\"1\"/>\n                </group>\n            </xpath>\n            <xpath expr=\"//list/field[@name='linked_virtual_id']\" position=\"after\">\n                <field name=\"is_optional\" column_invisible=\"True\"/>\n            </xpath>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 1774,
+    "name": "sale.order.form.pdf.quote.builder",
+    "inherit_id": [
+      1764,
+      "sale.order.form.inherit.sale_management"
+    ],
+    "priority": 16,
+    "arch": "<data><!-- Needed by customContentKanbanLikeWidget to save selected documents on the product. -->\n            <!-- Desktop view -->\n            <xpath expr=\"//field[@name='order_line']/list\" position=\"inside\">\n                <field name=\"product_document_ids\" column_invisible=\"1\"/>\n            </xpath>\n            <!-- Mobile view -->\n            <xpath expr=\"//field[@name='order_line']/kanban\" position=\"inside\">\n                <field name=\"product_document_ids\" column_invisible=\"1\"/>\n            </xpath>\n            <page name=\"order_lines\" position=\"after\">\n                <page name=\"pdf_quote_builder\" string=\"Quote Builder\" groups=\"sales_team.group_sale_salesman\" invisible=\"not (partner_id and is_pdf_quote_builder_available) or context.get('hide_pdf_quote_builder')\">\n                    <!-- Needed by customContentKanbanLikeWidget to save selected documents. -->\n                    <field name=\"quotation_document_ids\" invisible=\"1\"/>\n                    <field name=\"customizable_pdf_form_fields\" invisible=\"1\"/>\n                    <widget name=\"customContentKanbanLikeWidget\" class=\"d-inline\"/>\n                </page>\n            </page>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 3530,
+    "name": "sale.order.form.pos.sale",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<button name=\"action_view_invoice\" position=\"before\">\n                <button type=\"object\" name=\"action_view_pos_order\" class=\"oe_stat_button\" icon=\"fa-shopping-basket\" invisible=\"pos_order_count == 0\" groups=\"point_of_sale.group_pos_user\">\n                    <div class=\"o_field_widget o_stat_info\">\n                        <span class=\"o_stat_value d-flex\">\n                            <field name=\"pos_order_count\" widget=\"statinfo\" nolabel=\"1\" class=\"mr4\"/> Transferred<br/>\n                            to POS\n                        </span>\n                    </div>\n                </button>\n            </button>",
+    "active": true
+  },
+  {
+    "id": 1799,
+    "name": "sale.order.form.sale.planning",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<button name=\"action_view_invoice\" position=\"before\">\n                <!-- Needed as default value for `planning.planning_action_schedule_by_resource` action -->\n                <field name=\"planning_first_sale_line_id\" invisible=\"1\"/>\n                <!-- Needed as default value for `planning.planning_action_schedule_by_resource` action -->\n                <field name=\"planning_initial_date\" invisible=\"1\"/>\n                <button name=\"action_view_planning\" type=\"object\" icon=\"fa-tasks\" invisible=\"planning_hours_to_plan &lt;= 0 or state in ['draft', 'sent', 'cancel'] or locked\">\n                    <div class=\"o_field_widget o_stat_info\">\n                       <span class=\"o_stat_value\">\n                            <field name=\"planning_hours_to_plan\" options=\"{'digits': [false, 0]}\"/>\n                            Hours\n                        </span>\n                        <span class=\"o_stat_text\">To Plan</span>\n                   </div>\n                </button>\n                <button name=\"524\" type=\"action\" context=\"{                         'search_default_sale_order_id': id,                         'default_sale_line_id': planning_first_sale_line_id,                         'search_default_group_by_role': 1,                         'search_default_group_by_resource': 2,                         'initialDate': planning_initial_date,                         'planning_gantt_active_sale_order_id': id,                     }\" class=\"oe_stat_button\" icon=\"fa-tasks\" invisible=\"planning_hours_planned == 0 or state in ['draft', 'sent']\">\n                    <div class=\"o_field_widget o_stat_info\">\n                        <span class=\"o_stat_value\">\n                            <field name=\"planning_hours_planned\" options=\"{'digits': [false, 0]}\"/>\n                           Hours\n                        </span>\n                        <span class=\"o_stat_text\">Planned</span>\n                    </div>\n                </button>\n            </button>",
+    "active": true
+  },
+  {
+    "id": 6658,
+    "name": "sale.order.form.sale.project",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<xpath expr=\"//field[@name='order_line']//list\" position=\"inside\">\n                <field string=\"Related Task\" name=\"task_id\" optional=\"hide\"/>\n            </xpath>",
+    "active": true
+  },
+  {
+    "id": 3508,
+    "name": "sale.order.form.sale.stock",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<data><button name=\"action_view_invoice\" position=\"before\">\n                <button name=\"action_view_delivery\" type=\"object\" class=\"oe_stat_button\" icon=\"fa-truck\" invisible=\"delivery_count == 0\" groups=\"stock.group_stock_user\">\n                    <field name=\"delivery_count\" widget=\"statinfo\" string=\"Delivery\"/>\n                </button>\n            </button>\n            <group name=\"sale_shipping\" position=\"attributes\">\n                <attribute name=\"groups\"/><!-- Remove the res.group on the group and set it on the field directly-->\n                <attribute name=\"string\">Delivery</attribute>\n            </group>\n            <label for=\"commitment_date\" position=\"before\">\n                <field name=\"warehouse_id\" options=\"{'no_create': True}\" force_save=\"1\" readonly=\"state == 'sale'\"/>\n                <field name=\"incoterm\" options=\"{'no_open': True, 'no_create': True}\"/>\n                <field name=\"incoterm_location\"/>\n                <field name=\"picking_policy\" required=\"True\" readonly=\"state not in ['draft', 'sent']\"/>\n            </label>\n            <span name=\"expected_date_span\" position=\"attributes\">\n                <attribute name=\"invisible\">effective_date and commitment_date</attribute>\n            </span>\n            <div name=\"commitment_date_div\" position=\"replace\">\n                <div class=\"o_row\">\n                    <field name=\"commitment_date\"/>\n                    <span class=\"text-muted\" invisible=\"not expected_date or (effective_date and commitment_date)\">Expected: <field name=\"expected_date\" class=\"oe_inline\"/></span>\n                </div>\n                <field name=\"effective_date\" invisible=\"not effective_date\"/>\n                <field name=\"delivery_status\" invisible=\"state != 'sale'\"/>\n            </div>\n            <xpath expr=\"//page[@name='other_information']//field[@name='expected_date']\" position=\"after\">\n                <field string=\" \" name=\"json_popover\" widget=\"stock_rescheduling_popover\" invisible=\"not show_json_popover\"/>\n            </xpath>\n            <xpath expr=\"//field[@name='order_line']//form//field[@name='analytic_distribution']\" position=\"before\">\n                <field name=\"route_ids\" widget=\"many2many_tags\" groups=\"stock.group_adv_location\" options=\"{'no_create': True}\"/>\n            </xpath>\n            <xpath expr=\"//field[@name='order_line']//form//field[@name='product_uom_id']\" position=\"after\">\n                <widget name=\"qty_at_date_widget\"/>\n            </xpath>\n            <xpath expr=\"//field[@name='order_line']//list//field[@name='analytic_distribution']\" position=\"after\">\n                <field name=\"route_ids\" widget=\"many2many_tags\" groups=\"stock.group_adv_location\" options=\"{'no_create': True}\" optional=\"hide\"/>\n            </xpath>\n            <xpath expr=\"//field[@name='order_line']//list//field[@name='qty_delivered']\" position=\"after\">\n                <widget name=\"qty_at_date_widget\" width=\"20px\"/>\n            </xpath>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 4797,
+    "name": "sale.order.form.sale.timesheet",
+    "inherit_id": [
+      1817,
+      "sale.order.form.sale.project"
+    ],
+    "priority": 16,
+    "arch": "<button name=\"action_view_milestone\" position=\"before\">\n                <button name=\"action_view_timesheet\" type=\"object\" class=\"oe_stat_button\" icon=\"fa-clock-o\" invisible=\"not show_hours_recorded_button\" groups=\"hr_timesheet.group_hr_timesheet_user\">\n                    <div class=\"o_stat_info\">\n                        <span class=\"o_stat_value\">\n                            <field name=\"timesheet_total_duration\" class=\"mr4\"/>\n                            <field name=\"timesheet_encode_uom_id\" options=\"{'no_open': True}\"/>\n                        </span>\n                        <span class=\"o_stat_text\">Recorded</span>\n                    </div>\n                </button>\n            </button>",
+    "active": true
+  },
+  {
+    "id": 5283,
+    "name": "sale.order.inherited.form.mrp",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<div name=\"button_box\" position=\"inside\">\n                <button name=\"action_view_mrp_production\" type=\"object\" class=\"oe_stat_button\" icon=\"fa-wrench\" invisible=\"mrp_production_count == 0\" groups=\"mrp.group_mrp_user\">\n                    <field name=\"mrp_production_count\" widget=\"statinfo\" string=\"Manufacturing\"/>\n                </button>\n            </div>",
+    "active": true
+  },
+  {
+    "id": 4245,
+    "name": "sale.order.inherited.form.purchase",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<div name=\"button_box\" position=\"inside\">\n                <button name=\"action_view_purchase_orders\" type=\"object\" class=\"oe_stat_button\" icon=\"fa-credit-card\" invisible=\"purchase_order_count == 0\" groups=\"purchase.group_purchase_user\">\n                    <field name=\"purchase_order_count\" widget=\"statinfo\" string=\"Purchase\"/>\n                </button>\n            </div>",
+    "active": true
+  },
+  {
+    "id": 1709,
+    "name": "sale.order.kanban",
+    "inherit_id": [
+      1702,
+      "sale.order.kanban"
+    ],
+    "priority": 16,
+    "arch": "<kanban position=\"attributes\">\n                <attribute name=\"js_class\">sale_onboarding_kanban</attribute>\n            </kanban>",
+    "active": true
+  },
+  {
+    "id": 1708,
+    "name": "sale.order.list",
+    "inherit_id": [
+      1707,
+      "sale.order.list (quotes)"
+    ],
+    "priority": 16,
+    "arch": "<list position=\"attributes\">\n                <attribute name=\"js_class\">sale_onboarding_list</attribute>\n            </list>",
+    "active": true
+  },
+  {
+    "id": 6437,
+    "name": "sale.order.list",
+    "inherit_id": [
+      1705,
+      "sale.order.list (orders)"
+    ],
+    "priority": 16,
+    "arch": "<list position=\"attributes\">\n                <attribute name=\"decoration-warning\">subscription_state == '4_paused'</attribute>\n            </list>",
+    "active": true
+  },
+  {
+    "id": 3509,
+    "name": "sale.order.list.inherit.sale.stock",
+    "inherit_id": [
+      1704,
+      "sale.order.list"
+    ],
+    "priority": 16,
+    "arch": "<field name=\"tag_ids\" position=\"after\">\n                <field name=\"warehouse_id\" options=\"{'no_create': True}\" readonly=\"state == 'sale'\" groups=\"stock.group_stock_multi_warehouses\" optional=\"hide\"/>\n            </field>",
+    "active": true
+  },
+  {
+    "id": 3510,
+    "name": "sale.order.list.inherit.sale.stock",
+    "inherit_id": [
+      1705,
+      "sale.order.list (orders)"
+    ],
+    "priority": 16,
+    "arch": "<data><field name=\"commitment_date\" position=\"attributes\">\n                <attribute name=\"decoration-danger\">\n                    (\n                        (\n                            commitment_date &lt; effective_date\n                            or commitment_date &lt; datetime.datetime.combine(\n                                datetime.date.today(),\n                                datetime.time(0,0,0)\n                            ).to_utc().strftime('%Y-%m-%d %H:%M:%S')\n                        )\n                        and delivery_status in ['pending', 'started']\n                        and effective_date &lt;= commitment_date\n                        or delivery_status == 'partial'\n                    )\n                </attribute>\n            </field>\n            <field name=\"invoice_status\" position=\"before\">\n                <field name=\"delivery_status\" decoration-success=\"delivery_status == 'full'\" decoration-warning=\"delivery_status == 'partial'\" decoration-info=\"delivery_status in ['pending', 'started']\" widget=\"badge\" optional=\"hide\"/>\n            </field>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 3004,
+    "name": "sale.order.list.inherit.website.sale",
+    "inherit_id": [
+      1704,
+      "sale.order.list"
+    ],
+    "priority": 16,
+    "arch": "<field name=\"user_id\" position=\"before\">\n                <field name=\"website_id\" groups=\"website.group_multi_website\" optional=\"show\"/>\n            </field>",
+    "active": true
+  },
+  {
+    "id": 1818,
+    "name": "sale.order.list.select.inherit.sale_project",
+    "inherit_id": [
+      1711,
+      "sale.order.list.select"
+    ],
+    "priority": 16,
+    "arch": "<field name=\"order_line\" position=\"after\">\n                <field name=\"project_id\" groups=\"project.group_project_user\"/>\n            </field>",
+    "active": true
+  },
+  {
+    "id": 4255,
+    "name": "sale.order.margin.view.graph",
+    "inherit_id": [
+      1700,
+      "sale.order.graph"
+    ],
+    "priority": 16,
+    "arch": "<graph position=\"inside\">\n                <field name=\"margin_percent\" invisible=\"1\"/>\n            </graph>",
+    "active": true
+  },
+  {
+    "id": 4254,
+    "name": "sale.order.margin.view.pivot",
+    "inherit_id": [
+      1701,
+      "sale.order.pivot"
+    ],
+    "priority": 16,
+    "arch": "<pivot position=\"inside\">\n                <field name=\"margin_percent\" invisible=\"1\"/>\n            </pivot>",
+    "active": true
+  },
+  {
+    "id": 6516,
+    "name": "sale.order.search.inherit.project_sale_subscription",
+    "inherit_id": [
+      6453,
+      "sale.order.search"
+    ],
+    "priority": 16,
+    "arch": "<field name=\"sale_order_template_id\" position=\"after\">\n                <field name=\"project_id\" groups=\"project.group_project_user\"/>\n            </field>",
+    "active": true
+  },
+  {
+    "id": 1712,
+    "name": "sale.order.search.inherit.quotation",
+    "inherit_id": [
+      1711,
+      "sale.order.list.select"
+    ],
+    "priority": 16,
+    "arch": "<filter name=\"my_sale_orders_filter\" position=\"replace\">\n                <field name=\"campaign_id\"/>\n                <separator/>\n                <filter string=\"My Quotations\" name=\"my_quotation\" domain=\"[('user_id', '=', uid)]\"/>\n                <separator/>\n                <filter string=\"Quotations\" name=\"draft\" domain=\"[('state', 'in', ('draft', 'sent'))]\"/>\n                <filter string=\"Sales Orders\" name=\"sales\" domain=\"[('state', '=', 'sale')]\"/>\n                <separator/>\n                <filter string=\"Create Date\" name=\"filter_create_date\" date=\"create_date\"/>\n            </filter>",
+    "active": true
+  },
+  {
+    "id": 1713,
+    "name": "sale.order.search.inherit.sale",
+    "inherit_id": [
+      1711,
+      "sale.order.list.select"
+    ],
+    "priority": 16,
+    "arch": "<filter name=\"my_sale_orders_filter\" position=\"after\">\n                <filter invisible=\"1\" string=\"Sales Orders\" name=\"sales\" domain=\"[('state', '=', 'sale')]\"/>\n                <separator/>\n                <filter string=\"To Invoice\" name=\"to_invoice\" domain=\"[('invoice_status','=','to invoice')]\"/>\n                <filter string=\"To Upsell\" name=\"upselling\" domain=\"[('invoice_status','=','upselling')]\"/>\n                <separator/>\n                <filter string=\"Order Date\" name=\"order_date\" date=\"date_order\"/>\n            </filter>",
+    "active": true
+  },
+  {
+    "id": 6513,
+    "name": "sale.order.subscription.list.inherit.website.sale.subscription",
+    "inherit_id": [
+      6458,
+      "sale.subscription.order.list"
+    ],
+    "priority": 16,
+    "arch": "<field name=\"plan_id\" position=\"after\">\n                <field name=\"website_id\" optional=\"hide\"/>\n            </field>",
+    "active": true
+  },
+  {
+    "id": 6436,
+    "name": "sale.order.tree",
+    "inherit_id": [
+      1704,
+      "sale.order.list"
+    ],
+    "priority": 16,
+    "arch": "<field name=\"state\" position=\"after\">\n                <field name=\"subscription_state\" widget=\"badge\" decoration-success=\"subscription_state == '3_progress'\" decoration-warning=\"subscription_state == '4_paused'\" decoration-danger=\"subscription_state == '6_churn'\" decoration-primary=\"subscription_state == '7_upsell'\" decoration-info=\"subscription_state in ['1_draft', '2_renewal']\" readonly=\"1\" optional=\"hide\"/>\n                <field name=\"recurring_total\" optional=\"hide\"/>\n                <field name=\"plan_id\" optional=\"hide\"/>\n                <field name=\"recurring_monthly\" optional=\"hide\"/>\n            </field>",
+    "active": true
+  },
+  {
+    "id": 3043,
+    "name": "sale.order.view.form.inherit.website.appointment.sale",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 16,
+    "arch": "<div name=\"button_box\" position=\"inside\">\n                <button name=\"action_view_calendar_events\" type=\"object\" class=\"oe_stat_button\" icon=\"fa-calendar\" invisible=\"calendar_event_count == 0\">\n                    <field name=\"calendar_event_count\" widget=\"statinfo\"/>\n                </button>\n            </div>",
+    "active": true
+  },
+  {
+    "id": 6500,
+    "name": "sale.subscription.order.form",
+    "inherit_id": [
+      6435,
+      "sale.subscription.order.form"
+    ],
+    "priority": 16,
+    "arch": "<header position=\"after\">\n                <div role=\"alert\" class=\"alert alert-info mb-0 p-3 text-center\" invisible=\"not display_recurring_stock_delivery_warning\">\n                    The delivery order of the recurring product(s) will be created soon. If another delivery order exists,\n                    recurring product will be added to it automatically.\n                </div>\n            </header>",
+    "active": true
+  },
+  {
+    "id": 5966,
+    "name": "sale_stock.sale.order.search.inherit",
+    "inherit_id": [
+      1713,
+      "sale.order.search.inherit.sale"
+    ],
+    "priority": 16,
+    "arch": "<filter name=\"order_date\" position=\"after\">\n                <filter string=\"Late Availability\" name=\"late_availability\" domain=\"[('late_availability', '=', True)]\"/>\n            </filter>",
+    "active": true
+  },
+  {
+    "id": 6703,
+    "name": "sale.order.search.atheron.hotel.cctv",
+    "inherit_id": [
+      1711,
+      "sale.order.list.select"
+    ],
+    "priority": 20,
+    "arch": "<data>\n    <xpath expr=\"//filter[@name='my_sale_orders_filter']\" position=\"after\">\n        <separator/>\n        <filter name=\"ath_filter_hotel\" string=\"Hotel\" domain=\"[('order_line.product_id.categ_id', 'child_of', [6, 1247, 1242, 1296, 1241])]\"/>\n        <filter name=\"ath_filter_cctv\" string=\"CCTV\" domain=\"[('order_line.product_id.categ_id', 'not in', [6, 7, 11, 12, 13, 1241, 1242, 1247, 1296])]\"/>\n    </xpath>\n</data>",
+    "active": true
+  },
+  {
+    "id": 6704,
+    "name": "sale.order.form.atheron.transporte",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 30,
+    "arch": "<data>\n    <xpath expr=\"//notebook\" position=\"inside\">\n        <page string=\"Transporte\" name=\"atheron_transporte_page\">\n            <div class=\"alert alert-info\" role=\"alert\">\n                <strong>Calculo automatico de transporte</strong> via OpenStreetMap (OSRM). Se cobra <b>ida y vuelta</b>. La tarifa por km esta configurada en <b>Ajustes -&gt; Tecnico -&gt; Parametros del Sistema</b> (key: <code>atheron.transporte_tarifa_km</code>). Al pulsar el boton se calcula la ruta y se agrega/actualiza la linea \"TRANSPORTE TECNICO\" en la cotizacion.\n            </div>\n            <group>\n                <group string=\"Origen (GPS)\">\n                    <field name=\"x_origen_transporte\" readonly=\"1\" string=\"Origen capturado\" placeholder=\"Aun no se ha capturado el GPS\"/>\n                    <button name=\"1730\" type=\"action\" string=\"Capturar mi ubicacion GPS\" class=\"btn-warning\" icon=\"fa-map-marker\"/>\n                </group>\n                <group string=\"Destino\">\n                    <field name=\"x_destino_transporte\" placeholder=\"Vacio = se toma direccion del cliente\"/>\n                </group>\n            </group>\n            <group>\n                <group string=\"Resultado\">\n                    <field name=\"x_km_transporte\" readonly=\"1\"/>\n                    <button name=\"1723\" type=\"action\" string=\"Calcular transporte\" class=\"btn-primary\" icon=\"fa-truck\"/>\n                </group>\n            </group>\n        </page>\n    </xpath>\n</data>",
+    "active": true
+  },
+  {
+    "id": 4410,
+    "name": "rental.order.calendar",
+    "inherit_id": [
+      1699,
+      "sale.order.calendar"
+    ],
+    "priority": 32,
+    "arch": "<data><calendar position=\"attributes\">\n                <attribute name=\"date_start\">rental_start_date</attribute>\n                <attribute name=\"date_stop\">rental_return_date</attribute>\n                <attribute name=\"color\">rental_status</attribute>\n                <attribute name=\"edit\">0</attribute>\n            </calendar>\n            <field name=\"state\" position=\"replace\">\n                <field name=\"rental_status\" filters=\"1\" invisible=\"1\"/>\n            </field>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 3000,
+    "name": "sale.order.ecommerce.search.unpaid.view",
+    "inherit_id": [
+      1711,
+      "sale.order.list.select"
+    ],
+    "priority": 32,
+    "arch": "<data><filter name=\"my_sale_orders_filter\" position=\"attributes\">\n                <attribute name=\"invisible\">1</attribute>\n            </filter>\n            <filter name=\"my_sale_orders_filter\" position=\"before\">\n                <filter string=\"Order Date\" name=\"order_date\" date=\"date_order\"/>\n                <separator/>\n            </filter>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 1703,
+    "name": "sale.order.kanban.upload (orders)",
+    "inherit_id": [
+      1702,
+      "sale.order.kanban"
+    ],
+    "priority": 32,
+    "arch": "<kanban position=\"attributes\">\n                <attribute name=\"js_class\">sale_file_upload_kanban</attribute>\n            </kanban>",
+    "active": true
+  },
+  {
+    "id": 1706,
+    "name": "sale.order.tree.upload (orders)",
+    "inherit_id": [
+      1705,
+      "sale.order.list (orders)"
+    ],
+    "priority": 32,
+    "arch": "<list position=\"attributes\">\n                <attribute name=\"js_class\">sale_file_upload_list</attribute>\n            </list>",
+    "active": true
+  },
+  {
+    "id": 6832,
+    "name": "HOTEL v1 — sale.order piloto",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 99,
+    "arch": "<data>\n<xpath expr=\"//header\" position=\"inside\">\n <button name=\"1898\" type=\"action\" string=\"Hotel: OPCION\" class=\"btn-secondary\" invisible=\"not x_hotel_unit_id or x_reservation_status not in (False, 'draft')\"/>\n <button name=\"1897\" type=\"action\" string=\"Hotel: HOLD 2h\" class=\"btn-secondary\" invisible=\"not x_hotel_unit_id or x_reservation_status not in (False, 'draft', 'opcion')\"/>\n <button name=\"1899\" type=\"action\" string=\"Hotel: CONFIRMAR\" class=\"btn-primary\" invisible=\"not x_hotel_unit_id or x_reservation_status not in (False, 'draft', 'opcion', 'hold')\"/>\n <button name=\"1900\" type=\"action\" string=\"Hotel: PRE-CHECKIN\" class=\"btn-secondary\" invisible=\"not x_hotel_unit_id or x_reservation_status not in ('confirmed',)\"/>\n <button name=\"1901\" type=\"action\" string=\"Hotel: CHECK-IN\" class=\"btn-primary\" invisible=\"not x_hotel_unit_id or x_reservation_status not in ('confirmed', 'pre_checkin')\"/>\n <button name=\"1902\" type=\"action\" string=\"Hotel: CHECK-OUT\" class=\"btn-primary\" invisible=\"not x_hotel_unit_id or x_reservation_status not in ('checked_in',)\"/>\n <button name=\"1903\" type=\"action\" string=\"Hotel: CERRAR\" class=\"btn-secondary\" invisible=\"not x_hotel_unit_id or x_reservation_status not in ('checked_out',)\"/>\n <button name=\"1905\" type=\"action\" string=\"Hotel: NO-SHOW\" class=\"btn-secondary\" invisible=\"not x_hotel_unit_id or x_reservation_status not in ('confirmed', 'pre_checkin')\"/>\n <button name=\"1904\" type=\"action\" string=\"Hotel: CANCELAR\" class=\"btn-secondary\" invisible=\"not x_hotel_unit_id or x_reservation_status not in (False, 'draft', 'opcion', 'hold', 'confirmed', 'pre_checkin')\"/>\n</xpath>\n<xpath expr=\"//notebook\" position=\"inside\">\n <page string=\"Hotel v1\" name=\"hotel_v1\">\n  <div class=\"alert alert-warning\" role=\"alert\" invisible=\"not x_hotel_alert\"><field name=\"x_hotel_alert\" readonly=\"1\"/></div>\n  <group>\n   <group string=\"Reserva\">\n    <field name=\"x_reservation_status\" readonly=\"1\"/>\n    <field name=\"x_hotel_property_id\"/>\n    <field name=\"x_hotel_unit_id\"/>\n    <field name=\"x_checkin\"/><field name=\"x_checkout\"/><field name=\"x_nights\" readonly=\"1\"/>\n    <field name=\"x_num_adults\"/><field name=\"x_num_children\"/>\n    <field name=\"x_hotel_extra_approved\"/>\n    <field name=\"x_booking_source\"/>\n    <field name=\"x_hold_expires\" readonly=\"1\"/><field name=\"x_hold_expired\" readonly=\"1\"/>\n   </group>\n   <group string=\"VENTA / ANTICIPO / COBRO / SALDO\">\n    <field name=\"amount_total\" string=\"VENTA (total)\"/>\n    <field name=\"x_hotel_deposit_policy_id\"/>\n    <field name=\"x_hotel_deposit_pct\"/>\n    <field name=\"x_hotel_deposit_required\"/>\n    <field name=\"x_hotel_paid\"/>\n    <field name=\"x_hotel_balance\"/>\n    <field name=\"x_hotel_deposit_ok\"/>\n    <field name=\"x_hotel_rate_id\"/>\n    <field name=\"x_hotel_discount_pct\"/><field name=\"x_hotel_discount_approved_by\"/>\n   </group>\n  </group>\n  <field name=\"x_guest_line_ids\">\n   <list editable=\"bottom\"><field name=\"x_is_main_guest\"/><field name=\"x_name\"/><field name=\"x_doc_type\"/><field name=\"x_identity_number\"/><field name=\"x_nationality\"/><field name=\"x_birth_date\"/><field name=\"x_guest_phone\"/><field name=\"x_guest_email\"/><field name=\"x_origin_country_id\"/><field name=\"x_destination_country_id\"/><field name=\"x_travel_purpose\"/><field name=\"x_guest_partner_id\" readonly=\"1\"/><field name=\"x_precheckin_done\"/><field name=\"x_sire_reported\"/></list>\n  </field>\n  <field name=\"x_hotel_payment_ids\" readonly=\"1\"><list><field name=\"name\"/><field name=\"date\"/><field name=\"journal_id\"/><field name=\"amount\"/><field name=\"state\"/></list></field>\n </page>\n</xpath>\n</data>",
+    "active": true
+  },
+  {
+    "id": 6678,
+    "name": "sale.order.form.dian.atheron",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 99,
+    "arch": "<data>\n    <xpath expr=\"//group[@name='sale_header']\" position=\"after\">\n        <div class=\"alert alert-danger py-2 px-3 d-flex align-items-center gap-2\" role=\"alert\" invisible=\"not partner_id or partner_id.city_id\">\n            <i class=\"fa fa-exclamation-circle\"/>\n            <span class=\"flex-grow-1\"><strong>DIAN — Ciudad DANE falta en el cliente.</strong> La factura será rechazada (error CDG01).</span>\n            <button string=\"Completar datos DIAN\" type=\"action\" name=\"1618\" class=\"btn btn-sm btn-danger\"/>\n        </div>\n        <div class=\"alert alert-warning py-2 px-3 d-flex align-items-center gap-2\" role=\"alert\" invisible=\"not partner_id or partner_id.l10n_co_edi_obligation_type_ids\">\n            <i class=\"fa fa-exclamation-triangle\"/>\n            <span class=\"flex-grow-1\"><strong>DIAN — Responsabilidad Tributaria falta.</strong> La factura puede ser rechazada (error FAK26).</span>\n            <button string=\"Completar datos DIAN\" type=\"action\" name=\"1618\" class=\"btn btn-sm btn-warning\"/>\n        </div>\n        <div class=\"alert alert-warning py-2 px-3 d-flex align-items-center gap-2\" role=\"alert\" invisible=\"not partner_id or partner_id.l10n_co_edi_fiscal_regimen\">\n            <i class=\"fa fa-exclamation-triangle\"/>\n            <span class=\"flex-grow-1\"><strong>DIAN — Régimen Fiscal falta en el cliente.</strong> La factura puede ser rechazada (error FAK29).</span>\n            <button string=\"Completar datos DIAN\" type=\"action\" name=\"1618\" class=\"btn btn-sm btn-warning\"/>\n        </div>\n    </xpath>\n</data>",
+    "active": true
+  },
+  {
+    "id": 6526,
+    "name": "sale.order.form.nit.buscar",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 99,
+    "arch": "<data>\n  <xpath expr=\"//group[@name='partner_details']/field[@name='partner_id']\" position=\"before\">\n    <label for=\"x_nit_buscar\" string=\"NIT / Cédula\"/>\n    <field name=\"x_nit_buscar\" nolabel=\"1\" placeholder=\"Escribe NIT o cédula (búsqueda automática)\" readonly=\"state in ['sale','cancel']\"/>\n  </xpath>\n</data>",
+    "active": true
+  },
+  {
+    "id": 6707,
+    "name": "sale.order.line.atheron.personas.noches",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 99,
+    "arch": "<data>\n  <xpath expr=\"//field[@name='order_line']/list/field[@name='product_uom_qty']\" position=\"before\">\n    <field name=\"x_personas\" optional=\"show\"/>\n    <field name=\"x_noches\" optional=\"show\"/>\n    <field name=\"x_qty_calc\" optional=\"hide\" string=\"Cant. (preview)\"/>\n  </xpath>\n  <xpath expr=\"//field[@name='order_line']/list/field[@name='product_uom_qty']\" position=\"attributes\">\n    <attribute name=\"optional\">hide</attribute>\n  </xpath>\n  <xpath expr=\"//field[@name='order_line']/list/field[@name='price_subtotal'][not(@optional)]\" position=\"attributes\">\n    <attribute name=\"optional\">hide</attribute>\n  </xpath>\n  <xpath expr=\"//field[@name='order_line']/list/field[@name='price_total'][not(@optional)]\" position=\"attributes\">\n    <attribute name=\"optional\">hide</attribute>\n  </xpath>\n  <xpath expr=\"//field[@name='order_line']/list/field[@name='price_unit']\" position=\"after\">\n    <field name=\"x_subtotal_calc\" optional=\"show\" string=\"Importe\"/>\n  </xpath>\n  <xpath expr=\"//field[@name='order_line']/form//field[@name='product_uom_qty']\" position=\"before\">\n    <field name=\"x_personas\"/>\n    <field name=\"x_noches\"/>\n    <field name=\"x_qty_calc\" readonly=\"1\"/>\n  </xpath>\n  <xpath expr=\"//field[@name='order_line']/form//field[@name='price_unit']\" position=\"after\">\n    <field name=\"x_subtotal_calc\" readonly=\"1\" string=\"Importe\"/>\n  </xpath>\n  <xpath expr=\"//field[@name='tax_totals']\" position=\"after\">\n    <field name=\"x_total_preview\" string=\"Total (live)\" widget=\"monetary\" readonly=\"1\"/>\n    <button name=\"1740\" type=\"action\" string=\"Actualizar Total\" class=\"btn btn-success mt-2\"/>\n  </xpath>\n</data>",
+    "active": true
+  },
+  {
+    "id": 4409,
+    "name": "rental.order.kanban",
+    "inherit_id": [
+      1702,
+      "sale.order.kanban"
+    ],
+    "priority": 100,
+    "arch": "<data><kanban position=\"attributes\">\n                <attribute name=\"quick_create\">false</attribute>\n                <attribute name=\"class\">o_kanban_mobile align-content-start</attribute>\n            </kanban>\n            <field name=\"currency_id\" position=\"after\">\n                <field name=\"is_late\"/>\n                <field name=\"has_rented_products\"/>\n            </field>\n            <xpath expr=\"//footer/div\" position=\"replace\">\n                <div class=\"text-muted\">\n                    <field name=\"name\"/>\n                    <br/>\n                    <span t-if=\"record.next_action_date.value\" t-attf-class=\"#{record.is_late.raw_value ? 'text-danger' : 'text-muted'}\">\n                        <t t-if=\"record.is_late.raw_value\">\n                            <i class=\"fa fa-warning\"/> Late\n                        </t>\n                        <t t-if=\"record.rental_status.raw_value=='pickup'\">\n                            Pickup:\n                        </t>\n                        <t t-elif=\"record.rental_status.raw_value=='return'\">\n                            Return:\n                        </t>\n                    </span>\n                    <field name=\"next_action_date\"/>\n                </div>\n            </xpath>\n            <field name=\"state\" position=\"attributes\">\n                <attribute name=\"invisible\">state == 'sale' and rental_status</attribute>\n            </field>\n            <field name=\"state\" position=\"after\">\n                <field name=\"rental_status\" widget=\"label_selection\" invisible=\"state != 'sale' or not rental_status or not has_rented_products\" options=\"{'classes': {'pickup': 'success', 'return': 'warning', 'returned': 'default'}}\" class=\"ms-auto\"/>\n            </field>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 5624,
+    "name": "Odoo Studio: rental.order.form customization",
+    "inherit_id": [
+      4407,
+      "rental.order.form"
+    ],
+    "priority": 160,
+    "arch": "<data>\n  <xpath expr=\"/form//button[@id='send_proforma_primary']\" position=\"replace\"/>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='qty_returned']\" position=\"replace\"/>\n</data>",
+    "active": true
+  },
+  {
+    "id": 3081,
+    "name": "Odoo Studio: sale.order.form customization",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 160,
+    "arch": "<data>\n  <xpath expr=\"/form/sheet/div[7]\" position=\"after\">\n    <field name=\"x_avatar_image\" widget=\"image\" class=\"oe_avatar ml-3 mr-3\"/>\n  </xpath>\n  <xpath expr=\"/form//group[@name='order_details']\" position=\"inside\">\n    <field name=\"warehouse_id\" string=\"Almacén\" options=\"{'no_create': True}\"/>\n    <field name=\"x_modo_syscom\" string=\"Solo Syscom\"/>\n    <field name=\"x_zipaquira\" string=\"Existencia Física Zipaquirá\"/>\n  </xpath>\n  <xpath expr=\"/form//field[@name='payment_term_id']\" position=\"after\">\n    <field name=\"x_initial_payment\" string=\"Cuota Inicial Acordada ($)\" invisible=\"payment_term_id != 23\" placeholder=\"Dejar en 0 para usar 50% por defecto\"/>\n  </xpath>\n  <xpath expr=\"/form//group[@name='sale_header']\" position=\"after\">\n    <group name=\"studio_group_86s_1ibkt1c9u\">\n      <group name=\"studio_group_86s_left\"/>\n      <group name=\"studio_group_86s_right\"/>\n    </group>\n  </xpath>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='customer_lead']\" position=\"replace\"/>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='margin_percent']\" position=\"replace\"/>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='product_template_id']\" position=\"after\">\n    <field optional=\"show\" name=\"x_studio_imagen\" widget=\"image\"/>\n  </xpath>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='product_uom_id']\" position=\"replace\"/>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='purchase_price']\" position=\"replace\"/>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list/field[@name='price_total']\" position=\"after\">\n    <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='discount']\" position=\"move\"/>\n    <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='tax_ids']\" position=\"move\"/>\n  </xpath>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list/field[@name='price_total'][2]\" position=\"after\">\n    <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='margin']\" position=\"move\"/>\n    <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='product_document_ids']\" position=\"move\"/>\n  </xpath>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='price_unit']\" position=\"attributes\">\n    <attribute name=\"optional\">show</attribute>\n    <attribute name=\"readonly\"/>\n  </xpath>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='product_template_id']\" position=\"attributes\">\n    <attribute name=\"domain\">['|', ('categ_id', 'child_of', 1297), ('x_en_zipaquira', '=', True)] if (parent.x_modo_syscom and parent.x_zipaquira) else ([('categ_id', 'child_of', 1297)] if parent.x_modo_syscom else ([('x_en_zipaquira', '=', True)] if parent.x_zipaquira else []))</attribute>\n  </xpath>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='product_template_id']\" position=\"after\">\n    <field name=\"x_syscom_stock\" string=\"Stock Syscom\" readonly=\"1\" optional=\"show\" invisible=\"not parent.x_modo_syscom\"/>\n    <field name=\"free_qty_today\" string=\"Disponible\" readonly=\"1\" optional=\"show\" invisible=\"parent.x_modo_syscom\"/>\n  </xpath>\n</data>",
+    "active": true
+  },
+  {
+    "id": 6391,
+    "name": "rental.order.form.inherit.booking_engine",
+    "inherit_id": [
+      4407,
+      "rental.order.form"
+    ],
+    "priority": 160,
+    "arch": "<data><xpath expr=\"//button[@name='action_open_pickup']\" position=\"attributes\">\n          <attribute name=\"string\">Check In</attribute>\n        </xpath>\n        <xpath expr=\"//form[1]/header[1]/button[@name='action_open_return']\" position=\"attributes\">\n          <attribute name=\"string\">Check Out</attribute>\n        </xpath>\n        <xpath expr=\"//field[@name='is_rental_order']\" position=\"after\">\n          <button string=\"City Tax\" type=\"action\" name=\"1480\" context=\"{'search_default_x_sale_order_id': id, 'default_x_sale_order_id': id}\"/>\n        </xpath>\n        <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='planning_slot_ids']\" position=\"replace\"/>\n        <xpath expr=\"//form[1]/sheet[1]/notebook[1]\" position=\"inside\">\n          <page string=\"Guests\">\n            <field name=\"x_guest_line_ids\">\n              <list default_order=\"x_sequence asc,id desc\" editable=\"bottom\">\n                <field name=\"x_sequence\" widget=\"handle\"/>\n                <field optional=\"show\" name=\"x_guest_partner_id\" widget=\"res_partner_many2one\" required=\"1\"/>\n                <field optional=\"show\" name=\"x_guest_identity_check\" widget=\"badge\" readonly=\"True\" decoration-success=\"x_guest_identity_check == 'ok'\" decoration-warning=\"x_guest_identity_check == 'na'\" decoration-danger=\"x_guest_identity_check == 'invalid'\"/>\n                <field optional=\"show\" name=\"x_room_resource_id\" domain=\"[('default_role_id.x_is_a_room_offer', '!=', False), ('id', 'in', x_sol_resource_ids)]\" options=\"{'no_create': True, 'no_create_edit': True}\"/>\n              </list>\n            </field>\n          </page>\n        </xpath>\n    </data>",
+    "active": true
+  },
+  {
+    "id": 6399,
+    "name": "rental.order.kanban.inherit.booking_engine",
+    "inherit_id": [
+      4409,
+      "rental.order.kanban"
+    ],
+    "priority": 160,
+    "arch": "<xpath expr=\"//t[@t-name='card']/div[1]\" position=\"after\">\n          <field name=\"rental_start_date\" display=\"full\" widget=\"daterange\" options=\"{'end_date_field':'rental_return_date','max_precision':'days','condensed':false,'min_precision':'days','show_time':false}\"/>\n        </xpath>",
+    "active": true
+  },
+  {
+    "id": 6394,
+    "name": "sale.order.form.inherit.booking_engine",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 160,
+    "arch": "<xpath expr=\"//field[@name='product_template_id']\" position=\"after\">\n          <field name=\"x_total_guests\" optional=\"hide\"/>\n          <field name=\"x_nights\" optional=\"hide\"/>\n          <field name=\"x_resource_id\" optional=\"hide\"/>\n        </xpath>",
+    "active": true
+  },
+  {
+    "id": 6522,
+    "name": "rental.order.form.hotel.pms",
+    "inherit_id": [
+      4407,
+      "rental.order.form"
+    ],
+    "priority": 165,
+    "arch": "<data>\n  <xpath expr=\"//notebook\" position=\"inside\">\n    <page string=\"Hotel / PMS\" name=\"hotel_pms\">\n      <group col=\"2\">\n        <group string=\"Estado y Canal\">\n          <field name=\"x_reservation_status\"/>\n          <field name=\"x_booking_source\"/>\n          <field name=\"x_pms_reference\"/>\n        </group>\n        <group string=\"Ocupación\">\n          <field name=\"x_num_adults\"/>\n          <field name=\"x_num_children\"/>\n          <field name=\"x_nights\"/>\n          <field name=\"x_meal_plan\"/>\n        </group>\n      </group>\n      <group col=\"2\">\n        <group string=\"Tiempos Reales\">\n          <field name=\"x_checkin_actual\"/>\n          <field name=\"x_checkout_actual\"/>\n        </group>\n        <group string=\"Pagos\">\n          <field name=\"x_deposit_amount\"/>\n          <field name=\"x_deposit_paid\"/>\n          <field name=\"x_city_tax_total\"/>\n        </group>\n      </group>\n      <group string=\"Solicitudes Especiales\">\n        <field name=\"x_special_requests\" nolabel=\"1\" colspan=\"2\"/>\n      </group>\n    </page>\n  </xpath>\n  <xpath expr=\"//field[@name='x_guest_line_ids']//list/field[@name='x_room_resource_id']\" position=\"after\">\n    <field optional=\"show\" name=\"x_guest_type\"/>\n    <field optional=\"show\" name=\"x_identity_number\"/>\n    <field optional=\"show\" name=\"x_nationality\"/>\n    <field optional=\"show\" name=\"x_birth_date\"/>\n    <field optional=\"show\" name=\"x_guest_phone\"/>\n    <field optional=\"show\" name=\"x_guest_email\"/>\n  </xpath>\n</data>",
+    "active": true
+  },
+  {
+    "id": 6708,
+    "name": "sale.order.form.atheron.vendedor",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 200,
+    "arch": "<data>\n    <xpath expr=\"//group[@name='partner_details']/field[@name='partner_id']\" position=\"attributes\">\n        <attribute name=\"string\">Cliente / Facturación</attribute>\n        <attribute name=\"context\">{'res_partner_search_mode': 'customer', 'show_address': 0, 'show_vat': True}</attribute>\n    </xpath>\n    <xpath expr=\"//group[@name='partner_details']/field[@name='partner_invoice_id']\" position=\"attributes\">\n        <attribute name=\"invisible\">1</attribute>\n    </xpath>\n    <xpath expr=\"//group[@name='partner_details']/field[@name='partner_shipping_id']\" position=\"attributes\">\n        <attribute name=\"invisible\">1</attribute>\n    </xpath>\n    <xpath expr=\"//group[@name='order_details']/field[@name='validity_date']\" position=\"attributes\">\n        <attribute name=\"invisible\">1</attribute>\n    </xpath>\n    <xpath expr=\"//label[@name='plan_label']\" position=\"attributes\">\n        <attribute name=\"invisible\">1</attribute>\n    </xpath>\n    <xpath expr=\"//div[@name='plan_block']\" position=\"attributes\">\n        <attribute name=\"invisible\">1</attribute>\n    </xpath>\n    <xpath expr=\"//group[@name='partner_details']/field[@name='partner_id']\" position=\"after\">\n        <field name=\"x_direccion_cliente\" string=\"Dirección del Cliente\" placeholder=\"Calle / Dirección donde va el técnico\"/>\n        <field name=\"x_ciudad_dane_cliente\" string=\"Ciudad DANE\" options=\"{'no_create': True}\" context=\"{'default_country_id': 49}\" placeholder=\"Buscar ciudad...\"/>\n        <field name=\"x_telf_cliente\" string=\"Teléfono\" widget=\"phone\" placeholder=\"Ej: 3001234567\"/>\n        <field name=\"x_email_cliente\" string=\"Correo Electrónico\" widget=\"email\" placeholder=\"correo@ejemplo.com\"/>\n        <field name=\"x_responsabilidad_iva_cliente\" string=\"Responsabilidad de Impuesto (IVA)\" widget=\"many2many_tags\" options=\"{'no_create': True}\"/>\n    </xpath>\n    <xpath expr=\"//group[@name='partner_details']\" position=\"inside\">\n        <field name=\"x_vendedor_id\" string=\"Vendedor (comisión)\" options=\"{'no_create': True}\" placeholder=\"Vendedor para comisión 5%\" invisible=\"warehouse_id == 7\"/>\n    </xpath>\n</data>",
+    "active": true
+  },
+  {
+    "id": 6725,
+    "name": "ATHERON - Columnas cotizacion por almacen (rama)",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 250,
+    "arch": "<data>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='x_personas']\" position=\"attributes\">\n    <attribute name=\"column_invisible\">parent.warehouse_id != 7</attribute>\n    <attribute name=\"invisible\">parent.warehouse_id != 7</attribute>\n  </xpath>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='x_noches']\" position=\"attributes\">\n    <attribute name=\"column_invisible\">parent.warehouse_id != 7</attribute>\n    <attribute name=\"invisible\">parent.warehouse_id != 7</attribute>\n  </xpath>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='x_syscom_stock']\" position=\"attributes\">\n    <attribute name=\"column_invisible\">parent.warehouse_id == 7 or not parent.x_modo_syscom</attribute>\n    <attribute name=\"invisible\">parent.warehouse_id == 7 or not parent.x_modo_syscom</attribute>\n  </xpath>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='free_qty_today']\" position=\"attributes\">\n    <attribute name=\"column_invisible\">parent.warehouse_id == 7 or parent.x_modo_syscom</attribute>\n    <attribute name=\"invisible\">parent.warehouse_id == 7 or parent.x_modo_syscom</attribute>\n  </xpath>\n  <xpath expr=\"/form/sheet/notebook/page[@name='order_lines']/field[@name='order_line']/list//field[@name='discount']\" position=\"attributes\">\n    <attribute name=\"column_invisible\">parent.warehouse_id == 7</attribute>\n    <attribute name=\"invisible\">parent.warehouse_id == 7</attribute>\n  </xpath>\n</data>",
+    "active": true
+  },
+  {
+    "id": 6719,
+    "name": "sale.order.form.atheron.tecnico",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 250,
+    "arch": "<data>\n  <xpath expr=\"//field[@name='x_vendedor_id']\" position=\"after\">\n    <field name=\"x_tecnico_id\" options=\"{'no_create': True}\" invisible=\"warehouse_id == 7\"/>\n  </xpath>\n</data>",
+    "active": true
+  },
+  {
+    "id": 6727,
+    "name": "ATHERON - Campos DIAN cliente en cotizacion",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 260,
+    "arch": "<data>\n  <xpath expr=\"//field[@name='x_responsabilidad_iva_cliente']\" position=\"after\">\n    <field name=\"x_checkin\" invisible=\"warehouse_id != 7\" required=\"warehouse_id == 7\"/>\n    <field name=\"x_checkout\" invisible=\"warehouse_id != 7\" required=\"warehouse_id == 7\"/>\n    <field name=\"x_checkin_actual\" string=\"Entrada con hora\" invisible=\"warehouse_id != 7\"/>\n    <field name=\"x_checkout_actual\" string=\"Salida con hora\" invisible=\"warehouse_id != 7\"/>\n    <field name=\"x_tipo_doc_cliente\" options=\"{'no_create': True}\"/>\n    <field name=\"x_tipo_persona_cliente\"/>\n    <field name=\"x_depto_cliente\" options=\"{'no_create': True}\"/>\n  </xpath>\n</data>",
+    "active": true
+  },
+  {
+    "id": 6751,
+    "name": "ATHERON - Precio Manual en lineas cotizacion",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 280,
+    "arch": "<xpath expr=\"//field[@name='order_line']/list//field[@name='price_unit']\" position=\"after\">\n    <field name=\"x_precio_manual\" string=\"Precio Manual\" optional=\"show\" column_invisible=\"parent.warehouse_id != 7\" invisible=\"parent.warehouse_id != 7\"/>\n</xpath>",
+    "active": true
+  },
+  {
+    "id": 6752,
+    "name": "ATHERON - Boton Check-out hotel",
+    "inherit_id": [
+      1710,
+      "sale.order.form"
+    ],
+    "priority": 300,
+    "arch": "<data>\n  <xpath expr=\"//header\" position=\"inside\">\n    <field name=\"x_checkout_done\" invisible=\"1\"/>\n    <field name=\"x_checkin_done\" invisible=\"1\"/>\n    <button name=\"1875\" type=\"action\" string=\"🔑 Check-in (Entrada)\" class=\"btn-success\" invisible=\"warehouse_id != 7 or x_checkin_done or x_checkout_done or state not in ('sale','done')\" confirm=\"¿Registrar la entrada del huésped?\"/>\n    <button name=\"1839\" type=\"action\" string=\"🚪 Check-out (Salida)\" class=\"btn-warning\" invisible=\"warehouse_id != 7 or x_checkout_done or state not in ('sale','done')\" confirm=\"¿Marcar la salida del huésped? Se liberará la habitación para nuevas reservas.\"/>\n    <button name=\"1840\" type=\"action\" string=\"↩ Reabrir reserva\" invisible=\"not x_checkout_done\"/>\n  </xpath>\n  <xpath expr=\"//sheet\" position=\"before\">\n    <div class=\"alert alert-info text-center\" role=\"alert\" invisible=\"not x_checkin_done or x_checkout_done\">\n      🛏️ Huésped EN CASA (check-in realizado).\n    </div>\n    <div class=\"alert alert-success text-center\" role=\"alert\" invisible=\"not x_checkout_done\">\n      ✅ Habitación DESOCUPADA — check-out realizado.\n    </div>\n  </xpath>\n</data>",
+    "active": true
+  },
+  {
+    "id": 6404,
+    "name": "sale.order.list.select.inherit.booking_engine",
+    "inherit_id": [
+      1711,
+      "sale.order.list.select"
+    ],
+    "priority": 320,
+    "arch": "<data><xpath expr=\"//filter[@name='my_sale_orders_filter']\" position=\"before\">\n          <filter domain=\"['|',              '&amp;', '&amp;', '&amp;',              ('rental_status', '=', 'return'),              ('rental_return_date', '&gt;=', datetime.datetime.combine(context_today(), datetime.time(0, 0, 0)).to_utc().strftime('%Y-%m-%d %H:%M:%S')),              ('rental_return_date', '&lt;', datetime.datetime.combine(context_today() + relativedelta(days = 1), datetime.time(0, 0, 0)).to_utc().strftime('%Y-%m-%d %H:%M:%S')),              ('state', '=', 'sale'),              '&amp;', '&amp;', '&amp;',              ('rental_status', '=', 'pickup'),              ('rental_start_date', '&gt;=', datetime.datetime.combine(context_today(), datetime.time(0, 0, 0)).to_utc().strftime('%Y-%m-%d %H:%M:%S')),              ('rental_start_date', '&lt;', datetime.datetime.combine(context_today() + relativedelta(days = 1), datetime.time(0, 0, 0)).to_utc().strftime('%Y-%m-%d %H:%M:%S')),              ('state', '=', 'sale')]\" name=\"filter_today\" string=\"Today\"/>\n          <separator/>\n        </xpath>\n        <xpath expr=\"//filter[@name='my_sale_orders_filter']\" position=\"after\">\n          <separator/>\n          <filter domain=\"[('rental_status', 'in', ['sent', 'draft'])]\" name=\"filter_draft\" string=\"Draft\"/>\n          <filter domain=\"[('rental_status', '=', 'pickup'), ('state', '=', 'sale')]\" name=\"filter_check_in\" string=\"To Check In\"/>\n          <filter domain=\"[('rental_status', '=', 'return'), ('state', '=', 'sale')]\" name=\"filter_check_out\" string=\"To Check Out\"/>\n        </xpath>\n        <xpath expr=\"//filter[@name='salesperson']\" position=\"before\">\n          <filter string=\"Status\" name=\"rental_status_group\" context=\"{'group_by': 'rental_status'}\"/>\n        </xpath>\n    </data>",
+    "active": true
+  },
+  {
+    "id": 4407,
+    "name": "rental.order.form",
+    "inherit_id": [
+      4406,
+      "rental.order.form"
+    ],
+    "priority": 999,
+    "arch": "<data>\n                <!-- empty on purpose, can be dropped once sale_stock_renting override is dropped -->\n            </data>",
+    "active": true
+  },
+  {
+    "id": 6456,
+    "name": "sale.subscription.order.list",
+    "inherit_id": [
+      1707,
+      "sale.order.list (quotes)"
+    ],
+    "priority": 999,
+    "arch": "<list position=\"attributes\">\n                <!-- use the default order defined on the model -->\n              <attribute name=\"default_order\">id desc</attribute>\n          </list>",
+    "active": true
+  },
+  {
+    "id": 6461,
+    "name": "sale.subscription.order.primary.form",
+    "inherit_id": [
+      6435,
+      "sale.subscription.order.form"
+    ],
+    "priority": 999,
+    "arch": "<data><xpath expr=\"//field[@name='order_line']//list//field[@name='product_id']\" position=\"attributes\">\n                <attribute name=\"context\">\n                    {\n                    'default_lst_price': price_unit,\n                    'default_recurring_invoice': True,\n                    'default_uom_id': product_uom_id,\n                    }\n                </attribute>\n            </xpath>\n            <xpath expr=\"//field[@name='order_line']//list//field[@name='product_template_id']\" position=\"attributes\">\n                <attribute name=\"context\">\n                    {\n                    'default_lst_price': price_unit,\n                    'default_recurring_invoice': True,\n                    'default_uom_id': product_uom_id,\n                    }\n                </attribute>\n            </xpath>\n            <field name=\"next_invoice_date\" position=\"attributes\">\n                 <attribute name=\"optional\">show</attribute>\n            </field>\n            <field name=\"sale_order_template_id\" position=\"attributes\">\n                <attribute name=\"domain\">[('is_subscription', '=', True)]</attribute>\n            </field>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 6459,
+    "name": "sale.subscription.quotation.list",
+    "inherit_id": [
+      6458,
+      "sale.subscription.order.list"
+    ],
+    "priority": 999,
+    "arch": "<data><list position=\"attributes\">\n                <!-- use the default order defined on the model -->\n              <attribute name=\"default_order\">id desc</attribute>\n            </list>\n            <field name=\"amount_total\" position=\"attributes\">\n                <attribute name=\"optional\">show</attribute>\n            </field>\n            <field name=\"next_invoice_date\" position=\"before\">\n                <field name=\"validity_date\" readonly=\"1\" optional=\"hide\"/>\n            </field>\n            <field name=\"next_invoice_date\" position=\"attributes\">\n                <attribute name=\"optional\">hide</attribute>\n            </field>\n        </data>",
+    "active": true
+  },
+  {
+    "id": 6833,
+    "name": "Odoo Studio: sale.order.kanban customization",
+    "inherit_id": [
+      1702,
+      "sale.order.kanban"
+    ],
+    "priority": 1000,
+    "arch": "<data>\n    <xpath expr=\"//kanban\" position=\"attributes\">\n        <attribute name=\"default_group_by\">x_reservation_status</attribute>\n    </xpath>\n    <xpath expr=\"//footer\" position=\"before\">\n        <div class=\"d-flex flex-wrap gap-2 text-muted mb-1\">\n            <field name=\"x_hotel_unit_id\"/>\n            <field name=\"x_checkin\"/>\n            <field name=\"x_checkout\"/>\n            <field name=\"x_num_adults\"/>\n        </div>\n    </xpath>\n    <xpath expr=\"//field[@name='date_order']\" position=\"after\">\n        <field name=\"x_hotel_balance\" widget=\"monetary\"/>\n    </xpath>\n    <xpath expr=\"//field[@name='state']\" position=\"after\">\n        <field name=\"x_reservation_status\" widget=\"badge\"/>\n    </xpath>\n</data>",
+    "active": true
+  }
+]

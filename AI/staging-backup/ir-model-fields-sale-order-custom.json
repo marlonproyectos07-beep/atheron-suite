@@ -1,0 +1,972 @@
+[
+  {
+    "id": 9669,
+    "name": "activity_exception_decoration",
+    "field_description": "Activity Exception Decoration",
+    "ttype": "selection",
+    "relation": false,
+    "selection": "[('warning', 'Alert'), ('danger', 'Error')]",
+    "required": false,
+    "help": "Type of the exception activity on record."
+  },
+  {
+    "id": 9670,
+    "name": "activity_exception_icon",
+    "field_description": "Icon",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": "Icon to indicate an exception activity."
+  },
+  {
+    "id": 9719,
+    "name": "amount_untaxed",
+    "field_description": "Untaxed Amount",
+    "ttype": "monetary",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 9735,
+    "name": "expected_date",
+    "field_description": "Expected Date",
+    "ttype": "datetime",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": "Delivery date you can promise to the customer, computed from the minimum lead time of the order lines in case of Service products. In case of shipping, the shipping policy of the order will be taken into account to either use the minimum or maximum lead time of the order lines."
+  },
+  {
+    "id": 17809,
+    "name": "expense_count",
+    "field_description": "# of Expenses",
+    "ttype": "integer",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 17808,
+    "name": "expense_ids",
+    "field_description": "Expenses",
+    "ttype": "one2many",
+    "relation": "hr.expense",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 9736,
+    "name": "is_expired",
+    "field_description": "Is Expired",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 16305,
+    "name": "next_action_date",
+    "field_description": "Next Action",
+    "ttype": "datetime",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47422,
+    "name": "next_invoice_date",
+    "field_description": "Next Invoice",
+    "ttype": "date",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": "The next invoice will be created on this date then the period will be extended."
+  },
+  {
+    "id": 47429,
+    "name": "payment_exception",
+    "field_description": "Contract in exception",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": "Automatic payment with token failed. The payment provider configuration and token should be checked"
+  },
+  {
+    "id": 47411,
+    "name": "rating_avg_text",
+    "field_description": "Rating Avg Text",
+    "ttype": "selection",
+    "relation": false,
+    "selection": "[('top', 'Happy'), ('ok', 'Neutral'), ('ko', 'Unhappy'), ('none', 'Not Rated yet')]",
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47413,
+    "name": "rating_last_text",
+    "field_description": "Rating Text",
+    "ttype": "selection",
+    "relation": false,
+    "selection": "[]",
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 23889,
+    "name": "sale_warning_text",
+    "field_description": "Sale Warning",
+    "ttype": "text",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": "Internal warning for the partner or the products as set by the user."
+  },
+  {
+    "id": 9738,
+    "name": "tax_calculation_rounding_method",
+    "field_description": "Tax Calculation Rounding Method",
+    "ttype": "selection",
+    "relation": false,
+    "selection": "[]",
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 9739,
+    "name": "tax_country_id",
+    "field_description": "Tax Country",
+    "ttype": "many2one",
+    "relation": "res.country",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 9740,
+    "name": "tax_totals",
+    "field_description": "Tax Totals",
+    "ttype": "binary",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47461,
+    "name": "user_extend",
+    "field_description": "Renew",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": "Customer can create a renewal quotation for their subscription."
+  },
+  {
+    "id": 48907,
+    "name": "x_api_client_ref",
+    "field_description": "Referencia cliente API",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48905,
+    "name": "x_api_user_id",
+    "field_description": "Usuario API que creó el HOLD",
+    "ttype": "many2one",
+    "relation": "res.users",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 20194,
+    "name": "x_avatar_image",
+    "field_description": "Avatar",
+    "ttype": "binary",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47672,
+    "name": "x_booking_source",
+    "field_description": "Canal de Reserva",
+    "ttype": "selection",
+    "relation": false,
+    "selection": "[('direct', 'Directo'), ('booking_com', 'Booking.com'), ('airbnb', 'Airbnb'), ('phone', 'Teléfono'), ('whatsapp', 'WhatsApp'), ('agencia', 'Agencia'), ('otro', 'Otro')]",
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48411,
+    "name": "x_checkin",
+    "field_description": "Check-in (entrada)",
+    "ttype": "date",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47676,
+    "name": "x_checkin_actual",
+    "field_description": "Check-In Real",
+    "ttype": "datetime",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48478,
+    "name": "x_checkin_done",
+    "field_description": "Entrada (Check-in) realizada",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48412,
+    "name": "x_checkout",
+    "field_description": "Check-out (salida)",
+    "ttype": "date",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47677,
+    "name": "x_checkout_actual",
+    "field_description": "Check-Out Real",
+    "ttype": "datetime",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48439,
+    "name": "x_checkout_done",
+    "field_description": "Salida (Check-out) realizada",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47682,
+    "name": "x_city_tax_total",
+    "field_description": "Total Impuesto Ciudad",
+    "ttype": "float",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48305,
+    "name": "x_ciudad_dane_cliente",
+    "field_description": "Ciudad DANE",
+    "ttype": "many2one",
+    "relation": "res.city",
+    "selection": false,
+    "required": false,
+    "help": "Ciudad DANE del cliente. Se sincroniza con el contacto. Filtrada por Colombia."
+  },
+  {
+    "id": 47680,
+    "name": "x_deposit_amount",
+    "field_description": "Monto Anticipo",
+    "ttype": "float",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47681,
+    "name": "x_deposit_paid",
+    "field_description": "Anticipo Pagado",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48402,
+    "name": "x_depto_cliente",
+    "field_description": "Departamento",
+    "ttype": "many2one",
+    "relation": "res.country.state",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48243,
+    "name": "x_destino_transporte",
+    "field_description": "Destino Transporte",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48301,
+    "name": "x_direccion_cliente",
+    "field_description": "Dirección del Cliente",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": "Dirección principal del cliente. Se usa para Field Service (a dónde va el técnico) y se sincroniza con el contacto del cliente. Al modificar aquí se actualiza en el contacto."
+  },
+  {
+    "id": 48303,
+    "name": "x_email_cliente",
+    "field_description": "Correo Electrónico",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": "Correo electrónico del cliente. Se sincroniza con el contacto."
+  },
+  {
+    "id": 48221,
+    "name": "x_filtro_catalogo",
+    "field_description": "Filtrar por",
+    "ttype": "selection",
+    "relation": false,
+    "selection": "[('todos', 'Todos'), ('syscom', 'Solo Syscom'), ('zipaquira', 'Existencia Física Zipaquirá')]",
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48845,
+    "name": "x_frozen_approval_level",
+    "field_description": "Nivel de aprobación de la tarifa congelada",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48841,
+    "name": "x_frozen_breakdown",
+    "field_description": "Desglose por noche (congelado)",
+    "ttype": "text",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48839,
+    "name": "x_frozen_currency",
+    "field_description": "Moneda (congelada)",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48837,
+    "name": "x_frozen_price_total",
+    "field_description": "Precio cotizado total (congelado)",
+    "ttype": "float",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48843,
+    "name": "x_frozen_quoted_at",
+    "field_description": "Momento de cotización",
+    "ttype": "datetime",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48833,
+    "name": "x_frozen_rate_rule",
+    "field_description": "Regla tarifaria (congelada)",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48835,
+    "name": "x_frozen_rate_version",
+    "field_description": "Versión regla (congelada)",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48847,
+    "name": "x_frozen_tax_status",
+    "field_description": "Estado tributario (congelado)",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47312,
+    "name": "x_guest_line_ids",
+    "field_description": "Guest Line",
+    "ttype": "one2many",
+    "relation": "x_guests_line",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47314,
+    "name": "x_guests",
+    "field_description": "Guests",
+    "ttype": "many2many",
+    "relation": "res.partner",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48815,
+    "name": "x_hold_created_at",
+    "field_description": "HOLD creado el",
+    "ttype": "datetime",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48636,
+    "name": "x_hold_expired",
+    "field_description": "HOLD vencido",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48634,
+    "name": "x_hold_expires",
+    "field_description": "HOLD vence",
+    "ttype": "datetime",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48813,
+    "name": "x_hold_origin",
+    "field_description": "Origen del HOLD",
+    "ttype": "selection",
+    "relation": false,
+    "selection": "[('staff', 'Personal'), ('web', 'Web'), ('sofia', 'Sofía/WhatsApp'), ('ota', 'OTA'), ('qa', 'QA')]",
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48640,
+    "name": "x_hotel_alert",
+    "field_description": "Alerta comercial",
+    "ttype": "text",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48658,
+    "name": "x_hotel_balance",
+    "field_description": "SALDO pendiente",
+    "ttype": "float",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48660,
+    "name": "x_hotel_deposit_ok",
+    "field_description": "Anticipo mínimo cubierto",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48652,
+    "name": "x_hotel_deposit_pct",
+    "field_description": "Anticipo requerido (%)",
+    "ttype": "float",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48642,
+    "name": "x_hotel_deposit_policy_id",
+    "field_description": "Política de anticipo",
+    "ttype": "many2one",
+    "relation": "x_hotel_deposit_policy",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48656,
+    "name": "x_hotel_deposit_required",
+    "field_description": "ANTICIPO requerido",
+    "ttype": "float",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48648,
+    "name": "x_hotel_discount_approved_by",
+    "field_description": "Descuento autorizado por",
+    "ttype": "many2one",
+    "relation": "res.users",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48646,
+    "name": "x_hotel_discount_pct",
+    "field_description": "Descuento autorizado (%)",
+    "ttype": "float",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48638,
+    "name": "x_hotel_extra_approved",
+    "field_description": "Capacidad extra aprobada",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48809,
+    "name": "x_hotel_extra_approved_at",
+    "field_description": "Capacidad extra aprobada el",
+    "ttype": "datetime",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48807,
+    "name": "x_hotel_extra_approved_by",
+    "field_description": "Capacidad extra aprobada por",
+    "ttype": "many2one",
+    "relation": "res.users",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48811,
+    "name": "x_hotel_extra_reason",
+    "field_description": "Motivo aprobación capacidad extra",
+    "ttype": "text",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48654,
+    "name": "x_hotel_paid",
+    "field_description": "COBRADO (pagos registrados)",
+    "ttype": "float",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48650,
+    "name": "x_hotel_payment_ids",
+    "field_description": "Cobros (pagos) de la reserva",
+    "ttype": "one2many",
+    "relation": "account.payment",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48629,
+    "name": "x_hotel_property_id",
+    "field_description": "Propiedad hotel",
+    "ttype": "many2one",
+    "relation": "x_hotel_property",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48817,
+    "name": "x_hotel_quote_id",
+    "field_description": "Cotización origen",
+    "ttype": "many2one",
+    "relation": "x_hotel_quote",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48644,
+    "name": "x_hotel_rate_id",
+    "field_description": "Tarifa hotel",
+    "ttype": "many2one",
+    "relation": "x_hotel_rate",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48632,
+    "name": "x_hotel_unit_id",
+    "field_description": "Unidad hotel",
+    "ttype": "many2one",
+    "relation": "x_hotel_unit",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48194,
+    "name": "x_initial_payment",
+    "field_description": "Cuota Inicial Acordada",
+    "ttype": "float",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48399,
+    "name": "x_is_mixed_rama",
+    "field_description": "Mezcla CCTV y Hotel",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48245,
+    "name": "x_km_transporte",
+    "field_description": "Km Transporte (ida)",
+    "ttype": "float",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47678,
+    "name": "x_meal_plan",
+    "field_description": "Plan de Alimentación",
+    "ttype": "selection",
+    "relation": false,
+    "selection": "[('sin_desayuno', 'Sin Desayuno'), ('desayuno', 'Solo Desayuno'), ('media_pension', 'Media Pensión'), ('pension_completa', 'Pensión Completa'), ('todo_incluido', 'Todo Incluido')]",
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48199,
+    "name": "x_modo_syscom",
+    "field_description": "Solo Syscom",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47683,
+    "name": "x_nights",
+    "field_description": "Número de Noches",
+    "ttype": "integer",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47715,
+    "name": "x_nit_buscar",
+    "field_description": "NIT / Cédula",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": "Ingresa el NIT o cédula y presiona Buscar"
+  },
+  {
+    "id": 48405,
+    "name": "x_nombre_cliente",
+    "field_description": "Nombre / Razón social",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47674,
+    "name": "x_num_adults",
+    "field_description": "Número de Adultos",
+    "ttype": "integer",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47675,
+    "name": "x_num_children",
+    "field_description": "Número de Niños",
+    "ttype": "integer",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47268,
+    "name": "x_order_involves_room",
+    "field_description": "Order Involves Room",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48241,
+    "name": "x_origen_transporte",
+    "field_description": "Origen Transporte",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 20375,
+    "name": "x_paquete_cotizacion",
+    "field_description": "Equipos",
+    "ttype": "many2many",
+    "relation": "product.tag",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47270,
+    "name": "x_picked_up",
+    "field_description": "Picked up",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48226,
+    "name": "x_pin_autorizacion",
+    "field_description": "Código de Autorización",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47673,
+    "name": "x_pms_reference",
+    "field_description": "Referencia PMS",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48831,
+    "name": "x_quote_ref",
+    "field_description": "Query ID cotización (congelado)",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48403,
+    "name": "x_regimen_cliente",
+    "field_description": "Régimen fiscal",
+    "ttype": "selection",
+    "relation": false,
+    "selection": "[]",
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 47671,
+    "name": "x_reservation_status",
+    "field_description": "Estado Reservación",
+    "ttype": "selection",
+    "relation": false,
+    "selection": "[('draft', 'CONSULTA'), ('opcion', 'OPCION'), ('hold', 'HOLD'), ('confirmed', 'CONFIRMADA'), ('pre_checkin', 'PRE_CHECKIN'), ('checked_in', 'CHECKIN'), ('checked_out', 'CHECKOUT'), ('closed', 'CERRADA'), ('cancelled', 'CANCELADA'), ('no_show', 'NO_SHOW')]",
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48309,
+    "name": "x_responsabilidad_iva_cliente",
+    "field_description": "Responsabilidad de Impuesto (IVA)",
+    "ttype": "many2many",
+    "relation": "l10n_co_edi.type_code",
+    "selection": false,
+    "required": false,
+    "help": "Obligaciones y Responsabilidades fiscales DIAN del cliente. Se sincroniza con el contacto."
+  },
+  {
+    "id": 47679,
+    "name": "x_special_requests",
+    "field_description": "Solicitudes Especiales",
+    "ttype": "text",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 20889,
+    "name": "x_studio_nmero_de_personas",
+    "field_description": "Número de personas",
+    "ttype": "integer",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48335,
+    "name": "x_tecnico_id",
+    "field_description": "Técnico Asignado",
+    "ttype": "many2one",
+    "relation": "hr.employee",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48307,
+    "name": "x_telf_cliente",
+    "field_description": "Teléfono",
+    "ttype": "char",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": "Teléfono del cliente. Se sincroniza con el contacto."
+  },
+  {
+    "id": 48401,
+    "name": "x_tipo_doc_cliente",
+    "field_description": "Tipo de documento",
+    "ttype": "many2one",
+    "relation": "l10n_latam.identification.type",
+    "selection": false,
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48404,
+    "name": "x_tipo_persona_cliente",
+    "field_description": "Tipo de persona",
+    "ttype": "selection",
+    "relation": false,
+    "selection": "[]",
+    "required": false,
+    "help": false
+  },
+  {
+    "id": 48255,
+    "name": "x_total_preview",
+    "field_description": "Total (preview)",
+    "ttype": "monetary",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": "Total en vivo de la cotización (suma de Importe preview de cada línea)."
+  },
+  {
+    "id": 48257,
+    "name": "x_vendedor_id",
+    "field_description": "Vendedor (comisión)",
+    "ttype": "many2one",
+    "relation": "res.partner",
+    "selection": false,
+    "required": false,
+    "help": "Vendedor que capturó esta venta. Usado para calcular comisión del 5% sobre productos no-servicio cuando el subtotal supera $250.000. Filtra contactos con tag 'Vendedor Atheron'."
+  },
+  {
+    "id": 48209,
+    "name": "x_zipaquira",
+    "field_description": "Existencia Física Zipaquirá",
+    "ttype": "boolean",
+    "relation": false,
+    "selection": false,
+    "required": false,
+    "help": false
+  }
+]
