@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { WhatsAppCloudProvider } from '../src/whatsapp-cloud-adapter.mjs';
 import { assertImplementsMessagingProvider } from '../src/messaging-provider.mjs';
+import { createWhatsAppOrchestrator } from '../src/whatsapp-orchestrator.mjs';
 
 // Forma real de payload entrante de WhatsApp Cloud API (documentada
 // publicamente por Meta) -- no inventada.
@@ -67,6 +68,18 @@ test('con httpClient fake inyectado, sendMessage arma el request real de Meta (B
   assert.deepEqual(body, { messaging_product: 'whatsapp', to: '573000000000', type: 'text', text: { body: 'Tengo estas opciones disponibles' } });
 });
 
+test('un rechazo HTTP de Meta falla sin exponer su respuesta', async () => {
+  const provider = new WhatsAppCloudProvider({
+    accessToken: 'test-token-not-real',
+    phoneNumberId: '123456789012345',
+    httpClient: async () => ({ ok: false, status: 401, body: 'private-data' }),
+  });
+  await assert.rejects(
+    () => provider.sendMessage('573000000000', 'hola'),
+    (error) => error.message === 'WHATSAPP_API_REQUEST_FAILED',
+  );
+});
+
 test('verifyWebhook: handshake real de Meta -- token correcto devuelve el challenge', () => {
   const provider = new WhatsAppCloudProvider({ verifyToken: 'mi-verify-token-test' });
   const challenge = provider.verifyWebhook({ 'hub.mode': 'subscribe', 'hub.verify_token': 'mi-verify-token-test', 'hub.challenge': 'abc123' });
@@ -103,6 +116,29 @@ test('receiveMessage deduplica por message_id -- el mismo mensaje repetido (rein
   await provider.receiveMessage(REAL_INBOUND_PAYLOAD);
   await provider.receiveMessage(REAL_INBOUND_PAYLOAD); // Meta reintentando el mismo webhook
   assert.equal(received.length, 1);
+});
+
+test('primer mensaje Cloud llega al orquestador una vez, sin llamada real a Meta', async () => {
+  const provider = new WhatsAppCloudProvider({});
+  const events = [];
+  let availabilityCalls = 0;
+  const orchestrator = createWhatsAppOrchestrator({
+    provider,
+    referenceDate: '2026-12-01',
+    tools: { checkAvailability: async () => { availabilityCalls++; return true; } },
+    onEvent: (event) => events.push(event.type),
+  });
+  const payload = structuredClone(REAL_INBOUND_PAYLOAD);
+  payload.entry[0].changes[0].value.messages[0].text.body = 'Del viernes al domingo, somos 2';
+
+  const first = await provider.receiveMessage(payload);
+  const retry = await provider.receiveMessage(payload);
+
+  assert.deepEqual(first, { accepted: 1, duplicates: 0 });
+  assert.deepEqual(retry, { accepted: 0, duplicates: 1 });
+  assert.equal(availabilityCalls, 1);
+  assert.ok(orchestrator.getConversation('573000000000'));
+  assert.ok(events.includes('send_failed'));
 });
 
 test('markDelivered nunca inventa un endpoint que Meta no expone -- no-op documentado', async () => {

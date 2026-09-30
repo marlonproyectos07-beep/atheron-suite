@@ -15,14 +15,11 @@ import { buildWhatsAppGatewayTools } from '../../../../integrations/odoo-hotel-g
  *         nuevo por el pipeline real ya probado: nlu-lite.mjs ->
  *         conversation-engine.mjs -> ai-tool-adapters.mjs -> Gateway ->
  *         Odoo STAGING (whatsapp-orchestrator.mjs). Sin Gateway
- *         configurado, el mensaje se acepta/deduplica a nivel de
- *         transporte (para que Meta no reintente) pero NO se enruta --
- *         falla cerrado, nunca simula una respuesta.
+ *         configurado, devuelve 503 antes de deduplicar el mensaje.
  *
- * `provider.sendMessage` (la respuesta de vuelta por WhatsApp real)
- * sigue fallando cerrado (WHATSAPP_ADAPTER_NOT_CONNECTED) sin
- * accessToken/httpClient real -- eso es, a proposito, la unica pieza que
- * falta y que requiere autorizacion del CEO para conectar Meta real.
+ * El envio real exige credenciales Meta y el interruptor explicito
+ * WHATSAPP_TEST_SEND_ENABLED=true. Sin ambos, POST devuelve 503 antes
+ * de procesar o deduplicar mensajes, para que no se pierdan en silencio.
  *
  * Nunca conecta produccion, nunca imprime secretos, nunca confia en un
  * payload sin firma valida.
@@ -34,7 +31,14 @@ export const prerender = false;
 // (igual de razonable que el rate limiter en memoria de availability.ts
 // — no es persistencia garantizada entre cold starts, es la primera
 // capa de defensa).
-const provider = new WhatsAppCloudProvider({});
+const outboundReady = process.env.WHATSAPP_TEST_SEND_ENABLED === 'true'
+  && Boolean(process.env.WHATSAPP_ACCESS_TOKEN)
+  && Boolean(process.env.WHATSAPP_PHONE_NUMBER_ID);
+const provider = new WhatsAppCloudProvider(outboundReady ? {
+  accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
+  phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
+  httpClient: fetch,
+} : {});
 
 function readConfig() {
   return {
@@ -54,11 +58,7 @@ function readGatewayConfig() {
 // El orquestador se crea UNA sola vez por instancia "tibia", igual que
 // `provider`: registra su propio handler via provider.onMessage() para
 // que cada llamada a provider.receiveMessage() (ver POST) dispare el
-// pipeline real NLU -> motor -> Gateway -> respuesta. Si el Gateway no
-// esta configurado (HOTEL_GATEWAY_BASE_URL/etc.), el mensaje se sigue
-// aceptando/deduplicando a nivel de transporte (para que Meta no reciba
-// reintentos) pero no se enruta -- se falla cerrado, nunca se simula
-// una respuesta.
+// pipeline real NLU -> motor -> Gateway -> respuesta.
 let orchestrator: ReturnType<typeof createWhatsAppOrchestrator> | null = null;
 
 function ensureOrchestrator() {
@@ -119,6 +119,10 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResponse({ ok: false, error: 'INVALID_SIGNATURE' }, 401);
   }
 
+  if (!outboundReady) {
+    return jsonResponse({ ok: false, error: 'META_OUTBOUND_NOT_CONNECTED' }, 503);
+  }
+
   let payload: unknown;
   try {
     payload = JSON.parse(rawBody);
@@ -129,15 +133,13 @@ export const POST: APIRoute = async ({ request }) => {
   const routed = ensureOrchestrator();
   if (!routed) {
     // eslint-disable-next-line no-console
-    console.error('[hotel/webhook] HOTEL_GATEWAY_BASE_URL/HOTEL_WEB_AGENT_ID/HOTEL_WEB_AGENT_KEY no configurados -- mensaje aceptado a nivel de transporte, NO enrutado (fail-closed)');
+    console.error('[hotel/webhook] Gateway no configurado -- mensaje rechazado antes de deduplicar');
+    return jsonResponse({ ok: false, error: 'GATEWAY_NOT_CONNECTED' }, 503);
   }
 
   // provider.onMessage() ya tiene registrado el handler del orquestador
-  // (si el Gateway esta configurado): receiveMessage() parsea, deduplica
-  // por message_id y dispara el pipeline real completo para cada mensaje
-  // nuevo. Si el Gateway no esta configurado, no hay ningun handler
-  // registrado todavia -- receiveMessage igual deduplica/cuenta a nivel
-  // de transporte, simplemente no hay nada que lo procese mas alla.
+  // receiveMessage() parsea, deduplica por message_id y dispara el
+  // pipeline real completo para cada mensaje nuevo.
   const { accepted, duplicates } = await provider.receiveMessage(payload);
   // Observabilidad SIN PII: solo conteos, nunca texto/telefono del cliente.
   // eslint-disable-next-line no-console

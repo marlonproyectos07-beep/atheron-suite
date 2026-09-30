@@ -32,6 +32,7 @@ export class WhatsAppCloudProvider {
   #httpClient;
   #handlers = [];
   #seenMessageIds = new Set();
+  #receivedMessageIds = new Set();
   #correlationIds = new Map();
 
   /**
@@ -99,10 +100,14 @@ export class WhatsAppCloudProvider {
     let accepted = 0;
     let duplicates = 0;
     for (const message of this.parseInboundPayload(payload)) {
-      if (!message.message_id || this.deduplicate(message.message_id)) {
+      // La deduplicacion de transporte es independiente de la del
+      // orquestador. Si comparten el mismo Set, el primer mensaje queda
+      // marcado aqui y el orquestador lo descarta como duplicado.
+      if (!message.message_id || this.#receivedMessageIds.has(message.message_id)) {
         duplicates += 1;
         continue;
       }
+      this.#receivedMessageIds.add(message.message_id);
       accepted += 1;
       for (const handler of this.#handlers) {
         await handler(message);
@@ -116,7 +121,7 @@ export class WhatsAppCloudProvider {
     if (!this.#httpClient) {
       throw new Error('WHATSAPP_ADAPTER_NOT_CONNECTED: sin httpClient inyectado, este adaptador nunca llama a Meta por su cuenta.');
     }
-    return this.#httpClient(`${this.#config.apiBaseUrl}/${this.#config.phoneNumberId}${path}`, {
+    const response = await this.#httpClient(`${this.#config.apiBaseUrl}/${this.#config.phoneNumberId}${path}`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${this.#config.accessToken}`,
@@ -124,6 +129,11 @@ export class WhatsAppCloudProvider {
       },
       body: JSON.stringify(body),
     });
+    if (!response?.ok) {
+      // No incluir el cuerpo de Meta: puede contener datos personales.
+      throw new Error('WHATSAPP_API_REQUEST_FAILED');
+    }
+    return response;
   }
 
   async sendMessage(to, text) {
