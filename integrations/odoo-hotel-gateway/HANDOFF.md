@@ -11,6 +11,8 @@
 
 - Render STAGING público: `https://atheron-hotel-gateway-staging.onrender.com/health` respondió 200 `status:ok`; `/ready` respondió 200 `ready:true`; POST con credenciales inválidas respondió 401 `UNAUTHORIZED`.
 - Vercel Preview `https://atheron-suite-pl20ktei7-marlon-atheron.vercel.app`: `/api/hotel/health` respondió 200, `/api/hotel/availability` respondió 200 con `requested_available:true` para 201, 2026-11-03 a 2026-11-04, 2 huéspedes. GET del webhook con token inválido respondió 403; POST sin firma respondió 401. Esta es evidencia nueva de lectura a través de Preview, pero no demuestra por sí sola el alcance exacto de las variables de entorno en Production.
+- Tras subir `b9fe8f9`, Vercel creó el Preview `https://atheron-suite-41yd114hv-marlon-atheron.vercel.app` (deployment `dpl_wbFxdremhPGMBxrhgit67wgm9XHf`, target Preview, estado READY). Codex confirmó nuevamente health 200, availability 200 con `requested_available:true` para la misma consulta, GET inválido 403 y POST sin firma 401. El nuevo POST firmado con Meta no se probó porque no hay credenciales/autorización Meta.
+- Draft PR [#73](https://github.com/marlonproyectos07-beep/atheron-suite/pull/73) abierto de HOTEL-011 hacia la rama HOTEL-009; no se hizo merge.
 - Gateway: `npm test` 311/311 después del cambio; simulador WhatsApp v2 30/30. Build web completo con `ASTRO_TELEMETRY_DISABLED=1`. El primer intento de build fue bloqueado por el sandbox, los siguientes tuvieron éxito con permiso para escribir archivos generados en la raíz.
 - Respaldo `AI/staging-backup/`: 13 JSON válidos con los conteos documentados y ZIP de Studio con 6 entradas legibles. No se realizó una restauración en una base nueva. El README contiene una discrepancia menor: dice 69 acciones de servidor en la clasificación, pero el archivo y la tabla registran 81.
 - Modo Ángela: los tests locales de Kanban, disponibilidad, reserva, finanzas y bloqueo cruzado pasaron dentro de la suite. No se repitió un ciclo operacional en Odoo STAGING. El script de creación de usuario existe, pero requiere el correo real de Ángela.
@@ -23,15 +25,15 @@ El webhook de Astro ahora devuelve 503 antes de procesar un POST firmado si falt
 
 ## Pendientes y límites
 
-- El cambio de código es local hasta que se publique en la rama/Preview. No afirmar que la corrección está desplegada.
-- Meta no está conectado: faltan credenciales y el interruptor de prueba está apagado. El POST local ahora falla cerrado con 503 antes de recibir mensajes; el Preview publicado sigue ejecutando el commit anterior hasta un nuevo despliegue. Después de conectar Meta, el ACK tras un error de envío y la persistencia de deduplicación/conversación entre instancias serverless aún requieren una decisión técnica para un piloto con HOLD; no basta la memoria del proceso. Limitar el primer mensaje TEST a una consulta sin HOLD. El handler `HUMAN_REQUIRED` aún no tiene canal operativo para avisar a Ángela.
+- El código de `b9fe8f9` está desplegado en el Preview READY citado arriba. La ruta protegida con firma válida y la respuesta 503 sin salida Meta todavía no fueron comprobadas por HTTP.
+- Meta no está conectado: faltan credenciales y el interruptor de prueba está apagado. El POST del nuevo código falla cerrado con 503 antes de recibir mensajes si faltan esos datos. Después de conectar Meta, el ACK tras un error de envío y la persistencia de deduplicación/conversación entre instancias serverless aún requieren una decisión técnica para un piloto con HOLD; no basta la memoria del proceso. Limitar el primer mensaje TEST a una consulta sin HOLD. El handler `HUMAN_REQUIRED` aún no tiene canal operativo para avisar a Ángela.
 - Verificar por panel/API de Vercel que `HOTEL_GATEWAY_BASE_URL` y las credenciales se aplican solo a Preview; no se pudo auditar el alcance de las variables con las herramientas disponibles. No tocar Production.
-- Quote por Render y cleanup del HOLD constan en `AI/ATH-ODOO-HOTEL-011_GATEWAY-RENDER-LIVE_2026-09-30.md`; no se repitieron con credencial válida en este relevo. `DRAFT_PR = PENDING_NON_BLOCKING` (GitHub CLI no disponible).
+- Quote por Render y cleanup del HOLD constan en `AI/ATH-ODOO-HOTEL-011_GATEWAY-RENDER-LIVE_2026-09-30.md`; no se repitieron con credencial válida en este relevo. El PR #73 es Draft y sigue sin merge.
 - La expiración de Odoo STAGING fue advertida como aproximadamente 7 días el 2026-09-30. El respaldo reduce pérdida de artefactos, pero no equivale a una restauración completa. No se compró suscripción ni se migró a Production.
 - `.playwright-mcp/` era una carpeta preexistente sin seguimiento; conservarla.
 
 ## Próximo gate
 
-1. Publicar el commit de esta corrección solo en Vercel Preview y verificar su POST sin credenciales (503). Revisar el alcance de variables de Preview. Resolver persistencia y ACK antes de habilitar HOLD por WhatsApp.
+1. Revisar el alcance de variables de Preview. Comprobar POST firmado del nuevo Preview en un entorno de prueba antes del primer mensaje Meta; resolver persistencia y ACK antes de habilitar HOLD por WhatsApp.
 2. CEO: acceso/autorización Meta TEST y aprobación explícita antes del primer mensaje real. Correo real de Ángela solo para crear su usuario. Decisión separada sobre preservación de STAGING antes de la expiración.
 3. Nunca usar Production, clientes/números reales, Booking/Airbnb ni otras OTAs para esta prueba.
