@@ -137,3 +137,47 @@ export async function fetchHotelReservations(transport, { database, uid, technic
   ]);
   return rows.map(mapSaleOrderToReservation);
 }
+
+/**
+ * ATH-ODOO-HOTEL-009, Prioridad 4 (turno de cierre) -- respuesta real a
+ * "COBROS HOY": existe una fuente transaccional real, `account.payment`
+ * (el modelo contable estandar de Odoo), con un campo real
+ * `x_hotel_sale_order_id` (confirmado via fields_get, ver
+ * scripts/diagnostico-pagos.mjs) que ya vincula pago -> reserva.
+ * Confirmado con 2 pagos reales existentes (scripts/diagnostico-pagos-
+ * reales.mjs): `date`, `amount`, `x_hotel_sale_order_id`, `state`.
+ *
+ * Domain por defecto: solo pagos vinculados a una reserva de hotel
+ * (`x_hotel_sale_order_id != false`) y confirmados (`state = 'paid'`,
+ * nunca cuenta un pago cancelado o en borrador como cobrado).
+ */
+export const HOTEL_PAYMENT_DOMAIN = Object.freeze([
+  ['x_hotel_sale_order_id', '!=', false],
+  ['state', '=', 'paid'],
+]);
+
+export const HOTEL_PAYMENT_FIELDS = Object.freeze(['id', 'date', 'amount', 'x_hotel_sale_order_id', 'payment_type', 'journal_id']);
+
+export function mapAccountPaymentToCollection(row) {
+  return {
+    odoo_payment_id: row.id,
+    collected_date: row.date ?? null,
+    amount: row.amount ?? null,
+    external_reference: many2oneName(row.x_hotel_sale_order_id),
+    payment_type: row.payment_type ?? null,
+    journal: many2oneName(row.journal_id),
+  };
+}
+
+export async function fetchHotelPayments(transport, { database, uid, technicalSecret, limit = 300, domain = HOTEL_PAYMENT_DOMAIN, fields = HOTEL_PAYMENT_FIELDS }) {
+  const rows = await transport.call('object', 'execute_kw', [
+    database,
+    uid,
+    technicalSecret,
+    'account.payment',
+    'search_read',
+    [domain],
+    { fields, limit },
+  ]);
+  return rows.map(mapAccountPaymentToCollection);
+}

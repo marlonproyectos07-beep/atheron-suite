@@ -11,7 +11,7 @@
  */
 import { loadGuardedConfig } from './live-hotel-008a-runner.mjs';
 import { HttpOdooTransport } from '../src/odoo-transport.mjs';
-import { fetchHotelReservations } from '../src/odoo-reporting-reader.mjs';
+import { fetchHotelReservations, fetchHotelPayments } from '../src/odoo-reporting-reader.mjs';
 import { managerDashboard } from '../src/financial-model.mjs';
 
 const config = loadGuardedConfig(process.env);
@@ -27,6 +27,18 @@ const reservations = await fetchHotelReservations(transport, {
 const referenceDate = process.env.REFERENCE_DATE || new Date().toISOString().slice(0, 10);
 const dashboard = managerDashboard(reservations, referenceDate);
 
+// Prioridad 4 (turno de cierre): COBROS HOY via account.payment real
+// (x_hotel_sale_order_id, state='paid') -- fuente distinta de
+// sale.order, nunca mezclada con VENTAS HOY.
+const payments = await fetchHotelPayments(transport, {
+  database: config.database,
+  uid,
+  technicalSecret: config.technicalSecret,
+});
+const collectedTodayReal = payments
+  .filter((p) => p.collected_date === referenceDate)
+  .reduce((sum, p) => sum + (p.amount ?? 0), 0);
+
 console.log(JSON.stringify({
   overall: 'PASS',
   reference_date: referenceDate,
@@ -34,7 +46,9 @@ console.log(JSON.stringify({
   sales_created_today: dashboard.sales_created_today,
   sales_created_today_total: dashboard.sales_created_today_total,
   stays_today: dashboard.stays_today,
-  collected_today: dashboard.collected_today,
+  collected_today_sale_order_field: dashboard.collected_today, // sin fuente real de fecha (ver docs), queda en 0
+  collected_today_real_account_payment: collectedTodayReal, // REAL_SOURCE_CONNECTED (Prioridad 4)
+  total_payments_read: payments.length,
   accounts_receivable: dashboard.accounts_receivable,
   sales_by_channel: dashboard.sales_by_channel,
   sales_by_unit: dashboard.sales_by_unit,

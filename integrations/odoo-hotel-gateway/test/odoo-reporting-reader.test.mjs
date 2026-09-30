@@ -1,6 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mapSaleOrderToReservation, fetchHotelReservations, HOTEL_ORDER_DOMAIN, HOTEL_ORDER_FIELDS } from '../src/odoo-reporting-reader.mjs';
+import {
+  mapSaleOrderToReservation,
+  fetchHotelReservations,
+  HOTEL_ORDER_DOMAIN,
+  HOTEL_ORDER_FIELDS,
+  mapAccountPaymentToCollection,
+  fetchHotelPayments,
+  HOTEL_PAYMENT_DOMAIN,
+  HOTEL_PAYMENT_FIELDS,
+} from '../src/odoo-reporting-reader.mjs';
 import { FakeOdooTransport } from './fakes/odoo-transport.fake.mjs';
 
 // Forma real confirmada via fields_get contra Odoo STAGING (2026-09-30,
@@ -72,4 +81,37 @@ test('fetchHotelReservations filtra por x_order_involves_room y excluye cancelle
   assert.deepEqual(domain, HOTEL_ORDER_DOMAIN);
   assert.deepEqual(options.fields, HOTEL_ORDER_FIELDS);
   assert.ok(domain.some(([field]) => field === 'x_order_involves_room'));
+});
+
+// Forma real confirmada via search_read contra Odoo STAGING (2026-09-30,
+// scripts/diagnostico-pagos-reales.mjs) -- 2 pagos reales existentes.
+const REAL_PAYMENT_ROW = {
+  id: 2349,
+  date: '2026-09-23',
+  amount: 300000,
+  x_hotel_sale_order_id: [21933, 'COT/2026/03593'],
+  payment_type: 'inbound',
+  journal_id: [7, 'Bancolombia'],
+};
+
+test('mapAccountPaymentToCollection traduce la fila real de account.payment (Prioridad 4: COBROS HOY)', () => {
+  const c = mapAccountPaymentToCollection(REAL_PAYMENT_ROW);
+  assert.equal(c.collected_date, '2026-09-23');
+  assert.equal(c.amount, 300000);
+  assert.equal(c.external_reference, 'COT/2026/03593');
+  assert.equal(c.journal, 'Bancolombia');
+});
+
+test('fetchHotelPayments filtra por reserva vinculada y state=paid (nunca cuenta un pago cancelado como cobrado)', async () => {
+  const transport = new FakeOdooTransport({ result: [REAL_PAYMENT_ROW] });
+  const rows = await fetchHotelPayments(transport, { database: 'db', uid: 7, technicalSecret: 'x' });
+  assert.equal(rows.length, 1);
+
+  const call = transport.executeKwCalls[0];
+  const [, , , model, method, [domain], options] = call.args;
+  assert.equal(model, 'account.payment');
+  assert.equal(method, 'search_read');
+  assert.deepEqual(domain, HOTEL_PAYMENT_DOMAIN);
+  assert.deepEqual(options.fields, HOTEL_PAYMENT_FIELDS);
+  assert.ok(domain.some(([field, , value]) => field === 'state' && value === 'paid'));
 });
