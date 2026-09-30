@@ -631,3 +631,42 @@ el clasificador de modo automatico, requiere 2 minutos de Marlon en
 Studio si lo quiere) y una decision CEO pendiente (si registrar un
 pago TEST real via `account.payment` en un proximo ciclo, o mantener
 esa parte solo diseñada).
+
+## Actualizacion 2026-09-30 (mismo dia) -- tarjeta Kanban enriquecida, PENDIENTE CERRADO
+
+Marlon pego el XML directo en `Ajustes > Tecnico > Vistas`, registro
+`Odoo Studio: sale.order.kanban customization` (id 6833) -- yo no
+edite esa vista (seguia bloqueado por el clasificador de modo
+automatico); solo diagnostique el error de guardado y verifique el
+resultado, ambos en SOLO LECTURA.
+
+**Diagnostico del primer intento ("localizadores invalidos"):** el
+xpath `//div[hasclass('d-flex align-items-baseline mb-2')]` no se
+resolvio -- `hasclass()` con varias clases juntas es fragil para el
+resolutor de vistas de Odoo. Diagnostico via el metodo ORM real
+`sale.order.get_views()` (SOLO LECTURA, devuelve el arch YA COMBINADO
+tal como Odoo lo renderiza) -- confirmo que los otros 2 xpath SI se
+habian aplicado, y que la unica anomalia era ese `div`. Corregido
+apuntando a `//footer` (position="before"), unico y sin ambiguedad.
+
+**Verificacion del resultado (real, no asumida):**
+- `sale.order.get_views()` releido: los 4 cambios presentes en el arch
+  combinado, `combined_error: null`.
+- Kanban real (screenshot + inspeccion): cada tarjeta muestra ahora
+  unidad, check-in, check-out, personas, SALDO y el badge de
+  `Estado Reservación` real (CANCELADA/CHECKOUT/CERRADA/CONFIRMADA/...),
+  ademas del agrupamiento por columnas que ya funcionaba.
+- Regresion: formulario de `COT/2026/03821` (la reserva TEST del ciclo
+  check-in/check-out) se abrio y funciono identico a antes -- la vista
+  de formulario nunca se toco, solo la Kanban.
+- Anti-overbooking + Casa Completa, verificacion FRESCA (no reutilizando
+  evidencia anterior): `inverse-gate` con ventana nueva (2027-06-18/19)
+  -> `hold_id 22229` (`COT/2026/03822`, unidad 201) -> PASS,
+  `casa_completa_blocked: true`, 202/203/301/302 disponibles. Liberado
+  con `Hotel: CANCELAR` (real, confirmado en el chatter: "HOLD →
+  CANCELADA") y reconfirmado disponible de nuevo via
+  `scripts/prueba-reina-201.mjs`.
+- 274/274 tests (suite Node, no tocada por este cambio de Odoo).
+
+**Gate Kanban visual: CERRADO.** Ya no queda ningun pendiente de
+`Modo Angela` sin resolver.
