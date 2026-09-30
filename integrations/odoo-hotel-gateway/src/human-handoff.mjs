@@ -28,7 +28,7 @@ export function buildHandoffContext(conversation, reason, lastMessage = null) {
   if (!REASONS.includes(reason)) {
     throw new Error(`UNKNOWN_HANDOFF_REASON: ${reason}`);
   }
-  const { customer, requested, selectedUnit, quote, hold } = conversation;
+  const { customer, requested, selectedUnit, quote, hold, channel, state } = conversation;
   return {
     conversation_id: conversation.conversationId,
     nombre: customer?.identifier ?? null,
@@ -39,6 +39,8 @@ export function buildHandoffContext(conversation, reason, lastMessage = null) {
     precio_cotizado: quote?.total ?? null,
     hold: hold?.hold_id ?? null,
     saldo_condicion: quote?.balance ?? null, // null = SOURCE_PENDING, nunca se inventa un saldo
+    origen: channel ?? null,
+    estado: state ?? null,
     motivo_de_escalamiento: reason,
     ultimo_mensaje: lastMessage,
     accion_sugerida: 'TOMAR_CONVERSACION',

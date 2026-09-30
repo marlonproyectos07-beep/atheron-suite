@@ -355,3 +355,147 @@ XML-RPC/`search_read` con el usuario tecnico (permisos no probados
 todavia). Se deja como **PENDIENTE_DECISION_CEO**, no como bloqueo
 tecnico -- la fuente de datos y sus nombres de campo ya estan
 confirmados arriba, falta decidir el canal de lectura.
+
+## Actualizacion 2026-09-30 (turno nocturno) -- Prioridad 1 resuelta: tableros reales CONECTADOS
+
+### Decision tomada: opcion "D" (combinacion segura), no A ni B solas
+
+Se investigaron las 3 rutas reales pedidas:
+
+- **(A) Nueva operacion HTTP en el Gateway** -- descartada para este
+  uso: expondria lectura masiva de reservas al mismo nivel de
+  privilegio que `availability/quote/hold` a identidades externas
+  (Sofia/web), cuando el consumidor real (tablero gerencial/Angela) es
+  Marlon/recepcion, no un canal de IA.
+- **(B) XML-RPC directo** -- probado en SOLO LECTURA
+  (`scripts/diagnostico-permisos-xmlrpc.mjs`): el usuario tecnico YA
+  TIENE permiso `search_read` sobre `sale.order`, `x_hotel_unit`,
+  `x_hotel_property` (`ALLOWED` en los 3). Riesgo real confirmado:
+  `sale.order` es COMPARTIDO con otra linea de negocio de ATHERON S.A.S
+  (CCTV/Syscom -- campos reales `x_modo_syscom`/`x_is_mixed_rama`
+  confirman que la misma tabla mezcla hotel y seguridad electronica).
+  Leer sin filtrar expondria datos ajenos al hotel.
+- **(D) implementada**: B, pero SIEMPRE con dominio fijo
+  `x_order_involves_room = true` (campo real que Odoo ya usa para
+  marcar "esto es una reserva de hotel") + lista fija de campos +
+  SOLO como modulo/scripts locales de reporteria con la credencial
+  tecnica ya existente (nunca una operacion HTTP nueva). Implementado
+  en `integrations/odoo-hotel-gateway/src/odoo-reporting-reader.mjs`
+  (5 tests, con `FakeOdooTransport` y la forma real de fila confirmada
+  via `fields_get`).
+
+Nombres tecnicos reales descubiertos (nunca adivinados, ver
+`scripts/diagnostico-campos-hotel.mjs` / `diagnostico-selecciones.mjs`):
+`x_reservation_status` (10 valores reales: `draft`→CONSULTA,
+`opcion`→OPCION, `hold`→HOLD, `confirmed`→CONFIRMADA,
+`pre_checkin`→PRE_CHECKIN, `checked_in`→CHECKIN,
+`checked_out`→CHECKOUT, `closed`→CERRADA, `cancelled`→CANCELADA,
+`no_show`→NO_SHOW -- este ultimo no estaba en nuestro diseno de
+Angela, se documenta como hallazgo), `x_booking_source` (canal:
+direct/booking_com/airbnb/phone/whatsapp/agencia/otro),
+`x_hold_origin` (staff/web/sofia/ota/qa -- `sofia` coincide
+exactamente con el `source_channel` que el Gateway ya fuerza),
+`x_hotel_paid`, `x_hotel_balance`, `x_hotel_deposit_required`,
+`x_checkin`/`x_checkout`, `x_num_adults`/`x_num_children`,
+`x_nombre_cliente`/`x_telf_cliente`, `x_hold_expires`/`x_hold_expired`.
+
+### Tableros REALES corriendo (evidencia, no simulada)
+
+- **`scripts/manager-dashboard-live.mjs`**: lee reservas reales,
+  alimenta `managerDashboard()` (ya probado con fixtures, sin ningun
+  cambio de logica) y solo imprime AGREGADOS (nunca huesped/telefono
+  individual). Corrida real (referencia 2026-09-29):
+  `total_reservations_read: 300` (ver limite abajo),
+  `sales_created_today_total: 200000` (2 ventas reales),
+  `accounts_receivable: 27132720.7`,
+  `sales_by_unit`/`sales_by_channel` reales.
+- **`scripts/angela-dashboard-live.mjs`**: mismo patron para
+  `operational-read-model.mjs` (TODAY/ARRIVALS/DEPARTURES/HOLDS/
+  PAYMENT_PENDING/UPCOMING). Enmascara telefono (`****1234`) y reduce
+  el nombre a inicial incluso en su propia salida -- pensado para
+  correr local (PowerShell de Marlon), nunca para pegar la salida
+  cruda en un chat sin revisar.
+
+**Limite conocido, no bug:** `fetchHotelReservations` trae hasta 300
+filas por corrida (`limit` configurable). Con 234+ reservas ya en
+STAGING, una ventana mas larga (ej. todo un trimestre) necesitaria
+paginar (`offset`) o filtrar por fecha en el propio `domain` -- se deja
+como mejora simple, no bloqueante, para cuando el volumen real lo
+requiera.
+
+### Prioridad 2 -- KPIs gerenciales, fuente real por KPI
+
+| KPI | Estado | Fuente real |
+|---|---|---|
+| VENTAS HOY | `REAL_SOURCE_CONNECTED` | `amount_total` + `create_date` (`sale.order`) |
+| COBROS HOY | `REAL_SOURCE_MISSING` | Existe `x_hotel_paid` (monto acumulado COBRADO), pero **no hay un campo real de fecha de cobro** -- no se puede saber que se cobro HOY especificamente, solo el acumulado a la fecha. `financial-model.mjs` ya distingue esto (requiere `collected_date`, que no llega de la fuente) -- no se inventa. |
+| SALDOS | `REAL_SOURCE_CONNECTED` | `x_hotel_balance` (ya calculado por Odoo) |
+| RESERVAS NUEVAS | `REAL_SOURCE_CONNECTED` | `create_date` |
+| OCUPACION | `REAL_SOURCE_CONNECTED` | `x_checkin`/`x_checkout` |
+| CHECK-INS / CHECK-OUTS | `REAL_SOURCE_CONNECTED` (programados) | `x_checkin`/`x_checkout`. Nota: existen ademas `x_checkin_actual`/`x_checkout_actual`/`x_checkin_done`/`x_checkout_done` (check-in/out REAL vs programado) -- no conectados todavia, mejora futura para distinguir "debia llegar hoy" de "ya llego". |
+| VENTAS POR CANAL | `REAL_SOURCE_CONNECTED` | `x_booking_source` |
+| VENTAS POR ALOJAMIENTO | `REAL_SOURCE_CONNECTED` | `x_hotel_unit_id` |
+| ADR | `REAL_SOURCE_CONNECTED` (con matiz) | Derivado de `amount_total`/noches; `amount_total` es el total de la orden completa (podria incluir extras no separados por noche) -- razonable como aproximacion, no exacto al centavo. |
+
+VENTA != COBRO se mantiene estrictamente: `sales_created_today_total`
+y `collected_today` siguen siendo campos separados en
+`managerDashboard()`, nunca mezclados.
+
+### Prioridad 3 -- prueba reina endurecida (doble intento REAL)
+
+`scripts/prueba-doble-intento-real.mjs`: dos "clientes" (cotizacion +
+intento de HOLD) sobre la MISMA unidad/fechas, en secuencia inmediata,
+contra Odoo real. Resultado real: cliente A gano el HOLD (`hold_id
+22227`, `COT/2026/03820`, unidad 203); cliente B fallo con
+`NOT_QUOTED` (Odoo invalido su cotizacion al detectar que la
+disponibilidad ya habia cambiado) -- **cero sobreventa**, confirmado
+con datos reales, no simulados. Liberado despues con `Hotel: CANCELAR`.
+
+Los demas casos pedidos (repeticion, idempotencia, HOLD expirado,
+cancelacion, error de Gateway, recuperacion, Casa Completa vs
+habitaciones) ya estaban cubiertos -- por evidencia REAL donde aplica
+(HOLD expirado y cancelacion: ver actualizacion anterior; Casa
+Completa: Gate 009-E) y por el arnes SIMULADO
+(`anti-overbooking-harness.mjs`, 6 tests) donde una corrida real
+repetida no aportaria informacion nueva (ej. reintento con la misma
+`idempotency_key` ya esta probado exhaustivamente en
+`test/idempotency.test.mjs` desde HOTEL-007).
+
+### Prioridad 4 -- E2E conversacional, escenarios ampliados (REAL)
+
+`scripts/e2e-conversational-scenarios-live.mjs`, 6/6 PASS contra Odoo
+real, CERO huellas nuevas en "Reservas hotel" (ninguno llega a
+`requestBooking`, y `quote()` en LIVE no crea un registro visible --
+solo `hold()` lo hace, confirmado empiricamente): fechas disponibles,
+selección directa de unidad, cambio de fechas a mitad de conversacion
+(vuelve a consultar disponibilidad real), cambio de numero de personas
+(recalcula la unidad candidata real -- de 201 paso a CASA_COMPLETA al
+subir a 12 huespedes), mensaje repetido (cero llamadas duplicadas al
+Gateway real, confirmado contando invocaciones), y cotizacion real via
+pregunta de precio ($80.000 COP real).
+
+### Prioridad 6 -- ficha de handoff, campos completados
+
+`human-handoff.mjs` ahora incluye tambien `origen` (canal de la
+conversacion) y `estado` (estado del motor al momento de escalar),
+cerrando la lista completa pedida: Cliente/Telefono/Fechas/Personas/
+Unidad-opcion/Cotizacion/HOLD/Estado/Saldo/Origen/Motivo/Ultimo
+mensaje.
+
+### Prioridades 7-8 -- resiliencia y seguridad, verificado sin cambios de codigo
+
+Resiliencia: timeout/error de Gateway (propagan, nunca inventan
+resultado), respuesta malformada (fail-closed), duplicado/mensaje
+repetido (idempotente, ahora tambien confirmado real), HOLD expirado
+(real, dos veces), cambio de fechas/personas (real), abandono/reanudacion
+(el estado persiste entre llamadas, ya probado), dos clientes misma
+unidad (real, Prioridad 3 arriba) -- todo cubierto, sin regresiones.
+
+Seguridad: 0 `console.log` en `src/` (grep repetido), 0 secretos en
+todo el stage de este turno (`scan-for-secret-leak.mjs`), los nuevos
+scripts de lectura real enmascaran telefono y nunca imprimen huesped/
+telefono en el tablero gerencial (solo agregados). No se toco el `.env`
+antiguo de Downloads ni `ConsoleHost_history` (siguen fuera de alcance,
+solo reportados en HOTEL-008).
+
+272/272 tests PASS.

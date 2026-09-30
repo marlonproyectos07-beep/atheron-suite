@@ -20,6 +20,8 @@ test('buildHandoffContext arma el contexto completo cuando la conversacion ya tr
   assert.equal(ctx.precio_cotizado, 220000);
   assert.equal(ctx.hold, 'H-1');
   assert.equal(ctx.saldo_condicion, null); // el quote no trae saldo real: nunca se inventa
+  assert.equal(ctx.origen, 'whatsapp_sim');
+  assert.equal(ctx.estado, 'NEW');
   assert.equal(ctx.motivo_de_escalamiento, 'UNAUTHORIZED_DISCOUNT_REQUEST');
   assert.equal(ctx.ultimo_mensaje, 'me haces un descuento?');
   assert.equal(ctx.accion_sugerida, 'TOMAR_CONVERSACION');
