@@ -1,0 +1,72 @@
+{
+  "_comment": "EJEMPLO ILUSTRATIVO. No es estado real de ninguna mision. Ver AI/ORCH-002_MISSION_LOOP_SPEC.md",
+  "mission_id": "ORCH-002",
+  "created_by": "marlonproyectos07-beep",
+  "created_at": "2026-09-26T14:09:44Z",
+  "objective": "Encadenar 3 subtareas de prueba sin comentario humano intermedio",
+  "source_of_truth": "https://github.com/marlonproyectos07-beep/atheron-suite/pull/66",
+  "allowed": ["crear documentos en AI/", "commit/push solo a esta rama"],
+  "forbidden": ["merge", "produccion", "secretos", "force-push", "Odoo", "Booking/Airbnb/WhatsApp write"],
+  "tasks": ["ORCH-002-T1", "ORCH-002-T2", "ORCH-002-T3"],
+  "current_task_id": "ORCH-002-T2",
+  "max_auto_continuations": 3,
+  "auto_continuations_used": 1,
+  "status": "RUNNING",
+  "tasks_detail": {
+    "ORCH-002-T1": {
+      "task_id": "ORCH-002-T1",
+      "mission_id": "ORCH-002",
+      "state": "PASS",
+      "owner": "claude-code-action",
+      "branch": "chore/ath-ai-orch-002-autonomous-loop",
+      "depends_on": [],
+      "attempts": 1,
+      "max_attempts": 2,
+      "evidence": [
+        {
+          "type": "pr_comment",
+          "ref": "https://github.com/marlonproyectos07-beep/atheron-suite/pull/66#issuecomment-5847005699",
+          "note": "Disparo humano inicial",
+          "at": "2026-09-26T14:09:59Z"
+        }
+      ],
+      "next_action": "ATHERON AUTONOMOUS WORK ORDER (continuacion T2): ...",
+      "blockers": [],
+      "created_at": "2026-09-26T14:09:44Z",
+      "started_at": "2026-09-26T14:09:59Z",
+      "completed_at": "2026-09-26T14:15:00Z"
+    },
+    "ORCH-002-T2": {
+      "task_id": "ORCH-002-T2",
+      "mission_id": "ORCH-002",
+      "state": "RUNNING",
+      "owner": "claude-code-action",
+      "branch": "chore/ath-ai-orch-002-autonomous-loop",
+      "depends_on": ["ORCH-002-T1"],
+      "attempts": 1,
+      "max_attempts": 2,
+      "evidence": [],
+      "next_action": null,
+      "blockers": [],
+      "created_at": "2026-09-26T14:15:00Z",
+      "started_at": "2026-09-26T14:15:05Z",
+      "completed_at": null
+    },
+    "ORCH-002-T3": {
+      "task_id": "ORCH-002-T3",
+      "mission_id": "ORCH-002",
+      "state": "QUEUED",
+      "owner": "claude-code-action",
+      "branch": "chore/ath-ai-orch-002-autonomous-loop",
+      "depends_on": ["ORCH-002-T2"],
+      "attempts": 0,
+      "max_attempts": 2,
+      "evidence": [],
+      "next_action": null,
+      "blockers": [],
+      "created_at": "2026-09-26T14:15:00Z",
+      "started_at": null,
+      "completed_at": null
+    }
+  }
+}
