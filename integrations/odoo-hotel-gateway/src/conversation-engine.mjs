@@ -84,6 +84,26 @@ function toHumanRequired(conversation, reason, onEvent) {
 }
 
 /**
+ * GATE 010-D: mecanismo para que Angela devuelva una conversacion
+ * escalada a la IA (accion inversa a "TOMAR CONVERSACION"). Reconstruye
+ * el estado mas avanzado que los datos YA CONFIRMADOS soportan -- nunca
+ * asume un paso que no se volvio a verificar.
+ */
+export function resumeFromHuman(conversation) {
+  if (conversation.state !== 'HUMAN_REQUIRED') {
+    throw new Error('RESUME_ONLY_VALID_FROM_HUMAN_REQUIRED');
+  }
+  let state = 'COLLECTING_DATES';
+  if (!conversation.requested.checkIn || !conversation.requested.checkOut) state = 'COLLECTING_DATES';
+  else if (conversation.requested.guests == null) state = 'COLLECTING_GUESTS';
+  else if (conversation.hold) state = 'HOLD_CREATED';
+  else if (conversation.quote) state = 'READY_FOR_HOLD';
+  else if (conversation.options.length > 0) state = 'OPTIONS_PRESENTED';
+  else state = 'CHECKING_AVAILABILITY';
+  return touch(conversation, { state, handoffReason: null });
+}
+
+/**
  * Avanza la conversacion un turno. `input` (ya parseado por la capa de
  * NLU, fuera de alcance): { checkIn, checkOut, guests, selectUnit,
  * requestDiscount, requestBooking, askPrice, sensitiveReason,
@@ -105,6 +125,20 @@ export async function advanceConversation(conversation, input, tools, onEvent) {
   // de descuento autorizada que la IA pueda aplicar por su cuenta).
   if (input.requestDiscount) {
     return toHumanRequired(conversation, 'UNAUTHORIZED_DISCOUNT_REQUEST', onEvent);
+  }
+
+  // Cancelacion con impacto economico -- la IA nunca cancela un HOLD por
+  // su cuenta (ver GATE 010-C, RED): el Gateway tampoco tiene hoy una
+  // operacion de cancelacion aprobada (ver anti-overbooking-harness.mjs).
+  if (input.requestCancellation) {
+    return toHumanRequired(conversation, 'CANCELLATION_REQUEST_NEEDS_HUMAN', onEvent);
+  }
+
+  // Caso 15 (GATE 010-E): el HOLD vencio -- se libera la conversacion sin
+  // intervencion humana, no es un caso sensible, solo se cierra el ciclo.
+  if (input.holdExpired && conversation.state === 'HOLD_CREATED') {
+    emit(onEvent, conversation, 'hold_expired', { hold_id: conversation.hold?.hold_id ?? null });
+    return touch(conversation, { state: 'EXPIRED' });
   }
 
   let next = conversation;

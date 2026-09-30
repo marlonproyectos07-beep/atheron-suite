@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createConversation, advanceConversation } from '../src/conversation-engine.mjs';
+import { createConversation, advanceConversation, resumeFromHuman } from '../src/conversation-engine.mjs';
 
 function buildTools({ availableUnits = [], requiresManualConfirmation = false, quoteTotal = 100000 } = {}) {
   return {
@@ -121,6 +121,57 @@ test('conversacion ya escalada a humano no se reabre sola con un mensaje nuevo',
   assert.equal(conv.state, 'HUMAN_REQUIRED');
   conv = await advanceConversation(conv, { checkIn: '2026-12-10', checkOut: '2026-12-11', guests: 1 }, buildTools());
   assert.equal(conv.state, 'HUMAN_REQUIRED');
+});
+
+test('GATE 010-A: "quiero reservar" repetido tras HOLD_CREATED es idempotente, no crea un segundo HOLD', async () => {
+  const tools = buildTools({ availableUnits: ['201'] });
+  let conv = await advanceConversation(newConversation(), { checkIn: '2026-12-10', checkOut: '2026-12-11', guests: 1, requestBooking: true }, tools);
+  const firstHoldId = conv.hold.hold_id;
+  conv = await advanceConversation(conv, { checkIn: '2026-12-10', checkOut: '2026-12-11', guests: 1, requestBooking: true }, tools);
+  assert.equal(conv.state, 'HOLD_CREATED');
+  assert.equal(conv.hold.hold_id, firstHoldId);
+});
+
+test('GATE 010-A: repetir el mismo mensaje en OPTIONS_PRESENTED no vuelve a consultar disponibilidad', async () => {
+  const tools = buildTools({ availableUnits: ['201'] });
+  let conv = await advanceConversation(newConversation(), { checkIn: '2026-12-10', checkOut: '2026-12-11', guests: 1 }, tools);
+  assert.equal(conv.state, 'OPTIONS_PRESENTED');
+  const eventsSegundoTurno = [];
+  conv = await advanceConversation(conv, { checkIn: '2026-12-10', checkOut: '2026-12-11', guests: 1 }, tools, (e) => eventsSegundoTurno.push(e.type));
+  assert.equal(conv.state, 'OPTIONS_PRESENTED');
+  assert.deepEqual(eventsSegundoTurno, []); // no repite availability_checked
+});
+
+test('GATE 010-E (caso 15): HOLD vencido pasa a EXPIRED y emite hold_expired', async () => {
+  const tools = buildTools({ availableUnits: ['201'] });
+  let conv = await advanceConversation(newConversation(), { checkIn: '2026-12-10', checkOut: '2026-12-11', guests: 1, requestBooking: true }, tools);
+  const events = [];
+  conv = await advanceConversation(conv, { holdExpired: true }, tools, (e) => events.push(e.type));
+  assert.equal(conv.state, 'EXPIRED');
+  assert.deepEqual(events, ['hold_expired']);
+});
+
+test('GATE 010-E (caso 22): solicitud de cancelacion con impacto economico escala a humano, la IA nunca cancela sola', async () => {
+  const tools = buildTools({ availableUnits: ['201'] });
+  let conv = await advanceConversation(newConversation(), { checkIn: '2026-12-10', checkOut: '2026-12-11', guests: 1, requestBooking: true }, tools);
+  conv = await advanceConversation(conv, { requestCancellation: true }, tools);
+  assert.equal(conv.state, 'HUMAN_REQUIRED');
+  assert.equal(conv.handoffReason, 'CANCELLATION_REQUEST_NEEDS_HUMAN');
+});
+
+test('GATE 010-D: resumeFromHuman reconstruye el estado mas avanzado ya confirmado, sin re-asumir pasos no verificados', async () => {
+  const tools = buildTools({ availableUnits: ['201'] });
+  let conv = await advanceConversation(newConversation(), { checkIn: '2026-12-10', checkOut: '2026-12-11', guests: 1, askPrice: true }, tools);
+  assert.equal(conv.state, 'READY_FOR_HOLD');
+  conv = { ...conv, state: 'HUMAN_REQUIRED', handoffReason: 'SENSITIVE_REQUEST' };
+  const resumed = resumeFromHuman(conv);
+  assert.equal(resumed.state, 'READY_FOR_HOLD');
+  assert.equal(resumed.handoffReason, null);
+});
+
+test('resumeFromHuman lanza error si se llama fuera de HUMAN_REQUIRED (transicion invalida)', () => {
+  const conv = newConversation();
+  assert.throws(() => resumeFromHuman(conv), /RESUME_ONLY_VALID_FROM_HUMAN_REQUIRED/);
 });
 
 test('eventos de observabilidad se emiten con la traza completa, sin datos sensibles', async () => {

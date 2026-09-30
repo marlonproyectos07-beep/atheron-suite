@@ -11,13 +11,17 @@
  * Hallazgo real (no hipotesis, verificado en src/contract.mjs): el
  * contrato del Gateway hoy solo define las operaciones
  * availability/quote/hold/status. No existe una operacion `cancel` --
- * 'cancel' esta en COMMON_FORBIDDEN a proposito, como defensa en
- * profundidad, pero nunca se implemento como operacion real. Este arnes
- * simula la cancelacion sobre el inventario en memoria para poder probar
- * el CICLO COMPLETO de la regla de negocio ahora mismo; el paso de
- * cancelacion contra el Gateway/Odoo real queda NOT_IMPLEMENTED hasta que
- * exista esa operacion en el contrato (requiere diseno de contrato +
- * decision de Marlon, fuera de alcance de este gate).
+ * y esto NO es un descuido: `test/contract.test.mjs` ("unsupported
+ * operations (confirm/cancel) are never in the whitelist") prueba
+ * explicitamente, a proposito, desde HOTEL-007, que 'cancel' NUNCA debe
+ * quedar en el whitelist de operaciones del Gateway. Se intento agregar
+ * `cancel` como operacion real (DRY_RUN) en este gate y se revirtio
+ * exactamente por chocar con esa prueba deliberada: no es un bug a
+ * corregir, es una decision de arquitectura que solo Marlon puede
+ * levantar. Este arnes simula la cancelacion sobre el inventario en
+ * memoria (nunca sobre el Gateway) para poder probar el CICLO COMPLETO
+ * de la regla de negocio ahora mismo; el paso de cancelacion contra el
+ * Gateway/Odoo real queda NOT_IMPLEMENTED hasta esa decision.
  */
 
 import { isAvailable } from '../../odoo-hotel-ical/src/inventory-model.mjs';

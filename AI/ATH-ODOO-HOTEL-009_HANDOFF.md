@@ -162,3 +162,17 @@ Con esa sesion se completa la Fase 1 profunda y se puede empezar a
 construir la UI real (Frente A/B) directamente sobre lo ya diseñado y
 probado en este documento y en `AI/ATH-ODOO-HOTEL-009_ANGELA_UX.md` /
 `AI/ATH-ODOO-HOTEL-009_RESERVA_MANUAL.md`.
+
+## Actualizacion 2026-09-29 (tercera pasada) -- mandato MASTER AUTONOMOUS COMPLETION
+
+`ODOO_STAGING_UI_BLOCKED` sigue vigente (sin cambios desde la
+actualizacion anterior). Todo lo construible sin esa sesion para
+HOTEL-010 (laboratorio conversacional completo: NLU, politica de
+autonomia, handoff ampliado, simulador de 25 casos, E2E sin WhatsApp,
+MessagingProvider, copy) ya esta hecho y probado -- ver el detalle en
+`AI/ATH-ODOO-HOTEL-010_WHATSAPP_CONTRACT.md`. El unico bloqueo real de
+HOTEL-009 sigue siendo exactamente el mismo de arriba (una sesion de
+Chrome contra Odoo STAGING). HOTEL-010 tiene un segundo bloqueo,
+distinto: la autorizacion explicita de Marlon para conectar WhatsApp
+real (Meta), que es una decision de negocio, no tecnica -- no se toca
+sin ese permiso.

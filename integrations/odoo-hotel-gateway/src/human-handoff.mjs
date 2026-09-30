@@ -14,6 +14,7 @@ const REASONS = Object.freeze([
   'SENSITIVE_REQUEST',
   'MANUAL_CONFIRMATION_REQUIRED',
   'AMBIGUOUS_REQUEST',
+  'CANCELLATION_REQUEST_NEEDS_HUMAN',
 ]);
 
 export { REASONS as HANDOFF_REASONS };
@@ -27,7 +28,7 @@ export function buildHandoffContext(conversation, reason, lastMessage = null) {
   if (!REASONS.includes(reason)) {
     throw new Error(`UNKNOWN_HANDOFF_REASON: ${reason}`);
   }
-  const { customer, requested, selectedUnit, quote } = conversation;
+  const { customer, requested, selectedUnit, quote, hold } = conversation;
   return {
     conversation_id: conversation.conversationId,
     nombre: customer?.identifier ?? null,
@@ -36,6 +37,8 @@ export function buildHandoffContext(conversation, reason, lastMessage = null) {
     personas: requested?.guests ?? null,
     opcion: selectedUnit ?? null,
     precio_cotizado: quote?.total ?? null,
+    hold: hold?.hold_id ?? null,
+    saldo_condicion: quote?.balance ?? null, // null = SOURCE_PENDING, nunca se inventa un saldo
     motivo_de_escalamiento: reason,
     ultimo_mensaje: lastMessage,
     accion_sugerida: 'TOMAR_CONVERSACION',

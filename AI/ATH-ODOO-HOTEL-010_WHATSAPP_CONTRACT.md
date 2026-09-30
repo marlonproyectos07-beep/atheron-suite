@@ -131,9 +131,76 @@ produccion ni Odoo real):
   -- corre los 10 casos de conversacion end-to-end contra herramientas
   falsas deterministas. 10/10 PASS.
 
+## Actualizacion 2026-09-29 (segunda pasada) -- Mandato MASTER AUTONOMOUS COMPLETION (Gates 010-A a 010-K)
+
+Con HOTEL-009 avanzado y `ODOO_STAGING_UI_BLOCKED` todavia vigente (sin
+sesion de navegador contra `atheron1-hotel-staging-20260923`), se
+completo todo lo que no depende de esa sesion:
+
+- **Gate 010-A (auditoria de transiciones)**: se encontraron y cerraron
+  2 huecos reales -- mensajes duplicados/repetidos ya eran idempotentes
+  (verificado con tests nuevos), pero faltaba una salida real para
+  `HOLD_CREATED` (nunca llegaba a `EXPIRED`) y para una cancelacion
+  pedida por el cliente (no existia transicion, ahora escala a humano).
+- **Gate 010-B (NLU de laboratorio)**: `src/nlu-lite.mjs`, desacoplado
+  del motor y de WhatsApp. Basado en reglas (determinista, sin red);
+  convierte texto libre a `{intent, check_in, check_out, guests,
+  missing_fields, confidence}`. Nunca inventa un dato ausente; si no
+  reconoce el mensaje, `intent: 'needs_clarification'`. 14 tests,
+  cubriendo los 11 mensajes de ejemplo del CEO (incluye "somos 7, no 5"
+  -> se queda con el ultimo numero, y numeros en palabra como "dos").
+- **Gate 010-C (politica de autonomia)**: `src/ai-autonomy-policy.mjs`,
+  catalogo GREEN/YELLOW/RED explicito y consultable (`classify()`), no
+  solo prosa. Una accion no catalogada nunca se asume segura.
+- **Gate 010-D (handoff humano, ampliado)**: `human-handoff.mjs` ahora
+  incluye `hold` y `saldo_condicion` (null si la fuente no lo trae,
+  nunca inventado) en la ficha operativa. Se agrego
+  `resumeFromHuman()` en `conversation-engine.mjs`: reconstruye el
+  estado mas avanzado que los datos YA CONFIRMADOS soportan cuando
+  Angela devuelve la conversacion a la IA.
+- **Gate 010-E (simulador ampliado)**: `scripts/whatsapp-simulator.mjs`
+  paso de 10 a **25 escenarios** (los 25 exactos pedidos por el CEO),
+  25/25 PASS. Incluye timeout de Gateway, error de Odoo y respuesta
+  malformada -- estos tres se probaron ademas como tests reales en
+  `test/conversation-engine-faults.test.mjs` (no solo en el script).
+- **Gate 010-F (E2E sin WhatsApp)**: `test/e2e-without-whatsapp.test.mjs`
+  recorre el mensaje de ejemplo del CEO ("...para dos personas") a
+  traves de NLU -> motor -> adaptadores -> "Gateway" completo, incluye
+  HOLD TEST, verificacion de inventario y liberacion del TEST (via
+  expiracion del HOLD -- ver Gate 009-D para por que no via
+  cancelacion). SIMULADO: el "Gateway" es un fake que imita las formas
+  de respuesta ya confirmadas LIVE en HOTEL-008A: el mismo test sirve
+  el dia que haya sesion real, cambiando solo las funciones inyectadas.
+- **Gate 010-G (copy conversacional)**: `src/whatsapp-copy.mjs`, 11
+  mensajes cortos (todos <220 caracteres), ninguno afirma una reserva
+  confirmada sin confirmacion real.
+- **Gate 010-H (seguridad/privacidad)**: auditado. Cero `console.log`
+  en todo `src/` (grep confirmado). Los eventos de observabilidad
+  (`observability-events.mjs`) nunca cargan PII (solo IDs tecnicos). La
+  ficha de handoff (`human-handoff.mjs`) SI trae nombre/telefono a
+  proposito (es su funcion: Angela necesita contactar al cliente), pero
+  solo existe en memoria dentro de una conversacion escalada, nunca se
+  persiste ni se loguea en este gate. Idempotencia/rate limit/
+  correlation IDs siguen siendo los mismos ya probados en HOTEL-007
+  (`idempotency.test.mjs`, `rate-limiter.test.mjs`).
+- **Gate 010-I (MessagingProvider)**: `src/messaging-provider.mjs` --
+  interfaz (`receiveMessage/sendMessage/markRead/verifyWebhook`) +
+  `LabMessagingProvider` (memoria, sin red). Ningun cliente de Meta,
+  ningun token, ningun webhook publico.
+- **Gate 010-J (tests)**: 266/266 PASS (39 nuevos sobre los 227 de la
+  pasada anterior). Nada roto.
+
+**Hallazgo real de Gate 009-D (relevante tambien para 010-I/G):** se
+intento agregar `cancel` como operacion real del Gateway (DRY_RUN) y se
+revirtio de inmediato al chocar con una prueba deliberada de HOTEL-007
+(`test/contract.test.mjs`, "unsupported operations (confirm/cancel) are
+never in the whitelist"). No es un bug: es una decision de arquitectura
+que protege contra cancelaciones no autorizadas. Levantarla requiere
+decision explicita de Marlon, no una correccion tecnica.
+
 ## Estado
 
-Documentado + motor conversacional/adaptadores/handoff/observabilidad/
-simulador construidos y probados en laboratorio (31 tests nuevos entre
-los 4 archivos de test, mas el simulador con sus 10 casos). Cero
-WhatsApp/Meta real conectado. `WHATSAPP_CONNECTED: NO`.
+Documentado + motor conversacional/NLU/politica de autonomia/
+adaptadores/handoff/observabilidad/MessagingProvider/simulador (25
+casos)/E2E construidos y probados en laboratorio. Cero WhatsApp/Meta
+real conectado. `WHATSAPP_CONNECTED: NO`. `META_REAL_CONNECTED: NO`.
