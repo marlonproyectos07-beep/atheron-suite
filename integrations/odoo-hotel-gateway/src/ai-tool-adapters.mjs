@@ -35,8 +35,14 @@ export async function quoteTool({ unit, checkIn, checkOut, guests }, deps) {
   return deps.quote({ unit, checkIn, checkOut, guests });
 }
 
-export async function createHoldTool({ quoteId }, deps) {
-  return deps.createHold({ quoteId });
+/**
+ * `unit` viaja junto a `quoteId`: el contrato real de `hold` exige
+ * `unit_id` ademas de `quote_id` (src/contract.mjs) -- hallazgo real de
+ * HOTEL-009 al conectar esto contra el Gateway LIVE por primera vez: sin
+ * `unit`, la llamada real fallaria por falta del campo obligatorio.
+ */
+export async function createHoldTool({ quoteId, unit }, deps) {
+  return deps.createHold({ quoteId, unit });
 }
 
 /** Reutiliza la operacion real `status` del Gateway (por operation_id). */

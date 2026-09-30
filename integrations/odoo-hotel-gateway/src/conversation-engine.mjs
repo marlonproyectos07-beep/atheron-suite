@@ -226,7 +226,7 @@ export async function advanceConversation(conversation, input, tools, onEvent) {
   // Caso 5: "quiero reservar" -- solo crea el HOLD si ya hay cotizacion
   // real; nunca confirma lo que Odoo todavia no confirmo.
   if (input.requestBooking && next.state === 'READY_FOR_HOLD' && next.quote) {
-    const hold = await createHoldTool({ quoteId: next.quote.quote_id }, tools);
+    const hold = await createHoldTool({ quoteId: next.quote.quote_id, unit: next.selectedUnit }, tools);
     emit(onEvent, next, 'hold_created', { unit: next.selectedUnit, hold_id: hold?.hold_id ?? null });
     next = touch(next, { state: 'HOLD_CREATED', hold });
   }

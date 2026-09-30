@@ -176,3 +176,182 @@ Chrome contra Odoo STAGING). HOTEL-010 tiene un segundo bloqueo,
 distinto: la autorizacion explicita de Marlon para conectar WhatsApp
 real (Meta), que es una decision de negocio, no tecnica -- no se toca
 sin ese permiso.
+
+## Actualizacion 2026-09-30 -- SESION REAL contra Odoo STAGING (bloqueo levantado)
+
+Marlon abrio una sesion de Chrome ya autenticada contra
+`atheron1-hotel-staging-20260923` (usuario ATHERON S.A.S, con acceso de
+administrador -- confirmado empiricamente: pudo crear/cancelar
+registros y ver todas las apps de Ajustes). `ODOO_STAGING_UI_BLOCKED`
+queda LEVANTADO desde este punto. Todo lo de abajo es SOURCE_REAL,
+verificado en vivo, no inferido.
+
+### Gate 009-A -- auditoria real (app "Hotel v1 (Piloto)")
+
+La app custom `Hotel v1 (Piloto)` (menus: Reservas hotel, Propiedades,
+Unidades, Politicas de anticipo, Tarifas) es la fuente real. Hallazgos:
+
+- **Unidades** (`Hotel v1 — Unidades`, 8 registros): 201, 202, 203, 301,
+  302 y **3 CASA COMPLETA** (una por propiedad). Cada unidad trae
+  `CAPACIDAD_BASE`, `CAPACIDAD_COMERCIAL`, `CAPACIDAD_EXTRAORDINARIA`,
+  `REQUIERE_APROBACION_EXTRA`, `Propiedad`, `Recurso`, `Producto`, `Rol
+  planning`, `Tipo de unidad` (Fisica/Compuesta), `Unidades hijas` /
+  `Unidades compuestas que la contienen`.
+- **CASA COMPLETA (HOTEL ATHERON SUITE, record id 6) tiene como
+  "Unidades hijas" exactamente 201/202/203/301/302** -- el bloqueo
+  cruzado (Gate 009-E) esta modelado como relacion padre-hijo real, no
+  hay que inventar ni reimplementar la relacion, ya existe en datos.
+- **Propiedades** (3): HOTEL ATHERON SUITE, CASA ALGARRA, CASA NEUSA
+  (confirma lo ya documentado arriba).
+- **HOTEL ATHERON SUITE** (propiedad), campos reales nuevos:
+  `Hora check-in: 15:00`, `Hora check-out: 11:00`,
+  `Anticipo minimo por defecto (%): 30,00`,
+  `Horas maximas de HOLD: 2,00` (nota real en el campo: "HOTEL-004:
+  x_hold_hours es parametro STAGING (PENDIENTE_APROBACION_CEO); vacio =
+  valor tecnico 2h del motor" -- confirma que el 2h que ya usabamos en
+  DRY_RUN es el valor tecnico real, pendiente de aprobacion formal, no
+  inventado), `Capacidad comercial casa completa: 22`,
+  `Modelo contractual: OPERACION_DIRECTA_ATHERON`,
+  **`Proyecto housekeeping: Limpieza`** con etapas reales
+  `LISTA / POR LIMPIAR / EN LIMPIEZA / INCIDENCIA` -- esto es la fuente
+  real del estado LIMPIEZA que el diseno UX (Frente A) habia marcado
+  como "REQUIERE FUENTE": ya existe, vive en un proyecto de tareas
+  (`project.project`), no en el propio registro de unidad.
+- **Reservas hotel** (`sale.order` extendido, 234 registros reales al
+  cierre de esta auditoria; numeracion `COT/2026/xxxxx`, la misma que
+  ya aparecia en los fixtures de `financial-model.mjs` -- confirma que
+  esos fixtures SON datos reales de esta base). Pestaña **"Hotel v1"**
+  del formulario trae el modelo completo:
+  - `Estado Reservacion` (visto: `CONSULTA`; los botones de accion real
+    del formulario son **`Hotel: OPCION` / `Hotel: HOLD 2h` /
+    `Hotel: CONFIRMAR` / `Hotel: CANCELAR`**, que corresponden a un
+    workflow de estado real `Cotizacion -> Cotizacion enviada -> Orden
+    de venta -> Cancelado`);
+  - `Propiedad hotel`, `Unidad hotel`, `Check-in/Check-out (entrada/
+    salida)`, `Numero de Adultos`, `Numero de Ninos`,
+    `Capacidad extra aprobada` (checkbox), `Canal de Reserva`;
+  - **`HOLD vence`** (timestamp) y **`HOLD vencido`** (checkbox real,
+    calculado) -- confirma que la expiracion de HOLD ya es un campo
+    real visible, no solo un valor interno del Gateway;
+  - `VENTA (total)`, `Politica de anticipo`, `Anticipo requerido (%)`,
+    `ANTICIPO requerido` (monto), `COBRADO (pagos registrados)`,
+    `SALDO pendiente`, `Anticipo minimo cubierto` (checkbox);
+  - `Descuento autorizado (%)` y `Descuento autorizado por` -- SI existe
+    un campo real para autorizar un descuento; hoy vacio/0 en los
+    registros vistos. Esto no cambia la regla de autonomia de la IA
+    (Gate 010-C: descuento siempre HUMAN_REQUIRED) porque autorizarlo
+    sigue siendo un acto humano explicito sobre este campo, la IA nunca
+    lo toca.
+
+**Conclusion Gate 009-A:** el modelo de datos completo que
+`operational-read-model.mjs` y `financial-model.mjs` necesitan para
+dejar de correr sobre fixtures YA EXISTE en Odoo, con nombres de campo
+confirmados. Conectar esos modulos a datos reales requiere una decision
+de arquitectura (ver "Que sigue" abajo), no mas investigacion.
+
+### Gate 009-D -- "prueba reina" REAL (201, ciclo completo con evidencia)
+
+Ejecutada DOS VECES, ambas PASS, contra el Gateway real (LIVE, accion
+1967) mas el boton real `Hotel: CANCELAR` de Odoo:
+
+1. **Prueba de esta manana** (ya en el journal local antes de este
+   turno, verificada ahora): `hold_id 22223` (habitacion 201,
+   `COT/2026/03816`), `hold_id 22222` (Casa Completa,
+   `COT/2026/03815`), `hold_id 22224` (302, `COT/2026/03817`). Las tres
+   HOLD **expiraron solas a las 2h** (politica real) y el Gateway
+   (`status` + `availability`) confirmo `hold_expired` +
+   disponibilidad restaurada -- verificado con
+   `node scripts/live-hotel-008a-runner.mjs verify-expiration`, PASS.
+2. **Prueba fresca de este turno** (fechas 2027-01-28/29, nunca usadas
+   antes): `node scripts/live-hotel-008a-runner.mjs inverse-gate` ->
+   `quote_id 139`, `hold_id 22225` (201, `COT/2026/03818`),
+   `casa_completa_blocked: true`, 202/203/301/302 `available: true` ->
+   overall `PASS`. Liberacion: en vez de esperar 2h, se uso el boton
+   REAL `Hotel: CANCELAR` sobre este registro (Odoo lo paso a estado
+   `Cancelado`); `node scripts/prueba-reina-201.mjs` confirmo
+   inmediatamente despues que 201 y CASA COMPLETA volvieron a
+   `disponible`. El `status` del Gateway para ese hold ahora reporta
+   `"cancelled"` (distinto de `"hold_expired"` -- hallazgo real: Odoo
+   distingue ambos estados terminales).
+
+**Hallazgo clave (responde la pregunta abierta de donde debe vivir la
+cancelacion):** la cancelacion YA EXISTE, pero vive como una accion de
+workflow real dentro de Odoo (`Hotel: CANCELAR`, botón del formulario),
+NO como una operacion del contrato del Gateway. Esto es coherente con
+el hallazgo anterior de este mismo gate (agregar `cancel` como
+operacion del Gateway choco con una prueba deliberada de HOTEL-007) --
+la arquitectura real ya resuelve esto sin que el Gateway necesite
+exponerlo: cancelar es, a proposito, un acto humano (o de un futuro
+proceso Odoo-side), nunca algo que la IA/Gateway dispare por su cuenta.
+
+`scripts/prueba-reina-201.mjs` (nuevo, commiteado) deja el chequeo de
+disponibilidad post-liberacion reproducible para el proximo ciclo de
+prueba reina.
+
+### Gate 009-E -- Casa Completa <-> habitaciones, REAL
+
+Confirmado con evidencia real (no solo con el modelo de datos de
+arriba): la prueba de esta manana incluyo tambien la fase `gate4`
+-- HOLD de Casa Completa bloqueo **las 5 habitaciones Y la propia Casa
+Completa** (`no_disponible` en las 6 unidades) -- y la de este turno
+(`inverse-gate`) confirmo la direccion opuesta: HOLD de una habitacion
+(201) bloquea Casa Completa pero NO bloquea las habitaciones hermanas.
+Ámbas direcciones PASS, con datos reales, mismo motor ya aprobado en
+HOTEL-002 (accion 1967) -- no se reimplemento nada.
+
+### Gate 010-F -- E2E conversacional REAL (no simulado)
+
+`scripts/e2e-conversational-live.mjs` (nuevo, commiteado): conecta
+`conversation-engine.mjs` (el mismo motor del laboratorio HOTEL-010,
+sin cambios de logica) contra el Gateway LIVE real. Mensaje de prueba:
+fechas 2027-02-10/11, 1 huesped. Resultado real: 201 aparecio NO
+disponible para esas fechas (dato real, no forzado), el motor ofrecio
+alternativas reales (202/203/301/302), selecciono 202, cotizo real
+($50.000 COP, `quote_id 140`) y creo HOLD real (`hold_id 22226`,
+`COT/2026/03819`) -- estado final `HOLD_CREATED`. Liberado despues con
+el mismo boton real `Hotel: CANCELAR`; el Gateway confirmo 202 e
+disponible de nuevo (201 seguia no disponible por una reserva real
+ajena a esta prueba, y Casa Completa por lo tanto tambien -- consistente
+con el bloqueo cruzado, no es un error).
+
+**Hallazgo real y correccion aplicada:** al conectar esto contra el
+Gateway real se encontro que `createHoldTool`
+(`src/ai-tool-adapters.mjs`) no reenviaba `unit` -- el contrato real de
+`hold` exige `unit_id` ademas de `quote_id` (`src/contract.mjs`), y los
+tests con fakes no lo habian detectado porque los fakes ignoraban el
+campo. Corregido (`conversation-engine.mjs` ahora pasa
+`{quoteId, unit}` a `createHoldTool`), con test de regresion nuevo.
+267/267 tests PASS despues del fix.
+
+### Gates 009-B/C/F (Modo Angela real, reserva manual real, tablero
+gerencial real) -- evaluados, NO construidos todavia
+
+La app nativa `Hotel v1` YA cubre, de forma basica, el ciclo operativo
+completo: lista de reservas, formulario con todos los campos
+necesarios, y los 4 botones de workflow real
+(`OPCION/HOLD/CONFIRMAR/CANCELAR`) que de hecho SON una reserva manual
+funcional hoy mismo (Angela podria usarla ya, sin nada nuevo que
+construir, aunque sin la simplicidad visual que pide el Frente A).
+
+No se construyeron vistas Kanban/Dashboard nuevas ni cambios de Studio
+en este turno, a proposito: las interacciones de busqueda/agrupacion
+avanzada mostraron comportamiento inestable en esta sesion de
+automatizacion de navegador (timeouts de captura de pantalla, un
+"Agrupar por" que aplico multiples niveles de golpe) y construir vistas
+compartidas equivocadas en una base que ya usa un piloto real es un
+riesgo que no vale la pena correr sin control mas fino que clicks de
+coordenadas. **Recomendacion:** dedicar una sesion enfocada (idealmente
+con Studio, no solo agrupaciones de lista) para construir la Kanban de
+Angela y el dashboard gerencial sobre este modelo de datos ya
+confirmado -- el diseno (`ATH-ODOO-HOTEL-009_ANGELA_UX.md`) no necesita
+cambios, solo ejecucion.
+
+Para el tablero gerencial real (Gate 009-F), conectar
+`operational-read-model.mjs`/`financial-model.mjs` a estos datos reales
+requiere decidir COMO leerlos: (a) una nueva operacion de lectura en el
+contrato del Gateway (cambio de contrato, requiere decision de Marlon,
+igual que el hallazgo de `cancel`), o (b) lectura directa via
+XML-RPC/`search_read` con el usuario tecnico (permisos no probados
+todavia). Se deja como **PENDIENTE_DECISION_CEO**, no como bloqueo
+tecnico -- la fuente de datos y sus nombres de campo ya estan
+confirmados arriba, falta decidir el canal de lectura.

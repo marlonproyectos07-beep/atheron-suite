@@ -20,7 +20,14 @@ test('checkAvailabilityTool delega en deps.checkAvailability sin calcular nada p
 test('quoteTool y createHoldTool delegan en deps, nunca inventan un precio ni un id', async () => {
   const deps = { quote: async () => ({ quote_id: 'Q-1', total: 999 }), createHold: async () => ({ hold_id: 'H-1' }) };
   assert.deepEqual(await quoteTool({ unit: '201', checkIn: 'x', checkOut: 'y', guests: 1 }, deps), { quote_id: 'Q-1', total: 999 });
-  assert.deepEqual(await createHoldTool({ quoteId: 'Q-1' }, deps), { hold_id: 'H-1' });
+  assert.deepEqual(await createHoldTool({ quoteId: 'Q-1', unit: '201' }, deps), { hold_id: 'H-1' });
+});
+
+test('createHoldTool reenvia unit ademas de quoteId -- el contrato real de hold exige unit_id (hallazgo E2E LIVE)', async () => {
+  let received = null;
+  const deps = { createHold: async (payload) => { received = payload; return { hold_id: 'H-1' }; } };
+  await createHoldTool({ quoteId: 'Q-1', unit: '201' }, deps);
+  assert.deepEqual(received, { quoteId: 'Q-1', unit: '201' });
 });
 
 test('holdStatusTool reutiliza la operacion real `status` del Gateway por operation_id', async () => {

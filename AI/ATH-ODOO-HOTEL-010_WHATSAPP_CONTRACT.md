@@ -198,9 +198,29 @@ never in the whitelist"). No es un bug: es una decision de arquitectura
 que protege contra cancelaciones no autorizadas. Levantarla requiere
 decision explicita de Marlon, no una correccion tecnica.
 
+## Actualizacion 2026-09-30 -- Gate 010-F conectado contra Odoo STAGING REAL
+
+Con sesion real de Odoo STAGING disponible (ver
+`AI/ATH-ODOO-HOTEL-009_HANDOFF.md`, actualizacion 2026-09-30), se
+reemplazo el "Gateway" fake del E2E por el Gateway LIVE real
+(`scripts/e2e-conversational-live.mjs`, nuevo). Resultado real:
+`conversation-engine.mjs` (sin cambios de logica) recorrio disponibilidad
+real -> cotizacion real ($50.000 COP, `quote_id 140`) -> HOLD real
+(`hold_id 22226`, `COT/2026/03819`) contra Odoo, y se libero con el
+boton real `Hotel: CANCELAR`, confirmado por una nueva consulta de
+disponibilidad real. **`E2E_WITH_ODOO: REAL`** (ya no solo simulado).
+
+Este ejercicio encontro un bug real: `createHoldTool` no reenviaba
+`unit`, y el contrato real de `hold` (`src/contract.mjs`) exige
+`unit_id` ademas de `quote_id` -- los fakes de los tests no lo
+detectaban porque ignoraban el campo extra. Corregido en
+`ai-tool-adapters.mjs`/`conversation-engine.mjs`, con test de
+regresion nuevo. 267/267 tests PASS.
+
 ## Estado
 
 Documentado + motor conversacional/NLU/politica de autonomia/
 adaptadores/handoff/observabilidad/MessagingProvider/simulador (25
-casos)/E2E construidos y probados en laboratorio. Cero WhatsApp/Meta
-real conectado. `WHATSAPP_CONNECTED: NO`. `META_REAL_CONNECTED: NO`.
+casos) probados en laboratorio, MAS el E2E conversacional ahora probado
+tambien contra Odoo STAGING real (ver arriba). Cero WhatsApp/Meta real
+conectado. `WHATSAPP_CONNECTED: NO`. `META_REAL_CONNECTED: NO`.
