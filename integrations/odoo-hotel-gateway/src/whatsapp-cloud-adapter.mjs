@@ -88,14 +88,27 @@ export class WhatsAppCloudProvider {
     return messages;
   }
 
-  /** Entrega cada mensaje de texto del payload a los handlers, deduplicando por message_id (Fase 9). */
+  /**
+   * Entrega cada mensaje de texto del payload a los handlers, deduplicando
+   * por message_id (Fase 9). Devuelve `{ accepted, duplicates }` (el
+   * unico uso real hoy es el webhook de Vercel para reportar esos
+   * conteos en su respuesta HTTP) -- los llamadores existentes que
+   * ignoran el valor de retorno (E2E, simulador) siguen funcionando igual.
+   */
   async receiveMessage(payload) {
+    let accepted = 0;
+    let duplicates = 0;
     for (const message of this.parseInboundPayload(payload)) {
-      if (!message.message_id || this.deduplicate(message.message_id)) continue;
+      if (!message.message_id || this.deduplicate(message.message_id)) {
+        duplicates += 1;
+        continue;
+      }
+      accepted += 1;
       for (const handler of this.#handlers) {
         await handler(message);
       }
     }
+    return { accepted, duplicates };
   }
 
   async #post(path, body) {

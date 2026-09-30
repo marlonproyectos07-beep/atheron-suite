@@ -99,9 +99,18 @@ export function createWhatsAppOrchestrator({ provider, tools, referenceDate = nu
       if (typeof onHumanRequired === 'function') onHumanRequired(handoff);
     }
 
+    // El motor ya avanzo (fuente de verdad: Gateway/Odoo, arriba). Que el
+    // canal de salida no pueda entregar la respuesta (p.ej. adaptador de
+    // WhatsApp real sin accessToken todavia, ver Fase 15/16) nunca debe
+    // tirar la conversacion ni la peticion HTTP que la disparo -- se
+    // reporta via onEvent y se sigue.
     const reply = renderReply(conversation, priorState);
-    await provider.sendMessage(from, reply);
-    if (typeof provider.markRead === 'function') await provider.markRead(message_id);
+    try {
+      await provider.sendMessage(from, reply);
+      if (typeof provider.markRead === 'function') await provider.markRead(message_id);
+    } catch (error) {
+      if (typeof onEvent === 'function') onEvent({ type: 'send_failed', correlation_id: correlationId, error: error.message });
+    }
 
     return conversation;
   });

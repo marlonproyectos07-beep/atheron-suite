@@ -131,3 +131,18 @@ test('Fase 11 -- falla del Gateway: el cliente recibe una respuesta corta y clar
   assert.doesNotMatch(reply, /GATEWAY_TIMEOUT|Error|stack/i);
   assert.ok(events.includes('gateway_error'));
 });
+
+test('falla al ENVIAR la respuesta (p.ej. WhatsAppCloudProvider real sin accessToken todavia) nunca tira la peticion ni pierde el estado ya avanzado', async () => {
+  const provider = new LabMessagingProvider();
+  provider.sendMessage = async () => { throw new Error('WHATSAPP_ADAPTER_MISCONFIGURED: falta accessToken'); };
+  const events = [];
+  const orchestrator = createWhatsAppOrchestrator({ provider, tools: buildTools({ availableUnits: ['201'] }), referenceDate: REFERENCE_DATE, onEvent: (e) => events.push(e.type) });
+
+  await assert.doesNotReject(
+    provider.receiveMessage({ from: '573000000008', text: 'Del viernes al domingo, somos 2', message_id: 'wamid-10' }),
+  );
+
+  assert.ok(events.includes('send_failed'), 'el fallo de envio se reporta via onEvent, no se traga en silencio');
+  const conv = orchestrator.getConversation('573000000008');
+  assert.equal(conv.state, 'OPTIONS_PRESENTED', 'el motor SI avanzo (Gateway es la fuente de verdad); solo fallo el canal de salida');
+});
