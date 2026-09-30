@@ -2,26 +2,33 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ODOO_HOUSEKEEPING_STAGES,
+  LOGICAL_HOUSEKEEPING_STAGES,
   UX_LABEL,
   onCheckout,
   startCleaning,
   finishCleaning,
+  confirmReadyForGuest,
   reportIncident,
+  resolveIncident,
   InvalidHousekeepingTransition,
   INCIDENT_CATEGORIES,
   computeHousekeepingPriority,
 } from '../src/housekeeping-model.mjs';
 
-test('ODOO_HOUSEKEEPING_STAGES son exactamente las 4 etapas reales confirmadas en Odoo', () => {
+test('ODOO_HOUSEKEEPING_STAGES son exactamente las 4 etapas reales confirmadas en Odoo (sin tocar)', () => {
   assert.deepEqual(ODOO_HOUSEKEEPING_STAGES, ['LISTA', 'POR_LIMPIAR', 'EN_LIMPIEZA', 'INCIDENCIA']);
 });
 
-test('UX_LABEL cubre las 4 etapas reales, sin inventar una 5ta', () => {
-  assert.equal(Object.keys(UX_LABEL).length, 4);
-  for (const stage of ODOO_HOUSEKEEPING_STAGES) assert.ok(UX_LABEL[stage]);
+test('LOGICAL_HOUSEKEEPING_STAGES son las 5 etapas del flujo aprobado por el CEO (Decision 1)', () => {
+  assert.deepEqual(LOGICAL_HOUSEKEEPING_STAGES, ['POR_LIMPIAR', 'EN_LIMPIEZA', 'LISTA_PARA_REVISAR', 'LISTA', 'INCIDENCIA']);
 });
 
-test('checkout -> aseo -> lista: ciclo feliz completo', () => {
+test('UX_LABEL cubre las 5 etapas logicas, incluida LISTA_PARA_REVISAR', () => {
+  assert.equal(Object.keys(UX_LABEL).length, 5);
+  for (const stage of LOGICAL_HOUSEKEEPING_STAGES) assert.ok(UX_LABEL[stage]);
+});
+
+test('checkout -> aseo -> revision -> lista: ciclo feliz completo de 5 pasos', () => {
   let task = onCheckout('201');
   assert.equal(task.stage, 'POR_LIMPIAR');
 
@@ -29,7 +36,22 @@ test('checkout -> aseo -> lista: ciclo feliz completo', () => {
   assert.equal(task.stage, 'EN_LIMPIEZA');
 
   task = finishCleaning(task);
+  assert.equal(task.stage, 'LISTA_PARA_REVISAR');
+
+  task = confirmReadyForGuest(task);
   assert.equal(task.stage, 'LISTA');
+});
+
+test('finishCleaning nunca salta directo a LISTA: siempre pasa por LISTA_PARA_REVISAR', () => {
+  const task = startCleaning(onCheckout('201'));
+  const afterFinish = finishCleaning(task);
+  assert.equal(afterFinish.stage, 'LISTA_PARA_REVISAR');
+  assert.notEqual(afterFinish.stage, 'LISTA');
+});
+
+test('confirmReadyForGuest exige pasar por LISTA_PARA_REVISAR primero (no se puede saltar desde EN_LIMPIEZA)', () => {
+  const task = startCleaning(onCheckout('201')); // EN_LIMPIEZA
+  assert.throws(() => confirmReadyForGuest(task), InvalidHousekeepingTransition);
 });
 
 test('transicion invalida se rechaza igual que Odoo real (mensaje claro, sin escribir nada)', () => {
@@ -38,15 +60,35 @@ test('transicion invalida se rechaza igual que Odoo real (mensaje claro, sin esc
   try {
     finishCleaning(task);
   } catch (e) {
-    assert.match(e.message, /HOUSEKEEPING: transicion no permitida POR_LIMPIAR -> LISTA/);
+    assert.match(e.message, /HOUSEKEEPING: transicion no permitida POR_LIMPIAR -> LISTA_PARA_REVISAR/);
   }
 });
 
 test('no se puede limpiar dos veces seguidas sin pasar por POR_LIMPIAR', () => {
   let task = onCheckout('201');
   task = startCleaning(task); // EN_LIMPIEZA
-  task = finishCleaning(task); // LISTA
+  task = finishCleaning(task); // LISTA_PARA_REVISAR
+  task = confirmReadyForGuest(task); // LISTA
   assert.throws(() => startCleaning(task), InvalidHousekeepingTransition);
+});
+
+test('INCIDENCIA es alcanzable como rama lateral desde POR_LIMPIAR, EN_LIMPIEZA y LISTA_PARA_REVISAR', () => {
+  const desdePorLimpiar = reportIncident(onCheckout('201'), 'OTRO');
+  assert.equal(desdePorLimpiar.stage, 'INCIDENCIA');
+
+  const desdeEnLimpieza = reportIncident(startCleaning(onCheckout('202')), 'OTRO');
+  assert.equal(desdeEnLimpieza.stage, 'INCIDENCIA');
+
+  const desdeListaParaRevisar = reportIncident(finishCleaning(startCleaning(onCheckout('203'))), 'OTRO');
+  assert.equal(desdeListaParaRevisar.stage, 'INCIDENCIA');
+});
+
+test('una incidencia abierta nunca permite llegar a LISTA sin pasar de nuevo por aseo y revision (Regla v1)', () => {
+  const withIncident = reportIncident(finishCleaning(startCleaning(onCheckout('201'))), 'DAÑO');
+  assert.equal(withIncident.stage, 'INCIDENCIA');
+  // Desde INCIDENCIA, LISTA_PARA_REVISAR y LISTA nunca son transiciones validas.
+  assert.throws(() => confirmReadyForGuest(withIncident), InvalidHousekeepingTransition);
+  assert.throws(() => finishCleaning(withIncident), InvalidHousekeepingTransition);
 });
 
 test('reportIncident exige categoria conocida', () => {
@@ -54,19 +96,46 @@ test('reportIncident exige categoria conocida', () => {
   assert.throws(() => reportIncident(task, 'CATEGORIA_INVENTADA'), /UNKNOWN_INCIDENT_CATEGORY/);
 });
 
-test('reportIncident nunca decide por su cuenta si bloquea la entrega', () => {
+test('reportIncident nunca decide por su cuenta si bloquea la entrega: siempre decision_required (Regla v1)', () => {
   const task = startCleaning(onCheckout('201'));
   const withIncident = reportIncident(task, 'ELECTRICIDAD', { note: 'toma corriente danada' });
   assert.equal(withIncident.stage, 'INCIDENCIA');
-  assert.equal(withIncident.incident.blocks_delivery, null);
-  assert.equal(withIncident.incident.decision_required, 'CEO_DEBE_DEFINIR_SI_ESTA_CATEGORIA_BLOQUEA_ENTREGA');
+  assert.equal(withIncident.incident.decision_required, true);
+  assert.equal(withIncident.incident.resolved_by, null);
 });
 
-test('reportIncident respeta blocksDelivery si el llamador ya lo decidio explicitamente', () => {
-  const task = startCleaning(onCheckout('201'));
-  const withIncident = reportIncident(task, 'DAÑO', { blocksDelivery: true });
-  assert.equal(withIncident.incident.blocks_delivery, true);
-  assert.equal(withIncident.incident.decision_required, null);
+test('reportIncident no asume severidad por categoria: severity siempre null hasta que exista una regla futura', () => {
+  for (const category of INCIDENT_CATEGORIES) {
+    const withIncident = reportIncident(startCleaning(onCheckout('201')), category);
+    assert.equal(withIncident.incident.severity, null);
+  }
+});
+
+test('resolveIncident exige autorizacion humana explicita: falla cerrado sin authorizedBy', () => {
+  const withIncident = reportIncident(startCleaning(onCheckout('201')), 'OTRO');
+  assert.throws(
+    () => resolveIncident(withIncident, 'POR_LIMPIAR'),
+    /INCIDENT_RESOLUTION_REQUIRES_EXPLICIT_HUMAN_AUTHORIZATION/,
+  );
+});
+
+test('resolveIncident solo aplica sobre una tarea que esta en INCIDENCIA', () => {
+  const task = startCleaning(onCheckout('201')); // EN_LIMPIEZA, sin incidencia
+  assert.throws(
+    () => resolveIncident(task, 'POR_LIMPIAR', { authorizedBy: 'angela' }),
+    /CANNOT_RESOLVE_INCIDENT_OUTSIDE_INCIDENCIA_STAGE/,
+  );
+});
+
+test('resolveIncident con autorizacion explicita libera de vuelta al ciclo, nunca directo a LISTA', () => {
+  const withIncident = reportIncident(startCleaning(onCheckout('201')), 'DAÑO', { note: 'grifo goteando' });
+  const resolved = resolveIncident(withIncident, 'POR_LIMPIAR', { authorizedBy: 'marlon', resolutionNote: 'reparado' });
+  assert.equal(resolved.stage, 'POR_LIMPIAR');
+  assert.equal(resolved.incident.decision_required, false);
+  assert.equal(resolved.incident.resolved_by, 'marlon');
+  assert.equal(resolved.incident.resolution_note, 'reparado');
+  // Sigue exigiendo el ciclo completo de nuevo: no hay atajo hacia LISTA.
+  assert.throws(() => confirmReadyForGuest(resolved), InvalidHousekeepingTransition);
 });
 
 test('INCIDENT_CATEGORIES son exactamente las 6 pedidas por el CEO', () => {
