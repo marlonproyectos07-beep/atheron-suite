@@ -2,7 +2,8 @@ import type { APIRoute } from 'astro';
 import { verifySignature } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-webhook-security.mjs';
 import { WhatsAppCloudProvider } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-cloud-adapter.mjs';
 import { createWhatsAppOrchestrator } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-orchestrator.mjs';
-import { buildWhatsAppGatewayTools } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-gateway-tools.mjs';
+import { buildWhatsAppAvailabilityOnlyTools } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-gateway-tools.mjs';
+import { isAuthorizedTestMessage } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-test-gate.mjs';
 
 /**
  * ATH-ODOO-HOTEL-011 — Webhook Staging Deployment Gate.
@@ -36,7 +37,8 @@ export const prerender = false;
 const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || process.env.META_PHONE_NUMBER_ID;
 const outboundReady = process.env.WHATSAPP_TEST_SEND_ENABLED === 'true'
   && Boolean(process.env.WHATSAPP_ACCESS_TOKEN)
-  && Boolean(phoneNumberId);
+  && Boolean(phoneNumberId)
+  && Boolean(process.env.WHATSAPP_TEST_ALLOWED_FROM);
 const provider = new WhatsAppCloudProvider(outboundReady ? {
   accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
   phoneNumberId,
@@ -68,7 +70,7 @@ function ensureOrchestrator() {
   if (orchestrator) return orchestrator;
   const gatewayConfig = readGatewayConfig();
   if (!gatewayConfig) return null;
-  const tools = buildWhatsAppGatewayTools(gatewayConfig);
+  const tools = buildWhatsAppAvailabilityOnlyTools(gatewayConfig);
   orchestrator = createWhatsAppOrchestrator({
     provider,
     tools,
@@ -131,6 +133,17 @@ export const POST: APIRoute = async ({ request }) => {
     payload = JSON.parse(rawBody);
   } catch {
     return jsonResponse({ ok: false, error: 'INVALID_JSON_BODY' }, 400);
+  }
+
+  // Solo el numero Meta TEST, remitente autorizado y texto aprobado por
+  // el CEO pueden llegar al orquestador. Los demas eventos se reconocen
+  // sin efectuar consultas ni envios y sin provocar reintentos de Meta.
+  const messages = provider.parseInboundPayload(payload);
+  if (!isAuthorizedTestMessage(messages, {
+    allowedFrom: process.env.WHATSAPP_TEST_ALLOWED_FROM,
+    phoneNumberId: process.env.META_PHONE_NUMBER_ID,
+  })) {
+    return jsonResponse({ ok: true, accepted: 0, ignored: messages.length }, 200);
   }
 
   const routed = ensureOrchestrator();

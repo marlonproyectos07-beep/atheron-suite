@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LabMessagingProvider } from '../src/messaging-provider.mjs';
 import { createWhatsAppOrchestrator } from '../src/whatsapp-orchestrator.mjs';
+import { HOTEL_011_TEST_MESSAGE } from '../src/whatsapp-test-gate.mjs';
 
 function buildTools({ availableUnits = [] } = {}) {
   return {
@@ -12,6 +13,21 @@ function buildTools({ availableUnits = [] } = {}) {
 }
 
 const REFERENCE_DATE = '2026-12-01'; // martes
+
+test('HOTEL-011: mensaje CEO consulta disponibilidad y responde sin cotizar ni crear HOLD', async () => {
+  const provider = new LabMessagingProvider();
+  const checked = [];
+  const tools = { checkAvailability: async (request) => { checked.push(request); return true; } };
+  const orchestrator = createWhatsAppOrchestrator({ provider, tools, referenceDate: '2026-09-30' });
+  await provider.receiveMessage({ from: '573000000000', text: HOTEL_011_TEST_MESSAGE, message_id: 'hotel-011-test' });
+  assert.deepEqual(checked, [{ unit: '201', checkIn: '2026-11-10', checkOut: '2026-11-12', guests: 2 }]);
+  assert.equal(orchestrator.getConversation('573000000000').state, 'OPTIONS_PRESENTED');
+  assert.equal(orchestrator.getConversation('573000000000').quote, null);
+  assert.equal(orchestrator.getConversation('573000000000').hold, null);
+  assert.equal(provider.sentMessages.length, 1);
+  assert.match(provider.sentMessages[0].text, /201/);
+  assert.doesNotMatch(provider.sentMessages[0].text, /\$|COP|reserva|confirmad/i);
+});
 
 test('Fase 5 -- golden path: mensaje con fechas y personas completas llega hasta HOLD_CREATED y responde por WhatsApp', async () => {
   const provider = new LabMessagingProvider();

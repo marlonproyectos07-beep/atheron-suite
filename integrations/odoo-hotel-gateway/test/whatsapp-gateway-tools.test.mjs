@@ -1,10 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildWhatsAppGatewayTools, UNIT_ID_MAP } from '../src/whatsapp-gateway-tools.mjs';
+import { buildWhatsAppAvailabilityOnlyTools, buildWhatsAppGatewayTools, UNIT_ID_MAP } from '../src/whatsapp-gateway-tools.mjs';
 
 function tools(fetchImpl) {
   return buildWhatsAppGatewayTools({ baseUrl: 'https://gw.test', agentId: 'test-agent', rawKey: 'test-key', fetchImpl });
 }
+
+test('piloto HOTEL-011 expone solo disponibilidad, sin quote, HOLD ni status', async () => {
+  const fetchImpl = async () => ({ json: async () => ({ ok: true, data: { opciones: [{ unit_id: '1', estado: 'disponible' }] } }) });
+  const restricted = buildWhatsAppAvailabilityOnlyTools({ baseUrl: 'https://gw.test', agentId: 'test-agent', rawKey: 'test-key', fetchImpl });
+  assert.deepEqual(Object.keys(restricted), ['checkAvailability']);
+  assert.equal(await restricted.checkAvailability({ unit: '201', checkIn: '2026-11-10', checkOut: '2026-11-12', guests: 2 }), true);
+});
 
 test('checkAvailability real -- true cuando la unidad pedida viene disponible en opciones', async () => {
   const fetchImpl = async () => ({ json: async () => ({ ok: true, data: { opciones: [{ unit_id: '1', estado: 'disponible' }] } }) });

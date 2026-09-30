@@ -73,3 +73,11 @@ export function buildWhatsAppGatewayTools(config) {
     },
   };
 }
+
+// HOTEL-011: el piloto Meta TEST solo puede consultar disponibilidad.
+// Omitir quote/createHold impide llegar a esos endpoints aunque cambie
+// la intencion del mensaje o el estado del motor conversacional.
+export function buildWhatsAppAvailabilityOnlyTools(config) {
+  const { checkAvailability } = buildWhatsAppGatewayTools(config);
+  return { checkAvailability };
+}

@@ -19,6 +19,7 @@
  */
 
 const WEEKDAYS = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 function normalize(text) {
   return text
@@ -49,6 +50,26 @@ function nextWeekday(referenceDate, weekdayName) {
 
 function findDates(normalized, referenceDate) {
   if (!referenceDate) return { checkIn: null, checkOut: null };
+  const dayMonthRange = normalized.match(new RegExp(`\\bdel\\s+(\\d{1,2})\\s+al\\s+(\\d{1,2})\\s+de\\s+(${MONTHS.join('|')})(?:\\s+de\\s+(\\d{4}))?\\b`));
+  if (dayMonthRange) {
+    const month = MONTHS.indexOf(dayMonthRange[3]) + 1;
+    const [arrivalDay, departureDay] = [Number(dayMonthRange[1]), Number(dayMonthRange[2])];
+    let year = dayMonthRange[4] ? Number(dayMonthRange[4]) : Number(referenceDate.slice(0, 4));
+    const dateFor = (day) => {
+      const date = new Date(Date.UTC(year, month - 1, day));
+      return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+        ? date.toISOString().slice(0, 10) : null;
+    };
+    if (arrivalDay >= departureDay) return { checkIn: null, checkOut: null };
+    let checkIn = dateFor(arrivalDay);
+    let checkOut = dateFor(departureDay);
+    if (checkIn && checkOut && !dayMonthRange[4] && checkIn < referenceDate) {
+      year += 1;
+      checkIn = dateFor(arrivalDay);
+      checkOut = dateFor(departureDay);
+    }
+    return { checkIn, checkOut };
+  }
   if (/\bmanana\b/.test(normalized) && !/\bpasado manana\b/.test(normalized)) {
     return { checkIn: addDays(referenceDate, 1), checkOut: null };
   }
