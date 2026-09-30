@@ -27,25 +27,41 @@
   (`Crear Tarea al Confirmar Reserva Atheron Suite`, `Limpieza: Al
   entrar`, `Limpieza: Al salir`), todas sobre `sale.order`. Ver
   `AI/ATH-ODOO-HOTEL-012_DIAGNOSTICO.md` §6.
-- [ ] **PARCIAL, no bloqueado por permisos sino por inestabilidad de la
-  sesión de automatización de navegador**: auditar a fondo los campos de
-  `project.task` (asignación, vínculo a unidad/reserva) y el detalle
-  completo de las 3 automatizaciones encontradas.
+- [x] **Decisiones CEO 1-4 APROBADAS (2026-09-30)** — ver
+  `AI/ATH-ODOO-HOTEL-012_SAFE_WRITE_PLAN.md`:
+  1. Etapa housekeeping: secuencia de 5 pasos aprobada conceptualmente
+     (`POR LIMPIAR → EN LIMPIEZA → LISTA PARA REVISAR → LISTA`,
+     `INCIDENCIA` como rama lateral). No creada en Odoo todavía.
+  2. Incidencias — Regla v1 aprobada: cualquier incidencia abierta
+     bloquea el paso automático a LISTA, siempre `decision_required`.
+  3. Creación de tareas — prioridad a automatización nativa de Odoo;
+     auditar las 3 existentes antes de crear nada nuevo.
+  4. Algarra/Neusa — sin housekeeping en v1, queda como mejora
+     incremental.
+- [x] SAFE WRITE PLAN preparado (no ejecutado) — ver
+  `AI/ATH-ODOO-HOTEL-012_SAFE_WRITE_PLAN.md`: cambios propuestos,
+  objetos afectados, riesgos de duplicación, rollback, orden de
+  ejecución, pruebas, qué es seguro hacer solo en código, separación de
+  HOTEL-011.
+- [ ] **BLOQUEADO (reproducible, no aleatorio) — sesión de
+  automatización de navegador inestable**: auditar a fondo dominio/
+  proyecto/etapa/registro creado por cada una de las 3 automatizaciones
+  encontradas (`Crear Tarea al Confirmar Reserva Atheron Suite`,
+  `Limpieza: Al entrar`, `Limpieza: Al salir`). 3 intentos de esta
+  sesión abrieron consistentemente el registro equivocado. Condición de
+  salida obligatoria antes de tocar cualquier automatización real (ver
+  SAFE WRITE PLAN, sección "Auditoría").
 - [ ] **BLOQUEADO — requiere sesión Odoo STAGING con Studio habilitado**:
-  construir la vista real del tablero dentro de Odoo (requiere Marlon o
-  aprobación explícita por cada edición de recurso compartido, igual que
-  la tarjeta Kanban de HOTEL-009).
+  ejecutar el SAFE WRITE PLAN (crear etapa `LISTA PARA REVISAR`, ajustar
+  automatización si hace falta) y construir la vista real del tablero
+  (requiere Marlon o aprobación explícita por cada edición de recurso
+  compartido, igual que la tarjeta Kanban de HOTEL-009).
 - [ ] **BLOQUEADO**: ejecutar los 15 escenarios de QA obligatorio contra
   STAGING real.
-- [ ] Decisión CEO: ¿agregar etapa "LISTA PARA REVISAR" en Studio, o
-  fusionarla con una existente?
-- [ ] Decisión CEO: ¿qué categorías de incidencia bloquean la entrega al
-  huésped?
-- [ ] Decisión CEO: canal de escritura para crear la tarea de limpieza
-  real al check-out.
-- [ ] Decisión CEO: configurar housekeeping (proyecto + etapas) también
-  para Casa Algarra y Casa Neusa, o dejar el tablero de limpieza
-  limitado a Atheron Suite por ahora.
+- [ ] Disponible para la siguiente autorización, SIN necesitar sesión
+  Odoo: activar `LISTA_PARA_REVISAR` y la Regla v1 de incidencias en
+  `src/housekeeping-model.mjs` (código puro, reversible, testeable) —
+  ver SAFE WRITE PLAN, sección 9.
 
 ## HOTEL-011 — WhatsApp piloto controlado (EN CURSO, Codex, rama separada)
 
