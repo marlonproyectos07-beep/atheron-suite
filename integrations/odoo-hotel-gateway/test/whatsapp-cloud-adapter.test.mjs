@@ -62,7 +62,7 @@ test('con httpClient fake inyectado, sendMessage arma el request real de Meta (B
   await provider.sendMessage('573000000000', 'Tengo estas opciones disponibles');
 
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].url, 'https://graph.facebook.com/v20.0/123456789012345/messages');
+  assert.equal(calls[0].url, 'https://graph.facebook.com/v25.0/123456789012345/messages');
   assert.equal(calls[0].init.headers.Authorization, 'Bearer test-token-not-real');
   const body = JSON.parse(calls[0].init.body);
   assert.deepEqual(body, { messaging_product: 'whatsapp', to: '573000000000', type: 'text', text: { body: 'Tengo estas opciones disponibles' } });

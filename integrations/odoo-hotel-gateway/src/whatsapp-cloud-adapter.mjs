@@ -19,7 +19,7 @@
  *     que falta, nunca su valor.
  */
 
-export const WHATSAPP_API_VERSION = 'v20.0';
+export const WHATSAPP_API_VERSION = 'v25.0';
 
 function requireConfig(config, keys) {
   for (const key of keys) {
