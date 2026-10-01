@@ -17,6 +17,13 @@ import { ctaLandingGrupos } from '../../data/navegacion';
 import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
 import { formularioContactoActivo } from '../../data/ajustes';
 import { atributosWhatsApp, MENSAJE_GRUPO, EVENTO_GRUPO } from '../../data/whatsapp';
+import { getCollection } from 'astro:content';
+
+/* Cuenta real de propiedades publicadas (sin contar unidades que viven dentro
+   de otra ficha). Estaba escrita a mano y se quedaba vieja al publicar una. */
+const propiedadesPublicadas = (await getCollection('hospedajes')).filter(
+  (f) => f.data.publicado && !f.data.perteneceA,
+).length;
 import { ORGANIZACION } from '../../data/seo';
 
 const fichaServicio = {
@@ -96,7 +103,7 @@ const fichaServicio = {
             <span class="dato__texto">Huéspedes en Casa Algarra</span>
           </div>
           <div class="dato">
-            <span class="dato__numero">4</span>
+            <span class="dato__numero">{propiedadesPublicadas}</span>
             <span class="dato__texto">Propiedades publicadas</span>
           </div>
         </div>
