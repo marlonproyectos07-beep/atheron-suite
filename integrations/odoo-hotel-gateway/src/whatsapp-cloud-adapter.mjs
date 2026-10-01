@@ -140,6 +140,20 @@ export class WhatsAppCloudProvider {
     return this.#post('/messages', { messaging_product: 'whatsapp', to, type: 'text', text: { body: text } });
   }
 
+  async sendImage(to, link, caption = undefined) {
+    if (!link) throw new Error('WHATSAPP_IMAGE_LINK_REQUIRED');
+    const image = { link };
+    if (caption) image.caption = caption;
+    return this.#post('/messages', { messaging_product: 'whatsapp', to, type: 'image', image });
+  }
+
+  async sendVideo(to, link, caption = undefined) {
+    if (!link) throw new Error('WHATSAPP_VIDEO_LINK_REQUIRED');
+    const video = { link };
+    if (caption) video.caption = caption;
+    return this.#post('/messages', { messaging_product: 'whatsapp', to, type: 'video', video });
+  }
+
   async markRead(messageId) {
     return this.#post('/messages', { messaging_product: 'whatsapp', status: 'read', message_id: messageId });
   }
