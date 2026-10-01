@@ -166,9 +166,14 @@ export const POST: APIRoute = async ({ request }) => {
   // el CEO pueden llegar al orquestador. Los demas eventos se reconocen
   // sin efectuar consultas ni envios y sin provocar reintentos de Meta.
   const messages = provider.parseInboundPayload(payload);
+  // Puente temporal HOTEL-011 -> capacidades conversacionales HOTEL-013.
+  // Se habilita SOLO en este Preview TEST, manteniendo remitente y Phone Number ID autorizados.
+  const naturalTextEnabled = process.env.VERCEL_ENV === 'preview'
+    && process.env.VERCEL_GIT_COMMIT_REF === 'feature/ath-odoo-hotel-011-whatsapp-controlled-pilot';
   const gate = inspectTestMessage(messages, {
     allowedFrom: process.env.WHATSAPP_TEST_ALLOWED_FROM,
     phoneNumberId: process.env.META_PHONE_NUMBER_ID,
+    naturalTextEnabled,
   });
   const diagnostic = inspectMetaEvent(payload, messages, gate);
   logHotel011Diagnostic('EVENT_RECEIVED', diagnostic.event);
