@@ -3,7 +3,8 @@ import { verifySignature } from '../../../../integrations/odoo-hotel-gateway/src
 import { WhatsAppCloudProvider } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-cloud-adapter.mjs';
 import { createWhatsAppOrchestrator } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-orchestrator.mjs';
 import { buildWhatsAppAvailabilityOnlyTools } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-gateway-tools.mjs';
-import { isAuthorizedTestMessage } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-test-gate.mjs';
+import { inspectTestMessage } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-test-gate.mjs';
+import { inspectMetaEvent, ignoredReason, logHotel011Diagnostic } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-preview-diagnostics.mjs';
 
 /**
  * ATH-ODOO-HOTEL-011 — Webhook Staging Deployment Gate.
@@ -42,7 +43,17 @@ const outboundReady = process.env.WHATSAPP_TEST_SEND_ENABLED === 'true'
 const provider = new WhatsAppCloudProvider(outboundReady ? {
   accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
   phoneNumberId,
-  httpClient: fetch,
+  httpClient: async (...args: Parameters<typeof fetch>) => {
+    logHotel011Diagnostic('OUTBOUND_STEP', { outbound_call_started: true, outbound_call_status: 'started' });
+    try {
+      const response = await fetch(...args);
+      logHotel011Diagnostic('OUTBOUND_STEP', { outbound_call_started: true, outbound_call_status: response.status });
+      return response;
+    } catch (error) {
+      logHotel011Diagnostic('OUTBOUND_STEP', { outbound_call_started: true, outbound_call_status: 'error' });
+      throw error;
+    }
+  },
 } : {});
 
 function readConfig() {
@@ -71,9 +82,22 @@ function ensureOrchestrator() {
   const gatewayConfig = readGatewayConfig();
   if (!gatewayConfig) return null;
   const tools = buildWhatsAppAvailabilityOnlyTools(gatewayConfig);
+  const observedTools = {
+    checkAvailability: async (...args: Parameters<typeof tools.checkAvailability>) => {
+      logHotel011Diagnostic('ODOO_STEP', { odoo_call_started: true, odoo_call_status: 'started' });
+      try {
+        const result = await tools.checkAvailability(...args);
+        logHotel011Diagnostic('ODOO_STEP', { odoo_call_started: true, odoo_call_status: 'success' });
+        return result;
+      } catch (error) {
+        logHotel011Diagnostic('ODOO_STEP', { odoo_call_started: true, odoo_call_status: 'error' });
+        throw error;
+      }
+    },
+  };
   orchestrator = createWhatsAppOrchestrator({
     provider,
-    tools,
+    tools: observedTools,
     onEvent: (e: { type: string }) => {
       // Observabilidad SIN PII: solo el tipo de evento, nunca texto/telefono del cliente.
       // eslint-disable-next-line no-console
@@ -119,12 +143,14 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   if (!verifySignature(rawBody, signature, appSecret)) {
+    logHotel011Diagnostic('FLOW_DECISION', { decision: 'ignored', reason: 'signature_invalid' });
     // eslint-disable-next-line no-console
     console.error('[hotel/webhook] firma invalida o ausente -- payload rechazado');
     return jsonResponse({ ok: false, error: 'INVALID_SIGNATURE' }, 401);
   }
 
   if (!outboundReady) {
+    logHotel011Diagnostic('FLOW_DECISION', { decision: 'ignored', reason: 'other' });
     return jsonResponse({ ok: false, error: 'META_OUTBOUND_NOT_CONNECTED' }, 503);
   }
 
@@ -132,6 +158,7 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     payload = JSON.parse(rawBody);
   } catch {
+    logHotel011Diagnostic('FLOW_DECISION', { decision: 'ignored', reason: 'other' });
     return jsonResponse({ ok: false, error: 'INVALID_JSON_BODY' }, 400);
   }
 
@@ -139,15 +166,25 @@ export const POST: APIRoute = async ({ request }) => {
   // el CEO pueden llegar al orquestador. Los demas eventos se reconocen
   // sin efectuar consultas ni envios y sin provocar reintentos de Meta.
   const messages = provider.parseInboundPayload(payload);
-  if (!isAuthorizedTestMessage(messages, {
+  const gate = inspectTestMessage(messages, {
     allowedFrom: process.env.WHATSAPP_TEST_ALLOWED_FROM,
     phoneNumberId: process.env.META_PHONE_NUMBER_ID,
-  })) {
+  });
+  const diagnostic = inspectMetaEvent(payload, messages, gate);
+  logHotel011Diagnostic('EVENT_RECEIVED', diagnostic.event);
+  logHotel011Diagnostic('MESSAGE_PARSED', diagnostic.message);
+  if (!gate.allowed) {
+    logHotel011Diagnostic('FLOW_DECISION', {
+      decision: 'ignored', reason: ignoredReason(diagnostic.event, messages, gate),
+    });
+    logHotel011Diagnostic('ODOO_STEP', { odoo_call_started: false, odoo_call_status: 'not_reached' });
+    logHotel011Diagnostic('OUTBOUND_STEP', { outbound_call_started: false, outbound_call_status: 'not_reached' });
     return jsonResponse({ ok: true, accepted: 0, ignored: messages.length }, 200);
   }
 
   const routed = ensureOrchestrator();
   if (!routed) {
+    logHotel011Diagnostic('FLOW_DECISION', { decision: 'ignored', reason: 'other' });
     // eslint-disable-next-line no-console
     console.error('[hotel/webhook] Gateway no configurado -- mensaje rechazado antes de deduplicar');
     return jsonResponse({ ok: false, error: 'GATEWAY_NOT_CONNECTED' }, 503);
@@ -157,6 +194,10 @@ export const POST: APIRoute = async ({ request }) => {
   // receiveMessage() parsea, deduplica por message_id y dispara el
   // pipeline real completo para cada mensaje nuevo.
   const { accepted, duplicates } = await provider.receiveMessage(payload);
+  logHotel011Diagnostic('FLOW_DECISION', {
+    decision: accepted > 0 ? 'accepted' : 'ignored',
+    reason: accepted > 0 ? 'other' : 'duplicate',
+  });
   // Observabilidad SIN PII: solo conteos, nunca texto/telefono del cliente.
   // eslint-disable-next-line no-console
   console.log('[hotel/webhook] recibido', { accepted, duplicates, routed: Boolean(routed) });
