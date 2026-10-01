@@ -106,3 +106,12 @@ SEO 69 en La Margarita y Casa Colonial es esperado: son borradores con `noindex`
   - `public/assets/video/hotel-la-margarita/hotel-la-margarita-poster.webp`
   La sección «Conoce Hotel La Margarita / Un recorrido real por el hospedaje» solo se pinta si ambos archivos existen. Probado con archivos de prueba (luego eliminados): Lighthouse idéntico (100/100/96/69, LCP 1,7 s) gracias a `preload="none"`.
 - **Hero**: `heroFoto: false` hasta tener fachada real.
+
+## 8. Hotel La Margarita — media real integrada (media pack del aliado)
+
+- **Fotos** (WebP optimizadas, nombres `hotel-la-margarita-zipaquira-*.webp` en `public/assets/img/hospedajes/hotel-la-margarita/`; originales del paquete en `docs/media-originales/hotel-la-margarita/`): fachada (hero y tarjeta), recepción, patio interior, 2 zonas comunes, escalera, pasillo, habitación doble (2 tomas), habitación familiar, baño privado. 11 usadas. No usadas: `habitacion-03` (no se sabe si es doble o familiar), `zona-comun-03` y `detalle-decoracion` (repetidas/marginales), duplicado `fachada-poster.jpg`.
+- **Fotos antiguas** (8, de la ficha pública de Google) quedan en el repo pero ya no se usan; retirarlas requiere autorización.
+- **Hero**: fachada real (848×474, algo blanda en escritorio al ocupar todo el ancho; encuadre `center 20%`). Una foto de fachada de mayor resolución mejoraría el hero.
+- **Video** `hotel-la-margarita-recorrido-web.mp4` (43 s, 848×474, H.264, sin audio, 4,4 MB): fachada (10 s) → entrada y recepción (11 s) → escalera (8 s) → acceso y habitaciones (8 s) → camarote (6 s). Solo cortes y unión, sin filtros. Se excluyó el tramo donde aparece una persona reflejada en el espejo y el audio original. Poster = fachada. El video corto de fachada no se publica aparte (ya abre el maestro). Los videos originales (16 MB) no se versionaron.
+- La ficha sigue `publicado: false` / `noindex`.
+- Pendiente real: validaciones de §2 y aprobación de Marlon para publicar.

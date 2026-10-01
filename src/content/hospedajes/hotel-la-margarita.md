@@ -13,30 +13,40 @@ titulo: Hotel La Margarita en Zipaquirá | Hospedaje para grupos
 descripcion: Hotel en la Calle 12 de Zipaquirá, a una cuadra del terminal. Baño privado y wifi en cada habitación. Desde $ 65.000 por persona; cotizamos grupos.
 ogTitulo: Hotel La Margarita | Zipaquirá
 ogDescripcion: Habitaciones familiares y dobles con baño privado y wifi, a una cuadra del terminal de Zipaquirá. Desde $ 65.000 por persona por noche.
-avisoBorrador: Ficha en preparación. Los datos operativos ya están confirmados. Faltan fotos (fachada y habitación doble), el video del recorrido y la validación de algunos datos (ver AI/ATH-WEB-QUALITY-001_MATRIZ.md).
+avisoBorrador: Ficha en preparación. Los datos operativos y la media real ya están cargados; falta la validación de algunos datos (ver AI/ATH-WEB-QUALITY-001_MATRIZ.md) y la aprobación para publicar.
 avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operación y la entrega de las habitaciones se coordinan con la administración del hotel.
 zona: 'Calle 12 #9-31, Zipaquirá'
 localidad: Zipaquirá
 departamento: Cundinamarca
 presentacion: Hotel con habitaciones familiares y dobles, todas con baño privado y wifi, a una cuadra del terminal de transporte de Zipaquirá. Para familias y grupos.
 presentacionPendiente: false
-fotoTarjeta: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-01-habitacion.webp
-fotoTarjetaAlt: Habitación familiar de Hotel La Margarita con cama doble y camarote
-fotoPrincipal: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-01-habitacion.webp
-fotoPrincipalAlt: Habitación familiar de Hotel La Margarita en Zipaquirá con cama doble, camarote y televisión
+fotoTarjeta: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-fachada.webp
+fotoTarjetaAlt: Fachada de Hotel La Margarita en la Calle 12 de Zipaquirá, con el letrero del hotel y la entrada principal
+fotoPrincipal: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-fachada.webp
+fotoPrincipalAlt: Fachada de Hotel La Margarita en la Calle 12 de Zipaquirá, con el letrero del hotel y la entrada principal
 galeria:
-  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-01-habitacion.webp
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-fachada.webp
+    alt: Fachada de Hotel La Margarita en la Calle 12 de Zipaquirá, con el letrero del hotel y la entrada principal
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-recepcion.webp
+    alt: Recepción de Hotel La Margarita con mostrador de ladrillo, sala de espera con sofás y plantas
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-patio-interior.webp
+    alt: Patio interior de Hotel La Margarita con techo de vidrio, mecedoras y plantas
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-zona-comun-sala.webp
+    alt: Zona común de Hotel La Margarita con sillas de bejuco, plantas y una maqueta de barco
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-zona-comun-arpa.webp
+    alt: Zona común de Hotel La Margarita con sillas de bejuco con cojines verdes, un arpa y tambores
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-escalera.webp
+    alt: Escalera interior de Hotel La Margarita con barandas blancas y cuadros, vista desde el segundo piso
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-pasillo.webp
+    alt: Pasillo de Hotel La Margarita con mueble de madera y plantas
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-habitacion-doble.webp
+    alt: Habitación doble de Hotel La Margarita con cama doble, mesa de noche y techo de madera
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-habitacion-doble-ventana.webp
+    alt: Habitación doble de Hotel La Margarita con cama doble, mesa de noche de madera y ventana con cortina
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-habitacion-familiar.webp
     alt: Habitación familiar de Hotel La Margarita con cama doble, camarote y televisión
-  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-06-recepcion.webp
-    alt: Mostrador de recepción de Hotel La Margarita
-  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-02-zona-comun.webp
-    alt: Zona común interior de Hotel La Margarita con plantas, escalera y televisión
-  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-05-escaleras.webp
-    alt: Escaleras interiores de Hotel La Margarita decoradas con plantas y cuadros
-  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-03-pasillo-superior.webp
-    alt: Pasillo del nivel superior de Hotel La Margarita
-  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-07-pasillo-habitaciones.webp
-    alt: Pasillo de acceso a las habitaciones de Hotel La Margarita
+  - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-bano-privado.webp
+    alt: Baño privado de Hotel La Margarita con ducha de vidrio, lavamanos y espejo
 datos:
   - numero: Hasta 52
     texto: Personas, capacidad total reportada
@@ -85,7 +95,7 @@ habitaciones:
     banos: Baño privado
     descripcion: El hotel tiene 8 habitaciones familiares, con cama doble y camarote. Todas con baño privado y wifi.
     precio: $ 65.000 por persona
-    foto: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-01-habitacion.webp
+    foto: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-habitacion-familiar.webp
     fotoAlt: Habitación familiar de Hotel La Margarita con cama doble, camarote y televisión
     pendiente: false
   - nombre: Habitación doble
@@ -94,16 +104,25 @@ habitaciones:
     banos: Baño privado
     descripcion: El hotel tiene 10 habitaciones dobles, con cama doble. Todas con baño privado y wifi.
     precio: $ 65.000 por persona
+    foto: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-habitacion-doble.webp
+    fotoAlt: Habitación doble de Hotel La Margarita con cama doble, mesa de noche y techo de madera
+    galeria:
+      - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-habitacion-doble.webp
+        alt: Habitación doble de Hotel La Margarita con cama doble, mesa de noche y techo de madera
+      - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-zipaquira-habitacion-doble-ventana.webp
+        alt: Habitación doble de Hotel La Margarita con cama doble, mesa de noche de madera y ventana con cortina
     pendiente: false
 videoPrincipal:
   src: /assets/video/hotel-la-margarita/hotel-la-margarita-recorrido-web.mp4
   poster: /assets/video/hotel-la-margarita/hotel-la-margarita-poster.webp
   titulo: Conoce Hotel La Margarita
   descripcion: Un recorrido real por el hospedaje
-  ancho: 1280
-  alto: 720
+  ancho: 848
+  alto: 474
+  duracion: '0:43'
 notaHabitaciones: Tarifa pública desde $ 65.000 por persona por noche. La cantidad de personas por habitación se confirma al cotizar.
-heroFoto: false
+heroFoto: true
+heroEncuadre: center 20%
 tarifas:
   etiqueta: Tarifas
   titulo: Una tarifa clara por persona

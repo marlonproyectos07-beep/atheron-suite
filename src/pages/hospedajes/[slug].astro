@@ -974,7 +974,7 @@ function idHabitacion(nombre) {
               }`}
               loading="lazy"
             ></iframe>
-          ) : (
+          ) : d.direccionPublica && d.enlaceMapa ? null : (
             /* Sin encuadre confirmado no se pinta mapa. Antes que
                ensenar un punto que no es, se dice lo que hay. */
             <div class="nota-reserva">
