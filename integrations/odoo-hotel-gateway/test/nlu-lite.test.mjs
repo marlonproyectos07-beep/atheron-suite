@@ -102,3 +102,15 @@ test('toEngineInput nunca pone una fecha/huespedes que la NLU no resolvio (undef
   assert.equal(input.guests, undefined);
   assert.equal(input.requestBooking, true);
 });
+
+
+test('HOTEL-016: media y afirmacion se reconocen sin reiniciar la conversacion', () => {
+  assert.equal(parseMessage('¿Tienes fotos o video para verla?', { referenceDate: HOY }).intent, 'ask_media');
+  assert.equal(parseMessage('Sí', { referenceDate: HOY }).intent, 'affirmation');
+  assert.equal(parseMessage('ok', { referenceDate: HOY }).intent, 'affirmation');
+});
+
+test('HOTEL-016: variantes naturales de precio -> ask_price', () => {
+  assert.equal(parseMessage('¿Cuánto sale?', { referenceDate: HOY }).intent, 'ask_price');
+  assert.equal(parseMessage('¿Cuál es el valor?', { referenceDate: HOY }).intent, 'ask_price');
+});
