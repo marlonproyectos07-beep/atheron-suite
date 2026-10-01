@@ -31,7 +31,33 @@ export function presentOptions(options) {
 }
 
 export function presentPrice({ unit, total, currency = 'COP' }) {
-  return `Para ${unit}, el valor es ${currency} $${Number(total).toLocaleString('es-CO')}.`;
+  return `Para la habitación ${unit}, el valor total para las fechas que me indicaste es ${currency} ${Number(total).toLocaleString('es-CO')}. 😊 Si quieres, también puedo mostrarte fotos reales antes de que decidas.`;
+}
+
+export function offerNextStep({ unit } = {}) {
+  const label = unit ? `la habitación ${unit}` : 'esa opción';
+  return `Claro 😊 ¿Quieres que te muestre fotos de ${label} o prefieres que te diga el precio?`;
+}
+
+export function mediaIntro({ unit, hasVideo = false } = {}) {
+  const extra = hasVideo ? ' También te envío el video real.' : '';
+  return `Claro 👇 Te muestro fotos reales de la habitación ${unit} para que puedas verla antes de decidir.${extra}`;
+}
+
+export function mediaUnavailable({ unit } = {}) {
+  return unit
+    ? `Todavía no tengo fotos cargadas de la habitación ${unit}. Puedo ayudarte con el precio o revisar otra opción.`
+    : 'Todavía no tengo fotos asociadas a esa opción. Puedo ayudarte con el precio o revisar otra alternativa.';
+}
+
+export function bookingIntentSafe({ unit } = {}) {
+  const label = unit ? `la habitación ${unit}` : 'esa opción';
+  return `Perfecto 😊 Ya sé que te interesa ${label}. En esta prueba todavía no voy a crear una reserva ni bloquear inventario. Primero confirmemos que los datos estén correctos.`;
+}
+
+export function contextualClarification({ unit } = {}) {
+  if (unit) return `Te sigo con la habitación ${unit} 😊 Puedo decirte el precio, mostrarte fotos reales o ayudarte a revisar otra opción. ¿Qué prefieres?`;
+  return 'Claro 😊 Puedo ayudarte con disponibilidad, precio, fotos o con otra fecha. ¿Qué quieres revisar?';
 }
 
 export function askGuestName() {
@@ -64,6 +90,11 @@ export const WHATSAPP_COPY = Object.freeze({
   askGuests,
   presentOptions,
   presentPrice,
+  offerNextStep,
+  mediaIntro,
+  mediaUnavailable,
+  bookingIntentSafe,
+  contextualClarification,
   askGuestName,
   preparingHold,
   holdCreated,
