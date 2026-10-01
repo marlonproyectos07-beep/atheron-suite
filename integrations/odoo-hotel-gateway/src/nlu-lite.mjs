@@ -93,6 +93,15 @@ function findDates(normalized, referenceDate) {
   return { checkIn: null, checkOut: null };
 }
 
+function findStayNights(normalized) {
+  const match = normalized.match(/\b(?:por\s+)?(\d{1,2}|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\s+noches?\b/);
+  if (!match) return null;
+  const token = match[1];
+  const words = { una: 1, uno: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10 };
+  const value = token in words ? words[token] : Number(token);
+  return Number.isInteger(value) && value > 0 ? value : null;
+}
+
 const NUMBER_WORDS = { uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10 };
 const NUMBER_TOKEN = `(\\d{1,2}|${Object.keys(NUMBER_WORDS).join('|')})`;
 
@@ -103,6 +112,7 @@ function toNumber(token) {
 }
 
 function findGuests(normalized) {
+  if (/\b(?:somos\s+)?(?:una\s+)?pareja\b/.test(normalized)) return 2;
   // "somos 7, no 5" -> se queda con el ULTIMO numero mencionado (correccion
   // explicita del cliente), nunca con el primero. Acepta digitos y numeros
   // en palabra ("dos", "tres"...) hasta diez.
@@ -128,7 +138,7 @@ function findIntent(normalized, { hasGuestCorrection }) {
     if (re.test(normalized)) return intent;
   }
   if (hasGuestCorrection) return 'update_guests';
-  if (/necesito|busco|quiero (una habitacion|alojamiento)|habitacion/.test(normalized)) return 'availability_inquiry';
+  if (/necesito|busco|quiero (una habitacion|alojamiento)|habitacion|alojamiento|hospedarnos|hospedarme|quedarnos|quedarme/.test(normalized)) return 'availability_inquiry';
   return null;
 }
 
@@ -138,7 +148,9 @@ function findIntent(normalized, { hasGuestCorrection }) {
  */
 export function parseMessage(text, { referenceDate = null } = {}) {
   const normalized = normalize(text ?? '');
-  const { checkIn, checkOut } = findDates(normalized, referenceDate);
+  let { checkIn, checkOut } = findDates(normalized, referenceDate);
+  const stayNights = findStayNights(normalized);
+  if (checkIn && !checkOut && stayNights) checkOut = addDays(checkIn, stayNights);
   const guests = findGuests(normalized);
   const hasGuestCorrection = /somos \d{1,2}.*no \d{1,2}/.test(normalized);
   let intent = findIntent(normalized, { hasGuestCorrection });
@@ -161,6 +173,7 @@ export function parseMessage(text, { referenceDate = null } = {}) {
     check_in: checkIn,
     check_out: checkOut,
     guests,
+    stay_nights: stayNights,
     requested_action: intent,
     missing_fields: missingFields,
     confidence: intent === 'needs_clarification' ? 'low' : checkIn || guests != null || intent !== 'availability_inquiry' ? 'high' : 'medium',
