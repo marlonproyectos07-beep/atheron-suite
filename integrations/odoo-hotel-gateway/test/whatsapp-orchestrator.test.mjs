@@ -162,3 +162,124 @@ test('falla al ENVIAR la respuesta (p.ej. WhatsAppCloudProvider real sin accessT
   const conv = orchestrator.getConversation('573000000008');
   assert.equal(conv.state, 'OPTIONS_PRESENTED', 'el motor SI avanzo (Gateway es la fuente de verdad); solo fallo el canal de salida');
 });
+
+
+test('HOTEL-016: disponibilidad -> precio -> media mantiene la unidad 201 y nunca reinicia el flujo', async () => {
+  const provider = new LabMessagingProvider();
+  let quoteCalls = 0;
+  const tools = {
+    checkAvailability: async ({ unit }) => unit === '201',
+    quote: async ({ unit }) => {
+      quoteCalls += 1;
+      return { quote_id: `Q-${unit}`, total: 180000, requires_manual_confirmation: false };
+    },
+  };
+  const mediaResolver = (unit) => unit === '201'
+    ? {
+        images: [
+          { url: 'https://example.test/201-a.jpg', caption: '201 A' },
+          { url: 'https://example.test/201-b.jpg', caption: '201 B' },
+        ],
+        video: null,
+      }
+    : null;
+
+  const orchestrator = createWhatsAppOrchestrator({
+    provider,
+    tools,
+    referenceDate: '2026-10-01',
+    allowBookingActions: false,
+    mediaResolver,
+  });
+
+  await provider.receiveMessage({
+    from: '573000000020',
+    text: 'Necesito alojamiento mañana por una noche para dos personas',
+    message_id: 'h16-1',
+  });
+  assert.equal(orchestrator.getConversation('573000000020').state, 'OPTIONS_PRESENTED');
+  assert.equal(orchestrator.getConversation('573000000020').options[0].unit, '201');
+
+  await provider.receiveMessage({
+    from: '573000000020',
+    text: '¿Cuánto cuesta?',
+    message_id: 'h16-2',
+  });
+  assert.equal(quoteCalls, 1);
+  assert.equal(orchestrator.getConversation('573000000020').selectedUnit, '201');
+  assert.equal(orchestrator.getConversation('573000000020').state, 'READY_FOR_HOLD');
+  assert.match(provider.sentMessages.at(-1).text, /180\.000/);
+
+  await provider.receiveMessage({
+    from: '573000000020',
+    text: '¿Tienes imágenes o video para verla?',
+    message_id: 'h16-3',
+  });
+  assert.equal(provider.sentMedia.length, 2);
+  assert.equal(provider.sentMedia[0].type, 'image');
+  assert.equal(orchestrator.getConversation('573000000020').selectedUnit, '201');
+  assert.equal(orchestrator.getConversation('573000000020').state, 'READY_FOR_HOLD');
+});
+
+test('HOTEL-016: quiero reservar captura intención pero no crea HOLD en TEST', async () => {
+  const provider = new LabMessagingProvider();
+  let holdCalls = 0;
+  const tools = {
+    checkAvailability: async ({ unit }) => unit === '201',
+    quote: async ({ unit }) => ({ quote_id: `Q-${unit}`, total: 180000, requires_manual_confirmation: false }),
+    createHold: async () => {
+      holdCalls += 1;
+      return { hold_id: 'NO-DEBE-CREARSE' };
+    },
+  };
+  const orchestrator = createWhatsAppOrchestrator({
+    provider,
+    tools,
+    referenceDate: '2026-10-01',
+    allowBookingActions: false,
+  });
+
+  await provider.receiveMessage({
+    from: '573000000021',
+    text: 'Necesito alojamiento mañana por una noche para dos personas',
+    message_id: 'h16-b1',
+  });
+  await provider.receiveMessage({
+    from: '573000000021',
+    text: '¿Cuánto cuesta?',
+    message_id: 'h16-b2',
+  });
+  await provider.receiveMessage({
+    from: '573000000021',
+    text: 'Quiero reservar',
+    message_id: 'h16-b3',
+  });
+
+  assert.equal(holdCalls, 0);
+  assert.equal(orchestrator.getConversation('573000000021').state, 'READY_FOR_HOLD');
+  assert.match(provider.sentMessages.at(-1).text, /todavía no voy a crear una reserva/i);
+});
+
+test('HOTEL-016: "sí" después de presentar una sola opción responde de forma contextual', async () => {
+  const provider = new LabMessagingProvider();
+  createWhatsAppOrchestrator({
+    provider,
+    tools: { checkAvailability: async ({ unit }) => unit === '201' },
+    referenceDate: '2026-10-01',
+    allowBookingActions: false,
+  });
+
+  await provider.receiveMessage({
+    from: '573000000022',
+    text: 'Necesito alojamiento mañana por una noche para dos personas',
+    message_id: 'h16-c1',
+  });
+  await provider.receiveMessage({
+    from: '573000000022',
+    text: 'Sí',
+    message_id: 'h16-c2',
+  });
+
+  assert.match(provider.sentMessages.at(-1).text, /fotos|precio/i);
+  assert.equal(provider.sentMessages.at(-1).text.includes('Tengo estas opciones disponibles'), false);
+});
