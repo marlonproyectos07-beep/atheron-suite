@@ -76,3 +76,24 @@ El evento histórico `whatsapp_click` se conserva. Verificado con `gtag` simulad
 - «banos» visible junto a «Baño privado» en todas las fichas (`dato(h.banos,'bano','banos')`).
 - `dato(h.huéspedes…)` apuntaba a una propiedad inexistente: las tarjetas de habitación nunca mostraban el número de huéspedes; ahora sí.
 - Casa Colonial: CTAs «Solicitar información» (no «Reservar»).
+
+## 6. Lighthouse (móvil, build local servido con gzip, 2026-10-01)
+
+Orden: Rendimiento / Accesibilidad / Buenas prácticas / SEO.
+
+| Página | Puntajes | LCP | CLS |
+|---|---|---|---|
+| Portada | 99/96/96/100 | 2,1 s | 0 |
+| /hospedajes | 99/100/96/100 | 2,1 s | 0 |
+| Hotel Atheron Suite | 99/100/96/100 | 2,0 s | 0 |
+| Casa Algarra | 99/100/96/100 | 2,0 s | 0 |
+| Casa Neusa | 98/100/96/100 | 2,3 s | 0 |
+| Apartamentos en Algarra | 97/100/96/100 | 2,6 s | 0 |
+| Hotel Colonial Confort | 99/100/96/100 | 1,9 s | 0,028 |
+| Hotel La Margarita | 100/100/96/69 | 1,7 s | 0,001 |
+| Landing grupos | 100/100/96/100 | 1,4 s | 0,003 |
+| Landing hospedaje | 100/100/96/100 | 1,3 s | 0,002 |
+| /grupos | 99/100/96/100 | 1,8 s | 0,001 |
+| Casa Colonial Centro | 99/100/96/69 | 2,1 s | 0,003 |
+
+SEO 69 en La Margarita y Casa Colonial es esperado: son borradores con `noindex`. Todo ≥ 95 salvo ese caso. Buenas prácticas en 96 (no investigado el 4 % restante). No se midieron blog, guía ni eventos.
