@@ -25,8 +25,21 @@ import { parseMessage, toEngineInput } from './nlu-lite.mjs';
 import { createConversation, advanceConversation } from './conversation-engine.mjs';
 import { buildHandoffContext } from './human-handoff.mjs';
 import * as copy from './whatsapp-copy.mjs';
+import { mediaForUnit } from './whatsapp-media-catalog.mjs';
 
-function renderReply(conversation, priorState) {
+function currentUnit(conversation) {
+  return conversation.selectedUnit
+    ?? (conversation.options?.length === 1 ? conversation.options[0].unit : null);
+}
+
+function renderReply(conversation, priorState, slots = null) {
+  if (slots?.intent === 'affirmation' && conversation.state === 'OPTIONS_PRESENTED') {
+    return copy.offerNextStep({ unit: currentUnit(conversation) });
+  }
+  if (slots?.intent === 'needs_clarification' && conversation.state === 'OPTIONS_PRESENTED') {
+    return copy.contextualClarification({ unit: currentUnit(conversation) });
+  }
+
   switch (conversation.state) {
     case 'COLLECTING_DATES':
       return priorState === 'NEW' ? copy.greeting() : copy.askDates();
@@ -51,7 +64,15 @@ function renderReply(conversation, priorState) {
  *   `tools`: deps reales o fake para check_availability/quote/create_hold (ver ai-tool-adapters.mjs).
  *   `onHumanRequired(handoffContext)`: llamado cuando una conversacion escala.
  */
-export function createWhatsAppOrchestrator({ provider, tools, referenceDate = null, onHumanRequired = null, onEvent = null }) {
+export function createWhatsAppOrchestrator({
+  provider,
+  tools,
+  referenceDate = null,
+  onHumanRequired = null,
+  onEvent = null,
+  allowBookingActions = true,
+  mediaResolver = mediaForUnit,
+} = {}) {
   const conversations = new Map(); // from (telefono) -> conversation
 
   provider.onMessage(async (message) => {
@@ -77,6 +98,45 @@ export function createWhatsAppOrchestrator({ provider, tools, referenceDate = nu
 
     const slots = parseMessage(text, { referenceDate: referenceDate ?? new Date().toISOString().slice(0, 10) });
     const engineInput = toEngineInput(slots);
+
+    // HOTEL-016: media contextual. Si ya presentamos una sola unidad (o
+    // ya hay una seleccion), una pregunta por fotos/video NO reinicia la
+    // disponibilidad. Se responde con material REAL asociado a esa unidad.
+    if (slots.intent === 'ask_media') {
+      const unit = currentUnit(conversation);
+      const media = unit && typeof mediaResolver === 'function' ? mediaResolver(unit) : null;
+      try {
+        if (!unit || !media) {
+          await provider.sendMessage(from, copy.mediaUnavailable({ unit }));
+        } else {
+          await provider.sendMessage(from, copy.mediaIntro({ unit, hasVideo: Boolean(media.video) }));
+          for (const image of media.images ?? []) {
+            if (typeof provider.sendImage === 'function') {
+              await provider.sendImage(from, image.url, image.caption);
+            }
+          }
+          if (media.video && typeof provider.sendVideo === 'function') {
+            await provider.sendVideo(from, media.video.url, media.video.caption);
+          }
+        }
+        if (typeof provider.markRead === 'function') await provider.markRead(message_id);
+      } catch (error) {
+        if (typeof onEvent === 'function') onEvent({ type: 'send_failed', correlation_id: correlationId, error: error.message });
+      }
+      return conversation;
+    }
+
+    // HOTEL-016 TEST: capturamos intención de reserva pero NO creamos
+    // HOLD ni reserva real. El gate comercial sigue cerrado.
+    if (slots.intent === 'request_booking' && !allowBookingActions) {
+      try {
+        await provider.sendMessage(from, copy.bookingIntentSafe({ unit: currentUnit(conversation) }));
+        if (typeof provider.markRead === 'function') await provider.markRead(message_id);
+      } catch (error) {
+        if (typeof onEvent === 'function') onEvent({ type: 'send_failed', correlation_id: correlationId, error: error.message });
+      }
+      return conversation;
+    }
 
     // Fase 11 (fallas): Gateway offline / Odoo timeout / respuesta
     // malformada -- se propaga desde el motor (nunca se inventa un
@@ -104,7 +164,7 @@ export function createWhatsAppOrchestrator({ provider, tools, referenceDate = nu
     // WhatsApp real sin accessToken todavia, ver Fase 15/16) nunca debe
     // tirar la conversacion ni la peticion HTTP que la disparo -- se
     // reporta via onEvent y se sigue.
-    const reply = renderReply(conversation, priorState);
+    const reply = renderReply(conversation, priorState, slots);
     try {
       await provider.sendMessage(from, reply);
       if (typeof provider.markRead === 'function') await provider.markRead(message_id);
