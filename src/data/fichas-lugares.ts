@@ -57,7 +57,7 @@ export interface FichaExtra {
   familias?: string;
   grupos?: string;
   rutaCatedral?: string;
-  galeria?: { src: string; alt: string }[];
+  galería?: { src: string; alt: string }[];
   video?: { titulo: string; enlace: string };
   opinionesAtheron?: { texto: string; fecha: string }[];
   /** AAAA-MM-DD del ultimo cambio real de la ficha. Alimenta el sitemap. */

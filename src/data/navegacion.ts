@@ -164,7 +164,7 @@ export const menuFichaMovil: Enlace[] = [
   { texto: 'Tarifas', href: '#tarifas' },
   { texto: 'La casa', href: '#espacios' },
   { texto: 'Habitaciones', href: '#habitaciones' },
-  { texto: 'Galeria', href: '#galeria' },
+  { texto: 'Galería', href: '#galeria' },
   { texto: 'Opiniones', href: '#opiniones' },
   { texto: 'Ubicación', href: '#ubicacion' },
   { texto: 'Preguntas', href: '#faq' },

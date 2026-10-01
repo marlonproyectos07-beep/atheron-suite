@@ -48,7 +48,7 @@ export function getStaticPaths() {
          sitemap y los enlaces internos salen de rutaFicha. */
       const esperada = `${HUB_RESTAURANTES.ruta}/${lugar.slug}`;
       if (lugar.rutaFicha !== esperada) {
-        throw new Error(`rutaFicha de «${lugar.slug}» deberia ser ${esperada} y es ${lugar.rutaFicha}`);
+        throw new Error(`rutaFicha de «${lugar.slug}» debería ser ${esperada} y es ${lugar.rutaFicha}`);
       }
       return { params: { slug: lugar.slug }, props: { lugar } };
     });

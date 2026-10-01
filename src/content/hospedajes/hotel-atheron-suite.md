@@ -5,7 +5,7 @@ grupos:
   visible: true
   capacidad: 22
   tipo: maxima
-  nota: Casa completa para hasta 22 huéspedes, bajo confirmacion de disponibilidad.
+  nota: Casa completa para hasta 22 huéspedes, bajo confirmación de disponibilidad.
 orden: 1
 insignia: '01'
 titulo: Hotel Atheron Suite | Hospedaje a 16 min de la Catedral de Sal
@@ -36,7 +36,7 @@ tituloDescripcionPendiente: false
 caracteristicas:
   - texto: Wifi gratis en toda la propiedad
     pendiente: false
-  - texto: 'Control por voz con Alexa: luces, televisor y musica'
+  - texto: 'Control por voz con Alexa: luces, televisor y música'
     pendiente: false
   - texto: Entrada con clave digital, sin llaves
     pendiente: false
@@ -57,7 +57,7 @@ listadoEnlaceTexto: Ver Hotel Atheron Suite
 resumen: Apartamentos con minicocina y cocina compartida con estufa, wifi y Netflix, a 16 minutos caminando de la Catedral de Sal.
 precio: Tarifas según habitación y ocupación
 precioPendiente: false
-notaHabitaciones: 'Hasta 7 huéspedes con las camas fijas. Para grupos de 8 a 10 anadimos camas adicionales: escribenos y lo coordinamos directamente.'
+notaHabitaciones: 'Hasta 7 huéspedes con las camas fijas. Para grupos de 8 a 10 anadimos camas adicionales: escríbenos y lo coordinamos directamente.'
 heroFoto: true
 antesDeReservar:
   etiqueta: Antes de reservar
@@ -72,14 +72,14 @@ antesDeReservar:
     - titulo: Custodia de equipaje
       texto: >-
         Cuando el servicio esta disponible, puedes dejar tu equipaje sin costo
-        en la recepcion de la propiedad antes del check-in. Los domingos
-        depende de la operacion del dia: consultalo antes por WhatsApp, no es
+        en la recepción de la propiedad antes del check-in. Los domingos
+        depende de la operación del dia: consúltalo antes por WhatsApp, no es
         un servicio garantizado.
     - titulo: Aseo y ropa de cama
       texto: >-
-        El aseo y la ropa de cama estan incluidos en la tarifa. En estadias
-        prolongadas hacemos un servicio periodico aproximadamente cada tres
-        dias, con renovacion de sabanas y toallas.
+        El aseo y la ropa de cama están incluidos en la tarifa. En estadías
+        prolongadas hacemos un servicio periódico aproximadamente cada tres
+        días, con renovación de sábanas y toallas.
     - titulo: No se fuma
       texto: No se permite fumar dentro del establecimiento.
 casaCompleta:
@@ -88,7 +88,7 @@ casaCompleta:
   introSeccion: 'Reserva una habitación individual o, si viajan en grupo, toma la casa completa para hasta 22 personas.'
   ceja: '¿Viajan juntos?'
   titulo: Casa completa para grupos
-  insignia: Mejor opcion para grupos
+  insignia: Mejor opción para grupos
   nombre: Casa completa · Atheron Suite
   datos:
     - Hasta 22 huéspedes
@@ -140,9 +140,9 @@ habitaciones:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-cama.jpg
         alt: Cama doble de la habitación 201 con cabecero gris capitone, ropa de cama blanca y pie de cama azul
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-entrada-tv.jpg
-        alt: Entrada de la habitación 201 con la placa del numero y el televisor en la pared de listones
+        alt: Entrada de la habitación 201 con la placa del número y el televisor en la pared de listones
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-bano.jpg
-        alt: Bano compartido del segundo piso, con ducha de vidrio, sanitario y lavamanos
+        alt: Baño compartido del segundo piso, con ducha de vidrio, sanitario y lavamanos
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-cocina-compartida.jpg
         alt: Cocina compartida del segundo piso del Hotel Atheron Suite en Zipaquirá, con estufa a gas, horno, nevera y mesa
   - nombre: Habitación 202
@@ -185,7 +185,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-202-tv.jpg
         alt: Televisión de la habitación 202 frente a la cama doble y el camarote
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-bano.jpg
-        alt: Bano compartido del segundo piso, con ducha de vidrio, sanitario y lavamanos
+        alt: Baño compartido del segundo piso, con ducha de vidrio, sanitario y lavamanos
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-cocina-compartida.jpg
         alt: Cocina compartida del segundo piso del Hotel Atheron Suite en Zipaquirá, con estufa a gas, horno, nevera y mesa
   - nombre: Habitación 203
@@ -222,13 +222,13 @@ habitaciones:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-203-cama-nido.jpg
         alt: Cama nido de la habitación 203 desplegada junto a la cama principal, con la televisión al fondo
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-203-entrada.jpg
-        alt: Puerta de madera de la habitación 203 con la placa del numero
+        alt: Puerta de madera de la habitación 203 con la placa del número
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-203-entrada-bano.jpg
-        alt: Entrada del bano privado de la habitación 203, con toallas y percha junto a la puerta
+        alt: Entrada del baño privado de la habitación 203, con toallas y percha junto a la puerta
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-203-bano-ducha.jpg
-        alt: Bano privado de la habitación 203 con ducha de vidrio, lavamanos y espejo
+        alt: Baño privado de la habitación 203 con ducha de vidrio, lavamanos y espejo
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-203-bano-lavamanos.jpg
-        alt: Lavamanos y sanitario del bano privado de la habitación 203
+        alt: Lavamanos y sanitario del baño privado de la habitación 203
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-201-cocina-compartida.jpg
         alt: Cocina compartida del segundo piso del Hotel Atheron Suite en Zipaquirá, con estufa a gas, horno, nevera y mesa
   - nombre: Suite 301
@@ -284,17 +284,17 @@ habitaciones:
       duracion: '0:33'
     galeria:
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-principal.jpg
-        alt: Sala de la Suite 301 con sofa, escritorio, televisor y ventanal con vista a las montanas de Zipaquirá
+        alt: Sala de la Suite 301 con sofa, escritorio, televisor y ventanal con vista a las montañas de Zipaquirá
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg
         alt: Habitación de la Suite 301 con cama doble, camarote de dos camas y ropa de cama azul y blanca
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-sala.jpg
         alt: Zona social de la Suite 301 con televisor, escritorio de trabajo y barra alta con taburetes
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-cocina.jpg
-        alt: Estacion para bebidas y alimentos ligeros de la Suite 301, con barra, taburetes altos y nevera
+        alt: Estación para bebidas y alimentos ligeros de la Suite 301, con barra, taburetes altos y nevera
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-bano.jpg
-        alt: Bano privado de la Suite 301 con ducha de vidrio, sanitario y lavamanos
+        alt: Baño privado de la Suite 301 con ducha de vidrio, sanitario y lavamanos
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-vista.jpg
-        alt: Vista panoramica a Zipaquirá y sus montanas desde el ventanal de la Suite 301
+        alt: Vista panorámica a Zipaquirá y sus montañas desde el ventanal de la Suite 301
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-entrada.jpg
         alt: Acceso a la Suite 301 en el tercer piso del hospedaje, junto a la escalera
   - nombre: Habitación 302
@@ -328,7 +328,7 @@ habitaciones:
     video:
       src: /assets/302/Atheron_Suite_Habitacion_302_WEB.mp4
       poster: /assets/video/habitacion-302-video-poster.webp
-      titulo: 'Habitación 302 en video: fachada, entrada, habitación y bano'
+      titulo: 'Habitación 302 en video: fachada, entrada, habitación y baño'
       etiqueta: Ver la habitación en video
       ancho: 1080
       alto: 1920
@@ -339,16 +339,16 @@ habitaciones:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-escalera.jpg
         alt: Escalera de acceso a la habitación 302, entre las puertas de la 301 y la 302
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-entrada.jpg
-        alt: Puerta abierta de la habitación 302 con la placa del numero y la cama al fondo
+        alt: Puerta abierta de la habitación 302 con la placa del número y la cama al fondo
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-habitacion.jpg
         alt: Habitación 302 con cama doble de cabecero capitone gris y sofa cama al lado
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-tv.jpg
-        alt: Televisor de pantalla plana en la habitación 302 y puerta abierta al bano privado
+        alt: Televisor de pantalla plana en la habitación 302 y puerta abierta al baño privado
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-bano.jpg
-        alt: Bano privado de la habitación 302 con ducha de vidrio, lavamanos y sanitario
+        alt: Baño privado de la habitación 302 con ducha de vidrio, lavamanos y sanitario
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-ducha.jpg
         alt: Ducha y lavamanos de la habitación 302, con grifo cromado y ventana al exterior
-descripcionZona: 'En el centro de Zipaquirá, a distancia caminable de la Catedral de Sal y de la plaza principal. Antes se llamaba Hospedaje La Magia de Zipaquirá: es el mismo sitio, en la misma direccion.'
+descripcionZona: 'En el centro de Zipaquirá, a distancia caminable de la Catedral de Sal y de la plaza principal. Antes se llamaba Hospedaje La Magia de Zipaquirá: es el mismo sitio, en la misma dirección.'
 descripcionZonaPendiente: false
 distancias:
   - lugar: Catedral de Sal
@@ -379,7 +379,7 @@ mapaNota: ''
 mapaNotaPendiente: false
 experiencias:
   - titulo: Catedral de Sal
-    texto: A 16 minutos caminando. El recorrido subterraneo mas visitado del municipio.
+    texto: A 16 minutos caminando. El recorrido subterráneo mas visitado del municipio.
     pendiente: false
   - titulo: Centro histórico
     texto: Plaza principal, catedral diocesana y calles coloniales, a pocas cuadras.
@@ -396,9 +396,9 @@ latitud: 5.027763
 longitud: -74.000194
 checkin: 15:00
 checkout: 11:00
-# mascotas: se evalua caso por caso, asi que el campo queda sin declarar
+# mascotas: se evalua caso por caso, así que el campo queda sin declarar
 # a proposito. Poner false emitiria petsAllowed: false en JSON-LD, que es
-# justo lo que direccion corrigio el 9 de septiembre de 2026.
+# justo lo que dirección corrigio el 9 de septiembre de 2026.
 comodidades:
   - Wifi gratis
   - Netflix
@@ -417,4 +417,4 @@ Sal queda a 1,4 kilometros: se llega caminando en unos 16 minutos,
 sin necesidad de transporte.
 
 Tener cocina cambia la estancia. Si vienes en familia o te quedas
-varios dias, no dependes de restaurantes para cada comida.
+varios días, no dependes de restaurantes para cada comida.

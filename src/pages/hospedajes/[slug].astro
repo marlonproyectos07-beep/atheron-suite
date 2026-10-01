@@ -288,7 +288,7 @@ function idHabitacion(nombre) {
           <div class="texto-suave ficha__descripcion">
             <Content />
           </div>
-          <h3 style="margin-bottom: var(--esp-2);">Caracteristicas</h3>
+          <h3 style="margin-bottom: var(--esp-2);">Características</h3>
           <ul class="lista-check">
             {d.caracteristicas.map((c) => (
               <li><Marca texto={c.texto} pendiente={c.pendiente} /></li>
@@ -465,7 +465,7 @@ function idHabitacion(nombre) {
               </div>
 
               <article class="hotel-casa">
-                <a class="hotel-casa__foto" href="#detalle-casa-completa" aria-label="Ver la opcion Casa completa">
+                <a class="hotel-casa__foto" href="#detalle-casa-completa" aria-label="Ver la opción Casa completa">
                   <Foto
                     src={d.fotoPrincipal}
                     alt={d.fotoPrincipalAlt}
@@ -770,7 +770,7 @@ function idHabitacion(nombre) {
       <section class="seccion" id="galeria">
         <div class="contenedor">
           <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
-            <span class="etiqueta">Galeria</span>
+            <span class="etiqueta">Galería</span>
             <h2>{d.videoPrincipal ? 'Fotos y video del hospedaje' : 'Fotos del hospedaje'}</h2>
           </div>
           {/* Cada foto va dentro de un boton, igual que en las galerias de
@@ -864,7 +864,7 @@ function idHabitacion(nombre) {
             {opiniones.distintivo && (
               <div class="opiniones__cifra opiniones__cifra--distintivo">
                 <span class="opiniones__distintivo">{opiniones.distintivo}</span>
-                <span class="opiniones__pie">segun {opiniones.fuente}</span>
+                <span class="opiniones__pie">según {opiniones.fuente}</span>
               </div>
             )}
           </div>
@@ -930,9 +930,9 @@ function idHabitacion(nombre) {
             <div class="nota-reserva" style="margin-top: var(--esp-3);">
               <span class="nota-reserva__icono" aria-hidden="true">&#128274;</span>
               <div>
-                <strong>La direccion exacta se entrega al confirmar</strong>
+                <strong>La dirección exacta se entrega al confirmar</strong>
                 Coordinamos la llegada contigo una vez la reserva esta confirmada.
-                Así protegemos la tranquilidad de los huéspedes que ya estan alojados y nos aseguramos de recibirte bien el dia de tu llegada.
+                Así protegemos la tranquilidad de los huéspedes que ya están alojados y nos aseguramos de recibirte bien el día de tu llegada.
               </div>
             </div>
           )}
@@ -963,9 +963,9 @@ function idHabitacion(nombre) {
                      falta es el mapa incrustado, que necesita coordenadas. */}
                 {d.enlaceMapa
                   ? <>Abajo puedes abrir la ubicación en Google Maps. El mapa
-                      dentro de la pagina llegara en cuanto confirmemos las
+                      dentro de la página llegará en cuanto confirmemos las
                       coordenadas exactas.</>
-                  : <>Estamos terminando de publicar el mapa. Escribenos por WhatsApp y te
+                  : <>Estamos terminando de publicar el mapa. Escríbenos por WhatsApp y te
                       contamos como llegar y que tienes alrededor.</>}
               </div>
             </div>
@@ -1124,8 +1124,8 @@ function idHabitacion(nombre) {
           <h2>{d.tituloContacto}</h2>
           <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
             {d.publicado
-              ? 'La forma mas rapida es WhatsApp: te respondemos con disponibilidad y precio para tus fechas.'
-              : 'La forma mas rapida es WhatsApp: te contamos en que estado esta este alojamiento y que podemos ofrecerte.'}
+              ? 'La forma mas rápida es WhatsApp: te respondemos con disponibilidad y precio para tus fechas.'
+              : 'La forma mas rápida es WhatsApp: te contamos en que estado esta este alojamiento y que podemos ofrecerte.'}
           </p>
 
           {/* Una ficha sin publicar no ofrece reservar. Su
@@ -1158,9 +1158,9 @@ function idHabitacion(nombre) {
                lo primero que pregunta una empresa. No se publican razon
                social ni NIT: eso se entrega al facturar. */}
           <div class="nota-factura">
-            <strong>&iquest;Necesitas factura electronica?</strong>
-            Emitimos factura electronica para reservas directas. Solicitala al
-            momento de reservar y nuestro equipo te indicara los datos necesarios.
+            <strong>&iquest;Necesitas factura electrónica?</strong>
+            Emitimos factura electrónica para reservas directas. Solicítala al
+            momento de reservar y nuestro equipo te indicará los datos necesarios.
           </div>
         </div>
 

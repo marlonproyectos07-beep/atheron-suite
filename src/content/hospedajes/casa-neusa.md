@@ -10,7 +10,7 @@ orden: 3
 insignia: '03'
 modalidad: casa-completa
 titulo: Casa Neusa | Casa de campo en Cogua, Cundinamarca
-descripcion: Casa de campo entera en el sector de Neusa, Cogua, Cundinamarca. Desde $ 300.000 por noche para hasta 4 huéspedes, y hasta 8 comodos. Chimenea, balcón panorámico y zona de BBQ.
+descripcion: Casa de campo entera en el sector de Neusa, Cogua, Cundinamarca. Desde $ 300.000 por noche para hasta 4 huéspedes, y hasta 8 cómodos. Chimenea, balcón panorámico y zona de BBQ.
 ogTitulo: Casa Neusa | Casa de campo entera en Cogua
 ogDescripcion: Una casa de campo entera rodeada de naturaleza en el sector de Neusa, Cogua. Hasta 8 huéspedes, chimenea, balcón y zona exterior de BBQ.
 avisoBorrador: ''
@@ -18,7 +18,7 @@ nombreAnterior: Casa de campo en Neusa
 zona: 'Neusa, Cogua, Cundinamarca'
 localidad: Cogua
 departamento: Cundinamarca
-presentacion: Una casa de campo entera para desconectar, rodeada de zonas verdes y paisaje rural. Chimenea adentro, balcón con vista panoramica y zona de BBQ afuera.
+presentacion: Una casa de campo entera para desconectar, rodeada de zonas verdes y paisaje rural. Chimenea adentro, balcón con vista panorámica y zona de BBQ afuera.
 presentacionPendiente: false
 fotoTarjeta: /assets/img/hospedajes/casa-neusa/casa-neusa-01-portada-sala-chimenea.webp
 fotoTarjetaAlt: Sala de Casa Neusa con techo de madera y ventanales al campo
@@ -28,11 +28,11 @@ galeria:
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-01-portada-sala-chimenea.webp
     alt: Sala de Casa Neusa con techo de madera a dos aguas, sofas en L, chimenea de piedra y ventanales que dan al campo
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-02-exterior-principal.webp
-    alt: Exterior de Casa Neusa, casa de tejado a dos aguas con fachada blanca y vigas de madera, rodeada de cesped
+    alt: Exterior de Casa Neusa, casa de tejado a dos aguas con fachada blanca y vigas de madera, rodeada de césped
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-09-balcon-panoramico.webp
-    alt: Balcón de madera de Casa Neusa con baranda metalica, abierto al paisaje verde y a las montanas
+    alt: Balcón de madera de Casa Neusa con baranda metálica, abierto al paisaje verde y a las montañas
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-10-zona-bbq.webp
-    alt: Zona exterior de BBQ de Casa Neusa, con estructura de madera techada sobre el cesped y una gran roca al frente
+    alt: Zona exterior de BBQ de Casa Neusa, con estructura de madera techada sobre el césped y una gran roca al frente
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-06-cocina.webp
     alt: Cocina en L de Casa Neusa, con nevera, encimera oscura y ventana sobre el fregadero con vista al campo
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-07-comedor.webp
@@ -44,7 +44,7 @@ galeria:
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-05-sala-auxiliar-balcon.webp
     alt: Sala auxiliar del segundo piso de Casa Neusa, con sofa bajo el techo de madera y salida al balcón
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-08-bano.webp
-    alt: Bano completo de Casa Neusa, con ducha de vidrio, lavamanos y espejo
+    alt: Baño completo de Casa Neusa, con ducha de vidrio, lavamanos y espejo
   - imagen: /assets/img/hospedajes/casa-neusa/casa-neusa-11-acceso-los-laureles.webp
     alt: Acceso a Casa Neusa de noche, con el muro iluminado y el letrero Los Laureles
 datos:
@@ -58,7 +58,7 @@ datos:
     texto: Camas dobles
     pendiente: false
   - numero: '1'
-    texto: Bano
+    texto: Baño
     pendiente: false
 tituloDescripcion: Campo de verdad, a un rato de Bogotá
 tituloDescripcionPendiente: false
@@ -69,9 +69,9 @@ caracteristicas:
     pendiente: false
   - texto: Dos sofa-camas, para dos personas cada uno
     pendiente: false
-  - texto: Hasta 8 huéspedes comodos; 9 o 10 bajo consulta previa
+  - texto: Hasta 8 huéspedes cómodos; 9 o 10 bajo consulta previa
     pendiente: false
-  - texto: Un bano
+  - texto: Un baño
     pendiente: false
   - texto: Cocina
     pendiente: false
@@ -79,7 +79,7 @@ caracteristicas:
     pendiente: false
   - texto: Chimenea interior
     pendiente: false
-  - texto: Balcón con vista panoramica
+  - texto: Balcón con vista panorámica
     pendiente: false
   - texto: Zona exterior de BBQ
     pendiente: false
@@ -121,8 +121,8 @@ tarifas:
       precio: $ 600.000
     - huespedes: 10 huéspedes (bajo consulta)
       precio: $ 660.000
-  regla: Cada persona a partir de la cuarta suma $ 60.000. Nueve y diez huéspedes requieren consulta previa, porque necesitan acomodacion adicional.
-  nota: Precios por noche en pesos colombianos. La tarifa es la misma entre semana y en fin de semana. Escribenos con tus fechas y cuantos vienen, y te confirmamos disponibilidad y el total.
+  regla: Cada persona a partir de la cuarta suma $ 60.000. Nueve y diez huéspedes requieren consulta previa, porque necesitan acomodación adicional.
+  nota: Precios por noche en pesos colombianos. La tarifa es la misma entre semana y en fin de semana. Escríbenos con tus fechas y cuantos vienen, y te confirmamos disponibilidad y el total.
   cta: Consultar disponibilidad
   mensaje: 'Hola, quiero consultar disponibilidad y tarifa de Casa Neusa en Cogua. Somos [numero] personas y estas son mis fechas:'
 habitaciones: []
@@ -146,9 +146,9 @@ espacios:
   lista:
     - titulo: Sala con chimenea
       texto: >-
-        El punto de reunion de la casa, bajo el techo de madera y con
+        El punto de reunión de la casa, bajo el techo de madera y con
         los ventanales abiertos al campo. La chimenea es lo que cambia
-        una noche fria de campo por una noche de campo.
+        una noche fría de campo por una noche de campo.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-01-portada-sala-chimenea.webp
       fotoAlt: Sala de Casa Neusa con chimenea de piedra, sofas en L y ventanales al campo
     - titulo: Cocina
@@ -163,18 +163,18 @@ espacios:
         y no por turnos.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-07-comedor.webp
       fotoAlt: Comedor de Casa Neusa con mesa de madera para seis personas
-    - titulo: Balcón con vista panoramica
+    - titulo: Balcón con vista panorámica
       texto: >-
         Balcón de madera abierto al paisaje rural, con vista a las
-        montanas y a las zonas verdes que rodean la casa.
+        montañas y a las zonas verdes que rodean la casa.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-09-balcon-panoramico.webp
-      fotoAlt: Balcón de madera de Casa Neusa con vista al paisaje verde y a las montanas
+      fotoAlt: Balcón de madera de Casa Neusa con vista al paisaje verde y a las montañas
     - titulo: Zona exterior de BBQ
       texto: >-
         Asador al aire libre bajo su propia estructura de madera, en el
-        cesped, junto a la gran roca que identifica la casa.
+        césped, junto a la gran roca que identifica la casa.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-10-zona-bbq.webp
-      fotoAlt: Zona de BBQ de Casa Neusa, con estructura de madera techada sobre el cesped
+      fotoAlt: Zona de BBQ de Casa Neusa, con estructura de madera techada sobre el césped
     - titulo: Sala auxiliar del segundo piso
       texto: >-
         Un segundo lugar de estar arriba, con salida al balcón, para
@@ -196,23 +196,23 @@ espacios:
     - titulo: Como se acomodan ocho
       texto: >-
         Dos habitaciones con cama doble de 1,40 m y dos sofa-camas para
-        dos personas cada uno. Con esa distribucion ocho personas duermen
-        cómodas. Para nueve o diez preparamos una acomodacion adicional
-        en sofa o colchoneta, siempre sujeta a consulta y coordinacion
+        dos personas cada uno. Con esa distribución ocho personas duermen
+        cómodas. Para nueve o diez preparamos una acomodación adicional
+        en sofa o colchoneta, siempre sujeta a consulta y coordinación
         previa.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-05-sala-auxiliar-balcon.webp
       fotoAlt: Sala auxiliar de Casa Neusa con el sofa que también sirve de cama
-    - titulo: Un bano completo
+    - titulo: Un baño completo
       texto: >-
-        La casa tiene un bano, con ducha, lavamanos y espejo. Es el
-        unico, y lo comparte todo el grupo.
+        La casa tiene un baño, con ducha, lavamanos y espejo. Es el
+        único, y lo comparte todo el grupo.
       foto: /assets/img/hospedajes/casa-neusa/casa-neusa-08-bano.webp
-      fotoAlt: Bano completo de Casa Neusa, con ducha de vidrio y lavamanos
+      fotoAlt: Baño completo de Casa Neusa, con ducha de vidrio y lavamanos
 pruebaSocial:
   fuente: Airbnb
   etiqueta: Opiniones
   titulo: Lo que dicen quienes ya estuvieron
-  intro: Casa Neusa lleva tres anos recibiendo huéspedes a traves de Airbnb. Estas son sus valoraciones alli.
+  intro: Casa Neusa lleva tres años recibiendo huéspedes a través de Airbnb. Estas son sus valoraciones allí.
   puntuacion: '4,92'
   sobre: '5'
   resenas: 13
@@ -224,57 +224,57 @@ pruebaSocial:
     - texto: El lugar es muy acogedor, muy bonito, todo impecable, la vista hacia la naturaleza parece de postal...
       autor: Karen Julieth
       fecha: julio de 2026
-    - texto: Paz, desconexion y tranquilidad. Sin duda volveremos.
+    - texto: Paz, desconexión y tranquilidad. Sin duda volveremos.
       autor: Alex
       fecha: julio de 2026
-    - texto: El lugar muy lindo, limpio, acogedor y cuidado, con vistas preciosas a la montana.
+    - texto: El lugar muy lindo, limpio, acogedor y cuidado, con vistas preciosas a la montaña.
       autor: Jairo
       fecha: junio de 2026
 antesDeReservar:
   etiqueta: Antes de reservar
   titulo: Lo que conviene saber
-  intro: Preferimos decirlo antes que después. Si algo de esto te afecta, escribenos y lo miramos.
+  intro: Preferimos decirlo antes que después. Si algo de esto te afecta, escríbenos y lo miramos.
   condiciones:
     - titulo: Mascotas, bajo consulta previa
       texto: >-
-        No se aceptan automaticamente. Cada solicitud se analiza segun el
-        caso y requiere aprobacion antes de confirmar la reserva. En caso
+        No se aceptan automáticamente. Cada solicitud se analiza según el
+        caso y requiere aprobación antes de confirmar la reserva. En caso
         de autorizarse, se aplica un costo adicional que se confirma al
         aprobar la solicitud.
     - titulo: Fogata al aire libre
       texto: >-
         El anuncio menciona fogata al aire libre. No esta disponible de
         forma automatica: queda sujeta a consulta y a condiciones de uso
-        segun el clima y la epoca del ano.
+        según el clima y la época del año.
     - titulo: Entrada y salida
       texto: >-
         La entrada es de 3:00 p. m. a 9:00 p. m. y la salida, antes de
-        las 11:00 a. m. Si necesitas otro horario, consultanos antes de
+        las 11:00 a. m. Si necesitas otro horario, consúltanos antes de
         reservar.
     - titulo: Capacidad
       texto: >-
-        Ocho huéspedes se acomodan comodamente con las camas y los
+        Ocho huéspedes se acomodan cómodamente con las camas y los
         sofa-camas de la casa. Nueve o diez es posible bajo consulta
-        previa, con una acomodacion adicional en sofa o colchoneta que
+        previa, con una acomodación adicional en sofa o colchoneta que
         hay que coordinar antes de reservar.
     - titulo: Trae el mercado
       texto: >-
         Hasta la casa no llegan domicilios. Conviene comprar en Zipaquirá
-        o en Cogua antes de subir, sobre todo si la estadia es larga.
+        o en Cogua antes de subir, sobre todo si la estadía es larga.
   seguridadTitulo: Seguridad
-  seguridadNota: Tomado del anuncio publicado. Que un elemento no conste no significa que no exista, sino que no esta verificado en la ficha; si necesitas confirmarlo antes de viajar, escribenos y lo comprobamos.
+  seguridadNota: Tomado del anuncio publicado. Que un elemento no conste no significa que no exista, sino que no esta verificado en la ficha; si necesitas confirmarlo antes de viajar, escríbenos y lo comprobamos.
   seguridad:
     - texto: No consta que tenga detector de humo
       consta: false
-    - texto: No consta que tenga detector de monoxido de carbono
+    - texto: No consta que tenga detector de monóxido de carbono
       consta: false
 descripcionZona: >-
   Entorno campestre de Cogua, rodeado de naturaleza. A unos 5 minutos en
-  carro hay restaurantes, una tienda para compras basicas y espacios
+  carro hay restaurantes, una tienda para compras básicas y espacios
   naturales de la zona; el Embalse del Neusa queda aproximadamente a 20
   minutos. Desde Bogotá es mas o menos una hora de camino, aunque el
-  tiempo real depende del trafico y del punto desde el que salgas. En
-  Google Maps la casa aparece como Cabana los Laureles. La direccion
+  tiempo real depende del tráfico y del punto desde el que salgas. En
+  Google Maps la casa aparece como Cabaña los Laureles. La dirección
   exacta se entrega al confirmar la reserva.
 descripcionZonaPendiente: false
 distancias:
@@ -306,7 +306,7 @@ datosContacto:
 calle: ''
 latitud: 5.107200
 longitud: -73.971018
-rangoPrecio: COP $300.000-$660.000 por noche segun numero de huéspedes
+rangoPrecio: COP $300.000-$660.000 por noche según número de huéspedes
 checkin: '15:00'
 checkout: '11:00'
 comodidades:
@@ -329,20 +329,20 @@ la casa y el terreno para si.
 
 Es una alternativa para salir de la rutina de Bogotá sin hacer un viaje
 largo: aproximadamente a una hora de camino, aunque eso depende del
-trafico y del punto desde el que salgas, así que tomalo como referencia
-y no como garantia.
+tráfico y del punto desde el que salgas, así que tomalo como referencia
+y no como garantía.
 
 La propiedad esta rodeada de naturaleza y de amplias zonas verdes.
 Adentro hay chimenea, cocina y comedor; afuera, balcón con vista
-panoramica y zona de BBQ.
+panorámica y zona de BBQ.
 
 Son dos habitaciones, cada una con una cama doble de 1,40 m, y dos
-sofa-camas con capacidad para dos personas cada uno. Esa distribucion
-permite alojar comodamente hasta 8 huéspedes. Para grupos de 9 o 10
-personas podemos preparar una acomodacion adicional en sofa o
-colchoneta, sujeta a consulta y coordinacion previa.
+sofa-camas con capacidad para dos personas cada uno. Esa distribución
+permite alojar cómodamente hasta 8 huéspedes. Para grupos de 9 o 10
+personas podemos preparar una acomodación adicional en sofa o
+colchoneta, sujeta a consulta y coordinación previa.
 
 A unos 5 minutos en carro hay restaurantes, una tienda para compras
-basicas y espacios naturales de la zona; el Embalse del Neusa queda
+básicas y espacios naturales de la zona; el Embalse del Neusa queda
 aproximadamente a 20 minutos. Conviene traer el mercado desde
 Zipaquirá o Cogua, porque hasta la casa no llegan domicilios.

@@ -5,7 +5,7 @@ grupos:
   visible: true
   capacidad: 28
   tipo: fija
-  nota: Veintiocho personas en camas fijas; hasta 30 requiere colchoneta y confirmacion.
+  nota: Veintiocho personas en camas fijas; hasta 30 requiere colchoneta y confirmación.
 orden: 5
 insignia: '05'
 modalidad: habitaciones
@@ -14,7 +14,7 @@ descripcion: Hotel aliado para parejas y grupos de adultos en el centro de Zipaq
 ogTitulo: Hotel Colonial Confort | Centro de Zipaquirá
 ogDescripcion: Habitaciones privadas para parejas y grupos de adultos en el centro de Zipaquirá, cerca de la Catedral de Sal.
 avisoBorrador: ''
-avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operacion y la entrega de las habitaciones se coordinan con la administracion del hotel.
+avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operación y la entrega de las habitaciones se coordinan con la administración del hotel.
 zona: Centro de Zipaquirá
 localidad: Zipaquirá
 departamento: Cundinamarca
@@ -37,7 +37,7 @@ datos:
     texto: Personas en camas fijas
     pendiente: false
   - numero: '5,0'
-    texto: Calificacion en Google
+    texto: Calificación en Google
     pendiente: false
   - numero: Solo adultos
     texto: Parejas y grupos
@@ -47,7 +47,7 @@ tituloDescripcionPendiente: false
 caracteristicas:
   - texto: Habitaciones privadas
     pendiente: false
-  - texto: Bano privado en cada habitación
+  - texto: Baño privado en cada habitación
     pendiente: false
   - texto: Agua caliente
     pendiente: false
@@ -73,7 +73,7 @@ habitaciones:
     tipoBano: privado
     huespedes: Hasta 2
     camas: 1 cama doble
-    banos: Bano privado
+    banos: Baño privado
     descripcion: Habitación para una persona o una pareja adulta, con agua caliente, televisión y wifi.
     precio: $ 65.000 por persona · $ 130.000 por pareja
     pendiente: false
@@ -81,8 +81,8 @@ habitaciones:
     tipoBano: privado
     huespedes: Hasta 4
     camas: 2 camas dobles
-    banos: Bano privado
-    descripcion: La opcion de mayor capacidad, para hasta cuatro huéspedes adultos, con agua caliente, televisión y wifi.
+    banos: Baño privado
+    descripcion: La opción de mayor capacidad, para hasta cuatro huéspedes adultos, con agua caliente, televisión y wifi.
     precio: $ 65.000 por persona
     pendiente: false
 notaHabitaciones: El hotel tiene doce habitaciones con una cama doble y una habitación con dos camas dobles. No se admiten menores de edad.
@@ -92,25 +92,25 @@ tarifas:
   titulo: Una tarifa clara por persona
   desde: Desde $ 65.000 por persona por noche
   cubre: Una persona adulta
-  intro: La habitación para pareja cuesta $ 130.000 por noche. Para grupos, cotizamos segun el numero de adultos y las habitaciones disponibles.
+  intro: La habitación para pareja cuesta $ 130.000 por noche. Para grupos, cotizamos según el número de adultos y las habitaciones disponibles.
   filas:
     - huespedes: 1 persona
       precio: $ 65.000
     - huespedes: 2 personas
       precio: $ 130.000
   regla: $ 65.000 por cada huésped adulto.
-  nota: Para 29 o 30 adultos se agrega una colchoneta adicional. Esta acomodacion debe confirmarse antes de reservar.
+  nota: Para 29 o 30 adultos se agrega una colchoneta adicional. Esta acomodación debe confirmarse antes de reservar.
   cta: Cotizar alojamiento
   mensaje: 'Hola, quiero cotizar Hotel Colonial Confort en Zipaquirá. Somos [numero] adultos y estas son mis fechas:'
 pruebaSocial:
   fuente: Google
   etiqueta: Opiniones verificadas
-  titulo: Un hotel pequeno con muy buenas primeras opiniones
-  intro: Google muestra tres opiniones publicas, todas con la calificacion maxima al momento del levantamiento.
+  titulo: Un hotel pequeño con muy buenas primeras opiniones
+  intro: Google muestra tres opiniones publicas, todas con la calificación máxima al momento del levantamiento.
   puntuacion: '5,0'
   sobre: '5'
   resenas: 3
-  nota: Información consultada en Google el 4 de septiembre de 2026; la puntuacion puede cambiar.
+  nota: Información consultada en Google el 4 de septiembre de 2026; la puntuación puede cambiar.
   enlace: https://share.google/nCCtj73cjnG6K45sI
   enlaceTexto: Ver ficha en Google
   extractos:
@@ -123,7 +123,7 @@ antesDeReservar:
   intro: Revisa estas condiciones antes de consultar disponibilidad.
   condiciones:
     - titulo: Alojamiento exclusivo para adultos
-      texto: Solo se reciben huéspedes mayores de edad. No se admiten ninos ni adolescentes.
+      texto: Solo se reciben huéspedes mayores de edad. No se admiten niños ni adolescentes.
     - titulo: Pensado para parejas
       texto: La propuesta esta orientada principalmente a parejas y a grupos conformados por parejas adultas.
     - titulo: No se admiten mascotas
@@ -148,14 +148,14 @@ horarios:
     valor: Disponible las 24 horas
     pendiente: false
   - lugar: Ingreso anticipado o salida posterior
-    valor: $ 10.000 por cada hora adicional, con coordinacion previa
+    valor: $ 10.000 por cada hora adicional, con coordinación previa
     pendiente: false
 direccionPublica: false
 mapaBbox: ''
 mapaTitulo: ''
 enlaceMapa: https://share.google/nCCtj73cjnG6K45sI
 nombreAnterior: ''
-mapaNota: El punto publico de Google Maps esta confirmado. La direccion e instrucciones de llegada se entregan al confirmar la reserva.
+mapaNota: El punto publico de Google Maps esta confirmado. La dirección e instrucciones de llegada se entregan al confirmar la reserva.
 mapaNotaPendiente: false
 experiencias:
   - titulo: Catedral de Sal
@@ -167,7 +167,7 @@ experiencias:
 tituloContacto: Consulta una habitación en Hotel Colonial Confort
 datosContacto:
   - Centro de Zipaquirá, Cundinamarca
-  - 13 habitaciones · hasta 30 adultos con acomodacion adicional
+  - 13 habitaciones · hasta 30 adultos con acomodación adicional
   - Alojamiento aliado para parejas y grupos de adultos
   - Reservas gestionadas por Atheron Suite
 calle: ''
@@ -180,15 +180,15 @@ comodidades:
   - Wifi
   - Televisión
   - Agua caliente
-  - Bano privado
+  - Baño privado
 actualizado: '2026-09-15'
 ---
 
 Hotel Colonial Confort es un alojamiento aliado ubicado en el centro de
 Zipaquirá. Su propuesta se enfoca en parejas y grupos de adultos que buscan
-privacidad, tranquilidad y una ubicación practica para conocer la ciudad.
+privacidad, tranquilidad y una ubicación práctica para conocer la ciudad.
 
-Google muestra actualmente una calificacion de 5,0 sobre 5 basada en tres
+Google muestra actualmente una calificación de 5,0 sobre 5 basada en tres
 opiniones. Una de ellas destaca el servicio, los precios razonables y la
 tranquilidad del lugar. La cifra se presenta como referencia de una fuente
 externa y puede cambiar.

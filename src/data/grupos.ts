@@ -192,7 +192,7 @@ export function resumeCapacidad(publicadas: FichaEntrada[]): ResumenCapacidad {
 
     if (contenidaEnOtra) {
       console.warn(
-        `[grupos] ${f.id} pertenece a ${padre}, que tambien esta publicada. ` +
+        `[grupos] ${f.id} pertenece a ${padre}, que también esta publicada. ` +
         `Se muestra, pero NO se suma al total: contarlas las dos seria ` +
         `contar las mismas camas dos veces.`,
       );

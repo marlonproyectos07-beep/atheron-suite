@@ -5,7 +5,7 @@ grupos:
   visible: true
   capacidad: 22
   tipo: maxima
-  nota: Casa completa para hasta 22 huéspedes, bajo confirmacion de disponibilidad.
+  nota: Casa completa para hasta 22 huéspedes, bajo confirmación de disponibilidad.
 orden: 2
 insignia: '02'
 titulo: Casa Algarra | Casa completa para grupos en Zipaquirá
@@ -32,17 +32,17 @@ galeria:
   - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-05-cocina-nevera.webp
     alt: Segunda vista de la cocina de Casa Algarra, con la nevera
   - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-06-bano-auxiliar.webp
-    alt: Bano auxiliar de Casa Algarra junto a la cocina, sin ducha
+    alt: Baño auxiliar de Casa Algarra junto a la cocina, sin ducha
   - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-07-sala-piso-2.webp
     alt: Sala del segundo piso de Casa Algarra
   - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-08-hall-piso-2.webp
-    alt: Hall de distribucion del segundo piso de Casa Algarra, con acceso a las habitaciones
+    alt: Hall de distribución del segundo piso de Casa Algarra, con acceso a las habitaciones
   - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-09-habitacion-201.webp
     alt: Habitación 201 de Casa Algarra, con cama doble
   - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-10-habitacion-202.webp
     alt: Habitación 202 de Casa Algarra, con dos camas
   - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-12-habitacion-203-principal.webp
-    alt: Habitación 203 principal de Casa Algarra, con dos camas y bano privado
+    alt: Habitación 203 principal de Casa Algarra, con dos camas y baño privado
   - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-14-habitacion-204.webp
     alt: Habitación 204 de Casa Algarra, en el segundo piso
   - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-15-habitacion-205.webp
@@ -64,7 +64,7 @@ caracteristicas:
     pendiente: false
   - texto: Cinco habitaciones
     pendiente: false
-  - texto: Tres banos, dos de ellos con ducha
+  - texto: Tres baños, dos de ellos con ducha
     pendiente: false
   - texto: Cocina equipada con estufa, nevera y utensilios
     pendiente: false
@@ -99,33 +99,33 @@ casaCompleta:
   datos:
     - Hasta 22 huéspedes
     - 5 habitaciones
-    - 3 banos
+    - 3 baños
     - Parqueadero para 2 carros
   resumen: Para familias grandes, grupos de amigos, empresas o celebraciones que quieren dormir, cocinar y reunirse en una sola casa, sin repartirse entre hoteles.
   precio: 'Tarifa normal: $65.000 por persona'
   precioNota: 'Tarifa especial para grupos desde 8 personas: $50.000 por persona'
   detalleCeja: Para grupos y familias
   detalleTitulo: Casa completa · hasta 22 huéspedes
-  detalleTexto: Reserva Casa Algarra entera. Cinco habitaciones, tres banos, cocina equipada, sala y comedor, y parqueadero para dos carros. Todo el grupo en la misma casa.
+  detalleTexto: Reserva Casa Algarra entera. Cinco habitaciones, tres baños, cocina equipada, sala y comedor, y parqueadero para dos carros. Todo el grupo en la misma casa.
   detalleDatos:
     - Hasta 22 huéspedes
     - 5 habitaciones
-    - 3 banos
+    - 3 baños
     - Una sola casa
   ctaVer: Ver casa completa
   ctaCotizar: Cotizar casa completa
   mensaje: Hola, quiero cotizar Casa Algarra completa en Zipaquirá. Somos un grupo y quiero consultar disponibilidad y precio.
   cejaHabitaciones: '¿Son pocos?'
   tituloHabitaciones: También por habitaciones
-  introHabitaciones: Cuando la casa no esta reservada entera, podemos alquilar habitaciones sueltas. Escribenos y lo miramos.
+  introHabitaciones: Cuando la casa no esta reservada entera, podemos alquilar habitaciones sueltas. Escríbenos y lo miramos.
 habitaciones:
   - nombre: Habitación 201
     tipoBano: compartido
     camas: 1 cama doble
-    banos: Bano social compartido
+    banos: Baño social compartido
     descripcion: >-
       Habitación con cama doble en el segundo piso de Casa Algarra. Comparte el
-      bano social del segundo piso, que tiene ducha, con la habitación 202.
+      baño social del segundo piso, que tiene ducha, con la habitación 202.
     precio: Precio a consultar
     pendiente: false
     foto: /assets/img/hospedajes/casa-algarra/casa-algarra-09-habitacion-201.webp
@@ -134,16 +134,16 @@ habitaciones:
       - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-09-habitacion-201.webp
         alt: Habitación 201 de Casa Algarra en Zipaquirá, con cama doble
       - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-11-bano-social-piso-2.webp
-        alt: Bano social del segundo piso de Casa Algarra, con ducha, compartido por las habitaciones 201 y 202
+        alt: Baño social del segundo piso de Casa Algarra, con ducha, compartido por las habitaciones 201 y 202
       - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-08-hall-piso-2.webp
         alt: Hall del segundo piso de Casa Algarra, por el que se accede a la habitación
   - nombre: Habitación 202
     tipoBano: compartido
     camas: '2'
-    banos: Bano social compartido
+    banos: Baño social compartido
     descripcion: >-
       Habitación con dos camas en el segundo piso de Casa Algarra. Comparte el
-      bano social del segundo piso, que tiene ducha, con la habitación 201.
+      baño social del segundo piso, que tiene ducha, con la habitación 201.
     precio: Precio a consultar
     pendiente: false
     foto: /assets/img/hospedajes/casa-algarra/casa-algarra-10-habitacion-202.webp
@@ -152,15 +152,15 @@ habitaciones:
       - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-10-habitacion-202.webp
         alt: Habitación 202 de Casa Algarra en Zipaquirá, con dos camas
       - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-11-bano-social-piso-2.webp
-        alt: Bano social del segundo piso de Casa Algarra, con ducha, compartido por las habitaciones 201 y 202
+        alt: Baño social del segundo piso de Casa Algarra, con ducha, compartido por las habitaciones 201 y 202
       - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-08-hall-piso-2.webp
         alt: Hall del segundo piso de Casa Algarra, por el que se accede a la habitación
   - nombre: Habitación 203 Principal
     tipoBano: privado
     camas: '2'
-    banos: Bano privado
+    banos: Baño privado
     descripcion: >-
-      La habitación principal de Casa Algarra, con dos camas y bano privado con
+      La habitación principal de Casa Algarra, con dos camas y baño privado con
       ducha dentro de la propia habitación.
     precio: Precio a consultar
     pendiente: false
@@ -170,7 +170,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-12-habitacion-203-principal.webp
         alt: Habitación 203 principal de Casa Algarra en Zipaquirá, con dos camas
       - imagen: /assets/img/hospedajes/casa-algarra/casa-algarra-13-bano-privado-203.webp
-        alt: Bano privado con ducha de la habitación 203 de Casa Algarra
+        alt: Baño privado con ducha de la habitación 203 de Casa Algarra
   - nombre: Habitación 204
     descripcion: Habitación del segundo piso de Casa Algarra.
     precio: Precio a consultar
@@ -196,22 +196,22 @@ habitaciones:
 antesDeReservar:
   etiqueta: Antes de reservar
   titulo: Lo que conviene saber
-  intro: Preferimos decirlo antes que después. Si algo de esto te afecta, escribenos y lo miramos.
+  intro: Preferimos decirlo antes que después. Si algo de esto te afecta, escríbenos y lo miramos.
   condiciones:
     - titulo: Parqueadero incluido
       texto: >-
-        Dos espacios para vehiculos dentro de la propiedad, frente a la
+        Dos espacios para vehículos dentro de la propiedad, frente a la
         casa, sin costo adicional. Es una zona exterior, abierta y sin
-        cubierta, monitoreada por camaras.
+        cubierta, monitoreada por cámaras.
     - titulo: Si necesitas mas espacio
       texto: >-
         A unas cuatro cuadras, en el sector de la carrera 15 con calle 4,
         hay un parqueadero publico. Es un establecimiento independiente
         de Casa Algarra: la disponibilidad, el horario y la tarifa se
-        confirman directamente alli, y el pago se hace en el parqueadero.
+        confirman directamente allí, y el pago se hace en el parqueadero.
       enlace: 'https://www.google.com/maps/search/?api=1&query=Parqueadero%20P%C3%BAblico%20parque%20la%20esperanza%20Zipaquir%C3%A1'
       enlaceTexto: Como llegar al parqueadero publico
-descripcionZona: En Zipaquirá, Cundinamarca. La direccion exacta y las distancias se publican en cuanto esten confirmadas.
+descripcionZona: En Zipaquirá, Cundinamarca. La dirección exacta y las distancias se publican en cuanto estén confirmadas.
 descripcionZonaPendiente: false
 distancias: []
 horarios: []
@@ -247,10 +247,10 @@ actualizado: 2026-09-03
 ---
 
 Casa Algarra es una casa entera en Zipaquirá pensada para que un grupo
-se hospede junto. Cinco habitaciones, tres banos y zonas comunes de
+se hospede junto. Cinco habitaciones, tres baños y zonas comunes de
 verdad: sala, comedor y una cocina equipada donde caben todos.
 
-Es la opcion para familias grandes, grupos de amigos, equipos de
+Es la opción para familias grandes, grupos de amigos, equipos de
 trabajo y celebraciones. En vez de repartirse en habitaciones de hotel
 que no se comunican, el grupo cocina, come y se reúne en la misma casa,
 y cada quien tiene donde dormir.

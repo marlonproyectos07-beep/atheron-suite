@@ -5,7 +5,7 @@ grupos:
   visible: true
   capacidad: 40
   tipo: maxima
-  nota: Atheron ha alojado grupos de hasta 40 personas; inventario sujeto a confirmacion.
+  nota: Atheron ha alojado grupos de hasta 40 personas; inventario sujeto a confirmación.
 orden: 6
 insignia: '06'
 modalidad: habitaciones
@@ -13,8 +13,8 @@ titulo: Hotel La Margarita en Zipaquirá | Hospedaje aliado para grupos
 descripcion: Hotel aliado en Zipaquirá, Cundinamarca, cerca del centro histórico y de la Catedral de Sal. Alojamiento para grupos gestionado por Atheron Suite.
 ogTitulo: Hotel La Margarita | Zipaquirá
 ogDescripcion: Hotel aliado en Zipaquirá, cerca del centro histórico y de la Catedral de Sal. Consulta disponibilidad con Atheron Suite.
-avisoBorrador: Ficha en preparacion. La galeria real ya esta integrada; faltan confirmar el inventario completo de habitaciones, los horarios y las condiciones operativas del hotel.
-avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operacion y la entrega de las habitaciones se coordinan con la administracion del hotel.
+avisoBorrador: Ficha en preparación. La galería real ya esta integrada; faltan confirmar el inventario completo de habitaciones, los horarios y las condiciones operativas del hotel.
+avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operación y la entrega de las habitaciones se coordinan con la administración del hotel.
 zona: Barrio La Esmeralda
 localidad: Zipaquirá
 departamento: Cundinamarca
@@ -28,7 +28,7 @@ galeria:
   - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-01-habitacion.webp
     alt: Habitación de Hotel La Margarita con cama doble, camarote y televisión
   - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-02-zona-comun.webp
-    alt: Zona comun interior de Hotel La Margarita con plantas y televisión
+    alt: Zona común interior de Hotel La Margarita con plantas y televisión
   - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-03-pasillo-superior.webp
     alt: Pasillo del nivel superior de Hotel La Margarita
   - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-04-acceso-interior.webp
@@ -36,11 +36,11 @@ galeria:
   - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-05-escaleras.webp
     alt: Escaleras interiores de Hotel La Margarita decoradas con plantas y cuadros
   - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-06-recepcion.webp
-    alt: Mostrador de recepcion de Hotel La Margarita
+    alt: Mostrador de recepción de Hotel La Margarita
   - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-07-pasillo-habitaciones.webp
     alt: Pasillo de acceso a las habitaciones de Hotel La Margarita
   - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-08-acceso-recepcion.webp
-    alt: Acceso a la recepcion y zonas interiores de Hotel La Margarita
+    alt: Acceso a la recepción y zonas interiores de Hotel La Margarita
 datos:
   - numero: Hasta 40
     texto: Huéspedes en grupo
@@ -76,8 +76,8 @@ habitaciones:
     banos: Por confirmar
     descripcion: >-
       Habitación con cama doble, camarote y televisión, tal como aparece en la
-      galeria publica del hotel. La capacidad exacta y el inventario completo
-      de habitaciones quedan sujetos a confirmacion de la administracion.
+      galería publica del hotel. La capacidad exacta y el inventario completo
+      de habitaciones quedan sujetos a confirmación de la administración.
     pendiente: false
 heroFoto: true
 heroEncuadre: center 43%
@@ -86,7 +86,7 @@ tarifas:
   titulo: Una tarifa clara por persona
   desde: Desde $ 65.000 por persona por noche
   cubre: Una persona por noche
-  intro: La tarifa se confirma segun el numero de huéspedes y las fechas. Para grupos grandes cotizamos el alojamiento completo.
+  intro: La tarifa se confirma según el número de huéspedes y las fechas. Para grupos grandes cotizamos el alojamiento completo.
   regla: $ 65.000 por cada huésped por noche.
   nota: Tarifa base de referencia. El valor final se confirma antes de reservar.
   cta: Cotizar alojamiento
@@ -97,14 +97,14 @@ antesDeReservar:
   intro: Estas son las condiciones confirmadas hasta hoy. Las que falten se publican cuando el hotel las confirme.
   condiciones:
     - titulo: Alojamiento aliado
-      texto: El hotel no es propiedad de Atheron Suite. Nosotros coordinamos la reserva y la administracion del hotel opera el alojamiento.
+      texto: El hotel no es propiedad de Atheron Suite. Nosotros coordinamos la reserva y la administración del hotel opera el alojamiento.
     - titulo: Capacidad para grupos
       texto: Hemos alojado grupos de hasta 40 personas. La disponibilidad para un grupo completo se confirma antes de reservar.
     - titulo: Registro Nacional de Turismo
-      texto: El establecimiento figura en el Registro Nacional de Turismo con el numero 29756.
-    - titulo: Inventario sujeto a confirmacion
-      texto: La distribucion de camas y habitaciones disponibles para cada grupo se confirma antes de reservar. No asumimos que toda la capacidad este disponible para todas las fechas.
-descripcionZona: En Zipaquirá, cerca del centro histórico y de la Catedral de Sal. La direccion exacta y las instrucciones de llegada se entregan al confirmar la reserva.
+      texto: El establecimiento figura en el Registro Nacional de Turismo con el número 29756.
+    - titulo: Inventario sujeto a confirmación
+      texto: La distribución de camas y habitaciones disponibles para cada grupo se confirma antes de reservar. No asumimos que toda la capacidad este disponible para todas las fechas.
+descripcionZona: En Zipaquirá, cerca del centro histórico y de la Catedral de Sal. La dirección exacta y las instrucciones de llegada se entregan al confirmar la reserva.
 descripcionZonaPendiente: false
 distancias: []
 horarios: []
@@ -112,12 +112,12 @@ mapaBbox: ''
 mapaTitulo: ''
 enlaceMapa: https://share.google/ahqOT4EGauLT2ntoi
 nombreAnterior: ''
-mapaNota: El punto publico de Google esta confirmado. La direccion e instrucciones de llegada se entregan al confirmar la reserva.
+mapaNota: El punto publico de Google esta confirmado. La dirección e instrucciones de llegada se entregan al confirmar la reserva.
 mapaNotaPendiente: false
 direccionPublica: false
 experiencias:
   - titulo: Catedral de Sal
-    texto: El recorrido subterraneo mas visitado del municipio, dentro del entorno del centro de Zipaquirá.
+    texto: El recorrido subterráneo mas visitado del municipio, dentro del entorno del centro de Zipaquirá.
     pendiente: false
   - titulo: Centro histórico
     texto: Restaurantes, comercio y plazas del centro de Zipaquirá se encuentran en el entorno.
@@ -126,7 +126,7 @@ tituloContacto: Consulta disponibilidad en Hotel La Margarita
 datosContacto:
   - Zipaquirá, Cundinamarca
   - Alojamiento aliado para grupos
-  - Hasta 40 huéspedes, sujeto a confirmacion previa
+  - Hasta 40 huéspedes, sujeto a confirmación previa
   - Reservas gestionadas por Atheron Suite
 calle: ''
 latitud: null
@@ -141,13 +141,13 @@ actualizado: '2026-09-04'
 
 Hotel La Margarita es un alojamiento aliado en Zipaquirá, cerca del centro
 histórico y de la Catedral de Sal. Atheron Suite coordina la reserva y la
-administracion del hotel opera el alojamiento.
+administración del hotel opera el alojamiento.
 
-Es la opcion que proponemos cuando el grupo es grande: ya hemos coordinado
+Es la opción que proponemos cuando el grupo es grande: ya hemos coordinado
 estancias de hasta 40 personas. La tarifa parte de $ 65.000 por persona por
-noche y se confirma segun el numero de huéspedes y las fechas.
+noche y se confirma según el número de huéspedes y las fechas.
 
-El establecimiento figura en el Registro Nacional de Turismo con el numero
-29756. La galeria muestra fotografias reales de la ficha publica del hotel. El
+El establecimiento figura en el Registro Nacional de Turismo con el número
+29756. La galería muestra fotografias reales de la ficha publica del hotel. El
 inventario completo de habitaciones, los horarios de entrada y salida y las
-demas condiciones se publican cuando la administracion los confirme.
+demás condiciones se publican cuando la administración los confirme.
