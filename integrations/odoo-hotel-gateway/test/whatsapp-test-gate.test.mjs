@@ -23,3 +23,13 @@ test('acepta la segunda frase TEST con trim, lowercase y espacios multiples', ()
 test('rechaza una frase distinta aunque consulte disponibilidad', () => {
   assert.equal(isAuthorizedTestMessage([{ ...message, text: 'Hola quiero consultar disponibilidad para tres personas en hotel Atheron suite para mañana' }], config), false);
 });
+
+
+test('HOTEL-013 permite texto natural no vacio solo con remitente y numero TEST autorizados', () => {
+  const naturalConfig = { ...config, naturalTextEnabled: true };
+  assert.equal(isAuthorizedTestMessage([{ ...message, text: 'Somos una pareja y queremos quedarnos dos noches.' }], naturalConfig), true);
+  assert.equal(isAuthorizedTestMessage([{ ...message, text: '  ' }], naturalConfig), false);
+  assert.equal(isAuthorizedTestMessage([{ ...message, from: '573009998877', text: 'Necesito una habitación' }], naturalConfig), false);
+  assert.equal(isAuthorizedTestMessage([{ ...message, phone_number_id: '654321', text: 'Necesito una habitación' }], naturalConfig), false);
+  assert.equal(isAuthorizedTestMessage([message, message], naturalConfig), false);
+});
