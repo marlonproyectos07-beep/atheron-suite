@@ -7,7 +7,7 @@ import { inspectTestMessage } from '../../../../integrations/odoo-hotel-gateway/
 import { inspectMetaEvent, ignoredReason, logHotel011Diagnostic } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-preview-diagnostics.mjs';
 
 /**
- * ATH-ODOO-HOTEL-011 — Webhook Staging Deployment Gate.
+ * ATH-ODOO-HOTEL-013 — Webhook TEST/Preview para conversación natural.
  *
  * GET  -> verificacion real de Meta (hub.mode/hub.verify_token/hub.challenge).
  * POST -> recepcion real de eventos: verifica firma (X-Hub-Signature-256,
@@ -162,13 +162,16 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResponse({ ok: false, error: 'INVALID_JSON_BODY' }, 400);
   }
 
-  // Solo el numero Meta TEST, remitente autorizado y texto aprobado por
-  // el CEO pueden llegar al orquestador. Los demas eventos se reconocen
-  // sin efectuar consultas ni envios y sin provocar reintentos de Meta.
+  // El gate de transporte sigue siendo estricto: numero Meta TEST + remitente autorizado.
+  // En HOTEL-013 el contenido deja de depender de una frase exacta y pasa a la NLU.
+  // Fuera de la rama HOTEL-013 se conserva el comportamiento de HOTEL-011.
   const messages = provider.parseInboundPayload(payload);
+  const naturalTextEnabled = process.env.VERCEL_ENV === 'preview'
+    && process.env.VERCEL_GIT_COMMIT_REF === 'feature/ath-odoo-hotel-013-whatsapp-natural-conversation';
   const gate = inspectTestMessage(messages, {
     allowedFrom: process.env.WHATSAPP_TEST_ALLOWED_FROM,
     phoneNumberId: process.env.META_PHONE_NUMBER_ID,
+    naturalTextEnabled,
   });
   const diagnostic = inspectMetaEvent(payload, messages, gate);
   logHotel011Diagnostic('EVENT_RECEIVED', diagnostic.event);

@@ -102,3 +102,28 @@ test('toEngineInput nunca pone una fecha/huespedes que la NLU no resolvio (undef
   assert.equal(input.guests, undefined);
   assert.equal(input.requestBooking, true);
 });
+
+
+test('HOTEL-013: "Somos una pareja" -> guests=2', () => {
+  const slots = parseMessage('Somos una pareja', { referenceDate: HOY });
+  assert.equal(slots.guests, 2);
+});
+
+test('HOTEL-013: "mañana por dos noches para una pareja" completa checkout sin inventar', () => {
+  const slots = parseMessage('Necesito alojamiento mañana por dos noches para una pareja', { referenceDate: HOY });
+  assert.equal(slots.intent, 'availability_inquiry');
+  assert.equal(slots.check_in, '2026-12-02');
+  assert.equal(slots.check_out, '2026-12-04');
+  assert.equal(slots.guests, 2);
+  assert.equal(slots.stay_nights, 2);
+  assert.deepEqual(slots.missing_fields, []);
+});
+
+test('HOTEL-013: lenguaje natural conserva campos faltantes si no hay salida', () => {
+  const slots = parseMessage('Somos una pareja y queremos quedarnos mañana', { referenceDate: HOY });
+  assert.equal(slots.intent, 'availability_inquiry');
+  assert.equal(slots.check_in, '2026-12-02');
+  assert.equal(slots.check_out, null);
+  assert.equal(slots.guests, 2);
+  assert.ok(slots.missing_fields.includes('check_out'));
+});
