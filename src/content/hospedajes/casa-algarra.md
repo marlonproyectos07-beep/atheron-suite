@@ -89,7 +89,7 @@ notaHabitaciones: ''
 heroFoto: true
 heroEncuadre: center 30%
 casaCompleta:
-  etiquetaSeccion: Como hospedarse
+  etiquetaSeccion: Cómo hospedarse
   tituloSeccion: Tu grupo bajo el mismo techo
   introSeccion: Casa Algarra se reserva entera. Si son pocos, también podemos mirar habitaciones sueltas.
   ceja: '¿Vienen en grupo?'
@@ -117,7 +117,7 @@ casaCompleta:
   mensaje: Hola, quiero cotizar Casa Algarra completa en Zipaquirá. Somos un grupo y quiero consultar disponibilidad y precio.
   cejaHabitaciones: '¿Son pocos?'
   tituloHabitaciones: También por habitaciones
-  introHabitaciones: Cuando la casa no esta reservada entera, podemos alquilar habitaciones sueltas. Escríbenos y lo miramos.
+  introHabitaciones: Cuando la casa no está reservada entera, podemos alquilar habitaciones sueltas. Escríbenos y lo miramos.
 habitaciones:
   - nombre: Habitación 201
     tipoBano: compartido
@@ -203,14 +203,14 @@ antesDeReservar:
         Dos espacios para vehículos dentro de la propiedad, frente a la
         casa, sin costo adicional. Es una zona exterior, abierta y sin
         cubierta, monitoreada por cámaras.
-    - titulo: Si necesitas mas espacio
+    - titulo: Si necesitas más espacio
       texto: >-
         A unas cuatro cuadras, en el sector de la carrera 15 con calle 4,
-        hay un parqueadero publico. Es un establecimiento independiente
+        hay un parqueadero público. Es un establecimiento independiente
         de Casa Algarra: la disponibilidad, el horario y la tarifa se
         confirman directamente allí, y el pago se hace en el parqueadero.
       enlace: 'https://www.google.com/maps/search/?api=1&query=Parqueadero%20P%C3%BAblico%20parque%20la%20esperanza%20Zipaquir%C3%A1'
-      enlaceTexto: Como llegar al parqueadero publico
+      enlaceTexto: Cómo llegar al parqueadero público
 descripcionZona: En Zipaquirá, Cundinamarca. La dirección exacta y las distancias se publican en cuanto estén confirmadas.
 descripcionZonaPendiente: false
 distancias: []

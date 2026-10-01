@@ -13,7 +13,7 @@ titulo: Hotel La Margarita en Zipaquirá | Hospedaje aliado para grupos
 descripcion: Hotel aliado en Zipaquirá, Cundinamarca, cerca del centro histórico y de la Catedral de Sal. Alojamiento para grupos gestionado por Atheron Suite.
 ogTitulo: Hotel La Margarita | Zipaquirá
 ogDescripcion: Hotel aliado en Zipaquirá, cerca del centro histórico y de la Catedral de Sal. Consulta disponibilidad con Atheron Suite.
-avisoBorrador: Ficha en preparación. La galería real ya esta integrada; faltan confirmar el inventario completo de habitaciones, los horarios y las condiciones operativas del hotel.
+avisoBorrador: Ficha en preparación. La galería real ya está integrada; faltan confirmar el inventario completo de habitaciones, los horarios y las condiciones operativas del hotel.
 avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operación y la entrega de las habitaciones se coordinan con la administración del hotel.
 zona: Barrio La Esmeralda
 localidad: Zipaquirá
@@ -112,12 +112,12 @@ mapaBbox: ''
 mapaTitulo: ''
 enlaceMapa: https://share.google/ahqOT4EGauLT2ntoi
 nombreAnterior: ''
-mapaNota: El punto publico de Google esta confirmado. La dirección e instrucciones de llegada se entregan al confirmar la reserva.
+mapaNota: El punto público de Google esta confirmado. La dirección e instrucciones de llegada se entregan al confirmar la reserva.
 mapaNotaPendiente: false
 direccionPublica: false
 experiencias:
   - titulo: Catedral de Sal
-    texto: El recorrido subterráneo mas visitado del municipio, dentro del entorno del centro de Zipaquirá.
+    texto: El recorrido subterráneo más visitado del municipio, dentro del entorno del centro de Zipaquirá.
     pendiente: false
   - titulo: Centro histórico
     texto: Restaurantes, comercio y plazas del centro de Zipaquirá se encuentran en el entorno.

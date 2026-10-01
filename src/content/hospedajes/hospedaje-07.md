@@ -77,7 +77,7 @@ direccionPublica: false
 
 experiencias:
   - titulo: Catedral de Sal
-    texto: El recorrido subterráneo mas visitado del municipio.
+    texto: El recorrido subterráneo más visitado del municipio.
   - titulo: Centro histórico
     texto: Plaza principal, catedral diocesana y calles coloniales.
   - titulo: Por definir
@@ -91,4 +91,4 @@ datosContacto:
 ---
 
 Párrafo pendiente: como es el lugar, que se
-siente al llegar y que tipo de viajero disfruta mas quedarse aquí.
+siente al llegar y que tipo de viajero disfruta más quedarse aquí.

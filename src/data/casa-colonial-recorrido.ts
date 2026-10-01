@@ -511,7 +511,7 @@ export const recorrido: BloqueRecorrido[] = [
          Capacidad 8-10 huespedes
          Cama principal King Size
          2 camarotes (4 plazas)
-         2 sofa cama (4 plazas)
+         2 sofá cama (4 plazas)
          Bano privado · Wi-Fi · Aire acondicionado · Smart TV
 
        mas el texto "La Habitacion 207 es la suite mas completa del

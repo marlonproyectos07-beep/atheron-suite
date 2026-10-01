@@ -14,12 +14,12 @@ ogTitulo: Hotel Atheron Suite | Zipaquirá, Cundinamarca
 ogDescripcion: Hospedaje en Zipaquirá a 16 minutos a pie de la Catedral de Sal. Wifi, Netflix y cocina compartida.
 avisoBorrador: ''
 zona: 'Cra. 9 #10-32, Zipaquirá'
-presentacion: A 16 minutos caminando de la Catedral de Sal, con cocina compartida con estufa, wifi y Netflix. Pensado para quedarse mas de una noche sin sentir que estas en un hotel de paso.
+presentacion: A 16 minutos caminando de la Catedral de Sal, con cocina compartida con estufa, wifi y Netflix. Pensado para quedarse más de una noche sin sentir que estás en un hotel de paso.
 presentacionPendiente: false
 fotoTarjeta: /assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg
 fotoTarjetaAlt: Sala del Hotel Atheron Suite con ventanal a Zipaquirá, sofá cama, escritorio, televisor y barra con taburetes
 fotoPrincipal: /assets/img/hospedajes/la-magia-de-zipaquira-principal.jpg
-fotoPrincipalAlt: Sala del Hotel Atheron Suite con sofa cama, escritorio, televisor sobre pared de madera, barra con taburetes y ventanal con vista a Zipaquirá
+fotoPrincipalAlt: Sala del Hotel Atheron Suite con sofá cama, escritorio, televisor sobre pared de madera, barra con taburetes y ventanal con vista a Zipaquirá
 galeria: []
 datos:
   - numero: 1,4 km
@@ -71,9 +71,9 @@ antesDeReservar:
         consultarlo antes de llegar.
     - titulo: Custodia de equipaje
       texto: >-
-        Cuando el servicio esta disponible, puedes dejar tu equipaje sin costo
+        Cuando el servicio está disponible, puedes dejar tu equipaje sin costo
         en la recepción de la propiedad antes del check-in. Los domingos
-        depende de la operación del dia: consúltalo antes por WhatsApp, no es
+        depende de la operación del día: consúltalo antes por WhatsApp, no es
         un servicio garantizado.
     - titulo: Aseo y ropa de cama
       texto: >-
@@ -284,7 +284,7 @@ habitaciones:
       duracion: '0:33'
     galeria:
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-principal.jpg
-        alt: Sala de la Suite 301 con sofa, escritorio, televisor y ventanal con vista a las montañas de Zipaquirá
+        alt: Sala de la Suite 301 con sofá, escritorio, televisor y ventanal con vista a las montañas de Zipaquirá
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-camas.jpg
         alt: Habitación de la Suite 301 con cama doble, camarote de dos camas y ropa de cama azul y blanca
       - imagen: /assets/img/hospedajes/la-magia-de-zipaquira-301-sala.jpg
@@ -324,7 +324,7 @@ habitaciones:
     precio: Según ocupación
     pendiente: false
     foto: /assets/img/hospedajes/hotel-atheron-suite-302-habitacion.jpg
-    fotoAlt: Habitación 302 con cama doble de cabecero capitone gris y sofa cama al lado
+    fotoAlt: Habitación 302 con cama doble de cabecero capitone gris y sofá cama al lado
     video:
       src: /assets/302/Atheron_Suite_Habitacion_302_WEB.mp4
       poster: /assets/video/habitacion-302-video-poster.webp
@@ -341,7 +341,7 @@ habitaciones:
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-entrada.jpg
         alt: Puerta abierta de la habitación 302 con la placa del número y la cama al fondo
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-habitacion.jpg
-        alt: Habitación 302 con cama doble de cabecero capitone gris y sofa cama al lado
+        alt: Habitación 302 con cama doble de cabecero capitone gris y sofá cama al lado
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-tv.jpg
         alt: Televisor de pantalla plana en la habitación 302 y puerta abierta al baño privado
       - imagen: /assets/img/hospedajes/hotel-atheron-suite-302-bano.jpg
@@ -379,7 +379,7 @@ mapaNota: ''
 mapaNotaPendiente: false
 experiencias:
   - titulo: Catedral de Sal
-    texto: A 16 minutos caminando. El recorrido subterráneo mas visitado del municipio.
+    texto: A 16 minutos caminando. El recorrido subterráneo más visitado del municipio.
     pendiente: false
   - titulo: Centro histórico
     texto: Plaza principal, catedral diocesana y calles coloniales, a pocas cuadras.
@@ -413,7 +413,7 @@ actualizado: ''
 
 El Hotel Atheron Suite ofrece habitaciones y una suite con acceso a
 cocina compartida, en la Carrera 9 del centro de Zipaquirá. La Catedral de
-Sal queda a 1,4 kilometros: se llega caminando en unos 16 minutos,
+Sal queda a 1,4 kilómetros: se llega caminando en unos 16 minutos,
 sin necesidad de transporte.
 
 Tener cocina cambia la estancia. Si vienes en familia o te quedas

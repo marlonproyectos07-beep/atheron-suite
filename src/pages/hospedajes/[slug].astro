@@ -449,7 +449,7 @@ function idHabitacion(nombre) {
         <div class="contenedor">
           <div class="encabezado-seccion aparecer">
             <span class="etiqueta">{casa ? casa.etiquetaSeccion : 'Habitaciones'}</span>
-            <h2>{casa ? casa.tituloSeccion : 'Donde vas a dormir'}</h2>
+            <h2>{casa ? casa.tituloSeccion : 'Dónde vas a dormir'}</h2>
             {(casa?.introSeccion ?? d.notaHabitaciones) && (
               <p class="texto-suave" style="margin-top: var(--esp-2);">
                 {casa?.introSeccion ?? d.notaHabitaciones}
@@ -931,7 +931,7 @@ function idHabitacion(nombre) {
               <span class="nota-reserva__icono" aria-hidden="true">&#128274;</span>
               <div>
                 <strong>La dirección exacta se entrega al confirmar</strong>
-                Coordinamos la llegada contigo una vez la reserva esta confirmada.
+                Coordinamos la llegada contigo una vez la reserva está confirmada.
                 Así protegemos la tranquilidad de los huéspedes que ya están alojados y nos aseguramos de recibirte bien el día de tu llegada.
               </div>
             </div>
@@ -1065,7 +1065,7 @@ function idHabitacion(nombre) {
                       href={c.enlace}
                       target="_blank"
                       rel="noopener"
-                    >{c.enlaceTexto ?? 'Ver mas'}</a>
+                    >{c.enlaceTexto ?? 'Ver más'}</a>
                   )}
                 </article>
               ))}
@@ -1097,7 +1097,7 @@ function idHabitacion(nombre) {
         <div class="contenedor">
           <div class="encabezado-seccion aparecer">
             <span class="etiqueta">Experiencias</span>
-            <h2>Que hacer alrededor</h2>
+            <h2>Qué hacer alrededor</h2>
           </div>
           <div class="grid grid--3 aparecer">
             {experiencias.map((e) => (
@@ -1111,7 +1111,7 @@ function idHabitacion(nombre) {
             ))}
           </div>
           <div style="margin-top: var(--esp-4);">
-            <p class="texto-suave">Te contamos mas en nuestra <a href="/blog/guia-de-zipaquira">guía de Zipaquirá</a>.</p>
+            <p class="texto-suave">Te contamos más en nuestra <a href="/blog/guia-de-zipaquira">guía de Zipaquirá</a>.</p>
           </div>
         </div>
       </section>
@@ -1124,8 +1124,8 @@ function idHabitacion(nombre) {
           <h2>{d.tituloContacto}</h2>
           <p class="texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
             {d.publicado
-              ? 'La forma mas rápida es WhatsApp: te respondemos con disponibilidad y precio para tus fechas.'
-              : 'La forma mas rápida es WhatsApp: te contamos en que estado esta este alojamiento y que podemos ofrecerte.'}
+              ? 'La forma más rápida es WhatsApp: te respondemos con disponibilidad y precio para tus fechas.'
+              : 'La forma más rápida es WhatsApp: te contamos en qué estado está este alojamiento y qué podemos ofrecerte.'}
           </p>
 
           {/* Una ficha sin publicar no ofrece reservar. Su

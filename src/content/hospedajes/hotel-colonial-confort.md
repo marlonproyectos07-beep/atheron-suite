@@ -106,7 +106,7 @@ pruebaSocial:
   fuente: Google
   etiqueta: Opiniones verificadas
   titulo: Un hotel pequeño con muy buenas primeras opiniones
-  intro: Google muestra tres opiniones publicas, todas con la calificación máxima al momento del levantamiento.
+  intro: Google muestra tres opiniones públicas, todas con la calificación máxima al momento del levantamiento.
   puntuacion: '5,0'
   sobre: '5'
   resenas: 3
@@ -125,7 +125,7 @@ antesDeReservar:
     - titulo: Alojamiento exclusivo para adultos
       texto: Solo se reciben huéspedes mayores de edad. No se admiten niños ni adolescentes.
     - titulo: Pensado para parejas
-      texto: La propuesta esta orientada principalmente a parejas y a grupos conformados por parejas adultas.
+      texto: La propuesta está orientada principalmente a parejas y a grupos conformados por parejas adultas.
     - titulo: No se admiten mascotas
       texto: El hotel no recibe mascotas.
     - titulo: Parqueadero externo
@@ -133,7 +133,7 @@ antesDeReservar:
     - titulo: Capacidad grupal
       texto: Las camas fijas permiten alojar hasta 28 adultos. Para grupos de 29 o 30 se agrega una colchoneta adicional, informada y confirmada antes de reservar.
     - titulo: Horarios y horas adicionales
-      texto: El check-in es desde las 6:00 p. m. y el check-out hasta las 10:00 a. m. La atención esta disponible las 24 horas. Ingresar antes o salir después cuesta $ 10.000 por cada hora adicional y debe coordinarse previamente.
+      texto: El check-in es desde las 6:00 p. m. y el check-out hasta las 10:00 a. m. La atención está disponible las 24 horas. Ingresar antes o salir después cuesta $ 10.000 por cada hora adicional y debe coordinarse previamente.
 descripcionZona: En el centro de Zipaquirá, en la Carrera 9. Su ubicación facilita el acceso al centro histórico y a la Catedral de Sal.
 descripcionZonaPendiente: false
 distancias: []
@@ -155,7 +155,7 @@ mapaBbox: ''
 mapaTitulo: ''
 enlaceMapa: https://share.google/nCCtj73cjnG6K45sI
 nombreAnterior: ''
-mapaNota: El punto publico de Google Maps esta confirmado. La dirección e instrucciones de llegada se entregan al confirmar la reserva.
+mapaNota: El punto público de Google Maps esta confirmado. La dirección e instrucciones de llegada se entregan al confirmar la reserva.
 mapaNotaPendiente: false
 experiencias:
   - titulo: Catedral de Sal
