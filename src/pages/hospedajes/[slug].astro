@@ -1,4 +1,5 @@
 ---
+import { existsSync } from 'node:fs';
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Cabecera from '../../components/Cabecera.astro';
@@ -44,6 +45,20 @@ const heroFoto = d.heroFoto && Boolean(d.fotoPrincipal);
    variantes por ancho, con la misma convencion de nombres que el
    resto del sitio: <nombre>-700.avif, <nombre>-900.webp... */
 const baseHero = (d.fotoPrincipal ?? '').replace(/\.(jpe?g|png|webp)$/i, '');
+
+/* El video principal solo sale si sus archivos EXISTEN en public/. Mientras
+   el aliado no entrega el video final, la ficha puede llevar la ruta ya
+   declarada en su .md sin pintar un reproductor roto ni un cuadro vacio.
+   Con capitulos, se exige que existan todos. */
+const enDisco = (ruta) => Boolean(ruta) && existsSync(`public${ruta}`);
+const video =
+  d.videoPrincipal &&
+  enDisco(d.videoPrincipal.poster) &&
+  (d.videoPrincipal.capitulos.length > 0
+    ? d.videoPrincipal.capitulos.every((c) => enDisco(c.src) && enDisco(c.poster))
+    : enDisco(d.videoPrincipal.src))
+    ? d.videoPrincipal
+    : null;
 
 const hayHabitaciones = d.habitaciones.some((h) => !h.pendiente);
 const hayGaleria = d.galeria.length > 0;
@@ -394,18 +409,18 @@ function idHabitacion(nombre) {
       </section>
     )}
 
-    {d.videoPrincipal && (
+    {video && (
       <section class="seccion video-principal" id="video">
         <div class="contenedor video-principal__interior aparecer">
           <div class="video-principal__texto">
             <span class="etiqueta">Recorrido en video</span>
-            <h2>{d.videoPrincipal.titulo}</h2>
-            {d.videoPrincipal.descripcion && <p class="texto-suave">{d.videoPrincipal.descripcion}</p>}
-            {d.videoPrincipal.duracion && <span class="video-principal__duracion">{d.videoPrincipal.duracion}</span>}
+            <h2>{video.titulo}</h2>
+            {video.descripcion && <p class="texto-suave">{video.descripcion}</p>}
+            {video.duracion && <span class="video-principal__duracion">{video.duracion}</span>}
           </div>
-          {d.videoPrincipal.capitulos.length > 0 ? (
+          {video.capitulos.length > 0 ? (
             <div class="video-capitulos">
-              {d.videoPrincipal.capitulos.map((capitulo, i) => (
+              {video.capitulos.map((capitulo, i) => (
                 <article class="video-capitulo">
                   <h3>{i + 1}. {capitulo.titulo}</h3>
                   <video
@@ -414,8 +429,8 @@ function idHabitacion(nombre) {
                     playsinline
                     preload="none"
                     poster={capitulo.poster}
-                    width={d.videoPrincipal.ancho}
-                    height={d.videoPrincipal.alto}
+                    width={video.ancho}
+                    height={video.alto}
                     aria-label={capitulo.titulo}
                   >
                     <source src={capitulo.src} type="video/mp4" />
@@ -425,18 +440,18 @@ function idHabitacion(nombre) {
                 </article>
               ))}
             </div>
-          ) : d.videoPrincipal.src ? (
+          ) : video.src ? (
             <video
               class="video-principal__reproductor"
               controls
               playsinline
               preload="none"
-              poster={d.videoPrincipal.poster}
-              width={d.videoPrincipal.ancho}
-              height={d.videoPrincipal.alto}
-              aria-label={d.videoPrincipal.titulo}
+              poster={video.poster}
+              width={video.ancho}
+              height={video.alto}
+              aria-label={video.titulo}
             >
-              <source src={d.videoPrincipal.src} type="video/mp4" />
+              <source src={video.src} type="video/mp4" />
               Tu navegador no puede reproducir este video.
             </video>
           ) : null}
@@ -780,7 +795,7 @@ function idHabitacion(nombre) {
         <div class="contenedor">
           <div class="encabezado-seccion encabezado-seccion--centrado aparecer">
             <span class="etiqueta">Galería</span>
-            <h2>{d.videoPrincipal ? 'Fotos y video del hospedaje' : 'Fotos del hospedaje'}</h2>
+            <h2>{video ? 'Fotos y video del hospedaje' : 'Fotos del hospedaje'}</h2>
           </div>
           {/* Cada foto va dentro de un boton, igual que en las galerias de
                las habitaciones. Antes eran <div> sueltos: se veian, pero
@@ -804,25 +819,25 @@ function idHabitacion(nombre) {
                   <Foto src={f.imagen} alt={f.alt} forma="cuadrado" />
                 </button>
               ))}
-              {d.videoPrincipal && (
+              {video && (
                 <a
                   class="galeria__video"
                   href="#video"
-                  aria-label={`Reproducir: ${d.videoPrincipal.titulo}`}
+                  aria-label={`Reproducir: ${video.titulo}`}
                 >
                   <img
                     class="foto foto--cuadrado"
-                    src={d.videoPrincipal.poster}
+                    src={video.poster}
                     alt=""
-                    width={d.videoPrincipal.ancho}
-                    height={d.videoPrincipal.alto}
+                    width={video.ancho}
+                    height={video.alto}
                     loading="lazy"
                     decoding="async"
                   />
                   <span class="galeria__video-capa">
                     <span class="galeria__video-play" aria-hidden="true"></span>
                     <span class="galeria__video-texto">Ver recorrido en video</span>
-                    {d.videoPrincipal.duracion && <span class="galeria__video-duracion">{d.videoPrincipal.duracion}</span>}
+                    {video.duracion && <span class="galeria__video-duracion">{video.duracion}</span>}
                   </span>
                 </a>
               )}

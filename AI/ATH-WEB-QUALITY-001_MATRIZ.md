@@ -97,3 +97,12 @@ Orden: Rendimiento / Accesibilidad / Buenas prácticas / SEO.
 | Casa Colonial Centro | 99/100/96/69 | 2,1 s | 0,003 |
 
 SEO 69 en La Margarita y Casa Colonial es esperado: son borradores con `noindex`. Todo ≥ 95 salvo ese caso. Buenas prácticas en 96 (no investigado el 4 % restante). No se midieron blog, guía ni eventos.
+
+## 7. Hotel La Margarita — cierre de media (2026-10-01)
+
+- **Drive**: sin conector ni acceso desde la sesión; no se pudo localizar nada fuera del repo. No hay fotos ni videos nuevos. Se usaron solo las 6 fotos reales ya versionadas (§2).
+- **Video**: soporte listo, pendiente de archivos. Rutas y receta de armado en `docs/video-hotel-la-margarita.md`:
+  - `public/assets/video/hotel-la-margarita/hotel-la-margarita-recorrido-web.mp4`
+  - `public/assets/video/hotel-la-margarita/hotel-la-margarita-poster.webp`
+  La sección «Conoce Hotel La Margarita / Un recorrido real por el hospedaje» solo se pinta si ambos archivos existen. Probado con archivos de prueba (luego eliminados): Lighthouse idéntico (100/100/96/69, LCP 1,7 s) gracias a `preload="none"`.
+- **Hero**: `heroFoto: false` hasta tener fachada real.

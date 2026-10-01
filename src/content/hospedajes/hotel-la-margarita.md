@@ -13,7 +13,7 @@ titulo: Hotel La Margarita en Zipaquirá | Hospedaje para grupos
 descripcion: Hotel en la Calle 12 de Zipaquirá, a una cuadra del terminal. Baño privado y wifi en cada habitación. Desde $ 65.000 por persona; cotizamos grupos.
 ogTitulo: Hotel La Margarita | Zipaquirá
 ogDescripcion: Habitaciones familiares y dobles con baño privado y wifi, a una cuadra del terminal de Zipaquirá. Desde $ 65.000 por persona por noche.
-avisoBorrador: Ficha en preparación. Los datos operativos ya están confirmados. Faltan la foto de fachada, una foto de la habitación doble y la validación de algunos datos (ver lista de pendientes en AI/ATH-WEB-QUALITY-001_MATRIZ.md).
+avisoBorrador: Ficha en preparación. Los datos operativos ya están confirmados. Faltan fotos (fachada y habitación doble), el video del recorrido y la validación de algunos datos (ver AI/ATH-WEB-QUALITY-001_MATRIZ.md).
 avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operación y la entrega de las habitaciones se coordinan con la administración del hotel.
 zona: 'Calle 12 #9-31, Zipaquirá'
 localidad: Zipaquirá
@@ -95,6 +95,13 @@ habitaciones:
     descripcion: El hotel tiene 10 habitaciones dobles, con cama doble. Todas con baño privado y wifi.
     precio: $ 65.000 por persona
     pendiente: false
+videoPrincipal:
+  src: /assets/video/hotel-la-margarita/hotel-la-margarita-recorrido-web.mp4
+  poster: /assets/video/hotel-la-margarita/hotel-la-margarita-poster.webp
+  titulo: Conoce Hotel La Margarita
+  descripcion: Un recorrido real por el hospedaje
+  ancho: 1280
+  alto: 720
 notaHabitaciones: Tarifa pública desde $ 65.000 por persona por noche. La cantidad de personas por habitación se confirma al cotizar.
 heroFoto: false
 tarifas:
