@@ -8,7 +8,7 @@ insignia: '401'
 # contaría las mismas camas dos veces en el total de la página de grupos.
 perteneceA: edificio-algarra
 titulo: Apartamento 401 en Algarra, Zipaquirá | Atheron Suite
-descripcion: Apartamento 401 en el sector de Algarra, Zipaquirá. Una habitación, un baño, cocina, wifi y zona de trabajo. Alojamiento aliado comercializado por Atheron Suite. Consulta disponibilidad por WhatsApp.
+descripcion: Apartamento 401 en el sector de Algarra, Zipaquirá. Una habitación, un baño, cocina, wifi y zona de trabajo. Alojamiento aliado comercializado por Atheron Suite.
 ogTitulo: Apartamento 401 en Algarra, Zipaquirá
 ogDescripcion: Apartamento independiente en Algarra, Zipaquirá, con cocina equipada, wifi y zona de trabajo.
 avisoBorrador: Ficha en preparación. Faltan las fotografías autorizadas y varios datos por confirmar con la administración.

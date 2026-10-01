@@ -10,7 +10,7 @@ orden: 4
 insignia: '04'
 modalidad: habitaciones
 titulo: Apartamentos en Algarra, Zipaquirá | Alojamiento para grupos
-descripcion: Seis apartamentos independientes en el sector de Algarra, Zipaquirá, comercializados por Atheron Suite. Cocina equipada, wifi y zona de trabajo en cada uno, y capacidad grupal de hasta 43 huéspedes bajo confirmación.
+descripcion: Seis apartamentos independientes en el sector de Algarra, Zipaquirá. Cocina equipada, wifi y zona de trabajo en cada uno, y capacidad grupal de hasta 43 huéspedes bajo confirmación.
 ogTitulo: Apartamentos en Algarra | Alojamiento para grupos en Zipaquirá
 ogDescripcion: Seis apartamentos independientes en Algarra, Zipaquirá. Para familias, delegaciones y equipos que necesitan varias unidades a la vez.
 avisoBorrador: ''

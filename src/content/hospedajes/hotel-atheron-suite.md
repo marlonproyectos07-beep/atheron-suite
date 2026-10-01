@@ -9,7 +9,7 @@ grupos:
 orden: 1
 insignia: '01'
 titulo: Hotel Atheron Suite | Hospedaje a 16 min de la Catedral de Sal
-descripcion: Hospedaje en Zipaquirá a 1,4 km de la Catedral de Sal. Wifi, Netflix, cocina compartida y baño privado en tres de sus cinco unidades. Consulta disponibilidad por WhatsApp.
+descripcion: Hospedaje en Zipaquirá a 1,4 km de la Catedral de Sal. Wifi, Netflix, cocina compartida y baño privado en tres de sus cinco unidades.
 ogTitulo: Hotel Atheron Suite | Zipaquirá, Cundinamarca
 ogDescripcion: Hospedaje en Zipaquirá a 16 minutos a pie de la Catedral de Sal. Wifi, Netflix y cocina compartida.
 avisoBorrador: ''
