@@ -148,6 +148,12 @@ const Encabezado = nivel;
       try {
         const gtag = (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag;
         if (typeof gtag === 'function') {
+          gtag('event', 'lead_group', {
+            origin: origen,
+            group_size_range: rangoPersonas(Number(solicitud.personas)),
+            page_path: location.pathname,
+            transport_type: 'beacon',
+          });
           gtag('event', EVENTO_SOLICITUD_GRUPO, {
             event_category: 'conversion',
             origin: origen,

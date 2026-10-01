@@ -42,6 +42,10 @@ export interface Cta {
   evento?: string;
   /** De donde sale el clic. Se completa en cada sitio donde se pinta. */
   origen?: string;
+  /** Que mide el clic: propiedad, grupo, inversion o general. Ver whatsapp.ts. */
+  intencion?: 'propiedad' | 'grupo' | 'inversion' | 'general';
+  /** Propiedad a la que se refiere el clic, para la medicion. */
+  propiedad?: string;
 }
 
 /* ------------------------------------------------------------
@@ -193,6 +197,8 @@ export const ctaConsultarDe = (propiedad: string, localidad: string): Cta => {
     externo: true,
     evento: EVENTO_DISPONIBILIDAD,
     origen: 'ficha_cabecera',
+    intencion: 'propiedad',
+    propiedad,
   };
 };
 

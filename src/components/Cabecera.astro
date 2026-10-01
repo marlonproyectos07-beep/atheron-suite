@@ -57,6 +57,10 @@ const comunes = {
   href: cta.href,
   'data-whatsapp': cta.whatsapp,
   'data-evento': cta.evento,
+  'data-evento-intencion':
+    cta.intencion ??
+    (cta.evento === 'whatsapp_group_quote' ? 'grupo' : cta.propiedad ? 'propiedad' : undefined),
+  'data-evento-propiedad': cta.propiedad,
   ...(cta.externo ? { target: '_blank', rel: 'noopener noreferrer' } : {}),
 };
 const attrEscritorio = { ...comunes, 'data-evento-origen': cta.origen ?? 'cabecera' };

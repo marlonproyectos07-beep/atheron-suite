@@ -31,10 +31,14 @@ interface Props {
   texto?: string;
   /** De donde sale el clic, para la analitica futura. */
   origen?: string;
+  /** Que mide el clic. Casa Colonial pasa "inversion". */
+  intencion?: 'propiedad' | 'grupo' | 'inversion' | 'general';
+  /** Propiedad a la que se refiere el clic, para la medicion. */
+  propiedad?: string;
 }
 
-const { mensaje, texto = 'WhatsApp', origen = 'boton_flotante' } = Astro.props;
-const atributos = atributosWhatsApp(mensaje, { origen });
+const { mensaje, texto = 'WhatsApp', origen = 'boton_flotante', intencion, propiedad } = Astro.props;
+const atributos = atributosWhatsApp(mensaje, { origen, intencion, propiedad });
 ---
 
 <a class="boton boton--whatsapp flotante" {...atributos}>{texto}</a>

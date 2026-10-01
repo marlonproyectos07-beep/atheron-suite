@@ -131,6 +131,21 @@ export const ATRIBUTOS_WHATSAPP = {
 export const EVENTO_DISPONIBILIDAD = 'whatsapp_availability';
 export const EVENTO_GRUPO = 'whatsapp_group_quote';
 
+/* INTENCION DEL CLIC (ATH-WEB-QUALITY-001)
+
+   Es lo que decide QUE evento semantico emite main.js:
+
+     propiedad -> click_whatsapp_property (y booking_intent si el
+                  origen es una ficha)
+     grupo     -> click_whatsapp_group y start_quote
+     inversion -> investment_interest, y NADA mas
+
+   "inversion" nunca se mezcla con booking_intent: Casa Colonial es
+   un proyecto, no una propiedad reservable. Si no se indica, se
+   deduce del propio enlace: evento de grupo = grupo, enlace con
+   propiedad = propiedad, el resto = general (sin evento semantico). */
+export type IntencionClic = 'propiedad' | 'grupo' | 'inversion' | 'general';
+
 interface OpcionesEnlace {
   /** De donde sale el clic: "home_hero", "ficha_pie", "menu_movil"... */
   origen: string;
@@ -138,7 +153,15 @@ interface OpcionesEnlace {
   propiedad?: string;
   /** Nombre del evento. Por defecto, consulta de disponibilidad. */
   evento?: string;
+  /** Que mide el clic. Ver IntencionClic. */
+  intencion?: IntencionClic;
 }
+
+export const intencionDe = (
+  o: Pick<OpcionesEnlace, 'propiedad' | 'evento' | 'intencion'>,
+): IntencionClic =>
+  o.intencion ??
+  (o.evento === EVENTO_GRUPO ? 'grupo' : o.propiedad ? 'propiedad' : 'general');
 
 /** Todos los atributos de un enlace a WhatsApp, listos para {...}. */
 export function atributosWhatsApp(mensaje: string, opciones: OpcionesEnlace) {
@@ -148,6 +171,7 @@ export function atributosWhatsApp(mensaje: string, opciones: OpcionesEnlace) {
     'data-evento': opciones.evento ?? EVENTO_DISPONIBILIDAD,
     'data-evento-origen': opciones.origen,
     'data-evento-propiedad': opciones.propiedad,
+    'data-evento-intencion': intencionDe(opciones),
     ...ATRIBUTOS_WHATSAPP,
   };
 }

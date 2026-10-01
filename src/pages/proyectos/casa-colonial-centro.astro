@@ -71,11 +71,17 @@ import {
    decia una cosa -conversar sobre el proyecto- y abria WhatsApp con
    otra -consultar disponibilidad de un hospedaje-. */
 const ctaCabecera = {
-  texto: 'Conversar por WhatsApp',
+  texto: 'Solicitar información',
   href: enlaceWhatsApp(MENSAJE_GENERAL),
   clase: 'boton--whatsapp',
   whatsapp: MENSAJE_GENERAL,
   externo: true,
+  /* Casa Colonial es un proyecto, no una propiedad reservable: sus
+     clics miden investment_interest y nunca booking_intent. */
+  evento: 'ccc_whatsapp_click',
+  origen: 'ccc_cabecera',
+  intencion: 'inversion' as const,
+  propiedad: 'Casa Colonial Centro',
 };
 
 
@@ -462,6 +468,9 @@ const fichaPagina = {
             href={enlaceWhatsApp(MENSAJE_GENERAL)}
             data-whatsapp={MENSAJE_GENERAL}
             data-evento="ccc_whatsapp_click"
+            data-evento-origen="ccc_cierre"
+            data-evento-intencion="inversion"
+            data-evento-propiedad="Casa Colonial Centro"
             rel="noopener"
             target="_blank"
           >Conversar sobre el proyecto</a>
@@ -537,5 +546,5 @@ const fichaPagina = {
   {/* En main, BotonFlotante recibe el destino por href. Se le pasa ya
       resuelto a wa.me con el mismo mensaje, para que el boton funcione
       desde el primer byte aunque main.js no haya cargado. */}
-  <BotonFlotante href={enlaceWhatsApp(MENSAJE_GENERAL)} mensaje={MENSAJE_GENERAL} />
+  <BotonFlotante href={enlaceWhatsApp(MENSAJE_GENERAL)} mensaje={MENSAJE_GENERAL} texto="Solicitar información" origen="ccc_flotante" intencion="inversion" propiedad="Casa Colonial Centro" />
 </Base>

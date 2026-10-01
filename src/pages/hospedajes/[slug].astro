@@ -227,7 +227,7 @@ function idHabitacion(nombre) {
 >
   <Cabecera enlaces={menuFicha} enlacesMovil={enlacesMovil} cta={ctaConsultarDe(d.nombre, d.localidad)} />
 
-  <main id="contenido">
+  <main id="contenido" data-vista="view_property" data-evento-propiedad={d.nombre}>
     <section class:list={['hero', 'hero--interior', heroFoto && 'hero--foto']}>
       {heroFoto && (
         <picture
@@ -549,6 +549,9 @@ function idHabitacion(nombre) {
                             class="boton boton--contorno"
                             href={destino}
                             data-etiqueta-ver={h.etiquetaVer ?? undefined}
+                            data-evento-ver="view_room"
+                            data-evento-propiedad={d.nombre}
+                            data-evento-habitacion={h.nombre}
                           >Ver fotos y detalles</a>
                           <a
                             class="boton boton--whatsapp"
@@ -609,7 +612,7 @@ function idHabitacion(nombre) {
             {d.habitaciones.map((h, i) => {
               const id = idHabitacion(h.nombre);
               return (
-                <article class="habitacion" id={casa ? `detalle-${id}` : undefined}>
+                <article class="habitacion" id={casa ? `detalle-${id}` : undefined} data-vista-habitacion={h.nombre} data-evento-propiedad={d.nombre}>
                   {casa && <a class="hotel-volver" href="#habitaciones">← Ver todas las opciones</a>}
 
                   {h.galeria.length > 0 ? (
@@ -617,6 +620,9 @@ function idHabitacion(nombre) {
                       type="button"
                       class="habitacion__foto"
                       data-abrir-galeria={`galeria-${i + 1}`}
+                      data-evento-ver="view_room"
+                      data-evento-propiedad={d.nombre}
+                      data-evento-habitacion={h.nombre}
                       aria-label={`Ver las ${h.galeria.length} fotos de ${h.nombre}`}
                     >
                       <Foto
@@ -700,6 +706,9 @@ function idHabitacion(nombre) {
                             type="button"
                             class="boton boton--contorno"
                             data-abrir-galeria={`galeria-${i + 1}`}
+                            data-evento-ver="view_room"
+                            data-evento-propiedad={d.nombre}
+                            data-evento-habitacion={h.nombre}
                           >
                             Ver fotos
                           </button>
