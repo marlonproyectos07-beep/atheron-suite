@@ -81,3 +81,15 @@ export function buildWhatsAppAvailabilityOnlyTools(config) {
   const { checkAvailability } = buildWhatsAppGatewayTools(config);
   return { checkAvailability };
 }
+
+
+/**
+ * HOTEL-016: permite disponibilidad + cotizacion real desde Odoo STAGING,
+ * pero mantiene HOLD/reserva DESHABILITADOS. Asi una pregunta como
+ * "¿cuánto cuesta?" puede responder con tarifa real sin abrir ninguna
+ * operacion comercial.
+ */
+export function buildWhatsAppQuoteOnlyTools(config) {
+  const { checkAvailability, quote } = buildWhatsAppGatewayTools(config);
+  return { checkAvailability, quote };
+}
