@@ -50,6 +50,7 @@ export { REQUIRED_METHODS as MESSAGING_PROVIDER_METHODS };
 export class LabMessagingProvider {
   #handlers = [];
   #sent = [];
+  #media = [];
   #nextId = 1;
   #seenMessageIds = new Set();
   #correlationIds = new Map();
@@ -67,6 +68,18 @@ export class LabMessagingProvider {
   async sendMessage(to, text) {
     const message_id = `LAB-${this.#nextId++}`;
     this.#sent.push({ to, text, message_id });
+    return { message_id };
+  }
+
+  async sendImage(to, link, caption = undefined) {
+    const message_id = `LAB-${this.#nextId++}`;
+    this.#media.push({ to, type: 'image', link, caption, message_id });
+    return { message_id };
+  }
+
+  async sendVideo(to, link, caption = undefined) {
+    const message_id = `LAB-${this.#nextId++}`;
+    this.#media.push({ to, type: 'video', link, caption, message_id });
     return { message_id };
   }
 
@@ -105,5 +118,9 @@ export class LabMessagingProvider {
 
   get sentMessages() {
     return [...this.#sent];
+  }
+
+  get sentMedia() {
+    return [...this.#media];
   }
 }
