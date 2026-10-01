@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { verifySignature } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-webhook-security.mjs';
 import { WhatsAppCloudProvider } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-cloud-adapter.mjs';
 import { createWhatsAppOrchestrator } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-orchestrator.mjs';
-import { buildWhatsAppAvailabilityOnlyTools } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-gateway-tools.mjs';
+import { buildWhatsAppQuoteOnlyTools } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-gateway-tools.mjs';
 import { inspectTestMessage } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-test-gate.mjs';
 import { inspectMetaEvent, ignoredReason, logHotel011Diagnostic } from '../../../../integrations/odoo-hotel-gateway/src/whatsapp-preview-diagnostics.mjs';
 
@@ -81,7 +81,7 @@ function ensureOrchestrator() {
   if (orchestrator) return orchestrator;
   const gatewayConfig = readGatewayConfig();
   if (!gatewayConfig) return null;
-  const tools = buildWhatsAppAvailabilityOnlyTools(gatewayConfig);
+  const tools = buildWhatsAppQuoteOnlyTools(gatewayConfig);
   const observedTools = {
     checkAvailability: async (...args: Parameters<typeof tools.checkAvailability>) => {
       logHotel011Diagnostic('ODOO_STEP', { odoo_call_started: true, odoo_call_status: 'started' });
@@ -94,10 +94,22 @@ function ensureOrchestrator() {
         throw error;
       }
     },
+    quote: async (...args: Parameters<typeof tools.quote>) => {
+      logHotel011Diagnostic('ODOO_STEP', { odoo_call_started: true, odoo_call_status: 'quote_started' });
+      try {
+        const result = await tools.quote(...args);
+        logHotel011Diagnostic('ODOO_STEP', { odoo_call_started: true, odoo_call_status: 'quote_success' });
+        return result;
+      } catch (error) {
+        logHotel011Diagnostic('ODOO_STEP', { odoo_call_started: true, odoo_call_status: 'quote_error' });
+        throw error;
+      }
+    },
   };
   orchestrator = createWhatsAppOrchestrator({
     provider,
     tools: observedTools,
+    allowBookingActions: false,
     onEvent: (e: { type: string }) => {
       // Observabilidad SIN PII: solo el tipo de evento, nunca texto/telefono del cliente.
       // eslint-disable-next-line no-console
@@ -169,7 +181,8 @@ export const POST: APIRoute = async ({ request }) => {
   // Puente temporal HOTEL-011 -> capacidades conversacionales HOTEL-013.
   // Se habilita SOLO en este Preview TEST, manteniendo remitente y Phone Number ID autorizados.
   const naturalTextEnabled = process.env.VERCEL_ENV === 'preview'
-    && process.env.VERCEL_GIT_COMMIT_REF === 'feature/ath-odoo-hotel-011-whatsapp-controlled-pilot';
+    && ['feature/ath-odoo-hotel-011-whatsapp-controlled-pilot', 'feature/ath-odoo-hotel-016-whatsapp-natural-media']
+      .includes(process.env.VERCEL_GIT_COMMIT_REF ?? '');
   const gate = inspectTestMessage(messages, {
     allowedFrom: process.env.WHATSAPP_TEST_ALLOWED_FROM,
     phoneNumberId: process.env.META_PHONE_NUMBER_ID,
