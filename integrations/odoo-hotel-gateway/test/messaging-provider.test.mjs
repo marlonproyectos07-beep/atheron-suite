@@ -29,3 +29,25 @@ test('verifyWebhook nunca habla con Meta -- siempre responde localmente', () => 
   const provider = new LabMessagingProvider();
   assert.equal(provider.verifyWebhook({ any: 'query' }), true);
 });
+
+// ATH-ODOO-HOTEL-011, Fase 2: contrato ampliado.
+
+test('deduplicate: la primera vez que ve un message_id devuelve false, la segunda true (nunca procesa dos veces)', () => {
+  const provider = new LabMessagingProvider();
+  assert.equal(provider.deduplicate('wamid.ABC123'), false);
+  assert.equal(provider.deduplicate('wamid.ABC123'), true);
+  assert.equal(provider.deduplicate('wamid.OTRO'), false);
+});
+
+test('correlationId es estable: el mismo message_id siempre produce el mismo correlation_id', () => {
+  const provider = new LabMessagingProvider();
+  const first = provider.correlationId('wamid.ABC123');
+  const second = provider.correlationId('wamid.ABC123');
+  assert.equal(first, second);
+  assert.notEqual(first, provider.correlationId('wamid.OTRO'));
+});
+
+test('markDelivered no lanza y no llama a ningun servicio real', async () => {
+  const provider = new LabMessagingProvider();
+  assert.equal(await provider.markDelivered('wamid.ABC123'), true);
+});

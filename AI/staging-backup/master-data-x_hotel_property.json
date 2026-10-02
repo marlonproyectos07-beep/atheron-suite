@@ -1,0 +1,139 @@
+[
+  {
+    "id": 1,
+    "display_name": "HOTEL ATHERON SUITE",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-23 17:09:28",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:36:32",
+    "x_city": "Zipaquirá",
+    "x_tz": "America/Bogota",
+    "x_checkin_time": 15,
+    "x_checkout_time": 11,
+    "x_notes": "\nHOTEL-004: x_hold_hours es parámetro STAGING (PENDIENTE_APROBACION_CEO); vacío = valor técnico 2h del motor.",
+    "x_name": "HOTEL ATHERON SUITE",
+    "x_historic_name": "La Magia de Zipaquirá",
+    "x_contract_model": "OPERACION_DIRECTA_ATHERON",
+    "x_address": "Cra. 9 #10-32, Zipaquirá",
+    "x_capacity_whole": 22,
+    "x_hold_hours": 2,
+    "x_deposit_pct": 30,
+    "x_company_id": [
+      5,
+      "ATHERON S.A.S"
+    ],
+    "x_active": true,
+    "x_unit_ids": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "x_hk_stage_ready_id": [
+      65,
+      "LISTA"
+    ],
+    "x_hk_stage_issue_id": [
+      127,
+      "INCIDENCIA"
+    ],
+    "x_hk_project_id": [
+      35,
+      "House Keeping"
+    ],
+    "x_hk_stage_todo_id": [
+      62,
+      "POR LIMPIAR"
+    ],
+    "x_hk_stage_doing_id": [
+      63,
+      "EN LIMPIEZA"
+    ]
+  },
+  {
+    "id": 2,
+    "display_name": "CASA ALGARRA",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:01",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:36:33",
+    "x_city": false,
+    "x_tz": "America/Bogota",
+    "x_checkin_time": 0,
+    "x_checkout_time": 0,
+    "x_notes": "HOTEL-004: creada desde ATHERON HOTEL MASTER DATA 2026-09-24 (capacidad comercial/extraordinaria). Check-in/out, HOLD y modelo de contrato NO suministrados: vacíos (el motor usa sus valores técnicos por defecto 15:00/11:00/2h, pendientes CEO).\nHOTEL-004: x_hold_hours es parámetro STAGING (PENDIENTE_APROBACION_CEO); vacío = valor técnico 2h del motor.",
+    "x_name": "CASA ALGARRA",
+    "x_historic_name": false,
+    "x_contract_model": false,
+    "x_address": false,
+    "x_capacity_whole": 0,
+    "x_hold_hours": 0,
+    "x_deposit_pct": 0,
+    "x_company_id": [
+      5,
+      "ATHERON S.A.S"
+    ],
+    "x_active": true,
+    "x_unit_ids": [
+      7
+    ],
+    "x_hk_stage_ready_id": false,
+    "x_hk_stage_issue_id": false,
+    "x_hk_project_id": false,
+    "x_hk_stage_todo_id": false,
+    "x_hk_stage_doing_id": false
+  },
+  {
+    "id": 3,
+    "display_name": "CASA NEUSA",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:02",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:36:33",
+    "x_city": false,
+    "x_tz": "America/Bogota",
+    "x_checkin_time": 0,
+    "x_checkout_time": 0,
+    "x_notes": "HOTEL-004: creada desde ATHERON HOTEL MASTER DATA 2026-09-24 (capacidad comercial/extraordinaria). Check-in/out, HOLD y modelo de contrato NO suministrados: vacíos (el motor usa sus valores técnicos por defecto 15:00/11:00/2h, pendientes CEO).\nHOTEL-004: x_hold_hours es parámetro STAGING (PENDIENTE_APROBACION_CEO); vacío = valor técnico 2h del motor.",
+    "x_name": "CASA NEUSA",
+    "x_historic_name": false,
+    "x_contract_model": false,
+    "x_address": false,
+    "x_capacity_whole": 0,
+    "x_hold_hours": 0,
+    "x_deposit_pct": 0,
+    "x_company_id": [
+      5,
+      "ATHERON S.A.S"
+    ],
+    "x_active": true,
+    "x_unit_ids": [
+      8
+    ],
+    "x_hk_stage_ready_id": false,
+    "x_hk_stage_issue_id": false,
+    "x_hk_project_id": false,
+    "x_hk_stage_todo_id": false,
+    "x_hk_stage_doing_id": false
+  }
+]

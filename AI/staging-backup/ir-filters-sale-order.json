@@ -1,0 +1,28 @@
+[
+  {
+    "id": 26,
+    "name": "Operación del día (sin canceladas)",
+    "domain": "[('x_hotel_unit_id', '!=', False), ('x_reservation_status', 'not in', ['cancelled', 'no_show'])]",
+    "context": "{}",
+    "is_default": true,
+    "user_ids": [],
+    "action_id": [
+      1909,
+      "Hotel v1 — Reservas hotel"
+    ]
+  },
+  {
+    "id": 23,
+    "name": "REVISION DE VENTAS CCTV",
+    "domain": "[\"&\", (\"order_line.product_id.categ_id\", \"not in\", [6, 7, 11, 12, 13, 1241, 1242, 1247, 1296]), (\"state\", \"=\", \"sale\")]",
+    "context": "{'group_by': []}",
+    "is_default": false,
+    "user_ids": [
+      2
+    ],
+    "action_id": [
+      551,
+      "Quotations"
+    ]
+  }
+]

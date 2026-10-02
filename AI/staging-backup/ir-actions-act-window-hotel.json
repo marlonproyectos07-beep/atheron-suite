@@ -1,0 +1,274 @@
+[
+  {
+    "id": 682,
+    "name": "Abandoned Carts",
+    "res_model": "sale.order",
+    "domain": "[('is_abandoned_cart', '=', 1)]",
+    "context": "{'show_sale': True, 'create': False, 'public_partner_id': 4, 'search_default_recovery_email': True}",
+    "view_mode": "list,kanban,form,activity"
+  },
+  {
+    "id": 985,
+    "name": "Create Rental Orders",
+    "res_model": "sale.order",
+    "domain": false,
+    "context": "\n            {\n                'in_rental_app': 1,\n            }\n        ",
+    "view_mode": "form"
+  },
+  {
+    "id": 1912,
+    "name": "Hotel v1 — Políticas de anticipo",
+    "res_model": "x_hotel_deposit_policy",
+    "domain": false,
+    "context": "{}",
+    "view_mode": "list,form"
+  },
+  {
+    "id": 1910,
+    "name": "Hotel v1 — Propiedades",
+    "res_model": "x_hotel_property",
+    "domain": false,
+    "context": "{}",
+    "view_mode": "list,form"
+  },
+  {
+    "id": 1909,
+    "name": "Hotel v1 — Reservas hotel",
+    "res_model": "sale.order",
+    "domain": "[('x_hotel_unit_id','!=',False)]",
+    "context": "{}",
+    "view_mode": "list,form,kanban"
+  },
+  {
+    "id": 1913,
+    "name": "Hotel v1 — Tarifas",
+    "res_model": "x_hotel_rate",
+    "domain": false,
+    "context": "{}",
+    "view_mode": "list,form"
+  },
+  {
+    "id": 1911,
+    "name": "Hotel v1 — Unidades",
+    "res_model": "x_hotel_unit",
+    "domain": false,
+    "context": "{}",
+    "view_mode": "list,form"
+  },
+  {
+    "id": 560,
+    "name": "New Quotation",
+    "res_model": "sale.order",
+    "domain": false,
+    "context": "{\n                'search_default_team_id': [active_id],\n                'default_team_id': active_id,\n                'default_user_id': uid,\n        }\n        ",
+    "view_mode": "form"
+  },
+  {
+    "id": 1236,
+    "name": "Orden venta",
+    "res_model": "sale.order",
+    "domain": "[('opportunity_id', '=', active_id)]",
+    "context": "{'search_default_opportunity_id': active_id,'default_opportunity_id': active_id}",
+    "view_mode": "list,form"
+  },
+  {
+    "id": 678,
+    "name": "Orders",
+    "res_model": "sale.order",
+    "domain": "[]",
+    "context": "{'show_sale': True, 'search_default_order_confirmed': 1, 'search_default_from_website': 1}",
+    "view_mode": "list,form,kanban,activity"
+  },
+  {
+    "id": 1508,
+    "name": "Orders",
+    "res_model": "sale.order",
+    "domain": "[(\"x_order_involves_room\", \"=\", True)]",
+    "context": "{'search_default_filter_today': 1, 'in_rental_app': 1, 'search_default_from_rental': 1, 'group_by': ['rental_status']}",
+    "view_mode": "kanban,list,form"
+  },
+  {
+    "id": 680,
+    "name": "Orders To Invoice",
+    "res_model": "sale.order",
+    "domain": "[('state', '=', 'sale'), ('order_line', '!=', False), ('invoice_status', '=', 'to invoice'), ('website_id', '!=', False)]",
+    "context": "{'show_sale': True, 'search_default_order_confirmed': 1, 'create': False}",
+    "view_mode": "list,form,kanban"
+  },
+  {
+    "id": 553,
+    "name": "Orders to Invoice",
+    "res_model": "sale.order",
+    "domain": "[('invoice_status','=','to invoice')]",
+    "context": "{'create': False}",
+    "view_mode": "list,form,calendar,graph,pivot,kanban,activity"
+  },
+  {
+    "id": 554,
+    "name": "Orders to Upsell",
+    "res_model": "sale.order",
+    "domain": "[('invoice_status','=','upselling')]",
+    "context": "{'create': False}",
+    "view_mode": "list,form,calendar,graph,pivot,kanban,activity"
+  },
+  {
+    "id": 568,
+    "name": "Quotation",
+    "res_model": "sale.order",
+    "domain": "[('opportunity_id', '=', active_id)]",
+    "context": "{'search_default_opportunity_id': active_id, 'default_opportunity_id': active_id}",
+    "view_mode": "form,list,graph"
+  },
+  {
+    "id": 551,
+    "name": "Quotations",
+    "res_model": "sale.order",
+    "domain": false,
+    "context": "{'search_default_my_quotation': 1}",
+    "view_mode": "list,kanban,form,calendar,pivot,graph,activity,map"
+  },
+  {
+    "id": 552,
+    "name": "Quotations",
+    "res_model": "sale.order",
+    "domain": false,
+    "context": "{'search_default_my_quotation': 1}",
+    "view_mode": "list,kanban,form,calendar,pivot,graph,activity"
+  },
+  {
+    "id": 559,
+    "name": "Quotations",
+    "res_model": "sale.order",
+    "domain": "[]",
+    "context": "{\n                'search_default_team_id': [active_id],\n                'default_team_id': active_id,\n                'show_address': 1,\n            }\n        ",
+    "view_mode": "list,form,calendar,graph,kanban,pivot"
+  },
+  {
+    "id": 1530,
+    "name": "Quotations",
+    "res_model": "sale.order",
+    "domain": "[('subscription_state', 'in', ['1_draft', '2_renewal', '3_progress', '4_paused', '5_renewed', '6_churn'])]",
+    "context": "{\n            'search_default_my_subscriptions': 1,\n        }",
+    "view_mode": "list,kanban,form,pivot,graph,cohort,activity"
+  },
+  {
+    "id": 566,
+    "name": "Quotations and Sales",
+    "res_model": "sale.order",
+    "domain": "[('partner_id', 'child_of', active_ids)]",
+    "context": "{'default_partner_id': active_id}",
+    "view_mode": "list,kanban,form,graph"
+  },
+  {
+    "id": 977,
+    "name": "Rental Orders",
+    "res_model": "sale.order",
+    "domain": false,
+    "context": "{'in_rental_app': 1, 'search_default_from_rental': 1}",
+    "view_mode": "list,kanban,form,calendar,pivot,graph,activity"
+  },
+  {
+    "id": 978,
+    "name": "Rental Orders",
+    "res_model": "sale.order",
+    "domain": "[('is_rental_order', '=', True)]",
+    "context": "{'in_rental_app': 1, 'search_default_filter_today': 1, 'search_default_filter_to_pickup': 1}",
+    "view_mode": "list,kanban,form,calendar,pivot,graph,activity"
+  },
+  {
+    "id": 979,
+    "name": "Rental Orders",
+    "res_model": "sale.order",
+    "domain": "[('is_rental_order', '=', True)]",
+    "context": "{'in_rental_app': 1, 'search_default_filter_today': 1, 'search_default_filter_to_return': 1}",
+    "view_mode": "list,kanban,form,calendar,pivot,graph,activity"
+  },
+  {
+    "id": 1543,
+    "name": "Retention Analysis",
+    "res_model": "sale.order",
+    "domain": "[\n            ('is_subscription', '=',True), ('subscription_state', 'not in', ['1_draft', '2_renewal', '5_renewed', '7_upsell'])]\n        ",
+    "context": "{}",
+    "view_mode": "cohort"
+  },
+  {
+    "id": 550,
+    "name": "Sales Orders",
+    "res_model": "sale.order",
+    "domain": "[('state', 'not in', ('draft', 'sent', 'cancel'))]",
+    "context": "{'search_default_sales' : 1}",
+    "view_mode": "list,kanban,form,calendar,pivot,graph,activity,map"
+  },
+  {
+    "id": 561,
+    "name": "Sales Orders",
+    "res_model": "sale.order",
+    "domain": "[('state','not in',('draft','sent','cancel'))]",
+    "context": "{\n                'search_default_team_id': [active_id],\n                'default_team_id': active_id,\n            }\n        ",
+    "view_mode": "list,form,calendar,graph,kanban,pivot"
+  },
+  {
+    "id": 562,
+    "name": "Sales Orders",
+    "res_model": "sale.order",
+    "domain": "[('invoice_status','=','to invoice')]",
+    "context": "{\n                'search_default_team_id': [active_id],\n                'default_team_id': active_id,\n            }\n        ",
+    "view_mode": "list,form,calendar,graph,kanban,pivot"
+  },
+  {
+    "id": 1517,
+    "name": "Stays",
+    "res_model": "sale.order",
+    "domain": "[('x_guests', '=', active_id)]",
+    "context": "{'search_default_x_guests': active_id,'default_x_guests': [active_id], 'form_view_ref': 'booking_engine.rental_order_view'}",
+    "view_mode": "list,form"
+  },
+  {
+    "id": 1526,
+    "name": "Subscriptions",
+    "res_model": "sale.order",
+    "domain": "[('subscription_state', 'in', ['1_draft', '3_progress', '4_paused', '6_churn'])]",
+    "context": "{\n            'default_subscription_state': '1_draft',\n            'search_default_progress': 1,\n            'search_default_paused': 1,\n        }",
+    "view_mode": "list,kanban,form,pivot,graph,cohort,activity"
+  },
+  {
+    "id": 1527,
+    "name": "Subscriptions",
+    "res_model": "sale.order",
+    "domain": false,
+    "context": "{\n            'search_default_sale_order_template_id': [active_id],\n            'default_sale_order_template_id': active_id,\n        }\n        ",
+    "view_mode": "list,form,kanban,pivot,graph,activity"
+  },
+  {
+    "id": 1528,
+    "name": "To Renew",
+    "res_model": "sale.order",
+    "domain": "[('subscription_state', '!=', False)]",
+    "context": "{\n            'search_default_my_subscription':1,\n            'search_default_to_renew':1,\n            'default_subscription_state': '1_draft',\n        }",
+    "view_mode": "list,form,pivot,graph,kanban,cohort,activity"
+  },
+  {
+    "id": 679,
+    "name": "Unpaid Orders",
+    "res_model": "sale.order",
+    "domain": "[('state', '=', 'sent'), ('website_id', '!=', False)]",
+    "context": "{'show_sale': True, 'create': False}",
+    "view_mode": "list,form,kanban,activity"
+  },
+  {
+    "id": 681,
+    "name": "Unpaid Orders",
+    "res_model": "sale.order",
+    "domain": "[('state', '=', 'sent'), ('website_id', '!=', False)]",
+    "context": "{'show_sale': True, 'create': False}",
+    "view_mode": "list,kanban,form,activity"
+  },
+  {
+    "id": 1529,
+    "name": "Upsells",
+    "res_model": "sale.order",
+    "domain": "[('subscription_state', '=', '7_upsell')]",
+    "context": "{\n            'create': False,\n        }",
+    "view_mode": "list,form,pivot,graph,kanban,cohort,activity"
+  }
+]

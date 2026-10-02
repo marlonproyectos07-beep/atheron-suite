@@ -1,0 +1,362 @@
+[
+  {
+    "id": 1,
+    "display_name": "201",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-23 17:09:28",
+    "write_uid": [
+      1,
+      "OdooBot"
+    ],
+    "write_date": "2026-09-30 17:06:38",
+    "x_cap_base": 2,
+    "x_name": "201",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_unit_type": "fisica",
+    "x_resource_id": [
+      28,
+      "201 La magia - Baño compartido"
+    ],
+    "x_role_id": [
+      29,
+      "201 Habitación con Baño Compartido  - La Magia de Zipaquirá"
+    ],
+    "x_product_tmpl_id": [
+      12135,
+      "[MAGIA-201] 201 Habitación con Baño Compartido  - La Magia de Zipaquirá"
+    ],
+    "x_cap_comercial": 2,
+    "x_cap_extra": 0,
+    "x_cap_extra_status": false,
+    "x_requires_approval_extra": false,
+    "x_cap_notes": false,
+    "x_lock_touch": "2026-09-30 17:06:38",
+    "x_active": true,
+    "x_sequence": 10,
+    "x_child_ids": [],
+    "x_parent_ids": [
+      6
+    ]
+  },
+  {
+    "id": 2,
+    "display_name": "202",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-23 17:09:29",
+    "write_uid": [
+      1,
+      "OdooBot"
+    ],
+    "write_date": "2026-09-30 03:15:51",
+    "x_cap_base": 4,
+    "x_name": "202",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_unit_type": "fisica",
+    "x_resource_id": [
+      29,
+      "202 La magia - Baño compartido"
+    ],
+    "x_role_id": [
+      19,
+      "202 Habitación con Baño Compartido  - La Magia de Zipaquirá"
+    ],
+    "x_product_tmpl_id": [
+      12139,
+      "[MAGIA-202] 202 Habitación con Baño Compartido  - La Magia de Zipaquirá"
+    ],
+    "x_cap_comercial": 4,
+    "x_cap_extra": 0,
+    "x_cap_extra_status": false,
+    "x_requires_approval_extra": false,
+    "x_cap_notes": false,
+    "x_lock_touch": "2026-09-30 03:15:52",
+    "x_active": true,
+    "x_sequence": 20,
+    "x_child_ids": [],
+    "x_parent_ids": [
+      6
+    ]
+  },
+  {
+    "id": 3,
+    "display_name": "203",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-23 17:09:30",
+    "write_uid": [
+      1,
+      "OdooBot"
+    ],
+    "write_date": "2026-09-30 03:28:19",
+    "x_cap_base": 4,
+    "x_name": "203",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_unit_type": "fisica",
+    "x_resource_id": [
+      30,
+      "203 La magia - Baño privado"
+    ],
+    "x_role_id": [
+      30,
+      "203 Habitación con Baño Privado  - La Magia de Zipaquirá"
+    ],
+    "x_product_tmpl_id": [
+      12140,
+      "[MAGIA-203] 203 Habitación con Baño Privado  - La Magia de Zipaquirá"
+    ],
+    "x_cap_comercial": 4,
+    "x_cap_extra": 0,
+    "x_cap_extra_status": false,
+    "x_requires_approval_extra": false,
+    "x_cap_notes": false,
+    "x_lock_touch": "2026-09-30 03:28:19",
+    "x_active": true,
+    "x_sequence": 30,
+    "x_child_ids": [],
+    "x_parent_ids": [
+      6
+    ]
+  },
+  {
+    "id": 4,
+    "display_name": "301",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-23 17:09:31",
+    "write_uid": [
+      1,
+      "OdooBot"
+    ],
+    "write_date": "2026-09-29 15:15:41",
+    "x_cap_base": 6,
+    "x_name": "301",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_unit_type": "fisica",
+    "x_resource_id": [
+      31,
+      "301 La magia - Habitación Suite"
+    ],
+    "x_role_id": [
+      37,
+      "301 Habitación Suite - La Magia de Zipaquirá"
+    ],
+    "x_product_tmpl_id": [
+      12136,
+      "[MAGIA-301] 301 Habitación Suite - La Magia de Zipaquirá"
+    ],
+    "x_cap_comercial": 7,
+    "x_cap_extra": 8,
+    "x_cap_extra_status": "pendiente",
+    "x_requires_approval_extra": true,
+    "x_cap_notes": "Base cómoda 6. Comercial documentada 7. Acomodación adicional posible hasta 8: EXTRAORDINARIO/PENDIENTE, no definitivo.",
+    "x_lock_touch": "2026-09-29 15:15:43",
+    "x_active": true,
+    "x_sequence": 40,
+    "x_child_ids": [],
+    "x_parent_ids": [
+      6
+    ]
+  },
+  {
+    "id": 5,
+    "display_name": "302",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-23 17:09:31",
+    "write_uid": [
+      1,
+      "OdooBot"
+    ],
+    "write_date": "2026-09-29 15:16:03",
+    "x_cap_base": 3,
+    "x_name": "302",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_unit_type": "fisica",
+    "x_resource_id": [
+      32,
+      "302 La magia - Baño privado"
+    ],
+    "x_role_id": [
+      18,
+      "302 Habitación con Baño Privado  - La Magia de Zipaquirá"
+    ],
+    "x_product_tmpl_id": [
+      12134,
+      "[MAGIA-302] 302 Habitación con Baño Privado  - La Magia de Zipaquirá"
+    ],
+    "x_cap_comercial": 3,
+    "x_cap_extra": 4,
+    "x_cap_extra_status": "confirmada",
+    "x_requires_approval_extra": true,
+    "x_cap_notes": "Base 3, comercial 3. Hasta 4 bajo condición/aprobación.",
+    "x_lock_touch": "2026-09-29 15:16:03",
+    "x_active": true,
+    "x_sequence": 50,
+    "x_child_ids": [],
+    "x_parent_ids": [
+      6
+    ]
+  },
+  {
+    "id": 6,
+    "display_name": "CASA COMPLETA",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-23 17:09:31",
+    "write_uid": [
+      1,
+      "OdooBot"
+    ],
+    "write_date": "2026-09-30 17:06:38",
+    "x_cap_base": 0,
+    "x_name": "CASA COMPLETA",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_unit_type": "compuesta",
+    "x_resource_id": [
+      79,
+      "Casa Completa - La Magia de Zipaquirá"
+    ],
+    "x_role_id": [
+      69,
+      "Casa La Magia de Zipaquirá - Completa"
+    ],
+    "x_product_tmpl_id": [
+      58223,
+      "[CASA-MAGIA] Casa Completa - La Magia de Zipaquirá"
+    ],
+    "x_cap_comercial": 22,
+    "x_cap_extra": 0,
+    "x_cap_extra_status": false,
+    "x_requires_approval_extra": false,
+    "x_cap_notes": "Unidad comercial compuesta. Capacidad base no documentada (no inventada).",
+    "x_lock_touch": "2026-09-30 17:06:38",
+    "x_active": true,
+    "x_sequence": 60,
+    "x_child_ids": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "x_parent_ids": []
+  },
+  {
+    "id": 7,
+    "display_name": "CASA COMPLETA",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:04",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:53:37",
+    "x_cap_base": 0,
+    "x_name": "CASA COMPLETA",
+    "x_property_id": [
+      2,
+      "CASA ALGARRA"
+    ],
+    "x_unit_type": "fisica",
+    "x_resource_id": [
+      34,
+      "Casa Algarra"
+    ],
+    "x_role_id": [
+      31,
+      "Casa Algarra"
+    ],
+    "x_product_tmpl_id": [
+      58271,
+      "[CASA-ALGARRA] Casa Completa - Algarra"
+    ],
+    "x_cap_comercial": 22,
+    "x_cap_extra": 25,
+    "x_cap_extra_status": "confirmada",
+    "x_requires_approval_extra": true,
+    "x_cap_notes": "Maestro 2026-09-24: comercial 22, extraordinaria 25 (requiere aprobación). Capacidad base NO suministrada (0 = sin dato). Conflicto legacy: automatización 78 valida 2–20 personas por x_personas.",
+    "x_lock_touch": "2026-09-24 11:53:37",
+    "x_active": true,
+    "x_sequence": 10,
+    "x_child_ids": [],
+    "x_parent_ids": []
+  },
+  {
+    "id": 8,
+    "display_name": "CASA COMPLETA",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:31:05",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:51:18",
+    "x_cap_base": 0,
+    "x_name": "CASA COMPLETA",
+    "x_property_id": [
+      3,
+      "CASA NEUSA"
+    ],
+    "x_unit_type": "fisica",
+    "x_resource_id": [
+      33,
+      "Casa Campestre Neusa"
+    ],
+    "x_role_id": [
+      32,
+      "Casa Campestre Neusa"
+    ],
+    "x_product_tmpl_id": [
+      58272,
+      "[CASA-NEUSA] Casa Completa - Campestre Neusa"
+    ],
+    "x_cap_comercial": 8,
+    "x_cap_extra": 10,
+    "x_cap_extra_status": "confirmada",
+    "x_requires_approval_extra": true,
+    "x_cap_notes": "Maestro 2026-09-24: comercial 8, extraordinaria 10 (requiere aprobación). Capacidad base NO suministrada (0 = sin dato). Legacy automatización 139 valida 2–10 por x_personas.",
+    "x_lock_touch": "2026-09-24 11:51:18",
+    "x_active": true,
+    "x_sequence": 10,
+    "x_child_ids": [],
+    "x_parent_ids": []
+  }
+]

@@ -1,0 +1,676 @@
+[
+  {
+    "id": 1,
+    "display_name": "RATE-AHS-201-OCC",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:11:35",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:50:16",
+    "x_currency": "COP",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_unit_id": [
+      1,
+      "201"
+    ],
+    "x_price_night": 0,
+    "x_base_guests": 0,
+    "x_extra_person_price": 0,
+    "x_date_from": "2026-09-24",
+    "x_date_to": false,
+    "x_min_group": 0,
+    "x_source": "ATHERON HOTEL MASTER DATA",
+    "x_active": true,
+    "x_name": "RATE-AHS-201-OCC",
+    "x_rule_code": "RATE-AHS-201-OCC",
+    "x_property_code": "AHS",
+    "x_notes": "Capacidad comercial maestra 2.",
+    "x_pricing_model": "per_occupancy",
+    "x_commercial_status": "VERIFICADO_WEB",
+    "x_gov_state": "approved",
+    "x_price_person_night": 0,
+    "x_price_from": 0,
+    "x_max_guests": 0,
+    "x_min_nights": 0,
+    "x_priority": 10,
+    "x_source_version": "2026-09-24",
+    "x_version": 1,
+    "x_approved_by": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "x_approved_at": "2026-09-24 11:50:16",
+    "x_line_ids": [
+      27,
+      28
+    ],
+    "x_tax_mode": "pending_tax_definition",
+    "x_supersedes_id": false,
+    "x_change_reason": "HOTEL-004: carga gobernada desde ATHERON HOTEL MASTER DATA 2026-09-24 entregado por el Director de Orquesta. Tratamiento tributario separado: PENDING_TAX_DEFINITION.",
+    "x_group_price_person": 0,
+    "x_reference_values": false
+  },
+  {
+    "id": 2,
+    "display_name": "RATE-AHS-202-OCC",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:11:36",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:50:17",
+    "x_currency": "COP",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_unit_id": [
+      2,
+      "202"
+    ],
+    "x_price_night": 0,
+    "x_base_guests": 0,
+    "x_extra_person_price": 0,
+    "x_date_from": "2026-09-24",
+    "x_date_to": false,
+    "x_min_group": 0,
+    "x_source": "ATHERON HOTEL MASTER DATA",
+    "x_active": true,
+    "x_name": "RATE-AHS-202-OCC",
+    "x_rule_code": "RATE-AHS-202-OCC",
+    "x_property_code": "AHS",
+    "x_notes": "Capacidad comercial maestra 4.",
+    "x_pricing_model": "per_occupancy",
+    "x_commercial_status": "VERIFICADO_WEB",
+    "x_gov_state": "approved",
+    "x_price_person_night": 0,
+    "x_price_from": 0,
+    "x_max_guests": 0,
+    "x_min_nights": 0,
+    "x_priority": 10,
+    "x_source_version": "2026-09-24",
+    "x_version": 1,
+    "x_approved_by": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "x_approved_at": "2026-09-24 11:50:17",
+    "x_line_ids": [
+      29,
+      30,
+      31,
+      32
+    ],
+    "x_tax_mode": "pending_tax_definition",
+    "x_supersedes_id": false,
+    "x_change_reason": "HOTEL-004: carga gobernada desde ATHERON HOTEL MASTER DATA 2026-09-24 entregado por el Director de Orquesta. Tratamiento tributario separado: PENDING_TAX_DEFINITION.",
+    "x_group_price_person": 0,
+    "x_reference_values": false
+  },
+  {
+    "id": 3,
+    "display_name": "RATE-AHS-203-OCC",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:11:38",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:50:17",
+    "x_currency": "COP",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_unit_id": [
+      3,
+      "203"
+    ],
+    "x_price_night": 0,
+    "x_base_guests": 0,
+    "x_extra_person_price": 0,
+    "x_date_from": "2026-09-24",
+    "x_date_to": false,
+    "x_min_group": 0,
+    "x_source": "ATHERON HOTEL MASTER DATA",
+    "x_active": true,
+    "x_name": "RATE-AHS-203-OCC",
+    "x_rule_code": "RATE-AHS-203-OCC",
+    "x_property_code": "AHS",
+    "x_notes": "Capacidad comercial maestra 4.\nDevuelta a DRAFT por edición de línea (Marlon Parra villarreal, 2026-09-24 11:36:02.787686 UTC)",
+    "x_pricing_model": "per_occupancy",
+    "x_commercial_status": "VERIFICADO_WEB",
+    "x_gov_state": "approved",
+    "x_price_person_night": 0,
+    "x_price_from": 0,
+    "x_max_guests": 0,
+    "x_min_nights": 0,
+    "x_priority": 10,
+    "x_source_version": "2026-09-24",
+    "x_version": 1,
+    "x_approved_by": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "x_approved_at": "2026-09-24 11:50:17",
+    "x_line_ids": [
+      33,
+      34,
+      35,
+      36
+    ],
+    "x_tax_mode": "pending_tax_definition",
+    "x_supersedes_id": false,
+    "x_change_reason": "HOTEL-004: carga gobernada desde ATHERON HOTEL MASTER DATA 2026-09-24 entregado por el Director de Orquesta. Tratamiento tributario separado: PENDING_TAX_DEFINITION.",
+    "x_group_price_person": 0,
+    "x_reference_values": false
+  },
+  {
+    "id": 4,
+    "display_name": "RATE-AHS-301-OCC",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:11:38",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:50:17",
+    "x_currency": "COP",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_unit_id": [
+      4,
+      "301"
+    ],
+    "x_price_night": 0,
+    "x_base_guests": 0,
+    "x_extra_person_price": 0,
+    "x_date_from": "2026-09-24",
+    "x_date_to": false,
+    "x_min_group": 0,
+    "x_source": "ATHERON HOTEL MASTER DATA",
+    "x_active": true,
+    "x_name": "RATE-AHS-301-OCC",
+    "x_rule_code": "RATE-AHS-301-OCC",
+    "x_property_code": "AHS",
+    "x_notes": "Tarifas 1–7 verificadas en fuente comercial. Fuente anterior marcada CONFLICTO_CAPACIDAD: capacidad NO modificada (HOTEL-002: base 6/comercial 7/extra 8 con aprobación). Huésped 8 SIN tarifa aprobada → requires_quote + confirmación manual.",
+    "x_pricing_model": "per_occupancy",
+    "x_commercial_status": "VERIFICADO_WEB",
+    "x_gov_state": "approved",
+    "x_price_person_night": 0,
+    "x_price_from": 0,
+    "x_max_guests": 0,
+    "x_min_nights": 0,
+    "x_priority": 10,
+    "x_source_version": "2026-09-24",
+    "x_version": 1,
+    "x_approved_by": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "x_approved_at": "2026-09-24 11:50:17",
+    "x_line_ids": [
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43
+    ],
+    "x_tax_mode": "pending_tax_definition",
+    "x_supersedes_id": false,
+    "x_change_reason": "HOTEL-004: carga gobernada desde ATHERON HOTEL MASTER DATA 2026-09-24 entregado por el Director de Orquesta. Tratamiento tributario separado: PENDING_TAX_DEFINITION.",
+    "x_group_price_person": 0,
+    "x_reference_values": false
+  },
+  {
+    "id": 5,
+    "display_name": "RATE-AHS-302-OCC",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:11:40",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:50:17",
+    "x_currency": "COP",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_unit_id": [
+      5,
+      "302"
+    ],
+    "x_price_night": 0,
+    "x_base_guests": 0,
+    "x_extra_person_price": 0,
+    "x_date_from": "2026-09-24",
+    "x_date_to": false,
+    "x_min_group": 0,
+    "x_source": "ATHERON HOTEL MASTER DATA",
+    "x_active": true,
+    "x_name": "RATE-AHS-302-OCC",
+    "x_rule_code": "RATE-AHS-302-OCC",
+    "x_property_code": "AHS",
+    "x_notes": "Tarifas 1–4 verificadas. Ocupación 4 = extraordinaria en HOTEL-002 (comercial 3, extra 4 con aprobación): se mantiene requires_manual_confirmation.",
+    "x_pricing_model": "per_occupancy",
+    "x_commercial_status": "VERIFICADO_WEB",
+    "x_gov_state": "approved",
+    "x_price_person_night": 0,
+    "x_price_from": 0,
+    "x_max_guests": 0,
+    "x_min_nights": 0,
+    "x_priority": 10,
+    "x_source_version": "2026-09-24",
+    "x_version": 1,
+    "x_approved_by": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "x_approved_at": "2026-09-24 11:50:17",
+    "x_line_ids": [
+      44,
+      45,
+      46,
+      47
+    ],
+    "x_tax_mode": "pending_tax_definition",
+    "x_supersedes_id": false,
+    "x_change_reason": "HOTEL-004: carga gobernada desde ATHERON HOTEL MASTER DATA 2026-09-24 entregado por el Director de Orquesta. Tratamiento tributario separado: PENDING_TAX_DEFINITION.",
+    "x_group_price_person": 0,
+    "x_reference_values": false
+  },
+  {
+    "id": 6,
+    "display_name": "RATE-AHS-CASA-QUOTE",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:11:40",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:50:18",
+    "x_currency": "COP",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_unit_id": [
+      6,
+      "CASA COMPLETA"
+    ],
+    "x_price_night": 0,
+    "x_base_guests": 0,
+    "x_extra_person_price": 0,
+    "x_date_from": "2026-09-24",
+    "x_date_to": false,
+    "x_min_group": 0,
+    "x_source": "ATHERON HOTEL MASTER DATA",
+    "x_active": true,
+    "x_name": "RATE-AHS-CASA-QUOTE",
+    "x_rule_code": "RATE-AHS-CASA-QUOTE",
+    "x_property_code": "AHS",
+    "x_notes": "CASA COMPLETA Hotel Atheron Suite: sin tarifa automática aprobada. Siempre requires_quote.",
+    "x_pricing_model": "quote",
+    "x_commercial_status": "REQUIRES_QUOTE",
+    "x_gov_state": "approved",
+    "x_price_person_night": 0,
+    "x_price_from": 0,
+    "x_max_guests": 0,
+    "x_min_nights": 0,
+    "x_priority": 10,
+    "x_source_version": "2026-09-24",
+    "x_version": 1,
+    "x_approved_by": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "x_approved_at": "2026-09-24 11:50:18",
+    "x_line_ids": [],
+    "x_tax_mode": "pending_tax_definition",
+    "x_supersedes_id": false,
+    "x_change_reason": "HOTEL-004: carga gobernada desde ATHERON HOTEL MASTER DATA 2026-09-24 entregado por el Director de Orquesta. Tratamiento tributario separado: PENDING_TAX_DEFINITION.",
+    "x_group_price_person": 0,
+    "x_reference_values": false
+  },
+  {
+    "id": 7,
+    "display_name": "RATE-ALG-CASA-PP",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:11:40",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:50:19",
+    "x_currency": "COP",
+    "x_property_id": [
+      2,
+      "CASA ALGARRA"
+    ],
+    "x_unit_id": [
+      7,
+      "CASA COMPLETA"
+    ],
+    "x_price_night": 0,
+    "x_base_guests": 0,
+    "x_extra_person_price": 0,
+    "x_date_from": "2026-09-24",
+    "x_date_to": false,
+    "x_min_group": 8,
+    "x_source": "ATHERON HOTEL MASTER DATA",
+    "x_active": true,
+    "x_name": "RATE-ALG-CASA-PP",
+    "x_rule_code": "RATE-ALG-CASA-PP",
+    "x_property_code": "ALG",
+    "x_notes": "65.000 COP por persona (estándar); grupo de 8 o más: 50.000 COP por persona. Unidad de cobro interpretada por noche (igual que el resto del catálogo) — confirmar. Comercial 22, extraordinaria 25 con aprobación.",
+    "x_pricing_model": "per_person_group",
+    "x_commercial_status": "VERIFICADO",
+    "x_gov_state": "approved",
+    "x_price_person_night": 65000,
+    "x_price_from": 0,
+    "x_max_guests": 25,
+    "x_min_nights": 0,
+    "x_priority": 10,
+    "x_source_version": "2026-09-24",
+    "x_version": 1,
+    "x_approved_by": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "x_approved_at": "2026-09-24 11:50:19",
+    "x_line_ids": [],
+    "x_tax_mode": "pending_tax_definition",
+    "x_supersedes_id": false,
+    "x_change_reason": "HOTEL-004: carga gobernada desde ATHERON HOTEL MASTER DATA 2026-09-24 entregado por el Director de Orquesta. Tratamiento tributario separado: PENDING_TAX_DEFINITION.",
+    "x_group_price_person": 50000,
+    "x_reference_values": false
+  },
+  {
+    "id": 8,
+    "display_name": "RATE-NEUSA-BASE4-ADD",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:11:41",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:50:19",
+    "x_currency": "COP",
+    "x_property_id": [
+      3,
+      "CASA NEUSA"
+    ],
+    "x_unit_id": [
+      8,
+      "CASA COMPLETA"
+    ],
+    "x_price_night": 300000,
+    "x_base_guests": 4,
+    "x_extra_person_price": 60000,
+    "x_date_from": "2026-09-24",
+    "x_date_to": false,
+    "x_min_group": 0,
+    "x_source": "ATHERON HOTEL MASTER DATA",
+    "x_active": true,
+    "x_name": "RATE-NEUSA-BASE4-ADD",
+    "x_rule_code": "RATE-NEUSA-BASE4-ADD",
+    "x_property_code": "NEUSA",
+    "x_notes": "300.000 COP hasta 4 personas; +60.000 COP por huésped desde el quinto. Base N=4 confirmada por maestro. Por noche (confirmar). Comercial 8, extraordinaria 10 con aprobación.",
+    "x_pricing_model": "base_plus_extra",
+    "x_commercial_status": "VERIFICADO_WEB",
+    "x_gov_state": "approved",
+    "x_price_person_night": 0,
+    "x_price_from": 0,
+    "x_max_guests": 10,
+    "x_min_nights": 0,
+    "x_priority": 10,
+    "x_source_version": "2026-09-24",
+    "x_version": 1,
+    "x_approved_by": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "x_approved_at": "2026-09-24 11:50:19",
+    "x_line_ids": [],
+    "x_tax_mode": "pending_tax_definition",
+    "x_supersedes_id": false,
+    "x_change_reason": "HOTEL-004: carga gobernada desde ATHERON HOTEL MASTER DATA 2026-09-24 entregado por el Director de Orquesta. Tratamiento tributario separado: PENDING_TAX_DEFINITION.",
+    "x_group_price_person": 0,
+    "x_reference_values": false
+  },
+  {
+    "id": 9,
+    "display_name": "RATE-EDALG-GROUP-QUOTE",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:11:42",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:27",
+    "x_currency": "COP",
+    "x_property_id": false,
+    "x_unit_id": false,
+    "x_price_night": 0,
+    "x_base_guests": 0,
+    "x_extra_person_price": 0,
+    "x_date_from": "2026-09-24",
+    "x_date_to": false,
+    "x_min_group": 0,
+    "x_source": "ATHERON HOTEL MASTER DATA",
+    "x_active": true,
+    "x_name": "RATE-EDALG-GROUP-QUOTE",
+    "x_rule_code": "RATE-EDALG-GROUP-QUOTE",
+    "x_property_code": "EDALG",
+    "x_notes": "Apartamentos en Algarra — requires_quote hasta resolver conflicto.",
+    "x_pricing_model": "quote",
+    "x_commercial_status": "CONFLICTO",
+    "x_gov_state": "draft",
+    "x_price_person_night": 0,
+    "x_price_from": 0,
+    "x_max_guests": 0,
+    "x_min_nights": 0,
+    "x_priority": 10,
+    "x_source_version": "2026-09-24",
+    "x_version": 1,
+    "x_approved_by": false,
+    "x_approved_at": false,
+    "x_line_ids": [],
+    "x_tax_mode": "pending_tax_definition",
+    "x_supersedes_id": false,
+    "x_change_reason": "HOTEL-004: carga gobernada desde ATHERON HOTEL MASTER DATA 2026-09-24 entregado por el Director de Orquesta. Tratamiento tributario separado: PENDING_TAX_DEFINITION.",
+    "x_group_price_person": 0,
+    "x_reference_values": "Web: \"desde 65.000 COP por persona\" (referencia). WhatsApp antiguo: 250.000 hasta 5 + 50.000 adicional. CONFLICTO: ninguno se automatiza."
+  },
+  {
+    "id": 10,
+    "display_name": "RATE-COLCONF-PERSON",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:11:42",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:28",
+    "x_currency": "COP",
+    "x_property_id": false,
+    "x_unit_id": false,
+    "x_price_night": 0,
+    "x_base_guests": 0,
+    "x_extra_person_price": 0,
+    "x_date_from": "2026-09-24",
+    "x_date_to": false,
+    "x_min_group": 0,
+    "x_source": "ATHERON HOTEL MASTER DATA",
+    "x_active": true,
+    "x_name": "RATE-COLCONF-PERSON",
+    "x_rule_code": "RATE-COLCONF-PERSON",
+    "x_property_code": "COLCONF",
+    "x_notes": "Hotel Colonial Confort — pending.",
+    "x_pricing_model": "per_person",
+    "x_commercial_status": "PENDIENTE_CEO",
+    "x_gov_state": "draft",
+    "x_price_person_night": 0,
+    "x_price_from": 0,
+    "x_max_guests": 0,
+    "x_min_nights": 0,
+    "x_priority": 10,
+    "x_source_version": "2026-09-24",
+    "x_version": 1,
+    "x_approved_by": false,
+    "x_approved_at": false,
+    "x_line_ids": [],
+    "x_tax_mode": "pending_tax_definition",
+    "x_supersedes_id": false,
+    "x_change_reason": "HOTEL-004: carga gobernada desde ATHERON HOTEL MASTER DATA 2026-09-24 entregado por el Director de Orquesta. Tratamiento tributario separado: PENDING_TAX_DEFINITION.",
+    "x_group_price_person": 0,
+    "x_reference_values": "Web actual: 65.000 COP por persona; 130.000 COP pareja. Conflicto con WhatsApp/Meta anterior. NO aprobado."
+  },
+  {
+    "id": 11,
+    "display_name": "RATE-MARG-PENDING",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-24 11:11:43",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-24 11:31:28",
+    "x_currency": "COP",
+    "x_property_id": false,
+    "x_unit_id": false,
+    "x_price_night": 0,
+    "x_base_guests": 0,
+    "x_extra_person_price": 0,
+    "x_date_from": "2026-09-24",
+    "x_date_to": false,
+    "x_min_group": 0,
+    "x_source": "ATHERON HOTEL MASTER DATA",
+    "x_active": true,
+    "x_name": "RATE-MARG-PENDING",
+    "x_rule_code": "RATE-MARG-PENDING",
+    "x_property_code": "MARG",
+    "x_notes": "Hotel La Margarita — pending.",
+    "x_pricing_model": "from_price",
+    "x_commercial_status": "PENDIENTE_CEO",
+    "x_gov_state": "draft",
+    "x_price_person_night": 0,
+    "x_price_from": 0,
+    "x_max_guests": 0,
+    "x_min_nights": 0,
+    "x_priority": 10,
+    "x_source_version": "2026-09-24",
+    "x_version": 1,
+    "x_approved_by": false,
+    "x_approved_at": false,
+    "x_line_ids": [],
+    "x_tax_mode": "pending_tax_definition",
+    "x_supersedes_id": false,
+    "x_change_reason": "HOTEL-004: carga gobernada desde ATHERON HOTEL MASTER DATA 2026-09-24 entregado por el Director de Orquesta. Tratamiento tributario separado: PENDING_TAX_DEFINITION.",
+    "x_group_price_person": 0,
+    "x_reference_values": "Web: desde 65.000 COP por persona. Falta cierre comercial con aliado. NO aprobado."
+  },
+  {
+    "id": 31,
+    "display_name": "RATE-AHS-CASA-BASE10-ADD",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-27 04:18:59",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-27 20:55:23",
+    "x_currency": "COP",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_unit_id": [
+      6,
+      "CASA COMPLETA"
+    ],
+    "x_price_night": 500000,
+    "x_base_guests": 10,
+    "x_extra_person_price": 50000,
+    "x_date_from": "2026-09-24",
+    "x_date_to": false,
+    "x_min_group": 0,
+    "x_source": "ATHERON HOTEL MASTER DATA",
+    "x_active": true,
+    "x_name": "RATE-AHS-CASA-BASE10-ADD",
+    "x_rule_code": "RATE-AHS-CASA-BASE10-ADD",
+    "x_property_code": "AHS",
+    "x_notes": "Precio noche = MAX(500000, huespedes*50000). Modelado con base_plus_extra (base 10 huéspedes incluidos, 50.000 por adicional). Nuevo rule code porque el gobierno impide segunda versión vigente con el mismo código y V1 es inmutable.",
+    "x_pricing_model": "base_plus_extra",
+    "x_commercial_status": "VERIFICADO",
+    "x_gov_state": "approved",
+    "x_price_person_night": 0,
+    "x_price_from": 0,
+    "x_max_guests": 22,
+    "x_min_nights": 0,
+    "x_priority": 10,
+    "x_source_version": "2026-09-26",
+    "x_version": 1,
+    "x_approved_by": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "x_approved_at": "2026-09-27 20:55:23",
+    "x_line_ids": [],
+    "x_tax_mode": "pending_tax_definition",
+    "x_supersedes_id": [
+      6,
+      "RATE-AHS-CASA-QUOTE"
+    ],
+    "x_change_reason": "HOTEL-008A: decisión comercial CEO (Marlon) — Casa Completa: mínimo 500.000 COP/noche, 50.000 COP por huésped/noche (equivale a 500.000 hasta 10 huéspedes + 50.000 por huésped adicional, máx 22). Reemplaza funcionalmente a RATE-AHS-CASA-QUOTE v1 (REQUIRES_QUOTE), que se conserva intacta como histórico. Tratamiento tributario sin cambios: PENDING_TAX_DEFINITION. Sin descuentos por día.",
+    "x_group_price_person": 0,
+    "x_reference_values": false
+  }
+]

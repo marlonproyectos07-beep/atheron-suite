@@ -1,0 +1,1040 @@
+[
+  {
+    "id": 557,
+    "name": "Send an email",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "\n            if records:\n                action = records.with_context(hide_default_template=True).action_quotation_send()\n        ",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1730,
+    "name": "ATHERON - Abrir GPS para Origen Transporte",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "if not records:\n    raise UserError('Sin cotizacion activa.')\norder = records[0]\naction = {'type': 'ir.actions.act_url', 'url': '/atheron/gps-origen?order=' + str(order.id), 'target': 'new'}\n",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1740,
+    "name": "ATHERON - Actualizar total cotización",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "for record in records:\n    record.write({})",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1793,
+    "name": "ATHERON - Almacen Hotel en vivo (onchange)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "hotel_cats = env['product.category'].sudo().search([('id','child_of',[6,1247,1242,1296])]).ids\nhas_hotel = any([(l.product_id and l.product_id.categ_id and l.product_id.categ_id.id in hotel_cats) for l in record.order_line])\nhas_prod = any([l.product_id for l in record.order_line])\nif has_hotel:\n    if record.warehouse_id.id != 7:\n        record.update({'warehouse_id': 7})\n    if record.pricelist_id.id not in (16, 17) and not record.x_hotel_quote_id and not record.x_frozen_price_total:\n        record.update({'pricelist_id': 17})\n        try:\n            record._recompute_prices()\n        except Exception:\n            pass\n    if not record.x_checkin:\n        record.update({'x_checkin': datetime.date.today()})\n    if not record.x_checkout:\n        base_ci = record.x_checkin or datetime.date.today()\n        record.update({'x_checkout': base_ci + datetime.timedelta(days=1)})\nelif has_prod and record.warehouse_id.id == 7:\n    record.update({'warehouse_id': 4})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1815,
+    "name": "ATHERON - Anti-doble-reserva hotel",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "HOUSES = [\n    (57850, [57846,57848,57849,57845,57847]),\n    (57877, [57878,57866,57867,57868,57869,57870,57871,57872,57873,57874,57875,57876]),\n    (57887, [57879,57880,57881,57882,57883,57884,57885,57886]),\n    (57897, [57888,57889,57890,57891,57892,57893,57894,57895,57896]),\n    (57899, []),\n    (57900, []),\n]\nhotel_ids = set()\nfor comp, rooms in HOUSES:\n    hotel_ids.add(comp)\n    for r in rooms:\n        hotel_ids.add(r)\nSO = env['sale.order'].sudo()\nPP = env['product.product'].sudo()\nfor order in records:\n    booked = set(order.order_line.mapped('product_id').ids)\n    order_hotel = [p for p in booked if p in hotel_ids]\n    if not order_hotel:\n        continue\n    try:\n        order.flush_recordset(['x_checkin', 'x_checkout'])\n    except Exception:\n        pass\n    ci = order.x_checkin\n    co = order.x_checkout\n    if not ci or not co:\n        continue\n    if co <= ci:\n        continue\n    for prod in order_hotel:\n        conflict_set = None\n        for comp, rooms in HOUSES:\n            if prod == comp:\n                conflict_set = [comp] + rooms\n                break\n            if prod in rooms:\n                conflict_set = [comp, prod]\n                break\n        if not conflict_set:\n            continue\n        clash = SO.search([('id','!=',order.id),('state','in',('sale','done')),('x_checkin','!=',False),('x_checkout','!=',False),('x_checkin','<',co),('x_checkout','>',ci),('order_line.product_id','in',conflict_set)], limit=1)\n        if clash:\n            raise UserError('CHOQUE DE RESERVA: ' + (PP.browse(prod).name or '') + ' no esta disponible del ' + str(ci) + ' al ' + str(co) + '. Ya reservado en ' + clash.name + '.')\n        tmpl_ids = PP.browse(conflict_set).mapped('product_tmpl_id').ids\n        clash_roles = env['planning.role'].sudo().search([('product_ids','in',tmpl_ids)]).ids\n        if clash_roles:\n            ci_dt = str(ci)[:10] + ' 20:00:00'\n            co_dt = str(co)[:10] + ' 16:00:00'\n            slot_clash = env['planning.slot'].sudo().search([('role_id','in',clash_roles),('state','=','published'),('x_nobeds_id','!=',False),('sale_line_id','not in',order.order_line.ids),('start_datetime','<',co_dt),('end_datetime','>',ci_dt)], limit=1)\n            if slot_clash:\n                raise UserError('CHOQUE DE RESERVA (OTA): ' + (PP.browse(prod).name or '') + ' no esta disponible del ' + str(ci) + ' al ' + str(co) + '. Ya hay una reserva de OTA (Booking/Airbnb) en esas fechas para esta casa o una habitacion enlazada.')\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1749,
+    "name": "ATHERON - Buscar cliente por NIT (onchange)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "nit = (record.x_nit_buscar or '').strip()\nif nit:\n    nit_clean = nit.replace('-','').replace(' ','').replace('.','').replace(',','')\n    if len(nit_clean) >= 6:\n        partner = env['res.partner'].search([\n            '|','|','|',\n            ('vat','=', nit_clean),\n            ('vat','=', nit),\n            ('vat','=like', nit_clean + '-%'),\n            ('vat','=like', '%' + nit_clean),\n        ], limit=1)\n        if partner:\n            record.update({'partner_id': partner.id, 'x_nit_buscar': partner.vat or nit_clean})\n        elif not record.partner_id:\n            new_p = env['res.partner'].sudo().create({'name': 'Cliente ' + nit_clean, 'vat': nit_clean})\n            record.update({'partner_id': new_p.id})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1723,
+    "name": "ATHERON - Calcular Transporte (OSRM)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "# Calcula transporte ida y vuelta via Nominatim + OSRM\nTARIFA = float(env['ir.config_parameter'].sudo().get_param('atheron.transporte_tarifa_km', '1600') or 1600)\nPRODUCTO_ID = 12229\n\nCIUDADES = ['bogota', 'zipaquira', 'cajica', 'chia', 'cota', 'sopo', 'tocancipa', 'soacha', 'mosquera', 'funza', 'madrid']\n\ndef _norm(addr):\n    a = ' ' + (addr or '').strip() + ' '\n    a = a.replace('#', ' ').replace('  ', ' ')\n    repl = [(' Cra ', ' Carrera '), (' Cra. ', ' Carrera '), (' Cr ', ' Carrera '), (' Cr. ', ' Carrera '), (' Kr ', ' Carrera '), (' Kra ', ' Carrera '), (' Cll ', ' Calle '), (' Cll. ', ' Calle '), (' Cl ', ' Calle '), (' Cl. ', ' Calle '), (' Av ', ' Avenida '), (' Av. ', ' Avenida '), (' Avda ', ' Avenida '), (' Avda. ', ' Avenida '), (' Dg ', ' Diagonal '), (' Dg. ', ' Diagonal '), (' Diag ', ' Diagonal '), (' Tv ', ' Transversal '), (' Tv. ', ' Transversal '), (' Trans ', ' Transversal '), (' Bgta ', ' Bogota '), (' Bta ', ' Bogota '), (' Zipa ', ' Zipaquira ')]\n    al = a.lower()\n    out = a\n    for old, new in repl:\n        if old.lower() in al:\n            i = al.find(old.lower())\n            while i >= 0:\n                out = out[:i] + new + out[i+len(old):]\n                al = out.lower()\n                i = al.find(old.lower(), i+len(new))\n    digits = '0123456789'\n    res = []\n    i = 0\n    while i < len(out):\n        c = out[i]\n        if c == ' ' and i+2 < len(out) and out[i+1] == '-' and out[i+2] == ' ':\n            if res and res[-1] in digits + 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ' and i+3 < len(out) and out[i+3] in digits:\n                res.append('-')\n                i += 3\n                continue\n        res.append(c)\n        i += 1\n    out = ''.join(res)\n    while '  ' in out:\n        out = out.replace('  ', ' ')\n    return out.strip()\n\ndef _ciudad_en(addr):\n    al = addr.lower()\n    for c in CIUDADES:\n        if c in al:\n            return c.capitalize()\n    return ''\n\ndef _strip_num_placa(addr):\n    parts = addr.split(' ')\n    out = []\n    for p in parts:\n        if '-' in p and any(ch.isdigit() for ch in p):\n            a, _, b = p.partition('-')\n            if a and b and len(a) <= 4 and len(b) <= 4 and any(ch.isdigit() for ch in a):\n                continue\n        out.append(p)\n    return ' '.join(out)\n\ndef _geocode(addr):\n    headers = {'User-Agent': 'Atheron-Odoo-Transport/1.0', 'Accept-Language': 'es'}\n    ciudad = _ciudad_en(addr)\n    sin_placa = _strip_num_placa(addr)\n    intentos = []\n    intentos.append(addr + ', Colombia')\n    if ciudad and ciudad.lower() not in addr.lower()[-30:]:\n        intentos.append(addr + ', ' + ciudad + ', Colombia')\n    if sin_placa and sin_placa != addr:\n        intentos.append(sin_placa + ', Colombia')\n        if ciudad:\n            intentos.append(sin_placa + ', ' + ciudad + ', Colombia')\n    if ciudad:\n        intentos.append(ciudad + ', Colombia')\n    seen = set()\n    for q in intentos:\n        if q in seen:\n            continue\n        seen.add(q)\n        try:\n            r = requests.get('https://nominatim.openstreetmap.org/search', params={'format': 'json', 'limit': 1, 'q': q, 'countrycodes': 'co'}, headers=headers, timeout=15)\n            d = r.json()\n            if d:\n                return float(d[0]['lon']), float(d[0]['lat']), q, d[0].get('display_name', '')\n        except Exception:\n            pass\n    return None\n\norder_ids = env.context.get('active_ids') or []\nif not order_ids and records:\n    order_ids = records.ids\nif not order_ids:\n    raise UserError('No se detecto cotizacion activa.')\n\nresumen = []\nfor order in env['sale.order'].browse(order_ids):\n    origen_raw = (order.x_origen_transporte or '').strip()\n    destino_raw = (order.x_destino_transporte or '').strip()\n    if not destino_raw:\n        destino_raw = ' '.join((order.partner_id.contact_address or '').split())\n        if destino_raw:\n            order.write({'x_destino_transporte': destino_raw})\n    if not origen_raw:\n        raise UserError('Debe escribir el ORIGEN del transporte.')\n    if not destino_raw:\n        raise UserError('No se encontro direccion del cliente. Escriba el DESTINO manualmente.')\n\n    origen = _norm(origen_raw)\n    destino = _norm(destino_raw)\n\n    # Si origen empieza con \"geo:lat,lon\" parsea coords directas (capturado por GPS)\n    g1 = None\n    if origen_raw.lower().startswith('geo:'):\n        try:\n            coords = origen_raw[4:].split(' ')[0]\n            lat_s, lon_s = coords.split(',')\n            g1 = (float(lon_s), float(lat_s), 'GPS', 'GPS')\n        except Exception:\n            g1 = None\n    if not g1:\n        g1 = _geocode(origen)\n    if not g1:\n        raise UserError('No se pudo ubicar el ORIGEN.\\nIngresado: ' + origen_raw + '\\nNormalizado: ' + origen + '\\n\\nTip: usa \"Carrera 9 10-32, Zipaquira\" o \"Calle 80 45-23, Bogota\". No agregues \"#\" ni \"No\", deja el numero como \"X-Y\" pegado.')\n    g2 = _geocode(destino)\n    if not g2:\n        raise UserError('No se pudo ubicar el DESTINO.\\nIngresado: ' + destino_raw + '\\nNormalizado: ' + destino)\n\n    osrm = 'https://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f' % (g1[0], g1[1], g2[0], g2[1])\n    r3 = requests.get(osrm, params={'overview': 'false'}, timeout=15)\n    rj = r3.json()\n    if rj.get('code') != 'Ok' or not rj.get('routes'):\n        raise UserError('OSRM no pudo calcular la ruta.')\n    km_ida = round(rj['routes'][0]['distance'] / 1000.0, 1)\n    if km_ida < 0.1:\n        raise UserError('Distancia 0 km. Origen y destino quedaron en el mismo punto. Especifica mejor las direcciones.')\n    km_total = round(km_ida * 2, 1)\n\n    order.write({'x_km_transporte': km_ida})\n\n    existing = order.order_line.filtered(lambda l: l.product_id.id == PRODUCTO_ID)\n    if existing:\n        existing[0].write({'product_uom_qty': km_total, 'price_unit': TARIFA})\n    else:\n        order.write({'order_line': [(0, 0, {'product_id': PRODUCTO_ID, 'product_uom_qty': km_total, 'price_unit': TARIFA})]})\n\n    resumen.append('%s: %.1f km ida+vuelta = $%s' % (order.name, km_total, '{:,.0f}'.format(km_total * TARIFA)))\n\nmsg = ' | '.join(resumen) if resumen else 'Sin procesar'\naction = {'type': 'ir.actions.client', 'tag': 'display_notification', 'params': {'title': 'Transporte calculado', 'message': msg, 'type': 'success', 'sticky': False, 'next': {'type': 'ir.actions.act_window_close'}}}\n",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1751,
+    "name": "ATHERON - Cancelar tareas FSM al cancelar cotización",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "# ATHERON - Al cancelar la cotización: cancela y archiva las tareas FSM vinculadas\nif record.state == 'cancel':\n    tasks = env['project.task'].sudo().search([\n        ('sale_order_id', '=', record.id),\n        ('active', '=', True)\n    ])\n    if tasks:\n        tasks.write({'state': '1_canceled', 'active': False})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1875,
+    "name": "ATHERON - Check-in (marcar entrada)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "PS = env['planning.slot'].sudo()\nnow = fields.Datetime.now()\ndirty = []\nfor order in records:\n    order.write({'x_checkin_done': True, 'x_checkin_actual': now})\n    line_ids = order.order_line.ids\n    if line_ids:\n        slots = PS.search([('sale_line_id', 'in', line_ids)])\n        if slots:\n            slots.write({'x_checkin_state': 'checked_in'})\n            for rol in slots.mapped('role_id'):\n                if rol.x_estado_limpieza == 'sucia' and rol.name not in dirty:\n                    dirty.append(rol.name)\nif dirty:\n    action = {\n        'type': 'ir.actions.client',\n        'tag': 'display_notification',\n        'params': {\n            'title': 'Atencion: habitacion SUCIA',\n            'message': 'Check-in realizado, pero esta(s) habitacion(es) figuran SUCIAS: ' + ', '.join(dirty) + '. Coordina la limpieza.',\n            'type': 'warning',\n            'sticky': True,\n        },\n    }\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1839,
+    "name": "ATHERON - Check-out (marcar salida)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "PS = env['planning.slot'].sudo()\nnow = fields.Datetime.now()\nfor order in records:\n    order.write({'x_checkout_done': True, 'x_checkout_actual': now})\n    line_ids = order.order_line.ids\n    if line_ids:\n        slots = PS.search([('sale_line_id', 'in', line_ids)])\n        published = slots.filtered(lambda s: s.state == 'published')\n        if published:\n            published.write({'state': 'draft'})\n        if slots:\n            slots.write({'x_checkin_state': 'checked_out'})\n            roles = slots.mapped('role_id')\n            if roles:\n                roles.write({'x_estado_limpieza': 'sucia'})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1825,
+    "name": "ATHERON - Crear reserva calendario al confirmar (instant)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "PS = env['planning.slot'].sudo()\nfor order in records:\n    if not (order.x_checkin and order.x_checkout):\n        continue\n    ci = order.x_checkin\n    co = order.x_checkout\n    if co <= ci:\n        continue\n    st = ci.strftime('%Y-%m-%d') + ' 12:00:00'\n    en = co.strftime('%Y-%m-%d') + ' 12:00:00'\n    for line in order.order_line:\n        role = line.product_id.product_tmpl_id.planning_role_id\n        if not role:\n            continue\n        if any([s.start_datetime for s in line.planning_slot_ids]):\n            continue\n        rid = role.resource_ids[:1].id\n        PS.create({'role_id': role.id, 'resource_id': rid, 'start_datetime': st, 'end_datetime': en, 'sale_line_id': line.id})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1750,
+    "name": "ATHERON - Forzar dirección entrega = cliente principal",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "# Cuando se asigna el cliente, la dirección de entrega (técnico) queda igual\n# para que Field Service y facturación usen la misma dirección\nif record.partner_id:\n    record.update({'partner_shipping_id': record.partner_id.id, 'partner_invoice_id': record.partner_id.id})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1818,
+    "name": "ATHERON - Noches desde fechas (guardar)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "hotel_cats = env['product.category'].sudo().search([('id','child_of',[6,1247,1242,1296])]).ids\nfor order in records:\n    if order.x_checkin and order.x_checkout:\n        noches = (order.x_checkout - order.x_checkin).days\n        if noches > 0:\n            for line in order.order_line:\n                if line.product_id and line.product_id.categ_id and line.product_id.categ_id.id in hotel_cats and line.x_noches != noches:\n                    line.write({'x_noches': noches})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1817,
+    "name": "ATHERON - Noches desde fechas (onchange)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "hotel_cats = env['product.category'].sudo().search([('id','child_of',[6,1247,1242,1296])]).ids\nif record.x_checkin and record.x_checkout:\n    noches = (record.x_checkout - record.x_checkin).days\n    if noches > 0:\n        for line in record.order_line:\n            if line.product_id and line.product_id.categ_id and line.product_id.categ_id.id in hotel_cats and line.x_noches != noches:\n                line.write({'x_noches': noches})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1838,
+    "name": "ATHERON - Nota CCTV en vivo (onchange)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "hotel_cats = env['product.category'].sudo().search([('id','child_of',[6,1247,1242,1296,1241])]).ids\nnota = ('<p><strong>ADICIONALES</strong> (se cobran solo si se requieren):<br/>'\n        '- Cable UTP interior: $1.500/metro<br/>'\n        '- Cable UTP exterior: $2.000/metro<br/>'\n        '- Cable de corriente: $1.500/metro<br/>'\n        '- Video Balun adicional: $10.000 c/u<br/>'\n        '- Fuente 12V 1.5A adicional: $12.000 c/u<br/>'\n        '- Caja de paso 10x10: $5.000 c/u<br/>'\n        '- Borneras DC: $3.000 c/u<br/>'\n        '- Cámara Bala 2MPX B/N Hilook adicional: $75.000 c/u<br/>'\n        '- Punto mano de obra adicional: $60.000 c/u<br/>'\n        '- Recargo altura + escalera: $50.000/punto</p>'\n        '<p><strong>GARANTÍA:</strong><br/>'\n        '- Equipos nuevos: 1 año<br/>'\n        '- Disco Duro Pull Línea Económica: 3 meses<br/>'\n        '- Mano de obra: 1 año</p>'\n        '<p>Tiempo de ejecución: 1 a 2 días<br/>Validez de la oferta: 15 días</p>'\n        '<p>ATHERON S.A.S - NIT: 901.881.946-1<br/>Zipaquirá, Colombia - Tel: 3108699848</p>')\nhas_hotel = any([(l.product_id and l.product_id.categ_id and l.product_id.categ_id.id in hotel_cats) for l in record.order_line])\nhas_prod = any([l.product_id for l in record.order_line])\ncur = record.note or ''\nnote_clean = cur.replace('<p>','').replace('</p>','').replace('<br>','').replace('<br/>','').replace('&nbsp;','').strip()\nif has_prod and not has_hotel and not note_clean:\n    record.update({'note': nota})\nelif has_hotel and ('Recargo altura' in cur) and ('PAGO' not in cur):\n    record.update({'note': False})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1837,
+    "name": "ATHERON - Nota CCTV por defecto (adicionales/garantía)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "hotel_cats = env['product.category'].sudo().search([('id','child_of',[6,1247,1242,1296,1241])]).ids\nnota = ('<p><strong>ADICIONALES</strong> (se cobran solo si se requieren):<br/>'\n        '- Cable UTP interior: $1.500/metro<br/>'\n        '- Cable UTP exterior: $2.000/metro<br/>'\n        '- Cable de corriente: $1.500/metro<br/>'\n        '- Video Balun adicional: $10.000 c/u<br/>'\n        '- Fuente 12V 1.5A adicional: $12.000 c/u<br/>'\n        '- Caja de paso 10x10: $5.000 c/u<br/>'\n        '- Borneras DC: $3.000 c/u<br/>'\n        '- Cámara Bala 2MPX B/N Hilook adicional: $75.000 c/u<br/>'\n        '- Punto mano de obra adicional: $60.000 c/u<br/>'\n        '- Recargo altura + escalera: $50.000/punto</p>'\n        '<p><strong>GARANTÍA:</strong><br/>'\n        '- Equipos nuevos: 1 año<br/>'\n        '- Disco Duro Pull Línea Económica: 3 meses<br/>'\n        '- Mano de obra: 1 año</p>'\n        '<p>Tiempo de ejecución: 1 a 2 días<br/>Validez de la oferta: 15 días</p>'\n        '<p>ATHERON S.A.S - NIT: 901.881.946-1<br/>Zipaquirá, Colombia - Tel: 3108699848</p>')\nfor record in records:\n    has_hotel = any([(l.product_id and l.product_id.categ_id and l.product_id.categ_id.id in hotel_cats) for l in record.order_line])\n    has_prod = any([l.product_id for l in record.order_line])\n    cur = record.note or ''\n    note_clean = cur.replace('<p>','').replace('</p>','').replace('<br>','').replace('<br/>','').replace('&nbsp;','').strip()\n    if has_prod and not has_hotel and not note_clean:\n        record.write({'note': nota})\n    elif has_hotel and ('Recargo altura' in cur) and ('PAGO' not in cur):\n        record.write({'note': False})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1765,
+    "name": "ATHERON - Propagar tecnico a tareas de la SO",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "for so in records:\n    if so.x_tecnico_id:\n        tasks = env['project.task'].sudo().search([('sale_order_id', '=', so.id)])\n        for t in tasks:\n            if t.x_tecnico_id.id != so.x_tecnico_id.id:\n                t.write({'x_tecnico_id': so.x_tecnico_id.id})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1844,
+    "name": "ATHERON - Quitar bloque al cancelar orden",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "PS = env['planning.slot'].sudo()\nif not env.context.get('skip_slot_cleanup'):\n    for order in records:\n        line_ids = order.order_line.ids\n        if line_ids:\n            slots = PS.search([('sale_line_id', 'in', line_ids)])\n            if slots:\n                slots.unlink()\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1840,
+    "name": "ATHERON - Reabrir reserva (deshacer check-out)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "PS = env['planning.slot'].sudo()\nfor order in records:\n    order.write({'x_checkout_done': False, 'x_checkout_actual': False})\n    line_ids = order.order_line.ids\n    if line_ids:\n        slots = PS.search([('sale_line_id', 'in', line_ids)])\n        draft = slots.filtered(lambda s: s.state == 'draft')\n        if draft:\n            draft.write({'state': 'published'})\n        if slots:\n            new_state = 'checked_in' if order.x_checkin_done else 'confirmed'\n            slots.write({'x_checkin_state': new_state})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1843,
+    "name": "ATHERON - Sincronizar fechas del bloque con la orden",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "PS = env['planning.slot'].sudo()\nfor order in records:\n    if not order.x_checkin or not order.x_checkout:\n        continue\n    ci = order.x_checkin\n    co = order.x_checkout\n    if co <= ci:\n        continue\n    st = datetime.datetime(ci.year, ci.month, ci.day, 20, 0, 0)\n    en = datetime.datetime(co.year, co.month, co.day, 16, 0, 0)\n    for line in order.order_line:\n        for s in line.planning_slot_ids:\n            if s.start_datetime and (s.start_datetime != st or s.end_datetime != en):\n                s.write({'start_datetime': st, 'end_datetime': en})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1823,
+    "name": "ATHERON - Sincronizar reservas hotel al calendario",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "SO = env['sale.order'].sudo()\nPS = env['planning.slot'].sudo()\norders = SO.search([('state', 'in', ('sale', 'done')), ('x_checkin', '!=', False), ('x_checkout', '!=', False)])\nfor order in orders:\n    ci = order.x_checkin\n    co = order.x_checkout\n    st = datetime.datetime(ci.year, ci.month, ci.day, 15, 0, 0)\n    en = datetime.datetime(co.year, co.month, co.day, 11, 0, 0)\n    for line in order.order_line:\n        role = line.product_id.product_tmpl_id.planning_role_id\n        if not role:\n            continue\n        slots = line.planning_slot_ids\n        dated = slots.filtered(lambda s: s.start_datetime)\n        if not dated:\n            rid = role.resource_ids[:1].id\n            PS.create({'role_id': role.id, 'resource_id': rid, 'start_datetime': st, 'end_datetime': en, 'sale_line_id': line.id})\n        else:\n            dl = slots.filtered(lambda s: not s.start_datetime)\n            if dl:\n                dl.unlink()\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1672,
+    "name": "ATHERON — Cambiar Almacén según Zipaquirá",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "if record.x_zipaquira:\n    record.write({'warehouse_id': 6})\nelse:\n    record.write({'warehouse_id': 4})",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1669,
+    "name": "ATHERON — Verificar Stock y PIN (Cotización)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "# Verificar stock solo si la cotizacion es de almacen Zipaquira\nif record.warehouse_id.id == 6:\n    for line in record.order_line:\n        if line.product_id and line.product_id.is_storable:\n            quant = env['stock.quant'].search([\n                ('product_id', '=', line.product_id.id),\n                ('location_id', '=', 74)\n            ], limit=1)\n            disponible = quant.quantity if quant else 0\n            if disponible <= 0:\n                raise UserError('⛔ Sin stock en ATZIP para: ' + line.product_id.display_name + '. Revise el inventario antes de confirmar.')\n\n# Verificar PIN\npin_correcto = env['ir.config_parameter'].sudo().get_param('atheron.pin_autorizacion', '')\npin_ingresado = record.x_pin_autorizacion or ''\nif pin_ingresado != pin_correcto:\n    raise UserError('🔒 PIN incorrecto. Ingrese el código de autorización en el campo PIN (junto a condición de pago) y vuelva a confirmar.')\n\n# PIN correcto — limpiar campo\nrecord.write({'x_pin_autorizacion': False})",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1635,
+    "name": "Agregar etiqueta CARTERA CCTV al cliente",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "for record in records:\n    if record.partner_id:\n        record.partner_id.write({'category_id': [(4, 46)]})",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1548,
+    "name": "Auto-llenar NIT desde cliente (Cotización)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "Partner = env['res.partner']\nfor record in records:\n    nit = (record.x_nit_buscar or '').strip()\n    nit_clean = nit.replace('-','').replace(' ','').replace('.','').replace(',','')\n    p = record.partner_id\n    if p:\n        pv_clean = (p.vat or '').replace('-','').replace(' ','').replace('.','').replace(',','')\n        if nit_clean and nit_clean != pv_clean:\n            other = Partner.search([('vat','=',nit_clean),('id','!=',p.id)], limit=1)\n            if other:\n                record.write({'partner_id': other.id, 'x_nit_buscar': other.vat or nit_clean})\n            else:\n                p.write({'vat': nit_clean})\n        elif not nit_clean and (p.vat or ''):\n            record.write({'x_nit_buscar': p.vat})\n    elif nit_clean and len(nit_clean) >= 5:\n        found = Partner.search([('vat','=',nit_clean)], limit=1)\n        if not found:\n            found = Partner.create({'name': (record.x_nombre_cliente or ('Cliente ' + nit_clean)), 'vat': nit_clean})\n        record.write({'partner_id': found.id})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1552,
+    "name": "Buscar cliente por NIT (Cotización)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "nit = (record.x_nit_buscar or '').strip()\nif not nit:\n    raise UserError('Ingresa un NIT o cedula en el campo NIT / Cedula.')\n\nnit_clean = nit.replace('-','').replace(' ','').replace('.','').replace(',','')\n\npartner = env['res.partner'].search([\n    '|','|','|',\n    ('vat','=', nit_clean),\n    ('vat','=', nit),\n    ('vat','=like', nit_clean + '-%'),\n    ('vat','=like', '%' + nit_clean),\n], limit=1)\n\nif partner:\n    record.write({'partner_id': partner.id, 'x_nit_buscar': partner.vat or nit_clean})\nelse:\n    raise UserError(\n        'No se encontro ningun cliente con NIT/cedula: %s\\n\\n'\n        'Opciones:\\n'\n        '1. Verifica que el numero este correcto\\n'\n        '2. Busca el cliente por nombre en el campo Cliente\\n'\n        '3. Crea el cliente en Contactos > Nuevo, registra el NIT y vuelve a buscar' % nit\n    )",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1243,
+    "name": "Cargar Productos del Paquete",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "for order in records:\r\n    etiqueta = order.x_paquete_cotizacion\r\n    \r\n    if not etiqueta:\r\n        raise UserError('No hay etiqueta seleccionada.')\r\n    \r\n    # Diagnóstico\r\n    productos = env['product.template'].search(\r\n        [('tag_ids', 'in', etiqueta.ids)]\r\n    )\r\n    \r\n    raise UserError(\r\n        'Etiqueta encontrada: %s (ID: %s)\\n'\r\n        'Modelo etiqueta: %s\\n'\r\n        'Productos encontrados: %s\\n'\r\n        'Nombres: %s' % (\r\n            etiqueta.name,\r\n            etiqueta.id,\r\n            etiqueta._name,\r\n            len(productos),\r\n            ', '.join(productos.mapped('name')[:5])\r\n        )\r\n    )",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1532,
+    "name": "Change customer",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "action = env[\"ir.actions.actions\"]._for_xml_id(\"sale_subscription.sale_subscription_change_customer_wizard_action\")",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1618,
+    "name": "Completar datos DIAN del cliente",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "action = {\n    'type': 'ir.actions.act_window',\n    'name': 'Datos DIAN — Cliente',\n    'res_model': 'res.partner',\n    'res_id': record.partner_id.id,\n    'view_mode': 'form',\n    'target': 'new',\n}",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1048,
+    "name": "Crear Tarea con el nombre False",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "object_create",
+    "code": "# Available variables:\n#  - env: environment on which the action is triggered\n#  - model: model of the record on which the action is triggered; is a void recordset\n#  - record: record on which the action is triggered; may be void\n#  - records: recordset of all records on which the action is triggered in multi-mode; may be void\n#  - time, datetime, dateutil, timezone: useful Python libraries\n#  - float_compare: utility function to compare floats based on specific precision\n#  - b64encode, b64decode: functions to encode/decode binary data\n#  - log: log(message, level='info'): logging function to record debug information in ir.logging table\n#  - _logger: _logger.info(message): logger to emit messages in server logs\n#  - UserError: exception class for raising user-facing warning messages\n#  - Command: x2many commands namespace\n# To return an action, assign: action = {...}\n\n\n\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 578,
+    "name": "Create Project",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "action = records.action_create_project()",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1904,
+    "name": "HOTEL v1 — CANCELAR",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "LABEL = {'draft': 'CONSULTA', 'opcion': 'OPCION', 'hold': 'HOLD', 'confirmed': 'CONFIRMADA', 'pre_checkin': 'PRE_CHECKIN', 'checked_in': 'CHECKIN', 'checked_out': 'CHECKOUT', 'closed': 'CERRADA', 'cancelled': 'CANCELADA', 'no_show': 'NO_SHOW'}\nnow = datetime.datetime.now()\nfor order in records:\n    cur = order.x_reservation_status or 'draft'\n    if cur not in ('draft','opcion','hold','confirmed','pre_checkin',):\n        raise UserError('HOTEL: transición no permitida %s → CANCELADA en %s.' % (LABEL.get(cur), order.name))\n    order.write({'x_reservation_status': 'cancelled'})\n    if order.state != 'cancel':\n        order.with_context(disable_cancel_warning=True).action_cancel()\n",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1903,
+    "name": "HOTEL v1 — CERRAR",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "LABEL = {'draft': 'CONSULTA', 'opcion': 'OPCION', 'hold': 'HOLD', 'confirmed': 'CONFIRMADA', 'pre_checkin': 'PRE_CHECKIN', 'checked_in': 'CHECKIN', 'checked_out': 'CHECKOUT', 'closed': 'CERRADA', 'cancelled': 'CANCELADA', 'no_show': 'NO_SHOW'}\nnow = datetime.datetime.now()\nfor order in records:\n    cur = order.x_reservation_status or 'draft'\n    if cur not in ('checked_out',):\n        raise UserError('HOTEL: transición no permitida %s → CERRADA en %s.' % (LABEL.get(cur), order.name))\n    order.write({'x_reservation_status': 'closed'})\n",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1901,
+    "name": "HOTEL v1 — CHECKIN",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "LABEL = {'draft': 'CONSULTA', 'opcion': 'OPCION', 'hold': 'HOLD', 'confirmed': 'CONFIRMADA', 'pre_checkin': 'PRE_CHECKIN', 'checked_in': 'CHECKIN', 'checked_out': 'CHECKOUT', 'closed': 'CERRADA', 'cancelled': 'CANCELADA', 'no_show': 'NO_SHOW'}\nnow = datetime.datetime.now()\nfor order in records:\n    cur = order.x_reservation_status or 'draft'\n    if cur not in ('confirmed','pre_checkin',):\n        raise UserError('HOTEL: transición no permitida %s → CHECKIN en %s.' % (LABEL.get(cur), order.name))\n    order.write({'x_reservation_status': 'checked_in', 'x_checkin_actual': now, 'x_checkin_done': True})\n    leaves = order.x_hotel_unit_id\n    while leaves.filtered(lambda u: u.x_child_ids):\n        leaves = leaves.filtered(lambda u: not u.x_child_ids) | leaves.mapped('x_child_ids')\n    leaves.mapped('x_resource_id').sudo().write({'x_occupancy': 'occupied'})\n",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1902,
+    "name": "HOTEL v1 — CHECKOUT",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "LABEL = {'draft': 'CONSULTA', 'opcion': 'OPCION', 'hold': 'HOLD', 'confirmed': 'CONFIRMADA', 'pre_checkin': 'PRE_CHECKIN', 'checked_in': 'CHECKIN', 'checked_out': 'CHECKOUT', 'closed': 'CERRADA', 'cancelled': 'CANCELADA', 'no_show': 'NO_SHOW'}\nnow = datetime.datetime.now()\nfor order in records:\n    cur = order.x_reservation_status or 'draft'\n    if cur not in ('checked_in',):\n        raise UserError('HOTEL: transición no permitida %s → CHECKOUT en %s.' % (LABEL.get(cur), order.name))\n    order.write({'x_reservation_status': 'checked_out', 'x_checkout_actual': now, 'x_checkout_done': True})\n    prop = order.x_hotel_unit_id.x_property_id\n    leaves = order.x_hotel_unit_id\n    while leaves.filtered(lambda u: u.x_child_ids):\n        leaves = leaves.filtered(lambda u: not u.x_child_ids) | leaves.mapped('x_child_ids')\n    leaves.mapped('x_resource_id').sudo().write({'x_occupancy': 'vacant'})\n    if not (prop.x_hk_project_id and prop.x_hk_stage_todo_id):\n        raise UserError('HOTEL: configure proyecto/etapas de housekeeping en la propiedad %s.' % prop.x_name)\n    Task = env['project.task'].sudo()\n    for leaf in leaves:\n        res = leaf.x_resource_id\n        task = Task.search([('project_id', '=', prop.x_hk_project_id.id), ('x_resource_id', '=', res.id), ('stage_id', 'not in', (prop.x_hk_stage_ready_id | prop.x_hk_stage_issue_id).ids)], limit=1) if res else Task\n        if task:\n            task.write({'stage_id': prop.x_hk_stage_todo_id.id, 'x_cleaning': 'checkout'})\n            task.message_post(body='Movida a POR LIMPIAR por CHECKOUT de %s.' % order.name, subtype_xmlid='mail.mt_note')\n        else:\n            Task.create({'name': 'Limpieza %s — %s' % (leaf.x_name, order.name), 'project_id': prop.x_hk_project_id.id, 'stage_id': prop.x_hk_stage_todo_id.id, 'x_resource_id': res.id or False, 'x_cleaning': 'checkout', 'partner_id': order.partner_id.id})\n",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1899,
+    "name": "HOTEL v1 — CONFIRMAR",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "LABEL = {'draft': 'CONSULTA', 'opcion': 'OPCION', 'hold': 'HOLD', 'confirmed': 'CONFIRMADA', 'pre_checkin': 'PRE_CHECKIN', 'checked_in': 'CHECKIN', 'checked_out': 'CHECKOUT', 'closed': 'CERRADA', 'cancelled': 'CANCELADA', 'no_show': 'NO_SHOW'}\nnow = datetime.datetime.now()\nfor order in records:\n    if not order.x_hotel_unit_id:\n        raise UserError('HOTEL: defina la unidad antes de confirmar.')\n    cur = order.x_reservation_status or 'draft'\n    if cur not in ('draft','opcion','hold',):\n        raise UserError('HOTEL: transición no permitida %s → CONFIRMADA en %s.' % (LABEL.get(cur), order.name))\n    order.write({'x_reservation_status': 'confirmed'})\n    if order.state in ('draft', 'sent'):\n        # Conserva el precio comercial acordado: la lista de precios legacy no debe reescribirlo al confirmar\n        agreed = []\n        for l in order.order_line:\n            agreed.append((l, l.price_unit, l.discount))\n        order.action_confirm()\n        for l, pu, disc in agreed:\n            if l.exists() and (l.price_unit != pu or l.discount != disc):\n                l.write({'price_unit': pu, 'discount': disc})\n",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1914,
+    "name": "HOTEL v1 — CONSULTAR DISPONIBILIDAD (solo lectura, QA-002)",
+    "model_id": [
+      2514,
+      "Hotel v1 — Propiedad"
+    ],
+    "state": "code",
+    "code": "# HOTEL v1 — Consulta de disponibilidad (solo lectura). Replica EXACTAMENTE las reglas del motor 1896.\n# Uso: run() con context {'fe':'YYYY-MM-DD','fs':'YYYY-MM-DD','personas':N,'property_id':ID opcional}\nctx = env.context\nfe = ctx.get('fe'); fs = ctx.get('fs'); personas = int(ctx.get('personas') or 0)\nci = datetime.datetime.strptime(fe, '%Y-%m-%d').date()\nco = datetime.datetime.strptime(fs, '%Y-%m-%d').date()\nif co <= ci:\n    raise UserError('HOTEL consulta: fecha_salida debe ser posterior a fecha_entrada')\nnow = datetime.datetime.now()\nSO = env['sale.order'].sudo(); PS = env['planning.slot'].sudo(); UNIT = env['x_hotel_unit'].sudo(); RATE = env['x_hotel_rate'].sudo()\ndom_u = [('x_active', '=', True)]\nif ctx.get('property_id'):\n    dom_u.append(('x_property_id', '=', int(ctx.get('property_id'))))\nopciones = []\nfor unit in UNIT.search(dom_u, order='x_sequence, id'):\n    leaves = UNIT.browse()\n    frontier = unit\n    while frontier:\n        nochild = frontier.filtered(lambda u: not u.x_child_ids)\n        leaves |= nochild\n        frontier = (frontier - nochild).mapped('x_child_ids') - leaves\n    conflict = leaves\n    frontier = leaves\n    while frontier:\n        nxt = frontier.mapped('x_parent_ids') - conflict\n        conflict |= nxt\n        frontier = nxt\n    conflict |= unit\n    motivos = []\n    dom = [('x_hotel_unit_id', 'in', conflict.ids), ('x_checkin', '<', co), ('x_checkout', '>', ci), '|', ('x_reservation_status', 'in', ('confirmed', 'pre_checkin', 'checked_in')), '&', ('x_reservation_status', '=', 'hold'), ('x_hold_expires', '>', now)]\n    for c in SO.search(dom):\n        motivos.append({'tipo': 'reserva', 'sale_order_id': c.id, 'ref': c.name, 'unidad': c.x_hotel_unit_id.x_name, 'estado': c.x_reservation_status, 'hold_expires': str(c.x_hold_expires or '')})\n    tmpl_ids = conflict.mapped('x_product_tmpl_id').ids\n    if tmpl_ids:\n        for c in SO.search([('x_hotel_unit_id', '=', False), ('state', 'in', ('sale', 'done')), ('x_checkin', '<', co), ('x_checkout', '>', ci), ('order_line.product_id.product_tmpl_id', 'in', tmpl_ids)]):\n            motivos.append({'tipo': 'legacy', 'sale_order_id': c.id, 'ref': c.name})\n    prop = unit.x_property_id\n    tz = timezone(prop.x_tz or 'America/Bogota'); utc = timezone('UTC')\n    cin = prop.x_checkin_time or 15.0; cout = prop.x_checkout_time or 11.0\n    st = tz.localize(datetime.datetime(ci.year, ci.month, ci.day, int(cin), int(round((cin % 1) * 60)))).astimezone(utc).replace(tzinfo=None)\n    en = tz.localize(datetime.datetime(co.year, co.month, co.day, int(cout), int(round((cout % 1) * 60)))).astimezone(utc).replace(tzinfo=None)\n    res = conflict.mapped('x_resource_id')\n    if res:\n        slots = PS.search([('resource_id', 'in', res.ids), ('start_datetime', '<', en), ('end_datetime', '>', st)])\n        for s in slots.filtered(lambda s: not s.x_bloqueo_ref and not s.x_bloqueo_src_id and s.x_hotel_block_kind != 'hold' and s.x_checkin_state != 'cancelled' and not (s.sale_line_id and s.sale_line_id.order_id.x_hotel_unit_id)):\n            motivos.append({'tipo': 'bloqueo_calendario', 'planning_slot_id': s.id, 'resource': s.resource_id.name})\n    base = unit.x_cap_base or 0; com = unit.x_cap_comercial or 0; ext = unit.x_cap_extra or 0\n    manual = False\n    cap_ok = True\n    if personas and personas > com:\n        if ext and personas <= ext and unit.x_cap_extra_status in ('confirmada', 'pendiente'):\n            manual = True\n        else:\n            cap_ok = False\n    rate = RATE.search([('x_active', '=', True), ('x_unit_id', '=', unit.id), '|', ('x_date_from', '=', False), ('x_date_from', '<=', ci), '|', ('x_date_to', '=', False), ('x_date_to', '>=', ci)], limit=1)\n    if motivos:\n        estado = 'no_disponible'\n    elif not cap_ok:\n        estado = 'capacidad_insuficiente'\n    elif manual:\n        estado = 'requiere_aprobacion'\n    else:\n        estado = 'disponible'\n    opciones.append({'property_id': prop.id, 'property_name': prop.x_name, 'unit_id': unit.id, 'resource_id': unit.x_resource_id.id or False, 'nombre': unit.x_name, 'tipo': unit.x_unit_type, 'capacidad_base': base, 'capacidad_comercial': com, 'capacidad_extraordinaria': ext, 'extra_status': unit.x_cap_extra_status or False, 'requires_manual_confirmation': manual, 'tarifa': rate.x_price_night if rate else 'requiere_cotizacion', 'moneda': 'COP', 'rate_rule_id': rate.id or False, 'estado': estado, 'motivos': motivos})\nresult = {'fecha_entrada': fe, 'fecha_salida': fs, 'personas': personas, 'inventory_checked_at': str(now) + ' UTC', 'disponible': any(o['estado'] in ('disponible', 'requiere_aprobacion') for o in opciones), 'opciones': opciones}\naction = {'type': 'ir.actions.client', 'tag': 'display_notification', 'params': {'title': 'HOTEL disponibilidad', 'message': 'ok', 'result': result}}\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1922,
+    "name": "HOTEL v1 — COTIZAR ALOJAMIENTO (disponibilidad + tarifa, 003)",
+    "model_id": [
+      2514,
+      "Hotel v1 — Propiedad"
+    ],
+    "state": "code",
+    "code": "# HOTEL v1 — COTIZAR ALOJAMIENTO v2 = disponibilidad (1914) + motor tarifario (1921). Registro auditable x_hotel_quote. — HOTEL-004\n# context: fe, fs, personas, property_id (opcional), channel, include_validated (solo QA/vista previa), qa_fixtures (solo QA)\nctx = dict(env.context)\nnow = datetime.datetime.now()\nAV = env['ir.actions.server'].sudo().browse(1914)\nPR = env['ir.actions.server'].sudo().browse(1921)\navc = {'fe': ctx.get('fe'), 'fs': ctx.get('fs'), 'personas': ctx.get('personas'), 'active_model': 'x_hotel_property'}\nif ctx.get('property_id'):\n    avc['property_id'] = ctx.get('property_id')\nav = AV.with_context(**avc).run()['params']['result']\nunits = [o['unit_id'] for o in av['opciones'] if o['estado'] in ('disponible', 'requiere_aprobacion')]\nprices = {}\nif units:\n    pr = PR.with_context(fe=ctx.get('fe'), fs=ctx.get('fs'), personas=ctx.get('personas'), unit_ids=units, qa_fixtures=bool(ctx.get('qa_fixtures')), include_validated=bool(ctx.get('include_validated')), active_model='x_hotel_rate').run()['params']['result']\n    for p in pr:\n        prices[p['unit_id']] = p\nICP = env['ir.config_parameter'].sudo()\nvh = ICP.get_param('hotel_v1.quote_validity_hours')\nopciones = []\nversions = []\nlevels = []\nPROP = env['x_hotel_property'].sudo()\nDEP = env['x_hotel_deposit_policy'].sudo()\nfor o in av['opciones']:\n    inv = {'disponible': 'available', 'requiere_aprobacion': 'available_requires_approval', 'no_disponible': 'unavailable', 'capacidad_insuficiente': 'insufficient_capacity'}.get(o['estado'], o['estado'])\n    p = prices.get(o['unit_id'])\n    prop = PROP.browse(o['property_id'])\n    dep = DEP.search([('x_property_id', '=', prop.id), ('x_active', '=', True), ('x_kind', '=', 'estandar')], order='x_priority desc', limit=1)\n    opt = {'property_id': o['property_id'], 'property_name': o['property_name'], 'unit_id': o['unit_id'], 'resource_id': o['resource_id'], 'nombre': o['nombre'],\n           'capacidad_base': o['capacidad_base'], 'capacidad_comercial': o['capacidad_comercial'], 'capacidad_extraordinaria': o['capacidad_extraordinaria'],\n           'requires_manual_confirmation': bool(o['requires_manual_confirmation'] or (p and p['requires_manual_confirmation'])),\n           'inventory_status': inv, 'rate_rule_id': p['rate_rule_id'] if p else None, 'currency': 'COP',\n           'precio_total': p['precio_total'] if p else None, 'precio_desde': p['precio_desde'] if p else None,\n           'pricing_status': p['pricing_status'] if p else 'not_applicable', 'pricing_model': p['pricing_model'] if p else None,\n           'approval_level': p['approval_level'] if p else None, 'tax_status': p['tax_status'] if p else None, 'impuestos_incluidos_en_precio': p['impuestos_incluidos_en_precio'] if p else None,\n           'desglose': p['desglose'] if p else [], 'motivo_tarifa': p['motivo'] if p else '', 'motivos_inventario': o['motivos'],\n           'policies': {'checkin_time': prop.x_checkin_time or None, 'checkout_time': prop.x_checkout_time or None, 'timezone': prop.x_tz, 'hold_hours': prop.x_hold_hours or None,\n                        'hold_hours_status': 'PENDIENTE_APROBACION_CEO', 'deposit_pct': dep.x_pct if dep else None, 'policy_governance': 'SIN_ESTADO_DE_APROBACION'}}\n    if p:\n        versions += p['rule_versions']\n        if p['approval_level']:\n            levels.append(p['approval_level'])\n    opciones.append(opt)\nquote = env['x_hotel_quote'].sudo().create({'x_name': 'Q-TMP', 'x_fe': ctx.get('fe'), 'x_fs': ctx.get('fs'), 'x_personas': int(ctx.get('personas') or 0), 'x_checked_at': now, 'x_channel': ctx.get('channel') or 'staff'})\nqid = 'QH-%s-%06d' % (now.strftime('%Y%m%d'), quote.id)\nexpires = (now + datetime.timedelta(hours=float(vh))) if vh not in (False, None, '') else None\nlv = list(dict.fromkeys(levels))\nalevel = lv[0] if len(lv) == 1 else ('mixed:' + ','.join(lv) if lv else None)\nresult = {'query_id': qid, 'quote_id': quote.id, 'inventory_checked_at': av['inventory_checked_at'], 'quoted_at': str(now) + ' UTC', 'fecha_entrada': ctx.get('fe'), 'fecha_salida': ctx.get('fs'), 'personas': int(ctx.get('personas') or 0),\n          'availability': any(x['inventory_status'].startswith('available') for x in opciones), 'quote_expiration': str(expires) + ' UTC' if expires else None,\n          'quote_expiration_status': ('CONFIGURADO_STAGING (%sh) PENDIENTE_APROBACION_CEO' % vh) if expires else 'SIN_VALOR (PENDIENTE_APROBACION_CEO)',\n          'approval_level': alevel, 'include_validated_preview': bool(ctx.get('include_validated')), 'qa_fixtures': bool(ctx.get('qa_fixtures')), 'opciones': opciones}\nquote.sudo().write({'x_name': qid, 'x_payload': json.dumps(result, ensure_ascii=False, default=str), 'x_rule_versions': '\\n'.join(sorted(set(versions))), 'x_expires_at': expires, 'x_approval_level': alevel or ''})\naction = {'type': 'ir.actions.client', 'tag': 'display_notification', 'params': {'title': 'HOTEL cotización', 'message': qid, 'result': result}}\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1935,
+    "name": "HOTEL v1 — CREAR RESERVA DESDE COTIZACIÓN (004)",
+    "model_id": [
+      2524,
+      "Hotel v1 — Cotización (registro auditable)"
+    ],
+    "state": "code",
+    "code": "# HOTEL v1 — CREAR RESERVA DESDE COTIZACIÓN (HOTEL-004): COTIZACIÓN → RESERVA → PRECIO CONGELADO\n# context: quote_id, unit_id, partner_id, mode ('draft'|'hold'), hold_origin, allow_preview (solo QA staging)\nctx = env.context\nnow = datetime.datetime.now()\nQ = env['x_hotel_quote'].sudo().browse(int(ctx.get('quote_id') or 0)).exists()\nif not Q:\n    raise UserError('RESERVA DESDE COTIZACIÓN: cotización inexistente.')\nif Q.x_expires_at and Q.x_expires_at < now:\n    raise UserError('RESERVA DESDE COTIZACIÓN: la cotización %s venció el %s UTC. Recotizar.' % (Q.x_name, Q.x_expires_at))\ndata = json.loads(Q.x_payload or '{}')\nuid_ = int(ctx.get('unit_id') or 0)\nopt = [o for o in data.get('opciones', []) if o.get('unit_id') == uid_]\nif not opt:\n    raise UserError('RESERVA DESDE COTIZACIÓN: la unidad %s no está en la cotización %s.' % (uid_, Q.x_name))\no = opt[0]\nif o.get('pricing_status') != 'quoted' or o.get('precio_total') is None:\n    raise UserError('RESERVA DESDE COTIZACIÓN: %s no tiene precio cotizado (%s). No se inventa precio.' % (o.get('nombre'), o.get('pricing_status')))\nif not str(o.get('inventory_status') or '').startswith('available'):\n    raise UserError('RESERVA DESDE COTIZACIÓN: %s no estaba disponible en la cotización.' % o.get('nombre'))\nlvl = o.get('approval_level')\nif lvl != 'approved' and not ctx.get('allow_preview'):\n    raise UserError('RESERVA DESDE COTIZACIÓN: la tarifa de %s no está APPROVED (%s). Solo se permite en QA con allow_preview.' % (o.get('nombre'), lvl))\nif not ctx.get('partner_id'):\n    raise UserError('RESERVA DESDE COTIZACIÓN: falta cliente.')\nunit = env['x_hotel_unit'].sudo().browse(uid_)\nprod = unit.x_product_tmpl_id.product_variant_id\nif not prod:\n    raise UserError('RESERVA DESDE COTIZACIÓN: la unidad no tiene producto.')\nfe = data.get('fecha_entrada'); fs = data.get('fecha_salida')\nnights = (datetime.datetime.strptime(fs, '%Y-%m-%d').date() - datetime.datetime.strptime(fe, '%Y-%m-%d').date()).days\ntotal = float(o.get('precio_total'))\nrr = o.get('rate_rule_id')\nrules = env['x_hotel_rate'].sudo().search([('x_rule_code', 'in', rr if isinstance(rr, list) else [rr])])\nvers = ', '.join(['%s v%s' % (x.x_rule_code, x.x_version) for x in rules])\nso = env['sale.order'].create({\n    'partner_id': int(ctx.get('partner_id')), 'pricelist_id': 20, 'company_id': unit.x_property_id.x_company_id.id or env.company.id,\n    'x_hotel_unit_id': unit.id, 'x_hotel_property_id': unit.x_property_id.id, 'x_checkin': fe, 'x_checkout': fs,\n    'x_num_adults': int(data.get('personas') or 0), 'x_reservation_status': 'draft', 'x_hotel_quote_id': Q.id,\n    'x_quote_ref': Q.x_name, 'x_frozen_rate_rule': rr if not isinstance(rr, list) else ','.join(rr), 'x_frozen_rate_version': vers,\n    'x_frozen_price_total': total, 'x_frozen_currency': o.get('currency') or 'COP', 'x_frozen_breakdown': json.dumps(o.get('desglose') or [], ensure_ascii=False),\n    'x_frozen_quoted_at': Q.x_checked_at, 'x_frozen_approval_level': lvl, 'x_frozen_tax_status': o.get('tax_status') or 'PENDING_TAX_DEFINITION',\n    'x_hold_origin': ctx.get('hold_origin') or 'staff',\n    'note': 'Creada desde cotización %s (%s). Precio congelado %s %s. Impuestos: %s (no se agregan impuestos no aprobados).' % (Q.x_name, vers, total, o.get('currency') or 'COP', o.get('tax_status')),\n    'order_line': [(0, 0, {'product_id': prod.id, 'product_uom_qty': nights, 'price_unit': total / nights, 'discount': 0, 'tax_ids': [(6, 0, [])],\n                           'name': '%s — %s noches — %s personas — cotización %s' % (unit.x_name, nights, data.get('personas'), Q.x_name)})],\n})\nif (ctx.get('mode') or 'draft') == 'hold':\n    env['ir.actions.server'].sudo().browse(1897).with_context(active_model='sale.order', active_id=so.id, active_ids=so.ids, hotel_hold_origin=ctx.get('hold_origin') or 'staff').run()\nso.message_post(body='Reserva creada desde cotización %s. Regla(s): %s. Precio congelado: %s %s. Desglose: %s' % (Q.x_name, vers, total, o.get('currency'), o.get('desglose')), subtype_xmlid='mail.mt_note')\naction = {'type': 'ir.actions.client', 'tag': 'display_notification', 'params': {'title': 'HOTEL reserva', 'message': so.name, 'result': {'sale_order_id': so.id, 'name': so.name, 'status': so.x_reservation_status}}}\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1923,
+    "name": "HOTEL v1 — Capacidad extra: aprobación gobernada (003)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "# HOTEL v1 — Gobernanza de capacidad extraordinaria (003): solo grupo aprobador, con motivo, sello y auditoría\nGROUP = 'Hotel v1 / Aprobador comercial (tarifas y capacidad extra)'\ngrp = env['res.groups'].sudo().search([('name', '=', GROUP)], limit=1)\nnow = datetime.datetime.now()\nfor o in records:\n    if o.x_hotel_extra_approved:\n        if o.x_hotel_extra_approved_by:\n            continue\n        if not (grp and env.user in grp.sudo().user_ids):\n            raise UserError('CAPACIDAD EXTRAORDINARIA: solo \"%s\" puede aprobar. Usuario %s no autorizado.' % (GROUP, env.user.name))\n        g_ = (o.x_num_adults or 0) + (o.x_num_children or 0)\n        u_ = o.x_hotel_unit_id\n        if u_ and g_ > (u_.x_cap_extra or u_.x_cap_comercial or 0):\n            raise UserError('CAPACIDAD EXTRAORDINARIA: %s huéspedes supera la capacidad extraordinaria máxima (%s) de %s. No aprobable.' % (g_, u_.x_cap_extra or u_.x_cap_comercial, u_.x_name))\n        if not (o.x_hotel_extra_reason or '').strip():\n            raise UserError('CAPACIDAD EXTRAORDINARIA: registre el motivo (x_hotel_extra_reason) antes de aprobar.')\n        o.sudo().write({'x_hotel_extra_approved_by': env.user.id, 'x_hotel_extra_approved_at': now})\n        o.message_post(body='Capacidad extraordinaria APROBADA por %s (%s UTC). Unidad %s, huéspedes %s. Motivo: %s' % (env.user.name, now, o.x_hotel_unit_id.x_name, (o.x_num_adults or 0) + (o.x_num_children or 0), o.x_hotel_extra_reason), subtype_xmlid='mail.mt_note')\n    elif o.x_hotel_extra_approved_by:\n        o.sudo().write({'x_hotel_extra_approved_by': False, 'x_hotel_extra_approved_at': False})\n        o.message_post(body='Aprobación de capacidad extraordinaria RETIRADA/INVALIDADA (%s UTC, usuario %s).' % (now, env.user.name), subtype_xmlid='mail.mt_note')\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1924,
+    "name": "HOTEL v1 — Capacidad extra: invalidar al cambiar huéspedes/unidad (003)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "# HOTEL v1 — Invalidar aprobación de capacidad extra si cambian huéspedes o unidad (003)\nfor o in records:\n    if o.x_hotel_extra_approved:\n        o.write({'x_hotel_extra_approved': False})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1897,
+    "name": "HOTEL v1 — HOLD",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "LABEL = {'draft': 'CONSULTA', 'opcion': 'OPCION', 'hold': 'HOLD', 'confirmed': 'CONFIRMADA', 'pre_checkin': 'PRE_CHECKIN', 'checked_in': 'CHECKIN', 'checked_out': 'CHECKOUT', 'closed': 'CERRADA', 'cancelled': 'CANCELADA', 'no_show': 'NO_SHOW'}\nnow = datetime.datetime.now()\nfor order in records:\n    if not order.x_hotel_unit_id:\n        raise UserError('HOTEL: defina la unidad antes del HOLD.')\n    cur = order.x_reservation_status or 'draft'\n    if cur not in ('draft','opcion',):\n        raise UserError('HOTEL: transición no permitida %s → HOLD en %s.' % (LABEL.get(cur), order.name))\n    hours = order.x_hotel_unit_id.x_property_id.x_hold_hours or 2.0\n    order.write({'x_reservation_status': 'hold', 'x_hold_expires': now + datetime.timedelta(hours=hours), 'x_hold_expired': False})\n    order.message_post(body='HOLD registrado hasta %s UTC (%s h).' % (order.x_hold_expires, hours), subtype_xmlid='mail.mt_note')\n",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1930,
+    "name": "HOTEL v1 — HOLD visible en Planning (003)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "# HOTEL v1 — HOLD visible en Planning (003): refleja el HOLD como planning.slot tipo 'hold' vinculado explícitamente a la reserva.\n# La decisión de disponibilidad sigue en el motor 1896 (sale.order); este slot es representación operativa.\nPS = env['planning.slot'].sudo()\nnow = datetime.datetime.now()\nfor o in records:\n    hs = PS.search([('x_hotel_order_id', '=', o.id), ('x_hotel_block_kind', '=', 'hold')])\n    unit = o.x_hotel_unit_id\n    active = o.x_reservation_status == 'hold' and unit and unit.x_resource_id and o.x_checkin and o.x_checkout and o.x_hold_expires and o.x_hold_expires > now\n    if not active:\n        if hs:\n            hs.unlink()\n        continue\n    if not o.x_hold_created_at:\n        o.sudo().write({'x_hold_created_at': now, 'x_hold_origin': o.x_hold_origin or env.context.get('hotel_hold_origin') or 'staff'})\n    prop = unit.x_property_id\n    tz = timezone(prop.x_tz or 'America/Bogota'); utc = timezone('UTC')\n    cin = prop.x_checkin_time or 15.0; cout = prop.x_checkout_time or 11.0\n    ci = o.x_checkin; co = o.x_checkout\n    st = tz.localize(datetime.datetime(ci.year, ci.month, ci.day, int(cin), int(round((cin % 1) * 60)))).astimezone(utc).replace(tzinfo=None)\n    en = tz.localize(datetime.datetime(co.year, co.month, co.day, int(cout), int(round((cout % 1) * 60)))).astimezone(utc).replace(tzinfo=None)\n    vals = {'resource_id': unit.x_resource_id.id, 'start_datetime': st, 'end_datetime': en, 'x_hotel_order_id': o.id, 'x_hotel_block_kind': 'hold',\n            'name': 'HOLD %s — %s — vence %s UTC — origen %s' % (o.name, o.partner_id.name or '', o.x_hold_expires, o.x_hold_origin or 'staff'), 'state': 'published'}\n    if unit.x_role_id:\n        vals['role_id'] = unit.x_role_id.id\n    if hs:\n        h = hs[0]\n        if h.resource_id.id != vals['resource_id'] or h.start_datetime != st or h.end_datetime != en or h.name != vals['name']:\n            h.write(vals)\n        (hs - h).unlink()\n    else:\n        PS.create(vals)\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1921,
+    "name": "HOTEL v1 — MOTOR TARIFARIO (solo lectura, 003)",
+    "model_id": [
+      2520,
+      "Hotel v1 — Tarifa"
+    ],
+    "state": "code",
+    "code": "# HOTEL v1 — MOTOR TARIFARIO determinista v2 (solo lectura) — ATH-ODOO-HOTEL-004\n# context: fe, fs, personas, unit_ids y/o property_code; include_validated (vista previa QA de reglas VALIDATED); qa_fixtures (solo QA)\n# Nunca agrega impuestos: precio comercial separado del tratamiento tributario.\nctx = env.context\nRATE = env['x_hotel_rate'].sudo()\nci = datetime.datetime.strptime(ctx.get('fe'), '%Y-%m-%d').date()\nco = datetime.datetime.strptime(ctx.get('fs'), '%Y-%m-%d').date()\npersonas = int(ctx.get('personas') or 0)\nqa = bool(ctx.get('qa_fixtures'))\nprev = bool(ctx.get('include_validated'))\nLIVE = ('approved', 'published', 'synced')\nOKST = ('VERIFICADO', 'VERIFICADO_WEB')\nRANK = {'quoted': 0, 'requires_quote': 1, 'pending': 2}\nnights = (co - ci).days\ntargets = [('unit', u) for u in env['x_hotel_unit'].sudo().browse(ctx.get('unit_ids') or [])]\nif ctx.get('property_code'):\n    targets.append(('prop', ctx.get('property_code')))\ndef level(r):\n    if r.x_gov_state in LIVE and r.x_commercial_status in OKST:\n        return 'approved'\n    if prev and r.x_gov_state == 'validated' and r.x_commercial_status in OKST:\n        return 'validated_preview'\n    if qa and r.x_commercial_status == 'QA_FIXTURE':\n        return 'qa_fixture'\n    return False\ndef worst(a, b):\n    return a if RANK[a] >= RANK[b] else b\nres = []\nfor kind, t in targets:\n    if kind == 'unit':\n        allr = RATE.search([('x_active', '=', True), ('x_unit_id', '=', t.id)])\n        out = {'unit_id': t.id, 'unit': t.x_name}\n    else:\n        allr = RATE.search([('x_active', '=', True), ('x_property_code', '=', t), ('x_unit_id', '=', False)])\n        out = {'unit_id': False, 'property_code': t}\n    if not qa:\n        allr = allr.filtered(lambda r: r.x_commercial_status != 'QA_FIXTURE')\n    out.update({'currency': 'COP', 'precio_total': None, 'precio_desde': None, 'pricing_status': 'pending', 'rate_rule_id': None, 'rate_record_ids': [], 'rule_versions': [],\n                'pricing_model': None, 'tax_status': None, 'impuestos_incluidos_en_precio': None, 'approval_level': None, 'requires_manual_confirmation': False, 'noches': nights, 'desglose': [], 'motivo': ''})\n    if personas < 1 or nights < 1:\n        out['motivo'] = 'parámetros inválidos'\n        res.append(out)\n        continue\n    total = 0.0\n    status = 'quoted'\n    motivos = []\n    levels = []\n    used = RATE.browse()\n    d = ci\n    while d < co:\n        dated = allr.filtered(lambda r: level(r) and r.x_date_from and r.x_date_from <= d and (not r.x_date_to or r.x_date_to >= d))\n        cands = dated.filtered(lambda r: (not r.x_max_guests or personas <= r.x_max_guests) and (r.x_pricing_model not in ('per_person', 'group') or personas >= (r.x_min_group or 0)))\n        cands = cands.sorted(key=lambda r: (r.x_priority or 0, r.x_version or 0, r.id), reverse=True)\n        if dated and not cands:\n            status = worst(status, 'requires_quote')\n            motivos.append('%s personas fuera del rango de %s: cotización manual' % (personas, ', '.join(dated.mapped('x_rule_code'))))\n            used |= dated[:1]\n            d = d + datetime.timedelta(days=1)\n            continue\n        if not cands:\n            ref = allr.sorted(key=lambda r: (r.x_priority or 0, r.x_version or 0, r.id), reverse=True)[:1]\n            used |= ref\n            if ref and (ref.x_commercial_status == 'REQUIRES_QUOTE' or (ref.x_commercial_status == 'CONFLICTO' and ref.x_pricing_model == 'quote')):\n                status = worst(status, 'requires_quote')\n                motivos.append('%s: %s → cotización manual' % (ref.x_rule_code, ref.x_commercial_status))\n            else:\n                status = worst(status, 'pending')\n                motivos.append('%s: sin versión utilizable (%s/%s)' % (ref.x_rule_code if ref else 'SIN REGLA', ref.x_commercial_status if ref else '-', ref.x_gov_state if ref else '-'))\n            d = d + datetime.timedelta(days=1)\n            continue\n        r = cands[0]\n        used |= r\n        levels.append(level(r))\n        m = r.x_pricing_model\n        p = None\n        if r.x_min_nights and nights < r.x_min_nights:\n            status = worst(status, 'requires_quote'); motivos.append('%s: mínimo %s noches' % (r.x_rule_code, r.x_min_nights))\n        elif m == 'per_unit':\n            p = r.x_price_night\n        elif m == 'per_occupancy':\n            line = r.x_line_ids.filtered(lambda l: l.x_guests == personas)[:1]\n            if line and line.x_price_night > 0:\n                p = line.x_price_night\n                if line.x_requires_approval:\n                    out['requires_manual_confirmation'] = True\n            else:\n                status = worst(status, 'requires_quote'); motivos.append('%s: sin tarifa aprobada para %s huéspedes → cotización manual' % (r.x_rule_code, personas))\n        elif m == 'per_person':\n            p = r.x_price_person_night * personas\n        elif m == 'per_person_group':\n            unit_price = r.x_group_price_person if personas >= (r.x_min_group or 0) else r.x_price_person_night\n            p = unit_price * personas\n        elif m == 'base_plus_extra':\n            p = r.x_price_night + max(0, personas - (r.x_base_guests or 0)) * r.x_extra_person_price\n        elif m == 'group':\n            p = r.x_price_person_night * personas if r.x_price_person_night else r.x_price_night\n        elif m == 'from_price':\n            status = worst(status, 'requires_quote'); out['precio_desde'] = r.x_price_from or None\n            motivos.append('%s: tarifa desde → cotización manual' % r.x_rule_code)\n        else:\n            status = worst(status, 'requires_quote'); motivos.append('%s: requiere cotización' % r.x_rule_code)\n        if p is not None:\n            total += p\n            out['desglose'].append({'noche': str(d), 'rate_rule_id': r.x_rule_code, 'version': r.x_version, 'precio': p, 'approval_level': level(r)})\n        d = d + datetime.timedelta(days=1)\n    codes = list(dict.fromkeys(used.mapped('x_rule_code')))\n    out['rate_rule_id'] = codes[0] if len(codes) == 1 else (codes or None)\n    out['rate_record_ids'] = used.ids\n    out['rule_versions'] = ['%s v%s [%s/%s]' % (x.x_rule_code, x.x_version, x.x_commercial_status, x.x_gov_state) for x in used]\n    out['pricing_model'] = used[:1].x_pricing_model or None\n    tm = used[:1].x_tax_mode or None\n    out['tax_status'] = 'PENDING_TAX_DEFINITION' if tm in ('pending_tax_definition', 'pending', None) else tm\n    out['impuestos_incluidos_en_precio'] = True if tm == 'included' else (False if tm in ('excluded', 'exempt') else None)\n    out['pricing_status'] = status\n    out['motivo'] = '; '.join(list(dict.fromkeys(motivos)))\n    lv = list(dict.fromkeys(levels))\n    out['approval_level'] = ('approved' if lv == ['approved'] else ('qa_fixture' if 'qa_fixture' in lv else ('validated_preview' if lv else None)))\n    if status == 'quoted':\n        out['precio_total'] = total\n    else:\n        out['desglose'] = []\n    res.append(out)\naction = {'type': 'ir.actions.client', 'tag': 'display_notification', 'params': {'title': 'HOTEL tarifas', 'message': 'ok', 'result': res}}\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1896,
+    "name": "HOTEL v1 — Motor inventario compuesto / anti-doble-reserva",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "# HOTEL v1 — Motor de inventario compuesto (genérico, sin nombres de propiedad)\nBLOCKING = ('hold', 'confirmed', 'pre_checkin', 'checked_in')\nASKING = ('draft', 'opcion')\nSO = env['sale.order'].sudo()\nPS = env['planning.slot'].sudo()\nUNIT = env['x_hotel_unit'].sudo()\nnow = datetime.datetime.now()\nLABEL = {'draft': 'CONSULTA', 'opcion': 'OPCION', 'hold': 'HOLD', 'confirmed': 'CONFIRMADA', 'pre_checkin': 'PRE_CHECKIN', 'checked_in': 'CHECKIN', 'checked_out': 'CHECKOUT', 'closed': 'CERRADA', 'cancelled': 'CANCELADA', 'no_show': 'NO_SHOW'}\nfor order in records:\n    vals = {}\n    unit = order.x_hotel_unit_id\n    if not unit:\n        tmpls = order.order_line.mapped('product_id.product_tmpl_id')\n        if tmpls:\n            unit = UNIT.search([('x_product_tmpl_id', 'in', tmpls.ids)], limit=1)\n            if unit:\n                vals['x_hotel_unit_id'] = unit.id\n    if unit and not order.x_hotel_property_id:\n        vals['x_hotel_property_id'] = unit.x_property_id.id\n    status = order.x_reservation_status or 'draft'\n    if order.state == 'sale' and status in ('draft', 'opcion', 'hold'):\n        # Confirmación comercial por fuera del flujo HOTEL v1: se valida como CONFIRMADA (bloquea o rechaza)\n        status = 'confirmed'\n        vals['x_reservation_status'] = 'confirmed'\n    if status == 'hold' and not order.x_hold_expires:\n        hours = unit.x_property_id.x_hold_hours or 2.0\n        vals['x_hold_expires'] = now + datetime.timedelta(hours=hours)\n        vals['x_hold_expired'] = False\n    if vals:\n        order.sudo().write(vals)\n    if not unit or status not in BLOCKING + ASKING:\n        continue\n    ci = order.x_checkin\n    co = order.x_checkout\n    if not ci or not co:\n        if status in BLOCKING:\n            raise UserError('HOTEL: la reserva %s necesita check-in y check-out para estado %s.' % (order.name, LABEL.get(status)))\n        continue\n    if co <= ci:\n        raise UserError('HOTEL: check-out debe ser posterior a check-in (%s).' % order.name)\n    # Conjunto de conflicto: hojas físicas de la unidad + todas las unidades que contienen alguna de esas hojas\n    leaves = UNIT.browse()\n    frontier = unit\n    while frontier:\n        nochild = frontier.filtered(lambda u: not u.x_child_ids)\n        leaves |= nochild\n        frontier = (frontier - nochild).mapped('x_child_ids') - leaves\n    conflict = leaves\n    frontier = leaves\n    while frontier:\n        nxt = frontier.mapped('x_parent_ids') - conflict\n        conflict |= nxt\n        frontier = nxt\n    conflict |= unit\n    if status in BLOCKING:\n        # Bloqueo de fila: serializa solicitudes concurrentes sobre unidades relacionadas\n        conflict.write({'x_lock_touch': now})\n        guests = (order.x_num_adults or 0) + (order.x_num_children or 0)\n        cap = unit.x_cap_comercial or 0\n        if cap and guests > cap:\n            if unit.x_cap_extra and guests <= unit.x_cap_extra:\n                if not order.x_hotel_extra_approved:\n                    raise UserError('HOTEL: %s huéspedes supera CAPACIDAD_COMERCIAL %s de %s. Capacidad extraordinaria (%s) REQUIERE APROBACIÓN.' % (guests, cap, unit.x_name, unit.x_cap_extra))\n            else:\n                raise UserError('HOTEL: %s huéspedes supera la capacidad permitida de %s (comercial %s).' % (guests, unit.x_name, cap))\n    dom = [('id', 'not in', order.ids), ('x_hotel_unit_id', 'in', conflict.ids), ('x_checkin', '<', co), ('x_checkout', '>', ci),\n           '|', ('x_reservation_status', 'in', ('confirmed', 'pre_checkin', 'checked_in')),\n           '&', ('x_reservation_status', '=', 'hold'), ('x_hold_expires', '>', now)]\n    clash = SO.search(dom, limit=1)\n    reason = False\n    if clash:\n        extra = ''\n        if clash.x_reservation_status == 'hold':\n            extra = ' (HOLD vence %s UTC)' % clash.x_hold_expires\n        reason = '%s ocupada por %s [%s] %s→%s, estado %s%s' % (clash.x_hotel_unit_id.x_name, clash.name, clash.partner_id.name or '', clash.x_checkin, clash.x_checkout, LABEL.get(clash.x_reservation_status), extra)\n    if not reason:\n        tmpl_ids = conflict.mapped('x_product_tmpl_id').ids\n        if tmpl_ids:\n            legacy = SO.search([('id', 'not in', order.ids), ('x_hotel_unit_id', '=', False), ('state', 'in', ('sale', 'done')), ('x_checkin', '<', co), ('x_checkout', '>', ci), ('order_line.product_id.product_tmpl_id', 'in', tmpl_ids)], limit=1)\n            if legacy:\n                reason = 'reserva legacy %s %s→%s' % (legacy.name, legacy.x_checkin, legacy.x_checkout)\n    if not reason:\n        prop = unit.x_property_id\n        tzname = prop.x_tz or 'America/Bogota'\n        cin = prop.x_checkin_time or 15.0\n        cout = prop.x_checkout_time or 11.0\n        tz = timezone(tzname)\n        utc = timezone('UTC')\n        st = tz.localize(datetime.datetime(ci.year, ci.month, ci.day, int(cin), int(round((cin % 1) * 60)))).astimezone(utc).replace(tzinfo=None)\n        en = tz.localize(datetime.datetime(co.year, co.month, co.day, int(cout), int(round((cout % 1) * 60)))).astimezone(utc).replace(tzinfo=None)\n        res = conflict.mapped('x_resource_id')\n        if res:\n            slots = PS.search([('resource_id', 'in', res.ids), ('start_datetime', '<', en), ('end_datetime', '>', st)])\n            slots = slots.filtered(lambda s: not s.x_bloqueo_ref and not s.x_bloqueo_src_id and s.x_hotel_block_kind != 'hold' and s.x_checkin_state != 'cancelled' and not (s.sale_line_id and s.sale_line_id.order_id.x_hotel_unit_id))\n            if slots:\n                s0 = slots[0]\n                reason = 'bloqueo en calendario/OTA (planning.slot %s, %s, %s→%s UTC)' % (s0.id, s0.resource_id.name, s0.start_datetime, s0.end_datetime)\n    if status in BLOCKING:\n        if reason:\n            raise UserError('HOTEL — NO DISPONIBLE: %s no puede pasar a %s del %s al %s. Motivo: %s. No se permite doble reserva.' % (unit.x_name, LABEL.get(status), ci, co, reason))\n    else:\n        alert = ('ALERTA COMERCIAL: %s no disponible del %s al %s — %s' % (unit.x_name, ci, co, reason)) if reason else False\n        if (order.x_hotel_alert or False) != alert:\n            order.sudo().write({'x_hotel_alert': alert})\n            if alert and clash:\n                clash.message_post(body='Solicitud concurrente: %s (%s) pidió %s del %s al %s mientras esta reserva la bloquea.' % (order.name, order.partner_id.name or '', unit.x_name, ci, co), subtype_xmlid='mail.mt_note')\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1905,
+    "name": "HOTEL v1 — NO SHOW",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "LABEL = {'draft': 'CONSULTA', 'opcion': 'OPCION', 'hold': 'HOLD', 'confirmed': 'CONFIRMADA', 'pre_checkin': 'PRE_CHECKIN', 'checked_in': 'CHECKIN', 'checked_out': 'CHECKOUT', 'closed': 'CERRADA', 'cancelled': 'CANCELADA', 'no_show': 'NO_SHOW'}\nnow = datetime.datetime.now()\nfor order in records:\n    cur = order.x_reservation_status or 'draft'\n    if cur not in ('confirmed','pre_checkin',):\n        raise UserError('HOTEL: transición no permitida %s → NO_SHOW en %s.' % (LABEL.get(cur), order.name))\n    order.write({'x_reservation_status': 'no_show'})\n",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1898,
+    "name": "HOTEL v1 — OPCION",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "LABEL = {'draft': 'CONSULTA', 'opcion': 'OPCION', 'hold': 'HOLD', 'confirmed': 'CONFIRMADA', 'pre_checkin': 'PRE_CHECKIN', 'checked_in': 'CHECKIN', 'checked_out': 'CHECKOUT', 'closed': 'CERRADA', 'cancelled': 'CANCELADA', 'no_show': 'NO_SHOW'}\nnow = datetime.datetime.now()\nfor order in records:\n    cur = order.x_reservation_status or 'draft'\n    if cur not in ('draft',):\n        raise UserError('HOTEL: transición no permitida %s → OPCION en %s.' % (LABEL.get(cur), order.name))\n    order.write({'x_reservation_status': 'opcion'})\n",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1900,
+    "name": "HOTEL v1 — PRE CHECKIN",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "LABEL = {'draft': 'CONSULTA', 'opcion': 'OPCION', 'hold': 'HOLD', 'confirmed': 'CONFIRMADA', 'pre_checkin': 'PRE_CHECKIN', 'checked_in': 'CHECKIN', 'checked_out': 'CHECKOUT', 'closed': 'CERRADA', 'cancelled': 'CANCELADA', 'no_show': 'NO_SHOW'}\nnow = datetime.datetime.now()\nfor order in records:\n    cur = order.x_reservation_status or 'draft'\n    if cur not in ('confirmed',):\n        raise UserError('HOTEL: transición no permitida %s → PRE_CHECKIN en %s.' % (LABEL.get(cur), order.name))\n    order.write({'x_reservation_status': 'pre_checkin'})\n",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1937,
+    "name": "HOTEL v1 — Precio congelado: reserva inmutable (004)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "# HOTEL v1 — Reserva con precio congelado: fechas, unidad, huéspedes y datos congelados son inmutables (004)\nraise UserError('PRECIO CONGELADO (%s): no se pueden cambiar fechas, unidad, huéspedes ni datos de cotización de una reserva creada desde cotización. Genere una nueva cotización y reserva.' % ', '.join(records.mapped('name')))\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1938,
+    "name": "HOTEL v1 — Tarifa VALIDATED editada vuelve a DRAFT (004)",
+    "model_id": [
+      2520,
+      "Hotel v1 — Tarifa"
+    ],
+    "state": "code",
+    "code": "# HOTEL v1 — Editar valores comerciales de una regla VALIDATED la devuelve a DRAFT (requiere re-validación) (004)\nfor r in records:\n    r.sudo().write({'x_gov_state': 'draft', 'x_notes': (r.x_notes or '') + '\\nDevuelta a DRAFT por edición de valores (%s, %s UTC)' % (env.user.name, datetime.datetime.now())})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1916,
+    "name": "HOTEL v1 — Tarifa: gobernanza y aprobación (003)",
+    "model_id": [
+      2520,
+      "Hotel v1 — Tarifa"
+    ],
+    "state": "code",
+    "code": "# HOTEL v1 — Gobernanza de tarifas: DRAFT→VALIDATED→APPROVED→PUBLISHED→SYNCED (ATH-ODOO-HOTEL-003)\nLIVE = ('approved', 'published', 'synced')\nGROUP = 'Hotel v1 / Aprobador comercial (tarifas y capacidad extra)'\nnow = datetime.datetime.now()\ngrp = env['res.groups'].sudo().search([('name', '=', GROUP)], limit=1)\nis_approver = bool(grp) and env.user in grp.sudo().user_ids\nfor r in records:\n    st = r.x_gov_state or 'draft'\n    if not r.x_rule_code:\n        raise UserError('TARIFA: x_rule_code (rate_rule_id estable) es obligatorio.')\n    if not r.x_version:\n        r.sudo().write({'x_version': 1})\n    dup = env['x_hotel_rate'].sudo().search_count([('id', '!=', r.id), ('x_rule_code', '=', r.x_rule_code), ('x_version', '=', r.x_version or 1)])\n    if dup:\n        raise UserError('TARIFA: ya existe %s versión %s. Cree una versión nueva.' % (r.x_rule_code, r.x_version))\n    if st in ('validated',) + LIVE:\n        if r.x_commercial_status in ('CONFLICTO', 'CONFLICTO_CAPACIDAD', 'PENDIENTE_CEO', 'SIN_DATO', 'QA_FIXTURE', False):\n            raise UserError('TARIFA %s: estado comercial %s NO puede pasar a %s.' % (r.x_rule_code, r.x_commercial_status or 'vacío', st.upper()))\n        m = r.x_pricing_model\n        if not m:\n            raise UserError('TARIFA %s: falta modelo tarifario.' % r.x_rule_code)\n        if r.x_commercial_status == 'REQUIRES_QUOTE' and m not in ('quote', 'from_price'):\n            raise UserError('TARIFA %s: REQUIRES_QUOTE solo admite modelo quote/from_price.' % r.x_rule_code)\n        faltan = []\n        if m == 'per_unit' and not r.x_price_night > 0: faltan.append('precio noche')\n        if m == 'per_occupancy' and not r.x_line_ids.filtered(lambda l: l.x_price_night > 0): faltan.append('líneas de ocupación')\n        if m == 'per_person' and not r.x_price_person_night > 0: faltan.append('precio persona/noche')\n        if m == 'base_plus_extra' and not (r.x_price_night > 0 and r.x_base_guests > 0 and r.x_extra_person_price > 0): faltan.append('base/N/adicional')\n        if m == 'group' and not (r.x_min_group > 0 and (r.x_price_person_night > 0 or r.x_price_night > 0)): faltan.append('grupo mínimo y precio')\n        if m == 'from_price' and not r.x_price_from > 0: faltan.append('precio desde')\n        if m == 'per_person_group' and not (r.x_price_person_night > 0 and r.x_group_price_person > 0 and r.x_min_group > 0): faltan.append('precio persona, precio grupo y umbral de grupo')\n        if m not in ('quote', 'from_price') and (r.x_tax_mode or 'pending') == 'pending': faltan.append('tratamiento de impuestos')\n        if not r.x_currency: faltan.append('moneda')\n        if not r.x_date_from: faltan.append('effective_from')\n        if not r.x_source or not r.x_source_version: faltan.append('source/source_version')\n        if not r.x_change_reason: faltan.append('change_reason')\n        if faltan:\n            raise UserError('TARIFA %s incompleta para %s: %s. No se estima ni se rellena.' % (r.x_rule_code, st.upper(), ', '.join(faltan)))\n    if st in LIVE:\n        if not is_approver:\n            raise UserError('TARIFA %s: solo el grupo \"%s\" puede pasar a %s. Usuario %s no autorizado.' % (r.x_rule_code, GROUP, st.upper(), env.user.name))\n        live = env['x_hotel_rate'].sudo().search_count([('id', '!=', r.id), ('x_rule_code', '=', r.x_rule_code), ('x_gov_state', 'in', LIVE), ('x_active', '=', True)])\n        if live:\n            raise UserError('TARIFA %s: ya hay otra versión vigente. Retire la anterior primero.' % r.x_rule_code)\n        if not r.x_approved_by:\n            r.sudo().write({'x_approved_by': env.user.id, 'x_approved_at': now})\n    elif st in ('draft', 'validated') and r.x_approved_by:\n        r.sudo().write({'x_approved_by': False, 'x_approved_at': False})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1917,
+    "name": "HOTEL v1 — Tarifa: inmutabilidad de vigentes (003)",
+    "model_id": [
+      2520,
+      "Hotel v1 — Tarifa"
+    ],
+    "state": "code",
+    "code": "# HOTEL v1 — Inmutabilidad de tarifas vigentes (APPROVED/PUBLISHED/SYNCED)\nraise UserError('TARIFA vigente (%s): los valores comerciales son inmutables. Retire la versión (RETIRED) y cree una nueva con x_supersedes_id y change_reason.' % ', '.join(records.mapped('x_rule_code')))\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1920,
+    "name": "HOTEL v1 — Tarifa: transiciones de vigentes (003)",
+    "model_id": [
+      2520,
+      "Hotel v1 — Tarifa"
+    ],
+    "state": "code",
+    "code": "# HOTEL v1 — Transiciones desde estado vigente: solo avanzar (published/synced) o RETIRED, y solo aprobadores\nGROUP = 'Hotel v1 / Aprobador comercial (tarifas y capacidad extra)'\ngrp = env['res.groups'].sudo().search([('name', '=', GROUP)], limit=1)\nif not (grp and env.user in grp.sudo().user_ids):\n    raise UserError('TARIFA vigente: solo \"%s\" puede cambiar su estado.' % GROUP)\nfor r in records:\n    if r.x_gov_state not in ('approved', 'published', 'synced', 'retired'):\n        raise UserError('TARIFA %s: una versión vigente no puede volver a %s. Use RETIRED y cree nueva versión.' % (r.x_rule_code, (r.x_gov_state or 'draft').upper()))\n    if r.x_gov_state == 'retired':\n        r.sudo().write({'x_notes': (r.x_notes or '') + '\\nRETIRED por %s el %s UTC' % (env.user.name, datetime.datetime.now())})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1906,
+    "name": "HOTEL v1 — VENCER HOLDS",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "LABEL = {'draft': 'CONSULTA', 'opcion': 'OPCION', 'hold': 'HOLD', 'confirmed': 'CONFIRMADA', 'pre_checkin': 'PRE_CHECKIN', 'checked_in': 'CHECKIN', 'checked_out': 'CHECKOUT', 'closed': 'CERRADA', 'cancelled': 'CANCELADA', 'no_show': 'NO_SHOW'}\nnow = datetime.datetime.now()\nexp = env['sale.order'].sudo().search([('x_reservation_status', '=', 'hold'), ('x_hold_expires', '<=', now)])\nfor o in exp:\n    o.write({'x_reservation_status': 'draft', 'x_hold_expired': True})\n    o.message_post(body='HOLD vencido (%s UTC): inventario liberado automáticamente.' % o.x_hold_expires, subtype_xmlid='mail.mt_note')\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1907,
+    "name": "HOTEL v1 — Vencer HOLDs y liberar inventario (STAGING)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "LABEL = {'draft': 'CONSULTA', 'opcion': 'OPCION', 'hold': 'HOLD', 'confirmed': 'CONFIRMADA', 'pre_checkin': 'PRE_CHECKIN', 'checked_in': 'CHECKIN', 'checked_out': 'CHECKOUT', 'closed': 'CERRADA', 'cancelled': 'CANCELADA', 'no_show': 'NO_SHOW'}\nnow = datetime.datetime.now()\nexp = env['sale.order'].sudo().search([('x_reservation_status', '=', 'hold'), ('x_hold_expires', '<=', now)])\nfor o in exp:\n    o.write({'x_reservation_status': 'draft', 'x_hold_expired': True})\n    o.message_post(body='HOLD vencido (%s UTC): inventario liberado automáticamente.' % o.x_hold_expires, subtype_xmlid='mail.mt_note')\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1487,
+    "name": "HouseKeeping: Set resources as occupied",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "\nif slots := record.order_line.planning_slot_ids:\n    for slot in slots.filtered(lambda s: s.resource_id.role_ids and any(role.x_is_a_room_offer for role in s.resource_id.role_ids)):\n        slot.resource_id['x_occupancy'] = 'occupied'\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1488,
+    "name": "HouseKeeping: Set resources as vacant",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "\nif slots := record.order_line.planning_slot_ids:\n    for slot in slots.filtered(lambda s: s.resource_id.role_ids and any(role.x_is_a_room_offer for role in s.resource_id.role_ids)):\n        slot.resource_id['x_occupancy'] = 'vacant'\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 555,
+    "name": "Mark Quotation as Sent",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "action = records.action_quotation_sent()",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1624,
+    "name": "Nota automática — Crédito 12 cuotas",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "for record in records:\n    if record.payment_term_id.id == 23 and record.amount_total > 0:\n        contado = record.amount_total\n        credito = round(contado * 1.2)\n        ahorro = round(credito - contado)\n\n        if record.x_initial_payment and record.x_initial_payment > 0:\n            inicial = round(record.x_initial_payment)\n            inicial_label = 'Cuota inicial acordada'\n        else:\n            inicial = round(credito * 0.5)\n            inicial_label = 'Cuota inicial (50%)'\n\n        saldo = round(credito - inicial)\n        cuota = round(saldo / 12)\n\n        contado_s = '{:,.0f}'.format(contado).replace(',', '.')\n        credito_s = '{:,.0f}'.format(credito).replace(',', '.')\n        ahorro_s = '{:,.0f}'.format(ahorro).replace(',', '.')\n        inicial_s = '{:,.0f}'.format(inicial).replace(',', '.')\n        saldo_s = '{:,.0f}'.format(saldo).replace(',', '.')\n        cuota_s = '{:,.0f}'.format(cuota).replace(',', '.')\n\n        nota = ('<p><strong>PAGO DE CONTADO: $' + contado_s + '</strong><br/>¡Ahórrese $' + ahorro_s + ' pagando el día de la instalación!</p>'\n                '<p><strong>PAGO A CRÉDITO: $' + credito_s + '</strong><br/>- ' + inicial_label + ': $' + inicial_s + ' (día de instalación)<br/>- Saldo: $' + saldo_s + '<br/>- 12 cuotas semanales de $' + cuota_s + ' c/u<br/>- Sin intereses</p>'\n                '<p><strong>ADICIONALES</strong> (se cobran solo si se requieren):<br/>- Cable UTP interior: $1.500/metro<br/>- Cable UTP exterior: $2.000/metro<br/>- Cable de corriente: $1.500/metro<br/>- Video Balun adicional: $10.000 c/u<br/>- Fuente 12V 1.5A adicional: $12.000 c/u<br/>- Caja de paso 10x10: $5.000 c/u<br/>- Borneras DC: $3.000 c/u<br/>- Cámara Bala 2MPX B/N Hilook adicional: $75.000 c/u<br/>- Punto mano de obra adicional: $60.000 c/u<br/>- Recargo altura + escalera: $50.000/punto</p>'\n                '<p><strong>GARANTÍA:</strong><br/>- Equipos nuevos: 1 año<br/>- Disco Duro Pull Línea Económica: 3 meses<br/>- Mano de obra: 1 año</p>'\n                '<p>Tiempo de ejecución: 1 a 2 días<br/>Validez de la oferta: 15 días</p>'\n                '<p>ATHERON S.A.S - NIT: 901.881.946-1<br/>Zipaquirá, Colombia - Tel: 3108699848</p>')\n        record.write({'note': nota})\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1533,
+    "name": "Pause Subscription",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "\nif records:\n    records.pause_subscription()\n        ",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1925,
+    "name": "ROLLBACK COPY 003 — 1896 motor (pre-003)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "# COPIA DE ROLLBACK — NO EJECUTAR. Código previo a ATH-ODOO-HOTEL-003.\n# # HOTEL v1 — Motor de inventario compuesto (genérico, sin nombres de propiedad)\n# BLOCKING = ('hold', 'confirmed', 'pre_checkin', 'checked_in')\n# ASKING = ('draft', 'opcion')\n# SO = env['sale.order'].sudo()\n# PS = env['planning.slot'].sudo()\n# UNIT = env['x_hotel_unit'].sudo()\n# now = datetime.datetime.now()\n# LABEL = {'draft': 'CONSULTA', 'opcion': 'OPCION', 'hold': 'HOLD', 'confirmed': 'CONFIRMADA', 'pre_checkin': 'PRE_CHECKIN', 'checked_in': 'CHECKIN', 'checked_out': 'CHECKOUT', 'closed': 'CERRADA', 'cancelled': 'CANCELADA', 'no_show': 'NO_SHOW'}\n# for order in records:\n#     vals = {}\n#     unit = order.x_hotel_unit_id\n#     if not unit:\n#         tmpls = order.order_line.mapped('product_id.product_tmpl_id')\n#         if tmpls:\n#             unit = UNIT.search([('x_product_tmpl_id', 'in', tmpls.ids)], limit=1)\n#             if unit:\n#                 vals['x_hotel_unit_id'] = unit.id\n#     if unit and not order.x_hotel_property_id:\n#         vals['x_hotel_property_id'] = unit.x_property_id.id\n#     status = order.x_reservation_status or 'draft'\n#     if order.state == 'sale' and status in ('draft', 'opcion', 'hold'):\n#         # Confirmación comercial por fuera del flujo HOTEL v1: se valida como CONFIRMADA (bloquea o rechaza)\n#         status = 'confirmed'\n#         vals['x_reservation_status'] = 'confirmed'\n#     if status == 'hold' and not order.x_hold_expires:\n#         hours = unit.x_property_id.x_hold_hours or 2.0\n#         vals['x_hold_expires'] = now + datetime.timedelta(hours=hours)\n#         vals['x_hold_expired'] = False\n#     if vals:\n#         order.sudo().write(vals)\n#     if not unit or status not in BLOCKING + ASKING:\n#         continue\n#     ci = order.x_checkin\n#     co = order.x_checkout\n#     if not ci or not co:\n#         if status in BLOCKING:\n#             raise UserError('HOTEL: la reserva %s necesita check-in y check-out para estado %s.' % (order.name, LABEL.get(status)))\n#         continue\n#     if co <= ci:\n#         raise UserError('HOTEL: check-out debe ser posterior a check-in (%s).' % order.name)\n#     # Conjunto de conflicto: hojas físicas de la unidad + todas las unidades que contienen alguna de esas hojas\n#     leaves = UNIT.browse()\n#     frontier = unit\n#     while frontier:\n#         nochild = frontier.filtered(lambda u: not u.x_child_ids)\n#         leaves |= nochild\n#         frontier = (frontier - nochild).mapped('x_child_ids') - leaves\n#     conflict = leaves\n#     frontier = leaves\n#     while frontier:\n#         nxt = frontier.mapped('x_parent_ids') - conflict\n#         conflict |= nxt\n#         frontier = nxt\n#     conflict |= unit\n#     if status in BLOCKING:\n#         # Bloqueo de fila: serializa solicitudes concurrentes sobre unidades relacionadas\n#         conflict.write({'x_lock_touch': now})\n#         guests = (order.x_num_adults or 0) + (order.x_num_children or 0)\n#         cap = unit.x_cap_comercial or 0\n#         if cap and guests > cap:\n#             if unit.x_cap_extra and guests <= unit.x_cap_extra:\n#                 if not order.x_hotel_extra_approved:\n#                     raise UserError('HOTEL: %s huéspedes supera CAPACIDAD_COMERCIAL %s de %s. Capacidad extraordinaria (%s) REQUIERE APROBACIÓN.' % (guests, cap, unit.x_name, unit.x_cap_extra))\n#             else:\n#                 raise UserError('HOTEL: %s huéspedes supera la capacidad permitida de %s (comercial %s).' % (guests, unit.x_name, cap))\n#     dom = [('id', 'not in', order.ids), ('x_hotel_unit_id', 'in', conflict.ids), ('x_checkin', '<', co), ('x_checkout', '>', ci),\n#            '|', ('x_reservation_status', 'in', ('confirmed', 'pre_checkin', 'checked_in')),\n#            '&', ('x_reservation_status', '=', 'hold'), ('x_hold_expires', '>', now)]\n#     clash = SO.search(dom, limit=1)\n#     reason = False\n#     if clash:\n#         extra = ''\n#         if clash.x_reservation_status == 'hold':\n#             extra = ' (HOLD vence %s UTC)' % clash.x_hold_expires\n#         reason = '%s ocupada por %s [%s] %s→%s, estado %s%s' % (clash.x_hotel_unit_id.x_name, clash.name, clash.partner_id.name or '', clash.x_checkin, clash.x_checkout, LABEL.get(clash.x_reservation_status), extra)\n#     if not reason:\n#         tmpl_ids = conflict.mapped('x_product_tmpl_id').ids\n#         if tmpl_ids:\n#             legacy = SO.search([('id', 'not in', order.ids), ('x_hotel_unit_id', '=', False), ('state', 'in', ('sale', 'done')), ('x_checkin', '<', co), ('x_checkout', '>', ci), ('order_line.product_id.product_tmpl_id', 'in', tmpl_ids)], limit=1)\n#             if legacy:\n#                 reason = 'reserva legacy %s %s→%s' % (legacy.name, legacy.x_checkin, legacy.x_checkout)\n#     if not reason:\n#         prop = unit.x_property_id\n#         tzname = prop.x_tz or 'America/Bogota'\n#         cin = prop.x_checkin_time or 15.0\n#         cout = prop.x_checkout_time or 11.0\n#         tz = timezone(tzname)\n#         utc = timezone('UTC')\n#         st = tz.localize(datetime.datetime(ci.year, ci.month, ci.day, int(cin), int(round((cin % 1) * 60)))).astimezone(utc).replace(tzinfo=None)\n#         en = tz.localize(datetime.datetime(co.year, co.month, co.day, int(cout), int(round((cout % 1) * 60)))).astimezone(utc).replace(tzinfo=None)\n#         res = conflict.mapped('x_resource_id')\n#         if res:\n#             slots = PS.search([('resource_id', 'in', res.ids), ('start_datetime', '<', en), ('end_datetime', '>', st)])\n#             slots = slots.filtered(lambda s: not s.x_bloqueo_ref and s.x_checkin_state != 'cancelled' and not (s.sale_line_id and s.sale_line_id.order_id.x_hotel_unit_id))\n#             if slots:\n#                 s0 = slots[0]\n#                 reason = 'bloqueo en calendario/OTA (planning.slot %s, %s, %s→%s UTC)' % (s0.id, s0.resource_id.name, s0.start_datetime, s0.end_datetime)\n#     if status in BLOCKING:\n#         if reason:\n#             raise UserError('HOTEL — NO DISPONIBLE: %s no puede pasar a %s del %s al %s. Motivo: %s. No se permite doble reserva.' % (unit.x_name, LABEL.get(status), ci, co, reason))\n#     else:\n#         alert = ('ALERTA COMERCIAL: %s no disponible del %s al %s — %s' % (unit.x_name, ci, co, reason)) if reason else False\n#         if (order.x_hotel_alert or False) != alert:\n#             order.sudo().write({'x_hotel_alert': alert})\n#             if alert and clash:\n#                 clash.message_post(body='Solicitud concurrente: %s (%s) pidió %s del %s al %s mientras esta reserva la bloquea.' % (order.name, order.partner_id.name or '', unit.x_name, ci, co), subtype_xmlid='mail.mt_note')\n# ",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1926,
+    "name": "ROLLBACK COPY 003 — 1914 consulta (pre-003)",
+    "model_id": [
+      2514,
+      "Hotel v1 — Propiedad"
+    ],
+    "state": "code",
+    "code": "# COPIA DE ROLLBACK — NO EJECUTAR. Código previo a ATH-ODOO-HOTEL-003.\n# # HOTEL v1 — Consulta de disponibilidad (solo lectura). Replica EXACTAMENTE las reglas del motor 1896.\n# # Uso: run() con context {'fe':'YYYY-MM-DD','fs':'YYYY-MM-DD','personas':N,'property_id':ID opcional}\n# ctx = env.context\n# fe = ctx.get('fe'); fs = ctx.get('fs'); personas = int(ctx.get('personas') or 0)\n# ci = datetime.datetime.strptime(fe, '%Y-%m-%d').date()\n# co = datetime.datetime.strptime(fs, '%Y-%m-%d').date()\n# if co <= ci:\n#     raise UserError('HOTEL consulta: fecha_salida debe ser posterior a fecha_entrada')\n# now = datetime.datetime.now()\n# SO = env['sale.order'].sudo(); PS = env['planning.slot'].sudo(); UNIT = env['x_hotel_unit'].sudo(); RATE = env['x_hotel_rate'].sudo()\n# dom_u = [('x_active', '=', True)]\n# if ctx.get('property_id'):\n#     dom_u.append(('x_property_id', '=', int(ctx.get('property_id'))))\n# opciones = []\n# for unit in UNIT.search(dom_u, order='x_sequence, id'):\n#     leaves = UNIT.browse()\n#     frontier = unit\n#     while frontier:\n#         nochild = frontier.filtered(lambda u: not u.x_child_ids)\n#         leaves |= nochild\n#         frontier = (frontier - nochild).mapped('x_child_ids') - leaves\n#     conflict = leaves\n#     frontier = leaves\n#     while frontier:\n#         nxt = frontier.mapped('x_parent_ids') - conflict\n#         conflict |= nxt\n#         frontier = nxt\n#     conflict |= unit\n#     motivos = []\n#     dom = [('x_hotel_unit_id', 'in', conflict.ids), ('x_checkin', '<', co), ('x_checkout', '>', ci), '|', ('x_reservation_status', 'in', ('confirmed', 'pre_checkin', 'checked_in')), '&', ('x_reservation_status', '=', 'hold'), ('x_hold_expires', '>', now)]\n#     for c in SO.search(dom):\n#         motivos.append({'tipo': 'reserva', 'sale_order_id': c.id, 'ref': c.name, 'unidad': c.x_hotel_unit_id.x_name, 'estado': c.x_reservation_status, 'hold_expires': str(c.x_hold_expires or '')})\n#     tmpl_ids = conflict.mapped('x_product_tmpl_id').ids\n#     if tmpl_ids:\n#         for c in SO.search([('x_hotel_unit_id', '=', False), ('state', 'in', ('sale', 'done')), ('x_checkin', '<', co), ('x_checkout', '>', ci), ('order_line.product_id.product_tmpl_id', 'in', tmpl_ids)]):\n#             motivos.append({'tipo': 'legacy', 'sale_order_id': c.id, 'ref': c.name})\n#     prop = unit.x_property_id\n#     tz = timezone(prop.x_tz or 'America/Bogota'); utc = timezone('UTC')\n#     cin = prop.x_checkin_time or 15.0; cout = prop.x_checkout_time or 11.0\n#     st = tz.localize(datetime.datetime(ci.year, ci.month, ci.day, int(cin), int(round((cin % 1) * 60)))).astimezone(utc).replace(tzinfo=None)\n#     en = tz.localize(datetime.datetime(co.year, co.month, co.day, int(cout), int(round((cout % 1) * 60)))).astimezone(utc).replace(tzinfo=None)\n#     res = conflict.mapped('x_resource_id')\n#     if res:\n#         slots = PS.search([('resource_id', 'in', res.ids), ('start_datetime', '<', en), ('end_datetime', '>', st)])\n#         for s in slots.filtered(lambda s: not s.x_bloqueo_ref and s.x_checkin_state != 'cancelled' and not (s.sale_line_id and s.sale_line_id.order_id.x_hotel_unit_id)):\n#             motivos.append({'tipo': 'bloqueo_calendario', 'planning_slot_id': s.id, 'resource': s.resource_id.name})\n#     base = unit.x_cap_base or 0; com = unit.x_cap_comercial or 0; ext = unit.x_cap_extra or 0\n#     manual = False\n#     cap_ok = True\n#     if personas and personas > com:\n#         if ext and personas <= ext and unit.x_cap_extra_status in ('confirmada', 'pendiente'):\n#             manual = True\n#         else:\n#             cap_ok = False\n#     rate = RATE.search([('x_active', '=', True), ('x_unit_id', '=', unit.id), '|', ('x_date_from', '=', False), ('x_date_from', '<=', ci), '|', ('x_date_to', '=', False), ('x_date_to', '>=', ci)], limit=1)\n#     if motivos:\n#         estado = 'no_disponible'\n#     elif not cap_ok:\n#         estado = 'capacidad_insuficiente'\n#     elif manual:\n#         estado = 'requiere_aprobacion'\n#     else:\n#         estado = 'disponible'\n#     opciones.append({'property_id': prop.id, 'property_name': prop.x_name, 'unit_id': unit.id, 'resource_id': unit.x_resource_id.id or False, 'nombre': unit.x_name, 'tipo': unit.x_unit_type, 'capacidad_base': base, 'capacidad_comercial': com, 'capacidad_extraordinaria': ext, 'extra_status': unit.x_cap_extra_status or False, 'requires_manual_confirmation': manual, 'tarifa': rate.x_price_night if rate else 'requiere_cotizacion', 'moneda': 'COP', 'rate_rule_id': rate.id or False, 'estado': estado, 'motivos': motivos})\n# result = {'fecha_entrada': fe, 'fecha_salida': fs, 'personas': personas, 'inventory_checked_at': str(now) + ' UTC', 'disponible': any(o['estado'] in ('disponible', 'requiere_aprobacion') for o in opciones), 'opciones': opciones}\n# action = {'type': 'ir.actions.client', 'tag': 'display_notification', 'params': {'title': 'HOTEL disponibilidad', 'message': 'ok', 'result': result}}\n# ",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1933,
+    "name": "ROLLBACK COPY 004 — 1921 motor tarifario (pre-004)",
+    "model_id": [
+      2520,
+      "Hotel v1 — Tarifa"
+    ],
+    "state": "code",
+    "code": "# COPIA DE ROLLBACK — NO EJECUTAR\n# # HOTEL v1 — MOTOR TARIFARIO determinista (solo lectura) — ATH-ODOO-HOTEL-003\n# # context: fe, fs (YYYY-MM-DD), personas, unit_ids (lista) y/o property_code; qa_fixtures (solo QA)\n# ctx = env.context\n# RATE = env['x_hotel_rate'].sudo()\n# ci = datetime.datetime.strptime(ctx.get('fe'), '%Y-%m-%d').date()\n# co = datetime.datetime.strptime(ctx.get('fs'), '%Y-%m-%d').date()\n# personas = int(ctx.get('personas') or 0)\n# qa = bool(ctx.get('qa_fixtures'))\n# LIVE = ('approved', 'published', 'synced')\n# OKST = ('VERIFICADO', 'VERIFICADO_WEB')\n# nights = (co - ci).days\n# targets = [('unit', u) for u in env['x_hotel_unit'].sudo().browse(ctx.get('unit_ids') or [])]\n# if ctx.get('property_code'):\n#     targets.append(('prop', ctx.get('property_code')))\n# res = []\n# def usable(r):\n#     if qa and r.x_commercial_status == 'QA_FIXTURE':\n#         return True\n#     return r.x_gov_state in LIVE and r.x_commercial_status in OKST\n# for kind, t in targets:\n#     if kind == 'unit':\n#         base_dom = [('x_active', '=', True), ('x_unit_id', '=', t.id)]\n#         key = {'unit_id': t.id, 'unit': t.x_name}\n#     else:\n#         base_dom = [('x_active', '=', True), ('x_property_code', '=', t), ('x_unit_id', '=', False)]\n#         key = {'unit_id': False, 'property_code': t}\n#     allr = RATE.search(base_dom)\n#     if not qa:\n#         allr = allr.filtered(lambda r: r.x_commercial_status != 'QA_FIXTURE')\n#     out = dict(key)\n#     out.update({'currency': 'COP', 'precio_total': None, 'precio_desde': None, 'pricing_status': 'pending', 'rate_rule_id': None, 'rate_record_ids': [], 'rule_versions': [], 'pricing_model': None, 'tax_mode': None, 'requires_manual_confirmation': False, 'noches': nights, 'desglose': [], 'motivo': ''})\n#     if personas < 1 or nights < 1:\n#         out['motivo'] = 'parámetros inválidos'\n#         res.append(out)\n#         continue\n#     total = 0.0\n#     status = 'quoted'\n#     motivos = []\n#     used = env['x_hotel_rate'].sudo().browse()\n#     d = ci\n#     while d < co:\n#         dated = allr.filtered(lambda r: usable(r) and r.x_date_from and r.x_date_from <= d and (not r.x_date_to or r.x_date_to >= d))\n#         cands = dated.filtered(lambda r: personas >= (r.x_min_group or 0) and (not r.x_max_guests or personas <= r.x_max_guests))\n#         cands = cands.sorted(key=lambda r: (r.x_priority or 0, r.x_version or 0, r.id), reverse=True)\n#         if dated and not cands:\n#             status = 'requires_quote' if status != 'pending' else status\n#             motivos.append('%s personas fuera del rango de las reglas vigentes (%s)' % (personas, ', '.join(dated.mapped('x_rule_code'))))\n#             used |= dated\n#             d = d + datetime.timedelta(days=1)\n#             continue\n#         if not cands:\n#             ref = allr.sorted(key=lambda r: (r.x_priority or 0, r.x_version or 0), reverse=True)[:1]\n#             if ref and ref.x_commercial_status == 'REQUIRES_QUOTE':\n#                 status = 'requires_quote' if status != 'pending' else status\n#                 motivos.append('%s: REQUIRES_QUOTE' % ref.x_rule_code)\n#                 used |= ref\n#                 if ref.x_pricing_model == 'from_price' and ref.x_price_from:\n#                     out['precio_desde'] = ref.x_price_from\n#             else:\n#                 status = 'pending'\n#                 motivos.append('%s: sin versión aprobada utilizable (%s/%s)' % (ref.x_rule_code if ref else 'SIN REGLA', ref.x_commercial_status if ref else '-', ref.x_gov_state if ref else '-'))\n#                 used |= ref\n#             d = d + datetime.timedelta(days=1)\n#             continue\n#         r = cands[0]\n#         used |= r\n#         m = r.x_pricing_model\n#         p = None\n#         if r.x_min_nights and nights < r.x_min_nights:\n#             status = 'requires_quote' if status != 'pending' else status\n#             motivos.append('%s: mínimo %s noches' % (r.x_rule_code, r.x_min_nights))\n#         elif m == 'per_unit':\n#             if r.x_max_guests and personas > r.x_max_guests:\n#                 status = 'pending'; motivos.append('%s: %s personas > máx %s' % (r.x_rule_code, personas, r.x_max_guests))\n#             else:\n#                 p = r.x_price_night\n#         elif m == 'per_occupancy':\n#             line = r.x_line_ids.filtered(lambda l: l.x_guests == personas)[:1]\n#             if line and line.x_price_night > 0:\n#                 p = line.x_price_night\n#                 if line.x_requires_approval:\n#                     out['requires_manual_confirmation'] = True\n#             else:\n#                 status = 'pending'; motivos.append('%s: sin tarifa para %s personas' % (r.x_rule_code, personas))\n#         elif m == 'per_person':\n#             if r.x_min_group and personas < r.x_min_group:\n#                 status = 'requires_quote' if status != 'pending' else status; motivos.append('%s: mínimo %s personas' % (r.x_rule_code, r.x_min_group))\n#             elif r.x_max_guests and personas > r.x_max_guests:\n#                 status = 'pending'; motivos.append('%s: %s personas > máx %s' % (r.x_rule_code, personas, r.x_max_guests))\n#             else:\n#                 p = r.x_price_person_night * personas\n#         elif m == 'base_plus_extra':\n#             if r.x_max_guests and personas > r.x_max_guests:\n#                 status = 'pending'; motivos.append('%s: %s personas > máx %s' % (r.x_rule_code, personas, r.x_max_guests))\n#             else:\n#                 p = r.x_price_night + max(0, personas - (r.x_base_guests or 0)) * r.x_extra_person_price\n#         elif m == 'group':\n#             if personas >= (r.x_min_group or 0) and (r.x_price_person_night or r.x_price_night):\n#                 p = r.x_price_person_night * personas if r.x_price_person_night else r.x_price_night\n#             else:\n#                 status = 'requires_quote' if status != 'pending' else status; motivos.append('%s: grupo requiere cotización' % r.x_rule_code)\n#         elif m == 'from_price':\n#             status = 'requires_quote' if status != 'pending' else status\n#             out['precio_desde'] = r.x_price_from or None\n#             motivos.append('%s: tarifa desde, requiere cotización' % r.x_rule_code)\n#         else:\n#             status = 'requires_quote' if status != 'pending' else status\n#             motivos.append('%s: requiere cotización' % r.x_rule_code)\n#         if p is not None:\n#             total += p\n#             out['desglose'].append({'noche': str(d), 'rate_rule_id': r.x_rule_code, 'version': r.x_version, 'precio': p})\n#         d = d + datetime.timedelta(days=1)\n#     codes = list(dict.fromkeys(used.mapped('x_rule_code')))\n#     out['rate_rule_id'] = codes[0] if len(codes) == 1 else (codes or None)\n#     out['rate_record_ids'] = used.ids\n#     out['rule_versions'] = ['%s v%s [%s/%s]' % (x.x_rule_code, x.x_version, x.x_commercial_status, x.x_gov_state) for x in used]\n#     out['pricing_model'] = used[:1].x_pricing_model or None\n#     out['tax_mode'] = used[:1].x_tax_mode or None\n#     out['pricing_status'] = status\n#     out['motivo'] = '; '.join(list(dict.fromkeys(motivos)))\n#     if status == 'quoted':\n#         out['precio_total'] = total\n#     else:\n#         out['desglose'] = []\n#     res.append(out)\n# action = {'type': 'ir.actions.client', 'tag': 'display_notification', 'params': {'title': 'HOTEL tarifas', 'message': 'ok', 'result': res}}\n# ",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1934,
+    "name": "ROLLBACK COPY 004 — 1922 cotizador (pre-004)",
+    "model_id": [
+      2514,
+      "Hotel v1 — Propiedad"
+    ],
+    "state": "code",
+    "code": "# COPIA DE ROLLBACK — NO EJECUTAR\n# # HOTEL v1 — COTIZAR ALOJAMIENTO = disponibilidad (1914, HOTEL-002) + motor tarifario (1921, HOTEL-003). Solo lectura + registro auditable x_hotel_quote.\n# ctx = dict(env.context)\n# now = datetime.datetime.now()\n# AV = env['ir.actions.server'].sudo().browse(1914)\n# PR = env['ir.actions.server'].sudo().browse(1921)\n# avc = {'fe': ctx.get('fe'), 'fs': ctx.get('fs'), 'personas': ctx.get('personas'), 'active_model': 'x_hotel_property'}\n# if ctx.get('property_id'):\n#     avc['property_id'] = ctx.get('property_id')\n# av = AV.with_context(**avc).run()['params']['result']\n# units = [o['unit_id'] for o in av['opciones'] if o['estado'] in ('disponible', 'requiere_aprobacion')]\n# prices = {}\n# if units:\n#     pr = PR.with_context(fe=ctx.get('fe'), fs=ctx.get('fs'), personas=ctx.get('personas'), unit_ids=units, qa_fixtures=bool(ctx.get('qa_fixtures')), active_model='x_hotel_rate').run()['params']['result']\n#     for p in pr:\n#         prices[p['unit_id']] = p\n# ICP = env['ir.config_parameter'].sudo()\n# vh = ICP.get_param('hotel_v1.quote_validity_hours')\n# opciones = []\n# versions = []\n# for o in av['opciones']:\n#     inv = {'disponible': 'available', 'requiere_aprobacion': 'available_requires_approval', 'no_disponible': 'unavailable', 'capacidad_insuficiente': 'insufficient_capacity'}.get(o['estado'], o['estado'])\n#     p = prices.get(o['unit_id'])\n#     opt = {'property_id': o['property_id'], 'property_name': o['property_name'], 'unit_id': o['unit_id'], 'resource_id': o['resource_id'], 'nombre': o['nombre'],\n#            'capacidad_base': o['capacidad_base'], 'capacidad_comercial': o['capacidad_comercial'], 'capacidad_extraordinaria': o['capacidad_extraordinaria'],\n#            'requires_manual_confirmation': bool(o['requires_manual_confirmation'] or (p and p['requires_manual_confirmation'])),\n#            'inventory_status': inv, 'rate_rule_id': p['rate_rule_id'] if p else None, 'currency': 'COP',\n#            'precio_total': p['precio_total'] if p else None, 'precio_desde': p['precio_desde'] if p else None,\n#            'pricing_status': p['pricing_status'] if p else 'not_applicable', 'pricing_model': p['pricing_model'] if p else None,\n#            'tax_mode': p['tax_mode'] if p else None, 'desglose': p['desglose'] if p else [], 'motivo_tarifa': p['motivo'] if p else '', 'motivos_inventario': o['motivos']}\n#     if p:\n#         versions += p['rule_versions']\n#     opciones.append(opt)\n# prop = env['x_hotel_property'].sudo().browse(ctx.get('property_id') or 1)\n# dep = env['x_hotel_deposit_policy'].sudo().search([('x_property_id', '=', prop.id), ('x_active', '=', True), ('x_kind', '=', 'estandar')], order='x_priority desc', limit=1)\n# policies = {'checkin_time': prop.x_checkin_time, 'checkout_time': prop.x_checkout_time, 'timezone': prop.x_tz, 'hold_hours': prop.x_hold_hours,\n#             'deposit_pct': dep.x_pct if dep else None, 'policy_governance': 'SIN_ESTADO_DE_APROBACION (pendiente maestro)'}\n# quote = env['x_hotel_quote'].sudo().create({'x_name': 'Q-TMP', 'x_fe': ctx.get('fe'), 'x_fs': ctx.get('fs'), 'x_personas': int(ctx.get('personas') or 0), 'x_checked_at': now, 'x_channel': ctx.get('channel') or 'staff'})\n# qid = 'QH-%s-%06d' % (now.strftime('%Y%m%d'), quote.id)\n# expires = (now + datetime.timedelta(hours=float(vh))) if vh else None\n# result = {'query_id': qid, 'inventory_checked_at': av['inventory_checked_at'], 'fecha_entrada': ctx.get('fe'), 'fecha_salida': ctx.get('fs'), 'personas': int(ctx.get('personas') or 0),\n#           'availability': any(x['inventory_status'].startswith('available') for x in opciones), 'quote_expiration': str(expires) + ' UTC' if expires else None,\n#           'quote_expiration_status': 'configurado' if vh else 'PENDIENTE_CEO (hotel_v1.quote_validity_hours sin definir)',\n#           'qa_fixtures': bool(ctx.get('qa_fixtures')), 'policies': policies, 'opciones': opciones}\n# quote.sudo().write({'x_name': qid, 'x_payload': json.dumps(result, ensure_ascii=False, default=str), 'x_rule_versions': '\\n'.join(sorted(set(versions))), 'x_expires_at': expires})\n# action = {'type': 'ir.actions.client', 'tag': 'display_notification', 'params': {'title': 'HOTEL cotización', 'message': qid, 'result': result}}\n# ",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1943,
+    "name": "ROLLBACK COPY 005 — 1923 capacidad extra (pre-005)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "# COPIA DE ROLLBACK — NO EJECUTAR\n# # HOTEL v1 — Gobernanza de capacidad extraordinaria (003): solo grupo aprobador, con motivo, sello y auditoría\n# GROUP = 'Hotel v1 / Aprobador comercial (tarifas y capacidad extra)'\n# grp = env['res.groups'].sudo().search([('name', '=', GROUP)], limit=1)\n# now = datetime.datetime.now()\n# for o in records:\n#     if o.x_hotel_extra_approved:\n#         if o.x_hotel_extra_approved_by:\n#             continue\n#         if not (grp and env.user in grp.sudo().user_ids):\n#             raise UserError('CAPACIDAD EXTRAORDINARIA: solo \"%s\" puede aprobar. Usuario %s no autorizado.' % (GROUP, env.user.name))\n#         if not (o.x_hotel_extra_reason or '').strip():\n#             raise UserError('CAPACIDAD EXTRAORDINARIA: registre el motivo (x_hotel_extra_reason) antes de aprobar.')\n#         o.sudo().write({'x_hotel_extra_approved_by': env.user.id, 'x_hotel_extra_approved_at': now})\n#         o.message_post(body='Capacidad extraordinaria APROBADA por %s (%s UTC). Unidad %s, huéspedes %s. Motivo: %s' % (env.user.name, now, o.x_hotel_unit_id.x_name, (o.x_num_adults or 0) + (o.x_num_children or 0), o.x_hotel_extra_reason), subtype_xmlid='mail.mt_note')\n#     elif o.x_hotel_extra_approved_by:\n#         o.sudo().write({'x_hotel_extra_approved_by': False, 'x_hotel_extra_approved_at': False})\n#         o.message_post(body='Aprobación de capacidad extraordinaria RETIRADA/INVALIDADA (%s UTC, usuario %s).' % (now, env.user.name), subtype_xmlid='mail.mt_note')\n# ",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1961,
+    "name": "ROLLBACK COPY 006 — 1793 Almacén hotel en vivo (pre-006)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "# COPIA DE ROLLBACK — NO EJECUTAR\n# hotel_cats = env['product.category'].sudo().search([('id','child_of',[6,1247,1242,1296])]).ids\n# has_hotel = any([(l.product_id and l.product_id.categ_id and l.product_id.categ_id.id in hotel_cats) for l in record.order_line])\n# has_prod = any([l.product_id for l in record.order_line])\n# if has_hotel:\n#     if record.warehouse_id.id != 7:\n#         record.update({'warehouse_id': 7})\n#     if record.pricelist_id.id not in (16, 17):\n#         record.update({'pricelist_id': 17})\n#         try:\n#             record._recompute_prices()\n#         except Exception:\n#             pass\n#     if not record.x_checkin:\n#         record.update({'x_checkin': datetime.date.today()})\n#     if not record.x_checkout:\n#         base_ci = record.x_checkin or datetime.date.today()\n#         record.update({'x_checkout': base_ci + datetime.timedelta(days=1)})\n# elif has_prod and record.warehouse_id.id == 7:\n#     record.update({'warehouse_id': 4})\n# ",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1962,
+    "name": "ROLLBACK COPY 006 — 1935 Reserva desde cotización (pre-006)",
+    "model_id": [
+      2524,
+      "Hotel v1 — Cotización (registro auditable)"
+    ],
+    "state": "code",
+    "code": "# COPIA DE ROLLBACK — NO EJECUTAR\n# # HOTEL v1 — CREAR RESERVA DESDE COTIZACIÓN (HOTEL-004): COTIZACIÓN → RESERVA → PRECIO CONGELADO\n# # context: quote_id, unit_id, partner_id, mode ('draft'|'hold'), hold_origin, allow_preview (solo QA staging)\n# ctx = env.context\n# now = datetime.datetime.now()\n# Q = env['x_hotel_quote'].sudo().browse(int(ctx.get('quote_id') or 0)).exists()\n# if not Q:\n#     raise UserError('RESERVA DESDE COTIZACIÓN: cotización inexistente.')\n# if Q.x_expires_at and Q.x_expires_at < now:\n#     raise UserError('RESERVA DESDE COTIZACIÓN: la cotización %s venció el %s UTC. Recotizar.' % (Q.x_name, Q.x_expires_at))\n# data = json.loads(Q.x_payload or '{}')\n# uid_ = int(ctx.get('unit_id') or 0)\n# opt = [o for o in data.get('opciones', []) if o.get('unit_id') == uid_]\n# if not opt:\n#     raise UserError('RESERVA DESDE COTIZACIÓN: la unidad %s no está en la cotización %s.' % (uid_, Q.x_name))\n# o = opt[0]\n# if o.get('pricing_status') != 'quoted' or o.get('precio_total') is None:\n#     raise UserError('RESERVA DESDE COTIZACIÓN: %s no tiene precio cotizado (%s). No se inventa precio.' % (o.get('nombre'), o.get('pricing_status')))\n# if not str(o.get('inventory_status') or '').startswith('available'):\n#     raise UserError('RESERVA DESDE COTIZACIÓN: %s no estaba disponible en la cotización.' % o.get('nombre'))\n# lvl = o.get('approval_level')\n# if lvl != 'approved' and not ctx.get('allow_preview'):\n#     raise UserError('RESERVA DESDE COTIZACIÓN: la tarifa de %s no está APPROVED (%s). Solo se permite en QA con allow_preview.' % (o.get('nombre'), lvl))\n# if not ctx.get('partner_id'):\n#     raise UserError('RESERVA DESDE COTIZACIÓN: falta cliente.')\n# unit = env['x_hotel_unit'].sudo().browse(uid_)\n# prod = unit.x_product_tmpl_id.product_variant_id\n# if not prod:\n#     raise UserError('RESERVA DESDE COTIZACIÓN: la unidad no tiene producto.')\n# fe = data.get('fecha_entrada'); fs = data.get('fecha_salida')\n# nights = (datetime.datetime.strptime(fs, '%Y-%m-%d').date() - datetime.datetime.strptime(fe, '%Y-%m-%d').date()).days\n# total = float(o.get('precio_total'))\n# rr = o.get('rate_rule_id')\n# rules = env['x_hotel_rate'].sudo().search([('x_rule_code', 'in', rr if isinstance(rr, list) else [rr])])\n# vers = ', '.join(['%s v%s' % (x.x_rule_code, x.x_version) for x in rules])\n# so = env['sale.order'].create({\n#     'partner_id': int(ctx.get('partner_id')), 'company_id': unit.x_property_id.x_company_id.id or env.company.id,\n#     'x_hotel_unit_id': unit.id, 'x_hotel_property_id': unit.x_property_id.id, 'x_checkin': fe, 'x_checkout': fs,\n#     'x_num_adults': int(data.get('personas') or 0), 'x_reservation_status': 'draft', 'x_hotel_quote_id': Q.id,\n#     'x_quote_ref': Q.x_name, 'x_frozen_rate_rule': rr if not isinstance(rr, list) else ','.join(rr), 'x_frozen_rate_version': vers,\n#     'x_frozen_price_total': total, 'x_frozen_currency': o.get('currency') or 'COP', 'x_frozen_breakdown': json.dumps(o.get('desglose') or [], ensure_ascii=False),\n#     'x_frozen_quoted_at': Q.x_checked_at, 'x_frozen_approval_level': lvl, 'x_frozen_tax_status': o.get('tax_status') or 'PENDING_TAX_DEFINITION',\n#     'x_hold_origin': ctx.get('hold_origin') or 'staff',\n#     'note': 'Creada desde cotización %s (%s). Precio congelado %s %s. Impuestos: %s (no se agregan impuestos no aprobados).' % (Q.x_name, vers, total, o.get('currency') or 'COP', o.get('tax_status')),\n#     'order_line': [(0, 0, {'product_id': prod.id, 'product_uom_qty': nights, 'price_unit': total / nights, 'discount': 0, 'tax_ids': [(6, 0, [])],\n#                            'name': '%s — %s noches — %s personas — cotización %s' % (unit.x_name, nights, data.get('personas'), Q.x_name)})],\n# })\n# if (ctx.get('mode') or 'draft') == 'hold':\n#     env['ir.actions.server'].sudo().browse(1897).with_context(active_model='sale.order', active_id=so.id, active_ids=so.ids, hotel_hold_origin=ctx.get('hold_origin') or 'staff').run()\n# so.message_post(body='Reserva creada desde cotización %s. Regla(s): %s. Precio congelado: %s %s. Desglose: %s' % (Q.x_name, vers, total, o.get('currency'), o.get('desglose')), subtype_xmlid='mail.mt_note')\n# action = {'type': 'ir.actions.client', 'tag': 'display_notification', 'params': {'title': 'HOTEL reserva', 'message': so.name, 'result': {'sale_order_id': so.id, 'name': so.name, 'status': so.x_reservation_status}}}\n# ",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1539,
+    "name": "Sale Subscription: Update KPI",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "model._cron_update_kpi()",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1537,
+    "name": "Sale Subscription: generate recurring invoices and payments",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "model._cron_recurring_create_invoice()",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1538,
+    "name": "Sale Subscription: send reminder for subscriptions with no token",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "model._cron_recurring_send_payment_reminder()",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1536,
+    "name": "Sale Subscription: subscriptions expiration",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "model._cron_subscription_expiration()",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 567,
+    "name": "Sales: Send pending emails",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "model._cron_send_pending_emails()",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1482,
+    "name": "Set Rental Start/Return Hours",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "\npickup_time = env.ref('sale_renting.recurrence_nightly').pickup_time\nreturn_time = env.ref('sale_renting.recurrence_nightly').return_time\nfor record in records:\n    tz = env.ref('website.default_website').tz\n    rental_start_date = record.rental_start_date.astimezone(tz=dateutil.tz.gettz(tz))\n    start = rental_start_date.replace(hour=int(pickup_time), minute=int(pickup_time % 1 * 60), second=0)\n    record['rental_start_date'] = start.astimezone(tz=dateutil.tz.UTC).replace(tzinfo=None)\n\n    rental_return_date = record.rental_return_date.astimezone(tz=dateutil.tz.gettz(tz))\n    end = rental_return_date.replace(hour=int(return_time), minute=int(return_time % 1 * 60), second=0)\n    record['rental_return_date'] = end.astimezone(tz=dateutil.tz.UTC).replace(tzinfo=None)\n    record.action_update_rental_prices()\n",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 556,
+    "name": "Share",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "action = records.action_share()",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1546,
+    "name": "Subscription: Generate delivery",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "\nrecords.filtered('is_subscription').order_line._get_stock_subscription_lines()._action_launch_stock_rule()\n            ",
+    "binding_model_id": [
+      663,
+      "Sales Order"
+    ],
+    "binding_type": "action"
+  },
+  {
+    "id": 1731,
+    "name": "TEST gps cot 1808",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "env['ir.actions.server'].browse(1723).with_context(active_ids=[1808], active_model='sale.order', active_id=1808).sudo().run()",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1732,
+    "name": "TEST gps cot 1808 v2",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "env['ir.actions.server'].browse(1723).with_context(active_ids=[1808], active_model='sale.order', active_id=1808).sudo().run()",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1724,
+    "name": "TEST run requests action once",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "env['ir.actions.server'].browse(1723).sudo().run()",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1725,
+    "name": "TEST run transporte action on COT 1803",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "env['ir.actions.server'].browse(1723).with_context(active_ids=[1803], active_model='sale.order', active_id=1803).sudo().run()",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1727,
+    "name": "TEST run transporte action on COT 1804",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "env['ir.actions.server'].browse(1723).with_context(active_ids=[1804], active_model='sale.order', active_id=1804).sudo().run()",
+    "binding_model_id": false,
+    "binding_type": "action"
+  },
+  {
+    "id": 1726,
+    "name": "TEST run transporte action on COT 1805",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "code": "env['ir.actions.server'].browse(1723).with_context(active_ids=[1805], active_model='sale.order', active_id=1805).sudo().run()",
+    "binding_model_id": false,
+    "binding_type": "action"
+  }
+]

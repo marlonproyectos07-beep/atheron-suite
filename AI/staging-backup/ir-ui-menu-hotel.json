@@ -1,0 +1,36 @@
+[
+  {
+    "id": 908,
+    "name": "Hotel",
+    "parent_id": false,
+    "action": false,
+    "sequence": 2
+  },
+  {
+    "id": 985,
+    "name": "P&L — Hotelería",
+    "parent_id": [
+      983,
+      "Accounting/Reporting/📊 P&L por Rama (ATHERON)"
+    ],
+    "action": "ir.actions.client,1798",
+    "sequence": 2
+  },
+  {
+    "id": 1001,
+    "name": "Reservas hotel",
+    "parent_id": [
+      1000,
+      "Hotel v1 (Piloto)"
+    ],
+    "action": "ir.actions.act_window,1909",
+    "sequence": 10
+  },
+  {
+    "id": 1000,
+    "name": "Hotel v1 (Piloto)",
+    "parent_id": false,
+    "action": false,
+    "sequence": 90
+  }
+]

@@ -1,0 +1,1012 @@
+[
+  {
+    "id": 1,
+    "name": "Crear Tarea al Confirmar Reserva Atheron Suite",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_time_updated",
+    "active": true
+  },
+  {
+    "id": 2,
+    "name": "La etapa está establecida como \"Visita\"",
+    "model_id": [
+      409,
+      "Lead"
+    ],
+    "trigger": "on_time_created",
+    "active": true
+  },
+  {
+    "id": 4,
+    "name": "Atheron - Confirmación de Pago",
+    "model_id": [
+      549,
+      "Payments"
+    ],
+    "trigger": "on_state_set",
+    "active": true
+  },
+  {
+    "id": 5,
+    "name": "Resumen Cuotas Crédito",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_state_set",
+    "active": true
+  },
+  {
+    "id": 10,
+    "name": "Account POS Settle Due: On Invoice Confirmation",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 11,
+    "name": "Account POS Settle Due: On Invoice Creation",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 12,
+    "name": "Fix Slot Times",
+    "model_id": [
+      657,
+      "Planning Shift"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 13,
+    "name": "Set Rental Start/Return Hours on Create",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 14,
+    "name": "Create role on stay offer creation",
+    "model_id": [
+      456,
+      "Product"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 15,
+    "name": "Edit role name on stay offer modification",
+    "model_id": [
+      456,
+      "Product"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 16,
+    "name": "Delete role on stay offer deletion",
+    "model_id": [
+      456,
+      "Product"
+    ],
+    "trigger": "on_unlink",
+    "active": true
+  },
+  {
+    "id": 17,
+    "name": "HouseKeeping: On check in",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 18,
+    "name": "HouseKeeping: On check out",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 19,
+    "name": "HouseKeeping: On task stage reaching Clean",
+    "model_id": [
+      602,
+      "Task"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 20,
+    "name": "HouseKeeping: On task stage set to Ready",
+    "model_id": [
+      602,
+      "Task"
+    ],
+    "trigger": "on_change",
+    "active": true
+  },
+  {
+    "id": 21,
+    "name": "HouseKeeping: On stage change",
+    "model_id": [
+      602,
+      "Task"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 22,
+    "name": "Booking Engine: Mark Availabilities To Recompute: Slot Change",
+    "model_id": [
+      657,
+      "Planning Shift"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 23,
+    "name": "Booking Engine: Mark Availabilities To Recompute: Slot Delete",
+    "model_id": [
+      657,
+      "Planning Shift"
+    ],
+    "trigger": "on_unlink",
+    "active": true
+  },
+  {
+    "id": 24,
+    "name": "Booking Engine: Mark Availabilities To Recompute: Leave Change",
+    "model_id": [
+      143,
+      "Resource Time Off Detail"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 25,
+    "name": "Booking Engine: Mark Availabilities To Recompute: Leave Delete",
+    "model_id": [
+      143,
+      "Resource Time Off Detail"
+    ],
+    "trigger": "on_unlink",
+    "active": true
+  },
+  {
+    "id": 26,
+    "name": "Booking Engine: Mark Availabilities To Recompute: Room Change",
+    "model_id": [
+      145,
+      "Resources"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 27,
+    "name": "Booking Engine: Mark Availabilities To Recompute: Room Delete",
+    "model_id": [
+      145,
+      "Resources"
+    ],
+    "trigger": "on_unlink",
+    "active": true
+  },
+  {
+    "id": 28,
+    "name": "Booking Engine: Mark Availabilities To Recompute: Offer Change",
+    "model_id": [
+      456,
+      "Product"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 29,
+    "name": "Booking Engine: Mark Availabilities To Recompute: Offer Delete",
+    "model_id": [
+      456,
+      "Product"
+    ],
+    "trigger": "on_unlink",
+    "active": true
+  },
+  {
+    "id": 30,
+    "name": "Activate House Keeping",
+    "model_id": [
+      92,
+      "Config Settings"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 31,
+    "name": "Deactivate House Keeping",
+    "model_id": [
+      92,
+      "Config Settings"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 32,
+    "name": "HouseKeeping: On approvers setting set",
+    "model_id": [
+      92,
+      "Config Settings"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 33,
+    "name": "DIAN: Numerar facturas FAC al confirmar",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 34,
+    "name": "NIT: Auto-llenar desde cliente en Cotización",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 35,
+    "name": "NIT: Auto-llenar desde cliente en Factura",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 36,
+    "name": "FSM: Validar stock ATZIP al modificar cantidad",
+    "model_id": [
+      664,
+      "Sales Order Line"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 37,
+    "name": "ATZIP: Sincronizar stock disponible en producto",
+    "model_id": [
+      850,
+      "Quants"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 40,
+    "name": "WhatsApp Lead → Asignar a Willian (no Public user)",
+    "model_id": [
+      409,
+      "Lead"
+    ],
+    "trigger": "on_create",
+    "active": true
+  },
+  {
+    "id": 44,
+    "name": "Aviso Interno — Facturas Vencidas a Marlon",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_time",
+    "active": true
+  },
+  {
+    "id": 45,
+    "name": "Recordatorio Preventivo — Cuota vence mañana",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_time",
+    "active": true
+  },
+  {
+    "id": 46,
+    "name": "Nota crédito — 12 cuotas semanales",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 47,
+    "name": "Auto-etiquetar CARTERA CCTV en ventas a crédito",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 49,
+    "name": "Precio auto 30% margen al costo (CCTV)",
+    "model_id": [
+      456,
+      "Product"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 51,
+    "name": "NOBEDS → Odoo — Recibir Reserva",
+    "model_id": [
+      657,
+      "Planning Shift"
+    ],
+    "trigger": "on_webhook",
+    "active": true
+  },
+  {
+    "id": 52,
+    "name": "Test Webhook Simple",
+    "model_id": [
+      103,
+      "Users API Keys"
+    ],
+    "trigger": "on_webhook",
+    "active": true
+  },
+  {
+    "id": 56,
+    "name": "ATHERON — Alerta lead sin atender 24h",
+    "model_id": [
+      409,
+      "Lead"
+    ],
+    "trigger": "on_time",
+    "active": true
+  },
+  {
+    "id": 57,
+    "name": "ATHERON — Recordatorio tareas técnicos (vence hoy)",
+    "model_id": [
+      602,
+      "Task"
+    ],
+    "trigger": "on_time",
+    "active": true
+  },
+  {
+    "id": 60,
+    "name": "ATHERON — Cambiar Almacén al marcar Zipaquirá",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 61,
+    "name": "ATHERON — Material en Campo (Survey)",
+    "model_id": [
+      488,
+      "Survey User Input"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 63,
+    "name": "ATHERON — Webhook Materiales Campo",
+    "model_id": [
+      602,
+      "Task"
+    ],
+    "trigger": "on_webhook",
+    "active": true
+  },
+  {
+    "id": 64,
+    "name": "ATHERON — Factura Confirmada: notificar cliente y Marlon",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 65,
+    "name": "ATHERON — Envío Factura a Cliente y Marlon",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 66,
+    "name": "ATHERON — Validar entrega al confirmar factura",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 67,
+    "name": "ATHERON — Devolución almacén al anular factura",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 68,
+    "name": "ATHERON — Fix URL www en emails salientes",
+    "model_id": [
+      183,
+      "Outgoing Mails"
+    ],
+    "trigger": "on_create",
+    "active": true
+  },
+  {
+    "id": 69,
+    "name": "ATHERON - Sync tarifa transporte (write/create)",
+    "model_id": [
+      39,
+      "System Parameter"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 71,
+    "name": "ATHERON - Casa La Magia Completa: mínimo 10 personas-noche",
+    "model_id": [
+      664,
+      "Sales Order Line"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 78,
+    "name": "ATHERON - Casa Algarra: validar capacidad 2-20 personas",
+    "model_id": [
+      664,
+      "Sales Order Line"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 79,
+    "name": "ATHERON - Calcular/reversar comisiones (factura o nota credito)",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 80,
+    "name": "ATHERON - Buscar NIT automático al escribir",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_change",
+    "active": true
+  },
+  {
+    "id": 81,
+    "name": "ATHERON - Cliente único para facturación y técnico",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_change",
+    "active": true
+  },
+  {
+    "id": 82,
+    "name": "ATHERON - Cancelar tareas FSM al cancelar cotización",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 93,
+    "name": "ATHERON - Tarea toma tecnico de cotizacion",
+    "model_id": [
+      602,
+      "Task"
+    ],
+    "trigger": "on_create",
+    "active": true
+  },
+  {
+    "id": 94,
+    "name": "ATHERON - Propagar tecnico cotizacion a tareas",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 98,
+    "name": "ATHERON - Comision lista crea factura proveedor",
+    "model_id": [
+      2504,
+      "Comisión Atheron"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 107,
+    "name": "ATHERON - Prestamo genera asiento",
+    "model_id": [
+      2506,
+      "Atheron Prestamo"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 113,
+    "name": "ATHERON - Gasto auto-etiqueta por palabras clave",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 118,
+    "name": "ATHERON - Almacen por rama automatico (hotel/cctv)",
+    "model_id": [
+      664,
+      "Sales Order Line"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 121,
+    "name": "ATHERON - Almacen Hotel en vivo",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_change",
+    "active": true
+  },
+  {
+    "id": 132,
+    "name": "ATHERON - Constraint 10-30 personas Colonial Confort Completa",
+    "model_id": [
+      664,
+      "Sales Order Line"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 135,
+    "name": "ATHERON - Constraint capacidades Casa Colonial Centro",
+    "model_id": [
+      664,
+      "Sales Order Line"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 137,
+    "name": "ATHERON - Constraint capacidades Casa Familiar Santa Martha",
+    "model_id": [
+      664,
+      "Sales Order Line"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 139,
+    "name": "ATHERON - Precio especial + constraint Casa Campestre Neusa",
+    "model_id": [
+      664,
+      "Sales Order Line"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 141,
+    "name": "ATHERON - Validar anti-doble-reserva al confirmar",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 143,
+    "name": "ATHERON - Noches desde fechas en vivo",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_change",
+    "active": true
+  },
+  {
+    "id": 144,
+    "name": "ATHERON - Noches desde fechas al guardar",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 151,
+    "name": "ATHERON - Reserva al calendario al confirmar",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 159,
+    "name": "ATHERON - Auto 'En Zipaquirá' al recibir compra",
+    "model_id": [
+      849,
+      "Transfer"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 162,
+    "name": "ATHERON - Nota CCTV por defecto",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 163,
+    "name": "ATHERON - Nota CCTV en vivo",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_change",
+    "active": true
+  },
+  {
+    "id": 164,
+    "name": "ATHERON - Anti-duplicado NOBEDS",
+    "model_id": [
+      657,
+      "Planning Shift"
+    ],
+    "trigger": "on_create",
+    "active": true
+  },
+  {
+    "id": 165,
+    "name": "ATHERON - Mover bloque al cambiar fechas de la orden",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 166,
+    "name": "ATHERON - Quitar bloque al cancelar orden",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 167,
+    "name": "ATHERON - Casa Completa bloquea Habitaciones",
+    "model_id": [
+      657,
+      "Planning Shift"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 168,
+    "name": "ATHERON - Limpiar bloques al borrar reserva (casa/hab)",
+    "model_id": [
+      657,
+      "Planning Shift"
+    ],
+    "trigger": "on_unlink",
+    "active": true
+  },
+  {
+    "id": 169,
+    "name": "ATHERON - Habitacion bloquea Casa Completa",
+    "model_id": [
+      657,
+      "Planning Shift"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 170,
+    "name": "ATHERON - Orden borrador desde reserva OTA",
+    "model_id": [
+      657,
+      "Planning Shift"
+    ],
+    "trigger": "on_create",
+    "active": true
+  },
+  {
+    "id": 171,
+    "name": "ATHERON - Cancelar orden al cancelar reserva OTA",
+    "model_id": [
+      657,
+      "Planning Shift"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 172,
+    "name": "ATHERON - Descargar inventario al publicar factura directa",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 173,
+    "name": "ATHERON - Bodega por rama en factura",
+    "model_id": [
+      534,
+      "Journal Entry"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 184,
+    "name": "Tienda: minimo 100 unidades en consumibles",
+    "model_id": [
+      664,
+      "Sales Order Line"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 187,
+    "name": "HOTEL v1 — Motor inventario compuesto / anti-doble-reserva",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 188,
+    "name": "HOTEL v1 — Resolver huésped (sin duplicados)",
+    "model_id": [
+      2468,
+      "Guests Line"
+    ],
+    "trigger": "on_create",
+    "active": true
+  },
+  {
+    "id": 189,
+    "name": "HOTEL v1 — Guardia anti-solapamiento Planning v3 (002/003)",
+    "model_id": [
+      657,
+      "Planning Shift"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 190,
+    "name": "HOTEL v1 — Tarifa: gobernanza y aprobación (003)",
+    "model_id": [
+      2520,
+      "Hotel v1 — Tarifa"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 191,
+    "name": "HOTEL v1 — Tarifa: inmutabilidad de vigentes (003)",
+    "model_id": [
+      2520,
+      "Hotel v1 — Tarifa"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 192,
+    "name": "HOTEL v1 — Tarifa: líneas inmutables si vigente (003)",
+    "model_id": [
+      2522,
+      "Hotel v1 — Tarifa por ocupación (línea)"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 193,
+    "name": "HOTEL v1 — Tarifa: líneas no borrables si vigente (003)",
+    "model_id": [
+      2522,
+      "Hotel v1 — Tarifa por ocupación (línea)"
+    ],
+    "trigger": "on_unlink",
+    "active": true
+  },
+  {
+    "id": 194,
+    "name": "HOTEL v1 — Tarifa: transiciones de vigentes (003)",
+    "model_id": [
+      2520,
+      "Hotel v1 — Tarifa"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 195,
+    "name": "HOTEL v1 — Capacidad extra: aprobación gobernada (003)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 196,
+    "name": "HOTEL v1 — Capacidad extra: invalidar al cambiar huéspedes/unidad (003)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 197,
+    "name": "HOTEL v1 — HOLD visible en Planning (003)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 198,
+    "name": "HOTEL v1 — Precio congelado: línea de alojamiento (004)",
+    "model_id": [
+      664,
+      "Sales Order Line"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  },
+  {
+    "id": 199,
+    "name": "HOTEL v1 — Precio congelado: reserva inmutable (004)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 200,
+    "name": "HOTEL v1 — Tarifa VALIDATED editada vuelve a DRAFT (004)",
+    "model_id": [
+      2520,
+      "Hotel v1 — Tarifa"
+    ],
+    "trigger": "on_write",
+    "active": true
+  },
+  {
+    "id": 201,
+    "name": "HOTEL v1 — Línea de tarifa VALIDATED editada: regla a DRAFT (004)",
+    "model_id": [
+      2522,
+      "Hotel v1 — Tarifa por ocupación (línea)"
+    ],
+    "trigger": "on_create_or_write",
+    "active": true
+  }
+]

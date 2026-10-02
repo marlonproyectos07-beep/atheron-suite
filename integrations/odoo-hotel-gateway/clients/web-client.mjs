@@ -8,7 +8,7 @@ import { HotelGatewayClient } from './base-client.mjs';
  * mismo contrato de minimo privilegio que los demas clientes (Fase 14).
  */
 export class WebHotelClient extends HotelGatewayClient {
-  constructor({ baseUrl, rawKey, agentId = 'web-hotel-007' }) {
-    super({ baseUrl, agentId, rawKey });
+  constructor({ baseUrl, rawKey, agentId = 'web-hotel-007', fetchImpl }) {
+    super({ baseUrl, agentId, rawKey, fetchImpl });
   }
 }

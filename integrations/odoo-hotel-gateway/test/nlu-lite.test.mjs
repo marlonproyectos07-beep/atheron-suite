@@ -25,6 +25,27 @@ test('"Del viernes al domingo" -> resuelve ambas fechas relativas a referenceDat
   assert.equal(slots.check_out, '2026-12-06'); // domingo siguiente
 });
 
+test('mensaje CEO HOTEL-011 -> 10 a 12 de noviembre de 2026, sin precio ni reserva', () => {
+  const slots = parseMessage('Hola, necesito alojamiento del 10 al 12 de noviembre para 2 personas.', { referenceDate: '2026-09-30' });
+  assert.equal(slots.intent, 'availability_inquiry');
+  assert.equal(slots.check_in, '2026-11-10');
+  assert.equal(slots.check_out, '2026-11-12');
+  assert.equal(slots.guests, 2);
+  assert.deepEqual(slots.missing_fields, []);
+  const input = toEngineInput(slots);
+  assert.equal(input.askPrice, undefined);
+  assert.equal(input.requestBooking, undefined);
+});
+
+test('rango sin ano vencido -> proximo noviembre; fecha imposible no se inventa', () => {
+  const next = parseMessage('del 10 al 12 de noviembre', { referenceDate: '2026-12-01' });
+  assert.equal(next.check_in, '2027-11-10');
+  assert.equal(next.check_out, '2027-11-12');
+  const invalid = parseMessage('del 30 al 31 de noviembre', { referenceDate: '2026-09-30' });
+  assert.equal(invalid.check_in, '2026-11-30');
+  assert.equal(invalid.check_out, null);
+});
+
 test('"Cuanto vale?" -> intent ask_price', () => {
   assert.equal(parseMessage('¿Cuánto vale?', { referenceDate: HOY }).intent, 'ask_price');
 });

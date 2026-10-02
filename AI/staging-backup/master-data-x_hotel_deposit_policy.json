@@ -1,0 +1,54 @@
+[
+  {
+    "id": 1,
+    "display_name": "Reserva directa estándar — 30%",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-23 17:09:31",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-23 17:09:31",
+    "x_name": "Reserva directa estándar — 30%",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_kind": "estandar",
+    "x_pct": 30,
+    "x_min_guests": 0,
+    "x_date_from": false,
+    "x_date_to": false,
+    "x_priority": 10,
+    "x_active": true
+  },
+  {
+    "id": 2,
+    "display_name": "Caso especial — 50% (manual)",
+    "create_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "create_date": "2026-09-23 17:09:32",
+    "write_uid": [
+      2,
+      "Marlon Parra villarreal"
+    ],
+    "write_date": "2026-09-23 17:09:32",
+    "x_name": "Caso especial — 50% (manual)",
+    "x_property_id": [
+      1,
+      "HOTEL ATHERON SUITE"
+    ],
+    "x_kind": "especial",
+    "x_pct": 50,
+    "x_min_guests": 0,
+    "x_date_from": false,
+    "x_date_to": false,
+    "x_priority": 20,
+    "x_active": true
+  }
+]

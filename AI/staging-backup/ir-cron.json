@@ -1,0 +1,82 @@
+[
+  {
+    "id": 48,
+    "name": "Automation Rules: check and execute",
+    "model_id": [
+      786,
+      "Automation Rule"
+    ],
+    "state": "code",
+    "interval_number": 144,
+    "interval_type": "minutes",
+    "active": true,
+    "ir_actions_server_id": [
+      687,
+      "Automation Rules: check and execute"
+    ]
+  },
+  {
+    "id": 1,
+    "name": "Base: Auto-vacuum internal data",
+    "model_id": [
+      40,
+      "Automatic Vacuum"
+    ],
+    "state": "code",
+    "interval_number": 1,
+    "interval_type": "days",
+    "active": true,
+    "ir_actions_server_id": [
+      35,
+      "Base: Auto-vacuum internal data"
+    ]
+  },
+  {
+    "id": 155,
+    "name": "HOTEL v1 — Vencer HOLDs y liberar inventario (STAGING)",
+    "model_id": [
+      663,
+      "Sales Order"
+    ],
+    "state": "code",
+    "interval_number": 15,
+    "interval_type": "minutes",
+    "active": true,
+    "ir_actions_server_id": [
+      1907,
+      "HOTEL v1 — Vencer HOLDs y liberar inventario (STAGING)"
+    ]
+  },
+  {
+    "id": 85,
+    "name": "HouseKeeping: Daily room update",
+    "model_id": [
+      145,
+      "Resources"
+    ],
+    "state": "code",
+    "interval_number": 1,
+    "interval_type": "days",
+    "active": true,
+    "ir_actions_server_id": [
+      1492,
+      "HouseKeeping: Daily room update"
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Publisher: Update Notification",
+    "model_id": [
+      209,
+      "Publisher Warranty Contract For IoT Box"
+    ],
+    "state": "code",
+    "interval_number": 1,
+    "interval_type": "weeks",
+    "active": true,
+    "ir_actions_server_id": [
+      129,
+      "Publisher: Update Notification"
+    ]
+  }
+]
