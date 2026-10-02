@@ -18,11 +18,11 @@ if (env !== 'preview' || branch !== targetBranch) {
   process.exit(0);
 }
 
-const appSecret = process.env.META_APP_SECRET;
+const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
 const verifyToken = process.env.META_VERIFY_TOKEN;
-if (!appSecret || !verifyToken) {
+if (!accessToken || !verifyToken) {
   await saveStatus({ attempted: false, success: false, reason: 'missing_meta_config' });
-  console.error('[meta-preview-subscribe] missing META_APP_SECRET or META_VERIFY_TOKEN');
+  console.error('[meta-preview-subscribe] missing WHATSAPP_ACCESS_TOKEN or META_VERIFY_TOKEN');
   process.exit(0);
 }
 
@@ -32,7 +32,7 @@ try {
     callback_url: callbackUrl,
     fields: 'messages',
     verify_token: verifyToken,
-    access_token: `${appId}|${appSecret}`,
+    access_token: accessToken,
   });
 
   const response = await fetch(`https://graph.facebook.com/${appId}/subscriptions`, {
