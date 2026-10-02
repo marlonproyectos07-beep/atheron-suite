@@ -8,13 +8,15 @@ Estado: inventario confirmado parcialmente, solo lectura. `PENDIENTE_VERIFICACIO
 | AHS-202 | PENDIENTE_VERIFICACION | 16559325 | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION |
 | AHS-203 | PENDIENTE_VERIFICACION | 16559325 | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION |
 | AHS-301 | PENDIENTE_VERIFICACION | 16559325 | PENDIENTE_VERIFICACION | 1057232086445101786 | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION |
-| AHS-302 | PENDIENTE_VERIFICACION | 16559325 | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION |
-| AHS-CASA | PENDIENTE_VERIFICACION | 16569053 | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION; existencia del anuncio sin confirmar | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION |
+| AHS-302 | 5 (ficha STAGING, 2026-10-02) | 16559325 | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION |
+| AHS-CASA | 6 (ficha STAGING, 2026-10-02) | 16569053 | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION; existencia del anuncio sin confirmar | PENDIENTE_VERIFICACION | PENDIENTE_VERIFICACION |
 
 `external_property_id` = Booking `hotel_id` cuando la fuente es Booking. `external_listing_id` = Booking room/calendario ID o Airbnb listing ID, según canal. Para Airbnb no hay `external_property_id` confirmado. `external_reservation_id` proviene del UID iCal recibido, nunca del nombre de la habitación. `odoo_unit_id` usa únicamente el ID verificado en STAGING. El valor de CASA usado en tests (`TEST-ODOO-CASA`) y los listing IDs `TEST-*` son fixtures sintéticos, no mapeo real.
 
 ## Registro previsto en STAGING
 
-Por cada par `(source, canonical_unit_id)` se necesita un registro de configuración con `odoo_unit_id`, `odoo_resource_id` verificado, `external_property_id`, `external_listing_id`, dirección de import/export, referencia **segura** al feed de entrada, referencia al feed de salida Odoo, `last_sync_at`, `last_sync_status` y `last_error`. El modelo y menú Odoo concretos aún son `PENDIENTE_VERIFICACION`; Claude Chrome debe identificarlos en solo lectura antes de crear configuración. Ninguna URL de feed debe aparecer en Git.
+Por cada par `(source, canonical_unit_id)` se necesita un registro de configuración con `odoo_unit_id`, `odoo_resource_id` verificado, `external_property_id`, `external_listing_id`, dirección de import/export, referencia **segura** al feed de entrada, referencia al feed de salida Odoo, `last_sync_at`, `last_sync_status` y `last_error`. El modelo `x_hotel_ota_feed` existe en Odoo STAGING y contiene los campos de identidad, canal, feed y estado de sincronización; no se verificó un menú operativo ni registros de configuración. Ninguna URL de feed debe aparecer en Git.
 
 La URL **de exportación** de Booking/Airbnb es la entrada hacia Odoo. La URL **de exportación** de Odoo sería la entrada en Booking/Airbnb después del gate. El feed de salida de Odoo debe derivarse de la disponibilidad Odoo, incluyendo CASA ↔ habitaciones, no de un inventario paralelo. No se modifica NOBEDS.
+
+La ficha Odoo STAGING `/odoo/action-1911/5` identifica la unidad `302` en `x_hotel_unit/5` y muestra CASA COMPLETA entre sus unidades compuestas. La ficha relacionada `/odoo/action-1911/5/m-x_hotel_unit/6` identifica CASA COMPLETA en `x_hotel_unit/6` y lista 201/202/203/301/302 como hijas. Esto verifica identidad y relación, no prueba que exista un bloqueo OTA durable o sincronización activa.
