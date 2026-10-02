@@ -18,21 +18,62 @@ if (env !== 'preview' || branch !== targetBranch) {
   process.exit(0);
 }
 
-const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+const appSecret = process.env.META_APP_SECRET;
 const verifyToken = process.env.META_VERIFY_TOKEN;
-if (!accessToken || !verifyToken) {
+if (!appSecret || !verifyToken) {
   await saveStatus({ attempted: false, success: false, reason: 'missing_meta_config' });
-  console.error('[meta-preview-subscribe] missing WHATSAPP_ACCESS_TOKEN or META_VERIFY_TOKEN');
+  console.error('[meta-preview-subscribe] missing META_APP_SECRET or META_VERIFY_TOKEN');
   process.exit(0);
 }
 
 try {
+  // Obtain a real app access token server-to-server. Never log or persist it.
+  const tokenUrl = new URL('https://graph.facebook.com/oauth/access_token');
+  tokenUrl.searchParams.set('client_id', appId);
+  tokenUrl.searchParams.set('client_secret', appSecret);
+  tokenUrl.searchParams.set('grant_type', 'client_credentials');
+
+  const tokenResponse = await fetch(tokenUrl);
+  const tokenRaw = await tokenResponse.text();
+  let appAccessToken = null;
+  try {
+    const parsed = JSON.parse(tokenRaw);
+    appAccessToken = parsed?.access_token ?? null;
+  } catch {
+    appAccessToken = tokenRaw.startsWith('access_token=') ? new URLSearchParams(tokenRaw).get('access_token') : null;
+  }
+
+  if (!tokenResponse.ok || !appAccessToken) {
+    let detail = 'APP_TOKEN_REQUEST_FAILED';
+    try {
+      const parsed = JSON.parse(tokenRaw);
+      detail = JSON.stringify({
+        error: parsed?.error ? {
+          message: parsed.error.message ?? null,
+          type: parsed.error.type ?? null,
+          code: parsed.error.code ?? null,
+          error_subcode: parsed.error.error_subcode ?? null,
+        } : null,
+      });
+    } catch {}
+    await saveStatus({
+      attempted: true,
+      success: false,
+      stage: 'app_access_token',
+      http_status: tokenResponse.status,
+      meta_result: detail,
+      target: 'HOTEL-016-preview',
+    });
+    console.error('[meta-preview-subscribe] app access token request failed');
+    process.exit(0);
+  }
+
   const body = new URLSearchParams({
     object: 'whatsapp_business_account',
     callback_url: callbackUrl,
     fields: 'messages',
     verify_token: verifyToken,
-    access_token: accessToken,
+    access_token: appAccessToken,
   });
 
   const response = await fetch(`https://graph.facebook.com/${appId}/subscriptions`, {
@@ -59,6 +100,7 @@ try {
   await saveStatus({
     attempted: true,
     success: response.ok,
+    stage: 'subscription_update',
     http_status: response.status,
     meta_result: detail,
     target: 'HOTEL-016-preview',
