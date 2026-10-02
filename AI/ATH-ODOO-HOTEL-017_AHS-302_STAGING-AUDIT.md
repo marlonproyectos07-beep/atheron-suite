@@ -16,22 +16,23 @@ Fecha: 2026-10-02 (America/Bogota). Estado: **NO READY**. Inspección de solo le
 3. Hotel v1 ofrece Reservas hotel, Propiedades y Unidades. Reservación ofrece planificación y disponibilidad; también muestra NOBEDS, que no se abrió.
 4. En Ajustes > Técnico > Modelos, `x_hotel_ota_feed` (`/odoo/action-20/2532?debug=1`) existe como objeto personalizado HOTEL-017. Tiene campos `x_canonical_unit_id`, `x_odoo_unit_id`, `x_odoo_resource_id`, `x_source`, IDs externos, referencias de feeds y `x_last_sync_*`. Es configuración; la ficha del modelo no demuestra un flujo APPLY/RELEASE ni snapshot de bloqueos.
 5. `x_hotel_api_log` (`/odoo/action-20/2528?debug=1`) tiene `x_idempotency_key`, `x_correlation_id`, `x_operation`, `x_result`, `x_source_channel`, `x_unit_id` y timestamp. Su existencia no prueba que HOTEL-017 escriba allí. `x_hotel_api_lock` solo muestra nombre, último bloqueo y usuario API; no se verificó una clave OTA única.
-6. En Ajustes > Técnico > Acciones del servidor, la búsqueda por nombre `HOTEL-017` no devolvió registros. En el esquema inspeccionado de `planning.slot` (`/odoo/action-20/657?debug=1`) figuran `x_hotel_block_kind` y campos legados; no se observó `x_idempotency_key` o UID OTA en los campos mostrados. Estos resultados delimitan lo verificado, sin afirmar ausencia en toda la base.
+6. En Ajustes > Técnico > Acciones del servidor, la búsqueda por nombre `HOTEL-017` no devolvió registros. La acción existente `HOTEL v1 — API GATEWAY Sofía (006)` (`/odoo/server-actions/1967?debug=1`), que llama `odoo-adapter.mjs`, **no contiene** ninguna de las cinco ramas `ota_*` requeridas. En el esquema inspeccionado de `planning.slot` (`/odoo/action-20/657?debug=1`) figuran `x_hotel_block_kind` y campos legados; no se observó `x_idempotency_key` o UID OTA en los campos mostrados.
+7. Mientras se inspeccionaba STAGING, la rama remota avanzó con rutas, cliente y puerto Gateway para las cinco operaciones. Esas piezas de código no cambian por sí mismas la acción Odoo 1967 ni demuestran despliegue operativo.
 
 ## Cinco operaciones OTA
 
-| Operación | Código local | Odoo STAGING | Evidencia pendiente |
+| Operación Gateway | Código de la rama | Odoo STAGING | Evidencia pendiente |
 |---|---|---|---|
-| `importCalendar()` | Implementada, pruebas sintéticas | Modelo de configuración identificado; flujo no verificado | Ruta de ingreso segura, mapping y persistencia |
-| `exportCalendar()` | Implementada, pruebas sintéticas | Modelo de configuración identificado; feed no verificado | Feed derivado de Odoo, sin publicación OTA real |
-| `applyBlock()` | Implementada sobre puerto inyectado | No verificada | Bloqueo técnico único por `idempotency_key`, sin `sale.order` comercial |
-| `releaseBlock()` | Implementada sobre puerto inyectado | No verificada | Release exclusivo del bloqueo propio |
-| `reconcile()` | Implementada, pruebas sintéticas | Log genérico identificado; uso OTA no verificado | Conflictos auditables y Odoo como autoridad |
+| `ota_blocks_list` | Ruta, contrato, cliente y puerto presentes | Rama ausente en acción 1967 | Lectura de bloqueos Odoo sin derivados |
+| `ota_block_apply` | Ruta, contrato, cliente y puerto presentes | Rama ausente en acción 1967 | Bloqueo técnico único por `idempotency_key`, sin `sale.order` comercial |
+| `ota_block_release` | Ruta, contrato, cliente y puerto presentes | Rama ausente en acción 1967 | Release exclusivo del bloqueo propio |
+| `ota_snapshot_list` | Ruta, contrato, cliente y puerto presentes | Rama ausente en acción 1967 | Lectura de snapshot durable por canal/unidad |
+| `ota_snapshot_put` | Ruta, contrato, cliente y puerto presentes | Rama ausente en acción 1967 | Upsert de snapshot durable con clave única |
 
-`normalizeReservation()`, `deduplicate()` y `preventLoop()` son guardas del contrato local. El ledger de `createSyncLedger()` está en memoria. Por ello, un refresco del navegador no prueba durabilidad; se necesita un modelo Odoo/transacción verificable.
+`importCalendar()`, `exportCalendar()`, `applyBlock()`, `releaseBlock()` y `reconcile()` existen en el módulo iCal. `normalizeReservation()`, `deduplicate()` y `preventLoop()` son guardas del contrato local. El ledger de `createSyncLedger()` está en memoria. Por ello, un refresco del navegador no prueba durabilidad; se necesita un modelo Odoo/transacción verificable.
 
 ## Gate de escritura no superado
 
-Se identificó `x_hotel_ota_feed` como esquema de configuración, pero no se identificaron de forma verificable la acción Odoo de bloqueo OTA, la ubicación del snapshot durable, la unicidad transaccional de `idempotency_key`, ni el mecanismo de release que preserve otros bloqueos. Crear una entrada de planificación genérica no demostraría esas garantías y podría alterar disponibilidad. Conforme a la regla del usuario de detener escrituras ante duda del entorno, no se inició el piloto AHS-302 ni se creó dato comercial.
+Se identificó `x_hotel_ota_feed` como esquema de configuración, pero la acción Gateway 1967 no implementa las cinco operaciones OTA. Tampoco se verificaron un modelo de snapshot durable, unicidad transaccional de `idempotency_key`, ni un release que preserve otros bloqueos. Crear una entrada de planificación genérica no demostraría esas garantías y podría alterar disponibilidad. Conforme a la regla del usuario de detener escrituras ante duda del entorno, no se inició el piloto AHS-302 ni se creó dato comercial.
 
-Para reanudar: verificar los registros de `x_hotel_ota_feed` sin exponer URLs, localizar o implementar la acción/puerto HOTEL-017 y comprobar permisos, unicidad, auditoría durable y relación con inventario. Si no existe un mecanismo durable, implementarlo con pruebas y respaldo antes del piloto. Entonces elegir una ventana AHS-302 libre contra el inventario Odoo, registrar estado anterior, aplicar, comprobar exclusión CASA, repetir idéntica clave, liberar y verificar el estado posterior y la persistencia tras recarga. Antes de **cada** escritura verificar de nuevo el hostname exacto.
+Para reanudar: respaldar la acción 1967 y verificar los registros de `x_hotel_ota_feed` sin exponer URLs. Implementar en STAGING las cinco ramas Odoo con un modelo de snapshot y restricción única de clave, probar permisos, auditoría durable y relación con inventario. Entonces elegir una ventana AHS-302 libre contra el inventario Odoo, registrar estado anterior, aplicar, comprobar exclusión CASA, repetir idéntica clave, liberar y verificar el estado posterior y la persistencia tras recarga. Antes de **cada** escritura verificar de nuevo el hostname exacto.

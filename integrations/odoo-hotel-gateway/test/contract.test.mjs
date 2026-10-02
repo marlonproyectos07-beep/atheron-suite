@@ -8,8 +8,18 @@ import {
   assertSafeUpstreamPayload,
 } from '../src/contract.mjs';
 
-test('only exposes the four approved operations', () => {
-  assert.deepEqual(contract.operations, ['availability', 'quote', 'hold', 'status']);
+test('only exposes the approved Sofia and HOTEL-017 OTA operations', () => {
+  assert.deepEqual(contract.operations, [
+    'availability',
+    'quote',
+    'hold',
+    'status',
+    'ota_blocks_list',
+    'ota_block_apply',
+    'ota_block_release',
+    'ota_snapshot_list',
+    'ota_snapshot_put',
+  ]);
 });
 
 test('forces source_channel=sofia for availability', () => {

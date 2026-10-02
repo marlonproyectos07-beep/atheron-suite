@@ -1,8 +1,8 @@
 # ATH-ODOO-HOTEL-017 — Operaciones que faltan en el Hotel Gateway
 
-Estado: el Gateway HOTEL-007 expone solo `availability`, `quote`, `hold` y `status` (acción Odoo vía `ir.actions.server`). Ninguna lista, aplica ni libera bloqueos OTA, y `status`/`hold` no sirven de sustituto: un VEVENT es un bloqueo de calendario, no un HOLD comercial. El puerto `integrations/odoo-hotel-ical/src/gateway-odoo-port.mjs` ya llama a las operaciones de abajo y **falla cerrado** (`GATEWAY_OPERATION_UNSUPPORTED`) mientras no existan. No se simula cancelación.
+Estado al 2026-10-02: la rama HOTEL-017 ya incluye rutas, contratos, cliente y puerto Gateway para las cinco operaciones OTA. La acción Odoo STAGING 1967 (`HOTEL v1 — API GATEWAY Sofía (006)`) aún no contiene esas cinco ramas. `status`/`hold` no sirven de sustituto: un VEVENT es un bloqueo de calendario, no un HOLD comercial. El puerto `integrations/odoo-hotel-ical/src/gateway-odoo-port.mjs` propaga el error del Gateway; no simula cancelación.
 
-## Endpoints mínimos que faltan
+## Contratos Gateway implementados; backend Odoo pendiente
 
 | Ruta | Operación | Entrada | Salida | Efecto en Odoo STAGING |
 |---|---|---|---|---|
@@ -18,7 +18,7 @@ Campos del snapshot (`reconcileSnapshot`): `idempotency_key`, `source`, `externa
 
 - Un campo propio para `idempotency_key` en `planning.slot` con restricción de unicidad. En el piloto manual de AHS-302 la clave quedó dentro de `name` (`[H017 <canal> <clave>]`), que no es único ni indexado.
 - Un modelo durable para el snapshot. `x_hotel_ota_feed` (creado en STAGING) guarda un registro por canal y unidad, no por UID.
-- Una rama nueva en la acción del Gateway (o una acción aparte) para las cinco operaciones, y un rol técnico con permiso sobre ellas.
+- Una rama nueva en la acción Odoo 1967 (o una acción Odoo aparte vinculada de forma explícita) para las cinco operaciones, y un rol técnico con permiso sobre ellas.
 - Auditoría durable: hoy `audit.record()` no se persiste.
 
 ## Feed público
