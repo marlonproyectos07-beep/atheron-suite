@@ -6,6 +6,11 @@ const ROUTES = Object.freeze({
   '/hotel/quote': 'quote',
   '/hotel/hold': 'hold',
   '/hotel/status': 'status',
+  '/hotel/ota/blocks/list': 'ota_blocks_list',
+  '/hotel/ota/blocks/apply': 'ota_block_apply',
+  '/hotel/ota/blocks/release': 'ota_block_release',
+  '/hotel/ota/snapshot/list': 'ota_snapshot_list',
+  '/hotel/ota/snapshot/put': 'ota_snapshot_put',
 });
 
 const MAX_BODY_BYTES = 64 * 1024;
