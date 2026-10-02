@@ -149,6 +149,34 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResponse({ ok: false, error: 'INVALID_SIGNATURE' }, 401);
   }
 
+  // HOTEL-016 bridge: Meta may still point at HOTEL-011. After HOTEL-011
+  // verifies Meta's HMAC with its known-good secret, forward the exact raw
+  // payload to HOTEL-016 Preview using the existing shared gateway key as
+  // an internal trust header. HOTEL-016 then owns natural conversation and
+  // outbound with the refreshed Meta token. Production is never involved.
+  const proxyKey = process.env.HOTEL_WEB_AGENT_KEY;
+  if (process.env.VERCEL_ENV === 'preview' && proxyKey) {
+    try {
+      const response = await fetch('https://atheron-suite-git-feature-ath-odoo-hotel-b07d8f-marlon-atheron.vercel.app/api/hotel/webhook', {
+        method: 'POST',
+        headers: {
+          'content-type': request.headers.get('content-type') ?? 'application/json',
+          'x-hub-signature-256': signature,
+          'x-atheron-proxy-auth': proxyKey,
+        },
+        body: rawBody,
+      });
+      logHotel011Diagnostic('FLOW_DECISION', { decision: response.ok ? 'accepted' : 'ignored', reason: 'hotel_016_proxy' });
+      return new Response(await response.text(), {
+        status: response.status,
+        headers: { 'content-type': response.headers.get('content-type') ?? 'application/json' },
+      });
+    } catch (error) {
+      console.error('[hotel/webhook] HOTEL-016 proxy failed', error instanceof Error ? error.message : 'unknown');
+      return jsonResponse({ ok: false, error: 'HOTEL_016_PROXY_FAILED' }, 503);
+    }
+  }
+
   if (!outboundReady) {
     logHotel011Diagnostic('FLOW_DECISION', { decision: 'ignored', reason: 'other' });
     return jsonResponse({ ok: false, error: 'META_OUTBOUND_NOT_CONNECTED' }, 503);
