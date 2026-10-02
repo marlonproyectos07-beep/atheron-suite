@@ -84,6 +84,37 @@ const OPERATIONS = Object.freeze({
     'operation_id',
     'correlation_id',
   ]),
+  ota_blocks_list: new Set([
+    'property_id',
+    'correlation_id',
+  ]),
+  ota_block_apply: new Set([
+    'idempotency_key',
+    'source',
+    'canonical_unit_id',
+    'odoo_unit_id',
+    'external_uid',
+    'check_in',
+    'check_out',
+    'correlation_id',
+    'property_id',
+  ]),
+  ota_block_release: new Set([
+    'idempotency_key',
+    'correlation_id',
+    'property_id',
+  ]),
+  ota_snapshot_list: new Set([
+    'source',
+    'canonical_unit_id',
+    'correlation_id',
+    'property_id',
+  ]),
+  ota_snapshot_put: new Set([
+    'entry',
+    'correlation_id',
+    'property_id',
+  ]),
 });
 
 function isPlainObject(value) {
@@ -157,6 +188,39 @@ export function validateRequest(operation, body) {
 
   if (operation === 'status') {
     requireIdentifier(body, 'operation_id');
+  }
+
+  if (operation === 'ota_block_apply') {
+    requireIdempotencyKey(body);
+    requireString(body, 'source');
+    requireString(body, 'canonical_unit_id');
+    requireIdentifier(body, 'odoo_unit_id');
+    requireString(body, 'external_uid');
+    requireString(body, 'check_in');
+    requireString(body, 'check_out');
+  }
+
+  if (operation === 'ota_block_release') {
+    requireIdempotencyKey(body);
+  }
+
+  if (operation === 'ota_snapshot_list') {
+    requireString(body, 'source');
+    requireString(body, 'canonical_unit_id');
+  }
+
+  if (operation === 'ota_snapshot_put') {
+    if (!isPlainObject(body.entry)) {
+      throw new ContractError('INVALID_REQUEST', 'entry must be an object');
+    }
+    const entry = body.entry;
+    requireString(entry, 'source');
+    requireString(entry, 'canonical_unit_id');
+    requireString(entry, 'idempotency_key');
+    requireString(entry, 'external_uid');
+    requireString(entry, 'check_in');
+    requireString(entry, 'check_out');
+    requireString(entry, 'state');
   }
 
   return Object.freeze({
