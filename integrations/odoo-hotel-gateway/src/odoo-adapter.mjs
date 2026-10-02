@@ -78,6 +78,52 @@ function toOdooPayload(operation, payload) {
     };
   }
 
+  if (operation === 'ota_blocks_list') {
+    return {
+      ...(payload.property_id !== undefined ? { property_id: payload.property_id } : {}),
+      ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
+    };
+  }
+
+  if (operation === 'ota_block_apply') {
+    return {
+      idempotency_key: payload.idempotency_key,
+      source: payload.source,
+      canonical_unit_id: payload.canonical_unit_id,
+      odoo_unit_id: payload.odoo_unit_id,
+      external_uid: payload.external_uid,
+      check_in: payload.check_in,
+      check_out: payload.check_out,
+      ...(payload.property_id !== undefined ? { property_id: payload.property_id } : {}),
+      ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
+    };
+  }
+
+  if (operation === 'ota_block_release') {
+    return {
+      idempotency_key: payload.idempotency_key,
+      ...(payload.property_id !== undefined ? { property_id: payload.property_id } : {}),
+      ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
+    };
+  }
+
+  if (operation === 'ota_snapshot_list') {
+    return {
+      source: payload.source,
+      canonical_unit_id: payload.canonical_unit_id,
+      ...(payload.property_id !== undefined ? { property_id: payload.property_id } : {}),
+      ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
+    };
+  }
+
+  if (operation === 'ota_snapshot_put') {
+    return {
+      entry: payload.entry,
+      ...(payload.property_id !== undefined ? { property_id: payload.property_id } : {}),
+      ...(payload.correlation_id ? { correlation_id: payload.correlation_id } : {}),
+    };
+  }
+
   throw new ContractError('OPERATION_NOT_ALLOWED', `Unsupported operation: ${operation}`);
 }
 
@@ -207,6 +253,31 @@ export class OdooHotelAdapter {
       return fixture;
     }
     return this.#callOdooAction1967('hold', request);
+  }
+
+  async ota_blocks_list(request) {
+    if (this.#dryRun) return { blocks: [] };
+    return this.#callOdooAction1967('ota_blocks_list', request);
+  }
+
+  async ota_block_apply(request) {
+    if (this.#dryRun) return { dry_run: true, slot_id: null, replay: false };
+    return this.#callOdooAction1967('ota_block_apply', request);
+  }
+
+  async ota_block_release(request) {
+    if (this.#dryRun) return { dry_run: true, released: false };
+    return this.#callOdooAction1967('ota_block_release', request);
+  }
+
+  async ota_snapshot_list(request) {
+    if (this.#dryRun) return { entries: [] };
+    return this.#callOdooAction1967('ota_snapshot_list', request);
+  }
+
+  async ota_snapshot_put(request) {
+    if (this.#dryRun) return { dry_run: true, stored: true };
+    return this.#callOdooAction1967('ota_snapshot_put', request);
   }
 
   async status(request) {
