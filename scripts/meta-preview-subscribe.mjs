@@ -4,7 +4,7 @@ const branch = process.env.VERCEL_GIT_COMMIT_REF ?? '';
 const env = process.env.VERCEL_ENV ?? '';
 const targetBranch = 'feature/ath-odoo-hotel-016-whatsapp-natural-media';
 const callbackUrl = 'https://atheron-suite-git-feature-ath-odoo-hotel-b07d8f-marlon-atheron.vercel.app/api/hotel/webhook';
-const appId = '1606991587743431';
+const appId = '1606991587743431'; // Atheron Hotels Pilot TEST app
 const statusPath = new URL('../public/meta-preview-sync-status.json', import.meta.url);
 
 async function saveStatus(status) {
