@@ -16,7 +16,18 @@ function unwrap(response, operation) {
   if (!response || response.ok === false) {
     throw new GatewayPortError(response?.error?.code ?? 'GATEWAY_ERROR', `${operation} failed`);
   }
-  return response.data ?? response;
+  const data = response.data ?? response;
+  // En LIVE, la acción Odoo 1967 devuelve su propio sobre dentro del sobre HTTP.
+  if (data?.ok === false) {
+    throw new GatewayPortError(data.error_code ?? 'ODOO_OPERATION_FAILED', `${operation} failed in Odoo`);
+  }
+  if (data?.ok === true) {
+    if (!data.data || typeof data.data !== 'object') {
+      throw new GatewayPortError('ODOO_RESPONSE_INVALID', `${operation} returned no data`);
+    }
+    return data.data;
+  }
+  return data;
 }
 
 export function createGatewayOdooPort({ client, property_id } = {}) {

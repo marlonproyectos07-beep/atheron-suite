@@ -160,6 +160,17 @@ test('puerto Gateway: mapea operaciones y propaga error del Gateway', async () =
   await assert.rejects(port.releaseBlock('k1'), (e) => e.code === 'NOT_FOUND');
 });
 
+test('puerto Gateway LIVE: extrae datos del sobre 1967 y falla cerrado ante error interno', async () => {
+  const port = createGatewayOdooPort({ client: {
+    ota_blocks_list: async () => ({ ok: true, data: { ok: true, data: { blocks: [
+      { canonical_unit_id: 'AHS-302', check_in: '2027-01-10', check_out: '2027-01-12', source: 'odoo' },
+    ] } } }),
+    ota_snapshot_list: async () => ({ ok: true, data: { ok: false, error_code: 'NOT_FOUND' } }),
+  } });
+  assert.equal((await port.listBlocks())[0].canonical_unit_id, 'AHS-302');
+  await assert.rejects(port.snapshotStore.list('booking', 'AHS-302'), (e) => e.code === 'NOT_FOUND');
+});
+
 test('feed publico: sin PII ni motivos internos, UID estable, falla cerrado', async () => {
   const { odoo } = await seeded();
   const a = await buildPublicFeed({ unit: '302', channel: 'booking', odoo, today: '2027-01-01' });

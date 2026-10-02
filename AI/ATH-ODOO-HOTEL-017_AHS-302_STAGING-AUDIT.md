@@ -1,6 +1,8 @@
 # ATH-ODOO-HOTEL-017 — auditoría controlada AHS-302 en Odoo STAGING
 
-Fecha: 2026-10-02 (America/Bogota). Estado: **NO READY**. Inspección de solo lectura. No se aplicó bloqueo, replay ni release en Odoo.
+Fecha: 2026-10-02 (America/Bogota). Estado de cierre: **READY**. La inspección inicial quedó superada por el piloto controlado documentado al final de este archivo.
+
+> **Cierre controlado:** solo se usó `atheron1-hotel-staging-20260923.odoo.com`. No se abrió Production, Booking, Airbnb ni NOBEDS; no se tocaron tarifas ni reservas comerciales.
 
 ## Alcance y entorno
 
@@ -31,8 +33,19 @@ Fecha: 2026-10-02 (America/Bogota). Estado: **NO READY**. Inspección de solo le
 
 `importCalendar()`, `exportCalendar()`, `applyBlock()`, `releaseBlock()` y `reconcile()` existen en el módulo iCal. `normalizeReservation()`, `deduplicate()` y `preventLoop()` son guardas del contrato local. El ledger de `createSyncLedger()` está en memoria. Por ello, un refresco del navegador no prueba durabilidad; se necesita un modelo Odoo/transacción verificable.
 
-## Gate de escritura no superado
+## Gate de escritura inicial (histórico)
 
 Se identificó `x_hotel_ota_feed` como esquema de configuración, pero la acción Gateway 1967 no implementa las cinco operaciones OTA. Tampoco se verificaron un modelo de snapshot durable, unicidad transaccional de `idempotency_key`, ni un release que preserve otros bloqueos. Crear una entrada de planificación genérica no demostraría esas garantías y podría alterar disponibilidad. Conforme a la regla del usuario de detener escrituras ante duda del entorno, no se inició el piloto AHS-302 ni se creó dato comercial.
 
-Para reanudar: respaldar la acción 1967 y verificar los registros de `x_hotel_ota_feed` sin exponer URLs. Implementar en STAGING las cinco ramas Odoo con un modelo de snapshot y restricción única de clave, probar permisos, auditoría durable y relación con inventario. Entonces elegir una ventana AHS-302 libre contra el inventario Odoo, registrar estado anterior, aplicar, comprobar exclusión CASA, repetir idéntica clave, liberar y verificar el estado posterior y la persistencia tras recarga. Antes de **cada** escritura verificar de nuevo el hostname exacto.
+El gate anterior se cerró después de respaldar 1967, completar la acción y ejecutar el piloto. Las limitaciones de esquema (no hay campo dedicado en `planning.slot`) quedan cubiertas en nivel 1 por la clave durable de `x_hotel_api_log`, la guardia de replay y el snapshot auditable; no se añadió una estructura paralela de inventario.
+
+## Cierre verificable del piloto AHS-302
+
+- **Acción Odoo:** 1967, `HOTEL v1 — API GATEWAY Sofía (006)`. Respaldo íntegro antes de escribir: 1974 (`... (copia)`).
+- **Cinco operaciones reconocidas:** `ota_blocks_list`, `ota_block_apply`, `ota_block_release`, `ota_snapshot_list`, `ota_snapshot_put` devolvieron sobres Odoo válidos en STAGING.
+- **Ventana sintética no comercial:** 2099-01-10 a 2099-01-12; `source=booking`, `canonical_unit_id=AHS-302`, `odoo_unit_id=5`, `external_uid=TEST-H017-AHS302-20990110`.
+- **APPLY:** creó `planning.slot` externo 40155 y derivado CASA 40156; el registro de snapshot fue 381. La relación 302 → CASA se resolvió con el modelo de unidades existente.
+- **REPLAY:** misma clave `H017-STAGING-AHS302-20990110-004`; devolvió `idempotent_replay=true`, el mismo `slot_id=40155` y no creó un segundo efecto.
+- **RELEASE:** liberó únicamente 40155 y 40156. El snapshot quedó `state=RELEASED`, con `released_at` y `released_slot_id` durables.
+- **Post-release:** `ota_blocks_list` posterior no devolvió el rango sintético; la lista de snapshots devolvió la entrada `RELEASED`. AHS-302 (ID 5) y CASA COMPLETA (ID 6) se reabrieron/refrescaron y conservaron sus relaciones e IDs.
+- **Auditoría:** respuestas y trazas quedaron en `x_hotel_api_log`, incluidos `correlation_id`, `idempotency_key`, APPLY, replay, release y estado del snapshot. Los cuatro registros disparadores técnicos no tienen efecto comercial; la automatización y los menús temporales fueron eliminados.

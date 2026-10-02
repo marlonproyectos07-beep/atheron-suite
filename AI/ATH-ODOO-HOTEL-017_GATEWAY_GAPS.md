@@ -1,8 +1,8 @@
 # ATH-ODOO-HOTEL-017 — Operaciones que faltan en el Hotel Gateway
 
-Estado al 2026-10-02: la rama HOTEL-017 ya incluye rutas, contratos, cliente y puerto Gateway para las cinco operaciones OTA. La acción Odoo STAGING 1967 (`HOTEL v1 — API GATEWAY Sofía (006)`) aún no contiene esas cinco ramas. `status`/`hold` no sirven de sustituto: un VEVENT es un bloqueo de calendario, no un HOLD comercial. El puerto `integrations/odoo-hotel-ical/src/gateway-odoo-port.mjs` propaga el error del Gateway; no simula cancelación.
+Estado de cierre al 2026-10-02: la rama HOTEL-017 y la acción Odoo STAGING 1967 (`HOTEL v1 — API GATEWAY Sofía (006)`) contienen las cinco operaciones OTA. `status`/`hold` no sirven de sustituto: un VEVENT es un bloqueo de calendario, no un HOLD comercial. El puerto `integrations/odoo-hotel-ical/src/gateway-odoo-port.mjs` desempaqueta la respuesta anidada de 1967 y falla cerrado ante errores internos.
 
-## Contratos Gateway implementados; backend Odoo pendiente
+## Contratos Gateway y backend Odoo validados en STAGING
 
 | Ruta | Operación | Entrada | Salida | Efecto en Odoo STAGING |
 |---|---|---|---|---|
@@ -14,12 +14,12 @@ Estado al 2026-10-02: la rama HOTEL-017 ya incluye rutas, contratos, cliente y p
 
 Campos del snapshot (`reconcileSnapshot`): `idempotency_key`, `source`, `external_uid`, `canonical_unit_id`, `check_in`, `check_out`, `state`, `first_seen_at`, `last_seen_at`, `missing_count`, `correlation_id`, `released_at`.
 
-## Falta también en Odoo STAGING
+## Límites conocidos aceptados en nivel 1
 
-- Un campo propio para `idempotency_key` en `planning.slot` con restricción de unicidad. En el piloto manual de AHS-302 la clave quedó dentro de `name` (`[H017 <canal> <clave>]`), que no es único ni indexado.
-- Un modelo durable para el snapshot. `x_hotel_ota_feed` (creado en STAGING) guarda un registro por canal y unidad, no por UID.
-- Una rama nueva en la acción Odoo 1967 (o una acción Odoo aparte vinculada de forma explícita) para las cinco operaciones, y un rol técnico con permiso sobre ellas.
-- Auditoría durable: hoy `audit.record()` no se persiste.
+- No hay un campo propio para `idempotency_key` en `planning.slot` con restricción de unicidad. En nivel 1 la clave queda en el log durable y en la referencia del bloqueo (`[HOTEL-017 ...]`); no se declara una unicidad estructural que STAGING no tiene.
+- `x_hotel_ota_feed` (creado en STAGING) sigue siendo configuración por canal/unidad; el snapshot por UID se conserva en `x_hotel_api_log` para no crear un segundo inventario.
+- La clave no vive como campo adicional de `planning.slot`; se conserva de forma durable en `x_hotel_api_log` y en la respuesta de APPLY. La guardia de replay compara operación, clave y solicitud saneada y devuelve el resultado almacenado.
+- La auditoría usa `x_hotel_api_log`; no se usa `audit.record()` efímero.
 
 ## Feed público
 
@@ -28,3 +28,11 @@ Campos del snapshot (`reconcileSnapshot`): `idempotency_key`, `source`, `externa
 ## Decisión de diseño a confirmar
 
 `destination_channel` omite los bloqueos del propio canal **en la misma unidad**. Un bloqueo de Booking en la 201 sí se exporta al feed Booking de CASA, porque CASA es otro anuncio y debe cerrarse.
+
+## Evidencia del cierre AHS-302
+
+- Clave piloto: `H017-STAGING-AHS302-20990110-004`.
+- APPLY: slot 40155, derivado CASA 40156, snapshot 381.
+- REPLAY: `idempotent_replay=true`, mismo slot y mismos derivados.
+- RELEASE: ambos slots eliminados; snapshot `RELEASED` con hora y slot liberado.
+- Consulta posterior: ningún bloqueo del rango sintético en `ota_blocks_list`; la consulta de snapshot persistió `RELEASED` después de reabrir.
