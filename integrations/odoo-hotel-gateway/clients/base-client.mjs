@@ -41,4 +41,24 @@ export class HotelGatewayClient {
   status(request) {
     return this.#call('/hotel/status', request);
   }
+
+  ota_blocks_list(request = {}) {
+    return this.#call('/hotel/ota/blocks/list', request);
+  }
+
+  ota_block_apply(request) {
+    return this.#call('/hotel/ota/blocks/apply', request);
+  }
+
+  ota_block_release(request) {
+    return this.#call('/hotel/ota/blocks/release', request);
+  }
+
+  ota_snapshot_list(request) {
+    return this.#call('/hotel/ota/snapshot/list', request);
+  }
+
+  ota_snapshot_put(request) {
+    return this.#call('/hotel/ota/snapshot/put', request);
+  }
 }
