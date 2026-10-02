@@ -48,6 +48,17 @@ const provider = new WhatsAppCloudProvider(outboundReady ? {
     try {
       const response = await fetch(...args);
       logHotel011Diagnostic('OUTBOUND_STEP', { outbound_call_started: true, outbound_call_status: response.status });
+      if (process.env.VERCEL_ENV === 'preview'
+        && process.env.VERCEL_GIT_COMMIT_REF === 'feature/ath-odoo-hotel-016-whatsapp-natural-media') {
+        const metaResult = response.ok ? null : await response.clone().json().catch(() => null);
+        const code = metaResult?.error?.code;
+        const subcode = metaResult?.error?.error_subcode;
+        console.log('[hotel-016-outbound]', JSON.stringify({
+          http_status: response.status,
+          meta_code: Number.isInteger(code) ? code : null,
+          meta_subcode: Number.isInteger(subcode) ? subcode : null,
+        }));
+      }
       return response;
     } catch (error) {
       logHotel011Diagnostic('OUTBOUND_STEP', { outbound_call_started: true, outbound_call_status: 'error' });

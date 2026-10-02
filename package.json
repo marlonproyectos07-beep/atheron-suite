@@ -10,7 +10,7 @@
     "prueba-jornadas": "node --experimental-strip-types --no-warnings scripts/prueba-jornadas.mts",
     "redespliegue-necesario": "node scripts/necesita-redespliegue.mjs",
     "foto": "node scripts/optimiza-fotos.mjs",
-    "prebuild": "node scripts/meta-preview-subscribe.mjs && node scripts/comprueba-contenido.mjs && node scripts/comprueba-jornadas.mjs && node scripts/optimiza-selector.mjs",
+    "prebuild": "node scripts/comprueba-contenido.mjs && node scripts/comprueba-jornadas.mjs && node scripts/optimiza-selector.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "prueba-canario": "node --experimental-strip-types --no-warnings scripts/prueba-canario-endpoint.mts",
