@@ -176,11 +176,19 @@ export async function importCalendar({ ical, source, canonical_unit_id, mapping,
   return { imported: reservations.length, loops_discarded: raw.length - kept.length, results };
 }
 
-/** Exportacion local derivada del estado Odoo; el llamador publica el texto tras el gate. */
-export async function exportCalendar({ canonical_unit_id, from, to, stamp, odoo, ledger }) {
+/** Exportacion local derivada del estado Odoo; el llamador publica el texto tras el gate.
+ * `destination_channel` evita el eco: el feed destinado a un canal omite los bloqueos
+ * que ese mismo canal origino EN ESA MISMA UNIDAD. Los bloqueos del canal en otras
+ * unidades se conservan porque su efecto CASA <-> habitaciones si debe llegar al canal.
+ */
+export async function exportCalendar({ canonical_unit_id, from, to, stamp, odoo, ledger, destination_channel }) {
   assertUnit(canonical_unit_id);
   assertWindow(from, to);
-  const blocks = await odoo.listBlocks();
+  if (destination_channel != null && !SOURCES.has(destination_channel)) throw new Error('UNKNOWN_OTA_SOURCE');
+  const all = await odoo.listBlocks();
+  const blocks = destination_channel
+    ? all.filter((b) => !(b.source === destination_channel && b.canonical_unit_id === canonical_unit_id))
+    : all;
   const ical = buildIcalFeed(toInventory(blocks), LEGACY_UNIT[canonical_unit_id], { from, to, stamp });
   for (const event of parseIcal(ical)) ledger?.exportedUids.add(event.uid);
   return ical;
@@ -190,6 +198,6 @@ export function createChannelAdapter(source, deps) {
   if (!SOURCES.has(source)) throw new Error('UNKNOWN_OTA_SOURCE');
   return Object.freeze({
     importCalendar: (args) => importCalendar({ ...deps, ...args, source }),
-    exportCalendar: (args) => exportCalendar({ ...deps, ...args }),
+    exportCalendar: (args) => exportCalendar({ ...deps, ...args, destination_channel: source }),
   });
 }
