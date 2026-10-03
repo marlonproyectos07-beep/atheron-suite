@@ -17,6 +17,9 @@
 Ambos frentes parten de la misma base aprobada (HOTEL-009, `cd824a6`) y
 no dependen uno del otro. Ninguno debe tocar la rama del otro.
 
+> **HOTEL-012 V2 (2026-10-03):** Control Center evolucionado como read-model + pruebas
+> (376 PASS). No verificado contra Odoo (sin sesión). Ver `AI/ATH-ODOO-HOTEL-012_V2_CONTROL_CENTER.md`.
+
 ## Historial de gates (más reciente primero)
 
 | Gate | Estado | Referencia |

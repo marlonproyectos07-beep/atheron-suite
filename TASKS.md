@@ -63,6 +63,20 @@
   `src/housekeeping-model.mjs` (código puro, reversible, testeable) —
   ver SAFE WRITE PLAN, sección 9.
 
+## HOTEL-012 V2 — Control Center (EN CURSO, parcial: sin sesión Odoo)
+
+Detalle: `AI/ATH-ODOO-HOTEL-012_V2_CONTROL_CENTER.md`.
+
+- [x] Auditoría de HOTEL-009/012 y reutilización (sin dashboard nuevo).
+- [x] Read-model `control-center-model.mjs`: 8 estados, CASA COMPLETA ↔ habitaciones,
+  ocupación por unidades y por personas, housekeeping, KPI gerenciales, canales,
+  filtros/horizonte, alertas, Revenue Intelligence (DATA NOT READY sin costos).
+- [x] Lector paginado (corrige truncado a 300) y `saldos-audit` reproducible.
+- [x] 376 pruebas PASS (310 previas + 66 nuevas), 0 regresiones.
+- [ ] **PENDIENTE (Marlon, sesión local):** `TARGET_COUNT=357 TARGET_AMOUNT=37202549 node scripts/saldos-audit-live.mjs` para demostrar el origen del KPI.
+- [ ] **BLOQUEADO (sin sesión Odoo):** reflejar el contrato en la vista Studio, verificar en STAGING, revisar ACL real.
+- [ ] Decisión CEO: costos para tarifa piso (lista en el doc §6); capacidad Algarra/Neusa; alinear `alternatives-engine` con capacidades reales (hallazgo F4).
+
 ## HOTEL-011 — WhatsApp piloto controlado (EN CURSO, Codex, rama separada)
 
 No gestionado desde este documento — ver

@@ -117,6 +117,7 @@ export function mapSaleOrderToReservation(row) {
     hold_expires: row.x_hold_expires || null,
     hold_expired: row.x_hold_expired ?? null,
     odoo_status_raw: row.x_reservation_status ?? null,
+    hold_origin: row.x_hold_origin || null,
     odoo_id: row.id,
   };
 }
@@ -136,6 +137,70 @@ export async function fetchHotelReservations(transport, { database, uid, technic
     { fields, limit },
   ]);
   return rows.map(mapSaleOrderToReservation);
+}
+
+/**
+ * ATH-ODOO-HOTEL-012 V2 -- lectura PAGINADA y completa de reservas hoteleras.
+ *
+ * `fetchHotelReservations` trae como maximo `limit` (300) filas sin orden
+ * garantizado: con mas de 300 reservas en STAGING los KPI quedaban
+ * silenciosamente truncados (hallazgo de la auditoria V2). Esta funcion
+ * pagina con `offset` y `order: 'id asc'` (determinista) hasta agotar
+ * resultados, y devuelve `truncated: true` solo si choca con `maxRows`.
+ * Mismo dominio fijo y misma lista de campos: sigue siendo SOLO LECTURA.
+ */
+export async function fetchAllHotelReservations(transport, { database, uid, technicalSecret, pageSize = 200, maxRows = 5000, domain = HOTEL_ORDER_DOMAIN, fields = HOTEL_ORDER_FIELDS }) {
+  const all = [];
+  for (let offset = 0; offset < maxRows; offset += pageSize) {
+    const rows = await transport.call('object', 'execute_kw', [
+      database,
+      uid,
+      technicalSecret,
+      'sale.order',
+      'search_read',
+      [domain],
+      { fields, limit: Math.min(pageSize, maxRows - offset), offset, order: 'id asc' },
+    ]);
+    all.push(...rows);
+    if (rows.length < pageSize) return { reservations: all.map(mapSaleOrderToReservation), truncated: false };
+  }
+  return { reservations: all.map(mapSaleOrderToReservation), truncated: true };
+}
+
+/**
+ * ATH-ODOO-HOTEL-012 V2 -- tareas de aseo ABIERTAS (project.task del
+ * proyecto "Limpieza"), SOLO LECTURA. Campos confirmados por el codigo
+ * vivo de la accion 1902 (AI/hotel-012-snapshots/ACTION_1902_CURRENT.py):
+ * `project_id`, `stage_id`, `x_resource_id`, `state`. `user_ids` y
+ * `write_date` son campos estandar de project.task. El mapeo
+ * recurso -> unidad lo hace el llamador (x_hotel_unit.x_resource_id).
+ */
+export const HOUSEKEEPING_TASK_DOMAIN = Object.freeze([['state', 'not in', ['1_done', '1_canceled']]]);
+export const HOUSEKEEPING_TASK_FIELDS = Object.freeze(['id', 'name', 'project_id', 'stage_id', 'x_resource_id', 'user_ids', 'write_date']);
+
+export function mapProjectTaskToHousekeeping(row, { unitByResourceId = {}, userNameById = {} } = {}) {
+  const resourceId = Array.isArray(row.x_resource_id) ? row.x_resource_id[0] : row.x_resource_id;
+  const firstUser = Array.isArray(row.user_ids) && row.user_ids.length ? row.user_ids[0] : null;
+  return {
+    task_ref: row.id,
+    unit: unitByResourceId[resourceId] ?? null,
+    stage: many2oneName(row.stage_id),
+    assignee: firstUser != null ? (userNameById[firstUser] ?? null) : null,
+    updated_at: row.write_date ?? null,
+  };
+}
+
+export async function fetchOpenHousekeepingTasks(transport, { database, uid, technicalSecret, limit = 500, domain = HOUSEKEEPING_TASK_DOMAIN, fields = HOUSEKEEPING_TASK_FIELDS }, mapping = {}) {
+  const rows = await transport.call('object', 'execute_kw', [
+    database,
+    uid,
+    technicalSecret,
+    'project.task',
+    'search_read',
+    [domain],
+    { fields, limit },
+  ]);
+  return rows.map((r) => mapProjectTaskToHousekeeping(r, mapping));
 }
 
 /**
