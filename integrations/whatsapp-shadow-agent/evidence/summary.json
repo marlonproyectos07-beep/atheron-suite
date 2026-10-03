@@ -1,0 +1,22 @@
+{
+  "generated_by": "integrations/whatsapp-shadow-agent/scripts/run-suite.mjs",
+  "mode": "shadow",
+  "gateway": "FAKE (fixture contractual; no Odoo real)",
+  "playbook": {
+    "status": "BLOCKED",
+    "version": null,
+    "reason": "cases/playbook-cases.json no existe: el Playbook v0.1 no esta en el repo ni en la sesion",
+    "total": 0,
+    "pass": 0
+  },
+  "ceo_core": {
+    "total": 12,
+    "pass": 12
+  },
+  "ceo_supplement": {
+    "total": 20,
+    "pass": 20
+  },
+  "all_pass": false,
+  "failing": []
+}
