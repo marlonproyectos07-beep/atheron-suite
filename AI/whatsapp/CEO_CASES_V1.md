@@ -8,7 +8,7 @@
 
 > «Cancelación o cambio hasta 48 horas antes del check-in: no hay devolución en efectivo. El valor pagado queda como saldo a favor durante 6 meses para una nueva reserva en Hoteles Atero, sujeto a disponibilidad y a la tarifa vigente de las nuevas fechas. Si la nueva tarifa es superior, el huésped paga la diferencia. Solicitudes con menos de 48 horas, no-show o casos excepcionales pasan a revisión humana. Las reservas realizadas mediante Booking, Airbnb u otra OTA se rigen primero por las condiciones de la plataforma.»
 
-*Nota:* el texto dice «Hoteles Atero»; es probablemente «Atheron». Se conserva verbatim aquí; las respuestas del agente dicen «Hoteles Atheron». **Pendiente de confirmación del CEO.**
+*Nota:* el texto dice «Hoteles Atero»; es probablemente «Atheron». Se conserva verbatim aquí; las respuestas del agente dicen «Hoteles Atheron». **Marca oficial confirmada (CANONICAL-002): «Hoteles Atheron».**
 
 ## Anticipo oficial
 

@@ -13,7 +13,7 @@ export const POLICY = Object.freeze({
   /** Decision CEO 2026-10-03: anticipo oficial de reservas directas. El 30 % que aun pueda tener Odoo es configuracion anterior. */
   deposit: Object.freeze({ percent: 50, source: 'CEO_DECISION_2026-10-03', legacy_odoo_percent: 30 }),
   card_surcharge_percent: 5, // plantilla de pago oficial (Playbook s4 punto 9)
-  group: Object.freeze({ human_from: 11, strategic_from: 100 }),
+  group: Object.freeze({ human_from: 11, large_from: 30, strategic_from: 100 }),
   languages_supported: Object.freeze(['es']),
   default_property: 'AS', // la linea de WhatsApp es la de Hotel Atheron Suite (Playbook s5.1, T02)
   /**
@@ -30,6 +30,17 @@ export const POLICY = Object.freeze({
   automation_mode: 'shadow', // WHATSAPP_AUTOMATION_MODE
   odoo_staging_live_validation: 'PENDING_EXTERNAL_AUTHENTICATED_TEST',
   human_hours_observed: '08:00-22:00', // DATA_GAP #17: solo observado, no oficial
+});
+
+/**
+ * Anticipo por canal (CANONICAL-002). Solo DIRECT afirma el 50 %. Booking queda
+ * pendiente de validar contra la politica publicada de la plataforma; Airbnb
+ * cobra al huesped y no se pide anticipo adicional.
+ */
+export const CHANNEL_DEPOSIT = Object.freeze({
+  DIRECT: Object.freeze({ policy: 'DEPOSIT_50_PERCENT', percent: 50 }),
+  BOOKING: Object.freeze({ policy: 'DEPOSIT_REQUIRED_POLICY_PENDING_CHANNEL_VALIDATION', percent: null }),
+  AIRBNB: Object.freeze({ policy: 'NO_ADDITIONAL_DEPOSIT_AIRBNB_COLLECTS', percent: 0 }),
 });
 
 /** Orden de nombres que el agente usa al hablar. */

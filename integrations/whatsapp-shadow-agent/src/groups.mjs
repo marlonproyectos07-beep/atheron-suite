@@ -19,6 +19,15 @@ export const GROUP_STATUS = Object.freeze({
   STRATEGIC_GROUP_LEAD: 'STRATEGIC_GROUP_LEAD',
 });
 
+/** Flujo comercial por tamano: >=11 GROUP_SALES_FLOW, >=30 LARGE_GROUP_FLOW (alerta humana), >=100 STRATEGIC_GROUP_LEAD. */
+export function groupFlowFor(n) {
+  if (!Number.isFinite(n)) return null;
+  if (n >= POLICY.group.strategic_from) return 'STRATEGIC_GROUP_LEAD';
+  if (n >= POLICY.group.large_from) return 'LARGE_GROUP_FLOW';
+  if (n >= POLICY.group.human_from) return 'GROUP_SALES_FLOW';
+  return null;
+}
+
 export function evaluateGroup(n) {
   if (!Number.isFinite(n) || n < 7) return { status: GROUP_STATUS.NONE, guests: n ?? null, can_promise_capacity: false, hold_allowed: false };
   const verified = VERIFIED_ODOO_CAPACITY.casa_completa_AS;

@@ -9,13 +9,13 @@
  *
  * Principio: LA IA CONVERSA, ODOO DECIDE, EL HUMANO VALIDA EL DINERO.
  */
-import { POLICY, PROPERTIES, AS_ROOMS } from './policy.mjs';
+import { POLICY, PROPERTIES, AS_ROOMS, CHANNEL_DEPOSIT } from './policy.mjs';
 import { norm, residualWords, STAY_CUE, detectIntents, extractDates, extractPersons, extractProperty, extractMisc, detectLanguage, fmtDate, addDays } from './nlu.mjs';
 import { depositFor, reconcileWithOdoo } from './deposit.mjs';
-import { evaluateGroup, scenarioFor, GROUP_STATUS } from './groups.mjs';
+import { evaluateGroup, groupFlowFor, scenarioFor, GROUP_STATUS } from './groups.mjs';
 import { ShadowViolation } from './odoo-port.mjs';
 
-const BRAND = 'Hoteles Atheron'; // el texto oficial dice "Hoteles Atero" (probable errata, pendiente de confirmar)
+const BRAND = 'Hoteles Atheron'; // marca oficial confirmada por el CEO (CANONICAL-002); la propiedad conserva su nombre: Hotel Atheron Suite
 
 export const FACT_AMOUNTS = Object.freeze([15000, 20000, 10000]); // cifras de las fichas verificadas (parqueaderos, hora extra)
 
@@ -403,6 +403,14 @@ export async function processMessage(session, message, deps) {
     d.reply = 'Este canal es de reservas de hospedaje. Tu consulta de seguridad la derivamos al equipo de Atheron Security.';
     return finish(session, d, message);
   }
+  if (intents.includes('TURISMO') && !intents.includes('CONSULTA_DISPONIBILIDAD')) {
+    // Sin ficha verificada de turismo local: no se inventa; lo atiende una persona.
+    d.primary_intent = 'TURISMO';
+    d.data_gaps.push('DATA_GAP:informacion_turistica_no_verificada');
+    escalate(d, 'CONSULTA_FUERA_DE_ALCANCE_TURISMO');
+    d.reply = 'Con gusto. Eso lo confirmo con una persona del equipo para darte buena información.';
+    return finish(session, d, message);
+  }
   if (entities.property.not_bookable) {
     d.primary_intent = 'CONSULTA_DISPONIBILIDAD';
     d.reply = `${entities.property.not_bookable} aún no está disponible para reservas. Si quieres te muestro nuestras otras propiedades.`;
@@ -410,6 +418,7 @@ export async function processMessage(session, message, deps) {
     return finish(session, d, message);
   }
 
+  const memoryBefore = structuredClone(session.memory);
   const changes = mergeMemory(session, d, n, entities);
   const m = session.memory;
   const guests = m.guests ?? null;
@@ -595,10 +604,9 @@ export async function processMessage(session, message, deps) {
     d.primary_intent = 'GRUPO';
     addIntent(d, 'GRUPO');
     if (intents.includes('CONSULTA_DISPONIBILIDAD') || entities.dates.checkIn) addIntent(d, 'CONSULTA_DISPONIBILIDAD');
-    if (group.status === GROUP_STATUS.STRATEGIC_GROUP_LEAD) {
-      d.labels.push('STRATEGIC_GROUP_LEAD');
-      d.flags.push('STRATEGIC_GROUP_LEAD');
-    }
+    const flow = groupFlowFor(guests);
+    if (flow) { d.group_flow = flow; d.labels.push(flow); d.flags.push(flow); }
+    if (flow === 'LARGE_GROUP_FLOW' || flow === 'STRATEGIC_GROUP_LEAD') d.flags.push('HUMAN_ALERT_LARGE_GROUP');
     d.data_gaps.push(...group.data_gaps);
     if (group.status !== GROUP_STATUS.SMALL_GROUP) d.flags.push('GROUP_PRICING_APPROVAL');
     escalate(d, group.status === GROUP_STATUS.STRATEGIC_GROUP_LEAD ? 'STRATEGIC_GROUP_LEAD' : 'COTIZACION_DE_GRUPO', { urgency: group.status === GROUP_STATUS.STRATEGIC_GROUP_LEAD ? 'ALTA' : 'NORMAL' });
@@ -671,7 +679,7 @@ export async function processMessage(session, message, deps) {
   }
 
   // ======================= flujo comercial y FAQ ========================================================================================
-  return commercialFlow({ session, d, deps, n, intents, entities, prop, changes, message, fromAudio, text });
+  return commercialFlow({ session, d, deps, n, intents, entities, prop, changes, message, fromAudio, text, memoryBefore });
 }
 
 /** Politica oficial de cancelacion/cambio de reservas DIRECTAS (CEO_CASES_V1). */
@@ -694,7 +702,7 @@ function cancellationDecision(session, intents) {
   return { mode: 'HUMAN', reason: 'MENOS_DE_48H', note: `Faltan ${Math.max(Math.floor(hours), 0)} h para el check-in: revisión humana; no decidir devolución ni penalidad.` };
 }
 
-async function commercialFlow({ session, d, deps, n, intents, entities, prop, changes, fromAudio }) {
+async function commercialFlow({ session, d, deps, n, intents, entities, prop, changes, fromAudio, memoryBefore }) {
   const m = session.memory;
   const parts = [];
   const miss = missingFor(session);
@@ -715,6 +723,7 @@ async function commercialFlow({ session, d, deps, n, intents, entities, prop, ch
 
   // Confianza: sin ninguna intencion y con varias palabras sin explicar, NO se interpreta ni se consulta Odoo.
   if (intents.length === 0 && (dateEntities || personEntities) && !askingVehicleAnswer && !STAY_CUE.test(n) && residualWords(n).length > 1) {
+    session.memory = memoryBefore; // un mensaje que no se entiende no deja fechas ni personas en la memoria
     d.flags.push('CONFIANZA_INSUFICIENTE', 'FALLBACK_A_HUMANO');
     d.primary_intent = 'INTENCION_NO_ENTENDIDA';
     addIntent(d, 'INTENCION_NO_ENTENDIDA');
@@ -868,6 +877,22 @@ async function commercialFlow({ session, d, deps, n, intents, entities, prop, ch
     escalate(d, 'PAGO_AL_LLEGAR_SIN_POLITICA');
     d.data_gaps.push('DATA_GAP:politica_pago_al_llegar');
     d.reply = 'El anticipo es lo que asegura el cupo. Lo de pagar al llegar lo consulto con el equipo.';
+    return finish(session, d, null);
+  }
+  const depositChannel = /airbnb/.test(n) ? 'AIRBNB' : /booking/.test(n) ? 'BOOKING' : (session.reservation?.source ?? 'DIRECT');
+  if (intents.includes('ANTICIPO') && !intents.includes('METODO_PAGO') && depositChannel !== 'DIRECT') {
+    d.primary_intent = 'ANTICIPO';
+    d.deposit = { percent: null, amount: null, total: null, channel: depositChannel, policy: CHANNEL_DEPOSIT[depositChannel].policy };
+    if (depositChannel === 'AIRBNB') {
+      // Airbnb gestiona el cobro al huesped: no se pide anticipo adicional.
+      d.flags.push('DEPOSIT_NOT_REQUESTED_AIRBNB_COLLECTS');
+      d.reply = 'Para reservas por Airbnb, el cobro lo gestiona la plataforma; nosotros no pedimos un anticipo adicional.';
+    } else {
+      // Booking: el 50 % es la intencion del negocio, pero su compatibilidad con la politica publicada esta en auditoria.
+      d.flags.push('DEPOSIT_REQUIRED_POLICY_PENDING_CHANNEL_VALIDATION');
+      escalate(d, 'ANTICIPO_BOOKING_VALIDACION_DE_CANAL');
+      d.reply = 'Para reservas por Booking rigen primero las condiciones de la plataforma. Lo reviso con el equipo y te confirmo.';
+    }
     return finish(session, d, null);
   }
   if (intents.includes('ANTICIPO') && !intents.includes('METODO_PAGO')) {
