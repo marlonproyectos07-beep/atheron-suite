@@ -7,7 +7,7 @@ import { summarizeCoverage } from '../src/phase-a-inventory.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const tests = readdirSync(resolve(root, 'test'))
-  .filter((name) => name.endsWith('.test.mjs')).sort()
+  .filter((name) => name.endsWith('.test.mjs') && !name.startsWith('phase-b-')).sort()
   .map((name) => resolve(root, 'test', name));
 process.stdout.write(`PHASE_A_COVERAGE ${JSON.stringify(summarizeCoverage())}\n`);
 const result = spawnSync(process.execPath, ['--test', ...tests], { cwd: root, stdio: 'inherit' });

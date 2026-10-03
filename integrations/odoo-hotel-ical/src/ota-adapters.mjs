@@ -95,7 +95,12 @@ function revision(reservation) {
   return hash(JSON.stringify([reservation.check_in, reservation.check_out, reservation.status, reservation.source_updated_at]));
 }
 
-function toInventory(blocks) {
+export function legacyUnit(unit) {
+  assertUnit(unit);
+  return LEGACY_UNIT[unit];
+}
+
+export function toInventory(blocks) {
   return blocks.filter((b) => b.status !== 'cancelled').map((b) => ({
     unit: LEGACY_UNIT[b.canonical_unit_id], checkIn: b.check_in, checkOut: b.check_out,
   }));

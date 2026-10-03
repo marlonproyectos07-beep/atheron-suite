@@ -34,6 +34,13 @@ function parseIcsDate(value) {
   return digits; // se deja crudo si trae hora; quien lo use decide como truncarlo.
 }
 
+function parseIcsInstant(value) {
+  if (!/^\d{8}T\d{6}Z$/.test(value)) return null;
+  const iso = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}T${value.slice(9, 11)}:${value.slice(11, 13)}:${value.slice(13, 15)}Z`;
+  const parsed = Date.parse(iso);
+  return Number.isFinite(parsed) && new Date(parsed).toISOString() === iso.replace('Z', '.000Z') ? iso : null;
+}
+
 /** Parsea el texto iCal en eventos crudos {uid, dtstart, dtend, summary, description, status}. */
 export function parseIcal(icsText) {
   const lines = unfoldLines(icsText);
@@ -76,6 +83,9 @@ export function parseIcal(icsText) {
         break;
       case 'STATUS':
         current.status = value;
+        break;
+      case 'LAST-MODIFIED':
+        current.source_updated_at = parseIcsInstant(value);
         break;
       default:
         break;
