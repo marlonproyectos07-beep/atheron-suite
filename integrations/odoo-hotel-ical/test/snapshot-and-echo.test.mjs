@@ -68,6 +68,24 @@ test('C2: un error entre dos ausencias no cuenta como segunda lectura', async ()
   await r.run('airbnb', ok(cal(A1, A2)), 't1');
   await r.run('airbnb', ok(cal(A2)), 't2');
   await r.run('airbnb', { ok: false }, 't3');
+  const afterError = (await r.snapshotStore.list('airbnb', 'AHS-302')).find((e) => e.external_uid === 'a-1@airbnb.test');
+  assert.equal(afterError.missing_count, 0);
+  assert.equal(afterError.state, 'ACTIVE');
+  const firstAfterError = await r.run('airbnb', ok(cal(A2)), 't4');
+  assert.equal(firstAfterError.pending.length, 1);
+  assert.equal(releases(r.odoo), 0);
+  const secondAfterError = await r.run('airbnb', ok(cal(A2)), 't5');
+  assert.equal(secondAfterError.released.length, 1);
+  assert.equal(releases(r.odoo), 1);
+});
+
+test('C3: feed vacio inesperado rompe la secuencia de ausencias', async () => {
+  const r = rig();
+  await r.run('airbnb', ok(cal(A1, A2)), 't1');
+  await r.run('airbnb', ok(cal(A2)), 't2');
+  assert.equal((await r.run('airbnb', ok(cal()), 't3')).status, 'EMPTY_FEED_HELD');
+  const next = await r.run('airbnb', ok(cal(A2)), 't4');
+  assert.equal(next.pending.length, 1);
   assert.equal(releases(r.odoo), 0);
 });
 

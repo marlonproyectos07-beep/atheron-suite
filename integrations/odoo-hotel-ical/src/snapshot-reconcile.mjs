@@ -31,20 +31,33 @@ function validEnvelope(text) {
   return typeof text === 'string' && text.includes('BEGIN:VCALENDAR') && text.includes('END:VCALENDAR');
 }
 
+async function resetMissingSequence(previous, snapshotStore, audit) {
+  const held = [];
+  for (const entry of previous) {
+    if (entry.state !== 'MISSING_PENDING') continue;
+    await snapshotStore.put({ ...entry, missing_count: 0, state: 'ACTIVE' });
+    record(audit, 'reconcileSnapshot', entry, 'MISSING_SEQUENCE_RESET');
+    held.push(entry.idempotency_key);
+  }
+  return held;
+}
+
 export async function reconcileSnapshot({
   feed, source, canonical_unit_id, mapping, correlation_id, odoo, ledger, audit, snapshotStore, now, allow_empty = false,
 }) {
   if (!snapshotStore) throw new Error('SNAPSHOT_STORE_REQUIRED');
   if (!now) throw new Error('NOW_REQUIRED');
   const scope = { source, canonical_unit_id };
+  const previous = await snapshotStore.list(source, canonical_unit_id);
   if (!feed?.ok || !validEnvelope(feed.ical)) {
+    const kept = await resetMissingSequence(previous, snapshotStore, audit);
     record(audit, 'reconcileSnapshot', { ...scope, idempotency_key: null }, 'FEED_ERROR_NO_CHANGE');
-    return { status: 'FEED_ERROR_NO_CHANGE', pending: [], released: [], kept: [] };
+    return { status: 'FEED_ERROR_NO_CHANGE', pending: [], released: [], kept };
   }
   const events = parseIcal(feed.ical).filter((e) => !preventLoop(e));
-  const previous = await snapshotStore.list(source, canonical_unit_id);
   const tracked = previous.filter((e) => TRACKED.has(e.state));
   if (events.length === 0 && tracked.length > 0 && !allow_empty) {
+    await resetMissingSequence(previous, snapshotStore, audit);
     record(audit, 'reconcileSnapshot', { ...scope, idempotency_key: null }, 'EMPTY_FEED_HELD');
     return { status: 'EMPTY_FEED_HELD', pending: [], released: [], kept: tracked.map((e) => e.idempotency_key) };
   }

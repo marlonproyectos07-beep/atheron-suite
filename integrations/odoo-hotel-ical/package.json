@@ -5,6 +5,7 @@
   "type": "module",
   "description": "ATH-ODOO-HOTEL-008 Nivel 1 - modulo iCal independiente (NO NOBEDS). Genera calendarios de disponibilidad desde el inventario de Odoo (con bloqueo cruzado Casa Completa <-> habitaciones) e importa bloqueos externos de forma idempotente. No publica feeds reales ni conecta Booking/Airbnb todavia.",
   "scripts": {
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "phase-a": "node scripts/phase-a-runner.mjs"
   }
 }
