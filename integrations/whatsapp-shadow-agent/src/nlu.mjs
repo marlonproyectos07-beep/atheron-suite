@@ -144,6 +144,11 @@ export function extractPersons(n) {
     if (paraPers) out.total = toNum(paraPers[1]);
     else if (pers) out.total = toNum(pers[1]);
   }
+  if (out.total == null) {
+    const tpl = n.match(new RegExp(`\\bhuespedes:?\\s*${NUM}\\b`));
+    if (tpl) out.total = toNum(tpl[1]);
+  }
+  if (out.total == null && /\b(voy|viajo|vengo|estoy) solo\b|\bsolo yo\b/.test(n)) out.total = 1;
   if (out.total == null && /\bpareja\b/.test(n)) out.total = 2;
   if (out.total == null && /\b(una persona|1 persona|solo yo|para uno|para 1)\b/.test(n)) out.total = 1;
   if (out.total == null && out.adults != null) out.total = out.adults + (out.children ?? 0);

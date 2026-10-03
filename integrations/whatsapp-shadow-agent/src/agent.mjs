@@ -88,7 +88,12 @@ function mergeMemory(session, d, text, entities) {
     if (m[k] !== undefined && m[k] !== v) changes.push({ slot: label ?? k, from: m[k], to: v });
     m[k] = v;
   };
-  const { dates, persons, property, misc } = entities;
+  const { persons, property, misc } = entities;
+  let dates = entities.dates;
+  const dayOnly = !dates.checkIn && m.checkIn ? text.match(/\b(?:llego|llegamos|llegariamos|ingresamos|entramos|vamos a llegar)\s+(?:el\s+)?(\d{1,2})\b(?!\s*(?:de\b|am\b|pm\b|:|noches?|personas|adultos))/) : null;
+  if (dayOnly && Number(dayOnly[1]) >= 1 && Number(dayOnly[1]) <= 31) {
+    dates = { ...dates, checkIn: `${m.checkIn.slice(0, 8)}${String(dayOnly[1]).padStart(2, '0')}`, relative: 'explicit' };
+  }
 
   if (persons.total != null) set('guests', persons.total, 'personas');
   if (persons.adults != null) set('adults', persons.adults);
@@ -499,6 +504,20 @@ export async function processMessage(session, message, deps) {
     addIntent(d, 'ENVIO_COMPROBANTE');
     escalate(d, 'VALIDAR_COMPROBANTE', { urgency: 'ALTA' });
     d.reply = 'Recibido. Lo valido con el equipo y te confirmo.';
+    return finish(session, d, message);
+  }
+
+  // ---- GUARDARRAIL OTA: toda reserva Booking/Airbnb que se quiera tocar o dudar la revisa una persona ----
+  const otaChannel = /airbnb/.test(n) ? 'AIRBNB' : /booking/.test(n) ? 'BOOKING' : null;
+  const otaExisting = otaChannel && /\b(reserv\w*|tenia|tengo|hice|anfitrion|no pude|no alcance|no llegue|no viaje)\b/.test(n);
+  const OTA_SAFE = ['CHECKIN', 'CHECKOUT', 'ANTICIPO', 'DESCUENTO', 'MASCOTA', 'PARQUEADERO', 'UBICACION', 'CANCELACION', 'NO_SHOW', 'CAMBIO_FECHAS', 'POLITICA_CANCELACION', 'ENVIO_COMPROBANTE', 'RECLAMO', 'REEMBOLSO', 'INCIDENCIA'];
+  const otaTouch = /\b(cambi\w*|mover|mueva|pasar|trasladar|modific\w*|no pude|no alcance|no llegue|no viaje|cobr\w*)\b/.test(n) || Boolean(entities.dates.checkIn);
+  if (otaExisting && otaTouch && !intents.some((i) => OTA_SAFE.includes(i) && i !== 'CAMBIO_FECHAS' && i !== 'CANCELACION' && i !== 'NO_SHOW')) {
+    d.primary_intent = /\b(no pude|no alcance|no llegue|no viaje)\b/.test(n) ? 'NO_SHOW' : /\b(cambi\w*|mover|mueva|pasar|trasladar|modific\w*)\b/.test(n) ? 'CAMBIO_FECHAS' : 'CONFIRMAR_RESERVA_OTA';
+    addIntent(d, d.primary_intent);
+    d.flags.push('GUARDARRAIL_OTA', `CANAL_OTA:${otaChannel}`);
+    escalate(d, 'RESERVA_OTA_REVISION_HUMANA', { urgency: 'ALTA', note: 'OTA: rigen primero las condiciones de la plataforma; nunca se modifica ni cancela desde el agente.' });
+    d.reply = 'Entiendo. Tu reserva por plataforma se rige primero por las condiciones de esa plataforma; paso tu caso con una persona del equipo.';
     return finish(session, d, message);
   }
 
@@ -932,7 +951,7 @@ async function commercialFlow({ session, d, deps, n, intents, entities, prop, ch
   }
 
   // ---- OTA --------------------------------------------------------------------------------------------------------------
-  if (intents.includes('CONFIRMAR_RESERVA_OTA')) {
+  if (intents.includes('CONFIRMAR_RESERVA_OTA') && !intents.includes('CHECKIN') && !intents.includes('CHECKOUT')) {
     d.primary_intent = 'CONFIRMAR_RESERVA_OTA';
     d.odoo.needed = false;
     d.flags.push('BUSCAR_RESERVA_OTA_DATA_GAP_SINCRONIZACION');
