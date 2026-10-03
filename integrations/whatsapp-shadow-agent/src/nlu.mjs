@@ -4,6 +4,8 @@
  * y marca intenciones con el vocabulario del Playbook v0.1.
  */
 
+const MONTH_ABBR = { ene: 'enero', feb: 'febrero', mar: 'marzo', abr: 'abril', may: 'mayo', jun: 'junio', jul: 'julio', ago: 'agosto', sep: 'septiembre', sept: 'septiembre', set: 'septiembre', oct: 'octubre', nov: 'noviembre', dic: 'diciembre' };
+
 export const norm = (s) =>
   String(s ?? '')
     .normalize('NFD')
@@ -11,7 +13,18 @@ export const norm = (s) =>
     .toLowerCase()
     .replace(/[¿¡]/g, '')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim()
+    .replace(/\b(q|k)iero\b|\bquero\b/g, 'quiero')
+    .replace(/\b(?:resev|rezerv|reserb|rezerb|resserv)(ar|a|o|e|amos|ado)\b/g, 'reserv$1')
+    .replace(/\bh?abita[sc]i?o?n(es)?\b/g, (_, pl) => `habitacion${pl ?? ''}`)
+    .replace(/\bq\b/g, 'que')
+    .replace(/\bx\b/g, 'por')
+    .replace(/\bpa\b/g, 'para')
+    .replace(/\b(xq|pq|porq)\b/g, 'porque')
+    .replace(/\btb\b/g, 'tambien')
+    .replace(/\bdnd\b/g, 'donde')
+    .replace(/\bde (ene|feb|mar|abr|may|jun|jul|ago|sep|sept|set|oct|nov|dic)\b/g, (_, m) => `de ${MONTH_ABBR[m]}`);
+
 
 const NUM_WORDS = { un: 1, uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11, doce: 12, trece: 13, catorce: 14, quince: 15, veinte: 20, treinta: 30, cuarenta: 40, cincuenta: 50, cien: 100 };
 const NUM = '(\\d{1,4}|un|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|veinte|treinta|cuarenta|cincuenta|cien)';
@@ -166,7 +179,7 @@ export function extractMisc(n) {
     bath: /\bprivado\b/.test(n) ? 'privado' : /\bcompartido\b/.test(n) ? 'compartido' : null,
     vehicle,
     vehicles_count: vehicles ? toNum(vehicles[1]) : null,
-    pet: /\b(perro|perros|perrito|mascota|mascotas|gato|gatos)\b/.test(n),
+    pet: /\b(perro|perros|perrito|perrita|mascota|mascotas|gato|gatos|gatito|cachorro|labrador|golden|poodle|pug|bulldog|schnauzer|pitbull|chihuahua|husky|criollo|yorkie|beagle)\b/.test(n),
     kids: /\b(nino|ninos|nina|ninas|menores|bebe|bebes|hijos)\b/.test(n),
     ota: /\b(booking|airbnb|plataforma)\b/.test(n),
     lateTime: parseArrivalTime(n),
@@ -183,7 +196,7 @@ function parseArrivalTime(n) {
   return `${String(h).padStart(2, '0')}:${m[2] ?? '00'}`;
 }
 
-const STOP = new Set('a al amigos adulto adultos adultas el la las los un una unos unas y o de del en con por para es son somos seremos estamos hay este esta estos proximo siguiente que si no ya me mi tu su nos se lo le hotel habitacion habitaciones persona personas noche noches dia dias hoy manana pasado semana mes fecha desde hasta entre sobre'.split(' '));
+const STOP = new Set('a al amigos adulto adultos adultas el la las los un una unos unas y o de del en con por para es son somos seremos estamos hay este esta estos proximo siguiente que si no ya me mi tu su nos se lo le hotel habitacion habitaciones persona personas noche noches dia dias hoy manana pasado semana mes fecha desde hasta entre sobre mmm mm eh ehh ahh ah pues bueno mejor ahora entonces osea sea'.split(' '));
 
 /**
  * Palabras con contenido que NO explican ni las fechas, ni los numeros, ni los
@@ -217,13 +230,13 @@ const RULES = [
   ['CONSULTA_PRECIO', /\b(precio|cuanto (cuesta|vale|es|era|sale|seria)|valor|tarifa|cuesta|cobran)\b/],
   ['PAREJA', /\bparejas?\b/],
   ['PARQUEADERO', /\b(tengo|llevo|llegamos con|voy con|vamos con|traigo|traemos)\b[^.?]*\b(carro|carros|moto|motos|camioneta|vehiculo|vehiculos)\b/],
-  ['PARQUEADERO', /\b(parqueadero|parquear|parqueo|garaje|estacionamiento|donde dejo (el|mi) (carro|moto))\b/],
-  ['UBICACION', /\b(queda(n)? en el centro|esta(n)? en el centro|en que (zona|barrio|parte)|donde (queda|estan|esta)|direccion|ubicacion|ubicad|cerca (de|del)|que tan lejos|queda(n)? lejos|como llego|a cuantos? (minutos|cuadras))\b/],
+  ['PARQUEADERO', /\b(parqueadero|parquear|parqueo|garaje|estacionamiento|donde (dejo|dejar|puedo dejar|podemos dejar|guardo|guardar|parqueo|parquear)( el| mi| los| nuestro| nuestros)? ?(carro|carros|moto|motos|vehiculo|vehiculos|camioneta)|tienen donde (dejar|parquear|guardar))\b/],
+  ['UBICACION', /\b(como (hago para )?llegar|como se llega|desde (el|la) (terminal|aeropuerto|estacion|portal)|queda(n)? en el centro|esta(n)? en el centro|en que (zona|barrio|parte)|donde (queda|estan|esta)|direccion|ubicacion|ubicad|cerca (de|del)|que tan lejos|queda(n)? lejos|como llego|a cuantos? (minutos|cuadras))\b/],
   ['CHECKIN', /\b(check ?in|hora de (entrada|llegada|ingreso)|a que horas? (puedo |podemos |se puede |podria |podriamos )?(hacer (el )?)?(llego|llegar|ingreso|ingresar|entro|entrar|check)|a que hora llego|desde que hora (puedo )?(entrar|ingresar|llegar))\b/],
-  ['CHECKOUT', /\b(check ?out|hora de salida|hora (es )?(de |la )?salida|a que hora es la salida|a que hora se sale|a que horas? (toca |hay que |debo |debemos |tengo que |tenemos que |puedo |podemos |se debe )?(salir|salgo|desocupar|dejar la habitacion|entregar|entregarla))/],
-  ['MASCOTA', /\b(perro|perros|perrito|mascota|mascotas|gato|gatos)\b/],
+  ['CHECKOUT', /\b(check ?out|hora de salida|hora (es )?(de |la )?salida|a que hora es la salida|a que hora se sale|a que horas? (toca |hay que |debo |debemos |tengo que |tenemos que |puedo |podemos |se debe )?(salir|salgo|desocupar|dejar la habitacion|entregar|entregarla)|hasta que hora (tengo|tenemos|puedo|podemos|hay|me dan|nos dan)( para)? (salir|quedarme|quedarnos|desocupar|estar|dejar)|a que hora (se )?(tiene|tienen|toca) que (salir|desocupar|entregar))/],
+  ['MASCOTA', /\b(perro|perros|perrito|perrita|mascota|mascotas|gato|gatos|gatito|cachorro|animal(es)? (de compania|pequeno|grande)|labrador|golden|poodle|pug|bulldog|schnauzer|pitbull|chihuahua|husky|criollo|french poodle|yorkie|beagle)\b/],
   ['NINOS', /\b(nino|ninos|nina|ninas|menores|bebe|bebes|hijos|pagan los)\b/],
-  ['ANTICIPO', /\b(abono|abonar\w*|anticipo|adelanto|separar|apartar|pierdo (la reserva|el cupo)|se cae la reserva|guardarme la (reserva|habitacion))\b/],
+  ['ANTICIPO', /\b(adelantar|adelantado|(les |me )?pagan algo|pagar (algo|antes)|pago adelantado|abono|abonar\w*|anticipo|adelanto|separar|apartar|pierdo (la reserva|el cupo)|se cae la reserva|guardarme la (reserva|habitacion))\b/],
   ['METODO_PAGO', /\b(tarjeta|nequi|daviplata|pse|transferencia|qr|llave|a que cuenta|cuenta (de )?(ahorros|bancaria)|consign\w*|datos de pago|como (pago|puedo pagar)|medio de pago)\b/],
   ['CAMBIO_FECHAS', /\b(cambiar (mi |la )?(reserva|fecha)|cambio de (fecha|planes)|otra fecha|mover (la )?reserva|reprogramar|lo mismo pero|mejor (\d+|una|dos|tres|cuatro|cinco) noches?|mejor otra fecha)\b/],
   ['EXTENSION', /\b(una noche mas|quedarme mas|extender|prolongar|otra noche|noche adicional)\b/],
@@ -233,30 +246,30 @@ const RULES = [
   ['DESCUENTO', /\b(me sale mas barat\w*|sale mas barat\w*|(booking|airbnb|expedia|otra pagina|otro hotel|la competencia)[^.?]{0,40}(mas barat|menos|mas economic|mejor precio)|descuento|rebaja|rebajar|precio especial|tarifa especial|mejor tarifa|tarifa corporativa|promocion|mejor precio|mas barato en|igualar|hacerme un precio|me hace(s)? (un )?precio|booking me (lo )?ofrece|lo ofrece mas barato|descuento por)\b/],
   ['OBJECION_PRECIO', /\b(muy caro|esta caro|es mucho|muy costoso|carisimo|demasiado)\b/],
   ['PRESUPUESTO_LIMITADO', /\b(mas economic\w*|mas barat\w*|economica|solo tengo|tengo solo|presupuesto|la mas barata)\b/],
-  ['RECLAMO', /\b(me cobraron (de mas|doble|dos veces)|cobro (de mas|indebido|doble)|cobraron de mas|no me (ha )?llegado (la )?confirmacion|no he recibido (la )?confirmacion|no me confirman|estafa|pesimo|inaceptable|queja|reclamo|molest\w*|furios\w*|mal servicio|nadie abre|nadie (contesta|responde|atiende)|no me (han|ha) (respondido|contestado|atendido)|no (nos )?(han|ha) (respondido|contestado)|no me llego (la )?(reserva|confirmacion|respuesta)|esperando|me siento enga\w*|indignad\w*|horrible)\b/],
-  ['INCIDENCIA', /\b(no sale (agua )?caliente|no hay (agua|luz|internet|wifi|senal|gas)|no (funciona|prende|enciende|sirve|calienta|abre|cierra|baja|carga)|se (dano|rompio|fue la luz)|esta (danad[oa]|rot[oa]|sucio|sucia)|sin (luz|agua|wifi|internet)|gotera|sucio|ruido)\b/],
+  ['RECLAMO', /\b(me cobraron (mas|de mas)|cobraron (mas|de mas)|(mal|malisim[oa]|pesim[oa]|horrible|terrible|sucio|sucia|deplorable)\b[^.?]{0,40}\b(aseo|servicio|atencion|habitacion|experiencia|trato)|(aseo|servicio|atencion|experiencia|trato)\b[^.?]{0,40}\b(mal|malisim[oa]|pesim[oa]|horrible|terrible|deplorable)|mala resena|resena negativa|dejar (una )?mala|me cobraron (de mas|doble|dos veces)|cobro (de mas|indebido|doble)|cobraron de mas|no me (ha )?llegado (la )?confirmacion|no he recibido (la )?confirmacion|no me confirman|estafa|pesimo|inaceptable|queja|reclamo|molest\w*|furios\w*|mal servicio|nadie abre|nadie (contesta|responde|atiende)|no me (han|ha) (respondido|contestado|atendido)|no (nos )?(han|ha) (respondido|contestado)|no me llego (la )?(reserva|confirmacion|respuesta)|esperando|me siento enga\w*|indignad\w*|horrible)\b/],
+  ['INCIDENCIA', /\b(se (fue|acabo|corto|cayo) (el|la) (agua|luz|gas|internet|wifi)|no sale (agua )?caliente|no hay (agua|luz|internet|wifi|senal|gas)|no (funciona|prende|enciende|sirve|calienta|abre|cierra|baja|carga)|se (dano|rompio|fue la luz)|esta (danad[oa]|rot[oa]|sucio|sucia)|sin (luz|agua|wifi|internet)|gotera|sucio|ruido)\b/],
   ['HABLAR_CON_HUMANO', /\b(hablar con (una |un )?(persona|alguien|humano|asesor|asesora|agente|encargad[oa]|administrador|recepcion)|quiero un asesor|un asesor|pasame con|comunicame con|comunicarme con (una |un )?(persona|asesor|agente)|una persona real|atienda una persona)\b/],
   ['IDENTIDAD', /\b(eres (un )?(robot|bot|maquina|ia)|es (un )?(robot|bot)|hablo con (un )?(robot|bot)|eres humano|eres una persona)\b/],
   ['LLAMADA_PEDIDA', /\b(llamame|me llaman|llamarme|llamen|pueden llamar|quiero una llamada)\b/],
   ['LLEGADA_INMINENTE', /\b((estoy|estamos|ya estoy|ya estamos) (en la puerta|en la entrada|aqui afuera|afuera|llegando)|ya llegue|ya estoy (afuera|aqui|en la puerta)|estoy afuera|estamos afuera|estoy en la puerta|ya estamos aqui)\b/],
-  ['LLEGADA_TARDE', /\b(llego (tarde|despues|a las \d)|llegamos (tarde|despues)|llego a las|estoy en carretera|llegare (tarde|a las|despues)|llegaremos (tarde|a las|despues)|llego sobre las|llegaria tarde|llego en la noche|(voy|vamos) a llegar (tarde|despues|a las|sobre las|pasadas)|llegamos a las)\b/],
-  ['CHECKIN_TEMPRANO', /\b(entro mas temprano|ingreso (mas )?temprano|llegar temprano|entrar (mas )?temprano|early check)\b/],
+  ['LLEGADA_TARDE', /\b(((llegamos|llego|llegaria|llegariamos|llegaremos|llegare)\b[^.?]{0,25}\b(de la noche|madrugada|tarde))|llego (tarde|despues|a las \d)|llegamos (tarde|despues)|llego a las|estoy en carretera|llegare (tarde|a las|despues)|llegaremos (tarde|a las|despues)|llego sobre las|llegaria tarde|llego en la noche|(voy|vamos) a llegar (tarde|despues|a las|sobre las|pasadas)|llegamos a las)\b/],
+  ['CHECKIN_TEMPRANO', /\b((entrar|ingresar|llegar|hacer el ingreso|hacer el check ?in)( \w+)? (a las|desde las|antes de las) \d{1,2}( de la manana| am|:\d{2} am)|antes de las \d{1,2}|muy temprano|entro mas temprano|ingreso (mas )?temprano|llegar temprano|entrar (mas )?temprano|early check)\b/],
   ['CHECKOUT_TARDE', /\b(salgo mas tarde|salida (mas )?tarde|salir mas tarde|late check|check ?out (mas )?tarde)\b/],
-  ['ENVIO_COMPROBANTE', /\b((les |te |lo )?(consigne|consignamos|transferi|transferimos|deposite|depositamos)\b|(les |te |lo )?(envie|mande|hice|realice|hicimos|enviamos|mandamos) (el |la |un )?(pago|abono|anticipo|transferencia|consignacion|deposito)|ya me confirman|ya (les|te|lo) pague|pague (por|con|via|a traves)|ya pague|ya consigne|ya transferi|comprobante|soporte (de|del) pago|aqui (esta|va) el soporte|el soporte|adjunto el pago|te envie el pago|ya (hice|realice|envie|mande) (el |la )?(pago|transferencia|consignacion|abono|anticipo)|pago realizado|transferencia realizada)\b/],
+  ['ENVIO_COMPROBANTE', /\b(acabo de (transferir|consignar|pagar|depositar)|(hice|hicimos|realice|realizamos) (ya )?(el|la) (nequi|daviplata|transferencia|consignacion|pago|deposito|abono)|(el )?pantallazo|captura (del|de) (pago|transferencia)|foto del (pago|comprobante)|(les |te |lo )?(consigne|consignamos|transferi|transferimos|deposite|depositamos)\b|(les |te |lo )?(envie|mande|hice|realice|hicimos|enviamos|mandamos) (el |la |un )?(pago|abono|anticipo|transferencia|consignacion|deposito)|ya me confirman|ya (les|te|lo) pague|pague (por|con|via|a traves)|ya pague|ya consigne|ya transferi|comprobante|soporte (de|del) pago|aqui (esta|va) el soporte|el soporte|adjunto el pago|te envie el pago|ya (hice|realice|envie|mande) (el |la )?(pago|transferencia|consignacion|abono|anticipo)|pago realizado|transferencia realizada)\b/],
   ['FACTURA', /\b(factura|facturacion|nit|rut|datos fiscales)\b/],
   ['EQUIPAJE', /\b(maletas?|equipaje|guardar (las )?maletas)\b/],
   ['LISTA_ESPERA', /\b(avisame si se libera|avisame si hay|si se libera|lista de espera|si alguien cancela)\b/],
   ['CIERRE', /^(gracias|muchas gracias|ok gracias|listo gracias|vale gracias|perfecto gracias|mil gracias)\b/],
   ['CANCELA_CONSULTA', /\b(pensandolo mejor,? no|ya no (voy|vamos|quiero)|no gracias|ya reserve en otro|ya reservamos|mejor no|dejemoslo asi)\b/],
   ['RESERVA', /\b(quiero reservar|quisiera reservar|reservar|hacer una reserva|reserva para|me lo(s)? (separa|aparta|reserva))\b/],
-  ['CONFIRMAR_RESERVA_OTA', /\b(hice (una )?reserva (por|en|a traves de) (booking|airbnb)|mi reserva (de|por) (booking|airbnb)|reserva (en|por) (booking|airbnb))\b/],
+  ['CONFIRMAR_RESERVA_OTA', /\b(hice (una |la |mi )?reserva (por|en|a traves de) (booking|airbnb)|mi reserva (de|por) (booking|airbnb)|(reserve|reservamos) (la habitacion )?(por|en|a traves de) (booking|airbnb)|reserva (en|por) (booking|airbnb))\b/],
   ['ACLARACION_PRECIO', /\b(por persona|por habitacion|cada persona|el precio es por)\b/],
   ['PREGUNTA_PROPIEDAD', /\b(desayuno|wifi|wi-fi|cocina|aire acondicionado|ascensor|piso bajo|primer piso|camas?|tipo de cama|agua caliente|netflix|politica|incluye|que incluye)\b/],
   ['POLITICA_CANCELACION', /\bpolitica de cancelacion\b|\bcondiciones de cancelacion\b|\bsi cancelo\b/],
-  ['ALIADO_CONSULTA', /\b(consulta de disponibilidad para un cliente|para un cliente mio|tengo un cliente|mi cliente|soy del hotel|somos del hotel|soy de la agencia|somos una agencia|les mando (un|una|a un)|te mando (un|una)|mando un (huesped|cliente)|reserva para un cliente|cliente mio)\b/],
-  ['ALIADO_LIQUIDACION', /\b(cuadremos cuentas|liquidacion|comision(es)? de|cuadrar cuentas|cuentas de (septiembre|octubre|agosto))\b/],
+  ['ALIADO_CONSULTA', /\b(soy de (una |la )?agencia|agencia de (turismo|viajes)|ser(ia)? aliados?|como aliados?|aliados? (comercial|estrategic)\w*|alianza|convenio|trabajar con ustedes|consulta de disponibilidad para un cliente|para un cliente mio|tengo un cliente|mi cliente|soy del hotel|somos del hotel|soy de la agencia|somos una agencia|les mando (un|una|a un)|te mando (un|una)|mando un (huesped|cliente)|reserva para un cliente|cliente mio)\b/],
+  ['ALIADO_LIQUIDACION', /\b(cuadrar|comisiones|liquidar|cuadremos cuentas|liquidacion|comision(es)? de|cuadrar cuentas|cuentas de (septiembre|octubre|agosto))\b/],
   ['TURISMO', /\b(que hay para (hacer|visitar|ver|conocer)|que (hacer|visitar|conocer) en|que lugares|que (sitios|atracciones)|planes (en|para)|atracciones|recomiendan (visitar|conocer))\b/],
-  ['FUERA_DE_ALCANCE', /\b(camaras? (de )?(seguridad|vigilancia)|vigilancia|venden camaras|sensores? de|camara ip|camaras? de seguridad|alarmas?|camaras?|cctv|dvr|seguridad electronica|camara ip)\b/],
+  ['FUERA_DE_ALCANCE', /\b(camaras? (de )?(seguridad|vigilancia)|vigilancia|venden camaras|sensores? de|camara ip|camaras? de seguridad|alarmas?|camaras?|cctv|dvr|cercas? electric\w*|cerco electrico|circuito cerrado|control de acceso|citofon\w*|porteria virtual|monitoreo|sistema de seguridad|seguridad electronica|camara ip)\b/],
   ['SELECCION', /\b(esa de|la de|me quedo con (la|esa)|esa (me )?(sirve|gusta)|quiero esa|dame esa|la primera|la segunda)\b/],
   ['PREFERENCIA', /\b(mejor con|prefiero|baño privado|bano privado|bano compartido|con bano)\b/],
 ];

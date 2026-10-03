@@ -493,6 +493,15 @@ export async function processMessage(session, message, deps) {
     return finish(session, d, message);
   }
 
+  // Tras un "ya pague", cualquier seguimiento sobre pago sigue siendo validacion humana: no se vuelven a ofrecer datos de pago.
+  if (session.paymentClaimed && (intents.includes('METODO_PAGO') || intents.includes('ANTICIPO') || intents.includes('PAGO'))) {
+    d.primary_intent = 'ENVIO_COMPROBANTE';
+    addIntent(d, 'ENVIO_COMPROBANTE');
+    escalate(d, 'VALIDAR_COMPROBANTE', { urgency: 'ALTA' });
+    d.reply = 'Recibido. Lo valido con el equipo y te confirmo.';
+    return finish(session, d, message);
+  }
+
   // ---- cancelacion y politicas ----------------------------------------------------------------------
   const sayExisting0 = /\b(mi reserva|tengo (una )?reserva|ya tengo (mi )?reserva|reserve (por|en|con|a traves de)|hice (una |mi )?reserva|reservamos (por|en|con)|mi reservacion)\b/.test(n);
   if (sayExisting0 && !session.reservation) {
@@ -722,7 +731,8 @@ async function commercialFlow({ session, d, deps, n, intents, entities, prop, ch
   if (askingVehicleAnswer) wantsFaq.push('parking');
 
   // Confianza: sin ninguna intencion y con varias palabras sin explicar, NO se interpreta ni se consulta Odoo.
-  if (intents.length === 0 && (dateEntities || personEntities) && !askingVehicleAnswer && !STAY_CUE.test(n) && residualWords(n).length > 1) {
+  const hasSlotContext = Boolean(memoryBefore?.guests || memoryBefore?.checkIn);
+  if (intents.length === 0 && (dateEntities || personEntities) && !askingVehicleAnswer && !hasSlotContext && !STAY_CUE.test(n) && residualWords(n).length > 1) {
     session.memory = memoryBefore; // un mensaje que no se entiende no deja fechas ni personas en la memoria
     d.flags.push('CONFIANZA_INSUFICIENTE', 'FALLBACK_A_HUMANO');
     d.primary_intent = 'INTENCION_NO_ENTENDIDA';
@@ -1148,6 +1158,7 @@ function composeParts(parts) {
 }
 
 function finish(session, d, _message) {
+  if (d.flags.includes('PAYMENT_VALIDATION_REQUIRED')) session.paymentClaimed = true;
   const m = session.memory;
   d.memory = { ...m };
   if (!d.primary_intent) d.primary_intent = d.intents[0] ?? null;

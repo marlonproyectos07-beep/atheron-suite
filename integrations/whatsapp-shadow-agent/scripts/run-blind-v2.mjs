@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Ejecuta el set BLIND_V2 (50). Uso: node scripts/run-blind-v2.mjs <salida.json>
+ * Ejecuta el set BLIND_V2 (50). Uso: node scripts/run-blind-v2.mjs [--post-fix] [salida.json]
  * Evalua cada caso, marca HIGH_RISK_FAIL y escribe el resultado completo (respuestas por turno).
  */
 import { writeFileSync } from 'node:fs';
@@ -59,7 +59,9 @@ for (const c of BLIND_V2) {
   out.push({ id: c.id, theme: c.theme, turns: c.turns, pass, fails, high_risk: highRisk, replies: decisions.map((d) => d.reply), escalated: decisions.map((d) => d.escalate), odoo_calls: fake.calls.length });
 }
 const pass = out.filter((o) => o.pass).length;
-const summary = { FIRST_PASS_TOTAL: out.length, FIRST_PASS_PASS: pass, FIRST_PASS_FAIL: out.length - pass, FIRST_PASS_PERCENT: Math.round((pass / out.length) * 1000) / 10, HIGH_RISK_FAIL_COUNT: out.filter((o) => o.high_risk).length };
-if (process.argv[2]) writeFileSync(process.argv[2], JSON.stringify({ summary, cases: out }, null, 2));
+const P = process.argv.includes('--post-fix') ? 'POST_FIX_REGRESSION' : 'FIRST_PASS';
+const summary = { [`${P}_TOTAL`]: out.length, [`${P}_PASS`]: pass, [`${P}_FAIL`]: out.length - pass, [`${P}_PERCENT`]: Math.round((pass / out.length) * 1000) / 10, HIGH_RISK_FAIL_COUNT: out.filter((o) => o.high_risk).length };
+const outFile = process.argv.slice(2).find((a) => !a.startsWith('--'));
+if (outFile) writeFileSync(outFile, JSON.stringify({ summary, cases: out }, null, 2));
 console.log(JSON.stringify(summary));
-if (!process.argv[2]) for (const o of out.filter((x) => !x.pass)) console.log(`FAIL ${o.id}${o.high_risk ? ' [HIGH_RISK:' + o.high_risk + ']' : ''}: ${o.fails.join(' | ')}`);
+if (!outFile) for (const o of out.filter((x) => !x.pass)) console.log(`FAIL ${o.id}${o.high_risk ? ' [HIGH_RISK:' + o.high_risk + ']' : ''}: ${o.fails.join(' | ')}`);

@@ -1,0 +1,894 @@
+{
+  "summary": {
+    "POST_FIX_REGRESSION_TOTAL": 50,
+    "POST_FIX_REGRESSION_PASS": 50,
+    "POST_FIX_REGRESSION_FAIL": 0,
+    "POST_FIX_REGRESSION_PERCENT": 100,
+    "HIGH_RISK_FAIL_COUNT": 0
+  },
+  "cases": [
+    {
+      "id": "V01",
+      "theme": "disponibilidad",
+      "turns": [
+        "buenas, tienen pieza pa el 14 de nov? somos 2"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Para sábado 14 de noviembre (1 noche), 2 pers. tengo: hab. 201 con baño compartido, $105.000 en total y hab. 302 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 1
+    },
+    {
+      "id": "V02",
+      "theme": "disponibilidad/ortografia",
+      "turns": [
+        "hola tienen habitasion disponible para el 27 de diciembre somos 5 personas"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Para domingo 27 de diciembre (1 noche), 5 pers.: solo me queda la hab. 301 con baño privado, $150.000 en total (precio por habitación).\n¿Te la separo con el anticipo?"
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 1
+    },
+    {
+      "id": "V03",
+      "theme": "fragmentado",
+      "turns": [
+        "buenas",
+        "queria saber de una habitacion",
+        "para el viernes 16 de octubre",
+        "somos 3"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "Hola, ¿en qué te puedo ayudar?",
+        "Déjame revisar eso con una persona del equipo para responderte bien.",
+        "¿Cuántas personas?",
+        "Para viernes 16 de octubre (1 noche), 3 pers. tengo: hab. 302 con baño privado, $120.000 en total y hab. 202 con baño compartido, $105.000 en total (precio por habitación).\n¿Cuál prefieres?"
+      ],
+      "escalated": [
+        false,
+        true,
+        false,
+        false
+      ],
+      "odoo_calls": 1
+    },
+    {
+      "id": "V04",
+      "theme": "precio",
+      "turns": [
+        "q precio tiene la noche pa 2 personas el 7 de noviembre"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Para sábado 7 de noviembre (1 noche), 2 pers. tengo: hab. 201 con baño compartido, $105.000 en total y hab. 302 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 1
+    },
+    {
+      "id": "V05",
+      "theme": "precio sin datos",
+      "turns": [
+        "cuanto vale una noche con ustedes?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! ¿Para qué fecha y cuántas personas? Así te doy el precio exacto."
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V06",
+      "theme": "booking/anticipo",
+      "turns": [
+        "hice la reserva x booking para el 24 de octubre, les pagan algo a ustedes antes de llegar?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Para reservas por Booking rigen primero las condiciones de la plataforma. Lo reviso con el equipo y te confirmo."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V07",
+      "theme": "airbnb/anticipo",
+      "turns": [
+        "mi reserva es por airbnb, me toca hacer algun abono con ustedes?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Para reservas por Airbnb, el cobro lo gestiona la plataforma; nosotros no pedimos un anticipo adicional."
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V08",
+      "theme": "directa/anticipo",
+      "turns": [
+        "quiero reservar directo con ustedes, cuanto debo adelantar para asegurar"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! El anticipo es del 50% del total. Cuando tengamos la cotización te digo el valor exacto."
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V09",
+      "theme": "nequi",
+      "turns": [
+        "ya les hice el nequi, quedo listo?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Recibido. Lo valido con el equipo y te confirmo."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V10",
+      "theme": "transferencia",
+      "turns": [
+        "acabo de transferir el abono a bancolombia"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Recibido. Lo valido con el equipo y te confirmo."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V11",
+      "theme": "comprobante",
+      "turns": [
+        "les mando el pantallazo del pago ya"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Recibido. Lo valido con el equipo y te confirmo."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V12",
+      "theme": "cancelacion directa",
+      "turns": [
+        "quiero cancelar mi reserva del 30 de octubre, la hice directo con ustedes"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Entiendo. Paso tu caso con una persona del equipo para revisarlo; por aquí no decido devoluciones ni penalidades."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V13",
+      "theme": "cancelacion booking",
+      "turns": [
+        "necesito cancelar mi reserva de booking"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Entiendo. Tu reserva por plataforma se rige primero por las condiciones de esa plataforma; paso tu caso con una persona del equipo."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V14",
+      "theme": "cancelacion airbnb",
+      "turns": [
+        "me toca cancelar la reserva que tengo por airbnb, no puedo viajar"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Entiendo. Paso tu caso con una persona del equipo para revisarlo; por aquí no decido devoluciones ni penalidades."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V15",
+      "theme": "cancelacion <48h",
+      "turns": [
+        "cancelo la reserva de mañana, no alcanzo a llegar"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Entiendo. Paso tu caso con una persona del equipo para revisarlo; por aquí no decido devoluciones ni penalidades."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V16",
+      "theme": "no-show",
+      "turns": [
+        "ayer no pude llegar al hotel, me cobran la noche?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Entiendo. Paso tu caso con una persona del equipo para revisarlo; por aquí no decido devoluciones ni penalidades."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V17",
+      "theme": "cambio de fechas",
+      "turns": [
+        "puedo cambiar mi reserva del 10 al 17 de octubre?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Entiendo. Paso tu caso con una persona del equipo para revisarlo; por aquí no decido devoluciones ni penalidades."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V18",
+      "theme": "cambio de pax",
+      "turns": [
+        "hola, somos 2 para el 21 de noviembre",
+        "mmm mejor somos 4"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Para sábado 21 de noviembre (1 noche), 2 pers. tengo: hab. 201 con baño compartido, $105.000 en total y hab. 302 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?",
+        "Entonces son 4 personas.\nPara sábado 21 de noviembre (1 noche), 4 pers. tengo: hab. 202 con baño compartido, $105.000 en total y hab. 203 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+      ],
+      "escalated": [
+        false,
+        false
+      ],
+      "odoo_calls": 2
+    },
+    {
+      "id": "V19",
+      "theme": "cambio de fecha en conversacion",
+      "turns": [
+        "buenas, somos 3 para el 5 de diciembre",
+        "mejor para el 12 de diciembre"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Para sábado 5 de diciembre (1 noche), 3 pers. tengo: hab. 302 con baño privado, $120.000 en total y hab. 202 con baño compartido, $105.000 en total (precio por habitación).\n¿Cuál prefieres?",
+        "Para sábado 12 de diciembre (1 noche), 3 pers. tengo: hab. 302 con baño privado, $120.000 en total y hab. 202 con baño compartido, $105.000 en total (precio por habitación).\n¿Cuál prefieres?"
+      ],
+      "escalated": [
+        false,
+        false
+      ],
+      "odoo_calls": 2
+    },
+    {
+      "id": "V20",
+      "theme": "check-in",
+      "turns": [
+        "a que hora puedo hacer el ingreso?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! En Atheron Suite el check-in es desde las 15:00."
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V21",
+      "theme": "check-out",
+      "turns": [
+        "hasta q hora tengo para salir el lunes"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! En Atheron Suite el check-out es hasta las 11:00."
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V22",
+      "theme": "llegada tarde",
+      "turns": [
+        "llegamos como a las 11 de la noche, hay problema?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Anotado: llegas hacia las 23:00. Lo confirmo con recepción."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V23",
+      "theme": "early check-in",
+      "turns": [
+        "podemos entrar a las 9 de la mañana?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! En Atheron Suite el check-in es desde las 15:00. Consulto con el equipo si se puede ingresar antes."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V24",
+      "theme": "parking",
+      "turns": [
+        "tienen donde dejar el carro?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! En Atheron Suite no tenemos parqueadero propio, pero hay un parqueadero aliado a unas 2 cuadras y media (unos $15.000 la noche el carro, sujeto a cupo)."
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V25",
+      "theme": "mascotas",
+      "turns": [
+        "puedo llevar mi labrador?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! ¿Para qué fechas y de qué tamaño es tu mascota? Depende de la propiedad: en Apartamentos Algarra las reciben y en Atheron Suite es bajo consulta."
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V26",
+      "theme": "ubicacion",
+      "turns": [
+        "como hago para llegar desde el terminal de transporte"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Atheron Suite queda en Cra. 9 #10-32, centro de Zipaquirá."
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V27",
+      "theme": "turismo",
+      "turns": [
+        "q lugares recomiendan para visitar aparte de la catedral?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Con gusto. Eso lo confirmo con una persona del equipo para darte buena información."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V28",
+      "theme": "queja aseo",
+      "turns": [
+        "el aseo de la habitacion estuvo malisimo, vamos a dejar mala reseña"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Entiendo tu preocupación. Paso tu caso ya con una persona del equipo para que lo revise."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V29",
+      "theme": "incidencia",
+      "turns": [
+        "se fue el agua en la 203"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Lamento eso. Aviso ya a operaciones para que lo revisen."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V30",
+      "theme": "cobro",
+      "turns": [
+        "me cobraron mas de lo que habiamos quedado"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Entiendo tu preocupación. Paso tu caso ya con una persona del equipo para que lo revise."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V31",
+      "theme": "sin intencion hotelera",
+      "turns": [
+        "jajaja eso fue lo que me dijo mi mama"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Déjame revisar eso con una persona del equipo para responderte bien."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V32",
+      "theme": "sin intencion con fecha",
+      "turns": [
+        "el sabado cumple mi hermano y vamos a hacer asado"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Déjame revisar eso con una persona del equipo para responderte bien."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V33",
+      "theme": "aliado",
+      "turns": [
+        "buenas tardes, soy de una agencia de turismo y queremos trabajar con ustedes como aliados"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        null
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V34",
+      "theme": "aliado liquidacion",
+      "turns": [
+        "les escribo para cuadrar las comisiones del mes pasado"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        null
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V35",
+      "theme": "security",
+      "turns": [
+        "necesito cotizar un circuito cerrado de camaras para mi finca"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Este canal es de reservas de hospedaje. Tu consulta de seguridad la derivamos al equipo de Atheron Security."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V36",
+      "theme": "security",
+      "turns": [
+        "ustedes instalan cercas electricas?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Este canal es de reservas de hospedaje. Tu consulta de seguridad la derivamos al equipo de Atheron Security."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V37",
+      "theme": "grupo 11+",
+      "turns": [
+        "somos 12 personas de una familia para el puente de noviembre"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Para un grupo de 12 personas armamos una cotización a la medida. Paso tu caso con una persona del equipo. ¿Para qué fechas sería?"
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V38",
+      "theme": "grupo 30+",
+      "turns": [
+        "vamos 45 personas de un colegio en excursion el 3 de noviembre"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Sí podemos revisar un grupo de ese tamaño. Déjame validar capacidad entre nuestras propiedades y te confirmo la distribución."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 1
+    },
+    {
+      "id": "V39",
+      "theme": "grupo 100+",
+      "turns": [
+        "necesito hospedar a 200 invitados de un matrimonio en enero"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Sí podemos revisar un grupo de ese tamaño. Déjame validar capacidad entre nuestras propiedades y te confirmo la distribución. ¿Para qué fechas sería?"
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V40",
+      "theme": "grupo + descuento",
+      "turns": [
+        "somos 40 y queremos precio especial por ser tantos"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Déjame consultar si hay margen para esas fechas y te cuento."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V41",
+      "theme": "descuento",
+      "turns": [
+        "si pago en efectivo me hacen descuento?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Déjame consultar si hay margen para esas fechas y te cuento."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V42",
+      "theme": "audio",
+      "turns": [
+        {
+          "audio": true,
+          "transcript": "hola buenas queria saber si tienen una habitacion para dos personas el 18 de octubre",
+          "confidence": 0.9
+        }
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Entendí: 2 personas, domingo 18 de octubre.\nPara domingo 18 de octubre (1 noche), 2 pers. tengo: hab. 201 con baño compartido, $105.000 en total y hab. 302 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 1
+    },
+    {
+      "id": "V43",
+      "theme": "audio ininteligible",
+      "turns": [
+        {
+          "audio": true,
+          "transcript": "hola eh... queria... no se",
+          "confidence": 0.4
+        }
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! No alcancé a escuchar bien. ¿Me escribes la fecha y cuántas personas son?"
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V44",
+      "theme": "audio pago",
+      "turns": [
+        {
+          "audio": true,
+          "transcript": "ya hice la transferencia del anticipo por nequi",
+          "confidence": 0.9
+        }
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Recibido. Lo valido con el equipo y te confirmo."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V45",
+      "theme": "ambiguo",
+      "turns": [
+        "para cuando hay?"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Déjame revisar eso con una persona del equipo para responderte bien."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V46",
+      "theme": "coloquial",
+      "turns": [
+        "parce y si hay cuarto pa mañana pa dos personas"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Para domingo 4 de octubre (1 noche), 2 pers. tengo: hab. 201 con baño compartido, $105.000 en total y hab. 302 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 1
+    },
+    {
+      "id": "V47",
+      "theme": "digitacion",
+      "turns": [
+        "qiero resevar pa 4 personas el 8 de nov"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Para domingo 8 de noviembre (1 noche), 4 pers. tengo: hab. 202 con baño compartido, $105.000 en total y hab. 203 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+      ],
+      "escalated": [
+        false
+      ],
+      "odoo_calls": 1
+    },
+    {
+      "id": "V48",
+      "theme": "fragmentado pago",
+      "turns": [
+        "hola",
+        "ya consigne",
+        "por nequi el anticipo"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "Hola, ¿en qué te puedo ayudar?",
+        "Recibido. Lo valido con el equipo y te confirmo.",
+        "Recibido. Lo valido con el equipo y te confirmo."
+      ],
+      "escalated": [
+        false,
+        true,
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V49",
+      "theme": "queja con reserva",
+      "turns": [
+        "llevo dos horas esperando que me respondan, tengo reserva para hoy"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Lamento la espera. Aviso ya a una persona del equipo para que te atienda."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    },
+    {
+      "id": "V50",
+      "theme": "security vs hoteles",
+      "turns": [
+        "buenas, soy cliente de atheron security, tengo una falla en la alarma de mi casa"
+      ],
+      "pass": true,
+      "fails": [],
+      "high_risk": null,
+      "replies": [
+        "¡Hola! Este canal es de reservas de hospedaje. Tu consulta de seguridad la derivamos al equipo de Atheron Security."
+      ],
+      "escalated": [
+        true
+      ],
+      "odoo_calls": 0
+    }
+  ]
+}
