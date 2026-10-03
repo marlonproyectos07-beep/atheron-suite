@@ -77,6 +77,18 @@ Detalle: `AI/ATH-ODOO-HOTEL-012_V2_CONTROL_CENTER.md`.
 - [ ] **BLOQUEADO (sin sesión Odoo):** reflejar el contrato en la vista Studio, verificar en STAGING, revisar ACL real.
 - [ ] Decisión CEO: costos para tarifa piso (lista en el doc §6); capacidad Algarra/Neusa; alinear `alternatives-engine` con capacidades reales (hallazgo F4).
 
+## GOAL-WHATSAPP-AGENT-001 — agente SHADOW (EN CURSO, parcial)
+
+Detalle: `AI/whatsapp/ATH-WHATSAPP-AGENT-001_SHADOW.md`. Código: `integrations/whatsapp-shadow-agent/`.
+
+- [x] Playbook v0.1 versionado en `AI/whatsapp/` (sha256) y 100 casos T01-T100 ejecutados: 100/100 PASS (17 con desviaciones documentadas).
+- [x] Agente SHADOW: nunca envía, nunca HOLD; anticipo 50 %; horarios reales (sin 00:00); grupos y STRATEGIC_GROUP_LEAD; B2B y Atheron Security.
+- [x] 12 requisitos CEO del mensaje (CEO-D01..D12) PASS. 180 pruebas.
+- [ ] **FALTA ARCHIVO:** los 12 casos CEO *originales* no están en el repo -> adjuntar.
+- [ ] **FALTA TEXTO:** política exacta de cancelación (48 h / saldo 6 meses).
+- [ ] **BLOQUEADO (sin sesión Odoo):** corregir 30 % -> 50 % en STAGING (`AI/whatsapp/ODOO_DEPOSIT_50_RUNBOOK.md`); completar UNIT_ID_MAP/capacidades (solo Atheron Suite verificada).
+- [ ] Medir con conversaciones reales (generalización en ciego: 53-77 % a la primera).
+
 ## HOTEL-011 — WhatsApp piloto controlado (EN CURSO, Codex, rama separada)
 
 No gestionado desde este documento — ver

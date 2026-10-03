@@ -1,0 +1,1464 @@
+{
+  "summary": {
+    "playbook_sha256": "d6e13916dd64c8dbe8da49b7fd1a68e2b405726a616d4269bb8e056fc3bff92d",
+    "total": 100,
+    "pass": 100,
+    "fail": 0,
+    "deviations_from_playbook": 18
+  },
+  "deviations": [
+    {
+      "id": "T23",
+      "field": "ODOO",
+      "playbook": "Sí (ver cupo)",
+      "applied": "mustNot",
+      "reason": "El cliente aun no dio la nueva fecha: sin fecha no se consulta cupo; se pide la fecha y se escala (el Playbook marca ODOO=Si cuando ya hay fecha)."
+    },
+    {
+      "id": "T25",
+      "field": "ODOO",
+      "playbook": "Sí",
+      "applied": "mustNot",
+      "reason": "Sin fecha no se afirma disponibilidad ni se consulta Odoo: se orienta con la capacidad verificada de las fichas (302 hasta 3, 202 hasta 4) y se pide la fecha."
+    },
+    {
+      "id": "T26",
+      "field": "ODOO",
+      "playbook": "Sí",
+      "applied": "mustNot",
+      "reason": "Sin fecha no se consulta Odoo; primero se piden edades (el Playbook: no aplicar tarifa de ninos inventada)."
+    },
+    {
+      "id": "T27",
+      "field": "ODOO",
+      "playbook": "Sí",
+      "applied": "mustNot",
+      "reason": "Hoy es sabado: \"fin de semana\" es ambiguo (este o el siguiente); no se consulta Odoo hasta confirmar fechas."
+    },
+    {
+      "id": "T28",
+      "field": "ODOO",
+      "playbook": "Sí",
+      "applied": "mustNot",
+      "reason": "Grupo de 9 sin fechas: no hay consulta posible; se escala la cotizacion de grupo y se piden las fechas."
+    },
+    {
+      "id": "T29",
+      "field": "ODOO",
+      "playbook": "Sí",
+      "applied": "mustNot",
+      "reason": "Grupo de 13 sin fechas: no hay consulta posible; pasa a humano con resumen."
+    },
+    {
+      "id": "T30",
+      "field": "ODOO",
+      "playbook": "Sí",
+      "applied": "mustNot",
+      "reason": "Grupo de 25 sin fechas: solo se valida capacidad multipropiedad con humano (capacidad verificada en Odoo = solo Atheron Suite, 22)."
+    },
+    {
+      "id": "T31",
+      "field": "ODOO",
+      "playbook": "Sí",
+      "applied": "mustNot",
+      "reason": "Sin fecha no se consulta Odoo; primero se pregunta por la cuna."
+    },
+    {
+      "id": "T35",
+      "field": "ODOO",
+      "playbook": "Sí",
+      "applied": "mustNot",
+      "reason": "Casa Neusa no esta mapeada en Odoo (UNIT_ID_MAP solo cubre Atheron Suite): no hay consulta posible, DATA_GAP + humano."
+    },
+    {
+      "id": "T57",
+      "field": "ESC",
+      "playbook": "Sí hasta definir regla",
+      "applied": "no",
+      "reason": "DECISION CEO 2026-10-03: el anticipo oficial es 50 %. El Playbook v0.1 decia \"escalar hasta definir regla\" (DATA_GAP #2), ya resuelto. El total sale de la cotizacion de Odoo ya hecha en la conversacion; el agente solo aplica el 50 % y no vuelve a consultar."
+    },
+    {
+      "id": "T57",
+      "field": "ODOO",
+      "playbook": "Sí (total)",
+      "applied": "mustNot",
+      "reason": "DECISION CEO 2026-10-03: el anticipo oficial es 50 %. El Playbook v0.1 decia \"escalar hasta definir regla\" (DATA_GAP #2), ya resuelto. El total sale de la cotizacion de Odoo ya hecha en la conversacion; el agente solo aplica el 50 % y no vuelve a consultar."
+    },
+    {
+      "id": "T69",
+      "field": "ODOO",
+      "playbook": "Sí (precio)",
+      "applied": "mustNot",
+      "reason": "El audio pide precio pero no trae fecha ni personas: no hay consulta posible a Odoo; se responden parqueadero y check-in y se pide la fecha."
+    },
+    {
+      "id": "T70",
+      "field": "ODOO",
+      "playbook": "Sí",
+      "applied": "mustNot",
+      "reason": "Idioma no soportado (DATA_GAP): se escala a humano en vez de consultar Odoo y responder en un idioma que el equipo aun no soporta."
+    },
+    {
+      "id": "T83",
+      "field": "ESC",
+      "playbook": "No",
+      "applied": "yes",
+      "reason": "Las alternativas (Colonial/La Margarita) no se pueden consultar en Odoo (UNIT_ID_MAP solo Atheron Suite): sin cupo en Atheron Suite se escala a humano para revisar otras propiedades en vez de ofrecerlas sin verificar."
+    },
+    {
+      "id": "T85",
+      "field": "ESC",
+      "playbook": "No",
+      "applied": "yes",
+      "reason": "Sin otra habitacion que alcance en Atheron Suite y sin consulta posible a otras propiedades, se escala a humano (el Playbook decia ESC=No porque suponia alternativas en Odoo)."
+    },
+    {
+      "id": "T87",
+      "field": "ODOO",
+      "playbook": "Sí (si sincronizado)",
+      "applied": "mustNot",
+      "reason": "Sin nombre ni fechas no se puede ubicar la reserva; ademas la sincronizacion OTA->Odoo es DATA_GAP #10. Se piden los datos y, si no aparece, escala."
+    },
+    {
+      "id": "T88",
+      "field": "ODOO",
+      "playbook": "Sí",
+      "applied": "mustNot",
+      "reason": "Responder el check-in de una reserva ya ubicada no requiere Odoo: es un dato fijo verificado de la propiedad."
+    },
+    {
+      "id": "T89",
+      "field": "ODOO",
+      "playbook": "Sí",
+      "applied": "mustNot",
+      "reason": "La cancelacion de una reserva OTA la decide un humano; el agente no necesita leer la reserva para escalarla (shadow no escribe ni decide)."
+    }
+  ],
+  "results": [
+    {
+      "id": "T01",
+      "section": "12.1 Casos simples (T01–T10)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! ¿Para qué fecha y cuántas personas?"
+    },
+    {
+      "id": "T02",
+      "section": "12.1 Casos simples (T01–T10)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": true,
+      "reply": "¡Hola! Para sábado 3 de octubre (1 noche), 2 pers. tengo: hab. 201 con baño compartido, $105.000 en total y hab. 302 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+    },
+    {
+      "id": "T03",
+      "section": "12.1 Casos simples (T01–T10)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_PRECIO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! ¿Para qué fecha y cuántas personas? Así te doy el precio exacto."
+    },
+    {
+      "id": "T04",
+      "section": "12.1 Casos simples (T01–T10)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "PREGUNTA_PROPIEDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! El precio incluye aseo, ropa de cama y WiFi.\n¿Para qué fecha? Así te doy el precio exacto."
+    },
+    {
+      "id": "T05",
+      "section": "12.1 Casos simples (T01–T10)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CHECKIN",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! En Atheron Suite el check-in es desde las 15:00 y el check-out hasta las 11:00."
+    },
+    {
+      "id": "T06",
+      "section": "12.1 Casos simples (T01–T10)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "UBICACION",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "Atheron Suite queda a unos 1,4 km, unos 16 min a pie de la Catedral de Sal."
+    },
+    {
+      "id": "T07",
+      "section": "12.1 Casos simples (T01–T10)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! ¿Para qué fecha?"
+    },
+    {
+      "id": "T08",
+      "section": "12.1 Casos simples (T01–T10)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "SALUDO_SOLO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "Hola, ¿en qué te puedo ayudar?"
+    },
+    {
+      "id": "T09",
+      "section": "12.1 Casos simples (T01–T10)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CIERRE",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "Con gusto. Si quieres te la separo con el anticipo."
+    },
+    {
+      "id": "T10",
+      "section": "12.1 Casos simples (T01–T10)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "UBICACION",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! Atheron Suite queda en Cra. 9 #10-32, centro de Zipaquirá."
+    },
+    {
+      "id": "T11",
+      "section": "12.2 Ambigüedades (T11–T18)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! ¿De qué día a qué día sería el puente?"
+    },
+    {
+      "id": "T12",
+      "section": "12.2 Ambigüedades (T11–T18)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¿Son 2 personas o 2 habitaciones?"
+    },
+    {
+      "id": "T13",
+      "section": "12.2 Ambigüedades (T11–T18)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_PRECIO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¿Para qué fecha y cuántas personas? Así te doy el precio exacto."
+    },
+    {
+      "id": "T14",
+      "section": "12.2 Ambigüedades (T11–T18)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "FECHA",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! ¿Te refieres al sábado 10 de octubre?"
+    },
+    {
+      "id": "T15",
+      "section": "12.2 Ambigüedades (T11–T18)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "ACLARACION_PRECIO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "En Atheron Suite el valor es por habitación, según cuántas personas."
+    },
+    {
+      "id": "T16",
+      "section": "12.2 Ambigüedades (T11–T18)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! ¿Para qué fecha y cuántas personas?"
+    },
+    {
+      "id": "T17",
+      "section": "12.2 Ambigüedades (T11–T18)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! ¿Para qué fecha y cuántas personas?"
+    },
+    {
+      "id": "T18",
+      "section": "12.2 Ambigüedades (T11–T18)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "SELECCION",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¿Te refieres a la hab. 203 con baño privado, $120.000 en total?"
+    },
+    {
+      "id": "T19",
+      "section": "12.3 Cambios de opinión (T19–T24)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": true,
+      "reply": "Entonces son 3 noches.\nDel sábado 10 de octubre al martes 13 de octubre (3 noches), 2 pers. tengo: hab. 201 con baño compartido, $315.000 en total y hab. 302 con baño privado, $360.000 en total (precio por habitación).\n¿Cuál prefieres?"
+    },
+    {
+      "id": "T20",
+      "section": "12.3 Cambios de opinión (T19–T24)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": true,
+      "reply": "Entonces son 4 personas.\nPara sábado 10 de octubre (1 noche), 4 pers. tengo: hab. 202 con baño compartido, $105.000 en total y hab. 203 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+    },
+    {
+      "id": "T21",
+      "section": "12.3 Cambios de opinión (T19–T24)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": true,
+      "reply": "Para sábado 10 de octubre (1 noche), 2 pers. tengo: hab. 302 con baño privado, $120.000 en total y hab. 203 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+    },
+    {
+      "id": "T22",
+      "section": "12.3 Cambios de opinión (T19–T24)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CANCELA_CONSULTA",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "Claro, sin problema. Si cambias de idea, aquí estoy."
+    },
+    {
+      "id": "T23",
+      "section": "12.3 Cambios de opinión (T19–T24)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí (ver cupo)",
+          "applied": "mustNot",
+          "reason": "El cliente aun no dio la nueva fecha: sin fecha no se consulta cupo; se pide la fecha y se escala (el Playbook marca ODOO=Si cuando ya hay fecha)."
+        }
+      ],
+      "intent": "CAMBIO_FECHAS",
+      "escalated": true,
+      "escalation_reason": "CAMBIO_DE_FECHAS_RESERVA_PAGADA",
+      "odoo_called": false,
+      "reply": "Claro. ¿Para qué nueva fecha sería? Lo valido con el equipo."
+    },
+    {
+      "id": "T24",
+      "section": "12.3 Cambios de opinión (T19–T24)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "PRESUPUESTO_LIMITADO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "La más económica disponible es la hab. 201 con baño compartido, $105.000 en total. Cambia que el baño se comparte con una habitación vecina."
+    },
+    {
+      "id": "T25",
+      "section": "12.4 Varios huéspedes (T25–T31)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí",
+          "applied": "mustNot",
+          "reason": "Sin fecha no se afirma disponibilidad ni se consulta Odoo: se orienta con la capacidad verificada de las fichas (302 hasta 3, 202 hasta 4) y se pide la fecha."
+        }
+      ],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! Para 3 personas sirven la 302 (hasta 3) o la 202 (hasta 4), según disponibilidad.\n¿Para qué fecha?"
+    },
+    {
+      "id": "T26",
+      "section": "12.4 Varios huéspedes (T25–T31)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí",
+          "applied": "mustNot",
+          "reason": "Sin fecha no se consulta Odoo; primero se piden edades (el Playbook: no aplicar tarifa de ninos inventada)."
+        }
+      ],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! ¿Qué edades tienen los niños y para qué fecha?"
+    },
+    {
+      "id": "T27",
+      "section": "12.4 Varios huéspedes (T25–T31)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí",
+          "applied": "mustNot",
+          "reason": "Hoy es sabado: \"fin de semana\" es ambiguo (este o el siguiente); no se consulta Odoo hasta confirmar fechas."
+        }
+      ],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! Para 6 personas te sirve la suite 301 (hasta 7) o los Apartamentos Algarra. ¿Es este fin de semana (sáb 3 – dom 4) o el siguiente, y necesitas cocina?"
+    },
+    {
+      "id": "T28",
+      "section": "12.4 Varios huéspedes (T25–T31)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí",
+          "applied": "mustNot",
+          "reason": "Grupo de 9 sin fechas: no hay consulta posible; se escala la cotizacion de grupo y se piden las fechas."
+        }
+      ],
+      "intent": "GRUPO",
+      "escalated": true,
+      "escalation_reason": "COTIZACION_DE_GRUPO",
+      "odoo_called": false,
+      "reply": "¡Hola! Para un grupo de 9 personas armamos una cotización a la medida. Paso tu caso con una persona del equipo. ¿Para qué fechas sería?"
+    },
+    {
+      "id": "T29",
+      "section": "12.4 Varios huéspedes (T25–T31)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí",
+          "applied": "mustNot",
+          "reason": "Grupo de 13 sin fechas: no hay consulta posible; pasa a humano con resumen."
+        }
+      ],
+      "intent": "GRUPO",
+      "escalated": true,
+      "escalation_reason": "COTIZACION_DE_GRUPO",
+      "odoo_called": false,
+      "reply": "¡Hola! Para un grupo de 13 personas armamos una cotización a la medida. Paso tu caso con una persona del equipo. ¿Para qué fechas sería?"
+    },
+    {
+      "id": "T30",
+      "section": "12.4 Varios huéspedes (T25–T31)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí",
+          "applied": "mustNot",
+          "reason": "Grupo de 25 sin fechas: solo se valida capacidad multipropiedad con humano (capacidad verificada en Odoo = solo Atheron Suite, 22)."
+        }
+      ],
+      "intent": "GRUPO",
+      "escalated": true,
+      "escalation_reason": "COTIZACION_DE_GRUPO",
+      "odoo_called": false,
+      "reply": "¡Hola! Sí podemos revisar un grupo de ese tamaño. Déjame validar capacidad entre nuestras propiedades y te confirmo la distribución. ¿Para qué fechas sería?"
+    },
+    {
+      "id": "T31",
+      "section": "12.4 Varios huéspedes (T25–T31)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí",
+          "applied": "mustNot",
+          "reason": "Sin fecha no se consulta Odoo; primero se pregunta por la cuna."
+        }
+      ],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! ¿El bebé necesita cuna y para qué fecha?"
+    },
+    {
+      "id": "T32",
+      "section": "12.5 Mascotas (T32–T36)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "MASCOTA",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! ¿Para qué fechas y de qué tamaño es tu mascota? Depende de la propiedad: en Apartamentos Algarra las reciben y en Atheron Suite es bajo consulta."
+    },
+    {
+      "id": "T33",
+      "section": "12.5 Mascotas (T32–T36)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "MASCOTA",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "En Colonial Confort no se admiten mascotas. Te puedo ofrecer Apartamentos Algarra (las reciben) o Atheron Suite (bajo consulta)."
+    },
+    {
+      "id": "T34",
+      "section": "12.5 Mascotas (T32–T36)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "MASCOTA",
+      "escalated": true,
+      "escalation_reason": "MASCOTA_APROBACION_Y_COSTO",
+      "odoo_called": false,
+      "reply": "Voy a consultar con el equipo si podemos recibir a tu mascota y te cuento; no te lo puedo confirmar yo."
+    },
+    {
+      "id": "T35",
+      "section": "12.5 Mascotas (T32–T36)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí",
+          "applied": "mustNot",
+          "reason": "Casa Neusa no esta mapeada en Odoo (UNIT_ID_MAP solo cubre Atheron Suite): no hay consulta posible, DATA_GAP + humano."
+        }
+      ],
+      "intent": "MASCOTA",
+      "escalated": true,
+      "escalation_reason": "MASCOTA_APROBACION_Y_COSTO",
+      "odoo_called": false,
+      "reply": "En Casa Neusa las mascotas requieren aprobación previa y tienen un costo adicional. Consulto el valor con el equipo."
+    },
+    {
+      "id": "T36",
+      "section": "12.5 Mascotas (T32–T36)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "MASCOTA",
+      "escalated": true,
+      "escalation_reason": "MASCOTA_APROBACION_Y_COSTO",
+      "odoo_called": false,
+      "reply": "¡Hola! En Apartamentos Algarra las mascotas son bienvenidas, con un cargo de aseo adicional. El valor lo confirma el equipo."
+    },
+    {
+      "id": "T37",
+      "section": "12.6 Parqueadero (T37–T42)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "PARQUEADERO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¿Es carro o moto?"
+    },
+    {
+      "id": "T38",
+      "section": "12.6 Parqueadero (T37–T42)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "PARQUEADERO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "En Atheron Suite no tenemos parqueadero propio, pero hay un parqueadero aliado a unas 2 cuadras y media (unos $15.000 la noche el carro, sujeto a cupo)."
+    },
+    {
+      "id": "T39",
+      "section": "12.6 Parqueadero (T37–T42)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "PARQUEADERO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "En Atheron Suite no tenemos parqueadero propio, pero hay un parqueadero aliado a unas 2 cuadras y media (la moto va sin costo; el cupo se confirma el mismo día)."
+    },
+    {
+      "id": "T40",
+      "section": "12.6 Parqueadero (T37–T42)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "PARQUEADERO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "En Casa Algarra hay parqueadero para 2 vehículos incluido."
+    },
+    {
+      "id": "T41",
+      "section": "12.6 Parqueadero (T37–T42)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "PARQUEADERO",
+      "escalated": true,
+      "escalation_reason": "DATA_GAP_EN_FICHA",
+      "odoo_called": false,
+      "reply": "En Apartamentos Algarra hay parqueadero cubierto (2 carros y 3 motos), $20.000 la noche el carro y $10.000 la moto; hay que reservarlo antes.\nLa altura máxima del parqueadero la confirmo con el equipo."
+    },
+    {
+      "id": "T42",
+      "section": "12.6 Parqueadero (T37–T42)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "PARQUEADERO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "El parqueadero aliado queda a unas 2 cuadras y media."
+    },
+    {
+      "id": "T43",
+      "section": "12.7 Múltiples noches (T43–T46)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": true,
+      "reply": "¡Hola! Del martes 20 de octubre al domingo 25 de octubre (5 noches), 2 pers. tengo: hab. 201 con baño compartido, $525.000 en total y hab. 302 con baño privado, $600.000 en total (precio por habitación).\n¿Cuál prefieres?"
+    },
+    {
+      "id": "T44",
+      "section": "12.7 Múltiples noches (T43–T46)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¿Desde qué fecha empiezas y cuántas personas son?"
+    },
+    {
+      "id": "T45",
+      "section": "12.7 Múltiples noches (T43–T46)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "DESCUENTO",
+      "escalated": true,
+      "escalation_reason": "DESCUENTO_O_IGUALAR_PRECIO",
+      "odoo_called": false,
+      "reply": "Déjame consultar si hay margen para esas fechas y te cuento."
+    },
+    {
+      "id": "T46",
+      "section": "12.7 Múltiples noches (T43–T46)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": true,
+      "reply": "Del sábado 10 de octubre al martes 13 de octubre (3 noches), 2 pers. tengo: hab. 201 con baño compartido, $105.000 en total y hab. 302 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+    },
+    {
+      "id": "T47",
+      "section": "12.8 Cambio de fechas / extensión (T47–T50)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CAMBIO_FECHAS",
+      "escalated": true,
+      "escalation_reason": "CAMBIO_DE_FECHAS_RESERVA_PAGADA",
+      "odoo_called": true,
+      "reply": "Reviso el cupo para el domingo 4 de octubre y lo confirmo con el equipo."
+    },
+    {
+      "id": "T48",
+      "section": "12.8 Cambio de fechas / extensión (T47–T50)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "EXTENSION",
+      "escalated": true,
+      "escalation_reason": "EXTENSION_DE_ESTADIA",
+      "odoo_called": true,
+      "reply": "Reviso el cupo para esa noche más y lo confirmo con el equipo."
+    },
+    {
+      "id": "T49",
+      "section": "12.8 Cambio de fechas / extensión (T47–T50)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CHECKOUT_TARDE",
+      "escalated": true,
+      "escalation_reason": "SALIDA_TARDIA",
+      "odoo_called": false,
+      "reply": "En Atheron Suite el check-out es hasta las 11:00. Consulto con el equipo si se puede salir más tarde."
+    },
+    {
+      "id": "T50",
+      "section": "12.8 Cambio de fechas / extensión (T47–T50)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CHECKIN_TEMPRANO",
+      "escalated": true,
+      "escalation_reason": "INGRESO_TEMPRANO",
+      "odoo_called": false,
+      "reply": "En Atheron Suite el check-in es desde las 15:00. Consulto con el equipo si se puede ingresar antes."
+    },
+    {
+      "id": "T51",
+      "section": "12.9 Precio y objeciones (T51–T56)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "PRESUPUESTO_LIMITADO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "La más económica disponible es la hab. 201 con baño compartido, $105.000 en total. Cambia que el baño se comparte con una habitación vecina."
+    },
+    {
+      "id": "T52",
+      "section": "12.9 Precio y objeciones (T51–T56)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "OBJECION_PRECIO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "Entiendo. Incluye aseo, ropa de cama y WiFi; si quieres te muestro una opción más económica disponible."
+    },
+    {
+      "id": "T53",
+      "section": "12.9 Precio y objeciones (T51–T56)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "DESCUENTO",
+      "escalated": true,
+      "escalation_reason": "DESCUENTO_O_IGUALAR_PRECIO",
+      "odoo_called": false,
+      "reply": "Déjame consultar si hay margen para esas fechas y te cuento."
+    },
+    {
+      "id": "T54",
+      "section": "12.9 Precio y objeciones (T51–T56)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "DESCUENTO",
+      "escalated": true,
+      "escalation_reason": "DESCUENTO_O_IGUALAR_PRECIO",
+      "odoo_called": false,
+      "reply": "¡Hola! Lo consulto con el equipo para ver qué podemos hacer."
+    },
+    {
+      "id": "T55",
+      "section": "12.9 Precio y objeciones (T51–T56)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "ACLARACION_PRECIO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "En Atheron Suite el valor es por habitación, según cuántas personas."
+    },
+    {
+      "id": "T56",
+      "section": "12.9 Precio y objeciones (T51–T56)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": true,
+      "reply": "Con ese presupuesto no tengo una opción disponible para sábado 10 de octubre (1 noche).\nLa más económica es la hab. 201 con baño compartido, $105.000 en total."
+    },
+    {
+      "id": "T57",
+      "section": "12.10 Anticipo y pago (T57–T62)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ESC",
+          "playbook": "Sí hasta definir regla",
+          "applied": "no",
+          "reason": "DECISION CEO 2026-10-03: el anticipo oficial es 50 %. El Playbook v0.1 decia \"escalar hasta definir regla\" (DATA_GAP #2), ya resuelto. El total sale de la cotizacion de Odoo ya hecha en la conversacion; el agente solo aplica el 50 % y no vuelve a consultar."
+        },
+        {
+          "field": "ODOO",
+          "playbook": "Sí (total)",
+          "applied": "mustNot",
+          "reason": "DECISION CEO 2026-10-03: el anticipo oficial es 50 %. El Playbook v0.1 decia \"escalar hasta definir regla\" (DATA_GAP #2), ya resuelto. El total sale de la cotizacion de Odoo ya hecha en la conversacion; el agente solo aplica el 50 % y no vuelve a consultar."
+        }
+      ],
+      "intent": "ANTICIPO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "El anticipo es del 50%: $180.000 de $360.000, y asegura tu cupo."
+    },
+    {
+      "id": "T58",
+      "section": "12.10 Anticipo y pago (T57–T62)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "METODO_PAGO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "Te envío los datos de pago oficiales; luego mándame el comprobante por este mismo WhatsApp."
+    },
+    {
+      "id": "T59",
+      "section": "12.10 Anticipo y pago (T57–T62)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "METODO_PAGO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! Puedes pagar con tarjeta por un link de pago; tiene un recargo del 5%."
+    },
+    {
+      "id": "T60",
+      "section": "12.10 Anticipo y pago (T57–T62)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "ENVIO_COMPROBANTE",
+      "escalated": true,
+      "escalation_reason": "VALIDAR_COMPROBANTE",
+      "odoo_called": false,
+      "reply": "Recibido. Lo valido con el equipo y te confirmo."
+    },
+    {
+      "id": "T61",
+      "section": "12.10 Anticipo y pago (T57–T62)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "ANTICIPO_DIFERIDO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "El anticipo es lo que asegura el cupo; sin él no puedo garantizártelo."
+    },
+    {
+      "id": "T62",
+      "section": "12.10 Anticipo y pago (T57–T62)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "PAGO",
+      "escalated": true,
+      "escalation_reason": "PAGO_AL_LLEGAR_SIN_POLITICA",
+      "odoo_called": false,
+      "reply": "El anticipo es lo que asegura el cupo. Lo de pagar al llegar lo consulto con el equipo."
+    },
+    {
+      "id": "T63",
+      "section": "12.11 Mensajes cortados (T63–T66)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! ¿Para qué fecha?"
+    },
+    {
+      "id": "T64",
+      "section": "12.11 Mensajes cortados (T63–T66)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": true,
+      "reply": "Para sábado 3 de octubre (1 noche), 2 pers. tengo: hab. 201 con baño compartido, $105.000 en total y hab. 302 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+    },
+    {
+      "id": "T65",
+      "section": "12.11 Mensajes cortados (T63–T66)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! Perfecto. ¿Me confirmas fecha de llegada, fecha de salida y número de huéspedes?"
+    },
+    {
+      "id": "T66",
+      "section": "12.11 Mensajes cortados (T63–T66)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! ¿Me completas así? Ej.: llegada 10 oct, salida 11 oct, 2 huéspedes."
+    },
+    {
+      "id": "T67",
+      "section": "12.12 Audio (T67–T71)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": true,
+      "reply": "¡Hola! Entendí: 2 personas, sábado 3 de octubre.\nPara sábado 3 de octubre (1 noche), 2 pers. tengo: hab. 201 con baño compartido, $105.000 en total y hab. 302 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+    },
+    {
+      "id": "T68",
+      "section": "12.12 Audio (T67–T71)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "AUDIO_ILEGIBLE",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! No alcancé a escuchar bien. ¿Me escribes la fecha y cuántas personas son?"
+    },
+    {
+      "id": "T69",
+      "section": "12.12 Audio (T67–T71)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí (precio)",
+          "applied": "mustNot",
+          "reason": "El audio pide precio pero no trae fecha ni personas: no hay consulta posible a Odoo; se responden parqueadero y check-in y se pide la fecha."
+        }
+      ],
+      "intent": "PARQUEADERO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "En Atheron Suite no tenemos parqueadero propio, pero hay un parqueadero aliado a unas 2 cuadras y media (≈ $15.000 la noche el carro; la moto sin costo, sujeta a cupo).\nEn Atheron Suite el check-in es desde las 15:00.\n¿Para qué fecha y cuántas personas? Así te doy el precio exacto."
+    },
+    {
+      "id": "T70",
+      "section": "12.12 Audio (T67–T71)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí",
+          "applied": "mustNot",
+          "reason": "Idioma no soportado (DATA_GAP): se escala a humano en vez de consultar Odoo y responder en un idioma que el equipo aun no soporta."
+        }
+      ],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": true,
+      "escalation_reason": "IDIOMA_NO_SOPORTADO",
+      "odoo_called": false,
+      "reply": "Thanks for your message! A team member will help you shortly. / Gracias, una persona del equipo te ayudará en breve."
+    },
+    {
+      "id": "T71",
+      "section": "12.12 Audio (T67–T71)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "LLEGADA_INMINENTE",
+      "escalated": true,
+      "escalation_reason": "LLEGADA_INMINENTE",
+      "odoo_called": false,
+      "reply": "Aviso ya a recepción, en un momento te abren."
+    },
+    {
+      "id": "T72",
+      "section": "12.13 Cliente molesto (T72–T75)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "RECLAMO",
+      "escalated": true,
+      "escalation_reason": "RECLAMO",
+      "odoo_called": false,
+      "reply": "Lamento la espera. Aviso ya a una persona del equipo para que te atienda."
+    },
+    {
+      "id": "T73",
+      "section": "12.13 Cliente molesto (T72–T75)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "RECLAMO",
+      "escalated": true,
+      "escalation_reason": "RECLAMO",
+      "odoo_called": false,
+      "reply": "Entiendo tu preocupación. Paso tu caso ya con una persona del equipo para que lo revise."
+    },
+    {
+      "id": "T74",
+      "section": "12.13 Cliente molesto (T72–T75)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "INCIDENCIA",
+      "escalated": true,
+      "escalation_reason": "INCIDENCIA_EN_ESTADIA",
+      "odoo_called": false,
+      "reply": "Lamento eso. Aviso ya a operaciones para que lo revisen."
+    },
+    {
+      "id": "T75",
+      "section": "12.13 Cliente molesto (T72–T75)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "RECLAMO",
+      "escalated": true,
+      "escalation_reason": "RECLAMO",
+      "odoo_called": false,
+      "reply": "¡Hola! Lamento tu experiencia. Paso tu caso con una persona del equipo; por aquí no puedo confirmarte devoluciones."
+    },
+    {
+      "id": "T76",
+      "section": "12.14 Pide humano (T76–T78)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "HABLAR_CON_HUMANO",
+      "escalated": true,
+      "escalation_reason": "PEDIDO_EXPLICITO_DE_HUMANO",
+      "odoo_called": false,
+      "reply": "¡Hola! Claro, voy a pasar tu caso con una persona del equipo."
+    },
+    {
+      "id": "T77",
+      "section": "12.14 Pide humano (T76–T78)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "IDENTIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! Soy el asistente de atención de Atheron. Si prefieres, te paso con una persona del equipo."
+    },
+    {
+      "id": "T78",
+      "section": "12.14 Pide humano (T76–T78)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "LLAMADA",
+      "escalated": true,
+      "escalation_reason": "CALLBACK_SOLICITADO",
+      "odoo_called": false,
+      "reply": "¡Hola! Listo, aviso a una persona del equipo para que te llame a este número."
+    },
+    {
+      "id": "T79",
+      "section": "12.15 Dato desconocido (T79–T82)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "PREGUNTA_PROPIEDAD",
+      "escalated": true,
+      "escalation_reason": "DATA_GAP_EN_FICHA",
+      "odoo_called": false,
+      "reply": "El desayuno no lo tengo confirmado; lo consulto con el equipo y te cuento."
+    },
+    {
+      "id": "T80",
+      "section": "12.15 Dato desconocido (T79–T82)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "NINOS",
+      "escalated": true,
+      "escalation_reason": "TARIFA_DE_NINOS",
+      "odoo_called": false,
+      "reply": "La tarifa de niños no la tengo confirmada; la consulto con administración y te cuento."
+    },
+    {
+      "id": "T81",
+      "section": "12.15 Dato desconocido (T79–T82)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CANCELACION",
+      "escalated": true,
+      "escalation_reason": "POLITICA_CANCELACION",
+      "odoo_called": false,
+      "reply": "Esa política no la tengo confirmada por aquí; la consulto con el equipo y te cuento."
+    },
+    {
+      "id": "T82",
+      "section": "12.15 Dato desconocido (T79–T82)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "FACTURA",
+      "escalated": true,
+      "escalation_reason": "FACTURA_ELECTRONICA",
+      "odoo_called": false,
+      "reply": "Sí manejamos facturación electrónica. Te paso con una persona del equipo para tomar tus datos fiscales."
+    },
+    {
+      "id": "T83",
+      "section": "12.16 Disponibilidad agotada (T83–T86)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ESC",
+          "playbook": "No",
+          "applied": "yes",
+          "reason": "Las alternativas (Colonial/La Margarita) no se pueden consultar en Odoo (UNIT_ID_MAP solo Atheron Suite): sin cupo en Atheron Suite se escala a humano para revisar otras propiedades en vez de ofrecerlas sin verificar."
+        }
+      ],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": true,
+      "escalation_reason": "SIN_CUPO_ALTERNATIVAS_FUERA_DE_ODOO",
+      "odoo_called": true,
+      "reply": "Para domingo 4 de octubre (1 noche) no tengo cupo en Atheron Suite para 2 personas.\nDéjame revisar con el equipo otras opciones en nuestras propiedades."
+    },
+    {
+      "id": "T84",
+      "section": "12.16 Disponibilidad agotada (T83–T86)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "GRUPO",
+      "escalated": true,
+      "escalation_reason": "COTIZACION_DE_GRUPO",
+      "odoo_called": true,
+      "reply": "Para sábado 31 de octubre (1 noche) no tengo cupo en Atheron Suite para 8 personas. Paso tu caso con el equipo para revisar otras opciones y lista de espera."
+    },
+    {
+      "id": "T85",
+      "section": "12.16 Disponibilidad agotada (T83–T86)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ESC",
+          "playbook": "No",
+          "applied": "yes",
+          "reason": "Sin otra habitacion que alcance en Atheron Suite y sin consulta posible a otras propiedades, se escala a humano (el Playbook decia ESC=No porque suponia alternativas en Odoo)."
+        }
+      ],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": true,
+      "escalation_reason": "SIN_CUPO_ALTERNATIVAS_FUERA_DE_ODOO",
+      "odoo_called": true,
+      "reply": "Esa habitación no alcanza para 3 personas.\nPara sábado 10 de octubre (1 noche) no tengo cupo en Atheron Suite para 3 personas.\nDéjame revisar con el equipo otras opciones en nuestras propiedades."
+    },
+    {
+      "id": "T86",
+      "section": "12.16 Disponibilidad agotada (T83–T86)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "LISTA_ESPERA",
+      "escalated": true,
+      "escalation_reason": "LISTA_DE_ESPERA",
+      "odoo_called": false,
+      "reply": "Dejo tu interés anotado y te aviso si se libera; no te lo puedo asegurar."
+    },
+    {
+      "id": "T87",
+      "section": "12.17 Reservas OTA, llegada tarde, B2B y llamadas (T87–T95)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí (si sincronizado)",
+          "applied": "mustNot",
+          "reason": "Sin nombre ni fechas no se puede ubicar la reserva; ademas la sincronizacion OTA->Odoo es DATA_GAP #10. Se piden los datos y, si no aparece, escala."
+        }
+      ],
+      "intent": "CONFIRMAR_RESERVA_OTA",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¡Hola! Claro. ¿A nombre de quién está la reserva y para qué fechas? La ubico."
+    },
+    {
+      "id": "T88",
+      "section": "12.17 Reservas OTA, llegada tarde, B2B y llamadas (T87–T95)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí",
+          "applied": "mustNot",
+          "reason": "Responder el check-in de una reserva ya ubicada no requiere Odoo: es un dato fijo verificado de la propiedad."
+        }
+      ],
+      "intent": "CHECKIN",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "En Atheron Suite el check-in es desde las 15:00."
+    },
+    {
+      "id": "T89",
+      "section": "12.17 Reservas OTA, llegada tarde, B2B y llamadas (T87–T95)",
+      "pass": true,
+      "failures": [],
+      "deviations": [
+        {
+          "field": "ODOO",
+          "playbook": "Sí",
+          "applied": "mustNot",
+          "reason": "La cancelacion de una reserva OTA la decide un humano; el agente no necesita leer la reserva para escalarla (shadow no escribe ni decide)."
+        }
+      ],
+      "intent": "CANCELACION",
+      "escalated": true,
+      "escalation_reason": "CANCELACION_RESERVA_OTA",
+      "odoo_called": false,
+      "reply": "Entiendo. Paso tu caso con una persona del equipo para ayudarte; por aquí no puedo prometerte condiciones de cancelación."
+    },
+    {
+      "id": "T90",
+      "section": "12.17 Reservas OTA, llegada tarde, B2B y llamadas (T87–T95)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "LLEGADA_TARDE",
+      "escalated": true,
+      "escalation_reason": "LLEGADA_TARDE",
+      "odoo_called": false,
+      "reply": "Anotado: llegas hacia las 23:00. Lo confirmo con recepción."
+    },
+    {
+      "id": "T91",
+      "section": "12.17 Reservas OTA, llegada tarde, B2B y llamadas (T87–T95)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "LLEGADA_TARDE",
+      "escalated": true,
+      "escalation_reason": "LLEGADA_TARDE",
+      "odoo_called": false,
+      "reply": "Anotado: llegas hacia las 20:00. Lo confirmo con recepción."
+    },
+    {
+      "id": "T92",
+      "section": "12.17 Reservas OTA, llegada tarde, B2B y llamadas (T87–T95)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "ALIADO_CONSULTA",
+      "escalated": true,
+      "escalation_reason": "TRAFICO_B2B_ALIADO",
+      "odoo_called": false,
+      "reply": null
+    },
+    {
+      "id": "T93",
+      "section": "12.17 Reservas OTA, llegada tarde, B2B y llamadas (T87–T95)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "ALIADO_LIQUIDACION",
+      "escalated": true,
+      "escalation_reason": "TRAFICO_B2B_ALIADO",
+      "odoo_called": false,
+      "reply": null
+    },
+    {
+      "id": "T94",
+      "section": "12.17 Reservas OTA, llegada tarde, B2B y llamadas (T87–T95)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "FUERA_DE_ALCANCE",
+      "escalated": true,
+      "escalation_reason": "OTRA_LINEA_DE_NEGOCIO_SECURITY",
+      "odoo_called": false,
+      "reply": "¡Hola! Este canal es de reservas de hospedaje. Tu consulta de seguridad la derivamos al equipo de Atheron Security."
+    },
+    {
+      "id": "T95",
+      "section": "12.17 Reservas OTA, llegada tarde, B2B y llamadas (T87–T95)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "LLAMADA",
+      "escalated": true,
+      "escalation_reason": "LLAMADA_PERDIDA_CALLBACK",
+      "odoo_called": false,
+      "reply": "¡Hola! Vimos tu llamada. En este momento no podemos atender; te respondemos desde las 8:00 a.m. Si es por una reserva, cuéntanos fecha y personas por aquí."
+    },
+    {
+      "id": "T96",
+      "section": "12.18 Contexto y memoria (T96–T100)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": true,
+      "reply": "¡Hola! Para domingo 4 de octubre (1 noche), 4 pers. tengo: hab. 202 con baño compartido, $105.000 en total y hab. 203 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+    },
+    {
+      "id": "T97",
+      "section": "12.18 Contexto y memoria (T96–T100)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "PARQUEADERO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "¿Es carro o moto?"
+    },
+    {
+      "id": "T98",
+      "section": "12.18 Contexto y memoria (T96–T100)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_DISPONIBILIDAD",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": true,
+      "reply": "Para sábado 10 de octubre (1 noche), 2 pers. tengo: hab. 201 con baño compartido, $105.000 en total y hab. 302 con baño privado, $120.000 en total (precio por habitación).\n¿Cuál prefieres?"
+    },
+    {
+      "id": "T99",
+      "section": "12.18 Contexto y memoria (T96–T100)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CONSULTA_PRECIO",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "Eran $360.000 por 3 noches (sábado 10 de octubre al martes 13 de octubre), para 2 personas."
+    },
+    {
+      "id": "T100",
+      "section": "12.18 Contexto y memoria (T96–T100)",
+      "pass": true,
+      "failures": [],
+      "deviations": [],
+      "intent": "CANCELA_CONSULTA",
+      "escalated": false,
+      "escalation_reason": null,
+      "odoo_called": false,
+      "reply": "Claro, sin problema. Si cambias de idea, aquí estoy."
+    }
+  ]
+}

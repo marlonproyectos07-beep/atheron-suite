@@ -20,6 +20,8 @@ no dependen uno del otro. Ninguno debe tocar la rama del otro.
 > **HOTEL-012 V2 (2026-10-03):** Control Center evolucionado como read-model + pruebas
 > (376 PASS). No verificado contra Odoo (sin sesión). Ver `AI/ATH-ODOO-HOTEL-012_V2_CONTROL_CENTER.md`.
 
+> **WhatsApp agente SHADOW (2026-10-03):** `integrations/whatsapp-shadow-agent/`, Playbook v0.1 100/100, parcial: ver `AI/whatsapp/ATH-WHATSAPP-AGENT-001_SHADOW.md`.
+
 ## Historial de gates (más reciente primero)
 
 | Gate | Estado | Referencia |

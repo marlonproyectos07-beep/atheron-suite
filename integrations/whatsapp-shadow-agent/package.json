@@ -1,0 +1,11 @@
+{
+  "name": "@atheron/whatsapp-shadow-agent",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "test": "node --test",
+    "playbook:extract": "node scripts/extract-playbook-cases.mjs",
+    "playbook:run": "node scripts/run-playbook.mjs"
+  }
+}
