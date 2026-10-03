@@ -86,7 +86,7 @@ Detalle: `AI/whatsapp/ATH-WHATSAPP-AGENT-001_SHADOW.md`. Código: `integrations/
 - [x] 12 requisitos CEO del mensaje (CEO-D01..D12) PASS. 180 pruebas.
 - [x] CEO_CASES_V1.md canónico (12 casos) + política de cancelación oficial: 12/12 PASS. Ver `AI/whatsapp/ATH-WHATSAPP-AGENT-001_CIERRE.md`.
 - [ ] **DECISIÓN:** implementación duplicada en rama `claude/atero-whatsapp-shadow-agent-0v0yho` (mismo directorio): elegir canónica antes de cualquier merge.
-- [ ] Confirmar errata «Hoteles Atero».
+- [x] Marca canónica «Hoteles Atheron» confirmada por Control Maestro (CANONICAL-002).
 - [ ] **BLOQUEADO (sin sesión Odoo):** corregir 30 % -> 50 % en STAGING (`AI/whatsapp/ODOO_DEPOSIT_50_RUNBOOK.md`); completar UNIT_ID_MAP/capacidades (solo Atheron Suite verificada).
 - [ ] Medir con conversaciones reales (generalización en ciego: 53-77 % a la primera).
 

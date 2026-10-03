@@ -27,7 +27,7 @@ const direct = (checkIn, extra = {}) => ({ property: 'AS', source: 'DIRECT', has
 test('CEO_CASES_V1.md: exactamente CEO-01..CEO-12 y la politica oficial verbatim', () => {
   const ids = [...md.matchAll(/^### (CEO-\d{2})$/gm)].map((m) => m[1]);
   assert.deepEqual(ids, Array.from({ length: 12 }, (_, i) => `CEO-${String(i + 1).padStart(2, '0')}`));
-  assert.ok(md.includes('Cancelación o cambio hasta 48 horas antes del check-in: no hay devolución en efectivo. El valor pagado queda como saldo a favor durante 6 meses para una nueva reserva en Hoteles Atero, sujeto a disponibilidad y a la tarifa vigente de las nuevas fechas. Si la nueva tarifa es superior, el huésped paga la diferencia. Solicitudes con menos de 48 horas, no-show o casos excepcionales pasan a revisión humana. Las reservas realizadas mediante Booking, Airbnb u otra OTA se rigen primero por las condiciones de la plataforma.'));
+  assert.ok(md.includes('Cancelación o cambio hasta 48 horas antes del check-in: no hay devolución en efectivo. El valor pagado queda como saldo a favor durante 6 meses para una nueva reserva en Hoteles Atheron, sujeto a disponibilidad y a la tarifa vigente de las nuevas fechas. Si la nueva tarifa es superior, el huésped paga la diferencia. Solicitudes con menos de 48 horas, no-show o casos excepcionales pasan a revisión humana. Las reservas realizadas mediante Booking, Airbnb u otra OTA se rigen primero por las condiciones de la plataforma.'));
   assert.match(md, /50 % del total vigente/);
 });
 

@@ -1,0 +1,7 @@
+# Changelog — agente WhatsApp SHADOW
+
+## 2026-10-03 — CANONICAL-002: marca canónica
+
+- Decisión de Control Maestro: la marca oficial es **Hoteles Atheron**.
+- El texto fuente de la política de cancelación (`CEO_CASES_V1.md`) venía de la fuente original con la errata «Hoteles Atero»; se corrigió en el contenido canónico y en el test que lo verifica.
+- «Hoteles Atero» no se conserva en ningún contenido que consuman el agente o los tests; el historial está en Git (commits `bdb6a4c` y posteriores).

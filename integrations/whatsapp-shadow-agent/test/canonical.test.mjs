@@ -53,6 +53,12 @@ test('BRAND-001: el codigo fuente no contiene "Atero" y la propiedad conserva "H
   assert.match(readFileSync(join(here, '..', 'src', 'policy.mjs'), 'utf8'), /name: 'Hotel Atheron Suite'/);
 });
 
+test('BRAND-001: la fuente canonica CEO_CASES_V1.md tampoco dice "Atero"', () => {
+  const md = readFileSync(join(root, 'AI', 'whatsapp', 'CEO_CASES_V1.md'), 'utf8');
+  assert.doesNotMatch(md, /\bAtero\b/);
+  assert.match(md, /nueva reserva en Hoteles Atheron,/);
+});
+
 // ---- kill switch / shadow -----------------------------------------------------------------------------------------------
 test('kill switch: por defecto WHATSAPP_AUTOMATION_ENABLED=false y modo shadow', () => {
   const cfg = resolveConfig({});

@@ -24,7 +24,7 @@ No se importó: check-in 00:00, política antigua, clasificador alternativo, tes
 ## Marca
 
 Todo texto al cliente dice **Hoteles Atheron**; la propiedad conserva **Hotel Atheron Suite**. Prueba `BRAND-001`.
-El texto verbatim de `CEO_CASES_V1.md` conserva «Hoteles Atero» solo como cita del documento fuente.
+`CEO_CASES_V1.md` (fuente canónica) también dice «Hoteles Atheron»; trazabilidad en [CHANGELOG_WHATSAPP.md](CHANGELOG_WHATSAPP.md).
 
 ## Anticipo por canal
 

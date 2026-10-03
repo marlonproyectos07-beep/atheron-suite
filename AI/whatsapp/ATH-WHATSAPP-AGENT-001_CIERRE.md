@@ -11,7 +11,7 @@
   - < 48 h, no-show, sin check-in verificable, o reserva sin identificar: **ESCALATE_HUMAN**, sin decidir devolución ni penalidad.
   - Reserva OTA (Booking/Airbnb/otra): se rige primero por la plataforma → humano.
   - Pregunta general de política (sin reserva): se responde el texto oficial.
-  - **Errata probable:** el texto oficial dice «Hoteles Atero»; las respuestas dicen «Hoteles Atheron». Pendiente de confirmar.
+  - **Errata probable:** el texto oficial dice «Hoteles Atero»; las respuestas dicen «Hoteles Atheron». **RESUELTO (CANONICAL-002): marca canónica «Hoteles Atheron».**
 - **Anticipo 50 %** se mantiene; Odoo STAGING puede seguir en 30 % (se corrige en sesión separada; el agente marca `ODOO_DEPOSIT_MISMATCH`).
 - **Seguridad:** intención desconocida o confianza insuficiente (mensaje sin intención con varias palabras sin explicar, o audio < 0.6) → ESCALATE_HUMAN; nunca se asume disponibilidad ni se consulta Odoo.
 - **Nuevos en este cierre:** `ALLY_B2B`, `PAYMENT_VALIDATION_REQUIRED`, `GROUP_PRICING_APPROVAL`, invalidación de la cotización anterior al cambiar personas/fechas (CEO-08), consulta de capacidad verificada (solo Atheron Suite) para grupos ≥ 23.
@@ -54,6 +54,6 @@ Hallazgo (solo lectura por API, sin merge ni checkout):
 
 ## Bloqueos / pendientes
 1. Validación Odoo STAGING real (sesión autenticada separada; incluye 30 % → 50 %).
-2. Confirmar la errata «Hoteles Atero» y decidir cuál implementación es la canónica.
+2. ~~Confirmar la errata y decidir la implementación canónica~~ — resuelto en CANONICAL-002.
 3. UNIT_ID_MAP/capacidades: solo Atheron Suite verificada.
 4. Medir con conversaciones reales antes de salir de SHADOW.
