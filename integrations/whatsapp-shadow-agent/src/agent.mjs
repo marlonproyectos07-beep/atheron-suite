@@ -14,6 +14,8 @@ import { norm, residualWords, STAY_CUE, detectIntents, extractDates, extractPers
 import { depositFor, reconcileWithOdoo } from './deposit.mjs';
 import { evaluateGroup, groupFlowFor, scenarioFor, GROUP_STATUS } from './groups.mjs';
 import { ShadowViolation } from './odoo-port.mjs';
+import { redactPII } from './hybrid/pii.mjs';
+import { applyUnderstanding } from './hybrid/merge.mjs';
 
 const BRAND = 'Hoteles Atheron'; // marca oficial confirmada por el CEO (CANONICAL-002); la propiedad conserva su nombre: Hotel Atheron Suite
 
@@ -325,10 +327,11 @@ function parkingPart(p, vehicle, { ask = true } = {}) {
  * @param {object} message  { type: 'text'|'audio'|'image'|'document'|'call', text?, transcript?, confidence?, direction?, caption? }
  * @param {{odoo: object, humanAvailable?: boolean}} deps  odoo = puerto (se envuelve con guardPort afuera)
  */
-export async function processMessage(session, message, deps) {
+export async function processMessage(session, message, deps, understanding = null) {
   const d = newDecision(session);
   const type = message.type ?? 'text';
-  session.history.push({ role: 'guest', type, text: message.text ?? message.transcript ?? null });
+  const rawText = message.text ?? message.transcript ?? null;
+  session.history.push({ role: 'guest', type, text: rawText == null ? null : redactPII(rawText).text }); // el historial nunca guarda telefonos, cuentas ni documentos
 
   // ---- llamada -------------------------------------------------------------
   if (type === 'call') {
@@ -382,14 +385,21 @@ export async function processMessage(session, message, deps) {
   }
 
   const n = norm(text);
-  const intents = detectIntents(n);
-  addIntent(d, ...intents);
-  const entities = {
+  let intents = detectIntents(n);
+  let entities = {
     dates: extractDates(n, todayOf(session)),
     persons: extractPersons(n),
     property: extractProperty(n),
     misc: extractMisc(n),
   };
+  if (understanding?.interpretation) {
+    // HYBRID_SHADOW: el LLM propone; las reglas restringen. Ver src/hybrid/merge.mjs.
+    const merged = applyUnderstanding({ intents, entities, interp: understanding.interpretation, textNorm: n, today: todayOf(session), memory: session.memory, resolveConfidence: understanding.resolveConfidence });
+    intents = merged.intents;
+    entities = merged.entities;
+    d.understanding = { source: 'llm', ...merged.report };
+  }
+  addIntent(d, ...intents);
 
   // ---- B2B / otra linea de negocio: no es un huesped ---------------------------
   if (intents.includes('ALIADO_CONSULTA') || intents.includes('ALIADO_LIQUIDACION')) {
@@ -508,8 +518,8 @@ export async function processMessage(session, message, deps) {
   }
 
   // ---- GUARDARRAIL OTA: toda reserva Booking/Airbnb que se quiera tocar o dudar la revisa una persona ----
-  const otaChannel = /airbnb/.test(n) ? 'AIRBNB' : /booking/.test(n) ? 'BOOKING' : null;
-  const otaExisting = otaChannel && /\b(reserv\w*|tenia|tengo|hice|anfitrion|no pude|no alcance|no llegue|no viaje)\b/.test(n);
+  const otaChannel = /airbnb/.test(n) ? 'AIRBNB' : /booking/.test(n) ? 'BOOKING' : (entities.llm_channel ?? null);
+  const otaExisting = otaChannel && (/\b(reserv\w*|tenia|tengo|hice|anfitrion|no pude|no alcance|no llegue|no viaje)\b/.test(n) || entities.llm_existing_ota);
   const OTA_SAFE = ['CHECKIN', 'CHECKOUT', 'ANTICIPO', 'DESCUENTO', 'MASCOTA', 'PARQUEADERO', 'UBICACION', 'CANCELACION', 'NO_SHOW', 'CAMBIO_FECHAS', 'POLITICA_CANCELACION', 'ENVIO_COMPROBANTE', 'RECLAMO', 'REEMBOLSO', 'INCIDENCIA'];
   const otaTouch = /\b(cambi\w*|mover|mueva|pasar|trasladar|modific\w*|no pude|no alcance|no llegue|no viaje|cobr\w*)\b/.test(n) || Boolean(entities.dates.checkIn);
   if (otaExisting && otaTouch && !intents.some((i) => OTA_SAFE.includes(i) && i !== 'CAMBIO_FECHAS' && i !== 'CANCELACION' && i !== 'NO_SHOW')) {
@@ -524,7 +534,7 @@ export async function processMessage(session, message, deps) {
   // ---- cancelacion y politicas ----------------------------------------------------------------------
   const sayExisting0 = /\b(mi reserva|tengo (una )?reserva|ya tengo (mi )?reserva|reserve (por|en|con|a traves de)|hice (una |mi )?reserva|reservamos (por|en|con)|mi reservacion)\b/.test(n);
   if (sayExisting0 && !session.reservation) {
-    session.reservation = { property: m.property ?? POLICY.default_property, source: entities.misc.ota ? (/airbnb/.test(n) ? 'AIRBNB' : 'BOOKING') : 'DIRECT', has_payment: null, declared_by_guest: true };
+    session.reservation = { property: m.property ?? POLICY.default_property, source: entities.misc.ota ? (/airbnb/.test(n) || entities.llm_channel === 'AIRBNB' ? 'AIRBNB' : 'BOOKING') : 'DIRECT', has_payment: null, declared_by_guest: true };
     d.flags.push('RESERVA_EXISTENTE_DECLARADA_SIN_VERIFICAR');
   }
   if (intents.includes('POLITICA_CANCELACION') && !session.reservation) {
@@ -573,7 +583,7 @@ export async function processMessage(session, message, deps) {
   // ---- cambios sobre reservas existentes (con dinero) -----------------------------------------------
   const sayExisting = /\b(mi reserva|tengo (una )?reserva|ya tengo (mi )?reserva|reserve (por|en|con|a traves de)|hice (una |mi )?reserva|reservamos (por|en|con)|mi reservacion)\b/.test(n);
   if (sayExisting && !session.reservation) {
-    session.reservation = { property: m.property ?? POLICY.default_property, source: entities.misc.ota ? (/airbnb/.test(n) ? 'AIRBNB' : 'BOOKING') : 'DIRECT', has_payment: null, declared_by_guest: true };
+    session.reservation = { property: m.property ?? POLICY.default_property, source: entities.misc.ota ? (/airbnb/.test(n) || entities.llm_channel === 'AIRBNB' ? 'AIRBNB' : 'BOOKING') : 'DIRECT', has_payment: null, declared_by_guest: true };
     d.flags.push('RESERVA_EXISTENTE_DECLARADA_SIN_VERIFICAR');
   }
   const paidRes = session.reservation?.has_payment;
@@ -908,7 +918,7 @@ async function commercialFlow({ session, d, deps, n, intents, entities, prop, ch
     d.reply = 'El anticipo es lo que asegura el cupo. Lo de pagar al llegar lo consulto con el equipo.';
     return finish(session, d, null);
   }
-  const depositChannel = /airbnb/.test(n) ? 'AIRBNB' : /booking/.test(n) ? 'BOOKING' : (session.reservation?.source ?? 'DIRECT');
+  const depositChannel = /airbnb/.test(n) ? 'AIRBNB' : /booking/.test(n) ? 'BOOKING' : (entities.llm_channel ?? session.reservation?.source ?? 'DIRECT');
   if (intents.includes('ANTICIPO') && !intents.includes('METODO_PAGO') && depositChannel !== 'DIRECT') {
     d.primary_intent = 'ANTICIPO';
     d.deposit = { percent: null, amount: null, total: null, channel: depositChannel, policy: CHANNEL_DEPOSIT[depositChannel].policy };
@@ -1177,6 +1187,7 @@ function composeParts(parts) {
 }
 
 function finish(session, d, _message) {
+  session.lastEscalated = Boolean(d.escalate); // memoria de traspaso: el pipeline hibrido no re-automatiza un caso ya en manos humanas
   if (d.flags.includes('PAYMENT_VALIDATION_REQUIRED')) session.paymentClaimed = true;
   const m = session.memory;
   d.memory = { ...m };

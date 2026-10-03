@@ -7,12 +7,15 @@
  *
  *   WHATSAPP_AUTOMATION_ENABLED  kill switch; por defecto `false`.
  *   WHATSAPP_AUTOMATION_MODE     por defecto `shadow`; solo `shadow` habilitado.
+ *   WHATSAPP_UNDERSTANDING_MODE  por defecto `rules`; `hybrid_shadow` requiere un proveedor inyectado (hoy solo mock).
  *
  * Sin secretos: aqui solo hay banderas.
  */
 
 export const MODES = Object.freeze(['shadow', 'supervised', 'auto_offhours', 'auto']);
 export const ENABLED_MODES = Object.freeze(['shadow']);
+/** Motor de comprension. `rules` por defecto; `hybrid_shadow` existe pero NO se activa por defecto. */
+export const UNDERSTANDING_MODES = Object.freeze(['rules', 'hybrid_shadow']);
 
 export class ConfigError extends Error {
   constructor(code, message) {
@@ -29,7 +32,9 @@ export function resolveConfig(env = process.env) {
     throw new ConfigError('MODE_NOT_ENABLED', `el modo "${mode}" existe pero NO esta autorizado en esta version (solo shadow)`);
   }
   const enabled = String(env.WHATSAPP_AUTOMATION_ENABLED ?? 'false').trim().toLowerCase() === 'true';
-  return Object.freeze({ mode, enabled });
+  const understanding = (env.WHATSAPP_UNDERSTANDING_MODE ?? 'rules').trim();
+  if (!UNDERSTANDING_MODES.includes(understanding)) throw new ConfigError('UNKNOWN_UNDERSTANDING_MODE', `WHATSAPP_UNDERSTANDING_MODE desconocido: ${understanding}`);
+  return Object.freeze({ mode, enabled, understanding });
 }
 
 /**

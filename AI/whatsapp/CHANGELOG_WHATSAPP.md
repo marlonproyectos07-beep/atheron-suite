@@ -17,3 +17,10 @@
 - Set ciego V3 de 100 casos congelado (SHA256 `d13f2649…`, commit `4a653c0`). Primera pasada **71/100 (71 %)**, 4 HIGH_RISK (3 reales + 1 falso positivo del detector). Gate (≥90 % y 0 HIGH_RISK): **no cumple → SHADOW ONLY**.
 - Correcciones estructurales: guardarraíl OTA, horarios en reservas OTA, extracción de datos. POST_FIX_REGRESSION 81/100 (no es generalización ciega).
 - Recomendación de arquitectura: HYBRID_LLM_RULES (ver `ARQUITECTURA_RULES_VS_HYBRID.md`). Sin implementar.
+
+## 2026-10-03 — HYBRID-001: piloto híbrido LLM + reglas en SHADOW (arquitectura)
+
+- Nuevo `src/hybrid/`: esquema estricto versionado, interfaz `LanguageUnderstandingProvider` + mock (proveedores reales DISABLED), `redactPII`, `validateMemoryUpdate`, pipeline con piso duro de reglas, dual run y contrato de benchmark.
+- `WHATSAPP_UNDERSTANDING_MODE=rules` por defecto; `hybrid_shadow` no se activa solo y exige proveedor inyectado.
+- El historial de sesión ahora guarda texto redactado (también en modo `rules`).
+- Sin proveedor real, sin claves, sin datos externos, sin outbound.

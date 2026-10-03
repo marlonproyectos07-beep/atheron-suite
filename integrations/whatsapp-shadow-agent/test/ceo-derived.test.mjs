@@ -33,7 +33,7 @@ test('CEO-D01 SHADOW: nunca hay outbound, nunca HOLD, y el codigo no contiene ni
     assert.equal(d.outbound, null);
     assert.equal(d.hold, null);
   }
-  for (const f of readdirSync(join(here, '..', 'src'))) {
+  for (const f of readdirSync(join(here, '..', 'src'), { recursive: true }).filter((x) => x.endsWith('.mjs'))) {
     const src = readFileSync(join(here, '..', 'src', f), 'utf8');
     assert.ok(!/\bfetch\s*\(/.test(src) || f === 'odoo-port.mjs', `${f} usa fetch`);
     assert.ok(!/graph\.facebook|api\.whatsapp|twilio|sendMessage|messages\.send/i.test(src), `${f} referencia un canal de envio`);

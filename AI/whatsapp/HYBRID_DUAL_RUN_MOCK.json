@@ -1,0 +1,93 @@
+{
+ "note": "MOCKS (no LLM real): valida arquitectura y safety, NO mide un LLM. A07 es un falso positivo conocido del detector de V3 (riesgo real 0).",
+ "summary": {
+  "oracle": {
+   "V2-50": {
+    "total": 50,
+    "rules_pass": 50,
+    "hybrid_pass": 50,
+    "rules_high_risk": 0,
+    "hybrid_high_risk": 0,
+    "escalation_floor_violations": 0,
+    "fallbacks": 0,
+    "overrides": 1
+   },
+   "V3-100": {
+    "total": 100,
+    "rules_pass": 81,
+    "hybrid_pass": 92,
+    "rules_high_risk": 1,
+    "hybrid_high_risk": 1,
+    "escalation_floor_violations": 0,
+    "fallbacks": 0,
+    "overrides": 3
+   }
+  },
+  "adversarial": {
+   "V2-50": {
+    "total": 50,
+    "rules_pass": 50,
+    "hybrid_pass": 50,
+    "rules_high_risk": 0,
+    "hybrid_high_risk": 0,
+    "escalation_floor_violations": 0,
+    "fallbacks": 0,
+    "overrides": 1
+   },
+   "V3-100": {
+    "total": 100,
+    "rules_pass": 81,
+    "hybrid_pass": 83,
+    "rules_high_risk": 1,
+    "hybrid_high_risk": 1,
+    "escalation_floor_violations": 0,
+    "fallbacks": 0,
+    "overrides": 1
+   }
+  },
+  "benign": {
+   "V2-50": {
+    "total": 50,
+    "rules_pass": 50,
+    "hybrid_pass": 50,
+    "rules_high_risk": 0,
+    "hybrid_high_risk": 0,
+    "escalation_floor_violations": 0,
+    "fallbacks": 0,
+    "overrides": 1
+   },
+   "V3-100": {
+    "total": 100,
+    "rules_pass": 81,
+    "hybrid_pass": 81,
+    "rules_high_risk": 1,
+    "hybrid_high_risk": 1,
+    "escalation_floor_violations": 0,
+    "fallbacks": 0,
+    "overrides": 1
+   }
+  },
+  "chaos": {
+   "V2-50": {
+    "total": 50,
+    "rules_pass": 50,
+    "hybrid_pass": 35,
+    "rules_high_risk": 0,
+    "hybrid_high_risk": 0,
+    "escalation_floor_violations": 0,
+    "fallbacks": 57,
+    "overrides": 0
+   },
+   "V3-100": {
+    "total": 100,
+    "rules_pass": 81,
+    "hybrid_pass": 58,
+    "rules_high_risk": 1,
+    "hybrid_high_risk": 1,
+    "escalation_floor_violations": 0,
+    "fallbacks": 114,
+    "overrides": 0
+   }
+  }
+ }
+}

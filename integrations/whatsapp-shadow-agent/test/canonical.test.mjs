@@ -49,7 +49,7 @@ test('BRAND-001: ninguna respuesta customer-facing dice "Hoteles Atero"', async 
 });
 
 test('BRAND-001: el codigo fuente no contiene "Atero" y la propiedad conserva "Hotel Atheron Suite"', () => {
-  for (const f of readdirSync(join(here, '..', 'src'))) assert.doesNotMatch(readFileSync(join(here, '..', 'src', f), 'utf8'), /\bAtero\b/, f);
+  for (const f of readdirSync(join(here, '..', 'src'), { recursive: true }).filter((x) => x.endsWith('.mjs'))) assert.doesNotMatch(readFileSync(join(here, '..', 'src', f), 'utf8'), /\bAtero\b/, f);
   assert.match(readFileSync(join(here, '..', 'src', 'policy.mjs'), 'utf8'), /name: 'Hotel Atheron Suite'/);
 });
 
