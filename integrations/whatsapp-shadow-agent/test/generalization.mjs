@@ -23,7 +23,7 @@ export const HELD_OUT = [
   { id: 'H16', text: 'Cual es el valor del anticipo?', intent: 'ANTICIPO', esc: false, must: /50%/ },
   { id: 'H17', text: 'Pueden guardarme las maletas despues del check out?', intent: 'EQUIPAJE', esc: false },
   { id: 'H18', text: 'cotizacion de un sistema de alarma para mi casa', intent: 'FUERA_DE_ALCANCE', esc: true, line: 'ATHERON_SECURITY' },
-  { id: 'H19', text: 'Buenas, soy del hotel Sol, les mando un huesped para el 15', intent: 'ALIADO_CONSULTA', esc: true, line: 'B2B_ALLY' },
+  { id: 'H19', text: 'Buenas, soy del hotel Sol, les mando un huesped para el 15', intent: 'ALIADO_CONSULTA', esc: true, line: 'ALLY_B2B' },
   { id: 'H20', text: 'Para 4 personas, dos noches desde el 8 de noviembre', intent: 'CONSULTA_DISPONIBILIDAD', esc: false, odoo: true },
   { id: 'H21', text: 'hay disponibilidad el fin de semana largo?', intent: 'CONSULTA_DISPONIBILIDAD', esc: false, odoo: false },
   { id: 'H22', text: 'tienen cocina?', intent: 'PREGUNTA_PROPIEDAD', esc: false },

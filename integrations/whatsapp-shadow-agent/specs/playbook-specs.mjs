@@ -68,9 +68,9 @@ export const SPECS = {
   T22: { must: [/sin problema/], mustNot: [/\$/] },
   T23: {
     seed: reservation(PAID_AS),
-    expect: { odoo: 'mustNot' },
-    adjust: 'El cliente aun no dio la nueva fecha: sin fecha no se consulta cupo; se pide la fecha y se escala (el Playbook marca ODOO=Si cuando ya hay fecha).',
-    must: [/fecha/],
+    expect: { esc: false, odoo: 'mustNot' },
+    adjust: 'POLITICA OFICIAL CEO 2026-10-03 (CEO-03): reserva directa con mas de 48 h al check-in se explica (saldo a favor 6 meses, sujeto a disponibilidad/tarifa vigente) y no se escala; el Playbook decia ESC=Si. Sin nueva fecha no se consulta Odoo.',
+    must: [/48 horas/, /saldo a favor/, /fecha/],
   },
   T24: { seed: TWO_OPTS, seedAmounts: [120000, 105000], must: [/201/, /105\.000/] },
 
@@ -140,7 +140,12 @@ export const SPECS = {
   T46: { seed: mem({ ...dates(SAT, 3), guests: 2, property: 'AS' }), expect: { odoo: 'must' } },
 
   // ---- 12.8 cambio de fechas / extension ----
-  T47: { seed: reservation(PAID_AS), expect: { odoo: 'must' }, must: [/domingo 4 de octubre/] },
+  T47: {
+    seed: reservation(PAID_AS),
+    expect: { esc: false, odoo: 'must' },
+    adjust: 'POLITICA OFICIAL CEO 2026-10-03 (CEO-03): cambio de reserva directa con mas de 48 h = se explica la politica y se revisa cupo; el Playbook decia ESC=Si.',
+    must: [/domingo 4 de octubre/, /48 horas/],
+  },
   T48: { seed: reservation({ ...PAID_AS, in_stay: true, checkOut: '2026-10-04' }), expect: { odoo: 'must' } },
   T49: { seed: mem({ property: 'AS' }), must: [/11:00/] },
   T50: { seed: mem({ property: 'AS' }), must: [/15:00/] },
@@ -174,7 +179,7 @@ export const SPECS = {
 
   // ---- 12.12 audio ----
   T67: { expect: { odoo: 'must' }, must: [/entendi: 2 personas/] },
-  T68: { expect: { esc: false }, must: [/escribes/] },
+  T68: { expect: { esc: true }, must: [/escribes/] }, // CEO 2026-10-03: confianza insuficiente -> ESCALATE_HUMAN
   T69: {
     expect: { odoo: 'mustNot' },
     adjust: 'El audio pide precio pero no trae fecha ni personas: no hay consulta posible a Odoo; se responden parqueadero y check-in y se pide la fecha.',
@@ -202,7 +207,11 @@ export const SPECS = {
   // ---- 12.15 dato desconocido ----
   T79: { seed: mem({ property: 'AS' }), must: [/no lo tengo confirmado/], mustNot: [/si incluye/, /incluye desayuno/] },
   T80: { seed: mem({ property: 'LM' }), mustNot: [/50 ?%/, /\$/], must: [/administracion/] },
-  T81: { must: [/no la tengo confirmada/], mustNot: [/48/, /6 meses/, /reembolso/] },
+  T81: {
+    expect: { esc: false },
+    adjust: 'POLITICA OFICIAL CEO 2026-10-03: ya existe politica de cancelacion de reservas directas (DATA_GAP #1 del Playbook resuelto); se responde con el texto oficial en vez de escalar.',
+    must: [/48 horas/, /sin devolucion en efectivo|no hay devolucion en efectivo/, /6 meses/, /plataforma/],
+  },
   T82: { seed: mem({ property: 'AS' }), must: [/facturacion electronica/] },
 
   // ---- 12.16 disponibilidad agotada ----

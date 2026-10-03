@@ -1,11 +1,12 @@
 # Resultados Playbook v0.1 — agente SHADOW
 
 Playbook sha256: `d6e13916dd64c8dbe8da49b7fd1a68e2b405726a616d4269bb8e056fc3bff92d`
-Casos: 100 · PASS: 100 · FAIL: 0 · desviaciones documentadas respecto al Playbook: 18
+Casos: 100 · PASS: 100 · FAIL: 0 · desviaciones documentadas respecto al Playbook: 21
 
 ## Desviaciones (spec distinta de lo que dice el Playbook, con razón)
 
-- **T23** · ODOO: Playbook «Sí (ver cupo)» → aplicado «mustNot». El cliente aun no dio la nueva fecha: sin fecha no se consulta cupo; se pide la fecha y se escala (el Playbook marca ODOO=Si cuando ya hay fecha).
+- **T23** · ESC: Playbook «Sí» → aplicado «no». POLITICA OFICIAL CEO 2026-10-03 (CEO-03): reserva directa con mas de 48 h al check-in se explica (saldo a favor 6 meses, sujeto a disponibilidad/tarifa vigente) y no se escala; el Playbook decia ESC=Si. Sin nueva fecha no se consulta Odoo.
+- **T23** · ODOO: Playbook «Sí (ver cupo)» → aplicado «mustNot». POLITICA OFICIAL CEO 2026-10-03 (CEO-03): reserva directa con mas de 48 h al check-in se explica (saldo a favor 6 meses, sujeto a disponibilidad/tarifa vigente) y no se escala; el Playbook decia ESC=Si. Sin nueva fecha no se consulta Odoo.
 - **T25** · ODOO: Playbook «Sí» → aplicado «mustNot». Sin fecha no se afirma disponibilidad ni se consulta Odoo: se orienta con la capacidad verificada de las fichas (302 hasta 3, 202 hasta 4) y se pide la fecha.
 - **T26** · ODOO: Playbook «Sí» → aplicado «mustNot». Sin fecha no se consulta Odoo; primero se piden edades (el Playbook: no aplicar tarifa de ninos inventada).
 - **T27** · ODOO: Playbook «Sí» → aplicado «mustNot». Hoy es sabado: "fin de semana" es ambiguo (este o el siguiente); no se consulta Odoo hasta confirmar fechas.
@@ -14,10 +15,12 @@ Casos: 100 · PASS: 100 · FAIL: 0 · desviaciones documentadas respecto al Play
 - **T30** · ODOO: Playbook «Sí» → aplicado «mustNot». Grupo de 25 sin fechas: solo se valida capacidad multipropiedad con humano (capacidad verificada en Odoo = solo Atheron Suite, 22).
 - **T31** · ODOO: Playbook «Sí» → aplicado «mustNot». Sin fecha no se consulta Odoo; primero se pregunta por la cuna.
 - **T35** · ODOO: Playbook «Sí» → aplicado «mustNot». Casa Neusa no esta mapeada en Odoo (UNIT_ID_MAP solo cubre Atheron Suite): no hay consulta posible, DATA_GAP + humano.
+- **T47** · ESC: Playbook «Sí» → aplicado «no». POLITICA OFICIAL CEO 2026-10-03 (CEO-03): cambio de reserva directa con mas de 48 h = se explica la politica y se revisa cupo; el Playbook decia ESC=Si.
 - **T57** · ESC: Playbook «Sí hasta definir regla» → aplicado «no». DECISION CEO 2026-10-03: el anticipo oficial es 50 %. El Playbook v0.1 decia "escalar hasta definir regla" (DATA_GAP #2), ya resuelto. El total sale de la cotizacion de Odoo ya hecha en la conversacion; el agente solo aplica el 50 % y no vuelve a consultar.
 - **T57** · ODOO: Playbook «Sí (total)» → aplicado «mustNot». DECISION CEO 2026-10-03: el anticipo oficial es 50 %. El Playbook v0.1 decia "escalar hasta definir regla" (DATA_GAP #2), ya resuelto. El total sale de la cotizacion de Odoo ya hecha en la conversacion; el agente solo aplica el 50 % y no vuelve a consultar.
 - **T69** · ODOO: Playbook «Sí (precio)» → aplicado «mustNot». El audio pide precio pero no trae fecha ni personas: no hay consulta posible a Odoo; se responden parqueadero y check-in y se pide la fecha.
 - **T70** · ODOO: Playbook «Sí» → aplicado «mustNot». Idioma no soportado (DATA_GAP): se escala a humano en vez de consultar Odoo y responder en un idioma que el equipo aun no soporta.
+- **T81** · ESC: Playbook «Sí» → aplicado «no». POLITICA OFICIAL CEO 2026-10-03: ya existe politica de cancelacion de reservas directas (DATA_GAP #1 del Playbook resuelto); se responde con el texto oficial en vez de escalar.
 - **T83** · ESC: Playbook «No» → aplicado «yes». Las alternativas (Colonial/La Margarita) no se pueden consultar en Odoo (UNIT_ID_MAP solo Atheron Suite): sin cupo en Atheron Suite se escala a humano para revisar otras propiedades en vez de ofrecerlas sin verificar.
 - **T85** · ESC: Playbook «No» → aplicado «yes». Sin otra habitacion que alcance en Atheron Suite y sin consulta posible a otras propiedades, se escala a humano (el Playbook decia ESC=No porque suponia alternativas en Odoo).
 - **T87** · ODOO: Playbook «Sí (si sincronizado)» → aplicado «mustNot». Sin nombre ni fechas no se puede ubicar la reserva; ademas la sincronizacion OTA->Odoo es DATA_GAP #10. Se piden los datos y, si no aparece, escala.
@@ -50,7 +53,7 @@ Casos: 100 · PASS: 100 · FAIL: 0 · desviaciones documentadas respecto al Play
 | T20 | PASS | CONSULTA_DISPONIBILIDAD | no | sí | Entonces son 4 personas. ⏎ Para sábado 10 de octubre (1 noche), 4 pers. tengo: hab. 202 con baño compartido, $105.000 en total y hab. 203 con baño privado, $120.000 en total (precio por habitación). ⏎ ¿Cuál prefieres? |
 | T21 | PASS | CONSULTA_DISPONIBILIDAD | no | sí | Para sábado 10 de octubre (1 noche), 2 pers. tengo: hab. 302 con baño privado, $120.000 en total y hab. 203 con baño privado, $120.000 en total (precio por habitación). ⏎ ¿Cuál prefieres? |
 | T22 | PASS | CANCELA_CONSULTA | no | no | Claro, sin problema. Si cambias de idea, aquí estoy. |
-| T23 | PASS | CAMBIO_FECHAS | sí | no | Claro. ¿Para qué nueva fecha sería? Lo valido con el equipo. |
+| T23 | PASS | CAMBIO_FECHAS | no | no | Cancelación o cambio hasta 48 horas antes del check-in: no hay devolución en efectivo; el valor pagado queda como saldo a favor 6 meses para una nueva reserva en Hoteles Atheron. ⏎ Queda sujeto a disponibilidad y a la tarifa vigente de las nuevas fechas; si es superior, pagas la diferencia. ⏎ ¿Para qué nueva fecha sería? |
 | T24 | PASS | PRESUPUESTO_LIMITADO | no | no | La más económica disponible es la hab. 201 con baño compartido, $105.000 en total. Cambia que el baño se comparte con una habitación vecina. |
 | T25 | PASS | CONSULTA_DISPONIBILIDAD | no | no | ¡Hola! Para 3 personas sirven la 302 (hasta 3) o la 202 (hasta 4), según disponibilidad. ⏎ ¿Para qué fecha? |
 | T26 | PASS | CONSULTA_DISPONIBILIDAD | no | no | ¡Hola! ¿Qué edades tienen los niños y para qué fecha? |
@@ -74,7 +77,7 @@ Casos: 100 · PASS: 100 · FAIL: 0 · desviaciones documentadas respecto al Play
 | T44 | PASS | CONSULTA_DISPONIBILIDAD | no | no | ¿Desde qué fecha empiezas y cuántas personas son? |
 | T45 | PASS | DESCUENTO | sí | no | Déjame consultar si hay margen para esas fechas y te cuento. |
 | T46 | PASS | CONSULTA_DISPONIBILIDAD | no | sí | Del sábado 10 de octubre al martes 13 de octubre (3 noches), 2 pers. tengo: hab. 201 con baño compartido, $105.000 en total y hab. 302 con baño privado, $120.000 en total (precio por habitación). ⏎ ¿Cuál prefieres? |
-| T47 | PASS | CAMBIO_FECHAS | sí | sí | Reviso el cupo para el domingo 4 de octubre y lo confirmo con el equipo. |
+| T47 | PASS | CAMBIO_FECHAS | no | sí | Cancelación o cambio hasta 48 horas antes del check-in: no hay devolución en efectivo; el valor pagado queda como saldo a favor 6 meses para una nueva reserva en Hoteles Atheron. ⏎ Queda sujeto a disponibilidad y a la tarifa vigente de las nuevas fechas; si es superior, pagas la diferencia. ⏎ Para el domingo 4 de octubre reviso el cupo. |
 | T48 | PASS | EXTENSION | sí | sí | Reviso el cupo para esa noche más y lo confirmo con el equipo. |
 | T49 | PASS | CHECKOUT_TARDE | sí | no | En Atheron Suite el check-out es hasta las 11:00. Consulto con el equipo si se puede salir más tarde. |
 | T50 | PASS | CHECKIN_TEMPRANO | sí | no | En Atheron Suite el check-in es desde las 15:00. Consulto con el equipo si se puede ingresar antes. |
@@ -95,7 +98,7 @@ Casos: 100 · PASS: 100 · FAIL: 0 · desviaciones documentadas respecto al Play
 | T65 | PASS | CONSULTA_DISPONIBILIDAD | no | no | ¡Hola! Perfecto. ¿Me confirmas fecha de llegada, fecha de salida y número de huéspedes? |
 | T66 | PASS | CONSULTA_DISPONIBILIDAD | no | no | ¡Hola! ¿Me completas así? Ej.: llegada 10 oct, salida 11 oct, 2 huéspedes. |
 | T67 | PASS | CONSULTA_DISPONIBILIDAD | no | sí | ¡Hola! Entendí: 2 personas, sábado 3 de octubre. ⏎ Para sábado 3 de octubre (1 noche), 2 pers. tengo: hab. 201 con baño compartido, $105.000 en total y hab. 302 con baño privado, $120.000 en total (precio por habitación). ⏎ ¿Cuál prefieres? |
-| T68 | PASS | AUDIO_ILEGIBLE | no | no | ¡Hola! No alcancé a escuchar bien. ¿Me escribes la fecha y cuántas personas son? |
+| T68 | PASS | AUDIO_ILEGIBLE | sí | no | ¡Hola! No alcancé a escuchar bien. ¿Me escribes la fecha y cuántas personas son? |
 | T69 | PASS | PARQUEADERO | no | no | En Atheron Suite no tenemos parqueadero propio, pero hay un parqueadero aliado a unas 2 cuadras y media (≈ $15.000 la noche el carro; la moto sin costo, sujeta a cupo). ⏎ En Atheron Suite el check-in es desde las 15:00. ⏎ ¿Para qué fecha y cuántas personas? Así te doy el precio exacto. |
 | T70 | PASS | CONSULTA_DISPONIBILIDAD | sí | no | Thanks for your message! A team member will help you shortly. / Gracias, una persona del equipo te ayudará en breve. |
 | T71 | PASS | LLEGADA_INMINENTE | sí | no | Aviso ya a recepción, en un momento te abren. |
@@ -108,7 +111,7 @@ Casos: 100 · PASS: 100 · FAIL: 0 · desviaciones documentadas respecto al Play
 | T78 | PASS | LLAMADA | sí | no | ¡Hola! Listo, aviso a una persona del equipo para que te llame a este número. |
 | T79 | PASS | PREGUNTA_PROPIEDAD | sí | no | El desayuno no lo tengo confirmado; lo consulto con el equipo y te cuento. |
 | T80 | PASS | NINOS | sí | no | La tarifa de niños no la tengo confirmada; la consulto con administración y te cuento. |
-| T81 | PASS | CANCELACION | sí | no | Esa política no la tengo confirmada por aquí; la consulto con el equipo y te cuento. |
+| T81 | PASS | CANCELACION | no | no | Cancelación o cambio hasta 48 horas antes del check-in: no hay devolución en efectivo; el valor pagado queda como saldo a favor 6 meses para una nueva reserva en Hoteles Atheron. ⏎ Queda sujeto a disponibilidad y a la tarifa vigente de las nuevas fechas; si es superior, pagas la diferencia. ⏎ Menos de 48 h, no-show y casos excepcionales los revisa una persona; las reservas por Booking/Airbnb se rigen primero por la plataforma. |
 | T82 | PASS | FACTURA | sí | no | Sí manejamos facturación electrónica. Te paso con una persona del equipo para tomar tus datos fiscales. |
 | T83 | PASS | CONSULTA_DISPONIBILIDAD | sí | sí | Para domingo 4 de octubre (1 noche) no tengo cupo en Atheron Suite para 2 personas. ⏎ Déjame revisar con el equipo otras opciones en nuestras propiedades. |
 | T84 | PASS | GRUPO | sí | sí | Para sábado 31 de octubre (1 noche) no tengo cupo en Atheron Suite para 8 personas. Paso tu caso con el equipo para revisar otras opciones y lista de espera. |
@@ -116,7 +119,7 @@ Casos: 100 · PASS: 100 · FAIL: 0 · desviaciones documentadas respecto al Play
 | T86 | PASS | LISTA_ESPERA | sí | no | Dejo tu interés anotado y te aviso si se libera; no te lo puedo asegurar. |
 | T87 | PASS | CONFIRMAR_RESERVA_OTA | no | no | ¡Hola! Claro. ¿A nombre de quién está la reserva y para qué fechas? La ubico. |
 | T88 | PASS | CHECKIN | no | no | En Atheron Suite el check-in es desde las 15:00. |
-| T89 | PASS | CANCELACION | sí | no | Entiendo. Paso tu caso con una persona del equipo para ayudarte; por aquí no puedo prometerte condiciones de cancelación. |
+| T89 | PASS | CANCELACION | sí | no | Entiendo. Tu reserva por plataforma se rige primero por las condiciones de esa plataforma; paso tu caso con una persona del equipo. |
 | T90 | PASS | LLEGADA_TARDE | sí | no | Anotado: llegas hacia las 23:00. Lo confirmo con recepción. |
 | T91 | PASS | LLEGADA_TARDE | sí | no | Anotado: llegas hacia las 20:00. Lo confirmo con recepción. |
 | T92 | PASS | ALIADO_CONSULTA | sí | no | (silencio) |

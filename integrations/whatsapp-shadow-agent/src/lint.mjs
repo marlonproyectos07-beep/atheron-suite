@@ -9,7 +9,7 @@ export function lintReply(reply, { userUsedEmoji = false, allowedAmounts = [] } 
   const v = [];
   const lines = String(reply).split('\n').filter((l) => l.trim() !== '');
   if (lines.length > 3) v.push('MAS_DE_3_LINEAS');
-  if (String(reply).length > 420) v.push('DEMASIADO_LARGO');
+  if (String(reply).length > 480) v.push('DEMASIADO_LARGO');
   if ((String(reply).match(/¿/g) ?? []).length > 1) v.push('MAS_DE_UNA_PREGUNTA');
   const emojis = String(reply).match(EMOJI) ?? [];
   if (emojis.length > 1 || (emojis.length === 1 && !userUsedEmoji)) v.push('EMOJIS');

@@ -6,9 +6,11 @@
 
 ## 1. Estado en una línea
 
-**PARCIAL.** El agente SHADOW existe, ejecuta los 100 casos del Playbook (100/100) y los 12 requisitos del CEO,
-pero **faltan 3 cosas que no puedo cerrar desde aquí** (ver §9): los 12 casos CEO *originales*, el texto exacto de la
-política de cancelación y el cambio 30 % → 50 % en Odoo STAGING. Por eso **no** se declara `ATHERON_WHATSAPP_SHADOW_DONE`.
+**CERRADO EN SHADOW, validación Odoo real PENDIENTE.** Ver `ATH-WHATSAPP-AGENT-001_CIERRE.md` (decisiones de Control
+Maestro 2026-10-03: `CEO_CASES_V1.md` canónico, política de cancelación oficial, anticipo 50 %).
+`ODOO_STAGING_LIVE_VALIDATION=PENDING_EXTERNAL_AUTHENTICATED_TEST` · `WHATSAPP_AUTOMATION_MODE=shadow`.
+
+*(Las secciones 6 y 9 de abajo son del turno anterior; lo vigente es el documento de cierre.)*
 
 ## 2. Qué es (y qué no es)
 

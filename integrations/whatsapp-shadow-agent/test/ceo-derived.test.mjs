@@ -116,27 +116,23 @@ test('CEO-D05 descuento -> humano, sin inventar ningun porcentaje ni valor', asy
   }
 });
 
-test('CEO-D06 cancelacion: siempre humano; la pista "48 h / saldo 6 meses" va SOLO al humano y marcada SIN CONFIRMAR', async () => {
-  for (const text of ['Necesito cancelar mi reserva', 'No pude llegar', '¿Cuál es la política de cancelación?', 'Quiero que me devuelvan mi plata']) {
+test('CEO-D06 cancelacion: politica oficial >=48 h explica; <48 h, no-show, OTA y sin datos verificables -> humano', async () => {
+  assert.equal(POLICY.cancellation.cash_refund, false);
+  assert.equal(POLICY.cancellation.credit_months, 6);
+  assert.equal(POLICY.cancellation.notice_hours, 48);
+  for (const text of ['Necesito cancelar mi reserva', 'No pude llegar', 'Quiero que me devuelvan mi plata']) {
     const ctx = mk();
     const d = await say(ctx, text);
     assert.equal(d.escalate, true, text);
-    assert.ok(!/48|6 meses|seis meses|saldo a favor|reembolso (total|completo)/i.test(d.reply), `${text}: no promete condiciones`);
+    assert.ok(!/saldo a favor|6 meses/.test(d.reply ?? ''), `${text}: sin reserva verificable no se promete nada`);
   }
-  const ctx = mk();
-  const d = await say(ctx, 'Necesito cancelar mi reserva');
-  assert.match(d.escalation.note, /48 h/);
-  assert.match(d.escalation.note, /6 meses/);
-  assert.match(d.escalation.note, /SIN CONFIRMAR/);
-  assert.match(d.escalation.note, /no decirla al huésped/);
-  assert.equal(POLICY.cancellation.guest_facing, false);
-});
+}); 
 
 test('CEO-D07 clasificacion B2B (aliados): etiqueta, escala y NO responde como huesped', async () => {
   for (const text of ['Consulta de disponibilidad para un cliente', 'Cuadremos cuentas de septiembre', 'Tengo un cliente para el sábado', 'Liquidación de comisiones de octubre']) {
     const ctx = mk();
     const d = await say(ctx, text);
-    assert.equal(d.line, 'B2B_ALLY', text);
+    assert.equal(d.line, 'ALLY_B2B', text);
     assert.ok(d.labels.includes('B2B_ALIADO'));
     assert.equal(d.reply, null);
     assert.equal(d.escalate, true);

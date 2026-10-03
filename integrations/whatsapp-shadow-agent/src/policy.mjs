@@ -17,11 +17,18 @@ export const POLICY = Object.freeze({
   languages_supported: Object.freeze(['es']),
   default_property: 'AS', // la linea de WhatsApp es la de Hotel Atheron Suite (Playbook s5.1, T02)
   /**
-   * Cancelacion: SIEMPRE humano. El resumen del CEO menciona "48 h / saldo
-   * 6 meses" pero el texto exacto de la politica no esta en el repo: se
-   * pasa al humano como pista SIN CONFIRMAR y nunca se le afirma al huesped.
+   * Cancelacion de reservas DIRECTAS: politica oficial (AI/whatsapp/CEO_CASES_V1.md).
+   * >= 48 h antes del check-in: se explica; < 48 h, no-show, OTA o sin datos verificables: humano.
    */
-  cancellation: Object.freeze({ guest_facing: false, human_hint: Object.freeze({ notice_hours: 48, credit_months: 6, status: 'UNCONFIRMED_TEXT' }) }),
+  cancellation: Object.freeze({
+    source: 'CEO_CASES_V1 (Control Maestro 2026-10-03)',
+    notice_hours: 48, // "hasta 48 horas antes del check-in": politica; menos de 48 h = humano
+    credit_months: 6,
+    cash_refund: false,
+    ota_first: true, // Booking/Airbnb/OTA: rigen primero las condiciones de la plataforma
+  }),
+  automation_mode: 'shadow', // WHATSAPP_AUTOMATION_MODE
+  odoo_staging_live_validation: 'PENDING_EXTERNAL_AUTHENTICATED_TEST',
   human_hours_observed: '08:00-22:00', // DATA_GAP #17: solo observado, no oficial
 });
 

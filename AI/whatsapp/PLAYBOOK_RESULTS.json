@@ -4,15 +4,22 @@
     "total": 100,
     "pass": 100,
     "fail": 0,
-    "deviations_from_playbook": 18
+    "deviations_from_playbook": 21
   },
   "deviations": [
+    {
+      "id": "T23",
+      "field": "ESC",
+      "playbook": "Sí",
+      "applied": "no",
+      "reason": "POLITICA OFICIAL CEO 2026-10-03 (CEO-03): reserva directa con mas de 48 h al check-in se explica (saldo a favor 6 meses, sujeto a disponibilidad/tarifa vigente) y no se escala; el Playbook decia ESC=Si. Sin nueva fecha no se consulta Odoo."
+    },
     {
       "id": "T23",
       "field": "ODOO",
       "playbook": "Sí (ver cupo)",
       "applied": "mustNot",
-      "reason": "El cliente aun no dio la nueva fecha: sin fecha no se consulta cupo; se pide la fecha y se escala (el Playbook marca ODOO=Si cuando ya hay fecha)."
+      "reason": "POLITICA OFICIAL CEO 2026-10-03 (CEO-03): reserva directa con mas de 48 h al check-in se explica (saldo a favor 6 meses, sujeto a disponibilidad/tarifa vigente) y no se escala; el Playbook decia ESC=Si. Sin nueva fecha no se consulta Odoo."
     },
     {
       "id": "T25",
@@ -71,6 +78,13 @@
       "reason": "Casa Neusa no esta mapeada en Odoo (UNIT_ID_MAP solo cubre Atheron Suite): no hay consulta posible, DATA_GAP + humano."
     },
     {
+      "id": "T47",
+      "field": "ESC",
+      "playbook": "Sí",
+      "applied": "no",
+      "reason": "POLITICA OFICIAL CEO 2026-10-03 (CEO-03): cambio de reserva directa con mas de 48 h = se explica la politica y se revisa cupo; el Playbook decia ESC=Si."
+    },
+    {
       "id": "T57",
       "field": "ESC",
       "playbook": "Sí hasta definir regla",
@@ -97,6 +111,13 @@
       "playbook": "Sí",
       "applied": "mustNot",
       "reason": "Idioma no soportado (DATA_GAP): se escala a humano en vez de consultar Odoo y responder en un idioma que el equipo aun no soporta."
+    },
+    {
+      "id": "T81",
+      "field": "ESC",
+      "playbook": "Sí",
+      "applied": "no",
+      "reason": "POLITICA OFICIAL CEO 2026-10-03: ya existe politica de cancelacion de reservas directas (DATA_GAP #1 del Playbook resuelto); se responde con el texto oficial en vez de escalar."
     },
     {
       "id": "T83",
@@ -406,17 +427,23 @@
       "failures": [],
       "deviations": [
         {
+          "field": "ESC",
+          "playbook": "Sí",
+          "applied": "no",
+          "reason": "POLITICA OFICIAL CEO 2026-10-03 (CEO-03): reserva directa con mas de 48 h al check-in se explica (saldo a favor 6 meses, sujeto a disponibilidad/tarifa vigente) y no se escala; el Playbook decia ESC=Si. Sin nueva fecha no se consulta Odoo."
+        },
+        {
           "field": "ODOO",
           "playbook": "Sí (ver cupo)",
           "applied": "mustNot",
-          "reason": "El cliente aun no dio la nueva fecha: sin fecha no se consulta cupo; se pide la fecha y se escala (el Playbook marca ODOO=Si cuando ya hay fecha)."
+          "reason": "POLITICA OFICIAL CEO 2026-10-03 (CEO-03): reserva directa con mas de 48 h al check-in se explica (saldo a favor 6 meses, sujeto a disponibilidad/tarifa vigente) y no se escala; el Playbook decia ESC=Si. Sin nueva fecha no se consulta Odoo."
         }
       ],
       "intent": "CAMBIO_FECHAS",
-      "escalated": true,
-      "escalation_reason": "CAMBIO_DE_FECHAS_RESERVA_PAGADA",
+      "escalated": false,
+      "escalation_reason": null,
       "odoo_called": false,
-      "reply": "Claro. ¿Para qué nueva fecha sería? Lo valido con el equipo."
+      "reply": "Cancelación o cambio hasta 48 horas antes del check-in: no hay devolución en efectivo; el valor pagado queda como saldo a favor 6 meses para una nueva reserva en Hoteles Atheron.\nQueda sujeto a disponibilidad y a la tarifa vigente de las nuevas fechas; si es superior, pagas la diferencia.\n¿Para qué nueva fecha sería?"
     },
     {
       "id": "T24",
@@ -755,12 +782,19 @@
       "section": "12.8 Cambio de fechas / extensión (T47–T50)",
       "pass": true,
       "failures": [],
-      "deviations": [],
+      "deviations": [
+        {
+          "field": "ESC",
+          "playbook": "Sí",
+          "applied": "no",
+          "reason": "POLITICA OFICIAL CEO 2026-10-03 (CEO-03): cambio de reserva directa con mas de 48 h = se explica la politica y se revisa cupo; el Playbook decia ESC=Si."
+        }
+      ],
       "intent": "CAMBIO_FECHAS",
-      "escalated": true,
-      "escalation_reason": "CAMBIO_DE_FECHAS_RESERVA_PAGADA",
+      "escalated": false,
+      "escalation_reason": null,
       "odoo_called": true,
-      "reply": "Reviso el cupo para el domingo 4 de octubre y lo confirmo con el equipo."
+      "reply": "Cancelación o cambio hasta 48 horas antes del check-in: no hay devolución en efectivo; el valor pagado queda como saldo a favor 6 meses para una nueva reserva en Hoteles Atheron.\nQueda sujeto a disponibilidad y a la tarifa vigente de las nuevas fechas; si es superior, pagas la diferencia.\nPara el domingo 4 de octubre reviso el cupo."
     },
     {
       "id": "T48",
@@ -1022,8 +1056,8 @@
       "failures": [],
       "deviations": [],
       "intent": "AUDIO_ILEGIBLE",
-      "escalated": false,
-      "escalation_reason": null,
+      "escalated": true,
+      "escalation_reason": "CONFIANZA_INSUFICIENTE_AUDIO",
       "odoo_called": false,
       "reply": "¡Hola! No alcancé a escuchar bien. ¿Me escribes la fecha y cuántas personas son?"
     },
@@ -1190,12 +1224,19 @@
       "section": "12.15 Dato desconocido (T79–T82)",
       "pass": true,
       "failures": [],
-      "deviations": [],
+      "deviations": [
+        {
+          "field": "ESC",
+          "playbook": "Sí",
+          "applied": "no",
+          "reason": "POLITICA OFICIAL CEO 2026-10-03: ya existe politica de cancelacion de reservas directas (DATA_GAP #1 del Playbook resuelto); se responde con el texto oficial en vez de escalar."
+        }
+      ],
       "intent": "CANCELACION",
-      "escalated": true,
-      "escalation_reason": "POLITICA_CANCELACION",
+      "escalated": false,
+      "escalation_reason": null,
       "odoo_called": false,
-      "reply": "Esa política no la tengo confirmada por aquí; la consulto con el equipo y te cuento."
+      "reply": "Cancelación o cambio hasta 48 horas antes del check-in: no hay devolución en efectivo; el valor pagado queda como saldo a favor 6 meses para una nueva reserva en Hoteles Atheron.\nQueda sujeto a disponibilidad y a la tarifa vigente de las nuevas fechas; si es superior, pagas la diferencia.\nMenos de 48 h, no-show y casos excepcionales los revisa una persona; las reservas por Booking/Airbnb se rigen primero por la plataforma."
     },
     {
       "id": "T82",
@@ -1326,7 +1367,7 @@
       "escalated": true,
       "escalation_reason": "CANCELACION_RESERVA_OTA",
       "odoo_called": false,
-      "reply": "Entiendo. Paso tu caso con una persona del equipo para ayudarte; por aquí no puedo prometerte condiciones de cancelación."
+      "reply": "Entiendo. Tu reserva por plataforma se rige primero por las condiciones de esa plataforma; paso tu caso con una persona del equipo."
     },
     {
       "id": "T90",

@@ -1,7 +1,7 @@
 /**
  * Regresion de generalizacion. Tasas de la PRIMERA corrida (antes de
- * corregir): HELD_OUT 23/30 (77 %), BLIND 8/15 (53 %), BLIND2 10/15 (67 %).
- * Tras corregir las causas generales, estos tres conjuntos pasan completos,
+ * corregir): HELD_OUT 23/30 (77 %), BLIND 8/15 (53 %), BLIND2 10/15 (67 %), BLIND3 9/15 (60 %).
+ * Tras corregir las causas generales, estos cuatro conjuntos pasan completos,
  * pero ya NO son ciegos: la medida independiente es la de la primera corrida.
  */
 import test from 'node:test';
@@ -14,6 +14,7 @@ import { norm } from '../src/nlu.mjs';
 import { HELD_OUT } from './generalization.mjs';
 import { BLIND } from './generalization-blind.mjs';
 import { BLIND as BLIND2 } from './generalization-blind2.mjs';
+import { BLIND as BLIND3 } from './generalization-blind3.mjs';
 
 async function run(h) {
   const fake = makeFakeOdoo();
@@ -21,7 +22,7 @@ async function run(h) {
   return { d, fake };
 }
 
-for (const h of [...HELD_OUT, ...BLIND, ...BLIND2]) {
+for (const h of [...HELD_OUT, ...BLIND, ...BLIND2, ...BLIND3]) {
   test(`generalizacion ${h.id}: ${h.text}`, async () => {
     const { d, fake } = await run(h);
     assert.ok(new Set([...d.intents, d.primary_intent]).has(h.intent), `intent ${h.intent} vs [${d.intents}]`);

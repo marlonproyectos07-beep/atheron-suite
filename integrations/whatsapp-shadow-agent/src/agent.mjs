@@ -10,10 +10,12 @@
  * Principio: LA IA CONVERSA, ODOO DECIDE, EL HUMANO VALIDA EL DINERO.
  */
 import { POLICY, PROPERTIES, AS_ROOMS } from './policy.mjs';
-import { norm, detectIntents, extractDates, extractPersons, extractProperty, extractMisc, detectLanguage, fmtDate, addDays } from './nlu.mjs';
+import { norm, residualWords, STAY_CUE, detectIntents, extractDates, extractPersons, extractProperty, extractMisc, detectLanguage, fmtDate, addDays } from './nlu.mjs';
 import { depositFor, reconcileWithOdoo } from './deposit.mjs';
 import { evaluateGroup, scenarioFor, GROUP_STATUS } from './groups.mjs';
 import { ShadowViolation } from './odoo-port.mjs';
+
+const BRAND = 'Hoteles Atheron'; // el texto oficial dice "Hoteles Atero" (probable errata, pendiente de confirmar)
 
 export const FACT_AMOUNTS = Object.freeze([15000, 20000, 10000]); // cifras de las fichas verificadas (parqueaderos, hora extra)
 
@@ -65,6 +67,7 @@ function newDecision(session) {
 }
 
 function escalate(d, reason, { urgency = 'NORMAL', note = null } = {}) {
+  if (reason === 'VALIDAR_COMPROBANTE') d.flags.push('PAYMENT_VALIDATION_REQUIRED'); // nunca se confirma una reserva sin validacion humana
   d.escalate = true;
   d.escalation = { reason, urgency, note };
 }
@@ -122,6 +125,12 @@ function mergeMemory(session, d, text, entities) {
     m.checkOut = addDays(m.checkIn, dates.nights);
     m.nights_assumed = false;
     m.nights_explicit = true;
+  }
+  if (changes.length && (session.lastQuote || session.lastOptions.length)) {
+    // Cambio de personas/fechas/noches: la cotizacion anterior deja de ser valida
+    session.lastQuote = null;
+    session.lastOptions = [];
+    d.flags.push('COTIZACION_ANTERIOR_INVALIDADA');
   }
   return changes;
 }
@@ -349,7 +358,7 @@ export async function processMessage(session, message, deps) {
     if (low) {
       addIntent(d, 'AUDIO_ILEGIBLE');
       d.primary_intent = 'AUDIO_ILEGIBLE';
-      if (session.audioFailures >= 1) escalate(d, 'AUDIO_ILEGIBLE_REPETIDO');
+      escalate(d, session.audioFailures >= 1 ? 'AUDIO_ILEGIBLE_REPETIDO' : 'CONFIANZA_INSUFICIENTE_AUDIO');
       session.audioFailures += 1;
       d.reply = 'No alcancé a escuchar bien. ¿Me escribes la fecha y cuántas personas son?';
       return finish(session, d, message);
@@ -379,8 +388,8 @@ export async function processMessage(session, message, deps) {
 
   // ---- B2B / otra linea de negocio: no es un huesped ---------------------------
   if (intents.includes('ALIADO_CONSULTA') || intents.includes('ALIADO_LIQUIDACION')) {
-    d.line = 'B2B_ALLY';
-    d.labels.push('B2B_ALIADO');
+    d.line = 'ALLY_B2B';
+    d.labels.push('ALLY_B2B', 'B2B_ALIADO');
     d.primary_intent = intents.includes('ALIADO_LIQUIDACION') ? 'ALIADO_LIQUIDACION' : 'ALIADO_CONSULTA';
     escalate(d, 'TRAFICO_B2B_ALIADO', { note: 'No responder como huésped' });
     d.reply = null; // el agente de huespedes no responde trafico B2B
@@ -476,18 +485,41 @@ export async function processMessage(session, message, deps) {
   }
 
   // ---- cancelacion y politicas ----------------------------------------------------------------------
-  if (intents.includes('POLITICA_CANCELACION')) {
+  const sayExisting0 = /\b(mi reserva|tengo (una )?reserva|ya tengo (mi )?reserva|reserve (por|en|con|a traves de)|hice (una |mi )?reserva|reservamos (por|en|con)|mi reservacion)\b/.test(n);
+  if (sayExisting0 && !session.reservation) {
+    session.reservation = { property: m.property ?? POLICY.default_property, source: entities.misc.ota ? (/airbnb/.test(n) ? 'AIRBNB' : 'BOOKING') : 'DIRECT', has_payment: null, declared_by_guest: true };
+    d.flags.push('RESERVA_EXISTENTE_DECLARADA_SIN_VERIFICAR');
+  }
+  if (intents.includes('POLITICA_CANCELACION') && !session.reservation) {
     d.primary_intent = 'CANCELACION';
-    addIntent(d, 'CANCELACION');
-    d.data_gaps.push('DATA_GAP:politica_cancelacion_no_publicada');
-    escalate(d, 'POLITICA_CANCELACION', { note: policyHint() });
-    d.reply = 'Esa política no la tengo confirmada por aquí; la consulto con el equipo y te cuento.';
+    addIntent(d, 'CANCELACION', 'POLITICA_CANCELACION');
+    d.flags.push('POLITICA_CANCELACION_OFICIAL');
+    d.reply = `${policyLines(false)}\nMenos de 48 h, no-show y casos excepcionales los revisa una persona; las reservas por Booking/Airbnb se rigen primero por la plataforma.`;
     return finish(session, d, message);
   }
-  if (intents.includes('CANCELACION') || intents.includes('NO_SHOW')) {
-    d.primary_intent = intents.includes('NO_SHOW') ? 'NO_SHOW' : 'CANCELACION';
-    escalate(d, session.reservation?.source && session.reservation.source !== 'DIRECT' ? 'CANCELACION_RESERVA_OTA' : 'CANCELACION', { urgency: 'ALTA', note: policyHint() });
-    d.reply = 'Entiendo. Paso tu caso con una persona del equipo para ayudarte; por aquí no puedo prometerte condiciones de cancelación.';
+  if (intents.includes('CANCELACION') || intents.includes('NO_SHOW') || intents.includes('POLITICA_CANCELACION') || (intents.includes('CAMBIO_FECHAS') && session.reservation)) {
+    const cx = cancellationDecision(session, intents);
+    d.primary_intent = intents.includes('NO_SHOW') ? 'NO_SHOW' : intents.includes('CANCELACION') || intents.includes('POLITICA_CANCELACION') ? 'CANCELACION' : 'CAMBIO_FECHAS';
+    addIntent(d, d.primary_intent);
+    d.flags.push(`CANCELACION_DECISION:${cx.mode}:${cx.reason}`);
+    if (cx.mode === 'POLICY') {
+      // >= 48 h, reserva directa: se explica la politica oficial. Nada se ejecuta ni se promete mas alla del texto oficial.
+      let tail = '';
+      const dt = entities.dates;
+      if (dt.checkIn && !dt.tentative && session.reservation) {
+        const nights = session.reservation.nights ?? 1;
+        await consultOdoo(session, d, deps, { checkIn: dt.checkIn, checkOut: addDays(dt.checkIn, nights), guests: m.guests ?? session.reservation.guests ?? 2, purpose: 'cambio_fechas' });
+        tail = `\nPara el ${fmtDate(dt.checkIn)} reviso el cupo.`;
+      }
+      d.flags.push('SEGUIMIENTO_HUMANO_PARA_EJECUTAR');
+      if (!tail && (intents.includes('CAMBIO_FECHAS') || /cambi/.test(n))) tail = '\n¿Para qué nueva fecha sería?';
+      d.reply = `${policyLines(true)}${tail}`;
+      return finish(session, d, message);
+    }
+    escalate(d, cx.reason, { urgency: 'ALTA', note: cx.note });
+    d.reply = cx.mode === 'HUMAN_OTA'
+      ? 'Entiendo. Tu reserva por plataforma se rige primero por las condiciones de esa plataforma; paso tu caso con una persona del equipo.'
+      : 'Entiendo. Paso tu caso con una persona del equipo para revisarlo; por aquí no decido devoluciones ni penalidades.';
     return finish(session, d, message);
   }
 
@@ -516,9 +548,9 @@ export async function processMessage(session, message, deps) {
     d.reply = res?.status === 'OK' ? 'Reviso el cupo para esa noche más y lo confirmo con el equipo.' : 'Reviso el cupo para esa noche más con el equipo y te confirmo.';
     return finish(session, d, message);
   }
-  if (intents.includes('CAMBIO_FECHAS') && (paidRes || session.reservation)) {
+  if (false && intents.includes('CAMBIO_FECHAS') && (paidRes || session.reservation)) {
     d.primary_intent = 'CAMBIO_FECHAS';
-    escalate(d, 'CAMBIO_DE_FECHAS_RESERVA_PAGADA', { urgency: 'ALTA', note: policyHint() });
+    escalate(d, 'CAMBIO_DE_FECHAS_RESERVA_PAGADA');
     if (entities.dates.checkIn && !entities.dates.tentative) {
       const ci = entities.dates.checkIn;
       const nights = session.reservation.nights ?? 1;
@@ -548,6 +580,15 @@ export async function processMessage(session, message, deps) {
   }
 
   // ---- grupos grandes ----------------------------------------------------------------------------------------
+  if (!guests && (m.rooms ?? 0) >= 6) {
+    d.primary_intent = 'GRUPO';
+    addIntent(d, 'GRUPO', 'CONSULTA_DISPONIBILIDAD');
+    d.flags.push('GRUPO_POR_HABITACIONES');
+    d.data_gaps.push('CAPACIDAD_MULTIPROPIEDAD_NO_VERIFICADA_EN_ODOO');
+    escalate(d, 'COTIZACION_DE_GRUPO');
+    d.reply = `Para ${m.rooms} habitaciones armamos una cotización a la medida. Paso tu caso con una persona del equipo.${missingFor(session).includes('fecha') ? ' ¿Para qué fechas sería?' : ''}`;
+    return finish(session, d, message);
+  }
   const group = evaluateGroup(guests);
   d.group = group;
   if (group.status !== GROUP_STATUS.NONE) {
@@ -559,6 +600,7 @@ export async function processMessage(session, message, deps) {
       d.flags.push('STRATEGIC_GROUP_LEAD');
     }
     d.data_gaps.push(...group.data_gaps);
+    if (group.status !== GROUP_STATUS.SMALL_GROUP) d.flags.push('GROUP_PRICING_APPROVAL');
     escalate(d, group.status === GROUP_STATUS.STRATEGIC_GROUP_LEAD ? 'STRATEGIC_GROUP_LEAD' : 'COTIZACION_DE_GRUPO', { urgency: group.status === GROUP_STATUS.STRATEGIC_GROUP_LEAD ? 'ALTA' : 'NORMAL' });
     const miss = missingFor(session).includes('fecha') ? ' ¿Para qué fechas sería?' : '';
     if (group.status === GROUP_STATUS.STRATEGIC_GROUP_LEAD || group.status === GROUP_STATUS.PARTIAL_CAPACITY) {
@@ -571,6 +613,11 @@ export async function processMessage(session, message, deps) {
     if (groupTarget !== 'AS') {
       d.data_gaps.push(`PARTIAL_CAPACITY:${groupTarget}_no_mapeada_en_odoo`);
       d.flags.push('ODOO_PROPERTY_NOT_MAPPED');
+    }
+    if ((group.status === GROUP_STATUS.STRATEGIC_GROUP_LEAD || group.status === GROUP_STATUS.PARTIAL_CAPACITY) && m.checkIn && !m.dates_tentative) {
+      // capacidad VERIFICADA: solo Atheron Suite (casa completa, 22) y solo como insumo para el humano
+      await consultOdoo(session, d, deps, { checkIn: m.checkIn, checkOut: m.checkOut, guests: group.verified_capacity.single_property_max, rooms: 1, purpose: 'capacidad_verificada_insumo_grupo' });
+      d.flags.push('CAPACIDAD_VERIFICADA_CONSULTADA_SOLO_ATHERON_SUITE');
     }
     if (group.status === GROUP_STATUS.SMALL_GROUP && groupTarget === 'AS' && m.checkIn && !m.dates_tentative) {
       const res = await consultOdoo(session, d, deps, { checkIn: m.checkIn, checkOut: m.checkOut, guests, rooms: 1, purpose: 'insumo_cotizacion_grupo' });
@@ -627,9 +674,24 @@ export async function processMessage(session, message, deps) {
   return commercialFlow({ session, d, deps, n, intents, entities, prop, changes, message, fromAudio, text });
 }
 
-function policyHint() {
-  const h = POLICY.cancellation.human_hint;
-  return `Pista SIN CONFIRMAR para el humano (no decirla al huésped): aviso ${h.notice_hours} h / saldo a favor ${h.credit_months} meses. Texto exacto de la política: pendiente de CEO.`;
+/** Politica oficial de cancelacion/cambio de reservas DIRECTAS (CEO_CASES_V1). */
+function policyLines(withFollowUp) {
+  const a = `Cancelación o cambio hasta 48 horas antes del check-in: no hay devolución en efectivo; el valor pagado queda como saldo a favor 6 meses para una nueva reserva en ${BRAND}.`;
+  const b = 'Queda sujeto a disponibilidad y a la tarifa vigente de las nuevas fechas; si es superior, pagas la diferencia.';
+  return withFollowUp ? `${a}\n${b}` : `${a}\n${b}`;
+}
+
+/** POLICY (explicar) | HUMAN_* (escalar). Nunca decide devoluciones ni penalidades. */
+function cancellationDecision(session, intents) {
+  const r = session.reservation;
+  if (intents.includes('NO_SHOW')) return { mode: 'HUMAN', reason: 'NO_SHOW', note: 'No-show: revisión humana (política oficial).' };
+  if (!r) return { mode: 'HUMAN', reason: 'CANCELACION_SIN_RESERVA_VERIFICABLE', note: 'No se pudo identificar la reserva.' };
+  if (r.source && r.source !== 'DIRECT') return { mode: 'HUMAN_OTA', reason: 'CANCELACION_RESERVA_OTA', note: 'OTA: rigen primero las condiciones de la plataforma.' };
+  const prop = PROPERTIES[r.property] ?? PROPERTIES[POLICY.default_property];
+  if (!r.checkIn || !prop.checkin) return { mode: 'HUMAN', reason: 'CANCELACION_SIN_FECHA_DE_CHECKIN_VERIFICADA', note: 'No hay check-in verificado para contar las 48 horas.' };
+  const hours = (new Date(`${r.checkIn}T${prop.checkin}:00-05:00`) - new Date(session.now)) / 3600000;
+  if (hours >= POLICY.cancellation.notice_hours) return { mode: 'POLICY', reason: `MAS_DE_48H(${Math.floor(hours)}h)` };
+  return { mode: 'HUMAN', reason: 'MENOS_DE_48H', note: `Faltan ${Math.max(Math.floor(hours), 0)} h para el check-in: revisión humana; no decidir devolución ni penalidad.` };
 }
 
 async function commercialFlow({ session, d, deps, n, intents, entities, prop, changes, fromAudio }) {
@@ -651,6 +713,16 @@ async function commercialFlow({ session, d, deps, n, intents, entities, prop, ch
   const askingVehicleAnswer = session.pending === 'vehicle' && entities.misc.vehicle && !intents.includes('PARQUEADERO');
   if (askingVehicleAnswer) wantsFaq.push('parking');
 
+  // Confianza: sin ninguna intencion y con varias palabras sin explicar, NO se interpreta ni se consulta Odoo.
+  if (intents.length === 0 && (dateEntities || personEntities) && !askingVehicleAnswer && !STAY_CUE.test(n) && residualWords(n).length > 1) {
+    d.flags.push('CONFIANZA_INSUFICIENTE', 'FALLBACK_A_HUMANO');
+    d.primary_intent = 'INTENCION_NO_ENTENDIDA';
+    addIntent(d, 'INTENCION_NO_ENTENDIDA');
+    escalate(d, 'CONFIANZA_INSUFICIENTE');
+    d.reply = 'Déjame revisar eso con una persona del equipo para responderte bien.';
+    return finish(session, d, null);
+  }
+
   // ---- saludo / cierre ----------------------------------------------------------------------
   if (intents.includes('CANCELA_CONSULTA')) {
     d.primary_intent = 'CANCELA_CONSULTA';
@@ -663,7 +735,8 @@ async function commercialFlow({ session, d, deps, n, intents, entities, prop, ch
     d.reply = session.lastQuote ? 'Con gusto. Si quieres te la separo con el anticipo.' : 'Con gusto. Aquí estoy para lo que necesites.';
     return finish(session, d, null);
   }
-  if (intents.includes('SALUDO') && intents.length === 1 && !dateEntities && !personEntities) {
+  const greetRest = residualWords(n.replace(/^(hola|ola|hey|buenas?( tardes| noches| dias)?|buenos dias)\b/, ''));
+  if (intents.includes('SALUDO') && intents.length === 1 && !dateEntities && !personEntities && greetRest.length <= 1) {
     d.primary_intent = 'SALUDO_SOLO';
     addIntent(d, 'SALUDO_SOLO');
     d.reply = 'Hola, ¿en qué te puedo ayudar?';
@@ -1013,7 +1086,8 @@ async function commercialFlow({ session, d, deps, n, intents, entities, prop, ch
   }
 
   if (d.odoo.calls.length && d.odoo.results.some((r) => r.status === 'NO_AVAILABILITY') && m.guests >= 7) escalate(d, 'SIN_CUPO_LISTA_DE_ESPERA');
-  if (parts.length === 0 && intents.length === 0 && !dateEntities && !personEntities && !entities.misc.vehicle && !entities.misc.budget) {
+  const substantive = intents.filter((i) => i !== 'SALUDO');
+  if (parts.length === 0 && substantive.length === 0 && !dateEntities && !personEntities && !entities.misc.vehicle && !entities.misc.budget) {
     // Nada reconocible: NUNCA se asume una consulta de disponibilidad. Se pasa a una persona con el texto tal cual.
     d.primary_intent = 'INTENCION_NO_ENTENDIDA';
     addIntent(d, 'INTENCION_NO_ENTENDIDA');
