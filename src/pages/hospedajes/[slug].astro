@@ -162,7 +162,14 @@ if (d.publicado) {
    Repetida a mano en cada ficha -sin @id- Google leia veintitres
    organizaciones llamadas "Atheron Suite" sin relacion entre si, y
    ninguna de ellas era la de /#organizacion. */
-fichaNegocio.parentOrganization = ORGANIZACION;
+/* En propiedades propias, Atheron es la organizacion matriz.
+   En alojamientos aliados, afirmar parentOrganization seria describir una
+   relacion societaria que no existe. La comercializacion ya se explica de
+   forma visible mediante avisoAliado, asi que el JSON-LD no debe inventar
+   propiedad o control corporativo. */
+if (!d.avisoAliado) {
+  fichaNegocio.parentOrganization = ORGANIZACION;
+}
 
 /* La ficha declara ademas donde esta dentro del sitio. Es lo que
    permite a un buscador enseñar "Inicio > Hospedajes > Casa Algarra"
