@@ -349,9 +349,9 @@ test('redactPII: telefonos, correos, documentos, cuentas, tarjetas, URLs y nombr
   for (const leak of ['310 555 1234', 'carlos@mail.com', '1.020.304.050', '12345678901234', 'Carlos', 'Perez', 'https://']) assert.ok(!r.text.includes(leak), `${leak} -> ${r.text}`);
   for (const keep of ['3 personas', '14 de noviembre', '$120.000']) assert.ok(r.text.includes(keep), `${keep} -> ${r.text}`);
   assert.equal(r.redacted, true);
-  assert.ok(r.redactions.telefono >= 1 && r.redactions.email === 1 && r.redactions.nombre === 1);
+  assert.ok(r.redactions.PHONE >= 1 && r.redactions.EMAIL === 1 && r.redactions.NAME === 1);
   assert.equal(redactPII('somos 2 para el 14 de noviembre').redacted, false);
-  assert.equal(redactPII(PHONE_57).text, '[TELEFONO]');
+  assert.equal(redactPII(PHONE_57).text, '[PHONE]');
 });
 
 test('privacidad: el proveedor solo recibe texto redactado y contexto sin datos personales; el historial tampoco guarda PII', async () => {
@@ -395,10 +395,10 @@ test('comparador RULES_ONLY vs HYBRID_MOCK: cero violaciones del piso, y el hibr
 test('benchmark de proveedores: mide los 7 indicadores con mocks y rechaza cualquier proveedor real (DISABLED)', async () => {
   const p = new OracleMock({ latencyMs: 1, usage: { input_tokens: 100, output_tokens: 20 }, name: 'oracle-mock' });
   const cases = BLIND_V3.slice(0, 12);
-  const b = await benchmarkProvider({ provider: p, cases, makeOdoo: () => makeFakeOdoo(), pricing: { input_per_mtok: 1, output_per_mtok: 2 }, privacyMode: 'redacted', hybridOptions: { timeoutMs: 100 } });
-  for (const k of ['FIRST_PASS_ACCURACY', 'HIGH_RISK_FAILS', 'LATENCY', 'TOKENS', 'ESTIMATED_COST_USD', 'SCHEMA_FAILURES', 'PRIVACY_MODE']) assert.ok(k in b, k);
-  assert.ok(b.LATENCY.calls > 0 && b.TOKENS.input > 0 && b.ESTIMATED_COST_USD > 0);
-  assert.equal(b.SCHEMA_FAILURES, 0);
+  const b = await benchmarkProvider({ provider: p, cases, makeOdoo: () => makeFakeOdoo(), pricing: { input_per_mtok: 1, output_per_mtok: 2, source: 'TARIFA_DE_PRUEBA_SOLO_TEST' }, privacyMode: 'redacted', hybridOptions: { timeoutMs: 100 } });
+  for (const k of ['ACCURACY', 'HIGH_RISK_FAILS', 'SCHEMA_VALIDITY', 'LOW_CONFIDENCE_RATE', 'FALSE_ESCALATION', 'LATENCY', 'INPUT_TOKENS', 'OUTPUT_TOKENS', 'ESTIMATED_COST', 'PRIVACY_REJECTIONS', 'PRIVACY_MODE']) assert.ok(k in b, k);
+  assert.ok(b.LATENCY.calls > 0 && b.INPUT_TOKENS > 0 && b.ESTIMATED_COST > 0);
+  assert.equal(b.SCHEMA_VALIDITY, 100);
   assert.equal(b.PRIVACY_MODE, 'redacted');
   const fakeReal = { name: 'openai', interpretMessage() {}, interpretConversation() {}, health() {} };
   await assert.rejects(() => benchmarkProvider({ provider: fakeReal, cases, makeOdoo: () => makeFakeOdoo() }), ProviderDisabledError);

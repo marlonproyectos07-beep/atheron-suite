@@ -71,3 +71,8 @@ El 1 HIGH_RISK de V3 es **A07, falso positivo conocido del detector** (riesgo re
 - El vocabulario sensible y la evidencia textual son regex de **veto/verificación** (dirección segura: ante la duda, más humano); siguen siendo reglas y habrá falsos vetos.
 - El pipeline ejecuta reglas e híbrido por mensaje: dobla las lecturas a Odoo (read-only). Aceptable en SHADOW; optimizable.
 - Un LLM real puede equivocarse de formas que los mocks no cubren; por eso el siguiente paso es SHADOW paralelo con proveedor autorizado y set ciego nuevo.
+
+## Privacidad v2 y preparación de benchmark (HYBRID-PRIVACY-002)
+
+- `redactPII()` v2 y **fallo cerrado**: ver [PRIVACIDAD_HYBRID.md](PRIVACIDAD_HYBRID.md). Un mensaje con PII sensible no llega a ningún proveedor y pasa a humano.
+- Corpus V4: [V4_CORPUS_SCHEMA.md](V4_CORPUS_SCHEMA.md). Benchmark: [PROVIDER_BENCHMARK_MATRIX.md](PROVIDER_BENCHMARK_MATRIX.md). Decisión: [PROVIDER_DECISION_MATRIX.md](PROVIDER_DECISION_MATRIX.md). Local: [LOCAL_OLLAMA_CONTRACT.md](LOCAL_OLLAMA_CONTRACT.md). Reporte dual: [DUAL_SHADOW_REPORT_FORMAT.md](DUAL_SHADOW_REPORT_FORMAT.md).

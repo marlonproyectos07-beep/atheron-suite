@@ -43,5 +43,7 @@ export async function runCaseBothModes(c, { makeOdoo, provider, hybridOptions = 
     fallbacks: hybrid.decisions.map((d) => d.hybrid?.fallback).filter(Boolean),
     escalation_floor_violation: rules.decisions.some((rd, i) => rd.escalate && !['INTENCION_NO_ENTENDIDA', 'CONFIANZA_INSUFICIENTE'].includes(rd.escalation?.reason) && !hybrid.decisions[i].escalate),
     hybrid_replies: hybrid.decisions.map((d) => d.reply),
+    hybrid_meta: hybrid.decisions.map((d) => d.hybrid ?? null),
+    hybrid_last_escalate: lastH.escalate,
   };
 }

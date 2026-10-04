@@ -10,7 +10,7 @@ import { processMessage, FACT_AMOUNTS } from '../agent.mjs';
 import { norm } from '../nlu.mjs';
 import { groupFlowFor } from '../groups.mjs';
 import { lintReply } from '../lint.mjs';
-import { redactPII } from './pii.mjs';
+import { privacyGate, scrubHistory } from './privacy.mjs';
 import { SCHEMA_VERSION, validateInterpretation } from './schema.mjs';
 import { assertProvider } from './provider.mjs';
 
@@ -56,6 +56,7 @@ function fallbackDecision(rulesD, code) {
   if (!d.escalate) d.escalation = { reason: `HYBRID_FALLBACK:${code}`, urgency: 'NORMAL', note: 'La comprension por LLM no fue utilizable; el caso pasa a una persona.' };
   d.escalate = true;
   d.flags.push(`HYBRID_FALLBACK:${code}`);
+  if (code === 'PRIVACY_BLOCKED') d.flags.push('EXTERNAL_PROVIDER_ALLOWED=false');
   d.hybrid = { mode: 'hybrid_shadow', used_llm: false, fallback: code, overrides: [] };
   return d;
 }
@@ -147,10 +148,18 @@ export async function processHybrid(session, message, deps, opts) {
     rulesD.hybrid = { mode: 'hybrid_shadow', used_llm: false, fallback: null, reason: 'NON_TEXT_MESSAGE', overrides: [] };
     return rulesD;
   }
-  const finish = (d, clone, extra) => { adopt(session, clone); d.hybrid = { mode: 'hybrid_shadow', schema_version: SCHEMA_VERSION, latency_ms: Date.now() - started, ...extra }; d.outbound = null; return d; };
+  const finish = (d, clone, extra) => { adopt(session, clone); d.hybrid = { mode: 'hybrid_shadow', schema_version: SCHEMA_VERSION, latency_ms: Date.now() - started, provider_called: false, external_provider_allowed: true, ...extra }; d.outbound = null; return d; };
 
-  const red = redactPII(text);
-  const guestTurns = session.history.filter((h) => h.role === 'guest' && h.text).slice(-5).map((h) => h.text);
+  // ---- privacidad: FALLO CERRADO antes de cualquier proveedor ---------------------------------------------------
+  const guestTexts = session.history.filter((h) => h.role === 'guest').map((h) => h.text ?? '');
+  const guestTurns = guestTexts.filter(Boolean).slice(-5);
+  const gate = privacyGate({ history: guestTexts.slice(-5), current: text });
+  if (!gate.external_provider_allowed) {
+    // el estado que se adopta es el de rulesClone: ahi se reescriben los turnos fragmentados (incluido el actual)
+    for (const f of gate.fragmented) scrubHistory(rulesClone, f.indexes.map((i) => i + Math.max(0, guestTexts.length - 5)), `[${f.type}]`);
+    return finish(fallbackDecision(rulesD, 'PRIVACY_BLOCKED'), rulesClone, { used_llm: false, fallback: 'PRIVACY_BLOCKED', external_provider_allowed: false, privacy_reasons: gate.reasons, overrides: [], redactions: gate.redactions });
+  }
+  const red = { text: gate.text, redactions: gate.redactions };
   let raw;
   try {
     const payload = { text: red.text, context: safeContext(session), schema_version: SCHEMA_VERSION };
@@ -159,18 +168,18 @@ export async function processHybrid(session, message, deps, opts) {
       : await withTimeout(provider.interpretMessage(payload), cfg.timeoutMs);
   } catch (e) {
     const code = e instanceof ProviderFailure ? e.code : 'PROVIDER_ERROR';
-    return finish(fallbackDecision(rulesD, code), rulesClone, { used_llm: false, fallback: code, overrides: [], redactions: red.redactions });
+    return finish(fallbackDecision(rulesD, code), rulesClone, { used_llm: false, provider_called: true, fallback: code, overrides: [], redactions: red.redactions });
   }
-  if (typeof raw === 'string' || raw == null) return finish(fallbackDecision(rulesD, 'MALFORMED_RESPONSE'), rulesClone, { used_llm: false, fallback: 'MALFORMED_RESPONSE', overrides: [], redactions: red.redactions });
+  if (typeof raw === 'string' || raw == null) return finish(fallbackDecision(rulesD, 'MALFORMED_RESPONSE'), rulesClone, { used_llm: false, provider_called: true, fallback: 'MALFORMED_RESPONSE', overrides: [], redactions: red.redactions });
   const v = validateInterpretation(raw);
-  if (!v.ok) return finish(fallbackDecision(rulesD, 'SCHEMA_INVALID'), rulesClone, { used_llm: false, fallback: 'SCHEMA_INVALID', schema_errors: v.errors, overrides: [], redactions: red.redactions });
+  if (!v.ok) return finish(fallbackDecision(rulesD, 'SCHEMA_INVALID'), rulesClone, { used_llm: false, provider_called: true, fallback: 'SCHEMA_INVALID', schema_errors: v.errors, overrides: [], redactions: red.redactions });
   const interp = v.value;
-  if (interp.confidence < cfg.minConfidence) return finish(fallbackDecision(rulesD, 'LOW_CONFIDENCE'), rulesClone, { used_llm: false, fallback: 'LOW_CONFIDENCE', confidence: interp.confidence, overrides: [], redactions: red.redactions });
+  if (interp.confidence < cfg.minConfidence) return finish(fallbackDecision(rulesD, 'LOW_CONFIDENCE'), rulesClone, { used_llm: false, provider_called: true, fallback: 'LOW_CONFIDENCE', confidence: interp.confidence, overrides: [], redactions: red.redactions });
 
   const hybridClone = structuredClone(session);
   const hybridD = await processMessage(hybridClone, message, deps, { interpretation: interp, resolveConfidence: session.lastEscalated ? Infinity : cfg.resolveConfidence });
   const { restore, patches } = enforce({ rulesD, hybridD, hybridClone, interp, textNorm: norm(text) });
-  const info = { used_llm: true, fallback: null, interpretation: { intent: interp.intent, confidence: interp.confidence }, understanding: hybridD.understanding ?? null, redactions: red.redactions };
+  const info = { used_llm: true, provider_called: true, fallback: null, interpretation: { intent: interp.intent, confidence: interp.confidence }, understanding: hybridD.understanding ?? null, redactions: red.redactions };
   if (restore.length) {
     const d = rulesD;
     d.flags.push('RULES_OVERRIDE');

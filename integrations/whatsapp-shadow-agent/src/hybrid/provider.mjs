@@ -21,6 +21,7 @@ export const REAL_PROVIDERS = Object.freeze({
   openai: Object.freeze({ enabled: false, reason: 'DISABLED_PENDING_CEO_AUTHORIZATION' }),
   anthropic: Object.freeze({ enabled: false, reason: 'DISABLED_PENDING_CEO_AUTHORIZATION' }),
   gemini: Object.freeze({ enabled: false, reason: 'DISABLED_PENDING_CEO_AUTHORIZATION' }),
+  local_ollama: Object.freeze({ enabled: false, reason: 'DISABLED_PENDING_CEO_AUTHORIZATION' }),
   other: Object.freeze({ enabled: false, reason: 'DISABLED_PENDING_CEO_AUTHORIZATION' }),
 });
 

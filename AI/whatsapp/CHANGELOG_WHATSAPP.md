@@ -24,3 +24,10 @@
 - `WHATSAPP_UNDERSTANDING_MODE=rules` por defecto; `hybrid_shadow` no se activa solo y exige proveedor inyectado.
 - El historial de sesión ahora guarda texto redactado (también en modo `rules`).
 - Sin proveedor real, sin claves, sin datos externos, sin outbound.
+
+## 2026-10-04 — HYBRID-PRIVACY-002: privacidad y preparación del benchmark real (sin proveedor)
+
+- `redactPII()` v2 (10 marcadores, ofuscación, fragmentos entre mensajes) y **fallo cerrado**: PII sensible → el proveedor no se llama y el caso pasa a humano.
+- Contrato y validador del corpus V4 (`CORPUS_REJECTED_FOR_PRIVACY` / inválido) con informe que nunca copia valores.
+- Harness de benchmark (10 indicadores; costo `DATA_GAP`), configuración de candidatos (todos DISABLED), contrato `LOCAL_OLLAMA`, modelo de decisión (HIGH_RISK > 0 nunca gana) y formato de reporte dual.
+- Métricas del benchmark renombradas (`ACCURACY`, `SCHEMA_VALIDITY`, …). Sin proveedor real, claves, gasto ni datos externos.

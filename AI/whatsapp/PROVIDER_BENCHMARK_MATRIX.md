@@ -1,41 +1,33 @@
 # Matriz de evaluación de proveedores de comprensión — VACÍA / LISTA
 
-Todos los proveedores reales están **DISABLED**. No hay claves, secretos, llamadas de red ni gasto.
-Esta matriz se llena **solo** tras autorización explícita de Control Maestro, ejecutando `benchmarkProvider()` (`src/hybrid/benchmark.mjs`) sobre los sets congelados.
-Los precios los aporta Control Maestro (USD por millón de tokens); aquí no se inventan.
+Todos los candidatos están **DISABLED**: `OPENAI`, `ANTHROPIC`, `GEMINI`, `LOCAL_OLLAMA`, `OTHER` (`src/hybrid/provider-config.mjs`). Sin claves, sin red, sin gasto.
+Se llena solo tras autorización explícita de Control Maestro, ejecutando `benchmarkProvider()` (`src/hybrid/benchmark.mjs`) sobre sets congelados (V4 cuando exista).
+**Costo = `DATA_GAP`** hasta que Control Maestro aporte una tarifa real **con su fuente**; sin fuente, el costo no se calcula. No se inventan precios.
 
-## Indicadores medidos por el contrato
+## Indicadores
 
 | Indicador | Definición |
 |---|---|
-| FIRST_PASS_ACCURACY | % de casos del set congelado (V3-100 / V2-50) que pasan en HYBRID_SHADOW, primera pasada |
-| HIGH_RISK_FAILS | casos con riesgo alto según las reglas fijadas (incluye falsos positivos conocidos: A07) |
-| LATENCY | media / p50 / p95 por llamada de interpretación |
-| TOKENS | entrada / salida acumulados |
-| ESTIMATED_COST | tokens × precio aportado |
-| SCHEMA_FAILURES | respuestas con esquema inválido o texto libre |
-| PRIVACY_MODE | `redacted` (redactPII) / `none` |
+| ACCURACY | % de casos que pasan en HYBRID_SHADOW, primera pasada |
+| HIGH_RISK_FAILS | casos con riesgo alto según las reglas fijadas |
+| SCHEMA_VALIDITY | % de llamadas al proveedor con respuesta que cumple el esquema |
+| LOW_CONFIDENCE_RATE | % de llamadas con confianza < 0.6 |
+| FALSE_ESCALATION | casos que debían resolverse sin humano y se escalaron (cantidad y tasa) |
+| LATENCY | media / p50 / p95 por llamada |
+| INPUT_TOKENS / OUTPUT_TOKENS | acumulados |
+| ESTIMATED_COST | tokens × tarifa aportada; `DATA_GAP` si no hay tarifa con fuente |
+| PRIVACY_REJECTIONS | mensajes que el fallo cerrado impidió enviar al proveedor |
 
 ## Matriz
 
-| Proveedor / modelo | Estado | FIRST_PASS | HIGH_RISK | Latencia p50/p95 | Tokens | Costo est. | Fallos de esquema | Privacidad |
-|---|---|---|---|---|---|---|---|---|
-| OpenAI — (modelo por definir) | DISABLED | — | — | — | — | — | — | — |
-| Anthropic — (modelo por definir) | DISABLED | — | — | — | — | — | — | — |
-| Gemini — (modelo por definir) | DISABLED | — | — | — | — | — | — | — |
-| Otros — (a definir) | DISABLED | — | — | — | — | — | — | — |
-| Mock oracle (referencia de plomería, no es un LLM) | TEST | ver `HYBRID_DUAL_RUN_MOCK.json` | | | | | | |
+| Candidato | Tipo | Estado | ACCURACY | HIGH_RISK | SCHEMA | LOW_CONF | FALSE_ESC | Latencia p50/p95 | Tokens in/out | Costo | Priv. rechazos |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| OPENAI | externo | DISABLED | — | — | — | — | — | — | — | DATA_GAP | — |
+| ANTHROPIC | externo | DISABLED | — | — | — | — | — | — | — | DATA_GAP | — |
+| GEMINI | externo | DISABLED | — | — | — | — | — | — | — | DATA_GAP | — |
+| LOCAL_OLLAMA | local | DISABLED | — | — | — | — | — | — | — | DATA_GAP (sin costo por token; falta costo de hardware) | — |
+| OTHER | externo | DISABLED | — | — | — | — | — | — | — | DATA_GAP | — |
 
-## Criterios cualitativos a completar (sin datos hasta autorizar)
+Cómo decidir: ver [PROVIDER_DECISION_MATRIX.md](PROVIDER_DECISION_MATRIX.md). Contrato local: [LOCAL_OLLAMA_CONTRACT.md](LOCAL_OLLAMA_CONTRACT.md).
 
-| Criterio | OpenAI | Anthropic | Gemini | Otros |
-|---|---|---|---|---|
-| Salida estructurada con esquema (JSON schema / tool use) | — | — | — | — |
-| Calidad en español colombiano coloquial y audios transcritos | — | — | — | — |
-| Retención/entrenamiento con datos; modo sin retención | — | — | — | — |
-| Residencia de datos / términos de tratamiento | — | — | — | — |
-| Límites de tasa y disponibilidad (SLA) | — | — | — | — |
-
-## Criterio de entrada (propuesto, requiere confirmación)
-
-Para considerar SUPERVISED con un proveedor: nuevo set ciego no visto **≥ 90 % en primera pasada y 0 HIGH_RISK real**, más un set adversarial (inyección de instrucciones, mensajes contradictorios) y revisión humana de una muestra de tráfico real en SHADOW.
+> Nota: en HYBRID-001 las métricas se llamaban `FIRST_PASS_ACCURACY`, `TOKENS` y `SCHEMA_FAILURES`; ahora son `ACCURACY`, `INPUT_TOKENS`/`OUTPUT_TOKENS` y `SCHEMA_VALIDITY`.
