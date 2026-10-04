@@ -7,6 +7,7 @@
  *
  *   WHATSAPP_AUTOMATION_ENABLED  kill switch; por defecto `false`.
  *   WHATSAPP_AUTOMATION_MODE     por defecto `shadow`; solo `shadow` habilitado.
+ *   WHATSAPP_COMMERCIAL_CAPTURE  por defecto `off`; `shadow` adjunta `decision.commercial` (sin escribir en Odoo).
  *   WHATSAPP_UNDERSTANDING_MODE  por defecto `rules`; `hybrid_shadow` requiere un proveedor inyectado (hoy solo mock).
  *
  * Sin secretos: aqui solo hay banderas.
@@ -16,6 +17,8 @@ export const MODES = Object.freeze(['shadow', 'supervised', 'auto_offhours', 'au
 export const ENABLED_MODES = Object.freeze(['shadow']);
 /** Motor de comprension. `rules` por defecto; `hybrid_shadow` existe pero NO se activa por defecto. */
 export const UNDERSTANDING_MODES = Object.freeze(['rules', 'hybrid_shadow']);
+/** Captura comercial (lead estructurado + payload Odoo DRY_RUN). `off` por defecto; `shadow` solo adjunta el objeto, nunca escribe ni envia. */
+export const COMMERCIAL_CAPTURE_MODES = Object.freeze(['off', 'shadow']);
 
 export class ConfigError extends Error {
   constructor(code, message) {
@@ -34,7 +37,9 @@ export function resolveConfig(env = process.env) {
   const enabled = String(env.WHATSAPP_AUTOMATION_ENABLED ?? 'false').trim().toLowerCase() === 'true';
   const understanding = (env.WHATSAPP_UNDERSTANDING_MODE ?? 'rules').trim();
   if (!UNDERSTANDING_MODES.includes(understanding)) throw new ConfigError('UNKNOWN_UNDERSTANDING_MODE', `WHATSAPP_UNDERSTANDING_MODE desconocido: ${understanding}`);
-  return Object.freeze({ mode, enabled, understanding });
+  const commercial_capture = (env.WHATSAPP_COMMERCIAL_CAPTURE ?? 'off').trim();
+  if (!COMMERCIAL_CAPTURE_MODES.includes(commercial_capture)) throw new ConfigError('UNKNOWN_COMMERCIAL_CAPTURE', `WHATSAPP_COMMERCIAL_CAPTURE desconocido: ${commercial_capture}`);
+  return Object.freeze({ mode, enabled, understanding, commercial_capture });
 }
 
 /**

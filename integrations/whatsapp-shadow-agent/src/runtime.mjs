@@ -6,6 +6,7 @@
 import { processMessage } from './agent.mjs';
 import { processHybrid } from './hybrid/pipeline.mjs';
 import { assertProvider } from './hybrid/provider.mjs';
+import { captureFromSession } from './commercial/capture.mjs';
 import { outboundGate, resolveConfig, ConfigError } from './config.mjs';
 import { processCallEvent } from './calls.mjs';
 import { processAudioMessage } from './audio.mjs';
@@ -19,13 +20,14 @@ export function createRuntime({ env = process.env, provider = null, hybridOption
     assertProvider(provider);
   }
   const wrap = (d) => (d.suppressed ? d : { ...d, outbound: outboundGate(config, d.reply).outbound });
+  const withCommercial = (d, session) => (config.commercial_capture === 'shadow' && !d.suppressed ? { ...d, commercial: captureFromSession(session) } : d);
   return Object.freeze({
     config,
     async handleMessage(session, message, deps) {
       if (!config.enabled) return suppressed(config);
-      return wrap(config.understanding === 'hybrid_shadow'
+      return withCommercial(wrap(config.understanding === 'hybrid_shadow'
         ? await processHybrid(session, message, deps, { provider, ...hybridOptions })
-        : await processMessage(session, message, deps));
+        : await processMessage(session, message, deps)), session);
     },
     async handleCallEvent(session, event, deps) {
       if (!config.enabled) return suppressed(config);

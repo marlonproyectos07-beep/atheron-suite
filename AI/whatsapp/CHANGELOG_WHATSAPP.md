@@ -36,3 +36,8 @@
 
 - Bug de reproducibilidad corregido: el test de regresión V3 escribía en `node_modules/`, que no existe en un clon limpio; ahora usa un directorio temporal.
 - `scripts/v4.mjs` (import, freeze, rules, provider, compare) + `V4_RUNBOOK.md`. Solo orquestación: sin cambios a la lógica del agente, sin casos sintéticos nuevos, sin proveedor.
+
+## 2026-10-04 — COMMERCIAL-001: captura de reservas y grupos en SHADOW
+
+- `src/commercial/`: extracción de lead (huésped, fechas, pax, habitación, casa completa, canal, precio, anticipo, saldo, estado de pago, tipo de grupo), clasificación comercial (STANDARD/GROUP/CORPORATE/STRATEGIC + CAPACITY_GAP/PAYMENT_REPORTED/PAYMENT_CONFIRMED/MANUAL_REVIEW_REQUIRED) y payload Odoo **DRY_RUN**.
+- Caso de referencia: reserva directa 301 (130.000 / anticipo 40.000 / saldo 90.000). `WHATSAPP_COMMERCIAL_CAPTURE` (off por defecto). Sin escritura en Odoo, sin envío, sin proveedor.
