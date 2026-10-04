@@ -8,7 +8,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -20,9 +21,13 @@ test('BLIND_V3_100: el set congelado no se ha modificado (sha256)', () => {
 });
 
 test('POST_FIX_REGRESSION BLIND_V3_100: piso de 81/100 y sin HIGH_RISK real', () => {
-  const tmp = join(here, '..', '..', '..', 'node_modules', '.cache-blind-v3.json');
-  execFileSync('node', [join(here, '..', 'scripts', 'run-blind-v3.mjs'), '--post-fix', tmp]);
-  const r = JSON.parse(readFileSync(tmp, 'utf8'));
+  const dir = mkdtempSync(join(tmpdir(), 'blind-v3-'));
+  const tmp = join(dir, 'result.json');
+  let r;
+  try {
+    execFileSync('node', [join(here, '..', 'scripts', 'run-blind-v3.mjs'), '--post-fix', tmp]);
+    r = JSON.parse(readFileSync(tmp, 'utf8'));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
   assert.ok(r.summary.POST_FIX_REGRESSION_PASS >= 81, JSON.stringify(r.summary));
   const risky = r.cases.filter((c) => c.high_risk).map((c) => c.id);
   assert.deepEqual(risky, ['A07']);

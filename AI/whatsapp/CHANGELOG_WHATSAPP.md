@@ -31,3 +31,8 @@
 - Contrato y validador del corpus V4 (`CORPUS_REJECTED_FOR_PRIVACY` / inválido) con informe que nunca copia valores.
 - Harness de benchmark (10 indicadores; costo `DATA_GAP`), configuración de candidatos (todos DISABLED), contrato `LOCAL_OLLAMA`, modelo de decisión (HIGH_RISK > 0 nunca gana) y formato de reporte dual.
 - Métricas del benchmark renombradas (`ACCURACY`, `SCHEMA_VALIDITY`, …). Sin proveedor real, claves, gasto ni datos externos.
+
+## 2026-10-04 — V4-READY-003: espera controlada del corpus real
+
+- Bug de reproducibilidad corregido: el test de regresión V3 escribía en `node_modules/`, que no existe en un clon limpio; ahora usa un directorio temporal.
+- `scripts/v4.mjs` (import, freeze, rules, provider, compare) + `V4_RUNBOOK.md`. Solo orquestación: sin cambios a la lógica del agente, sin casos sintéticos nuevos, sin proveedor.
