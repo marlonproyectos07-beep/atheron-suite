@@ -76,3 +76,15 @@ test('unidad desconocida lanza error explicito', async () => {
     /UNKNOWN_UNIT/,
   );
 });
+
+test('200 pax para CASA: CAPACITY_GAP sin consultar ni prometer inventario', async () => {
+  let queried = false;
+  const result = await requestAccommodationAlternatives(
+    { requestedUnit: CASA_COMPLETA, checkIn: '2026-12-25', checkOut: '2026-12-26', guests: 200 },
+    { units: { [CASA_COMPLETA]: { capacity: 22 } },
+      checkAvailability: () => { queried = true; return true; } },
+  );
+  assert.equal(result.status, 'CAPACITY_GAP');
+  assert.equal(result.requested_available, false);
+  assert.equal(queried, false);
+});

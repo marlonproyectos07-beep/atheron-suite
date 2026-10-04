@@ -103,6 +103,10 @@ export function legacyUnit(unit) {
 export function toInventory(blocks) {
   return blocks.filter((b) => b.status !== 'cancelled').map((b) => ({
     unit: LEGACY_UNIT[b.canonical_unit_id], checkIn: b.check_in, checkOut: b.check_out,
+    source: b.source, source_channel: b.source_channel, status: b.status, reservation_ref: b.reservation_ref,
+    external_reservation_id: b.external_reservation_id, external_uid: b.external_uid,
+    hold_id: b.hold_id, idempotency_key: b.idempotency_key,
+    reason: b.reason, block_reason: b.block_reason,
   }));
 }
 

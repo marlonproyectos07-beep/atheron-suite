@@ -189,6 +189,20 @@ test('puerto Gateway LIVE: extrae datos del sobre 1967 y falla cerrado ante erro
   await assert.rejects(port.snapshotStore.list('booking', 'AHS-302'), (e) => e.code === 'NOT_FOUND');
 });
 
+test('puerto Gateway conserva causa y referencia Odoo cuando la respuesta las incluye', async () => {
+  const port = createGatewayOdooPort({ client: {
+    ota_blocks_list: async () => ({ ok: true, data: { blocks: [{
+      canonical_unit_id: 'AHS-301', check_in: '2026-12-25', check_out: '2026-12-26',
+      source: 'odoo', source_channel: 'DIRECT_WHATSAPP', reservation_ref: 'TEST-RES-301',
+      reason: 'Reserva directa', status: 'blocked',
+    }] } }),
+  } });
+  const [block] = await port.listBlocks();
+  assert.equal(block.source_channel, 'DIRECT_WHATSAPP');
+  assert.equal(block.reservation_ref, 'TEST-RES-301');
+  assert.equal(block.reason, 'Reserva directa');
+});
+
 test('feed publico: sin PII ni motivos internos, UID estable, falla cerrado', async () => {
   const { odoo } = await seeded();
   const a = await buildPublicFeed({ unit: '302', channel: 'booking', odoo, today: '2027-01-01' });

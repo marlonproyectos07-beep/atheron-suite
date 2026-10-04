@@ -51,6 +51,12 @@ export async function requestAccommodationAlternatives(
   assertKnownUnit(requestedUnit);
   if (!checkIn || !checkOut) throw new Error('CHECKIN_CHECKOUT_REQUIRED');
   if (!Number.isInteger(guests) || guests <= 0) throw new Error('GUESTS_MUST_BE_POSITIVE_INTEGER');
+  const capacity = units[requestedUnit]?.capacity;
+  if (!Number.isInteger(capacity) || capacity <= 0) throw new Error('CAPACITY_UNKNOWN');
+  if (guests > capacity) {
+    return { requested_unit: requestedUnit, requested_available: false,
+      alternatives: [], status: 'CAPACITY_GAP', capacity };
+  }
 
   const requestedAvailable = await checkAvailability(requestedUnit, checkIn, checkOut);
   if (requestedAvailable) {

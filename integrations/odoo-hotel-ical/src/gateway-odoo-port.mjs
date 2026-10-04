@@ -39,7 +39,10 @@ export function createGatewayOdooPort({ client, property_id } = {}) {
   };
   const toBlock = (b) => ({
     canonical_unit_id: b.canonical_unit_id, check_in: b.check_in, check_out: b.check_out,
-    status: b.status ?? 'blocked', source: b.source ?? 'odoo', idempotency_key: b.idempotency_key,
+    status: b.status ?? 'blocked', source: b.source ?? 'odoo', source_channel: b.source_channel,
+    idempotency_key: b.idempotency_key,
+    reservation_ref: b.reservation_ref, external_uid: b.external_uid,
+    hold_id: b.hold_id, reason: b.reason ?? b.block_reason,
   });
   return Object.freeze({
     /** Bloques NO derivados de las 6 unidades; el efecto CASA lo calcula inventory-model. */
