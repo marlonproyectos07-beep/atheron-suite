@@ -1,0 +1,14 @@
+{
+  "database": "atheron1-hotel-staging-20260923",
+  "model": "ir.actions.act_window",
+  "id": 1909,
+  "expected_name": "Hotel v1 — Reservas hotel",
+  "expected_res_model": "sale.order",
+  "expected_context_from_2026_09_30_backup": "{}",
+  "proposed_context": "{'in_rental_app': 1, 'default_is_rental_order': True}",
+  "server_action_model": "ir.actions.server",
+  "server_action_id": 1899,
+  "server_action_expected_name": "HOTEL v1 — CONFIRMAR",
+  "server_action_code_file": "hotel-v1-confirm-rental.py",
+  "apply_automatically": false
+}
