@@ -96,3 +96,9 @@ graphify-out/
 integrations/**/.env
 integrations/**/check-odoo.mjs
 .env*
+
+# Local snapshots of Odoo server actions (may contain operational code).
+integrations/odoo-hotel-gateway/.local-action-backups/
+
+# Logs de consola de sesiones de navegador (MCP). Pueden contener datos de sesion. Nunca versionar.
+integrations/odoo-hotel-gateway/.playwright-mcp/

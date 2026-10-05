@@ -1,0 +1,57 @@
+{
+  "_nota": "HOTEL-017 STAGING. Configuracion publica reproducible. Sin URLs iCal, tokens, claves de idempotencia, referencias de inbound ni datos de huespedes. Fecha de lectura: 2026-10-05 (America/Bogota). Base: atheron1-hotel-staging-20260923. Production NO tocada.",
+  "gate": "HOTEL-017_STAGING_GATE = PASS (declarado por CEO)",
+  "booking_property_id": "16559325",
+  "casa_completa": { "odoo_unit": 6, "resource": 79, "children_odoo_units": [1, 2, 3, 4, 5] },
+  "action_1967": {
+    "name": "HOTEL v1 — API GATEWAY Sofía (006)",
+    "id": 1967,
+    "current_sha256": "c0b1eb1584ca50be0c2b827b6c0f877a2df1a7c6832d7206f9ddedeab83ce87c",
+    "base_sha256": "9b053e02f123bc8879192e7758367fae1146ab4b0510567c06567f5a05785e25",
+    "base_file": "odoo-patches/hotel-017/action-1967-base-9b053e02.py",
+    "generator": "src/ota-adoption-action-code.mjs (patchActionCode)",
+    "temporary_patches": [
+      { "order": 1, "sha256_prefix": "5498b99b", "content": "adopcion 302 (piloto)" },
+      { "order": 2, "sha256_prefix": "8f35a981", "content": "adopcion 301 limitada a slot 40159 / Booking 12->13 oct 2026" },
+      { "order": 3, "sha256_prefix": "4976f432", "content": "listado incluye 40159 sin vinculo, para conflicto local" },
+      { "order": 4, "sha256_prefix": "c0b1eb15", "content": "listado devuelve source=booking solo para 40159 adoptado (vigente)" }
+    ],
+    "rollback": "restaurar la version previa desde el respaldo local (ignorado por Git); restaurar a 5498b99b reintroduce el CONFLICT 12->13 oct de 301"
+  },
+  "rooms": {
+    "201": { "canonical": "AHS-201", "odoo_unit": 1, "resource": 28, "role": 29, "outbound_attachment": 26982, "refresh_action": 1981, "wrapper_action": 1982, "cron": 157, "filter": "none (historico, residual)", "booking_room_id": "1655932502", "airbnb_listing_id": null, "inbound_feed_id": 3, "status": "FULL_OTA_PASS = YES (reportado)" },
+    "202": { "canonical": "AHS-202", "odoo_unit": 2, "resource": 29, "role": 19, "outbound_attachment": 26984, "refresh_action": 1983, "wrapper_action": 1984, "cron": 158, "filter": "none (historico, residual)", "booking_room_id": "1655932503", "airbnb_listing_id": "1213146414477202934", "inbound_feed_id": 4, "status": "FULL_OTA_PASS = YES (reportado)" },
+    "203": { "canonical": "AHS-203", "odoo_unit": 3, "resource": 30, "role": 30, "outbound_attachment": 26986, "refresh_action": 1985, "wrapper_action": 1986, "orphan_action": 1987, "cron": 159, "filter": "fin >= hoy; Casa solo con pedido", "booking_room_id": "1655932504", "airbnb_listing_id": "1213242080835096435", "inbound_feed_id": 5, "status": "FULL_OTA_PASS = YES (reportado)" },
+    "301": { "canonical": "AHS-301", "odoo_unit": 4, "resource": 31, "role": 37, "outbound_attachment": 26985, "refresh_action": 1988, "wrapper_action": 1989, "cron": 160, "filter": "fin >= hoy; Casa solo con pedido; excluye 40159 y 40161 por ID", "booking_room_id": "1655932506", "airbnb_listing_id": "1057232086445101786", "inbound_feed_id": 6, "adopted_slot": 40159, "status": "FULL_OTA_PASS = YES (reportado)" },
+    "302": { "canonical": "AHS-302", "odoo_unit": 5, "resource": 32, "role": 18, "outbound_attachment": 26981, "refresh_action": 1979, "wrapper_action": 1980, "cron": 156, "filter": "none (historico, residual)", "booking_room_id": "1655932505", "airbnb_listing_id": "1119517434126866031", "inbound_feed_id": 1, "adopted_slots": [40142, 40140], "status": "FULL_OTA_PASS = YES (reportado)" }
+  },
+  "feeds": [
+    { "id": 1, "name": "AHS-302 / booking", "source": "booking" },
+    { "id": 2, "name": "AHS-302 / airbnb", "source": "airbnb", "note": "manual, 3 DUPLICATE, 0 conflictos" },
+    { "id": 3, "name": "AHS-201 / booking", "source": "booking" },
+    { "id": 4, "name": "AHS-202 / booking", "source": "booking" },
+    { "id": 5, "name": "AHS-203 / booking", "source": "booking" },
+    { "id": 6, "name": "AHS-301 / booking", "source": "booking" }
+  ],
+  "crons": [
+    { "id": 156, "name": "ATHERON - Refrescar iCal SOLO 302", "action": 1980, "interval": "5 minutes" },
+    { "id": 157, "name": "ATHERON - Refrescar iCal SOLO 201", "action": 1982, "interval": "5 minutes" },
+    { "id": 158, "name": "ATHERON - Refrescar iCal SOLO 202", "action": 1984, "interval": "5 minutes" },
+    { "id": 159, "name": "ATHERON - Refrescar iCal SOLO 203", "action": 1986, "interval": "5 minutes" },
+    { "id": 160, "name": "ATHERON - Refrescar iCal SOLO 301", "action": 1989, "interval": "5 minutes" }
+  ],
+  "exceptions": {
+    "slot_40159": "Booking 301 12->13 oct 2026. Sin canal ni tipo en Odoo. Adoptado (vinculo unico). Listado con source=booking por parche c0b1eb15.",
+    "slot_40161": "Bloqueo de Airbnb 4->5 oct 2026 segun CEO. Sin canal ni tipo. NO adoptado, NO modificado, excluido de la salida de 301 por ID.",
+    "slot_40018": "Artefacto QA NOBEDS (2029-10-01/03), etiquetado booking/external, sin acreditar como reserva Booking. NO adoptado, NO borrado. Fuera de la integracion OTA de 203.",
+    "orphan_booking_203_connection": "Conexion airbnb.com.co en 'Import needed / Complete setup', solo exporta. Visible, sin consumidor activo. Decision CEO: dejar."
+  },
+  "known_residuals": [
+    "Accion 1987 vacia y huerfana (creada automaticamente por Odoo en un intento fallido). Pendiente de retirada con autorizacion.",
+    "Salidas 201, 202 y 302 sin filtro de fecha (incluyen historico).",
+    "Bloqueo manual de Airbnb de 2027 (1->3 oct) preservado; pendiente de auditoria.",
+    "Cron global 147 no aparece en la lectura de STAGING; no se toco.",
+    "El comentario de la accion 1988 (301) tiene las etiquetas 40159/40161 invertidas respecto a lo confirmado. Se reproduce tal cual hasta desplegar una correccion autorizada.",
+    "Campo 'Recurso Odoo' (x_odoo_resource_id) vacio en feeds 5 y 6. No requerido por el importador."
+  ]
+}
