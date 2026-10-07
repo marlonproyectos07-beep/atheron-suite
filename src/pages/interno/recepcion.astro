@@ -1,0 +1,156 @@
+---
+/**
+ * ATH-DISP-001 — pantalla interna de disponibilidad para recepción.
+ * Página sin indexar. Sin sesión válida muestra solo el acceso por PIN.
+ */
+import { COOKIE_NAME, OPERATOR_IDS, OPERATOR_NAMES, verifySession } from '../../../integrations/odoo-hotel-gateway/src/reception-auth.mjs';
+
+export const prerender = false;
+
+const secret = process.env.HOTEL_RECEPTION_SESSION_SECRET ?? '';
+const session = verifySession(Astro.cookies.get(COOKIE_NAME)?.value, secret);
+const operators = OPERATOR_IDS.map((id) => ({ id, label: OPERATOR_NAMES[id] }));
+---
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Recepción · Disponibilidad</title>
+    <style>
+      :root { color-scheme: light dark; --fg: #1d1d1f; --bg: #fafafa; --bd: #c9c9cf; --ok: #14532d; --no: #7f1d1d; --ver: #7c4a03; }
+      @media (prefers-color-scheme: dark) { :root { --fg: #f2f2f5; --bg: #161618; --bd: #3a3a40; --ok: #86efac; --no: #fca5a5; --ver: #fcd34d; } }
+      body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; background: var(--bg); color: var(--fg); }
+      main { max-width: 640px; margin: 0 auto; }
+      h1 { font-size: 1.25rem; margin: 0 0 12px; }
+      form { display: grid; gap: 10px; margin-bottom: 16px; }
+      label { display: grid; gap: 4px; font-size: 0.95rem; }
+      input, select, button { font: inherit; padding: 10px; border: 1px solid var(--bd); border-radius: 8px; background: transparent; color: inherit; }
+      button { cursor: pointer; font-weight: 600; }
+      table { width: 100%; border-collapse: collapse; }
+      td, th { text-align: left; padding: 8px; border-bottom: 1px solid var(--bd); }
+      .st { font-weight: 700; }
+      .st-ok { color: var(--ok); }
+      .st-no { color: var(--no); }
+      .st-ver { color: var(--ver); }
+      .msg { min-height: 1.2em; font-size: 0.95rem; }
+      .meta { font-size: 0.85rem; opacity: 0.8; }
+    </style>
+  </head>
+  <body>
+    <main>
+      {!session && (
+        <section aria-labelledby="login-title">
+          <h1 id="login-title">Acceso de recepción</h1>
+          <form id="login-form">
+            <label>Operador
+              <select name="operator" required>
+                {operators.map((o) => <option value={o.id}>{o.label}</option>)}
+              </select>
+            </label>
+            <label>Si eres «Otro», escribe tu nombre
+              <input name="nombre" type="text" maxlength="40" autocomplete="off" />
+            </label>
+            <label>PIN (6 a 8 dígitos)
+              <input name="pin" type="password" inputmode="numeric" pattern="\d{6,8}" autocomplete="off" required />
+            </label>
+            <button type="submit">Entrar</button>
+            <p class="msg" id="login-msg" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+      )}
+
+      {session && (
+        <section aria-labelledby="query-title">
+          <h1 id="query-title">Disponibilidad · {session.name}</h1>
+          <form id="query-form">
+            <label>Fecha de entrada <input name="checkin" type="date" required /></label>
+            <label>Fecha de salida <input name="checkout" type="date" required /></label>
+            <label>Huéspedes <input name="guests" type="number" min="1" max="60" value="2" required /></label>
+            <button type="submit">Consultar</button>
+          </form>
+          <p class="msg" id="query-msg" role="status" aria-live="polite"></p>
+          <table aria-label="Resultado por unidad">
+            <thead><tr><th scope="col">Unidad</th><th scope="col">Estado</th></tr></thead>
+            <tbody id="results"></tbody>
+          </table>
+          <p class="meta" id="checked"></p>
+          <form id="logout-form"><button type="submit">Cerrar sesión</button></form>
+        </section>
+      )}
+    </main>
+
+    <script>
+      const CLASS_BY_STATUS = { 'DISPONIBLE': 'st-ok', 'NO DISPONIBLE': 'st-no' };
+      const $ = (id) => document.getElementById(id);
+
+      async function postJson(url, data) {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(data ?? {}),
+        });
+        return { status: res.status, body: await res.json().catch(() => ({})) };
+      }
+
+      const loginForm = $('login-form');
+      if (loginForm) {
+        loginForm.addEventListener('submit', async (ev) => {
+          ev.preventDefault();
+          const f = new FormData(loginForm);
+          const { status, body } = await postJson('/api/interno/login', {
+            operator: f.get('operator'),
+            nombre: f.get('nombre'),
+            pin: f.get('pin'),
+          });
+          if (status === 200 && body.ok) { location.reload(); return; }
+          const texto = {
+            BLOQUEADO_TEMPORALMENTE: 'Demasiados intentos. Espera 15 minutos.',
+            SERVICE_UNAVAILABLE: 'Servicio no disponible. Avisa a administración.',
+          }[body.error] ?? 'PIN o nombre incorrecto.';
+          $('login-msg').textContent = texto;
+        });
+      }
+
+      const queryForm = $('query-form');
+      if (queryForm) {
+        queryForm.addEventListener('submit', async (ev) => {
+          ev.preventDefault();
+          const f = new FormData(queryForm);
+          $('query-msg').textContent = 'Consultando…';
+          $('results').replaceChildren();
+          const { body } = await postJson('/api/interno/disponibilidad', {
+            checkin: f.get('checkin'),
+            checkout: f.get('checkout'),
+            guests: Number(f.get('guests')),
+          });
+          if (!body.units) {
+            $('query-msg').textContent = body.error === 'SESION_REQUERIDA' ? 'Tu sesión venció. Recarga la página.' : 'Revisa las fechas y los huéspedes.';
+            return;
+          }
+          $('query-msg').textContent = body.ok === false ? 'Datos no confiables: no se muestra disponibilidad como libre.' : '';
+          for (const u of body.units) {
+            const tr = document.createElement('tr');
+            const tdName = document.createElement('td');
+            tdName.textContent = u.label;
+            const tdSt = document.createElement('td');
+            tdSt.className = 'st ' + (CLASS_BY_STATUS[u.status] ?? 'st-ver');
+            tdSt.textContent = u.status;
+            tr.append(tdName, tdSt);
+            $('results').append(tr);
+          }
+          $('checked').textContent = body.inventory_checked_at ? 'Consultado: ' + body.inventory_checked_at : '';
+        });
+      }
+
+      const logoutForm = $('logout-form');
+      if (logoutForm) {
+        logoutForm.addEventListener('submit', async (ev) => {
+          ev.preventDefault();
+          await postJson('/api/interno/logout', {});
+          location.reload();
+        });
+      }
+    </script>
+  </body>
+</html>

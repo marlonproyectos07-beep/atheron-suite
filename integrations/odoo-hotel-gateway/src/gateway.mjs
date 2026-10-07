@@ -44,6 +44,11 @@ export class HotelGateway {
     let identity = null;
     try {
       identity = this.identityStore.authenticate(agentId, rawKey);
+      // Mínimo privilegio (ATH-DISP-001): la operación debe estar en los
+      // alcances de la identidad. Se comprueba ANTES de validar o llamar a Odoo.
+      if (!this.identityStore.isAuthorizedFor(identity, operation)) {
+        throw new ContractError('FORBIDDEN_OPERATION', 'Operation is outside this identity scope', { operation });
+      }
       this.rateLimiter.consume(identity.agentId);
 
       const validated = validateRequest(operation, { ...body, correlation_id: correlationId });

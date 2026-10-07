@@ -18,6 +18,25 @@ import { ContractError } from './contract.mjs';
 
 const ALLOWED_SCOPES = Object.freeze(['availability', 'quote', 'hold', 'status']);
 
+/**
+ * Alcances por identidad. Si una entrada no declara `scopes`, recibe el
+ * conjunto completo (compatibilidad con las identidades existentes). Si los
+ * declara, deben ser un subconjunto no vacío y sin duplicados de
+ * ALLOWED_SCOPES. Cualquier otra cosa falla cerrado.
+ */
+export function normalizeScopes(scopes) {
+  if (scopes === undefined) return ALLOWED_SCOPES;
+  if (!Array.isArray(scopes) || scopes.length === 0) {
+    throw new Error('SCOPES_INVALID: debe ser un arreglo no vacío');
+  }
+  const unique = [...new Set(scopes)];
+  if (unique.length !== scopes.length) throw new Error('SCOPES_INVALID: duplicados');
+  for (const scope of unique) {
+    if (!ALLOWED_SCOPES.includes(scope)) throw new Error(`SCOPES_INVALID: alcance desconocido ${String(scope)}`);
+  }
+  return Object.freeze(unique);
+}
+
 export function hashKey(rawKey) {
   return createHash('sha256').update(String(rawKey), 'utf8').digest('hex');
 }
@@ -42,7 +61,7 @@ export class IdentityStore {
         actor: identity.actor,
         keyHash: identity.keyHash,
         revoked: Boolean(identity.revoked),
-        scopes: ALLOWED_SCOPES,
+        scopes: normalizeScopes(identity.scopes),
       });
     }
   }
