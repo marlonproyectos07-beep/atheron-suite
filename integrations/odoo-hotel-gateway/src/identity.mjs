@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { ContractError } from './contract.mjs';
+import { BEDS24_SCOPES } from './beds24/scopes.mjs';
 
 /**
  * Identidad tecnica del gateway HOTEL-007.
@@ -11,21 +12,22 @@ import { ContractError } from './contract.mjs';
  * variable de entorno (ver GATEWAY_TECHNICAL_IDENTITIES en .env.example) o
  * por un secret manager del runtime; nunca en este repositorio ni en logs.
  *
- * Todas las identidades comparten el mismo minimo privilegio: las 4
- * operaciones aprobadas (availability/quote/hold/status). Ningun agente
- * tiene privilegios especiales (Fase 5).
+ * Las identidades existentes conservan por defecto las 4 operaciones
+ * aprobadas (availability/quote/hold/status). Las futuras identidades Beds24
+ * requieren scopes explicitos; ningun agente los recibe por defecto.
  */
 
-const ALLOWED_SCOPES = Object.freeze(['availability', 'quote', 'hold', 'status']);
+const DEFAULT_SCOPES = Object.freeze(['availability', 'quote', 'hold', 'status']);
+const ALLOWED_SCOPES = Object.freeze([...DEFAULT_SCOPES, ...BEDS24_SCOPES]);
 
 /**
  * Alcances por identidad. Si una entrada no declara `scopes`, recibe el
- * conjunto completo (compatibilidad con las identidades existentes). Si los
+ * conjunto original de cuatro (compatibilidad con las identidades existentes). Si los
  * declara, deben ser un subconjunto no vacío y sin duplicados de
  * ALLOWED_SCOPES. Cualquier otra cosa falla cerrado.
  */
 export function normalizeScopes(scopes) {
-  if (scopes === undefined) return ALLOWED_SCOPES;
+  if (scopes === undefined) return DEFAULT_SCOPES;
   if (!Array.isArray(scopes) || scopes.length === 0) {
     throw new Error('SCOPES_INVALID: debe ser un arreglo no vacío');
   }
@@ -87,7 +89,7 @@ export class IdentityStore {
       actor,
       keyHash: hashKey(rawKey),
       revoked: false,
-      scopes: ALLOWED_SCOPES,
+      scopes: DEFAULT_SCOPES,
     });
   }
 

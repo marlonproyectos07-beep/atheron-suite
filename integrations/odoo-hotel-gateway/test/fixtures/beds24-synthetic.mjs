@@ -32,7 +32,7 @@ export function syntheticMapping() {
 }
 
 export function syntheticEvent(number = '201', overrides = {}) {
-  return {
+  const event = {
     type: 'reservation.created',
     bookingId: `TEST-BEDS24-BOOKING-${number}`,
     accountId: 'TEST-BEDS24-ACCOUNT',
@@ -43,6 +43,8 @@ export function syntheticEvent(number = '201', overrides = {}) {
     revision: 1,
     ...overrides,
   };
+  return { ...event,
+    eventId: overrides.eventId ?? `TEST-EVENT-${event.bookingId}-${event.type}-${event.revision}` };
 }
 
 export function syntheticTransport(handler = async () => ({ status: 200, data: {} })) {
