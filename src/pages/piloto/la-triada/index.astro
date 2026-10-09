@@ -1,0 +1,285 @@
+---
+/* ============================================================
+   PILOTO — PASO 1: ACTIVAR EL BENEFICIO (pantalla del huesped)
+
+   Es la primera pantalla del recorrido, y la que va a abrir el CEO
+   con su movil el miercoles 23 de septiembre de 2026.
+
+   QUE HACE, Y QUE NO DICE
+
+   Genera un identificador ATH-TRI-XXXXX, lo guarda en el navegador y
+   lo pinta grande, con su QR y su hora de caducidad. Nada mas.
+
+   NO anuncia ningun porcentaje mientras la condicion comercial no
+   conste verificada. Esto no es prudencia decorativa: si la pantalla
+   promete un 10% que el local no ha aceptado, el que queda mal
+   delante del cliente es el aliado, y el piloto se acaba ahi.
+
+   EL QR SE DIBUJA EN EL NAVEGADOR, NO AL CONSTRUIR
+
+   Porque el codigo no existe hasta que alguien pulsa el boton, y
+   porque la direccion que lleva dentro tiene que ser la del sitio
+   donde esta corriendo esto: en la prueba sera un preview, no el
+   dominio final. Se toma de location.origin, asi que el QR funciona
+   en cualquiera de los dos sin tocar nada.
+
+   SIN JAVASCRIPT NO HAY PILOTO, Y SE DICE
+
+   Generar un identificador y guardarlo es JavaScript. El <noscript>
+   no ofrece un sucedaneo que no funcione: dice que hace falta
+   activarlo y deja el WhatsApp de Atheron, que es el canal que si
+   responde siempre.
+   ============================================================ */
+import Base from '../../../layouts/Base.astro';
+import PilotoPie from '../../../components/PilotoPie.astro';
+import { PILOTO, AVISO_CONDICION, BENEFICIO } from '../../../data/piloto-la-triada';
+import { ENLACE_DISPONIBILIDAD } from '../../../data/whatsapp';
+import { fechaLarga } from '../../../data/fechas';
+---
+
+<Base
+  titulo={`Activar beneficio en ${PILOTO.aliado} | Piloto interno Atheron`}
+  descripcion="Página interna del piloto Atheron × La Triada. No es una página pública del sitio."
+  ruta={PILOTO.rutas.activar}
+  indexable={false}
+  seguirEnlaces={false}
+  jsonLd={null}
+  avisoBorrador={`Piloto interno ${PILOTO.id}. No publicado: no se enlaza desde el sitio.`}
+  hojasExtra={['piloto']}
+>
+  <main id="contenido" class="piloto">
+    <p class="piloto__interna">Piloto {PILOTO.id} · Red Atheron Zipaquirá</p>
+    <h1 class="piloto__titulo">Tu beneficio Atheron en {PILOTO.aliado}</h1>
+    <p class="piloto__entrada">
+      Activa aquí tu identificador y muéstralo en {PILOTO.aliado}. Es de un solo uso y vale
+      hasta el final del día.
+    </p>
+
+    {AVISO_CONDICION && (
+      <div class="piloto__condicion" role="note">
+        <strong>Aún no hay condición publicada</strong>
+        {AVISO_CONDICION}
+      </div>
+    )}
+
+    {BENEFICIO.estado === 'VERIFICADO' && BENEFICIO.descripcion && (
+      <div class="piloto__tarjeta">
+        <h2>Tu beneficio</h2>
+        <p>{BENEFICIO.descripcion}</p>
+        {BENEFICIO.base && <p>Se calcula sobre: {BENEFICIO.base}.</p>}
+        {BENEFICIO.exclusiones?.length ? (
+          <p>No incluye: {BENEFICIO.exclusiones.join('; ')}.</p>
+        ) : null}
+        {BENEFICIO.vigencia && (
+          <p>
+            Vigente desde el {fechaLarga(BENEFICIO.vigencia.desde)}
+            {BENEFICIO.vigencia.hasta ? ` hasta el ${fechaLarga(BENEFICIO.vigencia.hasta)}` : ''}.
+          </p>
+        )}
+      </div>
+    )}
+
+    {/* --- Antes de activar --- */}
+    <div class="piloto__tarjeta" data-paso="inicio">
+      <h2>Paso 1 · Activar</h2>
+      <p>
+        Al activar se genera un identificador único para esta visita. Se guarda solo en este
+        teléfono.
+      </p>
+      <button class="piloto__boton" type="button" data-activar>Activar mi beneficio</button>
+    </div>
+
+    {/* --- Ya activado. Se descubre desde el guion --- */}
+    <div class="piloto__tarjeta" data-paso="codigo" hidden>
+      <h2>Paso 2 · Muéstralo en {PILOTO.aliado}</h2>
+      <p class="piloto__codigo" data-codigo aria-live="polite"></p>
+      <div data-qr></div>
+      <p class="piloto__pie-dato">
+        Que lo escaneen, o dicta los cinco caracteres del final.
+      </p>
+      <p class="piloto__pie-dato" data-caducidad></p>
+      <p class="piloto__pie-dato">
+        <span class="piloto__estado" data-insignia></span>
+      </p>
+      <div class="piloto__botones">
+        <a class="piloto__boton piloto__boton--secundario" data-ir-validar href={PILOTO.rutas.validar}>
+          Abrir la pantalla del restaurante
+        </a>
+        <button class="piloto__boton piloto__boton--secundario" type="button" data-descartar>
+          No lo voy a usar
+        </button>
+      </div>
+    </div>
+
+    <div class="piloto__tarjeta" data-paso="cerrado" hidden>
+      <h2>Este identificador ya está cerrado</h2>
+      <p data-cierre></p>
+      <button class="piloto__boton" type="button" data-activar>Activar uno nuevo</button>
+    </div>
+
+    <noscript>
+      <div class="piloto__tarjeta">
+        <h2>Hace falta JavaScript</h2>
+        <p>
+          El identificador se genera en el propio teléfono, así que sin JavaScript no puede
+          crearse. Actívalo y vuelve a cargar, o
+          <a href={ENLACE_DISPONIBILIDAD} target="_blank" rel="noopener noreferrer">
+            escríbenos por WhatsApp</a> y lo resolvemos por ahí.
+        </p>
+      </div>
+    </noscript>
+
+    <PilotoPie actual={PILOTO.rutas.activar} />
+  </main>
+</Base>
+
+<script>
+  import { generarCodigo } from '../../../data/codigos-referido';
+  import { qrSvg } from '../../../data/qr';
+  import {
+    PILOTO,
+    CLAVE_ALMACEN,
+    ETIQUETA_ESTADO,
+    caducaEl,
+    estaVigente,
+    type EstadoReferido,
+  } from '../../../data/piloto-la-triada';
+
+  interface Guardado {
+    codigo: string;
+    activadoEn: string;
+    estado: EstadoReferido;
+  }
+
+  /* El almacen puede fallar: modo privado de Safari, cuota llena, o
+     un navegador con el almacenamiento bloqueado. Si falla, la
+     pagina sigue funcionando para esta visita y lo dice; lo que no
+     hace es romperse. */
+  const lee = (): Guardado | null => {
+    try {
+      const crudo = localStorage.getItem(CLAVE_ALMACEN);
+      if (!crudo) return null;
+      const dato = JSON.parse(crudo) as Guardado;
+      return dato && dato.codigo && dato.activadoEn ? dato : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const guarda = (dato: Guardado): boolean => {
+    try {
+      localStorage.setItem(CLAVE_ALMACEN, JSON.stringify(dato));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel);
+  const pasos = {
+    inicio: $('[data-paso="inicio"]')!,
+    codigo: $('[data-paso="codigo"]')!,
+    cerrado: $('[data-paso="cerrado"]')!,
+  };
+
+  const CLASE_ESTADO: Record<EstadoReferido, string> = {
+    ACTIVADO: 'piloto__estado--activado',
+    VALIDADO: 'piloto__estado--validado',
+    REDIMIDO: 'piloto__estado--redimido',
+    NO_REDIMIDO: 'piloto__estado--no-redimido',
+  };
+
+  /* Memoria de la visita: si el almacen no deja escribir, el codigo
+     sigue siendo valido en esta pantalla. Lo que no se puede es
+     decir que quedo guardado. */
+  let enMemoria: Guardado | null = null;
+  let almacenDisponible = true;
+
+  function pinta(): void {
+    const dato = enMemoria ?? lee();
+    for (const p of Object.values(pasos)) p.hidden = true;
+
+    if (!dato) {
+      pasos.inicio.hidden = false;
+      return;
+    }
+
+    const activadoEn = new Date(dato.activadoEn);
+    const vigente = estaVigente(activadoEn, new Date());
+    const cerrado = dato.estado === 'REDIMIDO' || dato.estado === 'NO_REDIMIDO' || !vigente;
+
+    if (cerrado) {
+      pasos.cerrado.hidden = false;
+      const razon =
+        dato.estado === 'REDIMIDO'
+          ? `${dato.codigo} se registró como redimido.`
+          : dato.estado === 'NO_REDIMIDO'
+            ? `${dato.codigo} se cerró sin usar.`
+            : `${dato.codigo} caducó al terminar el día en que se activó.`;
+      $('[data-cierre]')!.textContent = razon;
+      return;
+    }
+
+    pasos.codigo.hidden = false;
+    $('[data-codigo]')!.textContent = dato.codigo;
+
+    const insignia = $('[data-insignia]')!;
+    insignia.textContent = ETIQUETA_ESTADO[dato.estado];
+    insignia.className = `piloto__estado ${CLASE_ESTADO[dato.estado]}`;
+
+    const caduca = caducaEl(activadoEn);
+    const hora = caduca.toLocaleTimeString('es-CO', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'America/Bogota',
+    });
+    $('[data-caducidad]')!.textContent =
+      `Válido hasta las ${hora} de hoy.` + (almacenDisponible ? '' : ' Este navegador no puede guardarlo: no cierres esta pantalla.');
+
+    /* La direccion sale del origen real, no de una constante: en la
+       prueba esto corre en un preview, no en el dominio final. */
+    const destino = `${location.origin}${PILOTO.rutas.validar}?c=${encodeURIComponent(dato.codigo)}`;
+    $('[data-qr]')!.innerHTML = qrSvg(destino, `Código ${dato.codigo}`).replace(
+      '<svg ',
+      '<svg class="piloto__qr" ',
+    );
+    ($('[data-ir-validar]') as HTMLAnchorElement).href =
+      `${PILOTO.rutas.validar}?c=${encodeURIComponent(dato.codigo)}`;
+  }
+
+  function activa(): void {
+    const dato: Guardado = {
+      codigo: generarCodigo(PILOTO.slugAliado),
+      activadoEn: new Date().toISOString(),
+      estado: 'ACTIVADO',
+    };
+    enMemoria = dato;
+    almacenDisponible = guarda(dato);
+    pinta();
+  }
+
+  function descarta(): void {
+    const dato = enMemoria ?? lee();
+    if (!dato) return;
+    const cerrado: Guardado = { ...dato, estado: 'NO_REDIMIDO' };
+    enMemoria = cerrado;
+    guarda(cerrado);
+    pinta();
+  }
+
+  for (const boton of document.querySelectorAll<HTMLButtonElement>('[data-activar]')) {
+    boton.addEventListener('click', activa);
+  }
+  $('[data-descartar]')?.addEventListener('click', descarta);
+
+  /* Al volver a la pestana, el estado puede haber cambiado en otra
+     pantalla de este mismo navegador (la de validar, por ejemplo). */
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      enMemoria = null;
+      pinta();
+    }
+  });
+
+  pinta();
+</script>
