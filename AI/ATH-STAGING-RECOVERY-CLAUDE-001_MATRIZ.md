@@ -144,3 +144,26 @@ Esto cierra los bloqueantes 5 y 6 del §0 y convierte las HIPÓTESIS de la matri
 ## 9. No se hizo / límites
 
 No se contactó a Odoo, ni a Drive, ni a Codex. No se verificó el contenido del staging nuevo (puede ya traer cosas de Codex ATH-STAGING-RECOVERY-003: **antes de R1, ejecutar R0 y reconciliar con lo que Codex haya hecho**). Tipos de los modelos `x_hotel_*` = HIPÓTESIS. No se pudo medir el rendimiento web (fuera de alcance).
+
+## 10. Anexo (pasada 002): evidencia y fase por componente
+
+Evidencia: **REPO** = definición completa en el repo · **PARCIAL** = hay datos o nombres pero no la definición · **DUMP** = solo en el dump. Fases en `AI/ATH-STAGING-RECOVERY-CLAUDE-002_PLAN.md`.
+
+| # | Componente | Evidencia | Fase | Script |
+|---|---|---|---|---|
+| 1 | Modelos `x_hotel_*` | DUMP | R1 | `r1-models-fields.mjs` (esqueleto) |
+| 2 | 97 campos `sale.order` | REPO | R2 | por adaptar |
+| 3 | Propiedad | REPO | R3 | `r3-master-data.mjs` |
+| 4 | Habitaciones | REPO (datos) + DUMP (modelo) | R3 | `r3-master-data.mjs` |
+| 5 | Casa Completa | REPO (datos) + DUMP (modelo) | R3 | `r3-master-data.mjs` |
+| 7 | Disponibilidad | REPO (código acciones 1896/1914/1922) + DUMP (campos de slot) | R4 | `r4-actions-automations.mjs` (esqueleto) |
+| 8 | HOLD | REPO (1897/1930/1906/1907, cron 155) | R4 | idem |
+| 9 | Exclusión Casa↔rooms | DUMP (167/168/169/189 sin código en el repo) | R4 | idem |
+| 10 | Reserva directa | REPO (1899/1935/1937/1938) | R4 | idem |
+| 11–16 | Estados, tarifas, capacidad extra | REPO | R4/R5 | R4 / sin script |
+| 12 | Operador | PARCIAL (script de usuario, sin correo) | R6 | sin script nuevo |
+| 13 | Campos de `planning.slot` | DUMP | R1 | esqueleto |
+| 14 | Tablero | REPO (1909, 6832, 6833, filtro 26, menús) | R7 | `r7-angela-board.mjs` |
+| 17 | Vistas heredadas | REPO (arch completo) | R7 (solo 6832/6833) | idem |
+| 18–19 | Acción 1967 / OTA | REPO (base + parches) / secretos fuera | R8 | fuera de alcance |
+| 20–23 | Residuos y ajenos | — | no se migran | — |

@@ -1,0 +1,39 @@
+<!--
+  BORRADOR (no probado en Odoo). Filtros de "Modo Ángela" sobre sale.order, solo con campos reales confirmados
+  (x_checkin y x_checkout son DATE; x_reservation_status tiene 10 valores; x_hold_expired es boolean).
+  Se instala como extensión del search view de sale.order resuelto por nombre (ver r7-angela-board.mjs).
+  Ventanas (DECISIÓN DE DEFINICIÓN, a confirmar con Marlon/Ángela): una reserva "cae" en la ventana si
+  x_checkin <= fin_ventana  Y  x_checkout >= inicio_ventana  (incluye llegadas y salidas del propio día).
+    HOY    = [hoy, hoy]          MAÑANA = [hoy+1, hoy+1]
+    7 DÍAS = [hoy, hoy+6]        MES    = [primer día del mes, último día del mes]
+  Los filtros de un mismo <group> se combinan con OR; los de grupos distintos, con AND. Por eso las ventanas
+  van juntas en un grupo (se elige una) y los estados en otro.
+-->
+<data>
+  <xpath expr="//search" position="inside">
+    <!-- Ventanas -->
+    <filter name="ang_hoy" string="HOY"
+            domain="[('x_checkin','&lt;=',context_today().strftime('%Y-%m-%d')),('x_checkout','&gt;=',context_today().strftime('%Y-%m-%d'))]"/>
+    <filter name="ang_manana" string="MAÑANA"
+            domain="[('x_checkin','&lt;=',(context_today()+datetime.timedelta(days=1)).strftime('%Y-%m-%d')),('x_checkout','&gt;=',(context_today()+datetime.timedelta(days=1)).strftime('%Y-%m-%d'))]"/>
+    <filter name="ang_7dias" string="7 DÍAS"
+            domain="[('x_checkin','&lt;=',(context_today()+datetime.timedelta(days=6)).strftime('%Y-%m-%d')),('x_checkout','&gt;=',context_today().strftime('%Y-%m-%d'))]"/>
+    <filter name="ang_mes" string="MES"
+            domain="[('x_checkin','&lt;=',(context_today()+relativedelta(day=31)).strftime('%Y-%m-%d')),('x_checkout','&gt;=',context_today().strftime('%Y-%m-01'))]"/>
+    <separator/>
+    <!-- Operación -->
+    <filter name="ang_llegan_hoy" string="Llegadas hoy"
+            domain="[('x_checkin','=',context_today().strftime('%Y-%m-%d')),('x_reservation_status','not in',['cancelled','no_show','closed'])]"/>
+    <filter name="ang_salen_hoy" string="Salidas hoy"
+            domain="[('x_checkout','=',context_today().strftime('%Y-%m-%d')),('x_reservation_status','not in',['cancelled','no_show','closed'])]"/>
+    <filter name="ang_ocupadas" string="Ocupadas (en casa)"
+            domain="[('x_reservation_status','=','checked_in')]"/>
+    <filter name="ang_hold" string="HOLD vigente"
+            domain="[('x_reservation_status','=','hold'),('x_hold_expired','=',False)]"/>
+    <!-- DECISIÓN: "confirmada" = confirmed + pre_checkin (aún sin check-in). checked_in se cuenta como Ocupada. -->
+    <filter name="ang_confirmadas" string="Confirmadas"
+            domain="[('x_reservation_status','in',['confirmed','pre_checkin'])]"/>
+    <filter name="ang_con_saldo" string="Con saldo"
+            domain="[('x_hotel_balance','&gt;',0),('x_reservation_status','not in',['cancelled','no_show'])]"/>
+  </xpath>
+</data>

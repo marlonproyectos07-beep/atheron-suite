@@ -1,16 +1,18 @@
 # recovery/ — recuperación selectiva al staging NUEVO
 
-Ver la matriz y el plan en `AI/ATH-STAGING-RECOVERY-CLAUDE-001_MATRIZ.md`.
+Plan: `AI/ATH-STAGING-RECOVERY-CLAUDE-002_PLAN.md`. Matriz: `AI/ATH-STAGING-RECOVERY-CLAUDE-001_MATRIZ.md`.
+**Nada de esto se ha ejecutado contra un Odoo remoto.** Dry-run por defecto; escribir exige `--apply` + `RECOVERY_CONFIRM=atheron1-hotel-staging-20261009`.
 
-**Estado: preparado, NO ejecutado contra ningún Odoo remoto.** Ningún script se ejecutó con red.
-
-| Script | Qué hace | Escribe |
+| Script | Estado | Escribe |
 |---|---|---|
-| `recovery-lib.mjs` | Guard (solo `atheron1-hotel-staging-20261009`; rechaza la vieja y producción), argumentos, bitácora | — |
-| `r0-preflight-readonly.mjs` | Informa qué existe ya en el staging nuevo (módulos, modelos, campos, acciones, unidades) | No |
-| `r3-master-data.mjs` | Propiedad → 5 habitaciones → Casa Completa → anticipos, por nombre. `--plan` funciona sin red | Solo con `--apply` + `RECOVERY_CONFIRM` |
-| `r3-rollback.mjs` | Borra solo lo que la bitácora marca como CREATE | Solo con `--apply` + `RECOVERY_CONFIRM` |
+| `recovery-lib.mjs`, `connect.mjs`, `pure.mjs` | utilidades (guard, lista blanca de métodos, ensure idempotente) | — |
+| `r0-preflight-readonly.mjs` | listo | nunca |
+| `r1-models-fields.mjs` | esqueleto: espera `AI/recovery-extract/{models,fields,selections}.json` | con `--apply` |
+| `r3-master-data.mjs` | listo (`--plan` sin red) | con `--apply` |
+| `r4-actions-automations.mjs` | esqueleto: espera `{server_actions,automations,crons}.json`; todo se crea INACTIVO | con `--apply` |
+| `r7-angela-board.mjs` | preparado: vistas 6832/6833, acción 1909, menús, filtro 26; `--with-filters` = borrador | con `--apply` |
+| `rollback.mjs` | genérico, sobre la bitácora de cualquier fase | con `--apply` |
+| `extract/extract.sh`, `extract/discover.sql` | para el dump local; NO probado, incompleto | no toca Odoo |
 
-Reglas: dry-run por defecto; nunca ids viejos; diferencias se reportan y no se sobrescriben sin `--force-diff`; credenciales solo por variables de entorno puestas por Marlon fuera del chat; `recovery/out/` contiene bitácoras locales (no subir).
-
-Pendiente (no hay script aún, por falta de definiciones — ver matriz §0): R1 modelos `x_hotel_*` y campos de `planning.slot`; R4 reglas 167/168/169/189; R7 tablero.
+Sin el extracto, R1 y R4 terminan en `BLOCKED` (código 3) sin tocar la red. Contrato: `EXTRACT-CONTRACT.md`. Pruebas: `node --test recovery/test/recovery.test.mjs`.
+Bitácoras en `recovery/out/` (ignorada por Git).

@@ -1,0 +1,19 @@
+<data>
+    <xpath expr="//kanban" position="attributes">
+        <attribute name="default_group_by">x_reservation_status</attribute>
+    </xpath>
+    <xpath expr="//footer" position="before">
+        <div class="d-flex flex-wrap gap-2 text-muted mb-1">
+            <field name="x_hotel_unit_id"/>
+            <field name="x_checkin"/>
+            <field name="x_checkout"/>
+            <field name="x_num_adults"/>
+        </div>
+    </xpath>
+    <xpath expr="//field[@name='date_order']" position="after">
+        <field name="x_hotel_balance" widget="monetary"/>
+    </xpath>
+    <xpath expr="//field[@name='state']" position="after">
+        <field name="x_reservation_status" widget="badge"/>
+    </xpath>
+</data>
