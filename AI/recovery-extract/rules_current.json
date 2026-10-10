@@ -1,0 +1,56 @@
+{
+  "task": "ATH-STAGING-RECOVERY-019",
+  "source": {
+    "environment": "atheron1-hotel-staging-20261009",
+    "method": "Read-only Odoo Enterprise 19 UI; automation forms and linked code actions",
+    "captured_on": "2026-10-10",
+    "notes": "Domain literals are reconstructed from the visible Odoo domain builder; no remote action was executed or modified. active=true was confirmed by the available Archivar menu action."
+  },
+  "rules": [
+    {
+      "id": 167,
+      "name": "ATHERON - Casa Completa bloquea Habitaciones",
+      "model": "planning.slot",
+      "trigger": "on_create_or_write",
+      "trigger_ui": "Al guardar",
+      "domain": "[('x_bloqueo_ref','=',False),('state','=','published')]",
+      "pre_domain": "[]",
+      "active": true,
+      "code_or_configuration": {
+        "action_type": "execute_code",
+        "code": "for slot in records:\n    if slot.x_bloqueo_ref:\n        continue\n    role = slot.role_id\n    if not role or 'completa' not in (role.name or '').lower():\n        continue\n    if slot.state != 'published':\n        continue\n    casa = role.x_casa\n    if not casa:\n        continue\n    rooms = env['planning.role'].search([('x_casa','=',casa),('x_is_a_room_offer','=',True),('id','!=',role.id)])\n    for rr in rooms:\n        if 'completa' in (rr.name or '').lower():\n            continue\n        if not rr.resource_ids:\n            continue\n        if env['planning.slot'].search_count([('role_id','=',rr.id),('x_bloqueo_ref','=',str(slot.id))]):\n            continue\n        if env['planning.slot'].search_count([('role_id','=',rr.id),('start_datetime','<',slot.end_datetime),('end_datetime','>',slot.start_datetime)]):\n            continue\n        env['planning.slot'].create({'role_id': rr.id, 'resource_id': rr.resource_ids[:1].id, 'start_datetime': slot.start_datetime, 'end_datetime': slot.end_datetime, 'state': 'published', 'x_bloqueo_ref': str(slot.id)})"
+      },
+      "relevant_dependencies": ["planning.role.x_casa", "planning.role.x_is_a_room_offer", "planning.role.resource_ids", "planning.slot.role_id", "planning.slot.resource_id", "planning.slot.x_bloqueo_ref", "planning.slot.state", "planning.slot.start_datetime", "planning.slot.end_datetime"]
+    },
+    {
+      "id": 168,
+      "name": "ATHERON - Limpiar bloques al borrar reserva (casa/hab)",
+      "model": "planning.slot",
+      "trigger": "on_unlink",
+      "trigger_ui": "Al eliminar",
+      "domain": "[]",
+      "pre_domain": null,
+      "active": true,
+      "code_or_configuration": {
+        "action_type": "execute_code",
+        "code": "for slot in records:\n    if slot.x_bloqueo_ref:\n        continue\n    blocks = env['planning.slot'].search([('x_bloqueo_ref','=',str(slot.id))])\n    if blocks:\n        blocks.unlink()"
+      },
+      "relevant_dependencies": ["planning.slot.x_bloqueo_ref", "planning.slot.unlink"]
+    },
+    {
+      "id": 169,
+      "name": "ATHERON - Habitacion bloquea Casa Completa",
+      "model": "planning.slot",
+      "trigger": "on_create_or_write",
+      "trigger_ui": "Al guardar",
+      "domain": "[('x_bloqueo_ref','=',False),('state','=','published')]",
+      "pre_domain": "[]",
+      "active": true,
+      "code_or_configuration": {
+        "action_type": "execute_code",
+        "code": "for slot in records:\n    if slot.x_bloqueo_ref:\n        continue\n    role = slot.role_id\n    if not role or not role.x_is_a_room_offer:\n        continue\n    if 'completa' in (role.name or '').lower():\n        continue\n    if slot.state != 'published':\n        continue\n    casa = role.x_casa\n    if not casa:\n        continue\n    casa_role = env['planning.role'].search([('x_casa','=',casa),('x_is_a_room_offer','=',True),('name','ilike','completa')], limit=1)\n    if not casa_role:\n        continue\n    if env['planning.slot'].search_count([('role_id','=',casa_role.id),('x_bloqueo_ref','=',str(slot.id))]):\n        continue\n    if env['planning.slot'].search_count([('role_id','=',casa_role.id),('start_datetime','<',slot.end_datetime),('end_datetime','>',slot.start_datetime)]):\n        continue\n    env['planning.slot'].create({'role_id': casa_role.id, 'resource_id': casa_role.resource_ids[:1].id, 'start_datetime': slot.start_datetime, 'end_datetime': slot.end_datetime, 'state': 'published', 'x_bloqueo_ref': str(slot.id)})"
+      },
+      "relevant_dependencies": ["planning.role.x_casa", "planning.role.x_is_a_room_offer", "planning.role.resource_ids", "planning.slot.role_id", "planning.slot.resource_id", "planning.slot.x_bloqueo_ref", "planning.slot.state", "planning.slot.start_datetime", "planning.slot.end_datetime"]
+    }
+  ]
+}

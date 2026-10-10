@@ -1,0 +1,84 @@
+{
+  "task": "ATH-STAGING-RECOVERY-019",
+  "source": {
+    "environment": "atheron1-hotel-staging-20261009",
+    "model": "planning.role",
+    "method": "Read-only Odoo export of six selected roles; CSV limited to structural columns",
+    "captured_on": "2026-10-10",
+    "selection": "Exact hotel offer role names for rooms 201, 202, 203, 301, 302 and Casa Completa; similar raw room roles excluded"
+  },
+  "roles": [
+    {
+      "id": 69,
+      "name": "Casa La Magia de Zipaquirá - Completa",
+      "x_casa": "La Magia de Zipaquirá",
+      "x_is_a_room_offer": true,
+      "relevant_structural_fields": {
+        "active": true,
+        "resource_names": ["Casa Completa - La Magia de Zipaquirá"],
+        "sync_shift_rental": null,
+        "cleaning_state": "Limpia"
+      }
+    },
+    {
+      "id": 29,
+      "name": "201 Habitación con Baño Compartido  - La Magia de Zipaquirá",
+      "x_casa": "La Magia de Zipaquirá",
+      "x_is_a_room_offer": true,
+      "relevant_structural_fields": {
+        "active": true,
+        "resource_names": ["201 La magia - Baño compartido"],
+        "sync_shift_rental": true,
+        "cleaning_state": "Limpia"
+      }
+    },
+    {
+      "id": 19,
+      "name": "202 Habitación con Baño Compartido  - La Magia de Zipaquirá",
+      "x_casa": "La Magia de Zipaquirá",
+      "x_is_a_room_offer": true,
+      "relevant_structural_fields": {
+        "active": true,
+        "resource_names": ["202 La magia - Baño compartido"],
+        "sync_shift_rental": true,
+        "cleaning_state": "Limpia"
+      }
+    },
+    {
+      "id": 30,
+      "name": "203 Habitación con Baño Privado  - La Magia de Zipaquirá",
+      "x_casa": "La Magia de Zipaquirá",
+      "x_is_a_room_offer": true,
+      "relevant_structural_fields": {
+        "active": true,
+        "resource_names": ["203 La magia - Baño privado"],
+        "sync_shift_rental": true,
+        "cleaning_state": "Limpia"
+      }
+    },
+    {
+      "id": 37,
+      "name": "301 Habitación Suite - La Magia de Zipaquirá",
+      "x_casa": "La Magia de Zipaquirá",
+      "x_is_a_room_offer": true,
+      "relevant_structural_fields": {
+        "active": true,
+        "resource_names": ["301 La magia - Habitación Suite"],
+        "sync_shift_rental": true,
+        "cleaning_state": "Limpia"
+      }
+    },
+    {
+      "id": 18,
+      "name": "302 Habitación con Baño Privado  - La Magia de Zipaquirá",
+      "x_casa": "La Magia de Zipaquirá",
+      "x_is_a_room_offer": true,
+      "relevant_structural_fields": {
+        "active": true,
+        "resource_names": ["302 La magia - Baño privado"],
+        "sync_shift_rental": true,
+        "cleaning_state": "Limpia"
+      }
+    }
+  ]
+}
