@@ -92,3 +92,6 @@ Todas se ejecutan al correr el STEP indicado del runbook; si fallan, es STOP.
 
 ## 6. Actualización ATH-STAGING-RECOVERY-013 (2026-10-10)
 Sigue siendo `MIGRATION_PACKAGE_READY = NO`. R1, R4 y R5 ahora aplican el **alcance base sin OTA** (`recovery/scope.mjs`); R4 y R5 se detienen con `ID_DURO` si el código trae ids numéricos de la base antigua; R5 adapta tres referencias entre acciones (`browse(1914)`, `browse(1921)`, `browse(1897)`) a búsqueda por nombre. El extracto debe incluir también los campos propios de `planning.role`. Las 66 pruebas del paquete y las 573 del gateway pasan. **Faltan** las diferencias de R1/R2/R4 y de las reglas 167/169 que Codex dejó en ATH-STAGING-RECOVERY-012, que no está disponible en este entorno. Detalle: `AI/ATH-STAGING-RECOVERY-013_ESTADO.md`.
+
+## 7. Actualización ATH-STAGING-RECOVERY-016 (2026-10-10)
+Sigue `MIGRATION_PACKAGE_READY = NO`. Los artefactos de ATH-015 no llegaron a Claude Code, así que R1, R2 y R4 no se cierran con datos reales. Se añadió: comparador de 167/168/169 con aborto previo a cualquier escritura, mapeo idempotente de `planning.role`, compuerta de lógica hotelera y estado del reemplazo de la 189 (exige `rule189_intent.json`). 87 pruebas del paquete y 594 del gateway en verde. Detalle: `AI/ATH-STAGING-RECOVERY-016_ESTADO.md`; datos pendientes: `AI/ATH-STAGING-RECOVERY-016_READONLY_REQUEST.md`.

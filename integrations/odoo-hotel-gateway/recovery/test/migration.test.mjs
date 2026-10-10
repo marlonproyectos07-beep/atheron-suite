@@ -5,7 +5,7 @@ import { mkdtempSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { FakeOdoo } from './fake-odoo.mjs';
-import { buildSyntheticExtract } from './synthetic-extract.mjs';
+import { buildSyntheticExtract, seedProtectedRules } from './synthetic-extract.mjs';
 import { TARGET_DB, loadRecoveryConfig, readBackup, m2oName } from '../recovery-lib.mjs';
 import { makeCtx } from '../connect.mjs';
 import { LAYERS, ORDER, executeLayer, verifyLayer } from '../steps.mjs';
@@ -16,10 +16,11 @@ import { runQA, cleanupQA } from '../qa.mjs';
 
 const ENV = { RECOVERY_TARGET_DB: TARGET_DB, ODOO_BASE_URL: `https://${TARGET_DB}.odoo.com`, ODOO_TECHNICAL_USER: 'u', ODOO_TECHNICAL_SECRET: 's', RECOVERY_ANGELA_EMAIL: 'recepcion.prueba@example.invalid' };
 
-function world(fakeOpts = {}, extractOpts = {}) {
+function world(fakeOpts = {}, extractOpts = {}, rulesMode = 'same') {
   const dir = mkdtempSync(resolve(tmpdir(), 'ath-rec-'));
   const extractDir = resolve(dir, 'extract'); buildSyntheticExtract(extractDir, extractOpts);
   const fake = new FakeOdoo(fakeOpts);
+  seedProtectedRules(fake, rulesMode);
   // semillas del entorno nuevo que NO crea la recuperación: vistas padre, recursos/roles/producto de Planning
   const pv = (name) => fake.seed('ir.ui.view', { name, model: 'sale.order', mode: 'primary', priority: 16, arch: '<x/>', active: true });
   for (const [mod, xid, name] of [['sale', 'sale_order_view_kanban', 'sale.order.kanban'], ['sale', 'view_order_form', 'sale.order.form']]) fake.seed('ir.model.data', { module: mod, name: xid, model: 'ir.ui.view', res_id: pv(name) });

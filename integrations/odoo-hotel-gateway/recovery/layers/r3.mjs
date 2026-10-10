@@ -1,6 +1,7 @@
 // R3 — propiedad -> 5 habitaciones -> Casa Completa -> anticipos. Datos del respaldo JSON del repo. Por NOMBRE, nunca por id viejo.
 // Las tarifas (x_hotel_rate*) NO se tocan aquí: son precios reales.
-import { readBackup, splitRow, m2oName, BlockedError, READ_CTX } from '../recovery-lib.mjs';
+import { readBackup, splitRow, m2oName, BlockedError, READ_CTX, tryExtract, EXTRACT_DIR, WRITE_CTX } from '../recovery-lib.mjs';
+import { planRoleMapping, readCurrentRoles } from '../planning-role.mjs';
 import { findOne } from '../connect.mjs';
 
 export const meta = { id: 'R3', title: 'Propiedad, habitaciones, Casa Completa, anticipos', critical: true, needs: 'R1 aplicado (modelos x_hotel_*) y recursos/roles de Planning por nombre' };
@@ -38,6 +39,18 @@ export function plan() {
 }
 
 export const inputs = () => { fromBackup(); };
+
+/**
+ * Atributos de planning.role (x_casa, x_is_a_room_offer) que la regla 167 necesita. Valores ANTIGUOS: AI/recovery-extract/planning_roles.json
+ * (dump). Valores ACTUALES: lectura real del destino. Por nombre exacto, nunca por id; no se inventa ningún valor.
+ * Devuelve el plan; si no hay valores antiguos, devuelve null (queda PENDIENTE y bloquea).
+ */
+async function roleMapping(ctx) {
+  const old = tryExtract('planning_roles.json', ctx.extractDir ?? EXTRACT_DIR);
+  if (old === null) return null;
+  const cur = await readCurrentRoles(ctx.ex, old.map((r) => r.name));
+  return planRoleMapping(old, cur);
+}
 
 export async function run(ctx) {
   const { ex, ensure, log, write } = ctx;
@@ -80,10 +93,28 @@ export async function run(ctx) {
     const p = splitRow(d).scalars; if (propId) p.x_property_id = propId;
     await ensure('x_hotel_deposit_policy', [['x_name', '=', d.x_name]], p, d.x_name);
   }
+
+  // planning.role: atributos de los que depende la regla 167
+  const plan = await roleMapping(ctx);
+  if (plan === null) { log.add('ROLE_ATTR_PENDIENTE', 'planning.role', 'x_casa / x_is_a_room_offer', { note: 'falta AI/recovery-extract/planning_roles.json (valores antiguos del dump); no se escribe ni se inventa nada' }); return; }
+  const ACTION = { FIELD_MISSING: 'ROLE_CAMPO_FALTA', ROLE_ABSENT: 'ROLE_AUSENTE', AMBIGUO: 'ROLE_AMBIGUO' };
+  for (const it of plan.items) {
+    if (it.status === 'MATCH') { log.add('SKIP', 'planning.role', it.name, { id: it.id }); continue; }
+    if (ACTION[it.status]) { log.add(ACTION[it.status], 'planning.role', it.name, { note: `${it.status}${it.fields.length ? ': ' + it.fields.join(', ') : ''}` }); continue; }
+    const apply = it.status === 'VALUES_MISSING' ? it.set : (ctx.args.forceDiff ? Object.fromEntries(Object.keys(it.old).map((f) => [f, it.old[f]])) : null);
+    if (it.status === 'VALUES_DIFFER' && !apply) { log.add('ROLE_CONFLICTO', 'planning.role', it.name, { note: `el destino ya tiene ${JSON.stringify(it.current)}; antiguo ${JSON.stringify(it.old)}; no se sobrescribe sin --force-diff` }); continue; }
+    if (!write) { log.add('ROLE_SET?', 'planning.role', it.name, { note: JSON.stringify(apply) }); continue; }
+    const before = it.status === 'VALUES_MISSING' ? Object.fromEntries(Object.keys(apply).map((f) => [f, false])) : it.current;
+    ctx.journal.append({ op: 'UPDATE', layer: ctx.layer, model: 'planning.role', key: `${it.name} atributos`, id: it.id, before, after: apply });
+    await ex('planning.role', 'write', [[it.id], apply], { context: WRITE_CTX });
+    log.add('UPDATE', 'planning.role', it.name, { id: it.id, fields: Object.keys(apply) });
+  }
 }
 
 export async function verify(ctx) {
   const b = fromBackup(); const checks = [];
+  const rp = await roleMapping(ctx);
+  checks.push(rp === null ? { name: 'planning.role: atributos (falta planning_roles.json)', ok: false, blocked: true } : { name: `planning.role: atributos x_casa / x_is_a_room_offer (${rp.pending.join('; ') || 'todos coinciden'})`, ok: rp.items.every((i) => i.status === 'MATCH') });
   const one = async (model, domain) => (await ctx.ex(model, 'search_read', [domain], { fields: ['id'], limit: 3, context: READ_CTX }));
   const prop = await one('x_hotel_property', [['x_name', '=', LA_MAGIA]]);
   checks.push({ name: 'propiedad La Magia única', ok: prop.length === 1 });

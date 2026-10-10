@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { readFileSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { FakeOdoo } from './fake-odoo.mjs';
-import { buildSyntheticExtract } from './synthetic-extract.mjs';
+import { buildSyntheticExtract, seedProtectedRules } from './synthetic-extract.mjs';
 import { TARGET_DB, loadRecoveryConfig, readBackup, m2oName } from '../recovery-lib.mjs';
 import { makeCtx } from '../connect.mjs';
 import { ORDER, executeLayer } from '../steps.mjs';
@@ -17,10 +17,11 @@ import { plan as r5plan } from '../layers/r5.mjs';
 
 const ENV = { RECOVERY_TARGET_DB: TARGET_DB, ODOO_BASE_URL: `https://${TARGET_DB}.odoo.com`, ODOO_TECHNICAL_USER: 'u', ODOO_TECHNICAL_SECRET: 's', RECOVERY_ANGELA_EMAIL: 'recepcion.prueba@example.invalid' };
 
-function world(extractOpts = {}) {
+function world(extractOpts = {}, rulesMode = 'same') {
   const dir = mkdtempSync(resolve(tmpdir(), 'ath-scope-'));
   const extractDir = resolve(dir, 'extract'); buildSyntheticExtract(extractDir, extractOpts);
   const fake = new FakeOdoo();
+  seedProtectedRules(fake, rulesMode);
   const pv = (name) => fake.seed('ir.ui.view', { name, model: 'sale.order', mode: 'primary', priority: 16, arch: '<x/>', active: true });
   for (const [mod, xid, name] of [['sale', 'sale_order_view_kanban', 'sale.order.kanban'], ['sale', 'view_order_form', 'sale.order.form']]) fake.seed('ir.model.data', { module: mod, name: xid, model: 'ir.ui.view', res_id: pv(name) });
   pv('sale.order.search.inherit.quotation');
@@ -115,7 +116,10 @@ test('R4 excluye acciones, automatizaciones y crons OTA; lo interno se crea INAC
     assert.ok(!names('base.automation').some((n) => /NOBEDS|OTA/.test(n)));
     assert.ok(!names('ir.cron').some((n) => /iCal/.test(n)));
     assert.ok(names('ir.actions.server').includes('SYNTH guardia solapamiento') && names('ir.actions.server').includes('SYNTH accion reserva'));
-    assert.ok(w.fake.rows('base.automation').every((a) => a.active === false));
+    const PROT = /Casa Completa bloquea|Limpiar bloques|Habitacion bloquea/;
+    assert.ok(w.fake.rows('base.automation').filter((a) => !PROT.test(a.name)).every((a) => a.active === false), 'las creadas por R4 son inactivas');
+    assert.equal(w.fake.rows('base.automation').filter((a) => PROT.test(a.name)).length, 3, '167/168/169 preexistentes, sin duplicar');
+    assert.ok(w.fake.rows('base.automation').filter((a) => PROT.test(a.name)).every((a) => a.active === true), '167/168/169 siguen como estaban');
     assert.ok(w.fake.rows('ir.cron').every((c) => c.active === false));
     const ex = r.R4.log.filter((e) => e.action === 'EXCLUYE_OTA').map((e) => e.key).sort();
     assert.deepEqual(ex, ['ATHERON - Anti-duplicado NOBEDS', 'ATHERON - Orden borrador desde reserva OTA', 'ATHERON - Refrescar iCal SOLO 302', 'ATHERON - Refrescar iCal SOLO 302', 'HOTEL v1 — SYNTH llamada externa', 'NOBEDS → Odoo — Recibir Reserva'].sort()); // la acción y su cron
@@ -149,8 +153,9 @@ test('con exclusiones OTA: reaplicar no crea nada y el rollback solo toca lo cre
     const ctx = await w.mk('ROLLBACK');
     const r = await rollback({ ex: ctx.ex, write: true, journal: ctx.journal, log: ctx.log, layer: 'R4' });
     assert.equal(r.ERROR, 0); assert.equal(r.CONFLICT, 0);
-    assert.equal(w.fake.rows('base.automation').length, 0); assert.equal(w.fake.rows('ir.cron').length, 0);
-    assert.ok(!w.fake.rows('ir.actions.server').some((a) => /SYNTH/.test(a.name)));
+    assert.equal(w.fake.rows('base.automation').length, 3, 'solo quedan 167/168/169 (preexistentes)'); assert.equal(w.fake.rows('ir.cron').length, 0);
+    assert.ok(!w.fake.rows('ir.actions.server').some((a) => /SYNTH (guardia|accion)/.test(a.name)));
+    assert.equal(w.fake.rows('ir.actions.server').filter((a) => /SYNTH regla/.test(a.name)).length, 3, 'las acciones de 167/168/169 preexistentes no se tocan');
     const again = await upTo(w, 'R4'); assert.equal(again.R4.status, 'OK');
   } finally { w.cleanup(); }
 });

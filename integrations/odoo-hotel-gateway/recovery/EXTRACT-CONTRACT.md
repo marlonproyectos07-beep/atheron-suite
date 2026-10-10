@@ -26,3 +26,13 @@ Se generan con `recovery/extract/extract.sh` contra una copia **local** del dump
 
 ## Alcance BASE (ATH-STAGING-RECOVERY-013)
 R1 y R4 aplican `recovery/scope.mjs` sobre el extracto: se **excluyen** (y se registran como `EXCLUYE_OTA`) los modelos `x_hotel_ota_feed` y `x_hotel_api_log`, sus campos, los campos que apuntan a ellos o se llaman NOBEDS/Beds24/iCal, y toda acción/automatización/cron cuyo nombre, modelo o **código** apunte a Booking, Airbnb, Beds24, NOBEDS, iCal, `https://…` o `requests.*`. `server_actions.json` debería incluir el `id` de cada fila: así R4 puede convertir `browse(<id>)` entre acciones en búsqueda por nombre+modelo. El código que conserve ids numéricos (≥4 dígitos) escritos a mano **no se crea** (`ID_DURO`) y la capa se detiene.
+
+## Archivos añadidos en ATH-STAGING-RECOVERY-016
+| Archivo | Quién lo entrega | Lo usa | Forma |
+|---|---|---|---|
+| `rules_old.json` | dump antiguo | R4 (**obligatorio**: sin él no hay capa) | `[{name, model, trigger, filter_domain, filter_pre_domain, action_name, code}]` de las reglas 167, 168, 169 |
+| `rules_current.json` | lectura READ-ONLY del staging nuevo | solo `run.mjs rules-compare` (offline); R4 relee en vivo | `[{name, model, exists, active, trigger, filter_domain, filter_pre_domain, code, action_names}]`; ausente = `{exists:false}` |
+| `planning_roles.json` | dump antiguo | R3 (si falta: `ROLE_ATTR_PENDIENTE`, R3 no cierra) | `[{name, x_casa, x_is_a_room_offer}]` |
+| `planning_roles_current.json` | lectura READ-ONLY del staging nuevo | solo `run.mjs role-plan` (offline) | `{fields:{x_casa:bool, x_is_a_room_offer:bool}, roles:[{name, x_casa, x_is_a_room_offer}]}` |
+| `rule189_intent.json` | cotejo de Codex | `replacement189Status()` | `[{intent, conditions[], source}]`; sin él, reemplazo de la 189 = NO |
+Las reglas 167/168/169 se emparejan por **(nombre, modelo)**, nunca se crean por el camino genérico de R4 y nunca se sobrescriben: ver `recovery/rules-compare.mjs`.

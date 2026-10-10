@@ -5,6 +5,8 @@ import { loadExtract, BlockedError, findOldIdLiterals, fieldTokens, sha256, READ
 import { findOne } from '../connect.mjs';
 import { txt } from '../pure.mjs';
 import { classifyOta, hardcodedIds, adaptActionRefs } from '../scope.mjs';
+import { PROTECTED_RULES, compareAll, readCurrentRules } from '../rules-compare.mjs';
+import { hotelLogicGate } from '../hotel-gate.mjs';
 
 export const meta = { id: 'R4', title: 'Reglas: acciones, automatizaciones (inactivas), crons (inactivos)', critical: true, needs: 'AI/recovery-extract/{server_actions,automations,crons}.json con campos derivados' };
 
@@ -25,24 +27,37 @@ const load = (ctx) => {
   // referencias entre acciones por id numérico (`browse(1914)`): se adaptan a nombre+modelo SI el extracto trae esa acción (campo `id`)
   const byId = new Map(actions.filter((a) => a.id != null).map((a) => [Number(a.id), a]));
   for (const a of actions) a.code = adaptActionRefs(a.code, (id) => { const t = byId.get(id); return t ? { name: txt(t.name), model: t.model } : null; }).code;
+  // Reglas protegidas (167/168/169): NUNCA se crean ni se sobrescriben por el camino genérico; las gobierna el comparador.
+  const isProt = (b) => PROTECTED_RULES.some((p) => p.name === txt(b.name) && (b.model === undefined || b.model === p.model));
+  const protAutos = automations.filter(isProt);
+  const protActs = new Set(protAutos.flatMap((b) => b.action_names ?? []));
   const verdict = new Map();   // nombre de acción -> {ota, hard}
   for (const a of actions) verdict.set(txt(a.name), { ota: classifyOta({ name: txt(a.name), model: a.model, code: a.code }), hard: hardcodedIds(a.code) });
-  const kept = actions.filter((a) => { const v = verdict.get(txt(a.name)); return !v.ota.ota && v.hard.length === 0; });
+  const kept = actions.filter((a) => { const v = verdict.get(txt(a.name)); return !v.ota.ota && v.hard.length === 0 && !protActs.has(txt(a.name)); });
   const keptNames = new Set(kept.map((a) => txt(a.name)));
-  const autoV = automations.map((b) => ({ b, ota: classifyOta({ name: txt(b.name), model: b.model, code: String(b.filter_domain ?? '') + String(b.filter_pre_domain ?? '') }) }));
+  const autoV = automations.filter((b) => !isProt(b)).map((b) => ({ b, ota: classifyOta({ name: txt(b.name), model: b.model, code: String(b.filter_domain ?? '') + String(b.filter_pre_domain ?? '') }) }));
   const cronV = crons.map((c) => ({ c, ota: classifyOta({ name: txt(c.cron_name ?? c.name ?? c.action_name), model: '', code: '' }) }));
-  return { actions, automations, crons, verdict, kept, keptNames, autoV, cronV };
+  const oldRules = loadExtract('rules_old.json', dir);   // definición ANTIGUA de 167/168/169 (dump); sin ella no hay con qué comparar
+  return { actions, automations, crons, verdict, kept, keptNames, autoV, cronV, oldRules, protActs };
 };
 
-export const inputs = (ctx) => { load(ctx); };
+export const inputs = (ctx) => { load(ctx); };   // incluye rules_old.json: sin la definición antigua de 167/168/169 no hay capa
 
 export async function run(ctx) {
-  const { actions, automations, crons, verdict, kept, keptNames, autoV, cronV } = load(ctx);
+  const { actions, automations, crons, verdict, kept, keptNames, autoV, cronV, oldRules, protActs } = load(ctx);
   const { ex, ensure, log } = ctx;
   const modelId = async (m) => findOne(ex, 'ir.model', [['model', '=', m]]);
 
+  // ---- 1) compuerta hotelera y reglas protegidas: TODO esto es lectura; si algo no cuadra, la capa se detiene ANTES de escribir
+  const gate = await hotelLogicGate(ex);
+  if (!gate.ok) throw new BlockedError(`compuerta hotelera: faltan dependencias (${gate.failed.map((c) => c.name).join(', ')}); no se muta lógica hotelera`);
+  const cmp = compareAll(oldRules, await readCurrentRules(ex));
+  for (const r of cmp.results) log.add(r.verdict === 'REPLACE_REQUIRED' ? 'REEMPLAZO_REQUERIDO' : r.verdict === 'ABORT' ? 'ABORT' : 'REUSA', 'base.automation', `${r.key} ${r.name}`, { note: `${r.verdict}${r.reasons.length ? ': ' + r.reasons.join('; ') : ''}` });
+  if (cmp.mustAbort) throw new BlockedError(`regla(s) 167/168/169 no comparables (${cmp.results.filter((r) => r.verdict === 'ABORT').map((r) => r.key + ': ' + r.reasons.join(' / ')).join(' | ')}); no se modifica nada`);
+
   // ---- alcance: lo que NO entra, registrado con su motivo (no bloquea) o lo que obliga a parar (bloquea)
   for (const a of actions) {
+    if (protActs.has(txt(a.name))) continue;   // acciones de 167/168/169: las gobierna el comparador, no el filtro de creación
     const v = verdict.get(txt(a.name));
     if (v.ota.ota) log.add('EXCLUYE_OTA', 'ir.actions.server', txt(a.name), { note: v.ota.reasons.join('; ') });
     else if (v.hard.length) log.add('ID_DURO', 'ir.actions.server', txt(a.name), { note: `ids numéricos escritos a mano (${v.hard.slice(0, 6).join(',')}${v.hard.length > 6 ? '…' : ''}); no valen en la base nueva` });
@@ -100,13 +115,15 @@ export async function run(ctx) {
 }
 
 export async function verify(ctx) {
-  const { actions, automations, verdict, kept, keptNames, autoV } = load(ctx); const checks = [];
+  const { actions, automations, verdict, kept, keptNames, autoV, oldRules, protActs } = load(ctx); const checks = [];
+  const cmp = compareAll(oldRules, await readCurrentRules(ctx.ex));
+  for (const r of cmp.results) checks.push({ name: `regla ${r.key} ${r.name}: ${r.verdict}`, ok: r.verdict === 'REUSE_AS_IS' || r.verdict === 'REUSE_WITH_ADAPTATION' });
   for (const a of kept) {
     const r = await ctx.ex('ir.actions.server', 'search_read', [[['name', '=', txt(a.name)]]], { fields: ['code'], limit: 2, context: READ_CTX });
     checks.push({ name: `acción ${txt(a.name)}`, ok: r.length === 1 && sha256(r[0].code) === sha256(a.code) });
   }
   // lo que quedó detenido por ids duros nunca se creó: la capa no puede darse por buena
-  for (const a of actions) { const v = verdict.get(txt(a.name)); if (!v.ota.ota && v.hard.length) checks.push({ name: `acción ${txt(a.name)} (ids numéricos duros)`, ok: false, blocked: true }); }
+  for (const a of actions) { if (protActs.has(txt(a.name))) continue; const v = verdict.get(txt(a.name)); if (!v.ota.ota && v.hard.length) checks.push({ name: `acción ${txt(a.name)} (ids numéricos duros)`, ok: false, blocked: true }); }
   for (const { b, ota } of autoV) {
     if (ota.ota) continue;
     if (b.action_names.some((an) => !keptNames.has(an))) { checks.push({ name: `automatización ${txt(b.name)} (enlazada a acción excluida/detenida)`, ok: false, blocked: true }); continue; }

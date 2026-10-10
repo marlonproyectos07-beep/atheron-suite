@@ -71,6 +71,8 @@ node recovery/run.mjs layer R4 [--apply]
 ```
 Acciones, automatizaciones y crons de `planning.slot`/`sale.order`: disponibilidad, HOLD, exclusión Casa↔habitaciones y **guardia anti-solapamiento**. Todo **inactivo**. Verify: el código de cada acción coincide por SHA-256 con el extracto y cada automatización está inactiva y enlazada. Requiere el extracto completo (incluidos los campos derivados); sin él sale con `3`.
 
+> **Reglas 167/168/169 (016):** R4 las relee del destino y las compara con `rules_old.json`. Verás `REUSA` (se dejan como están), `REEMPLAZO_REQUERIDO` (STOP: difieren o no existen; nunca se sobrescriben) o `BLOCKED` si no se pueden comparar (se aborta antes de escribir). En R3 verás además `ROLE_*` por los atributos de `planning.role`.
+
 ## STEP 6 — R5 reserva directa  · VERIFY · STOP si falla
 ```
 node recovery/run.mjs layer R5 [--apply]
