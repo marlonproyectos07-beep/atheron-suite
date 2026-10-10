@@ -77,6 +77,8 @@ node recovery/run.mjs layer R5 [--apply]
 ```
 24 acciones «HOTEL v1 — …» (CONFIRMAR, HOLD, CHECKIN…, cotizar, motor tarifario…). Código idéntico al respaldo (SHA-256). Una línea `REVISAR` (números iguales a ids del staging viejo dentro del código) ⇒ **STOP** y mostrarla.
 
+> **Alcance base (013):** en los pasos 2, 5 y 6 verás líneas `EXCLUYE_OTA` (componentes de Booking/Airbnb/Beds24/NOBEDS/iCal o con llamadas externas que **no** se crean; informativas), `ADAPTA` (referencias entre acciones convertidas de id a nombre; revisar el texto) y `ID_DURO` (código con ids numéricos de la base antigua; **no se crea y es STOP**).
+
 ## STEP 7 — R6 operador  · VERIFY · STOP si falla
 ```
 node recovery/run.mjs layer R6 [--apply]

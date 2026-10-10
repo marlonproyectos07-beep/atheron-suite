@@ -2,24 +2,34 @@
 import { loadExtract, BlockedError, READ_CTX, EXTRACT_DIR } from '../recovery-lib.mjs';
 import { findOne } from '../connect.mjs';
 import { txt, fieldOrder, selectionCommands, FIELD_OPTIONAL } from '../pure.mjs';
+import { OTA_MODELS, classifyOtaField } from '../scope.mjs';
 
 // Modelos propios admitidos: x_hotel_* y x_guests_line (modelo de Studio «Guests Line», usado por sale.order.x_guest_line_ids).
 export const OWN_MODEL = /^(x_hotel_|x_guests_line$)/;
 
 export const meta = { id: 'R1', title: 'Modelos x_hotel_* y campos de planning.slot', critical: true, needs: 'AI/recovery-extract/{models,fields,selections}.json' };
 
+/**
+ * Carga el extracto y APLICA EL ALCANCE BASE: se excluyen los modelos OTA (x_hotel_ota_feed, x_hotel_api_log), los campos de esos
+ * modelos, los campos que apuntan a ellos y los de nombre NOBEDS/Beds24/iCal. Lo excluido se devuelve en `excluded` para registrarlo.
+ * Los campos de sale.order los crea R2: R1 no los toca.
+ */
 const load = (ctx) => {
   const dir = ctx.extractDir ?? EXTRACT_DIR;
-  // Los campos de sale.order los crea R2 (con las definiciones del respaldo + este extracto como enriquecimiento): R1 no los toca.
-  return { models: loadExtract('models.json', dir), fields: loadExtract('fields.json', dir).filter((f) => f.model !== 'sale.order'), selections: loadExtract('selections.json', dir) };
+  const allModels = loadExtract('models.json', dir), allFields = loadExtract('fields.json', dir).filter((f) => f.model !== 'sale.order');
+  const excluded = [];
+  const models = allModels.filter((m) => { if (OTA_MODELS[m.model]) { excluded.push({ kind: 'modelo', key: m.model, reasons: [OTA_MODELS[m.model]] }); return false; } return true; });
+  const fields = allFields.filter((f) => { const c = classifyOtaField(f); if (c.ota) { excluded.push({ kind: 'campo', key: `${f.model}.${f.name}`, reasons: c.reasons }); return false; } return true; });
+  return { models, fields, excluded, selections: loadExtract('selections.json', dir) };
 };
 
 /** Insumos locales: se validan ANTES de conectar a nada. */
 export const inputs = (ctx) => { load(ctx); };
 
 export async function run(ctx) {
-  const { models, fields, selections } = load(ctx);
+  const { models, fields, selections, excluded } = load(ctx);
   const { ex, ensure, log, write } = ctx;
+  for (const e of excluded) log.add('EXCLUYE_OTA', 'ir.model' + (e.kind === 'campo' ? '.fields' : ''), e.key, { note: e.reasons.join('; ') });
   for (const m of models) {
     if (!OWN_MODEL.test(m.model)) throw new BlockedError(`models.json trae un modelo fuera de alcance: ${m.model}`);
     await ensure('ir.model', [['model', '=', m.model]], { model: m.model, name: txt(m.name), state: 'manual' }, m.model, { compareFields: ['model', 'name'] });

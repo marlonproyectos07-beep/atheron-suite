@@ -89,3 +89,6 @@ Todas se ejecutan al correr el STEP indicado del runbook; si fallan, es STOP.
 
 ## 5. Archivos
 `integrations/odoo-hotel-gateway/recovery/`: `run.mjs` (CLI), `guard.mjs`, `snapshot.mjs`, `engine.mjs` (bitácora, ensure, rollback), `steps.mjs`, `qa.mjs`, `layers/r1…r7.mjs`, `test/` (Odoo falso, extracto sintético, 51 pruebas), `EXTRACT-CONTRACT.md`, `extract/` (no probado). Runbook: `AI/RUNBOOK-CODEX-STAGING-RECOVERY.md`.
+
+## 6. Actualización ATH-STAGING-RECOVERY-013 (2026-10-10)
+Sigue siendo `MIGRATION_PACKAGE_READY = NO`. R1, R4 y R5 ahora aplican el **alcance base sin OTA** (`recovery/scope.mjs`); R4 y R5 se detienen con `ID_DURO` si el código trae ids numéricos de la base antigua; R5 adapta tres referencias entre acciones (`browse(1914)`, `browse(1921)`, `browse(1897)`) a búsqueda por nombre. El extracto debe incluir también los campos propios de `planning.role`. Las 66 pruebas del paquete y las 573 del gateway pasan. **Faltan** las diferencias de R1/R2/R4 y de las reglas 167/169 que Codex dejó en ATH-STAGING-RECOVERY-012, que no está disponible en este entorno. Detalle: `AI/ATH-STAGING-RECOVERY-013_ESTADO.md`.
