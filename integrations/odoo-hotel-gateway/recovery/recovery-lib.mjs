@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { deriveExtractFile } from './closure.mjs';
 
 export const TARGET_DB = 'atheron1-hotel-staging-20261009';
 export const FORBIDDEN_DBS = Object.freeze(['atheron1-hotel-staging-20260923', 'atheron1']);
@@ -72,8 +73,10 @@ const hasPlaceholder = (v) => JSON.stringify(v).includes(PLACEHOLDER);
 /** Carga AI/recovery-extract/<file>. Si falta o contiene el marcador, BLOQUEA sin inventar nada. */
 export function loadExtract(file, dir = EXTRACT_DIR) {
   const p = resolve(dir, file);
-  if (!existsSync(p)) throw new BlockedError(`FALTA ${p.replace(REPO_ROOT + '/', '')} (llega con el dump; ver recovery/EXTRACT-CONTRACT.md)`);
-  const data = JSON.parse(readFileSync(p, 'utf8'));
+  // ATH-020: si el archivo del contrato no existe pero está publicado el cierre ath012_closure.json, se DERIVA de él (ver closure.mjs).
+  const derived = existsSync(p) ? null : deriveExtractFile(file, dir, { backupDir: BACKUP_DIR });
+  if (!existsSync(p) && derived === null) throw new BlockedError(`FALTA ${p.replace(REPO_ROOT + '/', '')} (llega con el dump; ver recovery/EXTRACT-CONTRACT.md)`);
+  const data = derived ?? JSON.parse(readFileSync(p, 'utf8'));
   if (hasPlaceholder(data)) throw new BlockedError(`${file} contiene ${PLACEHOLDER}: metadata sin completar`);
   if (!Array.isArray(data)) throw new BlockedError(`${file} debe ser un arreglo JSON (ver contrato)`);
   return data;

@@ -36,3 +36,10 @@ R1 y R4 aplican `recovery/scope.mjs` sobre el extracto: se **excluyen** (y se re
 | `planning_roles_current.json` | lectura READ-ONLY del staging nuevo | solo `run.mjs role-plan` (offline) | `{fields:{x_casa:bool, x_is_a_room_offer:bool}, roles:[{name, x_casa, x_is_a_room_offer}]}` |
 | `rule189_intent.json` | cotejo de Codex | `replacement189Status()` | `[{intent, conditions[], source}]`; sin él, reemplazo de la 189 = NO |
 Las reglas 167/168/169 se emparejan por **(nombre, modelo)**, nunca se crean por el camino genérico de R4 y nunca se sobrescriben: ver `recovery/rules-compare.mjs`.
+
+## ATH-STAGING-RECOVERY-020 — el contrato se deriva del cierre publicado
+Si `AI/recovery-extract/ath012_closure.json` existe y falta un archivo de este contrato, `loadExtract` lo **deriva** del cierre (`recovery/closure.mjs`): `models`, `fields`, `selections`, `server_actions`, `automations`, `crons`, `rules_old`, `planning_roles`, `rule189_intent`. Un archivo real del mismo nombre, si existe, manda. Reglas de la derivación:
+- el modelo y el binding de las 12 acciones directas salen de `AI/staging-backup/ir-actions-server-hotel.json`, emparejando por **id antiguo Y nombre**; el id antiguo nunca llega al destino. El **código** es siempre el del volcado;
+- `R4_DEFERRED` (en `closure.mjs`): las dos automatizaciones «Noches desde fechas» quedan fuera del núcleo R4 y R4 las registra como `DIFERIDO` con su motivo;
+- `x_hotel_quote.x_api_client_ref` y `x_api_user_id` se excluyen en R1 (`scope.mjs`, campos de identidad del cliente API/Gateway);
+- `rules_current.json` y `planning_roles_current.json` de Codex se aceptan tal como están publicados (`adaptRulesCurrent`, `adaptRolesCurrent`); «[]» ≡ sin domain.

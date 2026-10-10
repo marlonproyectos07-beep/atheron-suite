@@ -9,11 +9,16 @@
 export const OTA_MODELS = Object.freeze({
   x_hotel_ota_feed: 'configuración de feeds iCal por canal/unidad (Booking/Airbnb)',
   x_hotel_api_log: 'bitácora del Gateway/importador OTA (snapshots por UID); uso genérico dudoso, se excluye hasta que dirección decida',
+  x_hotel_api_lock: 'idempotencia del Gateway/API externa (ATH-020); fuera del alcance interno mínimo',
+  x_hotel_ext_conflict: 'cola de conflictos con calendarios externos (ATH-020); fuera del alcance interno mínimo',
 });
 
 const NAME_RX = /nobeds|\bOTA\b|airbnb|beds24|\bical\b|booking\.com|\bbooking\b(?![ _]engine)(?!_source)/i;
-const CODE_RX = /x_hotel_ota_feed|x_hotel_api_log|x_nobeds|beds24|nobeds|airbnb|booking\.com|BEGIN:VCALENDAR|\bical\b|urlopen|requests\.(get|post|put|delete|patch)|https?:\/\//i;
+const CODE_RX = /x_hotel_ota_feed|x_hotel_api_log|x_hotel_api_lock|x_hotel_ext_conflict|x_nobeds|beds24|nobeds|airbnb|booking\.com|BEGIN:VCALENDAR|\bical\b|urlopen|requests\.(get|post|put|delete|patch)|https?:\/\//i;
 const FIELD_RX = /nobeds|beds24|airbnb|\bical\b|_ical|inbound/i;
+// ATH-020: campos de identidad del cliente de la API/Gateway externa (x_hotel_quote.x_api_client_ref / x_api_user_id). Son definiciones sin valores,
+// ninguna acción interna del alcance los usa y sirven solo al Gateway: se excluyen del R1 mínimo sin API.
+const API_FIELD_RX = /^x_api_/i;
 
 /**
  * ¿Es OTA/externo? Devuelve {ota, reasons[]}. Se mira (1) el modelo, (2) el nombre, (3) el código de la acción.
@@ -32,6 +37,7 @@ export function classifyOtaField(f) {
   if (OTA_MODELS[f.model]) reasons.push(`campo de modelo OTA ${f.model}`);
   if (f.relation && OTA_MODELS[f.relation]) reasons.push(`relación a modelo OTA ${f.relation}`);
   if (FIELD_RX.test(f.name ?? '')) reasons.push(`nombre de campo «${f.name}»`);
+  if (API_FIELD_RX.test(f.name ?? '')) reasons.push(`campo de identidad de la API/Gateway externa «${f.name}»`);
   return { ota: reasons.length > 0, reasons };
 }
 

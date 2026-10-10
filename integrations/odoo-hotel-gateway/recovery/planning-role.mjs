@@ -60,3 +60,24 @@ export const READONLY_ROLE_QUERY = Object.freeze({
   fields_get: { model: 'planning.role', attributes: ['type', 'relation', 'required', 'selection', 'string'], only: [...ROLE_FIELDS, 'x_hotel_unit_ids'] },
   search_read: { model: 'planning.role', domain: [], fields: ['name', ...ROLE_FIELDS, 'x_hotel_unit_ids', 'resource_ids'], context: { active_test: false } },
 });
+
+/**
+ * ATH-020 — comparación de ESTRUCTURA rol a rol (además de x_casa / x_is_a_room_offer): recursos asociados (por nombre), active y sync_shift_rental.
+ * old = filas de planning_roles.json con {name, active, sync_shift_rental, resource_names}; current = {roles:[{name, structure:{active, resource_names, sync_shift_rental}}]}.
+ * Nunca por id. Una diferencia no se corrige aquí: se informa (STRUCTURE_DIFFERS) porque cambiaría qué recurso representa la habitación.
+ */
+export function compareRoleStructure(oldRoles, current) {
+  const norm = (v) => (v === false || v === undefined ? null : v);
+  return (oldRoles ?? []).map((o) => {
+    const matches = (current?.roles ?? []).filter((r) => r.name === o.name);
+    if (matches.length !== 1) return { name: o.name, status: matches.length ? 'AMBIGUO' : 'ROLE_ABSENT', diffs: [] };
+    const st = matches[0].structure;
+    if (!st || Object.keys(st).length === 0) return { name: o.name, status: 'NO_DATA', diffs: [] };
+    const diffs = [];
+    if (norm(o.active) !== norm(st.active)) diffs.push(`active: antiguo ${o.active} ≠ actual ${st.active}`);
+    if (norm(o.sync_shift_rental) !== norm(st.sync_shift_rental)) diffs.push(`sync_shift_rental: antiguo ${o.sync_shift_rental} ≠ actual ${st.sync_shift_rental}`);
+    const a = JSON.stringify([...(o.resource_names ?? [])].sort()), b = JSON.stringify([...(st.resource_names ?? [])].sort());
+    if (a !== b) diffs.push(`recursos: antiguo ${a} ≠ actual ${b}`);
+    return { name: o.name, status: diffs.length ? 'STRUCTURE_DIFFERS' : 'MATCH', diffs };
+  });
+}

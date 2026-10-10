@@ -9,7 +9,7 @@ export const LAYERS = Object.freeze({ R1: r1, R2: r2, R3: r3, R4: r4, R5: r5, R6
 export const ORDER = Object.freeze(['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']);
 // DIFF = lo preexistente no coincide con lo esperado: una persona decide (aceptar o --force-diff). Nunca se avanza en silencio.
 const BLOCKING_ACTIONS = new Set(['BLOQUEA', 'FALTA', 'OMITE', 'DEP_FALTA', 'AMBIGUO', 'ERROR', 'DIFF', 'ID_DURO',
-  'REEMPLAZO_REQUERIDO', 'ROLE_ATTR_PENDIENTE', 'ROLE_CAMPO_FALTA', 'ROLE_AUSENTE', 'ROLE_CONFLICTO', 'ROLE_AMBIGUO']);
+  'REEMPLAZO_REQUERIDO', 'REGLA_ADAPTAR', 'ROLE_ATTR_PENDIENTE', 'ROLE_CAMPO_FALTA', 'ROLE_AUSENTE', 'ROLE_CONFLICTO', 'ROLE_AMBIGUO']);
 
 /** Verificación de solo lectura de una capa; un BlockedError (p. ej. falta el extracto) cuenta como NO verificada. */
 export async function verifyLayer(ctx, name) {

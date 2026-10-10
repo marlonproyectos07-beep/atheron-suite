@@ -11,6 +11,7 @@
 //   node recovery/run.mjs qa --date YYYY-MM-DD [--apply]   |   node recovery/run.mjs qa-cleanup [--apply]
 //   node recovery/run.mjs diff <dirPRE> <dirPOST>
 //   node recovery/run.mjs rules-compare <rules_old.json> <rules_current.json>   # OFFLINE: 167/168/169 → REUSE_AS_IS | REUSE_WITH_ADAPTATION | REPLACE_REQUIRED | ABORT (salida 0/4/3)
+//   node recovery/run.mjs close-analysis [--json]   # OFFLINE (ATH-020): cierre analítico R1/R2/R4 con los artefactos publicados (salida 0 = paquete listo en lo estático, 4 = no)
 //   node recovery/run.mjs role-plan <planning_roles_old.json> <planning_roles_current.json>   # OFFLINE: plan de x_casa / x_is_a_room_offer
 // Códigos de salida: 0 ok · 1 error · 2 guardia/permiso · 3 bloqueado por falta de insumo · 4 parcial/verificación fallida (STOP)
 import { resolve } from 'node:path';
@@ -24,6 +25,8 @@ import { runQA, cleanupQA } from './qa.mjs';
 import { readFileSync } from 'node:fs';
 import { compareAll } from './rules-compare.mjs';
 import { planRoleMapping } from './planning-role.mjs';
+import { adaptRulesCurrent, adaptRolesCurrent } from './closure.mjs';
+import { analyze } from './closure-analysis.mjs';
 
 const argv = process.argv.slice(2);
 const [cmd, arg] = argv;
@@ -31,13 +34,15 @@ const opt = (name) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1
 const out = (o) => console.log(JSON.stringify(o, null, 2));
 const OUT = resolve(REPO_ROOT, 'integrations/odoo-hotel-gateway/recovery/out');
 
-const CMDS = new Set(['precheck', 'snapshot', 'layer', 'verify', 'rollback', 'qa', 'qa-cleanup', 'diff', 'rules-compare', 'role-plan']);
+const CMDS = new Set(['close-analysis', 'precheck', 'snapshot', 'layer', 'verify', 'rollback', 'qa', 'qa-cleanup', 'diff', 'rules-compare', 'role-plan']);
 
 async function main() {
   if (!CMDS.has(cmd)) { console.error(`comando desconocido: ${cmd}\nBase permitida: ${TARGET_DB}`); return 1; }
   // OFFLINE (sin red, sin variables): comparar 167/168/169 y planificar planning.role a partir de archivos que entrega Codex
-  if (cmd === 'rules-compare') { const c = compareAll(JSON.parse(readFileSync(resolve(argv[1]), 'utf8')), JSON.parse(readFileSync(resolve(argv[2]), 'utf8'))); out(c); return c.mustAbort ? 3 : c.mayMutate ? 0 : 4; }
-  if (cmd === 'role-plan') { const p = planRoleMapping(JSON.parse(readFileSync(resolve(argv[1]), 'utf8')), JSON.parse(readFileSync(resolve(argv[2]), 'utf8'))); out(p); return p.closed ? 0 : 4; }
+  // ATH-020: aceptan también la forma publicada por Codex (rules_current.json `{rules:[…]}`, planning_roles_current.json `{roles:[…]}`)
+  if (cmd === 'close-analysis') { const r = await analyze(); out(r.gate); if (argv.includes('--json')) out(r); return r.static_ok ? 0 : 4; }
+  if (cmd === 'rules-compare') { const c = compareAll(JSON.parse(readFileSync(resolve(argv[1]), 'utf8')), adaptRulesCurrent(JSON.parse(readFileSync(resolve(argv[2]), 'utf8')))); out(c); return c.mustAbort ? 3 : c.mayMutate ? 0 : 4; }
+  if (cmd === 'role-plan') { const p = planRoleMapping(JSON.parse(readFileSync(resolve(argv[1]), 'utf8')), adaptRolesCurrent(JSON.parse(readFileSync(resolve(argv[2]), 'utf8')))); out(p); return p.closed ? 0 : 4; }
   if (cmd === 'diff') { const d = diffSnapshots(resolve(argv[1]), resolve(argv[2])); out(d); return d.identical ? 0 : 4; }
   if (cmd === 'layer' || cmd === 'verify') {
     // insumos locales primero: si faltan (extracto, correo...) se sale con BLOCKED sin abrir ninguna conexión

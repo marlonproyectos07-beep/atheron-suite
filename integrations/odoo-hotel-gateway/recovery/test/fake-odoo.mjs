@@ -6,9 +6,9 @@ export class FakeOdoo {
     this.db = db; this.models = new Map(); this.calls = []; this.hooks = { create: null, unlink: null, write: null };
     const std = {
       'ir.model': { model: 'char', name: 'char', state: 'char', transient: 'boolean' },
-      'ir.model.fields': { name: 'char', model: 'char', model_id: 'many2one:ir.model', ttype: 'char', field_description: 'char', relation: 'char', relation_field: 'char', required: 'boolean', readonly: 'boolean', help: 'char', state: 'char', selection_ids: 'one2many', store: 'boolean', copied: 'boolean', index: 'char', size: 'integer', translate: 'boolean', compute: 'char', depends: 'char', domain: 'char', on_delete: 'char', currency_field: 'char' },
+      'ir.model.fields': { name: 'char', model: 'char', model_id: 'many2one:ir.model', ttype: 'char', field_description: 'char', relation: 'char', relation_field: 'char', required: 'boolean', readonly: 'boolean', help: 'char', state: 'char', selection_ids: 'one2many', store: 'boolean', copied: 'boolean', index: 'char', size: 'integer', translate: 'boolean', compute: 'char', depends: 'char', domain: 'char', on_delete: 'char', currency_field: 'char', related: 'char', relation_table: 'char', column1: 'char', column2: 'char' },
       'ir.actions.server': { name: 'char', model_id: 'many2one:ir.model', state: 'char', code: 'text', binding_type: 'char', binding_model_id: 'many2one:ir.model' },
-      'base.automation': { name: 'char', model_id: 'many2one:ir.model', trigger: 'char', active: 'boolean', filter_domain: 'char', filter_pre_domain: 'char', action_server_ids: 'many2many:ir.actions.server', trigger_field_ids: 'many2many:ir.model.fields' },
+      'base.automation': { name: 'char', model_id: 'many2one:ir.model', trigger: 'char', active: 'boolean', filter_domain: 'char', filter_pre_domain: 'char', action_server_ids: 'many2many:ir.actions.server', trigger_field_ids: 'many2many:ir.model.fields', on_change_field_ids: 'many2many:ir.model.fields' },
       'ir.cron': { cron_name: 'char', ir_actions_server_id: 'many2one:ir.actions.server', interval_number: 'integer', interval_type: 'char', active: 'boolean' },
       'ir.ui.view': { name: 'char', model: 'char', inherit_id: 'many2one:ir.ui.view', mode: 'char', priority: 'integer', arch: 'text', active: 'boolean', type: 'char' },
       'ir.ui.menu': { name: 'char', parent_id: 'many2one:ir.ui.menu', sequence: 'integer', action: 'char', active: 'boolean' },
@@ -21,8 +21,9 @@ export class FakeOdoo {
       'planning.role': { name: 'char' },
       'planning.slot': { name: 'char', resource_id: 'many2one:resource.resource', role_id: 'many2one:planning.role', start_datetime: 'datetime', end_datetime: 'datetime', state: 'char' },
       'product.template': { name: 'char', default_code: 'char' },
-      'sale.order': { name: 'char', partner_id: 'many2one:res.partner', state: 'char', order_line: 'one2many' },
+      'sale.order': { name: 'char', partner_id: 'many2one:res.partner', state: 'char', order_line: 'one2many:sale.order.line' },
       'res.partner': { name: 'char' },
+      'res.country': { name: 'char' }, 'res.company': { name: 'char' }, 'project.project': { name: 'char' }, 'project.task.type': { name: 'char' }, 'sale.order.line': { name: 'char', order_id: 'many2one:sale.order' }, 'project.task': { name: 'char' },
       'res.users': { name: 'char', login: 'char', email: 'char', active: 'boolean', [groupsField]: 'many2many:res.groups' },
       'res.groups': { name: 'char' },
       'account.payment': { amount: 'float', state: 'char' },
@@ -49,6 +50,21 @@ export class FakeOdoo {
   }
   #addRow(model, vals) { const m = this.models.get(model); const id = m.next++; m.rows.set(id, { id, ...vals }); return id; }
   seed(model, vals) { return this.#addRow(model, vals); }
+  /** ATH-020: crea una fila de ir.model.fields (state «base») por cada campo estándar del fake, como tiene Odoo real; así R4 puede resolver campos disparadores por nombre. */
+  syncStdFieldRows() {
+    for (const [model, m] of this.models) {
+      if (model === 'ir.model' || model === 'ir.model.fields') continue;
+      const mid = this.rows('ir.model').find((r) => r.model === model)?.id;
+      for (const [name, d] of m.fields) if (name !== 'id' && name !== 'display_name' && !this.rows('ir.model.fields').some((r) => r.model === model && r.name === name)) this.#addRow('ir.model.fields', { name, model, model_id: mid, ttype: d.type, relation: d.relation ?? false, state: 'base' });
+    }
+  }
+  /** ATH-020: declara un campo PREEXISTENTE del destino (estándar o de módulo): queda en fields_get y como fila de ir.model.fields. */
+  defineField(model, name, type = 'char', relation = null) {
+    const m = this.models.get(model); if (!m) throw new Error(`fake: modelo ${model} no existe`);
+    m.fields.set(name, { type, relation });
+    const mid = this.rows('ir.model').find((r) => r.model === model)?.id;
+    return this.#addRow('ir.model.fields', { name, model, model_id: mid, ttype: type, relation: relation ?? false, state: 'base' });
+  }
   rows(model) { return [...(this.models.get(model)?.rows.values() ?? [])]; }
   get writeCalls() { return this.calls.filter((c) => ['create', 'write', 'unlink'].includes(c.method)); }
 
@@ -137,7 +153,7 @@ export class FakeOdoo {
       case 'search_count': return this.#search(model, a[0], kw).length;
       case 'search_read': return this.#search(model, a[0], kw).map((r) => this.#out(model, r, kw.fields));
       case 'read': return a[0].map((id) => { const r = this.#model(model).rows.get(id); if (!r) throw this.#err(`Record does not exist or has been deleted: ${model}(${id})`); return this.#out(model, r, a[1]); });
-      case 'fields_get': return Object.fromEntries([...this.#model(model).fields].map(([n, d]) => [n, { type: d.type }]));
+      case 'fields_get': return Object.fromEntries([...this.#model(model).fields].map(([n, d]) => [n, { type: d.type, ...(d.relation ? { relation: d.relation } : {}) }]));
       case 'create': return this.#create(model, a[0]);
       case 'write': {
         if (this.hooks.write) this.hooks.write(model, a[0], a[1]);
@@ -173,7 +189,7 @@ export class FakeOdoo {
       if (!/^x_/.test(vals.name)) throw this.#err('Los campos manuales deben empezar por x_');
       if (['many2one', 'one2many', 'many2many'].includes(vals.ttype) && !this.models.has(vals.relation)) throw this.#err(`Unknown model ${vals.relation}`);
       if (vals.ttype === 'one2many' && !this.models.get(vals.relation)?.fields.has(vals.relation_field)) throw this.#err(`Unknown relation_field ${vals.relation_field}`);
-      if (vals.ttype === 'selection' && !vals.selection_ids?.length) throw this.#err('selection sin opciones');
+      if (vals.ttype === 'selection' && !vals.related && !vals.selection_ids?.length) throw this.#err('selection sin opciones');
       row.model = owner.model; this.models.get(owner.model).fields.set(vals.name, { type: vals.ttype, relation: vals.relation ?? null });
     }
     if (model === 'ir.cron' && !vals.ir_actions_server_id) throw this.#err('cron sin acción');

@@ -103,11 +103,10 @@ test('R1: orden de campos y selection', () => {
   assert.equal(txt({ es_CO: 'x' }), 'x');
 });
 
-test('R1/R4/R7 sin extracto: terminan en BLOCKED (código 3) sin tocar red', () => {
-  for (const s of ['r1-models-fields.mjs', 'r4-actions-automations.mjs']) {
-    try { execFileSync('node', [resolve(L.REPO_ROOT, 'integrations/odoo-hotel-gateway/recovery', s)], { env: { ...process.env, ...ENV }, stdio: 'pipe' }); assert.fail('debió salir con 3'); }
-    catch (e) { assert.equal(e.status, 3, s); assert.match(String(e.stdout), /BLOCKED: FALTA AI\/recovery-extract/); }
-  }
+test('sin extracto ni cierre publicado, loadExtract termina en BLOCKED sin tocar red (ATH-020: con el cierre, R1/R4 se derivan de él)', async () => {
+  const { mkdtempSync, rmSync } = await import('node:fs'); const { tmpdir } = await import('node:os');
+  const d = mkdtempSync(resolve(tmpdir(), 'ath-empty-'));
+  try { assert.throws(() => L.loadExtract('models.json', d), (e) => e instanceof L.BlockedError && /FALTA/.test(e.message)); } finally { rmSync(d, { recursive: true, force: true }); }
 });
 
 test('R3 --plan funciona sin red y trae 5 habitaciones + Casa', () => {

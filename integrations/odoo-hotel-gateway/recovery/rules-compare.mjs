@@ -2,7 +2,7 @@
 // Principio: estas reglas YA EXISTEN en el staging nuevo. Nunca se sobrescriben a ciegas. Antes de que R4 toque nada, se lee la
 // versión ACTUAL real (disparador, domain, pre-domain, código) y se compara con la antigua del dump. Si no se puede comparar,
 // se ABORTA antes de modificar. Se empareja por (nombre, modelo), jamás por id.
-import { READ_CTX } from './recovery-lib.mjs';
+import { READ_CTX, sha256 } from './recovery-lib.mjs';
 import { txt } from './pure.mjs';
 
 /** Reglas protegidas. `expected_trigger` y `name` salen de AI/staging-backup/base-automation.json; `intent` de los scripts ATH-DISP-001. */
@@ -22,13 +22,26 @@ const RANK = { REUSE_AS_IS: 0, REUSE_WITH_ADAPTATION: 1, REPLACE_REQUIRED: 2, AB
 /** Código Python sin comentarios, sin líneas vacías ni espacios finales; conserva la sangría (es significativa). */
 export const canonCode = (c) => String(c ?? '').replace(/\r\n?/g, '\n').split('\n').map((l) => l.replace(/\s+$/, '')).filter((l) => l.trim() !== '' && !l.trim().startsWith('#')).join('\n');
 /** Domain/pre-domain: sin espacios, comillas simples, sin comas finales. `false`/null/'' son lo mismo (sin domain). */
-export const canonDomain = (d) => { if (d === false || d == null) return ''; return String(d).replace(/\s+/g, '').replace(/"/g, "'").replace(/,([\]\)])/g, '$1'); };
+export const canonDomain = (d) => { if (d === false || d == null) return ''; const t = String(d).replace(/\s+/g, '').replace(/"/g, "'").replace(/,([\]\)])/g, '$1'); return t === '[]' ? '' : t; };   // «[]» = sin domain (ATH-020: la lectura de Odoo 19 muestra «[]» donde el dump guarda null)
 /** Esqueleto tolerante a adaptación: los ids numéricos duros y las referencias entre acciones (browse(N) / search(name…).ensure_one()) quedan neutros. */
 export const skeleton = (c) => canonCode(c)
   .replace(/env\[(['"])ir\.actions\.server\1\](?:\.sudo\(\))?\.browse\(\s*\d+\s*\)/g, 'ACTREF')
   .replace(/env\[(['"])ir\.actions\.server\1\](?:\.sudo\(\))?\.search\(\[\('name'[^\n]*?\],\s*limit=1\)(?:\.ensure_one\(\))?/g, 'ACTREF')
   // solo ids (>=4 dígitos) FUERA de cadenas: un 16 o un 20 (horas, contadores) cambia el comportamiento y debe contar como diferencia
   .replace(/('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")|(?<![\w.])\d{4,}(?![\w.])/g, (m, str) => str ?? 'N');
+
+/**
+ * ATH-020 — ¿la ÚNICA diferencia de código es que `old` agrega claves x_* a un diccionario (p. ej. create({... 'x_bloqueo_src_id': …}))?
+ * Se quitan de `old` solo esas claves y se exige igualdad exacta (canónica) con `current`. Devuelve {keys} o null. Conservador: ante cualquier otra diferencia, null.
+ */
+export function payloadExtension(oldCode, curCode) {
+  const keysOf = (c) => new Set([...String(c).matchAll(/'(x_[a-z0-9_]+)'\s*:/g)].map((m) => m[1]));
+  const have = keysOf(curCode); const extra = [...keysOf(oldCode)].filter((k) => !have.has(k));
+  if (!extra.length) return null;
+  let stripped = canonCode(oldCode);
+  for (const k of extra) stripped = stripped.replace(new RegExp(`,\\s*'${k}'\\s*:\\s*[^,}]+(?=\\s*[,}])`, 'g'), '');
+  return canonCode(stripped) === canonCode(curCode) ? { keys: extra.sort() } : null;
+}
 
 const hasContent = (r) => r && typeof r === 'object';
 const missingAttrs = (r) => ['trigger', 'filter_domain', 'filter_pre_domain', 'code'].filter((k) => r[k] === undefined);
@@ -54,9 +67,15 @@ export function compareRule(old, current) {
   if (canonDomain(old.filter_domain) !== canonDomain(current.filter_domain)) reasons.push('filter_domain distinto');
   if (canonDomain(old.filter_pre_domain) !== canonDomain(current.filter_pre_domain)) reasons.push('filter_pre_domain distinto');
   const exact = canonCode(old.code) === canonCode(current.code);
-  if (!exact && skeleton(old.code) !== skeleton(current.code)) reasons.push('el código difiere en su estructura (no solo ids o referencias)');
+  let ext = null;
+  if (!exact && skeleton(old.code) !== skeleton(current.code)) {
+    ext = payloadExtension(old.code, current.code);
+    if (!ext) reasons.push('el código difiere en su estructura (no solo ids o referencias)');
+  }
   if (reasons.length) return { verdict: 'REPLACE_REQUIRED', reasons };
-  return exact ? { verdict: 'REUSE_AS_IS', reasons: [] } : { verdict: 'REUSE_WITH_ADAPTATION', reasons: ['solo difieren enteros, referencias a acciones o comentarios'] };
+  if (ext) return { verdict: 'REUSE_WITH_ADAPTATION', write_required: true, reasons: [`el destino conserva trigger, domain y estructura; al payload de create() le faltan las claves ${ext.keys.join(', ')} que sí tiene el dump`],
+    adaptation: { kind: 'PAYLOAD_EXTENSION', keys: ext.keys, target_code: old.code, target_sha256: sha256(old.code) } };
+  return exact ? { verdict: 'REUSE_AS_IS', write_required: false, reasons: [] } : { verdict: 'REUSE_WITH_ADAPTATION', write_required: false, reasons: ['solo difieren enteros, referencias a acciones o comentarios'] };
 }
 
 /**
@@ -71,7 +90,7 @@ export function compareAll(oldRows, currentRows) {
     return { key: p.key, name: p.name, intent: p.intent, ...compareRule(o[0], c[0]) };
   });
   const worst = results.reduce((a, r) => (RANK[r.verdict] > RANK[a] ? r.verdict : a), 'REUSE_AS_IS');
-  return { results, overall: worst, mayMutate: RANK[worst] <= RANK.REUSE_WITH_ADAPTATION, mustAbort: worst === 'ABORT' };
+  return { results, overall: worst, mayMutate: RANK[worst] <= RANK.REUSE_WITH_ADAPTATION, mustAbort: worst === 'ABORT', writeRequired: results.filter((r) => r.write_required).map((r) => r.key) };
 }
 
 /**
@@ -87,7 +106,7 @@ export async function readCurrentRules(ex) {
     const r = rows[0];
     const [m] = await ex('ir.model', 'read', [[Array.isArray(r.model_id) ? r.model_id[0] : r.model_id], ['model']], { context: READ_CTX });
     const acts = r.action_server_ids?.length ? await ex('ir.actions.server', 'read', [r.action_server_ids, ['name', 'code']], { context: READ_CTX }) : [];
-    out.push({ name: p.name, model: m?.model, exists: true, active: r.active, trigger: r.trigger, filter_domain: r.filter_domain ?? false, filter_pre_domain: r.filter_pre_domain ?? false, code: acts.map((a) => a.code ?? '').join('\n'), action_names: acts.map((a) => a.name) });
+    out.push({ name: p.name, model: m?.model, exists: true, active: r.active, trigger: r.trigger, filter_domain: r.filter_domain ?? false, filter_pre_domain: r.filter_pre_domain ?? false, ...(acts.length > 0 && acts.every((a) => typeof a.code === 'string' && a.code.trim() !== '') ? { code: acts.map((a) => a.code).join('\n') } : {}), action_names: acts.map((a) => a.name), action_ids: acts.map((a) => a.id) });
   }
   return out;
 }

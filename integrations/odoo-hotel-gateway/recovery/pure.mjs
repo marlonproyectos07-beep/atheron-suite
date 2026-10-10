@@ -27,7 +27,7 @@ export const fieldOrder = (rows) => [...rows].sort((a, b) => (TTYPE_RANK[a.ttype
 export const selectionCommands = (rows) => [...rows].sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0)).map((r) => [0, 0, { value: r.value, name: txt(r.name), sequence: r.sequence ?? 0 }]);
 
 /** Atributos opcionales de un campo que se copian SOLO si el dump los trae (nada se rellena por defecto). */
-export const FIELD_OPTIONAL = ['help', 'size', 'copied', 'index', 'translate', 'store', 'compute', 'depends', 'domain', 'on_delete', 'relation_field', 'readonly', 'required'];
+export const FIELD_OPTIONAL = ['help', 'size', 'copied', 'index', 'translate', 'store', 'compute', 'depends', 'domain', 'on_delete', 'relation_field', 'readonly', 'required', 'related', 'relation_table', 'column1', 'column2', 'currency_field'];
 
 /**
  * Convierte el texto de selección que devuelve el respaldo ("[('a', 'A'), ('b', 'B')]") en [{value,name,sequence}].

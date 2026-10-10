@@ -89,7 +89,10 @@ test('campos OTA: por modelo, por relación a modelo OTA y por nombre NOBEDS/Bed
   assert.equal(classifyOtaField({ model: 'planning.slot', name: 'x_nobeds_id' }).ota, true);
   assert.equal(classifyOtaField({ model: 'planning.slot', name: 'x_hotel_block_kind' }).ota, false);
   assert.equal(classifyOtaField({ model: 'planning.slot', name: 'x_bloqueo_ref' }).ota, false);
-  assert.deepEqual(Object.keys(OTA_MODELS), ['x_hotel_ota_feed', 'x_hotel_api_log']);
+  assert.deepEqual(Object.keys(OTA_MODELS), ['x_hotel_ota_feed', 'x_hotel_api_log', 'x_hotel_api_lock', 'x_hotel_ext_conflict']);
+  assert.equal(classifyOtaField({ model: 'x_hotel_quote', name: 'x_api_client_ref' }).ota, true);   // ATH-020: identidad del cliente API/Gateway
+  assert.equal(classifyOtaField({ model: 'x_hotel_quote', name: 'x_api_user_id', relation: 'res.users' }).ota, true);
+  assert.equal(classifyOtaField({ model: 'x_hotel_quote', name: 'x_channel' }).ota, false);
 });
 
 // ---------- R1 ----------

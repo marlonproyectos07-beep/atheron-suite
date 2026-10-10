@@ -429,7 +429,7 @@ test('CLI: --apply sin RECOVERY_CONFIRM exacto => exit 2', () => {
 });
 test('CLI: comando o capa desconocidos => exit 1, antes de abrir conexión', () => { assert.equal(cli(['nada'], ENV).status, 1); assert.equal(cli(['layer', 'R9'], ENV).status, 1); });
 test('CLI: faltan insumos locales (extracto / correo) => exit 3 BLOCKED, antes de abrir conexión', () => {
-  const a = cli(['layer', 'R1'], ENV); assert.equal(a.status, 3); assert.match(a.stdout, /BLOCKED: FALTA/);
+  // ATH-020: R1/R2/R4 ya se alimentan del cierre publicado (ath012_closure.json); sin cierre ni archivos, loadExtract sigue bloqueando (ver closure.test.mjs)
   const noMail = { ...ENV }; delete noMail.RECOVERY_ANGELA_EMAIL;
   const b = cli(['layer', 'R6'], noMail); assert.equal(b.status, 3); assert.match(b.stdout, /RECOVERY_ANGELA_EMAIL/);
 });
