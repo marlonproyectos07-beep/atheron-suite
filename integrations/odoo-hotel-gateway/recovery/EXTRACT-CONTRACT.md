@@ -8,8 +8,8 @@ Se generan con `recovery/extract/extract.sh` contra una copia **local** del dump
 
 | Archivo | Tabla / filtro | Lo usa | Notas |
 |---|---|---|---|
-| `models.json` | `ir_model` donde `model LIKE 'x\_hotel\_%'` | R1 | `model`, `name`, `state='manual'`, `order`, `transient` |
-| `fields.json` | `ir_model_fields` de esos modelos **más** los `x_*` manuales de `planning.slot` y `sale.order` | R1 | `model`, `name`, `field_description`, `ttype`, `relation`, `relation_field`, `required`, `readonly`, `store`, `copied`, `index`, `size`, `translate`, `help`, `compute`, `depends`, `domain`, `on_delete`, `state='manual'` |
+| `models.json` | `ir_model` donde `model LIKE 'x\_hotel\_%'` **o** `model = 'x_guests_line'` | R1 | `model`, `name`, `state='manual'`, `order`, `transient` |
+| `fields.json` | `ir_model_fields` de esos modelos **más** los `x_*` manuales de `planning.slot`, `sale.order` y `account.payment` (el lector usa `account.payment.x_hotel_sale_order_id`) | R1 | `model`, `name`, `field_description`, `ttype`, `relation`, `relation_field`, `required`, `readonly`, `store`, `copied`, `index`, `size`, `translate`, `help`, `compute`, `depends`, `domain`, `on_delete`, `state='manual'` |
 | `selections.json` | `ir_model_fields_selection` de esos campos | R1 | `field_id`→ se resuelve a `(model,name)` en el extractor; columnas `value`, `name`, `sequence` |
 | `server_actions.json` | `ir_act_server` cuyo `model_id` ∈ {planning.slot, sale.order, x_hotel_*, product.template} y nombre ∈ {`HOTEL%`, `ATHERON%`, `ROLLBACK COPY%`} | R4 | `name`, `model` (nombre técnico), `state`, `code`, `binding_type`, `binding_model` (nombre técnico o null) |
 | `automations.json` | `base_automation` de esos modelos | R4 | `name`, `model` (técnico), `trigger`, `active`, `filter_domain`, `filter_pre_domain`, `trigger_field_names` (lista de nombres), `action_names` (lista de nombres de acciones enlazadas, en orden), `on_change_field_names` |

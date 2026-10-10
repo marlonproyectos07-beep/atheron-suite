@@ -1,18 +1,22 @@
-# recovery/ — recuperación selectiva al staging NUEVO
+# recovery/ — paquete de migración al staging NUEVO (`atheron1-hotel-staging-20261009`)
 
-Plan: `AI/ATH-STAGING-RECOVERY-CLAUDE-002_PLAN.md`. Matriz: `AI/ATH-STAGING-RECOVERY-CLAUDE-001_MATRIZ.md`.
-**Nada de esto se ha ejecutado contra un Odoo remoto.** Dry-run por defecto; escribir exige `--apply` + `RECOVERY_CONFIRM=atheron1-hotel-staging-20261009`.
+Gate y clasificación por capa: `AI/ATH-STAGING-RECOVERY-007_PAQUETE.md` · Ejecución: `AI/RUNBOOK-CODEX-STAGING-RECOVERY.md`.
+**`MIGRATION_PACKAGE_READY = NO`**: R1, R4 y 4 campos de R2 esperan `AI/recovery-extract/` (dump). **Nada se ha ejecutado contra un Odoo remoto.**
+Dry-run por defecto; escribir exige `--apply` + `RECOVERY_CONFIRM=atheron1-hotel-staging-20261009`. Todo código de salida ≠ 0 es STOP.
 
-| Script | Estado | Escribe |
-|---|---|---|
-| `recovery-lib.mjs`, `connect.mjs`, `pure.mjs` | utilidades (guard, lista blanca de métodos, ensure idempotente) | — |
-| `r0-preflight-readonly.mjs` | listo | nunca |
-| `r1-models-fields.mjs` | esqueleto: espera `AI/recovery-extract/{models,fields,selections}.json` | con `--apply` |
-| `r3-master-data.mjs` | listo (`--plan` sin red) | con `--apply` |
-| `r4-actions-automations.mjs` | esqueleto: espera `{server_actions,automations,crons}.json`; todo se crea INACTIVO | con `--apply` |
-| `r7-angela-board.mjs` | preparado: vistas 6832/6833, acción 1909, menús, filtro 26; `--with-filters` = borrador | con `--apply` |
-| `rollback.mjs` | genérico, sobre la bitácora de cualquier fase | con `--apply` |
-| `extract/extract.sh`, `extract/discover.sql` | para el dump local; NO probado, incompleto | no toca Odoo |
+| Pieza | Qué es |
+|---|---|
+| `run.mjs` | CLI único: `precheck`, `snapshot`, `layer R1..R7`, `verify`, `rollback`, `qa`, `qa-cleanup`, `diff` |
+| `guard.mjs` | guardia previa (recrea la intención de la 189): base/URL, no producción, neutralizado, estructura, contrato de campos |
+| `snapshot.mjs` | foto PRE/POST sin PII ni secretos + diff por clave natural |
+| `engine.mjs` | bitácora append-only, `ensure` idempotente, rollback selectivo/parcial/repetible |
+| `steps.mjs` | guardia → prerrequisitos verificados → capa → verify |
+| `layers/r1…r7.mjs` | capas (cada una con `run`, `verify`, `inputs`) |
+| `qa.mjs` | QA sintético (paso 9) y limpieza (paso 10) |
+| `EXTRACT-CONTRACT.md`, `extract/` | contrato del extracto del dump; el extractor **no está probado y no produce aún los campos derivados** |
+| `payloads/` | Kanban 6833, filtros de Ángela (borrador), contrato de la fila KPI |
+| `test/` | Odoo **falso**, extracto **sintético** (solo pruebas), 51 pruebas |
+| `r0-preflight-readonly.mjs`, `r1-…`, `r3-…`, `r4-…`, `r7-…`, `rollback.mjs` | envoltorios de compatibilidad hacia `run.mjs` |
 
-Sin el extracto, R1 y R4 terminan en `BLOCKED` (código 3) sin tocar la red. Contrato: `EXTRACT-CONTRACT.md`. Pruebas: `node --test recovery/test/recovery.test.mjs`.
-Bitácoras en `recovery/out/` (ignorada por Git).
+Pruebas: `node --test recovery/test/*.test.mjs` (51) · suite completa: `npm test` (558).
+Bitácora y snapshots: `recovery/out/` (ignorada por Git).

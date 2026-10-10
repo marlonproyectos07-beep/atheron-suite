@@ -70,8 +70,8 @@ export const readBackup = (file) => JSON.parse(readFileSync(resolve(BACKUP_DIR, 
 const hasPlaceholder = (v) => JSON.stringify(v).includes(PLACEHOLDER);
 
 /** Carga AI/recovery-extract/<file>. Si falta o contiene el marcador, BLOQUEA sin inventar nada. */
-export function loadExtract(file) {
-  const p = resolve(EXTRACT_DIR, file);
+export function loadExtract(file, dir = EXTRACT_DIR) {
+  const p = resolve(dir, file);
   if (!existsSync(p)) throw new BlockedError(`FALTA ${p.replace(REPO_ROOT + '/', '')} (llega con el dump; ver recovery/EXTRACT-CONTRACT.md)`);
   const data = JSON.parse(readFileSync(p, 'utf8'));
   if (hasPlaceholder(data)) throw new BlockedError(`${file} contiene ${PLACEHOLDER}: metadata sin completar`);
@@ -146,4 +146,9 @@ export function main(fn) {
     if (e instanceof RecoveryGuardError) { console.error(`GUARD: ${e.message}`); process.exit(2); }
     console.error(`ERROR: ${String(e?.diagnostic?.message || e?.message || e).slice(0, 400)}`); process.exit(1);
   });
+}
+
+/** Como loadExtract pero devuelve null si el archivo no existe (enriquecimiento opcional). Un marcador o un JSON roto sí bloquean. */
+export function tryExtract(file, dir = EXTRACT_DIR) {
+  try { return loadExtract(file, dir); } catch (e) { if (e instanceof BlockedError && /^FALTA /.test(e.message)) return null; throw e; }
 }

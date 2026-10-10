@@ -28,3 +28,15 @@ export const selectionCommands = (rows) => [...rows].sort((a, b) => (a.sequence 
 
 /** Atributos opcionales de un campo que se copian SOLO si el dump los trae (nada se rellena por defecto). */
 export const FIELD_OPTIONAL = ['help', 'size', 'copied', 'index', 'translate', 'store', 'compute', 'depends', 'domain', 'on_delete', 'relation_field', 'readonly', 'required'];
+
+/**
+ * Convierte el texto de selección que devuelve el respaldo ("[('a', 'A'), ('b', 'B')]") en [{value,name,sequence}].
+ * Estricto: si el número de pares no coincide con el número de paréntesis de apertura, devuelve null (no se adivina).
+ */
+export function parseSelection(str) {
+  if (typeof str !== 'string') return null;
+  const pairs = [...str.matchAll(/\(\s*'((?:[^'\\]|\\.)*)'\s*,\s*'((?:[^'\\]|\\.)*)'\s*\)/g)];
+  const opens = (str.match(/\(/g) ?? []).length;
+  if (!pairs.length || pairs.length !== opens) return null;
+  return pairs.map((m, i) => ({ value: m[1].replace(/\\'/g, "'"), name: m[2].replace(/\\'/g, "'"), sequence: (i + 1) * 10 }));
+}

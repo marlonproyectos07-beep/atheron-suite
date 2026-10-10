@@ -1,49 +1,33 @@
-// ATH-STAGING-RECOVERY — conexión + "ensure" idempotente compartido. Nada se ejecuta al importar.
+// ATH-STAGING-RECOVERY-007 — contexto de ejecución de una capa. Nada se ejecuta al importar.
+import { resolve } from 'node:path';
 import { HttpOdooTransport } from '../src/odoo-transport.mjs';
-import { loadRecoveryConfig, parseArgs, assertMayWrite, makeExecutor, makeLogger, differs, READ_CTX, WRITE_CTX } from './recovery-lib.mjs';
+import { loadRecoveryConfig, parseArgs, assertMayWrite, makeExecutor, makeLogger, READ_CTX, TARGET_DB, REPO_ROOT } from './recovery-lib.mjs';
+import { Journal, makeEnsure } from './engine.mjs';
 
-/** Abre sesión en el staging NUEVO. `write` solo es true con --apply + RECOVERY_CONFIRM. */
-export async function connect(name, { allowDelete = false, argv = process.argv.slice(2) } = {}) {
+export const JOURNAL_PATH = resolve(REPO_ROOT, 'integrations/odoo-hotel-gateway/recovery/out', `journal-${TARGET_DB}.jsonl`);
+
+/** Arma el contexto a partir de un transporte ya creado (real o falso en pruebas). */
+export async function makeCtx({ transport, cfg, layer, write = false, args = {}, allowDelete = false, journalPath = JOURNAL_PATH, extractDir = null, env = process.env }) {
+  const uid = await transport.call('common', 'login', [cfg.db, cfg.user, cfg.secret]);
+  const ex = makeExecutor(transport, cfg, uid, { write, allowDelete });
+  const log = makeLogger(layer);
+  const journal = new Journal(journalPath);
+  const ctx = { cfg, ex, write, args, log, journal, layer, extractDir, env, transport };
+  ctx.ensure = makeEnsure({ ex, write, args, log, journal, layer });
+  return ctx;
+}
+
+/** Sesión real contra el staging NUEVO (guard de base y de URL incluido). */
+export async function connect(layer, { allowDelete = false, argv = process.argv.slice(2), env = process.env } = {}) {
   const args = parseArgs(argv);
-  const cfg = loadRecoveryConfig();
-  const write = assertMayWrite(args);
-  const t = new HttpOdooTransport({ baseUrl: cfg.baseUrl });
-  const uid = await t.call('common', 'login', [cfg.db, cfg.user, cfg.secret]);
-  const version = await t.call('common', 'version', []).catch(() => null); // solo lectura
-  const ex = makeExecutor(t, cfg, uid, { write, allowDelete });
-  const log = makeLogger(name);
-  return { args, cfg, write, ex, log, version };
+  const cfg = loadRecoveryConfig(env);
+  const write = assertMayWrite(args, env);
+  const transport = new HttpOdooTransport({ baseUrl: cfg.baseUrl });
+  return makeCtx({ transport, cfg, layer, write, args, allowDelete, env });
 }
 
-/**
- * Buscar -> comparar -> (crear | omitir | informar diferencia). Nunca sobrescribe sin --force-diff.
- * `compareFields` limita qué campos se comparan (por defecto, todos los del payload).
- * Devuelve el id existente o creado; null en dry-run/ambiguo.
- */
-export function makeEnsure({ ex, write, args, log }) {
-  return async function ensure(model, domain, payload, label, { compareFields } = {}) {
-    const keys = compareFields ?? Object.keys(payload);
-    const found = await ex(model, 'search_read', [domain], { fields: keys, limit: 3, context: READ_CTX });
-    if (found.length > 1) { log.add('AMBIGUO', model, label, { note: `${found.length} coincidencias; no se escribe` }); return null; }
-    if (found.length === 0) {
-      if (!write) { log.add('CREATE?', model, label); return null; }
-      const id = await ex(model, 'create', [payload], { context: WRITE_CTX });
-      log.add('CREATE', model, label, { id });
-      return id;
-    }
-    const cur = found[0];
-    const diff = keys.filter((k) => k in payload && differs(cur[k], payload[k]));
-    if (diff.length === 0) { log.add('SKIP', model, label, { id: cur.id }); return cur.id; }
-    if (write && args.forceDiff) {
-      await ex(model, 'write', [[cur.id], Object.fromEntries(diff.map((k) => [k, payload[k]]))], { context: WRITE_CTX });
-      log.add('UPDATE', model, label, { id: cur.id, fields: diff });
-    } else log.add('DIFF', model, label, { id: cur.id, fields: diff });
-    return cur.id;
-  };
-}
-
-/** Un único id o null. Más de uno = ambiguo = null (el llamador lo reporta). */
 export async function findOne(ex, model, domain) {
   const r = await ex(model, 'search', [domain], { limit: 2, context: READ_CTX });
   return r.length === 1 ? r[0] : null;
 }
+export { makeEnsure };
