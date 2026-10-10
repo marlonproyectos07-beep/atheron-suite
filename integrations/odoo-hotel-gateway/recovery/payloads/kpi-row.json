@@ -1,0 +1,68 @@
+{
+  "_nota": "Generado desde src/angela-board-model.mjs (KPI_ROW). No editar a mano: la prueba lo compara.",
+  "position": "ARRIBA del tablero principal, antes del Kanban/listado",
+  "windows": [
+    "HOY",
+    "MAÑANA",
+    "7 DÍAS",
+    "MES"
+  ],
+  "kpi_row": [
+    {
+      "key": "DISPONIBLES",
+      "label": "DISPONIBLES",
+      "group": "OPERACION_COMERCIAL"
+    },
+    {
+      "key": "OCUPADAS",
+      "label": "OCUPADAS",
+      "group": "OPERACION_COMERCIAL"
+    },
+    {
+      "key": "HOLD",
+      "label": "HOLD",
+      "group": "INVENTARIO_NO_VENDIBLE"
+    },
+    {
+      "key": "BLOQUEADAS",
+      "label": "BLOQUEADAS",
+      "group": "INVENTARIO_NO_VENDIBLE"
+    },
+    {
+      "key": "LLEGADAS",
+      "label": "LLEGADAS HOY",
+      "group": "OPERACION_COMERCIAL"
+    },
+    {
+      "key": "SALIDAS",
+      "label": "SALIDAS HOY",
+      "group": "OPERACION_COMERCIAL"
+    },
+    {
+      "key": "CONFIRMADAS",
+      "label": "RESERVAS CONFIRMADAS",
+      "group": "OPERACION_COMERCIAL"
+    },
+    {
+      "key": "SALDO_PENDIENTE",
+      "label": "SALDO PENDIENTE",
+      "group": "FINANCIERO"
+    }
+  ],
+  "groups": {
+    "OPERACION_COMERCIAL": [
+      "DISPONIBLES",
+      "OCUPADAS",
+      "LLEGADAS",
+      "SALIDAS",
+      "CONFIRMADAS"
+    ],
+    "INVENTARIO_NO_VENDIBLE": [
+      "HOLD",
+      "BLOQUEADAS"
+    ],
+    "FINANCIERO": [
+      "SALDO_PENDIENTE"
+    ]
+  }
+}

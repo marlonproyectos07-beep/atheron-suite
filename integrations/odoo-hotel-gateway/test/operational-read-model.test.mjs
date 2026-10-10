@@ -45,9 +45,36 @@ test('departures: Camilo aparece el 29 (checkout)', () => {
   assert.equal(departures([CAMILO], '2026-09-28').length, 0);
 });
 
-test('inHouse: Camilo esta OCUPADA el 28, no el 29 (dia de salida)', () => {
-  assert.equal(inHouse([CAMILO], '2026-09-28').length, 1);
-  assert.equal(inHouse([CAMILO], '2026-09-29').length, 0);
+// ATH-STAGING-RECOVERY-CLAUDE-003: OCUPADAS = ocupacion FISICA (checked_in), no "toda reserva que cruza la fecha".
+const withStatus = (r, s, extra = {}) => ({ ...r, odoo_status_raw: s, ...extra });
+
+test('inHouse: checked_in esta OCUPADA el 28 y no el 29 (dia de salida)', () => {
+  const c = withStatus(CAMILO, 'checked_in');
+  assert.equal(inHouse([c], '2026-09-28').length, 1);
+  assert.equal(inHouse([c], '2026-09-29').length, 0);
+});
+
+test('inHouse: NO sobrecuenta -- una reserva que cruza la fecha sin check-in no esta ocupada', () => {
+  for (const s of ['draft', 'opcion', 'hold', 'confirmed', 'pre_checkin', 'cancelled', 'no_show', 'checked_out', 'closed']) {
+    assert.equal(inHouse([withStatus(CAMILO, s)], '2026-09-28').length, 0, `estado ${s} no debe contar como ocupada`);
+  }
+});
+
+test('inHouse: sin estado real (fixture antiguo) no se afirma ocupacion fisica solo por fechas', () => {
+  assert.equal(inHouse([CAMILO], '2026-09-28').length, 0);
+  assert.equal(toOperationalItem(CAMILO, { referenceDate: '2026-09-28' }).status_source, 'DERIVADO_DE_FECHAS');
+});
+
+test('inHouse: excluye QA / TEST / FICTICIO aunque esten checked_in', () => {
+  for (const guest of ['QA-7C Prueba', 'Cliente FICTICIO', 'TEST Marlon', 'Cliente WhatsApp']) {
+    assert.equal(inHouse([withStatus(CAMILO, 'checked_in', { guest })], '2026-09-28').length, 0, guest);
+  }
+  assert.equal(inHouse([withStatus(CAMILO, 'checked_in', { hold_origin: 'qa' })], '2026-09-28').length, 0);
+});
+
+test('today: una consulta que cruza la fecha ya no aparece como OCUPADA', () => {
+  const day = today([withStatus(CAMILO, 'draft', { checkin: '2026-09-27', checkout: '2026-09-30' })], '2026-09-28');
+  assert.equal(day.length, 0);
 });
 
 test('today: incluye llegadas, salidas y ocupados del dia, sin duplicar por otras causas', () => {

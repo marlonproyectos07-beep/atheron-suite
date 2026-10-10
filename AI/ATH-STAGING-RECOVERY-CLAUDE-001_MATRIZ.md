@@ -167,3 +167,5 @@ Evidencia: **REPO** = definición completa en el repo · **PARCIAL** = hay datos
 | 17 | Vistas heredadas | REPO (arch completo) | R7 (solo 6832/6833) | idem |
 | 18–19 | Acción 1967 / OTA | REPO (base + parches) / secretos fuera | R8 | fuera de alcance |
 | 20–23 | Residuos y ajenos | — | no se migran | — |
+
+**Actualización 003:** fila 14 (tablero) — reglas funcionales cerradas (confirmada, ventanas, saldo real, fila KPI, ocupadas físicas, separación visual) en `AI/ATH-STAGING-RECOVERY-CLAUDE-003_REGLAS-TABLERO.md`; modelo en `integrations/odoo-hotel-gateway/src/angela-board-model.mjs` (27 pruebas). Pendiente: criterio comercial de confirmación por propiedad, política de bloques OTA externos, portador de la fila KPI.

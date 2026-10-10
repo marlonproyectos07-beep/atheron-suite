@@ -4,6 +4,7 @@
 // Lo que falta del dump se marca con BLOCKED. DRY-RUN por defecto.
 //   Pasos: (1) prerrequisitos de campos  (2) vistas  (3) acción de ventana  (4) menús  (5) filtro guardado
 //          (6) filtros de Ángela (BORRADOR, payloads/search-angela-filtros.xml; solo con --with-filters)
+//          (7) contrato de la fila KPI (payloads/kpi-row.json; validado contra src/angela-board-model.mjs, sin escribir)
 // Requiere R1 (campos de sale.order) y R4 (acciones de servidor) ya aplicados: los botones de la vista 6832 llaman a
 // acciones POR ID NUMÉRICO; aquí se reescriben por el id nuevo, resuelto por nombre.
 import { readFileSync } from 'node:fs';
@@ -11,6 +12,7 @@ import { resolve } from 'node:path';
 import { readBackup, main, BlockedError, READ_CTX, PAYLOAD_DIR } from './recovery-lib.mjs';
 import { connect, makeEnsure, findOne } from './connect.mjs';
 import { rewriteActionButtons } from './pure.mjs';
+import { KPI_ROW, KPI_GROUPS, WINDOW_NAMES } from '../src/angela-board-model.mjs';
 
 // Resolución de la vista padre: por XMLID estándar de Odoo y se VERIFICA que el nombre coincida con el del respaldo.
 // (VERIFICAR en dry-run: el script imprime el id resuelto y aborta si el nombre no coincide.)
@@ -94,6 +96,14 @@ main(async () => {
     await ensure('ir.ui.view', [['name', '=', 'HOTEL v1 — filtros Ángela (HOY/MAÑANA/7 DÍAS/MES)'], ['model', '=', 'sale.order']],
       { name: 'HOTEL v1 — filtros Ángela (HOY/MAÑANA/7 DÍAS/MES)', model: 'sale.order', inherit_id: sp, mode: 'extension', priority: 99, arch, active: true }, 'filtros Ángela', { compareFields: ['arch'] });
   } else console.log('Filtros de Ángela (borrador) NO incluidos: añadir --with-filters tras validar el XML en dry-run.');
+
+  // (7) fila KPI: contrato aprobado. DEBE ir ARRIBA del tablero principal. El transportista (qué la dibuja dentro de Odoo)
+  // NO está decidido: ver plan §5. Aquí solo se valida el contrato; no se escribe nada.
+  const kpi = JSON.parse(readFileSync(resolve(PAYLOAD_DIR, 'kpi-row.json'), 'utf8'));
+  if (JSON.stringify(kpi.kpi_row) !== JSON.stringify(KPI_ROW) || JSON.stringify(kpi.groups) !== JSON.stringify(KPI_GROUPS) || JSON.stringify(kpi.windows) !== JSON.stringify(WINDOW_NAMES)) {
+    throw new BlockedError('payloads/kpi-row.json no coincide con src/angela-board-model.mjs; regenerar');
+  }
+  log.add('PENDIENTE', 'kpi-row', KPI_ROW.map((k) => k.key).join(' > '), { note: 'contrato válido; portador (dashboard Enterprise / vista planning.slot / tablero local) por decidir' });
 
   console.log(`Resumen: ${write ? 'APLICADO' : 'DRY-RUN'} | bitácora: ${log.flush()}`);
 });

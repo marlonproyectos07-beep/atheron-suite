@@ -94,7 +94,9 @@ Por qué R4 va antes que R7: las vistas 6832 llevan botones que llaman acciones 
 | **Casa Completa en la ocupación** | NO resuelto | Una reserva de Casa ocupa 1 «unidad» en `sale.order` pero 5 habitaciones físicas. Para ocupación por habitación hay que contar por `planning.slot` o expandir en el lector. |
 | **Fila de KPI con totales** | NO | Odoo muestra conteos por grupo en el Kanban/lista, no una fila de tarjetas. |
 
-## 5. Decisiones que necesita Marlon / ChatGPT (para cerrar el tablero)
+> **ACTUALIZACIÓN 003 (2026-10-10):** las decisiones 1–4 de este apartado quedaron **resueltas** por dirección; ver `AI/ATH-STAGING-RECOVERY-CLAUDE-003_REGLAS-TABLERO.md`. El defecto de «Ocupadas» del lector local ya está corregido. Lo que sigue abierto está en §6 de ese documento.
+
+## 5. Decisiones que necesita Marlon / ChatGPT (para cerrar el tablero) — RESUELTAS EN 003
 
 1. **Definición de «Reservas confirmadas»** (¿`confirmed+pre_checkin`?) y de **ventanas** (¿7 DÍAS = hoy…hoy+6?).
 2. **Una sola definición de «saldo real»** (`x_hotel_balance` o `amount_total − x_hotel_paid`) y si se excluyen pruebas por defecto.

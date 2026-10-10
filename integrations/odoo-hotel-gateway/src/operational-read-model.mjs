@@ -9,6 +9,7 @@
  */
 
 import { deriveStatus } from './angela-read-model.mjs';
+import { isTestRecord } from './angela-board-model.mjs';
 
 export const FIELD_SOURCE = Object.freeze({
   AVAILABLE: 'SOURCE_AVAILABLE',
@@ -44,7 +45,12 @@ export function toOperationalItem(reservation, { referenceDate } = {}) {
   const paid = reservation.collected ?? null;
   const balance = total != null ? Math.max(total - (paid ?? 0), 0) : null;
 
-  const reservationStatus = reservation.explicit_status ?? (referenceDate ? deriveStatus(reservation, referenceDate) : null);
+  // ATH-STAGING-RECOVERY-CLAUDE-003: si la fuente trae el estado REAL de Odoo, manda ese estado. Antes todo lo que
+  // cruzaba la fecha salia OCUPADA (consultas, opciones, confirmadas sin check-in), lo que sobrecontaba la ocupacion.
+  // Solo si no hay estado real (fixtures antiguos) se cae al calculo por fechas, y queda marcado como DERIVADO.
+  const hasRaw = reservation.odoo_status_raw !== undefined && reservation.odoo_status_raw !== null;
+  const reservationStatus = reservation.explicit_status
+    ?? (hasRaw ? statusFromRaw(reservation, referenceDate) : (referenceDate ? deriveStatus(reservation, referenceDate) : null));
 
   return {
     property: reservation.property ?? null,
@@ -61,6 +67,8 @@ export function toOperationalItem(reservation, { referenceDate } = {}) {
     paid,
     balance,
     external_reference: reservation.external_reference ?? null,
+    status_source: reservation.explicit_status ? 'ODOO_HOLD' : hasRaw ? 'ODOO_REAL' : 'DERIVADO_DE_FECHAS',
+    is_test: isTestRecord(reservation),
     _field_source: {
       property: sourceOf(reservation.property),
       guest: sourceOf(reservation.guest),
@@ -70,6 +78,29 @@ export function toOperationalItem(reservation, { referenceDate } = {}) {
       paid: sourceOf(reservation.collected),
     },
   };
+}
+
+
+/**
+ * Estado operativo a partir del estado REAL de Odoo (x_reservation_status). Noche = [checkin, checkout).
+ * OCUPADA solo con checked_in dentro de la estancia: una reserva que "cruza la fecha" sin check-in NO es ocupada.
+ */
+export function statusFromRaw(reservation, referenceDate) {
+  const raw = reservation.odoo_status_raw;
+  const { checkin, checkout } = reservation;
+  const dated = Boolean(checkin) && Boolean(checkout) && checkin !== 'PENDIENTE_DE_VERIFICAR' && checkout !== 'PENDIENTE_DE_VERIFICAR';
+  if (raw === 'hold') return 'HOLD';
+  if (raw === 'cancelled') return 'CANCELADA';
+  if (raw === 'no_show') return 'NO_SHOW';
+  if (raw === 'draft' || raw === 'opcion') return 'CONSULTA';
+  if (!dated || !referenceDate) return 'BLOQUEADA';
+  if (raw === 'checked_in') {
+    if (referenceDate < checkin) return 'RESERVADA';
+    return referenceDate < checkout ? 'OCUPADA' : 'CHECK-OUT';
+  }
+  if (raw === 'confirmed' || raw === 'pre_checkin') return referenceDate < checkout ? 'RESERVADA' : 'CONFIRMADA_VENCIDA';
+  if (raw === 'checked_out' || raw === 'closed') return referenceDate === checkout ? 'CHECK-OUT' : 'DISPONIBLE';
+  return 'BLOQUEADA'; // estado desconocido: revision humana, nunca optimista
 }
 
 function items(reservations, referenceDate) {
@@ -91,8 +122,15 @@ export function departures(reservations, referenceDate) {
   return items(reservations, referenceDate).filter((i) => i.check_out === referenceDate);
 }
 
+/**
+ * Reservas FISICAMENTE ocupadas en la fecha: checked_in dentro de la estancia, de operacion real.
+ * Excluye HOLD, consultas/opciones, confirmadas sin check-in, canceladas y QA/TEST/FICTICIO. Sin estado real de la
+ * fuente (status_source=DERIVADO_DE_FECHAS) NO se cuenta: no se puede afirmar ocupacion fisica solo por fechas.
+ * Es un conteo de RESERVAS; la ocupacion por habitacion fisica (sin duplicar Casa+habitaciones) esta en
+ * angela-board-model.mjs (roomsOnDate / buildBoard).
+ */
 export function inHouse(reservations, referenceDate) {
-  return items(reservations, referenceDate).filter((i) => i.reservation_status === 'OCUPADA');
+  return items(reservations, referenceDate).filter((i) => i.reservation_status === 'OCUPADA' && i.status_source === 'ODOO_REAL' && !i.is_test);
 }
 
 /** Reservas marcadas explicitamente como HOLD (no confirmadas todavia). */

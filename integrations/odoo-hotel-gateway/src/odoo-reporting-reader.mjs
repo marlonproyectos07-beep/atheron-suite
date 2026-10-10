@@ -64,6 +64,7 @@ export const HOTEL_ORDER_FIELDS = Object.freeze([
   'x_hotel_deposit_required',
   'x_hold_expires',
   'x_hold_expired',
+  'x_hotel_deposit_ok',
 ]);
 
 /** x_booking_source (codigo Odoo) -> canal, mismo vocabulario que financial-model.mjs. */
@@ -117,6 +118,8 @@ export function mapSaleOrderToReservation(row) {
     hold_expires: row.x_hold_expires || null,
     hold_expired: row.x_hold_expired ?? null,
     odoo_status_raw: row.x_reservation_status ?? null,
+    hold_origin: row.x_hold_origin || null,
+    deposit_ok: row.x_hotel_deposit_ok ?? null,
     odoo_id: row.id,
   };
 }
@@ -180,4 +183,20 @@ export async function fetchHotelPayments(transport, { database, uid, technicalSe
     { fields, limit },
   ]);
   return rows.map(mapAccountPaymentToCollection);
+}
+
+/**
+ * ATH-STAGING-RECOVERY-CLAUDE-003 -- SALDO_REAL. Vincula a cada reserva sus pagos de account.payment.
+ * Como HOTEL_PAYMENT_DOMAIN solo trae state='paid', cada pago aqui es PAYMENT_CONFIRMED. `payments_source` marca que la
+ * lista es completa (puede estar vacia) y permite calcular el saldo; sin esta llamada el saldo queda PENDIENTE_CLASIFICACION
+ * cuando x_hotel_paid > 0. Un pago 'outbound' (reembolso) se marca para que el saldo lo reste del cobrado.
+ */
+export function attachConfirmedPayments(reservations, collections) {
+  const byRef = new Map();
+  for (const c of collections) {
+    if (!c.external_reference) continue;
+    if (!byRef.has(c.external_reference)) byRef.set(c.external_reference, []);
+    byRef.get(c.external_reference).push({ amount: c.amount ?? 0, status: 'PAYMENT_CONFIRMED', direction: c.payment_type === 'outbound' ? 'outbound' : 'inbound' });
+  }
+  return reservations.map((r) => ({ ...r, payments: byRef.get(r.external_reference) ?? [], payments_source: 'account.payment' }));
 }
