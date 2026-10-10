@@ -103,3 +103,4 @@ integrations/odoo-hotel-gateway/.local-action-backups/
 # Logs de consola de sesiones de navegador (MCP). Pueden contener datos de sesion. Nunca versionar.
 .playwright-mcp/
 integrations/odoo-hotel-gateway/.playwright-mcp/
+integrations/odoo-hotel-gateway/recovery/out/
