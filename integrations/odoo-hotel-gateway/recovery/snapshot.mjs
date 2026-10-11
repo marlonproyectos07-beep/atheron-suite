@@ -6,15 +6,19 @@
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
-import { READ_CTX } from './recovery-lib.mjs';
+import { READ_CTX, readBackup, m2oName } from './recovery-lib.mjs';
 
 const OR = (...ds) => ds.reduce((acc, d, i) => (i === 0 ? [d] : ['|', ...acc, d]), []);
 const NAME_LIKE = (...ns) => OR(...ns.map((n) => ['name', 'like', n]));
+const ROOM_ROLE_NAMES = [...new Set(readBackup('master-data-x_hotel_unit.json')
+  .filter((u) => m2oName(u.x_property_id) === 'HOTEL ATHERON SUITE')
+  .map((u) => m2oName(u.x_role_id)).filter(Boolean))];
 
 /** Qué se lee de cada modelo. `hash` = campos que se guardan solo como huella. `key` = clave natural para comparar. */
 export const SPEC = Object.freeze([
   { model: 'ir.model', domain: ['|', ['model', 'like', 'x_hotel_'], ['model', '=', 'x_guests_line']], fields: ['model', 'name', 'state'], key: ['model'] },
-  { model: 'ir.model.fields', domain: ['|', '|', ['model', 'like', 'x_hotel_'], ['model', '=', 'x_guests_line'], '&', ['model', 'in', ['sale.order', 'planning.slot', 'account.payment']], ['name', 'like', 'x_']], fields: ['model', 'name', 'ttype', 'relation', 'relation_field', 'required', 'state'], key: ['model', 'name'] },
+  { model: 'ir.model.fields', domain: ['|', '|', ['model', 'like', 'x_hotel_'], ['model', '=', 'x_guests_line'], '&', ['model', 'in', ['sale.order', 'planning.slot', 'planning.role', 'account.payment']], ['name', 'like', 'x_']], fields: ['model', 'name', 'ttype', 'relation', 'relation_field', 'required', 'readonly', 'store', 'related', 'depends', 'state'], hash: ['compute'], key: ['model', 'name'] },
+  { model: 'planning.role', domain: [['name', 'in', ROOM_ROLE_NAMES]], fields: ['name', 'x_casa', 'x_is_a_room_offer', 'x_estado_limpieza', 'resource_ids', 'x_hotel_unit_ids', 'active', 'sync_shift_rental'], requiredFields: ['name', 'x_casa', 'x_is_a_room_offer', 'x_estado_limpieza', 'resource_ids'], optionalFields: true, key: ['name'] },
   { model: 'ir.actions.server', domain: NAME_LIKE('HOTEL v1', 'ATHERON'), fields: ['name', 'state', 'model_id'], hash: ['code'], key: ['name', 'model_id'] },
   { model: 'base.automation', domain: NAME_LIKE('HOTEL v1', 'ATHERON'), fields: ['name', 'model_id', 'trigger', 'active', 'filter_domain', 'action_server_ids'], key: ['name', 'model_id'] },
   { model: 'ir.cron', domain: [], fields: ['interval_number', 'interval_type', 'active', 'ir_actions_server_id'], cronName: true, filterName: /HOTEL|ATHERON/i, key: ['@name'] },
@@ -38,6 +42,12 @@ async function readSpec(ex, spec) {
   const exists = (await ex('ir.model', 'search', [[['model', '=', spec.model]]], { limit: 1, context: READ_CTX })).length > 0;
   if (!exists) return { skipped: 'el modelo no existe' };
   let fields = spec.fields;
+  let missingRequired = [];
+  if (spec.optionalFields) {
+    const fg = await ex(spec.model, 'fields_get', [], { attributes: ['type'] });
+    fields = spec.fields.filter((f) => f in fg);
+    missingRequired = (spec.requiredFields ?? []).filter((f) => !(f in fg));
+  }
   if (spec.allScalar) {
     const fg = await ex(spec.model, 'fields_get', [], { attributes: ['type'] });
     fields = Object.entries(fg).filter(([n, d]) => !['binary', 'one2many', 'many2many'].includes(d.type) && !/^(create|write)_(uid|date)$/.test(n) && n !== 'display_name' && n !== 'id').map(([n]) => n);
@@ -49,24 +59,26 @@ async function readSpec(ex, spec) {
   for (let r of rows) {
     const o = { id: r.id };
     for (const f of fields) o[f] = r[f];
+    if (spec.optionalFields) for (const f of spec.fields) if (!(f in o)) o[f] = null;
     if (spec.cronName) { o['@name'] = r.cron_name ?? r.name; if (spec.filterName && !spec.filterName.test(o['@name'] ?? '')) continue; }
     for (const h of spec.hash ?? []) { o[`${h}_sha256`] = sha(r[h] ?? ''); o[`${h}_len`] = String(r[h] ?? '').length; if (looksSecret(r[h])) { o.secret_like = true; secretLike.push(o.name ?? o.id); } }
     out.push(o);
   }
   out.sort((a, b) => String(keyOf(spec, a)).localeCompare(String(keyOf(spec, b))));
-  return { rows: out, secretLike };
+  return { rows: out, secretLike, missingRequired };
 }
 
 /** Toma el snapshot y lo escribe en `dir`. Devuelve el manifiesto. Solo lectura. */
 export async function takeSnapshot({ ex, cfg, dir, tag = 'pre', now = new Date() }) {
   mkdirSync(dir, { recursive: true });
-  const manifest = { tag, db: cfg.db, taken_at: now.toISOString(), note: 'sin secretos ni PII; código y arquitecturas solo como SHA-256', models: {}, counts: {}, secret_like: [] };
+  const manifest = { tag, db: cfg.db, taken_at: now.toISOString(), note: 'sin secretos ni PII; código y arquitecturas solo como SHA-256', complete: true, models: {}, counts: {}, secret_like: [] };
   for (const spec of SPEC) {
     const r = await readSpec(ex, spec);
-    if (r.skipped) { manifest.models[spec.model] = { skipped: r.skipped }; continue; }
+    if (r.skipped) { manifest.models[spec.model] = { skipped: r.skipped, missing_required: spec.requiredFields ?? [] }; if (spec.requiredFields) manifest.complete = false; continue; }
     const file = `${spec.model.replace(/\./g, '_')}.json`;
     writeFileSync(resolve(dir, file), JSON.stringify(r.rows, null, 2) + '\n');
-    manifest.models[spec.model] = { file, count: r.rows.length, sha256: sha(r.rows) };
+    manifest.models[spec.model] = { file, count: r.rows.length, sha256: sha(r.rows), missing_required: r.missingRequired };
+    if (r.missingRequired.length) manifest.complete = false;
     manifest.secret_like.push(...r.secretLike.map((n) => `${spec.model}:${n}`));
   }
   for (const m of COUNT_ONLY) {
@@ -101,4 +113,4 @@ export function diffSnapshots(preDir, postDir) {
   return out;
 }
 // Las relaciones se comparan por NOMBRE (el id puede cambiar si el destino se recreó); las listas de ids se comparan solo por longitud.
-function normRel(v) { return Array.isArray(v) ? (v.length === 2 && typeof v[0] === 'number' && typeof v[1] === 'string' ? v[1] : `[lista:${v.length}]`) : v; }
+function normRel(v) { return Array.isArray(v) ? (v.length === 2 && typeof v[0] === 'number' && typeof v[1] === 'string' ? v[1] : JSON.stringify([...v].sort((a, b) => String(a).localeCompare(String(b))))) : v; }

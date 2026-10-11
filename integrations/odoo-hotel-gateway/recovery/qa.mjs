@@ -33,20 +33,20 @@ export async function runQA(ctx, { date }) {
   let partner = null;
   if (write) {
     const name = `${QA_PREFIX}${Date.now()}`;
-    const intent = journal.append({ op: 'INTENT', layer: 'QA', model: 'res.partner', key: name, domain: [['name', '=', name]] });
+    const intent = journal.append({ op: 'INTENT', ownership: 'CREATED_BY_RECOVERY', layer: 'QA', model: 'res.partner', key: name, domain: [['name', '=', name]] });
     partner = await ex('res.partner', 'create', [{ name }], { context: WRITE_CTX });
-    journal.append({ op: 'CREATE', layer: 'QA', model: 'res.partner', key: name, id: partner, ref: intent.seq });
+    journal.append({ op: 'CREATE', ownership: 'CREATED_BY_RECOVERY', layer: 'QA', model: 'res.partner', key: name, id: partner, ref: intent.seq });
   }
   for (const s of SCENARIOS) {
     const unitId = await findOne(ex, 'x_hotel_unit', [['x_name', '=', s.unit]]);
     if (!unitId) { results.push({ ...s, got: 'sin unidad', ok: false }); continue; }
     if (!write) { results.push({ ...s, got: 'dry-run', ok: null }); log.add('QA?', 'sale.order', `${s.id} ${s.unit} ${date}`); continue; }
     const key = `${s.id} ${s.unit} ${date}`;
-    const intent = journal.append({ op: 'INTENT', layer: 'QA', model: 'sale.order', key, domain: [['partner_id', '=', partner], ['x_hotel_unit_id', '=', unitId]] });
+    const intent = journal.append({ op: 'INTENT', ownership: 'CREATED_BY_RECOVERY', layer: 'QA', model: 'sale.order', key, domain: [['partner_id', '=', partner], ['x_hotel_unit_id', '=', unitId]] });
     let got = 'ok'; let id = null;
     try { id = await ex('sale.order', 'create', [{ partner_id: partner, x_hotel_unit_id: unitId, x_checkin: date, x_checkout: out, x_reservation_status: 'confirmed' }], { context: WRITE_CTX }); }
     catch (e) { got = 'fail'; log.add('QA-RECHAZO', 'sale.order', key, { note: trim(e) }); }
-    if (id) journal.append({ op: 'CREATE', layer: 'QA', model: 'sale.order', key, id, ref: intent.seq });
+    if (id) journal.append({ op: 'CREATE', ownership: 'CREATED_BY_RECOVERY', layer: 'QA', model: 'sale.order', key, id, ref: intent.seq });
     results.push({ ...s, got, ok: got === s.expect });
   }
   return { date, guard, results, ok: write ? results.every((r) => r.ok) : null };

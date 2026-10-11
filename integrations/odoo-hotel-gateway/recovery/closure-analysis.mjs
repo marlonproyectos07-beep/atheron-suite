@@ -104,8 +104,11 @@ function r2Report(closure) {
   const payment = closure.r1_dependencies.account_payment_field;
   const detail = four.map((n) => { const i = byName.get(n); return { name: n, ttype: i.ttype, relation: i.relation || null, relation_field: i.relation_field ?? null, related: i.related ?? null, store: i.store, selection_options: i.related ? 'heredadas del origen (0 propias, no se fabrican)' : i.selection, issues: i.issues, requires: n === 'x_guest_line_ids' ? ['x_guests_line (modelo) + x_guests_line.x_sale_order_id (inverso)'] : n === 'x_hotel_payment_ids' ? [`account.payment.${payment.technical_name} (m2o a sale.order, on_delete «${payment.on_delete}»)`] : [`campo origen ${i.related} presente en Enterprise 19 (lectura)`] }; });
   const extra = byName.get('x_hotel_is_test');
-  const missing = [...detail.flatMap((d) => d.issues.map((x) => `${d.name}: ${x}`)), ...(extra ? [] : ['x_hotel_is_test ausente']), ...(items.length === 81 ? [] : [`se esperaban 81 campos sale.order.x_* y hay ${items.length}`])];
-  return { ready: missing.length === 0, missing_data: missing, total: items.length, from_backup: items.filter((i) => !i.from_dump).length, from_dump: items.filter((i) => i.from_dump).map((i) => i.name), four: detail, dependencies_outside: ['x_guests_line (R1)', `account.payment.${payment.technical_name} (R1)`, 'res.partner.l10n_co_edi_fiscal_regimen (módulo de localización: lectura previa)'] };
+  const missing = [...detail.flatMap((d) => d.issues.map((x) => `${d.name}: ${x}`)), ...(extra ? [] : ['x_hotel_is_test ausente']), ...(p.expected_total === 81 && items.length === 79 ? [] : [`se esperaban 81 campos fuente / 79 hoteleros y hay ${p.expected_total} / ${items.length}`])];
+  return { ready: missing.length === 0, missing_data: missing, total: p.expected_total, hotel_total: items.length,
+    external_excluded: p.R2_EXCLUDED_EXTERNAL_FIELDS, from_backup: items.filter((i) => !i.from_dump).length,
+    from_dump: items.filter((i) => i.from_dump).map((i) => i.name), four: detail,
+    dependencies_outside: ['x_guests_line (R1)', `account.payment.${payment.technical_name} (R1)`, 'res.partner.l10n_co_edi_fiscal_regimen (módulo de localización: lectura previa)'] };
 }
 
 function rolesReport(closure, dir) {

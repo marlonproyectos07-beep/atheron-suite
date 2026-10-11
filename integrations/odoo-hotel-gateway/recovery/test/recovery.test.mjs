@@ -89,7 +89,7 @@ test('kanban 6833: el XML documentado coincide con el arch del respaldo', () => 
 
 test('filtros de Ángela: XML bien formado y solo campos reales', () => {
   const x = readFileSync(resolve(L.PAYLOAD_DIR, 'search-angela-filtros.xml'), 'utf8');
-  execFileSync('python3', ['-I', '-c', 'import sys,xml.dom.minidom as m;m.parse(sys.argv[1])', resolve(L.PAYLOAD_DIR, 'search-angela-filtros.xml')]);
+  execFileSync(process.platform === 'win32' ? 'python' : 'python3', ['-I', '-c', 'import sys,xml.dom.minidom as m;m.parse(sys.argv[1])', resolve(L.PAYLOAD_DIR, 'search-angela-filtros.xml')]);
   const fields = new Set(JSON.parse(readFileSync(resolve(L.BACKUP_DIR, 'ir-model-fields-sale-order-custom.json'), 'utf8')).map((f) => f.name));
   for (const t of new Set(x.match(/'(x_[a-z_]+)'/g).map((s) => s.slice(1, -1)))) assert.ok(fields.has(t), `campo ${t} no existe en sale.order`);
   const statuses = ['draft', 'opcion', 'hold', 'confirmed', 'pre_checkin', 'checked_in', 'checked_out', 'closed', 'cancelled', 'no_show'];

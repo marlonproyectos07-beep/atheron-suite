@@ -34,6 +34,11 @@ export class FakeOdoo {
     this.#reg('ir.model', {});
     // modelos estándar visibles en ir.model
     for (const m of Object.keys(std)) this.#addRow('ir.model', { model: m, name: m, state: 'base' });
+    // ATH-024: x_guests_line pertenece al staging previo a recovery. R1 nunca debe crearlo ni borrarlo.
+    this.#reg('x_guests_line', { x_name: 'char', active: 'boolean' });
+    this.#addRow('ir.model', { model: 'x_guests_line', name: 'Línea de los huéspedes', state: 'manual' });
+    const guestsNameField = this.defineField('x_guests_line', 'x_name', 'char');
+    this.models.get('ir.model.fields').rows.get(guestsNameField).store = true;
     for (const n of modules) this.#addRow('ir.module.module', { name: n, state: 'installed' });
     this.#addRow('ir.config_parameter', { key: 'database.is_neutralized', value: neutralized ? 'True' : 'False' });
     this.#addRow('ir.config_parameter', { key: 'web.base.url', value: baseUrl ?? `https://${db}.odoo.com` });
@@ -63,7 +68,7 @@ export class FakeOdoo {
     const m = this.models.get(model); if (!m) throw new Error(`fake: modelo ${model} no existe`);
     m.fields.set(name, { type, relation });
     const mid = this.rows('ir.model').find((r) => r.model === model)?.id;
-    return this.#addRow('ir.model.fields', { name, model, model_id: mid, ttype: type, relation: relation ?? false, state: 'base' });
+    return this.#addRow('ir.model.fields', { name, model, model_id: mid, ttype: type, relation: relation ?? false, store: true, state: 'base' });
   }
   rows(model) { return [...(this.models.get(model)?.rows.values() ?? [])]; }
   get writeCalls() { return this.calls.filter((c) => ['create', 'write', 'unlink'].includes(c.method)); }
@@ -191,6 +196,7 @@ export class FakeOdoo {
       if (vals.ttype === 'one2many' && !this.models.get(vals.relation)?.fields.has(vals.relation_field)) throw this.#err(`Unknown relation_field ${vals.relation_field}`);
       if (vals.ttype === 'selection' && !vals.related && !vals.selection_ids?.length) throw this.#err('selection sin opciones');
       row.model = owner.model; this.models.get(owner.model).fields.set(vals.name, { type: vals.ttype, relation: vals.relation ?? null });
+      if (!('store' in row)) row.store = true; // valor por defecto del campo manual de Odoo
     }
     if (model === 'ir.cron' && !vals.ir_actions_server_id) throw this.#err('cron sin acción');
     if (m.fields.has('active') && !('active' in row)) row.active = true; // como Odoo: active=True por defecto

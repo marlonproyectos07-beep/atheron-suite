@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { FakeOdoo } from './fake-odoo.mjs';
 import { buildSyntheticExtract, seedProtectedRules, RULES_OLD } from './synthetic-extract.mjs';
@@ -241,7 +242,7 @@ test('R3: rol ausente o campo ausente => ROLE_AUSENTE / ROLE_CAMPO_FALTA (bloque
 });
 
 // ---------------- CLI offline ----------------
-const RUN = resolve(new URL('../run.mjs', import.meta.url).pathname);
+const RUN = fileURLToPath(new URL('../run.mjs', import.meta.url));
 test('CLI rules-compare (offline): 0 reutilizable, 4 reemplazo, 3 abort', () => {
   const dir = mkdtempSync(resolve(tmpdir(), 'ath-cli-'));
   try {

@@ -59,7 +59,7 @@ test('R5 adapta EXACTAMENTE las 3 referencias por id (1914, 1921, 1897) a búsqu
 test('todo el código de R5 (original y adaptado) compila como Python', () => {
   const all = readBackup('ir-actions-server-hotel.json'); const orig = new Map(all.map((a) => [a.name, a.code]));
   for (const a of r5plan()) for (const [tag, code] of [['original', orig.get(a.name)], ['adaptado', a.code]]) {
-    const r = spawnSync('python3', ['-I', '-c', 'import sys,ast; ast.parse(sys.stdin.read())'], { input: code, encoding: 'utf8' });
+    const r = spawnSync(process.platform === 'win32' ? 'python' : 'python3', ['-I', '-c', 'import sys,ast; ast.parse(sys.stdin.read())'], { input: code, encoding: 'utf8' });
     assert.equal(r.status, 0, `${a.name} (${tag}): ${r.stderr.slice(-200)}`);
   }
 });

@@ -66,7 +66,7 @@ export async function run(ctx) {
     if ((c.action_ids ?? []).length !== 1) throw new BlockedError(`regla ${r.key}: se esperaba exactamente 1 acción enlazada y hay ${(c.action_ids ?? []).length}; no se modifica nada`);
     if (!authorized) continue;   // queda como REGLA_ADAPTAR (bloqueante) hasta que una persona lo autorice con --apply --force-diff
     const id = c.action_ids[0]; const key = `${r.key} ${r.name}`;
-    ctx.journal.append({ op: 'UPDATE', layer: ctx.layer, model: 'ir.actions.server', key, id, before: { code: c.code }, after: { code: target } });
+    ctx.journal.append({ op: 'UPDATE', ownership: 'MODIFIED_BY_RECOVERY', layer: ctx.layer, model: 'ir.actions.server', key, id, before: { code: c.code }, after: { code: target } });
     await ex('ir.actions.server', 'write', [[id], { code: target }], { context: WRITE_CTX });
     log.add('UPDATE', 'ir.actions.server', key, { id, fields: ['code'], note: `PAYLOAD_EXTENSION +${r.adaptation.keys.join(',')} [sha ${r.adaptation.target_sha256.slice(0, 8)}]` });
   }

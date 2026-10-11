@@ -84,7 +84,7 @@ export async function run(ctx) {
     if (JSON.stringify(want) === JSON.stringify(have)) log.add('SKIP', 'x_hotel_unit', 'CASA COMPLETA -> hijas', { id: casaId });
     else if (have.length && !ctx.args.forceDiff) log.add('DIFF', 'x_hotel_unit', 'CASA COMPLETA -> hijas', { id: casaId, note: 'ya tiene hijas distintas; no se sobrescribe sin --force-diff' });
     else if (write) {
-      ctx.journal.append({ op: 'UPDATE', layer: ctx.layer, model: 'x_hotel_unit', key: 'CASA COMPLETA -> hijas', id: casaId, before: { x_child_ids: have }, after: { x_child_ids: want }, x2many: ['x_child_ids'] });
+      ctx.journal.append({ op: 'UPDATE', ownership: 'MODIFIED_BY_RECOVERY', layer: ctx.layer, model: 'x_hotel_unit', key: 'CASA COMPLETA -> hijas', id: casaId, before: { x_child_ids: have }, after: { x_child_ids: want }, x2many: ['x_child_ids'] });
       await ex('x_hotel_unit', 'write', [[casaId], { x_child_ids: [[6, 0, want]] }]);
       log.add('LINK', 'x_hotel_unit', 'CASA COMPLETA -> 201,202,203,301,302', { id: casaId });
     } else log.add('LINK?', 'x_hotel_unit', 'CASA COMPLETA -> 201,202,203,301,302', { before: have, after: want });
@@ -105,7 +105,7 @@ export async function run(ctx) {
     if (it.status === 'VALUES_DIFFER' && !apply) { log.add('ROLE_CONFLICTO', 'planning.role', it.name, { note: `el destino ya tiene ${JSON.stringify(it.current)}; antiguo ${JSON.stringify(it.old)}; no se sobrescribe sin --force-diff` }); continue; }
     if (!write) { log.add('ROLE_SET?', 'planning.role', it.name, { note: JSON.stringify(apply) }); continue; }
     const before = it.status === 'VALUES_MISSING' ? Object.fromEntries(Object.keys(apply).map((f) => [f, false])) : it.current;
-    ctx.journal.append({ op: 'UPDATE', layer: ctx.layer, model: 'planning.role', key: `${it.name} atributos`, id: it.id, before, after: apply });
+    ctx.journal.append({ op: 'UPDATE', ownership: 'MODIFIED_BY_RECOVERY', layer: ctx.layer, model: 'planning.role', key: `${it.name} atributos`, id: it.id, before, after: apply });
     await ex('planning.role', 'write', [[it.id], apply], { context: WRITE_CTX });
     log.add('UPDATE', 'planning.role', it.name, { id: it.id, fields: Object.keys(apply) });
   }

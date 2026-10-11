@@ -11,6 +11,8 @@ import { TARGET_DB, loadRecoveryConfig, readBackup, m2oName, loadExtract, EXTRAC
 import { makeCtx } from '../connect.mjs';
 import { ORDER, executeLayer } from '../steps.mjs';
 import { rollback, verifyRolledBack, Journal } from '../engine.mjs';
+import { takeSnapshot, diffSnapshots } from '../snapshot.mjs';
+import { plan as r2Plan } from '../layers/r2.mjs';
 import { readClosure, deriveFields, deriveModels, deriveSelections, deriveR4, deriveRulesOld, deriveRolesOld, deriveRule189Intent, adaptRulesCurrent, adaptRolesCurrent, R4_DEFERRED, CASES_189 } from '../closure.mjs';
 import { analyze, assess189, modelCreationOrder } from '../closure-analysis.mjs';
 import { compareAll, compareRule, payloadExtension, canonDomain } from '../rules-compare.mjs';
@@ -31,11 +33,12 @@ const cliRun = (args) => spawnSync('node', [resolve(REPO_ROOT, 'integrations/odo
  * Destino simulado con el estado que describen las lecturas de Codex: 167/168/169 YA existen con su código ACTUAL, los 6 roles existen con x_casa / x_is_a_room_offer,
  * y los campos preexistentes (estándar o de módulo) de los que dependen R1/R2/R4. `external:false` quita las cuatro dependencias de CHECKIN/CHECKOUT y las dos de Guests Line.
  */
-function realWorld({ external = true, extract = EXTRACT_DIR, seedRules = true } = {}) {
+function realWorld({ external = true, extract = EXTRACT_DIR, seedRules = true, ath024 = false } = {}) {
   const dir = mkdtempSync(resolve(tmpdir(), 'ath-020-'));
   const fake = new FakeOdoo();
   fake.defineField('planning.slot', 'sale_line_id', 'many2one', 'sale.order.line');
   fake.defineField('planning.role', 'x_casa', 'char'); fake.defineField('planning.role', 'x_is_a_room_offer', 'boolean');
+  fake.defineField('planning.role', 'resource_ids', 'many2many', 'resource.resource');
   fake.defineField('res.partner', 'company_type', 'selection'); fake.defineField('res.partner', 'l10n_co_edi_fiscal_regimen', 'selection');
   if (external) {
     fake.defineField('res.partner', 'x_identity_check', 'selection'); fake.defineField('sale.order.line', 'x_resource_id', 'many2one', 'resource.resource');
@@ -43,6 +46,27 @@ function realWorld({ external = true, extract = EXTRACT_DIR, seedRules = true } 
     fake.defineField('project.task', 'x_resource_id', 'many2one', 'resource.resource'); fake.defineField('project.task', 'x_cleaning', 'selection');
   }
   fake.syncStdFieldRows();
+  if (ath024) {
+    const missingGuests = new Set(['x_destination_country_id', 'x_doc_type', 'x_is_main_guest', 'x_origin_country_id',
+      'x_precheckin_done', 'x_residence_city', 'x_sire_reported', 'x_travel_purpose']);
+    const guests = loadExtract('fields.json').filter((f) => f.model === 'x_guests_line');
+    assert.equal(guests.length, 21);
+    for (const f of guests.filter((f) => !missingGuests.has(f.name))) {
+      let row = fake.rows('ir.model.fields').find((r) => r.model === f.model && r.name === f.name);
+      if (!row) { const id = fake.defineField(f.model, f.name, f.ttype, f.relation); row = fake.models.get('ir.model.fields').rows.get(id); }
+      Object.assign(row, Object.fromEntries(['relation_field', 'required', 'readonly', 'store', 'related', 'compute', 'depends']
+        .filter((k) => f[k] !== undefined).map((k) => [k, f[k]])));
+    }
+    const presentR2 = new Set('x_avatar_image x_booking_source x_checkin x_checkin_actual x_checkin_done x_checkout x_checkout_actual x_checkout_done x_city_tax_total x_ciudad_dane_cliente x_deposit_amount x_deposit_paid x_depto_cliente x_destino_transporte x_direccion_cliente x_email_cliente x_filtro_catalogo x_guest_line_ids x_guests x_initial_payment x_is_mixed_rama x_km_transporte x_meal_plan x_modo_syscom x_nights x_nit_buscar x_nombre_cliente x_num_adults x_num_children x_order_involves_room x_origen_transporte x_paquete_cotizacion x_picked_up x_pin_autorizacion x_pms_reference x_regimen_cliente x_reservation_status x_responsabilidad_iva_cliente x_special_requests x_studio_nmero_de_personas x_tecnico_id x_telf_cliente x_tipo_doc_cliente x_tipo_persona_cliente x_total_preview x_vendedor_id x_zipaquira'.split(' '));
+    assert.equal(presentR2.size, 47);
+    for (const f of r2Plan({ extractDir: extract }).items.filter((f) => presentR2.has(f.name))) {
+      const id = fake.defineField('sale.order', f.name, f.ttype, f.relation);
+      const row = fake.models.get('ir.model.fields').rows.get(id);
+      Object.assign(row, Object.fromEntries(['relation_field', 'required', 'readonly', 'store', 'related', 'compute', 'depends']
+        .filter((k) => f[k] !== undefined).map((k) => [k, f[k]])));
+    }
+    assert.equal(fake.rows('ir.model.fields').filter((f) => f.model === 'sale.order' && presentR2.has(f.name)).length, 47);
+  }
   const pv = (name) => fake.seed('ir.ui.view', { name, model: 'sale.order', mode: 'primary', priority: 16, arch: '<x/>', active: true });
   for (const [mod, xid, name] of [['sale', 'sale_order_view_kanban', 'sale.order.kanban'], ['sale', 'view_order_form', 'sale.order.form']]) fake.seed('ir.model.data', { module: mod, name: xid, model: 'ir.ui.view', res_id: pv(name) });
   pv('sale.order.search.inherit.quotation');
@@ -142,18 +166,21 @@ test('R1: si falta una dependencia externa (res.partner.x_identity_check), ESE c
 // =========================================================================================================== FASE 3 · R2 y planning.role
 test('R2: 81 campos sale.order.x_* (80 + x_hotel_is_test), los cuatro pendientes con inverso/origen y SIN opciones inventadas', async () => {
   const r = (await analyze()).R2;
-  assert.equal(r.ready, true, JSON.stringify(r.missing_data)); assert.equal(r.total, 81); assert.deepEqual(r.from_dump, ['x_hotel_is_test']);
+  assert.equal(r.ready, true, JSON.stringify(r.missing_data)); assert.equal(r.total, 81); assert.equal(r.hotel_total, 79);
+  assert.deepEqual(r.external_excluded.map((f) => f.name).sort(), ['x_api_client_ref', 'x_api_user_id']);
+  assert.deepEqual(r.from_dump, ['x_hotel_is_test']);
   const f = Object.fromEntries(r.four.map((x) => [x.name, x]));
   assert.equal(f.x_guest_line_ids.relation_field, 'x_sale_order_id'); assert.equal(f.x_hotel_payment_ids.relation_field, 'x_hotel_sale_order_id');
   assert.equal(f.x_regimen_cliente.related, 'partner_id.l10n_co_edi_fiscal_regimen'); assert.equal(f.x_tipo_persona_cliente.related, 'partner_id.company_type');
   assert.equal(f.x_regimen_cliente.store, false); assert.match(f.x_regimen_cliente.selection_options, /no se fabrican/);
 });
-test('R2 contra el destino simulado: crea los 81, los related sin selection_ids, reaplica sin cambios; sin la localización colombiana NO crea x_regimen_cliente', async () => {
+test('R2 contra el destino simulado: crea los 79 hoteleros, excluye API, y reaplica sin cambios', async () => {
   const w = realWorld();
   try {
     const out = await upTo(w, 'R2'); assert.equal(out.R2?.status, 'OK', JSON.stringify(out.R1?.blockers ?? out.R2?.blockers));
     const so = w.fake.rows('ir.model.fields').filter((x) => x.model === 'sale.order' && x.state === 'manual');
-    assert.equal(so.length, 81);
+    assert.equal(so.length, 79);
+    assert.ok(!so.some((x) => ['x_api_client_ref', 'x_api_user_id'].includes(x.name)));
     const reg = so.find((x) => x.name === 'x_regimen_cliente'); assert.equal(reg.related, 'partner_id.l10n_co_edi_fiscal_regimen'); assert.equal(reg.store, false); assert.equal(reg.selection_ids, undefined);
     assert.equal(so.find((x) => x.name === 'x_guest_line_ids').relation_field, 'x_sale_order_id');
     assert.ok(so.some((x) => x.name === 'x_hotel_is_test'));
@@ -167,6 +194,97 @@ test('R2 contra el destino simulado: crea los 81, los related sin selection_ids,
     assert.ok(r.log.some((l) => l.action === 'DEP_FALTA' && l.key === 'sale.order.x_regimen_cliente'));
     assert.equal(w2.fake.rows('ir.model.fields').some((x) => x.model === 'sale.order' && x.name === 'x_regimen_cliente'), false);
   } finally { w2.cleanup(); }
+});
+
+test('ATH-024 offline: PRE, R1/R2/R3/R4 diferencial, verify, rollback y reaplicación conservan lo preexistente', async () => {
+  const w = realWorld({ ath024: true });
+  try {
+    const read = await w.mk('SNAPSHOT', { write: false });
+    const pre = resolve(w.dir, 'pre');
+    const cfg = loadRecoveryConfig(ENV);
+    const manifest = await takeSnapshot({ ex: read.ex, cfg, dir: pre });
+    assert.equal(manifest.complete, true, JSON.stringify(manifest.models['planning.role']));
+    assert.equal(manifest.models['planning.role'].count, 6);
+    const rolesPre = JSON.parse(readFileSync(resolve(pre, 'planning_role.json'), 'utf8'));
+    assert.ok(rolesPre.every((r) => 'x_estado_limpieza' in r && 'x_casa' in r && 'x_is_a_room_offer' in r));
+    const guestModelId = w.fake.rows('ir.model').find((r) => r.model === 'x_guests_line').id;
+    const ruleIds = w.fake.rows('base.automation').map((r) => r.id);
+    const r1dry = await executeLayer(await w.mk('R1', { write: false }), 'R1');
+    assert.equal(r1dry.status, 'DRY_RUN');
+    assert.ok(!r1dry.log.some((x) => x.action === 'DIFFERENT_BLOCKING'));
+    assert.equal(w.fake.writeCalls.length, 0);
+    const r1 = await executeLayer(await w.mk('R1'), 'R1'); assert.equal(r1.status, 'OK', JSON.stringify(r1.blockers));
+    assert.equal(r1.log.filter((x) => x.model === 'ir.model.fields' && x.key.startsWith('x_guests_line.') && x.action === 'REUSE_EXISTING').length, 13);
+    assert.equal(r1.log.filter((x) => x.model === 'ir.model.fields' && x.key.startsWith('x_guests_line.') && x.action === 'CREATE').length, 8);
+    const r2 = await executeLayer(await w.mk('R2'), 'R2'); assert.equal(r2.status, 'OK', JSON.stringify(r2.blockers));
+    assert.equal(r2.log.filter((x) => x.action === 'EXISTS_COMPATIBLE').length, 47);
+    assert.equal(r2.log.filter((x) => x.action === 'CREATE' && x.model === 'ir.model.fields').length, 32);
+    assert.deepEqual(r2.log.filter((x) => x.action === 'EXCLUYE_OTA').map((x) => x.key).sort(), ['sale.order.x_api_client_ref', 'sale.order.x_api_user_id']);
+    for (const layer of ['R3', 'R4']) {
+      const out = await executeLayer(await w.mk(layer, { forceDiff: true }), layer);
+      assert.equal(out.status, 'OK', `${layer}: ${JSON.stringify(out.blockers)}`);
+    }
+    const mid = resolve(w.dir, 'mid'); await takeSnapshot({ ex: read.ex, cfg, dir: mid });
+    assert.equal(diffSnapshots(pre, mid).identical, false);
+    const rb = await rollback({ ex: (await w.mk('ROLLBACK')).ex, write: true, journal: new Journal(w.journalPath), log: read.log });
+    assert.equal(rb.ERROR, 0, JSON.stringify(rb)); assert.equal(rb.CONFLICT, 0, JSON.stringify(rb));
+    assert.equal((await verifyRolledBack({ ex: read.ex, journal: new Journal(w.journalPath) })).ok, true);
+    assert.equal(w.fake.rows('ir.model').find((r) => r.id === guestModelId)?.model, 'x_guests_line');
+    assert.ok(ruleIds.every((id) => w.fake.rows('base.automation').some((r) => r.id === id)));
+    const post = resolve(w.dir, 'post'); await takeSnapshot({ ex: read.ex, cfg, dir: post });
+    assert.equal(diffSnapshots(pre, post).identical, true);
+    assert.equal((await rollback({ ex: (await w.mk('ROLLBACK')).ex, write: true, journal: new Journal(w.journalPath), log: read.log })).DELETED, 0);
+    const again = await upTo(w, 'R4', { forceDiff: true }); assert.equal(again.R4.status, 'OK');
+  } finally { w.cleanup(); }
+});
+
+test('ATH-024: un campo existente incompatible bloquea R1 o R2 antes de escribir', async () => {
+  const w = realWorld({ ath024: true });
+  try {
+    w.fake.rows('ir.model.fields').find((f) => f.model === 'x_guests_line' && f.name === 'x_birth_date').ttype = 'integer';
+    const r1 = await executeLayer(await w.mk('R1'), 'R1');
+    assert.equal(r1.status, 'BLOCKED'); assert.match(r1.message, /x_birth_date/);
+    assert.equal(w.fake.writeCalls.length, 0);
+  } finally { w.cleanup(); }
+  const v = realWorld({ ath024: true });
+  try {
+    assert.equal((await executeLayer(await v.mk('R1'), 'R1')).status, 'OK');
+    const before = v.fake.writeCalls.length;
+    v.fake.rows('ir.model.fields').find((f) => f.model === 'sale.order' && f.name === 'x_checkin').ttype = 'integer';
+    const r2 = await executeLayer(await v.mk('R2'), 'R2');
+    assert.equal(r2.status, 'BLOCKED'); assert.match(r2.message, /x_checkin/);
+    assert.equal(v.fake.writeCalls.length, before);
+  } finally { v.cleanup(); }
+});
+
+test('rollback: conserva INTENT ambiguo y restaura exclusivamente el valor modificado de planning.role', async () => {
+  const w = realWorld({ ath024: true });
+  try {
+    const id = w.fake.rows('ir.model').find((m) => m.model === 'x_guests_line').id;
+    const ctx = await w.mk('R3', { forceDiff: true });
+    const role = w.fake.rows('planning.role')[0];
+    const before = role.x_casa;
+    await ctx.ensure('planning.role', [['id', '=', role.id]], { x_casa: 'VALOR DE PRUEBA LOCAL' }, 'rol prueba', { compareFields: ['x_casa'] });
+    assert.equal(role.x_casa, 'VALOR DE PRUEBA LOCAL');
+    const journal = new Journal(w.journalPath);
+    journal.append({ op: 'INTENT', ownership: 'CREATED_BY_RECOVERY', layer: 'R3', model: 'ir.model', key: 'x_guests_line', domain: [['model', '=', 'x_guests_line']] });
+    const result = await rollback({ ex: (await w.mk('ROLLBACK')).ex, write: true, journal, log: ctx.log, layer: 'R3' });
+    assert.equal(result.RESTORED, 1); assert.equal(result.CONFLICT, 1); assert.equal(role.x_casa, before);
+    assert.equal(w.fake.rows('ir.model').find((m) => m.id === id)?.model, 'x_guests_line');
+    const again = await rollback({ ex: (await w.mk('ROLLBACK')).ex, write: true, journal, log: ctx.log, layer: 'R3' });
+    assert.equal(again.RESTORED, 0); assert.equal(again.CONFLICT, 1);
+  } finally { w.cleanup(); }
+});
+
+test('snapshot PRE se declara incompleto si falta una relación necesaria de planning.role', async () => {
+  const w = realWorld({ ath024: true });
+  try {
+    w.fake.models.get('planning.role').fields.delete('resource_ids');
+    const ctx = await w.mk('SNAPSHOT', { write: false });
+    const m = await takeSnapshot({ ex: ctx.ex, cfg: loadRecoveryConfig(ENV), dir: resolve(w.dir, 'incomplete') });
+    assert.equal(m.complete, false);
+    assert.deepEqual(m.models['planning.role'].missing_required, ['resource_ids']);
+  } finally { w.cleanup(); }
 });
 test('planning.role: mapeo por NOMBRE + atributos + estructura (recursos, active, sync_shift_rental); los ids antiguos no intervienen', async () => {
   const r = (await analyze()).roles;

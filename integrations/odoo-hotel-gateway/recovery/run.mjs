@@ -57,8 +57,10 @@ async function main() {
     case 'snapshot': {
       const tag = opt('--tag') ?? 'pre'; const dir = resolve(OUT, `snapshot-${tag}-${Date.now()}`);
       const m = await takeSnapshot({ ex: ctx.ex, cfg: ctx.cfg, dir, tag });
-      console.log(`SNAPSHOT ${tag} en ${dir}`); out({ counts: m.counts, secret_like: m.secret_like, models: Object.fromEntries(Object.entries(m.models).map(([k, v]) => [k, v.count ?? v.skipped])) });
-      return m.secret_like.length ? 4 : 0; // si algo parece credencial, STOP: no se continúa sin revisarlo
+      console.log(`SNAPSHOT ${tag} en ${dir}`); out({ complete: m.complete, counts: m.counts, secret_like: m.secret_like,
+        models: Object.fromEntries(Object.entries(m.models).map(([k, v]) => [k, v.count ?? v.skipped])),
+        missing_required: Object.fromEntries(Object.entries(m.models).filter(([, v]) => v.missing_required?.length).map(([k, v]) => [k, v.missing_required])) });
+      return m.complete && !m.secret_like.length ? 0 : 4; // snapshot incompleto o posible credencial: STOP
     }
     case 'layer': {
       const r = await executeLayer(ctx, arg);

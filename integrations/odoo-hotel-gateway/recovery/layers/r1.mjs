@@ -4,6 +4,7 @@ import { findOne } from '../connect.mjs';
 import { txt, fieldOrder, selectionCommands, FIELD_OPTIONAL } from '../pure.mjs';
 import { OTA_MODELS, classifyOtaField } from '../scope.mjs';
 import { knownFromRows, depIssues } from '../deps.mjs';
+import { inspectFields, assertNoFieldConflict } from '../field-diff.mjs';
 
 // Modelos propios admitidos: x_hotel_* y x_guests_line (modelo de Studio «Guests Line», usado por sale.order.x_guest_line_ids).
 export const OWN_MODEL = /^(x_hotel_|x_guests_line$)/;
@@ -32,15 +33,30 @@ export async function run(ctx) {
   const { models, fields, selections, excluded, known, knownNames } = load(ctx);
   const { ex, ensure, log, write } = ctx;
   for (const e of excluded) log.add('EXCLUYE_OTA', 'ir.model' + (e.kind === 'campo' ? '.fields' : ''), e.key, { note: e.reasons.join('; ') });
+  // Preflight de TODOS los campos existentes antes de la primera escritura de la capa.
+  const classes = new Map();
+  for (const model of new Set(fields.map((f) => f.model))) {
+    const found = await inspectFields(ex, model, fields.filter((f) => f.model === model));
+    for (const f of found) { classes.set(`${model}.${f.name}`, f); log.add(f.status, 'ir.model.fields', `${model}.${f.name}`, { note: f.differences.join(', ') }); }
+    const conflict = assertNoFieldConflict(found, model);
+    if (conflict) throw new BlockedError(conflict);
+  }
   for (const m of models) {
     if (!OWN_MODEL.test(m.model)) throw new BlockedError(`models.json trae un modelo fuera de alcance: ${m.model}`);
-    await ensure('ir.model', [['model', '=', m.model]], { model: m.model, name: txt(m.name), state: 'manual' }, m.model, { compareFields: ['model', 'name'] });
+    if (m.model === 'x_guests_line') {
+      const existing = await ex('ir.model', 'search_read', [[['model', '=', m.model]]], { fields: ['model', 'state'], limit: 2, context: READ_CTX });
+      if (existing.length !== 1) throw new BlockedError('x_guests_line debe existir exactamente una vez; R1 jamás recrea ese modelo');
+      log.add('REUSE_EXISTING_MODEL', 'ir.model', m.model, { id: existing[0].id });
+      continue;
+    }
+    await ensure('ir.model', [['model', '=', m.model]], { model: m.model, name: txt(m.name), state: 'manual' }, m.model, { compareFields: ['model'] });
   }
   const declared = new Set(models.map((m) => m.model));
   const ids = new Map();
   const modelId = async (model) => { if (!ids.has(model)) ids.set(model, await findOne(ex, 'ir.model', [['model', '=', model]])); return ids.get(model); };
   for (const f of fieldOrder(fields)) {
     const label = `${f.model}.${f.name}`;
+    if (classes.get(label)?.status === 'REUSE_EXISTING') continue;
     const mid = await modelId(f.model);
     if (!mid) { log.add(write ? 'BLOQUEA' : 'FALTA', 'ir.model', f.model, { note: `modelo ausente para ${label}${declared.has(f.model) ? ' (se crea en el apply)' : ''}` }); continue; }
     if (f.relation && !declared.has(f.relation) && !(await modelId(f.relation))) { log.add('BLOQUEA', 'ir.model.fields', label, { note: `relación a ${f.relation} que no existe ni se crea` }); continue; }
@@ -62,10 +78,9 @@ export async function verify(ctx) {
   const { models, fields } = load(ctx);
   const checks = [];
   for (const m of models) checks.push({ name: `modelo ${m.model}`, ok: (await ctx.ex('ir.model', 'search', [[['model', '=', m.model]]], { context: READ_CTX })).length === 1 });
-  for (const f of fields) {
-    const r = await ctx.ex('ir.model.fields', 'search_read', [[['model', '=', f.model], ['name', '=', f.name]]], { fields: ['ttype', 'relation'], limit: 2, context: READ_CTX });
-    checks.push({ name: `campo ${f.model}.${f.name}`, ok: r.length === 1 && r[0].ttype === f.ttype && (!f.relation || r[0].relation === f.relation) });
-  }
+  for (const model of new Set(fields.map((f) => f.model)))
+    for (const f of await inspectFields(ctx.ex, model, fields.filter((x) => x.model === model)))
+      checks.push({ name: `campo ${model}.${f.name}`, ok: f.status === 'REUSE_EXISTING', detail: f.differences.join(', ') });
   return { ok: checks.every((c) => c.ok), checks };
 }
 

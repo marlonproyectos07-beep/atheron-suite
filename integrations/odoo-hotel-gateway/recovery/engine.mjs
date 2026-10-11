@@ -61,20 +61,20 @@ export function makeEnsure({ ex, write, args, log, journal, layer }) {
     if (found.length > 1) { log.add('AMBIGUO', model, label, { note: `${found.length} coincidencias; no se escribe` }); return null; }
     if (found.length === 0) {
       if (!write) { log.add('CREATE?', model, label); return null; }
-      const intent = journal.append({ op: 'INTENT', layer, model, key: label, domain: intentDomain ?? domain }); // intentDomain: versión sin PII para guardar en la bitácora
+      const intent = journal.append({ op: 'INTENT', ownership: 'CREATED_BY_RECOVERY', layer, model, key: label, domain: intentDomain ?? domain }); // intentDomain: versión sin PII para guardar en la bitácora
       const id = await ex(model, 'create', [payload], { context: WRITE_CTX });
-      journal.append({ op: 'CREATE', layer, model, key: label, id, ref: intent.seq });
+      journal.append({ op: 'CREATE', ownership: 'CREATED_BY_RECOVERY', layer, model, key: label, id, ref: intent.seq });
       log.add('CREATE', model, label, { id });
       return id;
     }
     const cur = found[0];
     const diff = keys.filter((k) => k in payload && differs(cur[k], payload[k]));
-    if (diff.length === 0) { log.add('SKIP', model, label, { id: cur.id }); return cur.id; }
+    if (diff.length === 0) { log.add('SKIP', model, label, { id: cur.id, ownership: 'PREEXISTING_RECORD' }); return cur.id; }
     if (write && args.forceDiff) {
       const x2many = diff.filter((k) => isCmd(payload[k]));
       const before = Object.fromEntries(diff.map((k) => [k, cur[k]]));
       const after = Object.fromEntries(diff.map((k) => [k, x2many.includes(k) ? cmdToIds(payload[k]) : payload[k]]));
-      journal.append({ op: 'UPDATE', layer, model, key: label, id: cur.id, before, after, x2many });
+      journal.append({ op: 'UPDATE', ownership: 'MODIFIED_BY_RECOVERY', layer, model, key: label, id: cur.id, before, after, x2many });
       await ex(model, 'write', [[cur.id], after], { context: WRITE_CTX });
       log.add('UPDATE', model, label, { id: cur.id, fields: diff });
     } else log.add('DIFF', model, label, { id: cur.id, fields: diff });
@@ -87,7 +87,8 @@ const sameVal = (a, b) => !differs(a, b);
 /**
  * Deshace lo que la bitácora marca como aplicado, en orden inverso. Seguro de re-ejecutar: lo ya deshecho se omite,
  * y lo que falla queda como ERROR/CONFLICT sin detener el resto (soporta ejecución parcial y fallo a mitad de capa).
- *  - CREATE/INTENT: se borra solo ese registro; si ya no existe => GONE.
+   *  - CREATE: se borra solo el ID registrado tras create; si ya no existe => GONE.
+   *  - INTENT sin CREATE: un dominio natural no prueba autoría; si aparece un candidato => CONFLICT sin borrar.
  *  - UPDATE: se restaura solo si el valor actual sigue siendo el que escribimos; si alguien lo cambió después => CONFLICT.
  * `write=false` solo informa.
  */
@@ -110,8 +111,7 @@ export async function rollback({ ex, write, journal, log, layer = null }) {
       if (e.op === 'INTENT') {
         const hits = await ex(e.model, 'search', [e.domain], { limit: 3, context: READ_CTX }).catch((err) => { if (/doesn't exist|does not exist|Unknown model/i.test(String(err?.diagnostic?.message || err?.message))) return []; throw err; });
         if (hits.length === 0) { log.add('GONE', e.model, e.key, { note: 'nunca llegó a crearse' }); mark('GONE'); continue; }
-        if (hits.length > 1) { log.add('CONFLICT', e.model, e.key, { note: 'varios candidatos; no se borra' }); out.CONFLICT++; continue; }
-        id = hits[0];
+        log.add('CONFLICT', e.model, e.key, { note: 'INTENT sin ID confirmado; no se atribuye ni borra un registro por dominio natural' }); out.CONFLICT++; continue;
       }
       if (!(await recordExists(ex, e.model, id))) { log.add('GONE', e.model, e.key); mark('GONE'); continue; }
       if (!write) { log.add('BORRARÍA', e.model, e.key, { id }); out.WOULD++; continue; }

@@ -218,7 +218,8 @@ test('sin extracto del dump: R1 y R4 quedan BLOCKED y no escriben', async () => 
 test('R2 sin enriquecimiento del dump: exactamente 4 campos BLOQUEA (nada se inventa)', async () => {
   const { plan } = await import('../layers/r2.mjs');
   const p = plan({ extractDir: '/ruta/que/no/existe' });
-  assert.equal(p.items.length, 80); assert.equal(p.standard_excluded.length, 17);
+  assert.equal(p.expected_total, 80); assert.equal(p.items.length, 78); assert.equal(p.standard_excluded.length, 17);
+  assert.deepEqual(p.R2_EXCLUDED_EXTERNAL_FIELDS.map((f) => f.name).sort(), ['x_api_client_ref', 'x_api_user_id']);
   assert.deepEqual(p.items.filter((i) => i.issues.length).map((i) => i.name).sort(), ['x_guest_line_ids', 'x_hotel_payment_ids', 'x_regimen_cliente', 'x_tipo_persona_cliente']);
 });
 
@@ -416,7 +417,8 @@ test('QA en dry-run no crea nada', async () => {
 
 // ---------------- CLI (sin red): rechazos y códigos de salida ----------------
 import { spawnSync } from 'node:child_process';
-const RUN = resolve(new URL('../run.mjs', import.meta.url).pathname);
+import { fileURLToPath } from 'node:url';
+const RUN = fileURLToPath(new URL('../run.mjs', import.meta.url));
 const cli = (args, env = {}) => spawnSync('node', [RUN, ...args], { env: { PATH: process.env.PATH, ...env }, encoding: 'utf8' });
 
 test('CLI: sin variables => exit 2 (guardia) y sin tocar la red', () => { const r = cli(['precheck']); assert.equal(r.status, 2); assert.match(r.stderr, /falta la variable/); });

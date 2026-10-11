@@ -2,10 +2,13 @@
 // Del archivo de 97 campos, 17 NO son propios (los crean módulos estándar) y se EXCLUYEN: solo se crean los 80 x_*.
 // Lo que el respaldo no define (relation_field de one2many, compute/store) NO se inventa: ese campo se marca BLOQUEA
 // salvo que el extracto del dump (opcional) lo aporte.
-import { readBackup, tryExtract, EXTRACT_DIR, READ_CTX } from '../recovery-lib.mjs';
+import { readBackup, tryExtract, EXTRACT_DIR } from '../recovery-lib.mjs';
 import { findOne } from '../connect.mjs';
 import { txt, parseSelection, selectionCommands, fieldOrder } from '../pure.mjs';
 import { knownFromRows, depIssues } from '../deps.mjs';
+import { classifyOtaField } from '../scope.mjs';
+import { inspectFields, assertNoFieldConflict } from '../field-diff.mjs';
+import { BlockedError } from '../recovery-lib.mjs';
 
 export const meta = { id: 'R2', title: 'Campos x_* de sale.order', critical: true, needs: 'R1 aplicado (relaciones a x_hotel_*) y módulos l10n/hr de los many2one' };
 
@@ -39,22 +42,36 @@ export function plan(ctx = {}) {
       relation_field: e.relation_field ?? undefined, compute: e.compute ?? undefined, depends: e.depends ?? undefined, store: e.store, related: e.related ?? undefined, readonly: e.readonly,
       selection: e.ttype === 'selection' ? sels.filter((x) => x.field_name === e.name).map((x) => ({ value: x.value, name: txt(x.name), sequence: x.sequence ?? 0 })) : null, issues, enriched: true, from_dump: true });
   }
-  return { standard_excluded: base.filter((f) => !f.name.startsWith('x_')).map((f) => f.name), items, enrichRows: enrich };
+  const excluded_external_fields = items.filter((f) => classifyOtaField({ ...f, model: 'sale.order' }).ota)
+    .map((f) => ({ name: f.name, reasons: classifyOtaField({ ...f, model: 'sale.order' }).reasons }));
+  const excludedNames = new Set(excluded_external_fields.map((f) => f.name));
+  const hotel_fields = items.filter((f) => !excludedNames.has(f.name));
+  return { standard_excluded: base.filter((f) => !f.name.startsWith('x_')).map((f) => f.name),
+    expected_total: items.length, items: hotel_fields, R2_HOTEL_FIELDS: hotel_fields.map((f) => f.name),
+    R2_EXCLUDED_EXTERNAL_FIELDS: excluded_external_fields, enrichRows: enrich };
 }
 
 export const inputs = (ctx) => { plan(ctx); };
 
 export async function run(ctx) {
   const { ex, ensure, log } = ctx;
-  const { items, standard_excluded } = plan(ctx);
+  const { items, standard_excluded, R2_EXCLUDED_EXTERNAL_FIELDS } = plan(ctx);
   const known = knownFromRows(items.map((i) => ({ ...i, model: 'sale.order' }))); const knownNames = new Set(items.map((i) => i.name));
   log.add('NOTA', 'sale.order', `${standard_excluded.length} campos estándar excluidos`, { note: 'los crean módulos, no esta capa' });
+  for (const f of R2_EXCLUDED_EXTERNAL_FIELDS) log.add('EXCLUYE_OTA', 'ir.model.fields', `sale.order.${f.name}`, { note: f.reasons.join('; ') });
+  const classified = await inspectFields(ex, 'sale.order', items);
+  for (const f of classified) log.add(f.status === 'CREATE_MISSING' ? 'MISSING' : f.status === 'REUSE_EXISTING' ? 'EXISTS_COMPATIBLE' : 'EXISTS_DIFFERENT',
+    'ir.model.fields', `sale.order.${f.name}`, { note: f.differences.join(', ') });
+  const conflict = assertNoFieldConflict(classified, 'sale.order');
+  if (conflict) throw new BlockedError(conflict);
+  const status = new Map(classified.map((f) => [f.name, f.status]));
   const soId = await findOne(ex, 'ir.model', [['model', '=', 'sale.order']]);
   if (!soId) { log.add('BLOQUEA', 'ir.model', 'sale.order', { note: 'sale.order no existe' }); return; }
   const modelCache = new Map();
   const hasModel = async (m) => { if (!modelCache.has(m)) modelCache.set(m, !!(await findOne(ex, 'ir.model', [['model', '=', m]]))); return modelCache.get(m); };
   for (const f of fieldOrder(items.map((i) => ({ ...i, model: 'sale.order' })))) {
     const label = `sale.order.${f.name}`;
+    if (status.get(f.name) === 'REUSE_EXISTING') continue;
     if (f.issues.length) { log.add('BLOQUEA', 'ir.model.fields', label, { note: f.issues.join('; ') }); continue; }
     if (f.relation && !(await hasModel(f.relation))) { log.add('BLOQUEA', 'ir.model.fields', label, { note: `modelo ${f.relation} ausente (¿R1 o módulo?)` }); continue; }
     const missing = await depIssues(ex, { model: 'sale.order', name: f.name, related: f.related, depends: f.depends, compute: f.compute }, known, knownNames);
@@ -77,10 +94,9 @@ export async function run(ctx) {
 export async function verify(ctx) {
   const { items } = plan(ctx);
   const checks = [];
-  for (const f of items) {
-    if (f.issues.length) { checks.push({ name: `sale.order.${f.name}`, ok: false, blocked: true, detail: f.issues.join('; ') }); continue; }
-    const r = await ctx.ex('ir.model.fields', 'search_read', [[['model', '=', 'sale.order'], ['name', '=', f.name]]], { fields: ['ttype', 'relation'], limit: 2, context: READ_CTX });
-    checks.push({ name: `sale.order.${f.name}`, ok: r.length === 1 && r[0].ttype === f.ttype && (!f.relation || r[0].relation === f.relation) });
-  }
+  const inspected = await inspectFields(ctx.ex, 'sale.order', items);
+  for (const [i, f] of items.entries()) checks.push({ name: `sale.order.${f.name}`,
+    ok: !f.issues.length && inspected[i].status === 'REUSE_EXISTING',
+    blocked: !!f.issues.length, detail: f.issues.length ? f.issues.join('; ') : inspected[i].differences.join(', ') });
   return { ok: checks.every((c) => c.ok), checks, blocked: checks.filter((c) => c.blocked).map((c) => c.name) };
 }

@@ -2,6 +2,7 @@
 
 Gate y clasificación por capa: `AI/ATH-STAGING-RECOVERY-007_PAQUETE.md` · Ejecución: `AI/RUNBOOK-CODEX-STAGING-RECOVERY.md`.
 **ATH-020:** R1, R2 y R4 se alimentan ahora del cierre publicado (`AI/recovery-extract/ath012_closure.json`, `rules_current.json`, `planning_roles_current.json`): `node recovery/run.mjs close-analysis` (offline) imprime las compuertas. `MIGRATION_PACKAGE_READY = YES` **solo significa listo para una misión de ejecución controlada**, con las precondiciones de destino de `AI/ATH-STAGING-RECOVERY-020_ESTADO.md` §9; no autoriza escribir en el staging. Histórico: `AI/ATH-STAGING-RECOVERY-013_ESTADO.md`.
+**ATH-025:** R1 reutiliza obligatoriamente el modelo preexistente `x_guests_line` y preclasifica sus campos; R2 separa 81 campos fuente en 79 hoteleros y 2 API excluidos. Ambas capas bloquean diferencias estructurales antes de escribir. El snapshot incluye los seis roles hoteleros de `planning.role`, sus relaciones y metadata de campos. El rollback solo elimina IDs registrados tras `create`; un `INTENT` sin ID confirmado queda en conflicto para conciliación manual. La simulación offline parte de 13/21 campos de huéspedes, 47/81 de R2 y las reglas 167/168/169 preexistentes; no prueba Odoo remoto ni autoriza escrituras.
 Dry-run por defecto; escribir exige `--apply` + `RECOVERY_CONFIRM=atheron1-hotel-staging-20261009`. Todo código de salida ≠ 0 es STOP.
 
 | Pieza | Qué es |
@@ -19,10 +20,10 @@ Dry-run por defecto; escribir exige `--apply` + `RECOVERY_CONFIRM=atheron1-hotel
 | `scope.mjs` | alcance BASE: excluye OTA (Booking/Airbnb/Beds24/NOBEDS/iCal/llamadas externas), detecta ids numéricos duros y adapta `browse(<id>)` entre acciones a búsqueda por nombre |
 | `EXTRACT-CONTRACT.md`, `extract/` | contrato del extracto del dump; el extractor **no está probado y no produce aún los campos derivados** |
 | `payloads/` | Kanban 6833, filtros de Ángela (borrador), contrato de la fila KPI |
-| `test/` | Odoo **falso**, extracto **sintético** (solo pruebas), 87 pruebas |
+| `test/` | Odoo **falso**, extracto sintético y fixture ATH-024 (solo pruebas locales), 121 pruebas |
 | `r0-preflight-readonly.mjs`, `r1-…`, `r3-…`, `r4-…`, `r7-…`, `rollback.mjs` | envoltorios de compatibilidad hacia `run.mjs` |
 
-Pruebas: `node --test recovery/test/*.test.mjs` (87) · suite completa: `npm test` (594).
+Pruebas del paquete: `node --test recovery/test/*.test.mjs` (121).
 Bitácora y snapshots: `recovery/out/` (ignorada por Git).
 | `closure.mjs` | ATH-020: deriva del cierre ATH-012 los archivos del contrato (models, fields, selections, server_actions, automations, crons, rules_old, planning_roles, rule189_intent) y adapta las lecturas actuales de Codex; `loadExtract` cae a él si falta el archivo |
 | `closure-analysis.mjs` | ATH-020: análisis offline R1/R2/R4/167-169/189/roles/R3-R7 y compuertas (`run.mjs close-analysis`) |
