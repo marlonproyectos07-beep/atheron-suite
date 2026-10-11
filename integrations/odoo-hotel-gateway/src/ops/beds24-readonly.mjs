@@ -68,6 +68,7 @@ export const STATUS = Object.freeze({
 /** HIPÓTESIS: new/request ocupan calendario pero no son «confirmadas». Verificar con datos reales. */
 const STATUS_MAP = { confirmed: 'CONFIRMED', new: 'PENDING', request: 'PENDING', cancelled: 'CANCELLED', canceled: 'CANCELLED', black: 'BLACKOUT', inquiry: 'INQUIRY' };
 const HOLD_NOTE = /HOLD\s+hasta\s+(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}))?/i;
+const DAY_USE_TAG = /\b(?:DAY[_ -]?USE|USO[ _-]TEMPORAL)\b/i;
 const STAY_TAG = /ATH-STAY-[A-Z0-9]+(?:-[A-Z0-9]+)*/i;
 
 function sourceOf(raw) {
@@ -106,6 +107,9 @@ export function normalizeBeds24Booking(raw, { roomUnits = BEDS24_ROOM_UNITS } = 
     guest: [raw.firstName, raw.lastName].filter(Boolean).join(' ').trim() || String(raw.title ?? '').trim() || null,
     chargeTotal, payments, notes,
     holdExpires,
+    /* DAY_USE: uso temporal de una habitación dentro del día, sin pernoctar. Beds24 puede exigir una noche, por eso
+       se acepta salida == llegada o la etiqueta DAY_USE / USO TEMPORAL en las notas. El tramo queda en la fecha de llegada. */
+    dayUse: Boolean(raw.arrival) && (raw.arrival === raw.departure || DAY_USE_TAG.test(notes)),
     masterStayRef: (STAY_TAG.exec(`${raw.apiReference ?? ''} ${notes}`)?.[0] ?? '').toUpperCase() || null,
   };
 }

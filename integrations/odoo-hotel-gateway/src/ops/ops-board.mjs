@@ -9,8 +9,8 @@ import { PHYSICAL_ROOMS, CASA_UNIT } from './config.mjs';
  * Reglas fijas: OTA confirmada = ocupación real; BLACKOUT = bloqueada, no ocupada; Casa Completa = sombra sobre las 5 físicas
  * (ocupación contada una vez, por habitación); un cambio de habitación NO es llegada ni salida; saldo = venta − pagos CONFIRMADOS.
  */
-export const CELL_STATES = Object.freeze(['FREE', 'OCCUPIED', 'ARRIVAL', 'DEPARTURE', 'HOLD', 'BLACKOUT', 'OVERBOOKING', 'ROOM_MOVE']);
-const PRIORITY = ['OVERBOOKING', 'ROOM_MOVE', 'ARRIVAL', 'DEPARTURE', 'OCCUPIED', 'HOLD', 'BLACKOUT', 'FREE'];
+export const CELL_STATES = Object.freeze(['FREE', 'OCCUPIED', 'ARRIVAL', 'DEPARTURE', 'HOLD', 'BLACKOUT', 'OVERBOOKING', 'ROOM_MOVE', 'DAY_USE']);
+const PRIORITY = ['OVERBOOKING', 'ROOM_MOVE', 'ARRIVAL', 'DEPARTURE', 'OCCUPIED', 'DAY_USE', 'HOLD', 'BLACKOUT', 'FREE'];
 
 function holdIsLive(seg, asOf, now) {
   if (!seg.holdExpires) return true; // HOLD sin vencimiento escrito: sigue bloqueando y se avisa en anomalías
@@ -27,6 +27,7 @@ function buildClaims(stays, blackouts, asOf, now) {
     for (const seg of stay.segments) {
       if (seg.kind !== 'ROOM') continue;
       const rooms = seg.unit === CASA_UNIT ? PHYSICAL_ROOMS : PHYSICAL_ROOMS.includes(seg.unit) ? [seg.unit] : [];
+      if (seg.dayUse) { if (seg.status === 'CONFIRMED') for (const room of rooms) claims.push({ room, stay, seg, kind: 'DAYUSE', derived: seg.unit === CASA_UNIT }); continue; }
       const kind = seg.status === 'CONFIRMED' ? 'OCCUPY' : seg.status === 'HOLD' ? (holdIsLive(seg, asOf, now) ? 'HOLD' : 'EXPIRED') : 'HOLD'; // PENDING bloquea como HOLD
       if (kind === 'EXPIRED') continue;
       for (const room of rooms) claims.push({ room, stay, seg, kind, derived: seg.unit === CASA_UNIT });
@@ -40,7 +41,8 @@ function buildClaims(stays, blackouts, asOf, now) {
 }
 
 export function cellFor(room, date, claims) {
-  const mine = claims.filter((c) => c.room === room);
+  const mine = claims.filter((c) => c.room === room && c.kind !== 'DAYUSE');
+  const dayUse = claims.filter((c) => c.room === room && c.kind === 'DAYUSE' && c.seg.checkin === date);
   const states = new Set(); const refs = []; let overbook = null;
   const nightClaims = mine.filter((c) => coversNight(c.seg.checkin, c.seg.checkout, date));
   const occupy = nightClaims.filter((c) => c.kind === 'OCCUPY');
@@ -51,6 +53,11 @@ export function cellFor(room, date, claims) {
   if (!occupy.length && !holds.length && blacks.length) states.add('BLACKOUT');
   if (occupy.length + blacks.length > 1 && occupy.length >= 1) {
     states.add('OVERBOOKING'); overbook = { room, date, claims: [...occupy, ...blacks].map((c) => c.stay?.stay_id ?? `BLOQUEO:${c.seg.bookingId}`) };
+  }
+  if (dayUse.length) {
+    states.add('DAY_USE'); dayUse.forEach((c) => refs.push(c.stay.stay_id));
+    // el huésped que pernocta esa noche está en la habitación: el uso temporal choca con él
+    if (occupy.length) { states.add('OVERBOOKING'); overbook = { room, date, claims: [...occupy, ...dayUse].map((c) => c.stay?.stay_id), reason: 'DAY_USE_CHOCA_CON_ESTADIA' }; }
   }
   for (const c of mine.filter((x) => x.kind === 'OCCUPY' || x.kind === 'HOLD')) {
     if (c.seg.checkin === date) states.add(c.seg.first ? 'ARRIVAL' : 'ROOM_MOVE');
@@ -67,7 +74,7 @@ export function cellFor(room, date, claims) {
 export function describeStay(stay, asOf) {
   const segs = stay.segments;
   const label = (s) => (s.kind === 'EXTERNAL' ? 'EXTERNO' : s.unit === CASA_UNIT ? 'CASA COMPLETA' : s.unit);
-  const cur = segs.find((s) => coversNight(s.checkin, s.checkout, asOf)) ?? null;
+  const cur = segs.find((s) => (s.dayUse ? s.checkin === asOf : coversNight(s.checkin, s.checkout, asOf))) ?? null;
   const next = cur ? segs.find((s) => s.seq === cur.seq + 1) ?? null : segs.find((s) => s.checkin > asOf) ?? null;
   const unpaid = (stay.payment_plan ?? []).find((p) => p.outstanding > 0);
   return {
@@ -91,11 +98,14 @@ function kpiForWindow(windowName, ctx) {
   const sum = (k) => cells.filter((c) => c.bucket === k).length;
   const unit = w.dates.length === 1 ? 'habitaciones' : 'noches-habitación';
   const live = stays.filter((s) => s.status !== 'CANCELLED');
-  const confirmed = live.filter((s) => s.status === 'CONFIRMED' && overlaps(s.check_in_global, s.check_out_global, w));
+  // el uso temporal (DAY_USE) no es llegada, salida ni estadía confirmada de alojamiento: su dinero sí entra en el saldo
+  const lodging = live.filter((s) => !s.day_use);
+  const confirmed = lodging.filter((s) => s.status === 'CONFIRMED' && overlaps(s.check_in_global, s.check_out_global, w));
+  const moneyStays = live.filter((s) => s.status === 'CONFIRMED' && overlaps(s.check_in_global, s.check_out_global, w));
   const arrivals = confirmed.filter((s) => s.check_in_global >= w.start && s.check_in_global <= w.end);
   const departures = confirmed.filter((s) => s.check_out_global >= w.start && s.check_out_global <= w.end);
-  const balance = confirmed.reduce((a, s) => a + s.balance, 0);
-  const reported = confirmed.reduce((a, s) => a + s.payment_reported_unconfirmed, 0);
+  const balance = moneyStays.reduce((a, s) => a + s.balance, 0);
+  const reported = moneyStays.reduce((a, s) => a + s.payment_reported_unconfirmed, 0);
   const kpi = {
     DISPONIBLES: { value: sum('DISPONIBLE'), unit }, OCUPADAS: { value: sum('OCUPADA'), unit },
     HOLD: { value: sum('HOLD'), unit }, BLOQUEADAS: { value: sum('BLOQUEADA'), unit },
@@ -138,7 +148,7 @@ export function buildOps({ bookings, registry = [], confirmedPayments = [], paym
 
   const todayCells = PHYSICAL_ROOMS.map((r) => cellFor(r, asOf, claims));
   const tomorrow = addDays(asOf, 1);
-  const live = stays.filter((s) => s.status === 'CONFIRMED');
+  const live = stays.filter((s) => s.status === 'CONFIRMED' && !s.day_use);
   const overbookings = [];
   for (const d of datesBetween(asOf, addDays(asOf, 60))) for (const r of PHYSICAL_ROOMS) { const o = cellFor(r, d, claims).overbooking; if (o) overbookings.push(o); }
   const holdAnoms = bookings.filter((b) => b.status === 'HOLD' && !b.holdExpires).map((b) => ({ code: 'HOLD_SIN_VENCIMIENTO', ref: b.bookingId, detail: '' }));
@@ -151,7 +161,8 @@ export function buildOps({ bookings, registry = [], confirmedPayments = [], paym
     en_externo: live.filter((s) => s.current_room === 'EXTERNO').map((s) => ({ stay_id: s.stay_id, guest: s.guest })),
     cambios_hoy: movesOn(asOf, live),
     cambios_manana: movesOn(tomorrow, live),
-    deben_pagar: live.filter((s) => s.balance > 0).map((s) => ({ stay_id: s.stay_id, guest: s.guest, balance: s.balance, next_payment_date: s.next_payment_date, next_payment_amount: s.next_payment_amount, overdue: s.payment_overdue, reportado_sin_confirmar: s.payment_reported_unconfirmed }))
+    uso_temporal_hoy: stays.filter((s) => s.day_use && s.status === 'CONFIRMED' && s.check_in_global === asOf).map((s) => ({ stay_id: s.stay_id, guest: s.guest, room: s.room_segments[0].room_location })),
+    deben_pagar: stays.filter((s) => s.status === 'CONFIRMED' && s.balance > 0).map((s) => ({ stay_id: s.stay_id, guest: s.guest, balance: s.balance, next_payment_date: s.next_payment_date, next_payment_amount: s.next_payment_amount, overdue: s.payment_overdue, reportado_sin_confirmar: s.payment_reported_unconfirmed }))
       .sort((a, b) => String(a.next_payment_date).localeCompare(String(b.next_payment_date))),
     sobreventas: overbookings,
     bloqueos: blackouts.filter((b) => b.checkout > asOf).map((b) => ({ unit: b.unit, from: b.checkin, to: b.checkout, notes: b.notes })),

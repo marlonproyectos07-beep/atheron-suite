@@ -82,6 +82,10 @@ function buildSegments(g, anomalies) {
     if (!ACTIVE.has(b.status) && b.status !== 'CANCELLED') continue;
     if (b.status === 'CANCELLED') continue;
     if (!b.unit) { anomalies.push({ code: 'RESERVA_SIN_HABITACION', ref: g.ref, detail: `${b.bookingId} roomId ${b.roomId}` }); continue; }
+    if (b.dayUse && isDate(b.checkin)) {
+      segs.push({ kind: 'ROOM', dayUse: true, unit: b.unit, bookingId: b.bookingId, checkin: b.checkin, checkout: b.checkin, status: b.status, holdExpires: b.holdExpires, source: b.source, charge: b.chargeTotal });
+      continue;
+    }
     if (!isDate(b.checkin) || !isDate(b.checkout) || b.checkout <= b.checkin) { anomalies.push({ code: 'FECHAS_INVALIDAS', ref: g.ref, detail: b.bookingId }); continue; }
     segs.push({ kind: 'ROOM', unit: b.unit, bookingId: b.bookingId, checkin: b.checkin, checkout: b.checkout, status: b.status, holdExpires: b.holdExpires, source: b.source, charge: b.chargeTotal });
   }
@@ -157,9 +161,10 @@ export function consolidateStays({ bookings, registry = [], confirmedPayments = 
     for (const b of g.bookings) for (const p of b.payments) {
       const key = `${b.bookingId}:${p.id}`; if (seen.has(key)) continue; seen.add(key);
       const confirmed = confirmedIds.has(p.id) || confirmedIds.has(key) || paymentPolicy === 'CONFIRMED';
-      payments.push({ ...p, bookingId: b.bookingId, status: confirmed ? PAYMENT_CONFIRMED : PAYMENT_REPORTED });
+      const led = ledger.find((l) => l.beds24PaymentId && (String(l.beds24PaymentId) === p.id || String(l.beds24PaymentId) === key));
+      payments.push({ ...p, bookingId: b.bookingId, status: confirmed ? PAYMENT_CONFIRMED : PAYMENT_REPORTED, method: led?.method ?? null, journal: led?.journal ?? null, date: led?.date ?? p.date ?? null });
     }
-    for (const p of ledger) if (!p.beds24PaymentId) payments.push({ id: String(p.id), bookingId: p.bookingId ?? null, amount: Number(p.amount) || 0, date: p.date ?? null, status: PAYMENT_CONFIRMED });
+    for (const p of ledger) if (!p.beds24PaymentId) payments.push({ id: String(p.id), bookingId: p.bookingId ?? null, amount: Number(p.amount) || 0, date: p.date ?? null, method: p.method ?? null, journal: p.journal ?? null, status: PAYMENT_CONFIRMED });
     const paymentConfirmed = payments.filter((p) => p.status === PAYMENT_CONFIRMED).reduce((a, p) => a + p.amount, 0);
     const paymentReported = payments.filter((p) => p.status === PAYMENT_REPORTED).reduce((a, p) => a + p.amount, 0);
     const plan = reg?.payment_plan ? allocatePlan(reg.payment_plan, paymentConfirmed, asOf) : null;
@@ -184,6 +189,7 @@ export function consolidateStays({ bookings, registry = [], confirmedPayments = 
       status,
       segments,
       booking_ids: g.bookings.map((b) => b.bookingId),
+      day_use: roomSegs.length > 0 && roomSegs.every((x) => x.dayUse),
       has_registry: Boolean(reg),
     });
   }
