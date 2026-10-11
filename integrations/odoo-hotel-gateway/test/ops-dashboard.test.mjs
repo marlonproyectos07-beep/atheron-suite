@@ -203,3 +203,44 @@ test('HTML: renderiza el tablero, escapa texto y muestra las preguntas de Ángel
   assert.equal(html.includes('<script>x'), false);
   assert.match(html, /ROOM_MOVE/);
 });
+
+// ---- ATH-OPS-DASHBOARD-002: cifras reales del médico informadas por dirección (ids y totales de Beds24) ----
+import { inventoryFields, missingExpectedFields } from '../src/ops/field-probe.mjs';
+import { spawnSync } from 'node:child_process';
+
+const realShape = () => ({
+  raw: [
+    { id: 94515854, roomId: 740218, status: 'confirmed', arrival: '2026-10-11', departure: '2026-10-17', firstName: 'Dr. Piloto', lastName: 'Sintético', price: 385000, notes: STAY },
+    { id: 94517233, roomId: 740220, status: 'confirmed', arrival: '2026-10-18', departure: '2026-11-01', firstName: 'Dr. Piloto', lastName: 'Sintético', price: 770000, notes: STAY },
+  ],
+  registry: [{ ref: STAY, guest: 'Dr. Piloto Sintético', source: 'DIRECT', commercial: { nights: 21, nightly_rate: 55000, total_sale: 1155000 },
+    members: [{ kind: 'BEDS24', bookingId: '94515854' }, { kind: 'EXTERNAL', label: 'Otra propiedad', checkin: '2026-10-17', checkout: '2026-10-18', charge: 0 }, { kind: 'BEDS24', bookingId: '94517233' }],
+    payment_plan: [{ seq: 1, amount: 577500, due_date: '2026-10-19' }, { seq: 2, amount: 577500, due_date: null }] }],
+});
+
+test('cifras reales del médico: 385.000 + 770.000 = 1.155.000 (la noche externa va dentro de #94515854), sin avisos', () => {
+  const { raw, registry } = realShape();
+  const o = buildOps({ bookings: raw.map((r) => normalizeBeds24Booking(r)), registry, asOf: '2026-10-12' });
+  const s = o.stays[0];
+  assert.equal(o.stays.length, 1);
+  assert.deepEqual(s.booking_ids, ['94515854', '94517233']);
+  assert.equal(s.total_sale, 1155000); assert.equal(s.payment_confirmed, 0); assert.equal(s.balance, 1155000);
+  assert.equal(s.total_nights, 21);
+  assert.deepEqual(o.anomalies, []);
+  assert.equal([s.current_room, s.next_room, s.next_move_date, s.next_payment_amount, s.next_payment_date].join('|'), '203|EXTERNO|2026-10-17|577500|2026-10-19');
+});
+
+test('inventario de campos: nombres y tipos, nunca valores; reporta los esperados que faltan', () => {
+  const inv = inventoryFields([{ id: 1, roomId: 2, firstName: 'Secreto', invoiceItems: [{ id: 9, type: 'payment', amount: 5 }] }]);
+  assert.equal(JSON.stringify(inv).includes('Secreto'), false);
+  assert.deepEqual(inv.booking_fields.id.types, ['number']);
+  assert.ok(inv.invoice_item_fields.type);
+  assert.ok(missingExpectedFields(inv).includes('arrival'));
+});
+
+test('sonda real sin BEDS24_TOKEN: sale con código 3 e indica la variable, sin red', () => {
+  const env = { ...process.env }; delete env.BEDS24_TOKEN;
+  const r = spawnSync(process.execPath, [new URL('../scripts/ops-beds24-probe.mjs', import.meta.url).pathname], { env, encoding: 'utf8' });
+  assert.equal(r.status, 3);
+  assert.match(r.stderr, /BEDS24_TOKEN/);
+});

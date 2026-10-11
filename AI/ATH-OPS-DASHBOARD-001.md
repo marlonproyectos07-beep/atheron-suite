@@ -87,3 +87,6 @@ BEDS24_TOKEN=… node scripts/ops-dashboard.mjs --live --as-of 2026-10-16 --regi
 2. Dar acceso/autorización para crear en Odoo STAGING los 3 modelos de §3 y publicar el tablero (o aprobar servirlo desde el Gateway).
 3. ¿Los pagos anotados en Beds24 cuentan como confirmados o solo los de Odoo? (hoy: solo Odoo).
 4. Fecha y estado de la 1.ª cuota del médico.
+
+## 10. Actualización (ATH-OPS-DASHBOARD-002)
+Lectura real y despliegue en STAGING bloqueados por entorno (falta `BEDS24_TOKEN`, hosts `beds24.com` y Odoo STAGING sin red). Se añadió la sonda de solo lectura y se corrigió el modelado del médico con las cifras reales (385.000 + 770.000; noche externa incluida en #94515854, tramo EXTERNAL con cargo 0). Detalle en `AI/ATH-OPS-DASHBOARD-002.md`.
