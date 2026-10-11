@@ -23,6 +23,7 @@ import { formularioContactoActivo } from '../data/ajustes';
 import { experiencias } from '../data/experiencias';
 import { fotoHero } from '../data/casa-colonial-centro';
 import { atributosWhatsApp, MENSAJE_DISPONIBILIDAD, MENSAJE_GRUPO } from '../data/whatsapp';
+import { atributosBeds24, MENSAJE_SOLICITUD, AVISO_SOLICITUD } from '../data/beds24';
 import { ORGANIZACION } from '../data/seo';
 
 /* Los cuatro hospedajes destacados salen de la misma coleccion que
@@ -200,18 +201,20 @@ const fichaNegocio = {
         </p>
 
         <div class="grupo-botones">
-          <a class="boton boton--acento boton--grande" href="/hospedajes">
+          {/* CTA principal: abre el motor de solicitudes de Beds24 (Hotel
+              Atheron Suite). Es una solicitud, no un pago. */}
+          <a
+            class="boton boton--acento boton--grande"
+            {...atributosBeds24({ origen: 'home_hero', propiedad: 'Hotel Atheron Suite' })}
+          >
+            Consultar disponibilidad
+          </a>
+          <a class="boton boton--claro boton--grande" href="/hospedajes">
             Ver hospedajes
           </a>
-          {/* Abre WhatsApp en un clic, con la plantilla ya escrita:
-              personas, fechas y tipo de evento. El destino viene
-              resuelto en el HTML, no lo pone main.js al cargar. */}
-          <a
-            class="boton boton--claro boton--grande"
-            {...atributosWhatsApp(MENSAJE_GRUPO, { origen: 'home_hero', evento: 'whatsapp_group_quote' })}
-          >
-            Cotizar mi grupo
-          </a>
+          {/* "Cotizar mi grupo" ya esta en el enlace de grupos de arriba
+              (home_hero_grupo_5_mas): dos botones al mismo canal en el
+              hero saturaban. El segundo lugar lo ocupa "Ver hospedajes". */}
         </div>
 
         {/* Datos rapidos: dan confianza sin pedir nada a cambio. En movil
@@ -792,18 +795,17 @@ const fichaNegocio = {
       <div class="contenedor">
         <div class="cta-final aparecer">
           <h2>Tu próxima escapada empieza aquí</h2>
-          <p>
-            Escribenos y te ayudamos a elegir que hospedaje se adapta mejor a tu viaje.
-          </p>
+          <p>{MENSAJE_SOLICITUD}</p>
+          <p class="texto-suave">{AVISO_SOLICITUD}</p>
           {/* El cierre de la portada manda al canal donde se responde,
               no a otra pagina. Quien ha bajado hasta aqui ya vio los
               hospedajes; lo que le queda por hacer es preguntar. */}
           <div class="grupo-botones grupo-botones--centrado">
             <a
-              class="boton boton--whatsapp boton--grande"
-              {...atributosWhatsApp(MENSAJE_DISPONIBILIDAD, { origen: 'home_cierre' })}
+              class="boton boton--acento boton--grande"
+              {...atributosBeds24({ origen: 'home_cierre', propiedad: 'Hotel Atheron Suite' })}
             >
-              Ver disponibilidad
+              Solicitar reserva
             </a>
             <a class="boton boton--claro boton--grande" href="/hospedajes">
               Explorar todos los hospedajes

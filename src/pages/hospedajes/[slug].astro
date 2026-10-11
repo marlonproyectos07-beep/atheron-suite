@@ -12,6 +12,7 @@ import CanarioDisponibilidad from '../../components/CanarioDisponibilidad.astro'
 import { formularioContactoActivo } from '../../data/ajustes';
 import { migaDePan, url, ORGANIZACION } from '../../data/seo';
 import { atributosWhatsApp } from '../../data/whatsapp';
+import { atributosBeds24, esHotelAtheronSuite, MENSAJE_SOLICITUD, AVISO_SOLICITUD } from '../../data/beds24';
 
 export async function getStaticPaths() {
   const fichas = await getCollection('hospedajes');
@@ -36,6 +37,8 @@ const casa = d.casaCompleta ?? null;
    Zipaquira; con la primera casa en Cogua, esos cinco textos habrian
    mandado al huesped al municipio equivocado. El valor por defecto
    sigue siendo Zipaquira, asi que las fichas de antes no cambian. */
+/* Solo el Hotel Atheron Suite se solicita por el motor de Beds24. */
+const usaBeds24 = esHotelAtheronSuite(ficha.id);
 const mensajeInteres = `Hola, me interesa ${d.nombre} de Atheron Suite en ${d.localidad}.`;
 /* Sin foto principal no hay portada fotografica que valga: las fichas
    en obra todavia no la tienen y pedirla reventaba el build. */
@@ -225,7 +228,7 @@ function idHabitacion(nombre) {
   imagen={d.fotoPrincipal}
   imagenAlt={d.fotoPrincipalAlt}
 >
-  <Cabecera enlaces={menuFicha} enlacesMovil={enlacesMovil} cta={ctaConsultarDe(d.nombre, d.localidad)} />
+  <Cabecera enlaces={menuFicha} enlacesMovil={enlacesMovil} cta={ctaConsultarDe(d.nombre, d.localidad, ficha.id)} />
 
   <main id="contenido">
     <section class:list={['hero', 'hero--interior', heroFoto && 'hero--foto']}>
@@ -260,14 +263,28 @@ function idHabitacion(nombre) {
           <Marca texto={d.presentacion} pendiente={d.presentacionPendiente} />
         </p>
         <div class="grupo-botones">
-          <a
-            class="boton boton--whatsapp boton--grande"
-            {...atributosWhatsApp(`${mensajeInteres} Quiero consultar disponibilidad.`, { origen: 'ficha_hero', propiedad: d.nombre })}
-          >
-            Consultar disponibilidad
-          </a>
+          {usaBeds24 ? (
+            <a
+              class="boton boton--acento boton--grande"
+              {...atributosBeds24({ origen: 'ficha_hero', propiedad: d.nombre })}
+            >
+              Solicitar reserva
+            </a>
+          ) : (
+            <a
+              class="boton boton--whatsapp boton--grande"
+              {...atributosWhatsApp(`${mensajeInteres} Quiero consultar disponibilidad.`, { origen: 'ficha_hero', propiedad: d.nombre })}
+            >
+              Consultar disponibilidad
+            </a>
+          )}
           {hayGaleria && <a class="boton boton--claro boton--grande" href="#galeria">Ver fotos</a>}
         </div>
+        {usaBeds24 && (
+          <p class="hero__texto" style="font-size:.9rem;opacity:.9;margin-top:var(--esp-2);">
+            {MENSAJE_SOLICITUD} {AVISO_SOLICITUD}
+          </p>
+        )}
 
         <div class="hero__datos">
           {d.datos.map((item) => (
@@ -550,10 +567,17 @@ function idHabitacion(nombre) {
                             href={destino}
                             data-etiqueta-ver={h.etiquetaVer ?? undefined}
                           >Ver fotos y detalles</a>
+                          {usaBeds24 ? (
+                            <a
+                              class="boton boton--primario"
+                              {...atributosBeds24({ origen: 'ficha_mini_habitacion', propiedad: d.nombre })}
+                            >Consultar disponibilidad</a>
+                          ) : (
                           <a
                             class="boton boton--whatsapp"
                             {...atributosWhatsApp(`Hola, quiero consultar disponibilidad y precio de ${h.nombre} en ${d.nombre}.`, { origen: 'ficha_mini_habitacion', propiedad: d.nombre })}
                           >Consultar</a>
+                          )}
                         </div>
                       </div>
                     </article>
@@ -704,12 +728,21 @@ function idHabitacion(nombre) {
                             Ver fotos
                           </button>
                         )}
+                        {usaBeds24 ? (
+                          <a
+                            class="boton boton--primario"
+                            {...atributosBeds24({ origen: 'ficha_habitacion', propiedad: d.nombre })}
+                          >
+                            Solicitar reserva
+                          </a>
+                        ) : (
                         <a
                           class="boton boton--whatsapp"
                           {...atributosWhatsApp(`Hola, quiero consultar por la ${h.nombre} en ${d.nombre}.`, { origen: 'ficha_habitacion', propiedad: d.nombre })}
                         >
                           Consultar
                         </a>
+                        )}
                       </div>
                     </div>
                   </div>

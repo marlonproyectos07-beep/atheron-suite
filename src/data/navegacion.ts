@@ -14,6 +14,7 @@
    existen. Y las landings no llevan menu a proposito (ver abajo).
    ============================================================ */
 
+import { EVENTO_SOLICITUD, URL_SOLICITUD_BEDS24, esHotelAtheronSuite } from './beds24';
 import {
   ENLACE_DISPONIBILIDAD,
   ENLACE_GRUPO,
@@ -64,13 +65,27 @@ export interface Cta {
    El href ya viene resuelto desde src/data/whatsapp.ts, escrito en
    el HTML al construir. No depende de que main.js cargue.
    ------------------------------------------------------------ */
-export const ctaDisponibilidad: Cta = {
+export const ctaDisponibilidadWhatsApp: Cta = {
   texto: 'Ver disponibilidad',
   href: ENLACE_DISPONIBILIDAD,
   clase: 'boton--whatsapp',
   whatsapp: MENSAJE_DISPONIBILIDAD,
   externo: true,
   evento: EVENTO_DISPONIBILIDAD,
+};
+
+/* ATH-WEB-DIRECT-BOOKING-003: el boton general de la cabecera abre el
+   motor de solicitudes de Beds24 (Hotel Atheron Suite). Es una
+   CONSULTA/SOLICITUD, no un pago. La version de WhatsApp de arriba se
+   conserva para el catalogo, que mezcla varios hospedajes: el motor
+   solo conoce los cinco apartamentos del Hotel Atheron Suite. Sin
+   data-whatsapp, main.js no le cambia el destino. */
+export const ctaDisponibilidad: Cta = {
+  texto: 'Consultar disponibilidad',
+  href: URL_SOLICITUD_BEDS24,
+  clase: 'boton--primario',
+  externo: true,
+  evento: EVENTO_SOLICITUD,
 };
 
 /* ------------------------------------------------------------
@@ -181,7 +196,9 @@ export const menuFichaMovil: Enlace[] = [
    Antes era un ancla a "#contacto" y solo main.js la convertia en
    WhatsApp al cargar. Ahora el destino viene resuelto en el HTML.
    ------------------------------------------------------------ */
-export const ctaConsultarDe = (propiedad: string, localidad: string): Cta => {
+export const ctaConsultarDe = (propiedad: string, localidad: string, id = ''): Cta => {
+  /* Solo el Hotel Atheron Suite usa el motor de Beds24. */
+  if (esHotelAtheronSuite(id)) return { ...ctaDisponibilidad, origen: 'ficha_cabecera' };
   const mensaje =
     `Hola, quiero consultar disponibilidad de ${propiedad}, en ${localidad}.\n\n` +
     'Fecha de llegada:\nFecha de salida:\nNúmero de huéspedes:';

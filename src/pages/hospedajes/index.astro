@@ -20,9 +20,10 @@ import BotonFlotante from '../../components/BotonFlotante.astro';
 import Marca from '../../components/Marca.astro';
 import Foto from '../../components/Foto.astro';
 import ProyectoFoto from '../../components/ProyectoFoto.astro';
-import { menuHospedajes, ctaDisponibilidad } from '../../data/navegacion';
+import { menuHospedajes, ctaDisponibilidadWhatsApp as ctaDisponibilidad } from '../../data/navegacion';
 import { migaDePan, url, ORGANIZACION } from '../../data/seo';
 import { atributosWhatsApp, MENSAJE_DISPONIBILIDAD, mensajeDisponibilidadDe } from '../../data/whatsapp';
+import { atributosBeds24, esHotelAtheronSuite } from '../../data/beds24';
 import { fotoPatioArcos, conceptoPatioGastronomico } from '../../data/casa-colonial-centro';
 
 const OCULTAR_ENLACE_DE_FICHAS_EN_OBRA = false;
@@ -344,6 +345,12 @@ const fichaCatalogo = {
                       dice "disponibilidad" lo afirma antes de que nadie
                       lo haya comprobado. El municipio sale de la ficha,
                       no escrito a mano: Casa Neusa esta en Cogua. */}
+                  {esHotelAtheronSuite(id) && !enObra ? (
+                    <a class="boton boton--primario boton--bloque"
+                       {...atributosBeds24({ origen: 'catalogo_tarjeta', propiedad: data.nombre })}>
+                      Consultar disponibilidad
+                    </a>
+                  ) : (
                   <a class="boton boton--whatsapp boton--bloque"
                      {...atributosWhatsApp(
                        enObra
@@ -353,6 +360,7 @@ const fichaCatalogo = {
                      )}>
                     {enObra ? 'Consultar estado del alojamiento' : 'Consultar disponibilidad por WhatsApp'}
                   </a>
+                  )}
 
                 </div>
               </article>
