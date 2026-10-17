@@ -1,0 +1,82 @@
+---
+import Base from '../../layouts/Base.astro';
+import Cabecera from '../../components/Cabecera.astro';
+import Pie from '../../components/Pie.astro';
+import BotonFlotante from '../../components/BotonFlotante.astro';
+import { menuBlog, ctaDisponibilidad } from '../../data/navegacion';
+import { articuloDe, fechaLarga } from '../../data/blog';
+import { atributosWhatsApp } from '../../data/whatsapp';
+import { migaDePan, url, ORGANIZACION } from '../../data/seo';
+
+const articulo = articuloDe('/eventos/trail-running-de-colores-zipaquira-2026')!;
+const fuente = 'https://www.catedraldesal.gov.co/noticias/trail-running-de-colores-2026-carrera-180-metros-bajo-tierra/';
+const WA = 'Hola, vi la guía del Trail Running en Atheron y quiero consultar hospedaje para la noche del 17 de octubre en Zipaquirá.\n\nPersonas:\nHabitaciones:\nHora aproximada de llegada:';
+const ficha = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BlogPosting', '@id': `${url(articulo.ruta)}#articulo`,
+      headline: articulo.titulo, description: articulo.descripcion,
+      url: url(articulo.ruta), datePublished: articulo.publicado, dateModified: articulo.modificado,
+      inLanguage: 'es-CO', author: { '@type': 'Organization', name: articulo.autor },
+      publisher: { '@id': ORGANIZACION['@id'] }, citation: articulo.fuentes.map((f) => f.url),
+      mainEntityOfPage: url(articulo.ruta),
+    },
+    {
+      '@type': 'Event', '@id': `${url(articulo.ruta)}#evento`,
+      name: 'Trail Running de Colores 2026', description: articulo.descripcion,
+      startDate: '2026-10-18T07:00:00-05:00',
+      eventStatus: 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      location: { '@type': 'Place', name: 'Parque de la Sal y Catedral de Sal',
+        address: { '@type': 'PostalAddress', addressLocality: 'Zipaquirá', addressRegion: 'Cundinamarca', addressCountry: 'CO' } },
+      organizer: { '@type': 'Organization', name: 'Catedral de Sal de Zipaquirá', url: 'https://www.catedraldesal.gov.co/' },
+      url: fuente,
+    },
+    ORGANIZACION,
+    migaDePan([{ nombre: 'Inicio', ruta: '/' }, { nombre: 'Blog', ruta: '/blog' }, { nombre: 'Trail Running de Colores 2026', ruta: articulo.ruta }], `${url(articulo.ruta)}#miga`),
+  ],
+};
+---
+
+<Base titulo="Trail Running de Colores 2026: horarios y hospedaje | Atheron" descripcion={articulo.descripcion} ruta={articulo.ruta} ogTipo="article" jsonLd={ficha} hojasExtra={['guia', 'eventos']}>
+  <Cabecera enlaces={menuBlog} cta={{ ...ctaDisponibilidad, origen: 'evento_trail' }} actual="/blog" />
+  <main id="contenido">
+    <section class="evento-hero"><div class="contenedor evento-hero__contenido">
+      <nav class="migas" aria-label="Ruta de navegación"><ol><li><a href="/">Inicio</a></li><li><a href="/blog">Blog</a></li><li aria-current="page">Trail Running de Colores 2026</li></ol></nav>
+      <span class="hero__etiqueta">Guía verificada para corredores y acompañantes</span>
+      <h1>Trail Running de Colores 2026 en Zipaquirá</h1>
+      <p class="hero__texto">Retira tu kit este sábado y prepara una salida temprana el domingo. Reunimos los horarios oficiales para que disfrutes la carrera dentro de la Catedral de Sal y organices tu estadía con tiempo.</p>
+      <span class="evento-hero__fecha">Kit: sábado 17 · Carrera: domingo 18, 7:00 a. m.</span>
+    </div></section>
+    <section class="seccion"><div class="contenedor articulo">
+      <p class="articulo__meta"><span>Verificado el <time datetime={articulo.modificado}>{fechaLarga(articulo.modificado)}</time></span><span>Por {articulo.autor}</span></p>
+      <div class="respuesta-rapida"><strong>Para planear tu llegada:</strong> el kit se entrega <strong>el sábado 17, de 7:00 a. m. a 5:00 p. m.</strong> en el Salón Muisca. El domingo la partida es a las <strong>7:00 a. m.</strong> Las inscripciones están cerradas. Confirma cualquier cambio con la organización.</div>
+      <aside class="evento-conversion" aria-label="Consulta de hospedaje para el Trail Running"><div><h2>Una noche para llegar con calma</h2><p>Si vienes desde otra ciudad, consulta hospedaje en Zipaquirá para la noche del sábado 17. Cuéntanos cuántas personas viajan y tu hora de llegada; confirmaremos las opciones disponibles antes de reservar. Atheron ofrece alojamiento de forma independiente al evento.</p></div>
+        <div class="evento-conversion__acciones"><a class="boton boton--whatsapp" {...atributosWhatsApp(WA, { origen: 'evento_trail_hero_hospedaje' })}>Consultar por WhatsApp</a><a class="boton boton--claro" href="/hospedajes">Ver hospedajes</a></div>
+      </aside>
+      <h2>Lo que necesitas para participar</h2>
+      <ul class="evento-datos">
+        <li><strong>Organiza:</strong> Catedral de Sal de Zipaquirá.</li>
+        <li><strong>Recorrido:</strong> 6 km; cerca de 2 km transcurren dentro de la Catedral.</li>
+        <li><strong>Calentamiento:</strong> domingo 18, 6:15 a. m. <strong>Salida:</strong> 7:00 a. m.</li>
+        <li><strong>Entrega de kits:</strong> sábado 17, de 7:00 a. m. a 5:00 p. m., Salón Muisca del Parque de la Sal. La organización indica que es el único día de entrega.</li>
+        <li><strong>Parqueadero:</strong> ingreso el domingo de 5:00 a 6:00 a. m., hasta agotar cupos. La fuente indica una tarifa de $13.000 COP.</li>
+        <li><strong>Inscripción:</strong> cerrada según la organización. Esta página no ofrece cupos ni entradas.</li>
+      </ul>
+      <div class="evento-conversion"><div><h2>Comprueba los detalles oficiales</h2><p>La organización publica las condiciones para menores, entrega de kits por terceros y documentos físicos. Revísalas antes de viajar; también puede actualizar horarios y accesos.</p></div>
+        <div class="evento-conversion__acciones"><a class="boton boton--primario" href={fuente} target="_blank" rel="noopener noreferrer">Leer información oficial</a></div>
+      </div>
+      <h2>Si viajas desde otra ciudad</h2>
+      <p>La entrega de kits es el sábado y la carrera comienza temprano el domingo. Por eso, una noche en Zipaquirá puede facilitarte la logística: revisa los horarios de llegada a tu hospedaje y el trayecto hasta el Parque de la Sal antes de reservar. Es una recomendación editorial de Atheron, no una indicación del organizador.</p>
+      <p>Si acompañas a un corredor, aprovecha para conocer la <a href="/guia-zipaquira">guía de Zipaquirá</a> y planear otras visitas de acuerdo con el tiempo disponible. El acceso a los atractivos y el hospedaje se gestionan por separado.</p>
+      <aside class="evento-conversion" aria-label="Hospedaje para la carrera"><div><h2>¿Viajan varias personas?</h2><p>Consulta <a href="/hospedajes">nuestros hospedajes</a> o cuéntanos si viajas con un <a href="/grupos">grupo</a>. Revisaremos opciones reales según el número de huéspedes. Atheron no es organizador ni aliado oficial de la carrera.</p></div>
+        <div class="evento-conversion__acciones"><a class="boton boton--whatsapp" {...atributosWhatsApp(WA, { origen: 'evento_trail_hospedaje' })}>Consultar hospedaje</a><a class="boton boton--claro" href="/hospedajes">Ver hospedajes</a></div>
+      </aside>
+      <h2>Fuentes y vigencia</h2>
+      <p>Información consultada el 17 de octubre de 2026. Esta guía corresponde a la carrera del 18 de octubre; después de esa fecha debe mostrarse como referencia histórica.</p>
+      <ul class="evento-fuentes"><li><a href={fuente} target="_blank" rel="noopener noreferrer">Catedral de Sal — recorrido, horarios y entrega de kits</a></li></ul>
+    </div></section>
+  </main>
+  <Pie /><BotonFlotante mensaje={WA} origen="evento_trail_flotante" />
+</Base>
