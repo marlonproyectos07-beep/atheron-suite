@@ -99,6 +99,26 @@ export const CATEGORIA_ATHERON = 'Atheron Suite';
 
 export const articulos: Articulo[] = [
   {
+    ruta: '/eventos/trail-running-de-colores-zipaquira-2026',
+    titulo: 'Trail Running de Colores 2026 en Zipaquirá: horarios, kits y hospedaje',
+    tituloCorto: 'Trail Running de Colores: guía para este fin de semana',
+    rotulo: 'Agenda deportiva · 18 de octubre',
+    descripcion: 'Entrega de kits el 17 de octubre y carrera el 18 a las 7:00 a. m. Consulta horarios, parqueadero y hospedaje independiente en Zipaquirá.',
+    autor: 'Atheron Suite',
+    publicado: '2026-10-17', modificado: '2026-10-17',
+    categoria: CATEGORIA_ZIPAQUIRA, imagen: null, imagenAlt: null,
+    fuentes: [
+      { titulo: 'Catedral de Sal — información para participantes', url: 'https://www.catedraldesal.gov.co/noticias/trail-running-de-colores-2026-carrera-180-metros-bajo-tierra/' },
+    ],
+    enlacesInternos: [
+      { texto: 'Guía Atheron de Zipaquirá', href: '/guia-zipaquira' },
+      { texto: 'Hospedajes en Zipaquirá', href: '/hospedajes' },
+      { texto: 'Alojamiento para grupos', href: '/grupos' },
+    ],
+    cta: { texto: 'Consultar hospedaje', href: '/hospedajes' },
+    publicadoEnSitio: true,
+  },
+  {
     ruta: '/eventos/circuito-salinas-rock-festival-zipaquira-2026',
     titulo: 'Circuito de Salinas Rock Festival 2026 en Zipaquirá: fecha, lugar y bandas',
     tituloCorto: 'Circuito de Salinas Rock Festival 2026',
