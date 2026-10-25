@@ -184,6 +184,8 @@ function insigniaDe(h) {
   return null;
 }
 
+const mensajeSolicitud201 = "Hola, Atheron Hotels. Quiero solicitar disponibilidad de la habitación 201 de Atheron Suite, Carrera 9 #10-32, Zipaquirá.\n\nFecha de llegada:\nFecha de salida:\nPersonas (1 o 2):\n\nEntiendo que esta solicitud no confirma una reserva ni bloquea fechas. Agradezco confirmar disponibilidad, precio final con impuestos y condiciones del anticipo.";
+
 function idHabitacion(nombre) {
   return String(nombre)
     .toLowerCase()
@@ -533,7 +535,7 @@ function idHabitacion(nombre) {
                           >Ver fotos y detalles</a>
                           <a
                             class="boton boton--whatsapp"
-                            {...atributosWhatsApp(`Hola, quiero consultar disponibilidad y precio de ${h.nombre} en ${d.nombre}.`, { origen: 'ficha_mini_habitacion', propiedad: d.nombre })}
+                            {...atributosWhatsApp((d.nombre === 'Hotel Atheron Suite' && h.nombre === 'Habitación 201') ? mensajeSolicitud201 : `Hola, quiero consultar disponibilidad y precio de ${h.nombre} en ${d.nombre}.`, { origen: 'ficha_mini_habitacion', propiedad: d.nombre })}
                           >Consultar</a>
                         </div>
                       </div>
@@ -687,7 +689,7 @@ function idHabitacion(nombre) {
                         )}
                         <a
                           class="boton boton--whatsapp"
-                          {...atributosWhatsApp(`Hola, quiero consultar por la ${h.nombre} en ${d.nombre}.`, { origen: 'ficha_habitacion', propiedad: d.nombre })}
+                          {...atributosWhatsApp((d.nombre === 'Hotel Atheron Suite' && h.nombre === 'Habitación 201') ? mensajeSolicitud201 : `Hola, quiero consultar por la ${h.nombre} en ${d.nombre}.`, { origen: 'ficha_habitacion', propiedad: d.nombre })}
                         >
                           Consultar
                         </a>
