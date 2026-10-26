@@ -26,3 +26,8 @@ export function requireUnit(smoobuApartmentId) {
 /** Casa Completa bloquea las cinco fisicas y viceversa. */
 export const PHYSICAL_UNITS = Object.freeze(UNITS.filter((u) => u.unit !== 'CASA').map((u) => u.unit));
 export const conflictsWith = (unit) => (unit === 'CASA' ? PHYSICAL_UNITS : ['CASA']);
+
+/** Apartamentos de Smoobu fuera de alcance a proposito (Carrera 19). Se ignoran con motivo explicito. */
+export const EXCLUDED_APARTMENTS = Object.freeze(new Set([3567496]));
+export const isExcludedApartment = (id) => EXCLUDED_APARTMENTS.has(Number(id));
+export const unitForName = (name) => UNITS.find((u) => u.unit === name) ?? null;

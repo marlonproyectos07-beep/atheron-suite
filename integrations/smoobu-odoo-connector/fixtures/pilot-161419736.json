@@ -1,0 +1,5 @@
+{
+  "_nota": "Fixture SINTETICA y minima de la reserva piloto; sin datos de huesped. No es una respuesta real de la API.",
+  "booking": { "id": 161419736, "apartment": { "id": 3557521 }, "arrival": "2026-10-26", "departure": "2026-10-27" },
+  "odooSlotsRole37": []
+}

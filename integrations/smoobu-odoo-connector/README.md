@@ -48,6 +48,9 @@ El sandbox de Claude Code **no tiene salida** a login.smoobu.com ni atheron1.odo
 3. `npm run connectivity` comprueba DNS/HTTPS sin credenciales. `npm run diagnose` prueba `/api` y, solo ante 404, `/api/v1`, e informa cual funciono.
 Alternativa: levantar el entorno de Claude Code con red "Limited" + dominios permitidos `login.smoobu.com` y `atheron1.odoo.com`, y los secretos del entorno.
 
+## Motor de conciliacion (ATH-DEV-010, solo simulacion)
+`src/reconcile.mjs`: reservas Smoobu + `planning.slot` leidos de Odoo -> propuestas `CREATE_SLOT` / `RELEASE_SLOT`, conflictos y advertencias; idempotente y sin escrituras. `npm run simulate` ejecuta el piloto 161419736. Plan de escrituras y puertas: `WRITE-PLAN.md`. Limitacion principal: no ha visto reservas reales (Smoobu 401) ni la convencion horaria real de los turnos.
+
 ## Mapa
 201: 3557506 -> rol 29 | 202: 3557511 -> 19 | 203: 3557516 -> 30 | 301: 3557521 -> 37 | 302: 3557526 -> 18 | Casa Completa: 3557501 -> 69
 
