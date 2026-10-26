@@ -5,14 +5,15 @@
 export function parseDomain(text) {
   if (text === false || text === null || text === undefined || text === '' || text === '[]') return { terms: [] };
   const src = String(text).trim();
-  if (!/^\[\s*(\(.*\)\s*,?\s*)+\]$/.test(src)) return { unknown: true };
+  // Odoo devuelve los dominios como [('a','=',x)] o [['a','=',x]], con comillas simples o dobles
+  if (!/^\[\s*([(\[].*[)\]]\s*,?\s*)+\]$/.test(src)) return { unknown: true };
   const terms = [];
-  const re = /\(\s*'([\w.]+)'\s*,\s*'(=|!=)'\s*,\s*(False|True|'[^']*'|\d+)\s*\)/g;
+  const re = /[(\[]\s*['"]([\w.]+)['"]\s*,\s*['"](=|!=)['"]\s*,\s*(False|True|false|true|'[^']*'|"[^"]*"|\d+)\s*[)\]]/g;
   let consumed = src.slice(1, -1);
   let m;
   while ((m = re.exec(src)) !== null) {
     const raw = m[3];
-    const value = raw === 'False' ? false : raw === 'True' ? true : raw.startsWith("'") ? raw.slice(1, -1) : Number(raw);
+    const value = /^false$/i.test(raw) ? false : /^true$/i.test(raw) ? true : /^['"]/.test(raw) ? raw.slice(1, -1) : Number(raw);
     terms.push({ field: m[1], op: m[2], value });
     consumed = consumed.replace(m[0], '');
   }

@@ -22,6 +22,10 @@ test('evaluador de dominios: lee los dominios reales de las automatizaciones', (
   assert.equal(matches("[('x_bloqueo_ref','=',False),('state','=','published')]", rec), false);
   assert.equal(matches("[('x_nobeds_id', '!=', False)]", rec), false);
   assert.equal(matches("[('state','=','draft'),('x_nobeds_id','!=',False),('sale_line_id','!=',False)]", rec), false);
+  // formas reales vistas en produccion: listas, comillas dobles
+  assert.equal(matches("[['state','=','published']]", rec), false);
+  assert.equal(matches('[["state", "=", "draft"]]', rec), true);
+  assert.equal(matches("[('x_bloqueo_ref','=',False),['state','=','published']]", rec), false);
   assert.equal(matches(false, rec), true); assert.equal(matches("[('state','=','draft')]", rec), true);
   assert.equal(matches("['|',('a','=',1),('b','=',2)]", rec), 'unknown'); assert.equal(parseDomain('basura').unknown, true);
 });
