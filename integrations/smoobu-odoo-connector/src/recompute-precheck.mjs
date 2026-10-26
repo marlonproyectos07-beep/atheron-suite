@@ -138,15 +138,42 @@ export async function runRecomputePrecheck({ odoo }) {
     return { saleOrdersSince22h: orders.map((o) => ({ id: o.id, created: o.create_date, state: o.state })), planningSlotsCreatedSince22h: lastSlots.map((s) => ({ id: s.id, role: idOf(s.role_id), created: s.create_date, state: s.state })) };
   }));
 
+  steps.push(await step('effects.external', async () => {
+    // lo que podria reaccionar a una escritura en x_availability (modulos de canal, acciones/automatizaciones/crons ajenos, campos almacenados)
+    const mods = await odoo.searchRead('ir.module.module', [['state', '=', 'installed'], '|', '|', ['name', 'ilike', 'channex'], ['name', 'ilike', 'channel'], ['name', 'ilike', 'booking']], ['name', 'state'], { limit: 50 });
+    const ff = await fieldsOf(odoo, 'ir.model.fields', ['name', 'ttype', 'store', 'compute', 'depends', 'related']);
+    const fields = await odoo.searchRead('ir.model.fields', [['model', '=', 'x_availability'], ['store', '=', true]], ff, { limit: 60 });
+    const mentioning = await odoo.searchRead('ir.actions.server', [['code', 'ilike', 'x_availability']], ['id', 'name', 'state', 'usage'], { limit: 50 });
+    const webhooks = await odoo.searchRead('ir.actions.server', [['state', '=', 'webhook']], ['id', 'name', 'model_name'], { limit: 50 });
+    const allCrons = await odoo.searchRead('ir.cron', [['active', '=', true], ['ir_actions_server_id', 'in', [...new Set([...mentioning.map((a) => a.id), 1493, 1494, 1495, 1496])]]], ['id', 'cron_name', 'ir_actions_server_id', 'nextcall'], { limit: 30 });
+    const autosAll = await odoo.searchRead('base.automation', [['active', '=', true], ['action_server_ids', 'in', mentioning.map((a) => a.id)]], ['id', 'name', 'trigger', 'model_name'], { limit: 50 });
+    ctx.effects = { mods, webhooksOnAvail: webhooks.filter((w) => /x_availability/.test(w.model_name ?? '')), allCrons, autosAll, fields };
+    return {
+      installedChannelOrBookingModules: mods.map((m) => m.name),
+      storedFieldsOfAvailability: fields.map((f) => ({ name: f.name, type: f.ttype, compute: f.compute || null, depends: f.depends || null, related: f.related || null })),
+      serverActionsMentioningAvailability: mentioning.map((a) => ({ id: a.id, name: a.name, state: a.state })),
+      webhookActionsOnAvailability: ctx.effects.webhooksOnAvail.map((w) => w.id),
+      activeCronsRunningThose: allCrons.map((c) => ({ id: c.id, name: c.cron_name, nextcall: c.nextcall })),
+      activeAutomationsRunningThose: autosAll.map((a) => ({ id: a.id, name: a.name, trigger: a.trigger, model: a.model_name })),
+    };
+  }));
+
   return { steps, ctx };
 }
 
-/** Evalua las puertas. Puro: recibe el resultado de runRecomputePrecheck. */
+/**
+ * Evalua las puertas para el metodo MINIMO: la accion 1493 (recalcula solo filas x_to_recompute=true; escribe solo
+ * x_total_units/x_booked/x_to_recompute en x_availability). El cron de la accion 1496 NO es ese metodo: se evalua
+ * aparte y, si es global (crea/archiva/marca todas las filas), queda excluido.
+ */
 export function evaluateGates(result) {
   const byName = Object.fromEntries(result.steps.map((s) => [s.name, s]));
   const c = result.ctx;
-  const code = c.cron?.srv?.code ?? '';
   const a1493 = c.actions?.find((a) => a.id === 1493)?.code ?? '';
+  const an = analyzeActionCode(a1493);
+  const cronCode = c.cron?.srv?.code ?? '';
+  const cronScope = analyzeActionCode(cronCode);
+  const marksAll = /search\(\[\('x_date',\s*'>=',\s*today\)\]\)\.write\(\{'x_to_recompute':\s*True\}\)/.test(cronCode) || cronScope.create > 0;
   const g = {};
   g.onlyTwoPendingRows = Boolean(c.pendingOnlyExpected);
   g.targetRowsBelongToOffer12136 = Boolean(c.targetRowsOfOffer);
@@ -154,11 +181,19 @@ export function evaluateGates(result) {
   g.icalClean = Boolean(c.icalClean);
   g.noRealOverlapOnNight = c.realOverlaps === 0;
   g.cronIdentifiedByXmlId = Boolean(c.cron?.c?.id) && !(byName['cron.identify']?.unresolved?.length);
-  const bad = analyzeActionCode(`${code}\n${a1493}`);
-  g.noExternalEffects = g.cronIdentifiedByXmlId && !bad.http && !bad.mail && !bad.saleOrder && !bad.ical && !bad.webhook && !bad.create && !bad.unlink;
-  g.writesOnlyAvailability = g.cronIdentifiedByXmlId && bad.models.every((m) => ['x_availability'].includes(m));
-  const flagSetters = (byName['cascade.flag-users']?.actionsMentioningFlag ?? []).filter((a) => a.setsTrue);
-  g.noRecurringRecomputeTriggersOnOthers = (byName['cascade.flag-users']?.automationsOnModelXAvailability ?? []).length === 0 && flagSetters.length === 0;
-  g.minimalMethodDefined = false; // lo fija el codigo de ejecucion tras revisar el scope real
-  return { gates: g, allGatesProven: Object.values(g).every(Boolean) };
+  g.cronIsGlobalAndExcluded = g.cronIdentifiedByXmlId && marksAll; // informativo: el cron NO se ejecuta
+  g.methodIs1493 = Boolean(a1493) && /x_to_recompute',\s*'=',\s*True/.test(a1493) && /'x_booked':\s*booked/.test(a1493);
+  g.methodWritesOnlyAvailabilityFields = g.methodIs1493 && an.write === 1 && an.create === 0 && an.unlink === 0 && /avail_batch\.write\(\{'x_total_units': total, 'x_booked': booked, 'x_to_recompute': False\}\)/.test(a1493);
+  g.methodNoExternalEffects = g.methodIs1493 && !an.http && !an.mail && !an.saleOrder && !an.ical && !an.webhook && !an.cronOrQueue;
+  const e = c.effects ?? {};
+  const wideEffects = (e.mods ?? []).filter((m) => /channex|channel/i.test(m.name));
+  g.noChannelModuleInstalled = Boolean(c.effects) && wideEffects.length === 0;
+  g.noWebhookOnAvailability = Boolean(c.effects) && (e.webhooksOnAvail ?? []).length === 0;
+  g.noAutomationOnAvailability = (byName['cascade.flag-users']?.automationsOnModelXAvailability ?? []).length === 0 && Boolean(c.effects) && (e.autosAll ?? []).length === 0;
+  const activeCronsOnFlag = (byName['cascade.flag-users']?.cronsRunningThem ?? []).filter((x) => x.active);
+  const otherActiveCrons = (e.allCrons ?? []);
+  g.noActiveRecurringTriggerOnOthers = Boolean(c.effects) && activeCronsOnFlag.length === 0 && otherActiveCrons.length === 0;
+  g.noStoredDependentsOfBooked = Boolean(c.effects) && (e.fields ?? []).every((f) => !f.compute || !/x_booked|x_total_units/.test(f.depends ?? '') || false);
+  g.verificationDefined = true; // releer 1171/1172, conteo global, slots y iCal (ver runRecomputeExecute)
+  return { gates: g, allGatesProven: Object.entries(g).every(([k, v]) => k === 'cronIsGlobalAndExcluded' || v === true) };
 }
