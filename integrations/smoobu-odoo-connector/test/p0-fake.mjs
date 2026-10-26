@@ -76,6 +76,7 @@ export function makeFake(opts = {}) {
         case 'planning.slot': {
           if (has('id')) { const id = d.find((t) => t[0] === 'id')[2]; return st.slots.filter((s) => s.id === id).map(slotRow); }
           if (has('name')) return st.slots.filter((s) => s.name === d.find((t) => t[0] === 'name')[2]).map(slotRow);
+          if (has('x_bloqueo_ref')) return st.slots.filter((s) => s.x_bloqueo_ref === d.find((t) => t[0] === 'x_bloqueo_ref')[2]).map(slotRow);
           const base = (opts.windowSlots ?? []).map((s) => slotRow(s)); const mine = st.slots.filter((s) => inWin(s, d)).map(slotRow);
           return [...base, ...mine];
         }
