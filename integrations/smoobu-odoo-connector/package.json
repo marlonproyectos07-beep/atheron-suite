@@ -13,6 +13,7 @@
     "calibrate3": "node scripts/calibrate3.mjs",
     "audit": "node scripts/audit.mjs",
     "pilot-dryrun": "node scripts/pilot-dryrun.mjs",
-    "p0": "node scripts/p0.mjs"
+    "p0": "node scripts/p0.mjs",
+    "recovery-check": "node scripts/recovery-check.mjs"
   }
 }
