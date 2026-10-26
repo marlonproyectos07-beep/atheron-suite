@@ -1,0 +1,9 @@
+# Estado y secretos deben permanecer fuera del repositorio.
+.env
+.env.*
+!.env.example
+backups/
+*.dump
+*.sqlite
+*.pem
+*.key
