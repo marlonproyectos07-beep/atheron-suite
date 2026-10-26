@@ -40,13 +40,16 @@ export function analyzeBlockFields(rows) {
 
 export async function runCalibration3({ odoo, actionId = 1914, limit = 3000 }) {
   const steps = [];
+  let present = [];
   steps.push(await step('fields_get.block-fields', async () => {
     const f = await odoo.fieldsGet('planning.slot', ['string', 'type', 'required', 'readonly', 'selection', 'relation', 'store', 'help']);
-    return { fields: Object.fromEntries(FIELDS.map((k) => [k, f[k] ? { type: f[k].type, required: Boolean(f[k].required), readonly: Boolean(f[k].readonly), store: f[k].store !== false,
+    present = FIELDS.filter((k) => f[k]);
+    return { present, absent: FIELDS.filter((k) => !f[k]), fields: Object.fromEntries(FIELDS.map((k) => [k, f[k] ? { type: f[k].type, required: Boolean(f[k].required), readonly: Boolean(f[k].readonly), store: f[k].store !== false,
       relation: f[k].relation ?? null, selection: f[k].selection ? f[k].selection.map((x) => x[0]) : null, label: f[k].string ?? null } : null])) };
   }));
+  // solo se piden campos que existen (pedir uno ausente devuelve 500)
   steps.push(await step('values.block-fields', async () => analyzeBlockFields(
-    await odoo.searchRead('planning.slot', [['role_id', 'in', ROLE_IDS]], ['id', 'role_id', 'x_checkin_state', ...FIELDS], { limit, order: 'id desc' }))));
+    await odoo.searchRead('planning.slot', [['role_id', 'in', ROLE_IDS]], ['id', 'role_id', 'x_checkin_state', ...present], { limit, order: 'id desc' }))));
   steps.push(await step(`action.${actionId}`, async () => {
     const rows = await odoo.searchRead('ir.actions.server', [['id', '=', actionId]], ['id', 'name', 'state', 'model_id', 'code']);
     const a = rows[0];
@@ -57,7 +60,18 @@ export async function runCalibration3({ odoo, actionId = 1914, limit = 3000 }) {
     const byCode = await odoo.searchRead('ir.actions.server', [['code', 'ilike', 'x_hotel_block_kind']], ['id', 'name', 'state', 'model_id'], { limit: 40 });
     const byName = await odoo.searchRead('ir.actions.server', [['name', 'ilike', 'dispon']], ['id', 'name', 'state', 'model_id'], { limit: 40 });
     const slim = (r) => ({ id: r.id, name: r.name, state: r.state, model: Array.isArray(r.model_id) ? r.model_id[1] : null });
-    return { referencingBlockKind: byCode.map(slim), nameMentionsAvailability: byName.map(slim) };
+    const byPlanning = await odoo.searchRead('ir.actions.server', [['code', 'ilike', 'planning.slot']], ['id', 'name', 'state', 'model_id'], { limit: 60 });
+    return { referencingBlockKind: byCode.map(slim), nameMentionsAvailability: byName.map(slim), referencingPlanningSlot: byPlanning.map(slim) };
+  }));
+  steps.push(await step('automations-and-crons.metadata', async () => {
+    const autos = await odoo.searchRead('base.automation', [['active', '=', true]], ['id', 'name', 'trigger', 'model_id'], { limit: 200 });
+    const crons = await odoo.searchRead('ir.cron', [['active', '=', true]], ['id', 'cron_name'], { limit: 200 });
+    return {
+      automationsOnPlanningSlot: autos.filter((a) => /planning/i.test(Array.isArray(a.model_id) ? a.model_id[1] : '')).map((a) => ({ id: a.id, name: a.name, trigger: a.trigger })),
+      automationsTotal: autos.length,
+      cronsMentioningHotel: crons.filter((c) => /nobeds|planning|hotel|disponib|ical|booking|airbnb|smoobu|reserva/i.test(String(c.cron_name ?? ''))).map((c) => ({ id: c.id, name: c.cron_name })),
+      cronsTotal: crons.length,
+    };
   }));
   return { overall: steps.every((s) => s.status === 'OK') ? 'OK' : 'PARTIAL', steps };
 }

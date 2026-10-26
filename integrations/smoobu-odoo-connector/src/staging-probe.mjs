@@ -14,3 +14,16 @@ export async function probeDatabase({ baseUrl, database, fetchImpl = globalThis.
     return { database, error: e?.cause?.code ?? e?.name ?? 'NETWORK' };
   }
 }
+
+/** GET sin credenciales a la raiz de un host: codigo HTTP y, si redirige, solo el host de destino. */
+export async function probeHost({ origin, fetchImpl = globalThis.fetch, timeoutMs = 10000 }) {
+  try {
+    const res = await fetchImpl(origin, { method: 'GET', redirect: 'manual', signal: AbortSignal.timeout(timeoutMs) });
+    const loc = res.headers?.get?.('location');
+    let redirectHost = null;
+    try { redirectHost = loc ? new URL(loc, origin).host : null; } catch { redirectHost = '(invalido)'; }
+    return { origin, httpStatus: res.status, redirectHost };
+  } catch (e) {
+    return { origin, error: e?.cause?.code ?? e?.name ?? 'NETWORK' };
+  }
+}

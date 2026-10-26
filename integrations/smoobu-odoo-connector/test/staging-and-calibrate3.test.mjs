@@ -5,7 +5,7 @@ import { assertStagingWriteTarget, STAGING_DATABASE } from '../src/staging-guard
 import { runIsolationCheck } from '../src/isolation-check.mjs';
 import { probeDatabase } from '../src/staging-probe.mjs';
 
-const OK = { ODOO_STAGING_DATABASE: STAGING_DATABASE, ODOO_STAGING_BASE_URL: 'https://s.test', ODOO_STAGING_API_KEY: 'STG-KEY', ODOO_API_KEY: 'PROD-KEY', ODOO_DATABASE: 'atheron1', ODOO_STAGING_WRITES: 'yes-staging' };
+const OK = { ODOO_STAGING_DATABASE: STAGING_DATABASE, ODOO_STAGING_BASE_URL: `https://${STAGING_DATABASE}.odoo.com`, ODOO_STAGING_API_KEY: 'STG-KEY', ODOO_API_KEY: 'PROD-KEY', ODOO_DATABASE: 'atheron1', ODOO_STAGING_WRITES: 'yes-staging' };
 
 test('guardia de staging: falla cerrado ante cada condicion insegura', () => {
   assert.equal(assertStagingWriteTarget(OK).database, STAGING_DATABASE);
@@ -14,6 +14,8 @@ test('guardia de staging: falla cerrado ante cada condicion insegura', () => {
   bad({ ODOO_STAGING_DATABASE: 'atheron1' }, 'STAGING_DATABASE_NOT_AUTHORIZED');
   bad({ ODOO_STAGING_BASE_URL: '' }, 'STAGING_BASE_URL_MISSING');
   bad({ ODOO_STAGING_API_KEY: '' }, 'STAGING_CREDENTIAL_MISSING');
+  bad({ ODOO_STAGING_BASE_URL: 'https://atheron1.odoo.com' }, 'STAGING_HOST_NOT_AUTHORIZED');
+  bad({ ODOO_STAGING_BASE_URL: 'no es url' }, 'STAGING_BASE_URL_INVALID');
   bad({ ODOO_STAGING_API_KEY: 'PROD-KEY' }, 'STAGING_USES_PRODUCTION_CREDENTIAL');
   bad({ ODOO_STAGING_WRITES: 'si' }, 'STAGING_WRITES_NOT_ENABLED');
   assert.throws(() => assertStagingWriteTarget({}), { code: 'STAGING_DATABASE_NOT_AUTHORIZED' });
@@ -63,7 +65,24 @@ test('lectura 3 con cliente simulado: solo lecturas y codigo de accion redactado
   const r = await runCalibration3({ odoo });
   const by = Object.fromEntries(r.steps.map((s) => [s.name, s]));
   assert.equal(by['fields_get.block-fields'].fields.x_bloqueo_src_id, null);
+  assert.deepEqual(by['fields_get.block-fields'].absent, ['x_bloqueo_src_id']);
   assert.deepEqual(by['fields_get.block-fields'].fields.x_hotel_block_kind.selection, ['external', 'derived']);
   assert.ok(!by['action.1914'].code.includes('abcdefghijklmnopqrstuvwxyz'));
   assert.ok(calls.every(([op]) => op === 'fields_get' || op === 'search_read'));
+});
+
+test('lectura 3: no pide campos ausentes (evita el 500 observado)', async () => {
+  const requested = [];
+  const odoo = {
+    fieldsGet: async () => ({ x_channel: { type: 'selection' }, x_bloqueo_ref: { type: 'char' } }),
+    searchRead: async (m, d, f) => { if (m === 'planning.slot') requested.push(f); return []; },
+  };
+  await runCalibration3({ odoo });
+  assert.deepEqual(requested[0], ['id', 'role_id', 'x_checkin_state', 'x_channel', 'x_bloqueo_ref']);
+});
+
+test('sondeo de host: solo codigo y host de redireccion', async () => {
+  const { probeHost } = await import('../src/staging-probe.mjs');
+  const r = await probeHost({ origin: 'https://h.test', fetchImpl: async () => ({ status: 303, headers: { get: () => 'https://www.odoo.com/trial?secret=1' } }) });
+  assert.deepEqual(r, { origin: 'https://h.test', httpStatus: 303, redirectHost: 'www.odoo.com' });
 });
