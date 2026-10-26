@@ -225,6 +225,11 @@ export async function collectEvidence({ reader, slotId }) {
   out.counts = snap.counts; out.availability = snap.availability; out.feeds = snap.feeds; out.mirrorsOfSlot = snap.mirrorsOfSlot; out.messagesOfSlot = snap.messagesOfSlot;
   out.mailMessagesForMirrors = [];
   for (const m of out.mirrors) out.mailMessagesForMirrors.push({ id: m.id, messages: await reader.searchCount('mail.message', [['model', '=', 'planning.slot'], ['res_id', '=', m.id]]) });
+  // exposicion publica: que .ics contienen ya el marcador (busqueda en el indice de texto del adjunto; no se lee el contenido)
+  try {
+    const hits = await reader.searchRead('ir.attachment', [['name', 'like', 'ical_atheron_role_'], ['res_model', '=', 'planning.role'], ['index_content', 'ilike', 'ATH-DEV-018 PRUEBA P0']], ['id', 'res_id', 'write_date', 'file_size']);
+    out.feedsContainingMarker = hits.map((h) => ({ role: h.res_id, writeDate: h.write_date, size: h.file_size }));
+  } catch (e) { out.feedsContainingMarker = { status: 'NO_LEGIBLE', code: e.code ?? 'UNKNOWN', httpStatus: e.status ?? null }; }
   // posible causa de la publicacion automatica: atributos del rol (solo los que existan)
   try {
     const f = await reader.fieldsGet('planning.role', ['type']);
