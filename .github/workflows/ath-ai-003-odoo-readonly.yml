@@ -1,0 +1,107 @@
+# ATH-AI-003 — ATHERON: comprobacion REAL, de SOLO LECTURA, Odoo 19 JSON-2.
+# Esta automatizacion NO usa n8n todavia. Es un primer runner aislado
+# con los secretos EXISTENTES del repositorio; nunca modifica Odoo.
+# El evento push esta limitado a esta rama para ejecutar un piloto.
+# El cron solo funciona una vez que el workflow esta en la rama por defecto.
+name: ATH-AI-003 Odoo pulso solo lectura
+
+on:
+  push:
+    branches:
+      - feature/ath-ai-003-odoo-readonly-heartbeat
+    paths:
+      - .github/workflows/ath-ai-003-odoo-readonly.yml
+  workflow_dispatch:
+  schedule:
+    # 13:17 UTC = 08:17 America/Bogota, sin DST
+    - cron: '17 13 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ath-ai-003-odoo-readonly
+  cancel-in-progress: false
+
+jobs:
+  comprobar_odoo:
+    name: Comprobacion de Odoo (nunca escribe)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Comprobar JSON-2 con res.partner.search_count
+        shell: bash
+        env:
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          def terminar(estado, detalle, codigo):
+              msg = f"ATH-AI-003: {estado} — {detalle}"
+              print(msg)
+              resumen = os.environ.get("GITHUB_STEP_SUMMARY")
+              if resumen:
+                  with open(resumen, "a", encoding="utf-8") as file:
+                      file.write(f"### ATH-AI-003 — Odoo JSON-2\n\n- Estado: **{estado}**\n- Comprobacion: `res.partner.search_count` (lectura)\n- Detalle: {detalle}\n- Escrituras: **ninguna**\n")
+              sys.exit(codigo)
+
+          base = os.getenv("ODOO_BASE_URL", "").strip().rstrip("/")
+          database = os.getenv("ODOO_DATABASE", "").strip()
+          key = os.getenv("ODOO_API_KEY", "").strip()
+          if not base or not database or not key:
+              terminar("BLOQUEADO", "Falta variable ODOO_BASE_URL / ODOO_DATABASE o secreto ODOO_API_KEY", 2)
+
+          parsed = urllib.parse.urlsplit(base)
+          # Cerrojo anti-SSRF y anti filtracion del token. Solo este dominio de Odoo.
+          if (
+              parsed.scheme != "https"
+              or parsed.hostname != "atheron1.odoo.com"
+              or parsed.port not in (None, 443)
+              or parsed.username is not None
+              or parsed.password is not None
+              or parsed.query or parsed.fragment
+              or parsed.path.rstrip("/") not in ("", "/json/2")
+              or database != "atheron1"
+          ):
+              terminar("BLOQUEADO", "URL / base de datos no coincide con Odoo Atheron autorizado", 2)
+
+          class SinRedirecciones(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, msg, headers, newurl):
+                  return None
+
+          url = "https://atheron1.odoo.com/json/2/res.partner/search_count"
+          payload = json.dumps({"domain": []}).encode("utf-8")
+          request = urllib.request.Request(
+              url,
+              data=payload,
+              headers={
+                  "Authorization": "bearer " + key,
+                  "X-Odoo-Database": database,
+                  "Content-Type": "application/json; charset=utf-8",
+                  "User-Agent": "Atheron-AI-003-ReadOnly/1.0",
+              },
+              method="POST",
+          )
+          try:
+              # search_count NO crea ni modifica registros.
+              with urllib.request.build_opener(SinRedirecciones()).open(request, timeout=20) as response:
+                  if response.status != 200:
+                      terminar("ERROR", "Respuesta HTTP inesperada", 1)
+                  answer = json.loads(response.read(128 * 1024))
+              if type(answer) is not int or answer < 0:
+                  terminar("ERROR", "JSON-2 respondio un formato no esperado", 1)
+              # No imprimir recuentos, datos de clientes ni cuerpos de respuesta en logs publicos.
+              terminar("OK", "Autenticacion y consulta real confirmadas; sin datos expuestos", 0)
+          except urllib.error.HTTPError as exc:
+              terminar("ERROR", f"HTTP {exc.code} en consulta read-only", 1)
+          except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, ValueError):
+              terminar("ERROR", "Conexion, tiempo de espera o formato JSON", 1)
+          PY
