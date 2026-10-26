@@ -18,3 +18,8 @@ export const EXPECTED_FIRE_ON_UNLINK = Object.freeze([23, 158, 168]);
 export const PRODUCTION = Object.freeze({ host: 'atheron1.odoo.com', database: 'atheron1' });
 /** Campos que el conector NUNCA escribe en este piloto. */
 export const FORBIDDEN_FIELDS = Object.freeze(['x_guest_id', 'x_nobeds_id', 'x_bloqueo_ref', 'sale_line_id', 'x_channel', 'x_checkin_state', 'employee_id']);
+
+/** Recuperacion del turno 39686 creado por la ejecucion P0 (ATH-DEV-018): requiere una frase NUEVA y explicita del CEO. */
+export const P0_RECOVERY_ID = 39686;
+export const P0_RECOVERY_MIRROR_ID = 39687;
+export const P0_RECOVERY_PHRASE = 'ATH-DEV-018-RETIRAR-39686-Y-SU-ESPEJO';

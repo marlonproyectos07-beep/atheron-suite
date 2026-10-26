@@ -56,3 +56,9 @@ Nunca: borrado fisico, edicion de turnos sin clave `SMOOBU-`, escritura en `sale
 - Decision del CEO: no duplicar la base ni crear staging. Ensayo real de solo lectura y prediccion de efectos: `PILOTO-ODOO-ORIGINAL.md`.
 - Unico candidato real evaluable: P0 (turno BORRADOR de 301, noche pasada 2026-10-15, reserva ficticia 900000001), autorizable solo con aprobacion expresa. P1/P2 (publicados) son **piloto productivo NO SEGURO** por el cron 147 y el eco no descartable.
 - Identificador privado: token opaco HMAC en `name` (`src/opaque-key.mjs`, requiere el secreto `SMOOBU_KEY_SAL`, no configurado). No se usa `x_guest_id`.
+
+
+## Actualizacion ATH-DEV-018 (P0 ejecutado en produccion)
+- Se ejecuto UNA escritura autorizada (turno 39686). Resultado: **REQUIERE RECUPERACION** (ver `PILOTO-P0-INFORME.md`): el borrador se publico solo, se creo el espejo 39687 y ambos estan en los .ics publicos.
+- Se retira la categoria "P0 autorizable": un turno de habitacion NO puede crearse en borrador (rol con `sync_shift_rental`).
+- Nuevas puertas: usuario tecnico de minimo privilegio (la API key actual es del administrador, uid 2); validar con lectura de `create`/`sync_shift_rental` antes de cualquier otra escritura.

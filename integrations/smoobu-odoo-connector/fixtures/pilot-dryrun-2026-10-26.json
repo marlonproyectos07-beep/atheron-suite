@@ -145,7 +145,7 @@
    "commerciallySellable": true
   }
  },
- "authorization": {
+ "authorizationAtDryRun": {
   "P0": "AUTORIZABLE_CON_APROBACION_EXPRESA",
   "P1": "PILOTO_PRODUCTIVO_NO_SEGURO",
   "P2": "PILOTO_PRODUCTIVO_NO_SEGURO",
@@ -155,5 +155,17 @@
   "P6": "SOLO_MANUAL_NUNCA_AUTOMATICA",
   "P7": "PROHIBIDA",
   "P8": "BLOQUEADA"
- }
+ },
+ "authorizationAfterP0Observation": {
+  "P0": "NO_SEGURO",
+  "P1": "PILOTO_PRODUCTIVO_NO_SEGURO",
+  "P2": "PILOTO_PRODUCTIVO_NO_SEGURO",
+  "P3": "BLOQUEADA",
+  "P4": "BLOQUEADA",
+  "P5": "INEFICAZ_Y_BLOQUEADA",
+  "P6": "SOLO_MANUAL_NUNCA_AUTOMATICA",
+  "P7": "PROHIBIDA",
+  "P8": "BLOQUEADA"
+ },
+ "_correccion": "La prediccion P0 (borrador se mantiene borrador) fue REFUTADA por la ejecucion real del 2026-10-26: ver PILOTO-P0-INFORME.md."
 }

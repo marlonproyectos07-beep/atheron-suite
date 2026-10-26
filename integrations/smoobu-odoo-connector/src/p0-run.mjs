@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { analyzeActionCode } from './audit.mjs';
 import { matches } from './domain-eval.mjs';
-import { P0_VALS, P0_MARKER_NAME, P0_WINDOW, SIX_ROLE_IDS, SIX_RESOURCE_IDS, EXPECTED_SLOT_AUTOMATIONS, EXPECTED_FIRE_ON_CREATE_DRAFT, EXPECTED_FIRE_ON_UNLINK, PRODUCTION, P0_FICTIONAL_RESERVATION } from './p0-spec.mjs';
+import { P0_RECOVERY_ID, P0_RECOVERY_MIRROR_ID, P0_VALS, P0_MARKER_NAME, P0_WINDOW, SIX_ROLE_IDS, SIX_RESOURCE_IDS, EXPECTED_SLOT_AUTOMATIONS, EXPECTED_FIRE_ON_CREATE_DRAFT, EXPECTED_FIRE_ON_UNLINK, PRODUCTION, P0_FICTIONAL_RESERVATION } from './p0-spec.mjs';
 
 /**
  * Orquestacion del piloto P0 (ATH-DEV-018): PRECHECK -> crear 1 borrador -> verificar -> retirar -> verificar.
@@ -242,4 +242,37 @@ export async function collectEvidence({ reader, slotId }) {
     out.stateFieldMeta = { readonly: Boolean(f.state?.readonly), store: f.state?.store !== false, selection: (f.state?.selection ?? []).map((x) => x[0]) };
   } catch { out.stateFieldMeta = 'NO_LEGIBLE'; }
   return out;
+}
+
+
+/**
+ * RECUPERACION (ATH-DEV-018) del turno P0 publicado por error: retira SOLO el id 39686. La regla 168 retirara por si sola
+ * su espejo 39687 (x_bloqueo_ref = '39686'). Se verifica antes que no hay nada mas implicado y despues que todo volvio al estado previo.
+ * Estado previo conocido (precheck aprobado de la misma ejecucion): turnos 601, rol 37: 85, ventana vacia, 301/2026-10-15 reservadas 0.
+ */
+export const P0_PRE_STATE = Object.freeze({ slotsTotal: 601, slotsRole37: 85, saleOrders: 1440, partners: 2727, mailMail: 5084 });
+export async function runRecovery({ reader, writer, sleep = sleepDefault, settleOpts = {} }) {
+  const id = P0_RECOVERY_ID; const mirrorId = P0_RECOVERY_MIRROR_ID;
+  const rep = { mode: 'recover', slotId: id, expectedMirrorId: mirrorId, result: 'DETENIDO' };
+  const fields = ['id', 'role_id', 'resource_id', 'company_id', 'state', 'start_datetime', 'end_datetime', 'name', 'x_bloqueo_ref', 'x_nobeds_id', 'x_guest_id', 'sale_line_id'];
+  const slot = (await reader.searchRead('planning.slot', [['id', '=', id]], fields))[0];
+  const mirrors = await reader.searchRead('planning.slot', [['x_bloqueo_ref', '=', String(id)]], fields);
+  const windowSlots = await reader.searchRead('planning.slot', [['role_id', 'in', [...SIX_ROLE_IDS]], ['start_datetime', '<', P0_WINDOW.end], ['end_datetime', '>', P0_WINDOW.start]], ['id']);
+  const slotOk = slot && slot.name === P0_MARKER_NAME && idOf(slot.role_id) === 37 && idOf(slot.resource_id) === 31 && idOf(slot.company_id) === 5 && slot.start_datetime === P0_VALS.start_datetime && slot.end_datetime === P0_VALS.end_datetime
+    && !slot.x_bloqueo_ref && !slot.x_nobeds_id && !idOf(slot.x_guest_id) && !idOf(slot.sale_line_id);
+  const mirrorOk = mirrors.length === 1 && mirrors[0].id === mirrorId && idOf(mirrors[0].role_id) === 69 && mirrors[0].start_datetime === P0_VALS.start_datetime && mirrors[0].end_datetime === P0_VALS.end_datetime && !mirrors[0].x_nobeds_id && !idOf(mirrors[0].sale_line_id);
+  const onlyOurs = eq(ci(windowSlots.map((w) => w.id)), ci([id, mirrorId]));
+  rep.preChecks = { slotIsExactlyTheP0Record: Boolean(slotOk), onlyMirrorReferencingIt: Boolean(mirrorOk), nothingElseInWindow: onlyOurs };
+  if (!slotOk || !mirrorOk || !onlyOurs) { rep.note = 'las condiciones de recuperacion no se cumplen: sin escrituras'; return rep; }
+  await writer.unlinkOwn(id);
+  const done = await settle(() => snapshot(reader, id), (s) => s.counts.slotsTotal === P0_PRE_STATE.slotsTotal && s.windowSlots.length === 0 && s.availability.every((a) => a.booked === 0), { sleep, ...settleOpts });
+  const s = done.value;
+  const gone = (await reader.searchRead('planning.slot', [['id', 'in', [id, mirrorId]]], ['id'])).length === 0;
+  let markerFeeds = null;
+  try { markerFeeds = (await reader.searchRead('ir.attachment', [['name', 'like', 'ical_atheron_role_'], ['res_model', '=', 'planning.role'], ['index_content', 'ilike', 'ATH-DEV-018 PRUEBA P0']], ['id', 'res_id'])).map((h) => h.res_id); } catch { markerFeeds = 'NO_LEGIBLE'; }
+  rep.after = { bothRecordsGone: gone, counts: s.counts, windowEmpty: s.windowSlots.length === 0, availabilityAllZero: s.availability.every((a) => a.booked === 0), feedsStillContainingMarker: markerFeeds, settledAttempts: done.attempts };
+  const restored = gone && s.counts.slotsTotal === P0_PRE_STATE.slotsTotal && s.counts.slotsRole37 === P0_PRE_STATE.slotsRole37 && s.counts.saleOrders === P0_PRE_STATE.saleOrders && s.counts.partners === P0_PRE_STATE.partners && s.counts.mailMail === P0_PRE_STATE.mailMail && s.windowSlots.length === 0 && s.availability.every((a) => a.booked === 0);
+  rep.result = restored ? 'PASO' : 'REQUIERE_RECUPERACION';
+  if (restored && Array.isArray(markerFeeds) && markerFeeds.length) rep.note = 'estado restaurado; los .ics aun contienen el marcador hasta el proximo refresco del cron (<= 5 min): verificar con evidence';
+  return rep;
 }

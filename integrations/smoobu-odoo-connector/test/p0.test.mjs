@@ -158,3 +158,28 @@ test('evidencia (solo lectura) de un turno P0 ya creado: no emite ninguna escrit
   assert.equal(ev.slot[0].isP0Marker, true); assert.equal(ev.mirrors.length, 0);
   assert.equal(r.st.calls.filter((c) => /create|unlink|write/.test(c)).length, before);
 });
+
+test('recuperacion: retira SOLO el id 39686 (el espejo cae por la regla 168), exige frase propia y no puede crear', async () => {
+  const { runRecovery, P0_PRE_STATE } = await import('../src/p0-run.mjs');
+  const { P0_RECOVERY_PHRASE, P0_RECOVERY_ID, P0_RECOVERY_MIRROR_ID } = await import('../src/p0-spec.mjs');
+  const mkRig = (extra = {}) => {
+    const f = makeFake({ slotTotalBase: 601 - 0, ...extra });
+    f.st.slots.push({ id: P0_RECOVERY_ID, ...P0_VALS, state: 'published', created: true }, { id: P0_RECOVERY_MIRROR_ID, role_id: 69, resource_id: 79, company_id: 5, state: 'published', start_datetime: P0_VALS.start_datetime, end_datetime: P0_VALS.end_datetime, x_bloqueo_ref: String(P0_RECOVERY_ID), name: false, created: true });
+    f.st.availability.find((a) => a.id === 1).booked = 1; f.st.slotTotalBase = P0_PRE_STATE.slotsTotal - 0;
+    return f;
+  };
+  const f = mkRig({ role37Base: 85 });
+  const reader = new OdooJson2Client({ ...cfg, fetchImpl: f.fetchImpl });
+  const writer = new P0WriteClient({ ...cfg, fetchImpl: f.fetchImpl, authorization: P0_RECOVERY_PHRASE });
+  await assert.rejects(writer.createExactlyOne({ ...P0_VALS }), { code: 'P0_RECOVERY_CANNOT_CREATE' });
+  await assert.rejects(writer.unlinkOwn(P0_RECOVERY_ID + 5), { code: 'P0_UNLINK_NOT_OWN_ID' });
+  // con un turno ajeno en la ventana no se escribe nada
+  const g = mkRig({ role37Base: 85, windowSlots: [{ id: 9, role_id: 29, resource_id: 28, company_id: 5, state: 'published', start_datetime: '2026-10-15 20:00:00', end_datetime: '2026-10-16 16:00:00' }] });
+  const blocked = await runRecovery({ reader: new OdooJson2Client({ ...cfg, fetchImpl: g.fetchImpl }), writer: new P0WriteClient({ ...cfg, fetchImpl: g.fetchImpl, authorization: P0_RECOVERY_PHRASE }), sleep: async () => {}, settleOpts: { tries: 1, ms: 0 } });
+  assert.equal(blocked.result, 'DETENIDO'); assert.equal(writes(g.st.calls).length, 0);
+  const out = await runRecovery({ reader, writer, sleep: async () => {}, settleOpts: { tries: 1, ms: 0 } });
+  assert.equal(out.preChecks.nothingElseInWindow, true);
+  assert.deepEqual(writes(f.st.calls), ['planning.slot/unlink']);
+  assert.equal(out.after.bothRecordsGone, true);
+  assert.throws(() => new P0WriteClient({ ...cfg, fetchImpl: f.fetchImpl, authorization: 'cualquier otra' }), { code: 'P0_NOT_AUTHORIZED' });
+});

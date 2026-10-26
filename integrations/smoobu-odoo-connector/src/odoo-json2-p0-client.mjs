@@ -1,6 +1,6 @@
 import { OdooJson2Client } from './odoo-json2-client.mjs';
 import { ConnectorError } from './errors.mjs';
-import { P0_AUTH_PHRASE, P0_VALS, FORBIDDEN_FIELDS, PRODUCTION } from './p0-spec.mjs';
+import { P0_AUTH_PHRASE, P0_VALS, FORBIDDEN_FIELDS, PRODUCTION, P0_RECOVERY_PHRASE, P0_RECOVERY_ID } from './p0-spec.mjs';
 
 /**
  * Cliente con UNA escritura de creacion y UNA de borrado, ambas con guardias duras (ATH-DEV-018).
@@ -12,15 +12,18 @@ const same = (a, b) => JSON.stringify(Object.entries(a).sort()) === JSON.stringi
 export class P0WriteClient extends OdooJson2Client {
   constructor({ authorization, ...opts }) {
     super(opts);
-    if (authorization !== P0_AUTH_PHRASE) throw new ConnectorError('P0_NOT_AUTHORIZED');
+    // modo recuperacion: solo puede borrar el id fijo P0_RECOVERY_ID, nunca crear
+    this.recoveryOnly = authorization === P0_RECOVERY_PHRASE;
+    if (authorization !== P0_AUTH_PHRASE && !this.recoveryOnly) throw new ConnectorError('P0_NOT_AUTHORIZED');
     let host = '';
     try { host = new URL(this.baseUrl).hostname; } catch { throw new ConnectorError('P0_BASE_URL_INVALID'); }
     if (host !== PRODUCTION.host || this.database !== PRODUCTION.database) throw new ConnectorError('P0_TARGET_NOT_AUTHORIZED');
-    this.createdIds = new Set(); this.createCalls = 0; this.unlinkCalls = 0;
+    this.createdIds = new Set(this.recoveryOnly ? [P0_RECOVERY_ID] : []); this.createCalls = 0; this.unlinkCalls = 0;
   }
 
   /** Crea UN planning.slot con los valores exactos autorizados. Devuelve el resultado crudo saneado. */
   async createExactlyOne(vals) {
+    if (this.recoveryOnly) throw new ConnectorError('P0_RECOVERY_CANNOT_CREATE');
     if (this.createCalls >= 1) throw new ConnectorError('P0_ONLY_ONE_CREATE');
     if (!same(vals, P0_VALS)) throw new ConnectorError('P0_VALUES_MISMATCH');
     if (FORBIDDEN_FIELDS.some((f) => f in vals)) throw new ConnectorError('P0_FORBIDDEN_FIELD');

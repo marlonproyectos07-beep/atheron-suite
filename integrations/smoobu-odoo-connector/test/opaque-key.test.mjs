@@ -59,7 +59,8 @@ test('informe guardado del ensayo real: anonimo y consistente con la matriz de a
   const txt = JSON.stringify(fx);
   assert.ok(!/161419736/.test(txt.replace(/distinta de 161419736/, '')) && fx.slotsWindow.withNobedsId === 0);
   const m = Object.fromEntries(evaluateAll().map((o) => [o.id, o.verdict]));
-  assert.deepEqual(fx.authorization, m);
+  assert.deepEqual(fx.authorizationAfterP0Observation, m);
+  assert.equal(fx.authorizationAtDryRun.P0, 'AUTORIZABLE_CON_APROBACION_EXPRESA'); // lo que se predijo entonces, hoy refutado
   assert.deepEqual(fx.predictions['P0_draft_past_2026-10-15'].feedsChanged, []);
   assert.equal(fx.predictions['P0_draft_past_2026-10-15'].mirror, null);
   assert.ok(fx.candidates.pastFree.every((n) => n < '2026-10-26'));

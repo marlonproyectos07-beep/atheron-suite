@@ -7,7 +7,10 @@ export const FACTS = Object.freeze({
   cron147CanBeDisabledSelectively: false, // regenera TODOS los .ics cada 5 min; apagarlo corta la salida a OTAs/NOBEDS (prohibido)
   icalFeedIncludesPublishedDirectSlots: true,
   rules167169FireOnPublished: true,
-  draftSlotFiresMirrorsOrIcal: false, // dominio exige state=published (167/169) y el feed solo incluye published
+  // OBSERVADO el 2026-10-26 (P0, id 39686): un turno de 301 creado con state='draft' quedo 'published' al crearse
+  // (el rol 37 tiene sync_shift_rental=true) y disparo la regla 169 (espejo en Casa). Un borrador NO es posible para las habitaciones.
+  draftSlotFiresMirrorsOrIcal: true,
+  draftSlotStaysDraftOnCreate: false,
   bookingEngineIgnoresState: true,
   nativeReleaseIsDeleteOnly: true,
   deleteCascadesSharedMirrors: true, // automatizacion 168
@@ -35,7 +38,7 @@ export function evaluateOperation(id, facts = FACTS) {
   switch (id) {
     case 'P0': {
       const reasons = []; const conditions = ['noche pasada, libre en las seis unidades y sin cierre del recurso', 'autorizacion expresa de Marlon', 'borrado de limpieza autorizado y manual (caso por caso)', 'verificacion posterior por lectura'];
-      if (f.draftSlotFiresMirrorsOrIcal) return v('NO_SEGURO', ['un borrador dispararia espejos o iCal']);
+      if (f.draftSlotFiresMirrorsOrIcal || !f.draftSlotStaysDraftOnCreate) return v('NO_SEGURO', ['REFUTADO POR OBSERVACION (P0 real, id 39686): el borrador se publica solo al crearse en roles con sync_shift_rental, por lo que dispara el espejo de Casa y entra en el .ics publico']);
       reasons.push('un borrador no cumple el dominio de 167/169 ni entra en el iCal: sin espejo, sin publicacion a OTAs, sin eco');
       reasons.push('solo corre 12 (sin efecto con horas correctas) y 22 (recalculo interno; fecha pasada)');
       if (!f.guestPlaceholderVerified) reasons.push('la clave en name no sale al iCal porque el borrador no entra en el feed');

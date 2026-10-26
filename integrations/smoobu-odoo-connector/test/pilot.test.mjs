@@ -125,13 +125,13 @@ test('conciliacion nunca propone borrar ni liberar espejos compartidos; toda lib
   assert.throws(() => assertNoDestructiveOps([{ op: 'RELEASE_SLOT', status: 'PENDING_APPROVAL', writesEnabled: false }]), { code: 'DESTRUCTIVE_OR_UNBLOCKED_OPERATION' });
 });
 
-test('matriz de autorizaciones: P0 autorizable con aprobacion; P1/P2 NO seguros; resto bloqueado', () => {
+test('matriz de autorizaciones: P0 REFUTADO por la observacion real; P1/P2 NO seguros; resto bloqueado', () => {
   const m = Object.fromEntries(evaluateAll().map((o) => [o.id, o.verdict]));
-  assert.equal(m.P0, 'AUTORIZABLE_CON_APROBACION_EXPRESA');
+  assert.equal(m.P0, 'NO_SEGURO');
   assert.equal(m.P1, 'PILOTO_PRODUCTIVO_NO_SEGURO'); assert.equal(m.P2, 'PILOTO_PRODUCTIVO_NO_SEGURO');
   assert.deepEqual([m.P3, m.P4, m.P5, m.P6, m.P7, m.P8], ['BLOQUEADA', 'BLOQUEADA', 'INEFICAZ_Y_BLOQUEADA', 'SOLO_MANUAL_NUNCA_AUTOMATICA', 'PROHIBIDA', 'BLOQUEADA']);
   // los veredictos dependen de los hechos
   assert.equal(evaluateOperation('P1', { ...FACTS, cron147CanBeDisabledSelectively: true }).verdict, 'REQUIERE_PRUEBA_EN_STAGING');
-  assert.equal(evaluateOperation('P0', { ...FACTS, draftSlotFiresMirrorsOrIcal: true }).verdict, 'NO_SEGURO');
-  assert.ok(evaluateOperation('P0').conditions.some((c) => /autorizacion expresa/.test(c)));
+  assert.equal(evaluateOperation('P0', { ...FACTS, draftSlotFiresMirrorsOrIcal: false, draftSlotStaysDraftOnCreate: true }).verdict, 'AUTORIZABLE_CON_APROBACION_EXPRESA');
+  assert.ok(evaluateOperation('P0', { ...FACTS, draftSlotFiresMirrorsOrIcal: false, draftSlotStaysDraftOnCreate: true }).conditions.some((c) => /autorizacion expresa/.test(c)));
 });

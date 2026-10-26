@@ -4,6 +4,7 @@
 #
 #  - push (solo al editar este archivo) y workflow_dispatch con modo "precheck": SOLO LECTURA.
 #  - modo "evidence": SOLO LECTURA de un turno P0 ya creado.
+#  - modo "recover": retira SOLO el turno 39686 (y por la regla 168 su espejo 39687); exige la frase de recuperacion.
 #  - modo "execute": unicamente por workflow_dispatch, con la frase de autorizacion exacta en "confirm".
 #  - No llama a Smoobu. No toca reglas, crons ni ajustes. Un solo escritor a la vez.
 # Usa los secretos/variables ya configurados: ODOO_API_KEY, ODOO_BASE_URL, ODOO_DATABASE.
@@ -18,7 +19,7 @@ on:
         required: true
         default: 'precheck'
         type: choice
-        options: [precheck, evidence, execute]
+        options: [precheck, evidence, execute, recover]
       slot_id:
         description: 'Id del turno P0 (solo para evidence, solo lectura)'
         required: false
