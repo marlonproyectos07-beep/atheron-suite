@@ -1,0 +1,46 @@
+# ============================================================
+# SEGUNDA CALIBRACION DE SOLO LECTURA (recursos, company_id, reglas 167/169) (ATH-DEV-012)
+# Manual (workflow_dispatch) o al editar este archivo. NO llama a Smoobu. Solo ejecuta
+# fields_get y search_read contra Odoo. Salida anonimizada: ids,
+# horas, conteos y la "forma" del texto; nunca nombres ni secretos.
+# Usa los mismos secretos/variables que smoobu-odoo-diagnose:
+#   secreto ODOO_API_KEY; variables ODOO_BASE_URL, ODOO_DATABASE.
+# ============================================================
+name: smoobu-odoo-calibrate2
+
+# push limitado a ESTE archivo: GitHub solo registra un workflow nuevo de una rama
+# de trabajo al recibir un push, y asi el primer cambio lanza la unica lectura.
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/ath-odoo-hotel-017-booking-airbnb-level1]
+    paths:
+      - '.github/workflows/smoobu-odoo-calibrate2.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoobu-odoo-calibrate2
+  cancel-in-progress: false
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: integrations/smoobu-odoo-connector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pruebas unitarias
+        run: npm test
+      - name: Calibracion (solo lectura)
+        env:
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+        run: npm run --silent calibrate2

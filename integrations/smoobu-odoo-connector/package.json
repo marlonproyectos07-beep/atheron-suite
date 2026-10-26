@@ -8,6 +8,7 @@
     "diagnose": "node scripts/diagnose.mjs",
     "connectivity": "node scripts/connectivity.mjs",
     "simulate": "node scripts/simulate-pilot.mjs",
-    "calibrate": "node scripts/calibrate.mjs"
+    "calibrate": "node scripts/calibrate.mjs",
+    "calibrate2": "node scripts/calibrate2.mjs"
   }
 }
