@@ -1,0 +1,69 @@
+# ============================================================
+# DIAGNOSTICO SMOOBU <-> ODOO (SOLO LECTURA) — ATH-DEV-003
+#
+# Runner autorizado con salida HTTPS (el sandbox de Claude Code no
+# llega a login.smoobu.com ni a atheron1.odoo.com). No despliega, no
+# escribe, no activa webhooks; solo ejecuta pruebas y `npm run diagnose`.
+#
+# SECRETOS (Settings > Secrets and variables > Actions > Secrets).
+# Los escribe Marlon directamente ahi; nunca en el chat:
+#   SMOOBU_API_KEY, SMOOBU_API_SECRET, ODOO_API_KEY
+# VARIABLES publicas (pestana Variables): ODOO_BASE_URL, ODOO_DATABASE
+#   (SMOOBU_BASE_URL es opcional; por defecto https://login.smoobu.com)
+#
+# Se ejecuta a mano (Actions > Run workflow; GitHub solo lista el
+# boton si el archivo esta en la rama por defecto) o al subir cambios
+# al conector en la rama de trabajo. Sin secretos termina en BLOQUEADO
+# (codigo 2) sin fallar la tuberia. El registro solo contiene ids,
+# fechas, conteos y codigos HTTP.
+# ============================================================
+name: smoobu-odoo-diagnose
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/ath-odoo-hotel-017-booking-airbnb-level1]
+    paths:
+      - 'integrations/smoobu-odoo-connector/**'
+      - '.github/workflows/smoobu-odoo-diagnose.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoobu-odoo-diagnose
+  cancel-in-progress: true
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: integrations/smoobu-odoo-connector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pruebas unitarias
+        run: npm test
+      - name: Conectividad (sin credenciales)
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+        run: node scripts/connectivity.mjs
+      - name: Diagnostico de solo lectura
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_KEY }}
+          SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_SECRET }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+        run: |
+          set +e
+          npm run --silent diagnose
+          code=$?
+          if [ "$code" -eq 2 ]; then echo "::warning::BLOQUEADO: faltan variables o secretos (ver lista arriba)"; exit 0; fi
+          exit $code

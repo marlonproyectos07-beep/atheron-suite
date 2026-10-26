@@ -4,6 +4,20 @@ import { SmoobuClient } from './smoobu-client.mjs';
 import { OdooJson2Client } from './odoo-json2-client.mjs';
 
 export const TARGET_RESERVATION = 161419736;
+export const PATH_PREFIXES = ['/api', '/api/v1'];
+
+/** El prefijo entra en la firma y no pudimos leerlo de la fuente primaria: se prueba cada candidato hasta que uno no devuelva 404. */
+export async function detectPrefix(makeClient) {
+  const tried = [];
+  for (const prefix of PATH_PREFIXES) {
+    const client = makeClient(prefix);
+    try { await client.listProperties(); return { client, prefix, tried: [...tried, { prefix, httpStatus: 200 }] }; } catch (e) {
+      tried.push({ prefix, code: e.code ?? 'UNKNOWN', httpStatus: e.status ?? null });
+      if (e.status !== 404) return { client, prefix, tried }; // fallo real distinto de ruta: no seguir probando
+    }
+  }
+  return { client: makeClient(PATH_PREFIXES[0]), prefix: null, tried };
+}
 
 /** Ejecuta un paso y devuelve {name, status: OK|FAIL|SKIPPED, ...detalle} sin lanzar. */
 async function step(name, fn) {
@@ -20,7 +34,12 @@ const skipped = (name, why) => ({ name, status: 'SKIPPED', why });
 export async function runDiagnosis({ env = process.env, clients = {} } = {}) {
   const steps = [];
   let smoobu = clients.smoobu; let odoo = clients.odoo;
-  if (!smoobu) { try { smoobu = new SmoobuClient(loadSmoobuConfig(env)); } catch (e) { steps.push({ name: 'smoobu.config', status: 'BLOCKED', code: e.code, missing: e.missing }); } }
+  let prefixProbe = null;
+  if (!smoobu) { try {
+    const cfg = loadSmoobuConfig(env);
+    prefixProbe = await detectPrefix((pathPrefix) => new SmoobuClient({ ...cfg, pathPrefix }));
+    smoobu = prefixProbe.client;
+  } catch (e) { steps.push({ name: 'smoobu.config', status: 'BLOCKED', code: e.code, missing: e.missing }); } }
   if (!odoo) { try { odoo = new OdooJson2Client(loadOdooConfig(env)); } catch (e) { steps.push({ name: 'odoo.config', status: 'BLOCKED', code: e.code, missing: e.missing }); } }
 
   let reservation = null;
@@ -29,7 +48,7 @@ export async function runDiagnosis({ env = process.env, clients = {} } = {}) {
       const aps = await smoobu.listProperties();
       const ids = new Set(aps.map((a) => Number(a.id)));
       const units = UNITS.map((u) => ({ unit: u.unit, smoobuApartmentId: u.smoobuApartmentId, found: ids.has(u.smoobuApartmentId) }));
-      return { apartmentsReturned: aps.length, units, allSixFound: units.every((u) => u.found) };
+      return { pathPrefixUsed: prefixProbe?.prefix ?? null, prefixAttempts: prefixProbe?.tried ?? null, apartmentsReturned: aps.length, units, allSixFound: units.every((u) => u.found) };
     }));
     steps.push(await step(`smoobu.reservation.${TARGET_RESERVATION}`, async () => {
       reservation = await smoobu.getReservation(TARGET_RESERVATION);

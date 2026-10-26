@@ -5,6 +5,7 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "test": "node --test",
-    "diagnose": "node scripts/diagnose.mjs"
+    "diagnose": "node scripts/diagnose.mjs",
+    "connectivity": "node scripts/connectivity.mjs"
   }
 }

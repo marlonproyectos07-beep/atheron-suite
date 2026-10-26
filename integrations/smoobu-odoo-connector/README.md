@@ -37,6 +37,13 @@ Donde configurarlas: (1) sesiones en la nube: Ajustes del entorno de Claude Code
 ## Diagnostico
 `npm run diagnose` (salida 0 = OK, 1 = fallo, 2 = bloqueado por variables). Comprueba autenticacion Smoobu, que existan las seis unidades, lee la reserva 161419736 (debe ser 301), y en Odoo verifica `planning.role` 37 y los `planning.slot` del rol en esas fechas. Imprime solo ids, fechas, conteos y codigos.
 
+## Ejecucion real (ATH-DEV-003)
+El sandbox de Claude Code **no tiene salida** a login.smoobu.com ni atheron1.odoo.com (DNS bloqueado por la politica de red del entorno). Vercel aloja un sitio estatico: no se usa para esto (anadiria un endpoint con secretos y no hay necesidad). Runner elegido: **GitHub Actions** (`.github/workflows/smoobu-odoo-diagnose.yml`), solo lectura, permisos `contents: read`.
+1. Marlon crea los 3 secretos en GitHub -> Settings -> Secrets and variables -> Actions -> Secrets: `SMOOBU_API_KEY`, `SMOOBU_API_SECRET`, `ODOO_API_KEY`; y las variables `ODOO_BASE_URL`, `ODOO_DATABASE` (y opcional `SMOOBU_BASE_URL`). Los valores se escriben solo en esa pantalla.
+2. Re-ejecutar el flujo (Actions -> Re-run, o subir un cambio al conector). Sin secretos termina en BLOQUEADO.
+3. `npm run connectivity` comprueba DNS/HTTPS sin credenciales. `npm run diagnose` prueba `/api` y, solo ante 404, `/api/v1`, e informa cual funciono.
+Alternativa: levantar el entorno de Claude Code con red "Limited" + dominios permitidos `login.smoobu.com` y `atheron1.odoo.com`, y los secretos del entorno.
+
 ## Mapa
 201: 3557506 -> rol 29 | 202: 3557511 -> 19 | 203: 3557516 -> 30 | 301: 3557521 -> 37 | 302: 3557526 -> 18 | Casa Completa: 3557501 -> 69
 
