@@ -1,0 +1,48 @@
+{
+  "name": "ATH-AI-004 — Smoke test local sin APIs",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "ath-ai-004-manual",
+      "name": "Inicio manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{proyecto:'ATH-AI-004',estado:'OK_STAGING',modo:'SIMULACION',verificacion:'n8n ejecuta nodo Code sin APIs externas',escrituras:0}}];"
+      },
+      "id": "ath-ai-004-code",
+      "name": "Verificación sin credenciales",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        510,
+        240
+      ]
+    }
+  ],
+  "connections": {
+    "Inicio manual": {
+      "main": [
+        [
+          {
+            "node": "Verificación sin credenciales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "pinData": {},
+  "tags": []
+}
