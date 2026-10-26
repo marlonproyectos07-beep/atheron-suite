@@ -34,6 +34,10 @@ Pendiente de confirmar con una llamada real: (a) prefijo de ruta `/api/...` vs `
 
 Donde configurarlas: (1) sesiones en la nube: Ajustes del entorno de Claude Code -> Variables/Secretos de entorno; (2) local Windows: el almacen de `integrations/odoo-hotel-gateway/scripts/secure-store`. Nunca en el chat, en `.env` versionado ni en el repo. Las publicas pueden ir como variables normales; las tres secretas solo como secretos.
 
+## Clasificacion del diagnostico (ATH-DEV-005)
+El informe trae `classification`: `ENV_MISSING`, `SMOOBU_AUTH_401`, `SMOOBU_SIGNATURE_ERROR` (el mensaje del 401 menciona firma/timestamp/nonce), `SMOOBU_ENDPOINT_ERROR` (404), `SMOOBU_OTHER_ERROR`, `ODOO_FAILURE`, `COMPLETE`. En GitHub aparece en el resumen del job. Ante un 401 se guarda el mensaje de Smoobu saneado (sin credenciales, 160 caracteres), el desfase de reloj frente a la cabecera `Date` y una comprobacion de higiene de credenciales (solo booleanos: espacios, comillas, no-ASCII, clave igual a secreto). Las credenciales se recortan (`trim`) al cargarlas. Smoobu API: Ajustes -> Avanzado -> Claves API -> Crear clave -> Generar secreto (el secreto se muestra una sola vez); clave y secreto deben ser el par de la misma credencial HMAC, no la clave heredada.
+La prueba de conformidad compara con `openssl` (calculo independiente); no existe vector oficial publicado.
+
 ## Diagnostico
 `npm run diagnose` (salida 0 = OK, 1 = fallo, 2 = bloqueado por variables). Comprueba autenticacion Smoobu, que existan las seis unidades, lee la reserva 161419736 (debe ser 301), y en Odoo verifica `planning.role` 37 y los `planning.slot` del rol en esas fechas. Imprime solo ids, fechas, conteos y codigos.
 

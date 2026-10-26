@@ -1,5 +1,5 @@
 import { UNITS, unitForSmoobuApartment } from './unit-map.mjs';
-import { loadSmoobuConfig, loadOdooConfig, envStatus } from './config.mjs';
+import { loadSmoobuConfig, loadOdooConfig, envStatus, credentialHygiene } from './config.mjs';
 import { SmoobuClient } from './smoobu-client.mjs';
 import { OdooJson2Client } from './odoo-json2-client.mjs';
 
@@ -12,8 +12,9 @@ export async function detectPrefix(makeClient) {
   for (const prefix of PATH_PREFIXES) {
     const client = makeClient(prefix);
     try { await client.listProperties(); return { client, prefix, tried: [...tried, { prefix, httpStatus: 200 }] }; } catch (e) {
-      tried.push({ prefix, code: e.code ?? 'UNKNOWN', httpStatus: e.status ?? null });
-      if (e.status !== 404) return { client, prefix, tried }; // fallo real distinto de ruta: no seguir probando
+      tried.push({ prefix, code: e.code ?? 'UNKNOWN', httpStatus: e.status ?? null, detail: e.detail ?? null });
+      // 404 (ruta) y 401 (la ruta equivocada tambien lo da) siguen al siguiente candidato; otro fallo corta
+      if (e.status !== 404 && e.status !== 401) return { client, prefix, tried };
     }
   }
   return { client: makeClient(PATH_PREFIXES[0]), prefix: null, tried };
@@ -22,7 +23,8 @@ export async function detectPrefix(makeClient) {
 /** Ejecuta un paso y devuelve {name, status: OK|FAIL|SKIPPED, ...detalle} sin lanzar. */
 async function step(name, fn) {
   try { return { name, status: 'OK', ...(await fn()) }; } catch (e) {
-    return { name, status: 'FAIL', code: e.code ?? 'UNKNOWN', httpStatus: e.status ?? null };
+    return { name, status: 'FAIL', code: e.code ?? 'UNKNOWN', httpStatus: e.status ?? null,
+      ...(e.detail ? { upstreamMessage: e.detail } : {}), ...(e.serverDate ? { serverDate: e.serverDate } : {}) };
   }
 }
 const skipped = (name, why) => ({ name, status: 'SKIPPED', why });
@@ -75,5 +77,40 @@ export async function runDiagnosis({ env = process.env, clients = {} } = {}) {
 
   const real = steps.filter((s) => s.status === 'OK').length;
   const overall = steps.some((s) => s.status === 'BLOCKED') ? 'BLOCKED' : steps.some((s) => s.status === 'FAIL') ? 'FAIL' : 'OK';
-  return { overall, realReads: real, env: envStatus(env), steps };
+  const smoobuFail = steps.find((x) => x.name === 'smoobu.auth+apartments' && x.status === 'FAIL');
+  if (smoobuFail && prefixProbe) smoobuFail.prefixAttempts = prefixProbe.tried;
+  const report = { overall, realReads: real, env: envStatus(env), credentialHygiene: credentialHygiene(env), steps };
+  const skew = clockSkewSeconds(smoobuFail?.serverDate);
+  if (skew !== null) report.clockSkewSeconds = skew;
+  report.classification = classify(report);
+  return report;
+}
+
+const SIGNATURE_WORDS = /signature|hmac|timestamp|nonce|canonical|expired|replay/i;
+
+/**
+ * Clasificacion unica para el resumen del workflow:
+ * ENV_MISSING | SMOOBU_AUTH_401 | SMOOBU_SIGNATURE_ERROR | SMOOBU_ENDPOINT_ERROR |
+ * SMOOBU_OTHER_ERROR | ODOO_FAILURE | COMPLETE
+ */
+export function classify(report) {
+  if (report.overall === 'BLOCKED') return 'ENV_MISSING';
+  const fails = report.steps.filter((s) => s.status === 'FAIL');
+  const sm = fails.find((s) => s.name.startsWith('smoobu'));
+  if (sm) {
+    const attempts = sm.prefixAttempts ?? [];
+    const all = [sm, ...attempts];
+    if (all.some((a) => SIGNATURE_WORDS.test(a.upstreamMessage ?? a.detail ?? ''))) return 'SMOOBU_SIGNATURE_ERROR';
+    if (sm.httpStatus === 401 || sm.httpStatus === 403) return 'SMOOBU_AUTH_401';
+    if (sm.httpStatus === 404) return 'SMOOBU_ENDPOINT_ERROR';
+    return 'SMOOBU_OTHER_ERROR';
+  }
+  if (fails.length) return 'ODOO_FAILURE';
+  return report.steps.every((s) => s.status === 'OK') ? 'COMPLETE' : 'ENV_MISSING';
+}
+
+/** Segundos de desfase entre el reloj local y la cabecera Date del servidor (null si no hay). */
+export function clockSkewSeconds(serverDate, now = Date.now()) {
+  const t = Date.parse(serverDate ?? '');
+  return Number.isFinite(t) ? Math.round((now - t) / 1000) : null;
 }

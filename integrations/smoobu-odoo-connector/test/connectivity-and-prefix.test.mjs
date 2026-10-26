@@ -29,13 +29,13 @@ const mk = (okPrefix) => (pathPrefix) => ({ pathPrefix, listProperties: async ()
   return apartments;
 } });
 
-test('detectPrefix: prueba /api y cae a /api/v1 solo ante 404', async () => {
+test('detectPrefix: prueba /api y cae a /api/v1 ante 404', async () => {
   const a = await detectPrefix(mk('/api/v1'));
   assert.equal(a.prefix, '/api/v1'); assert.deepEqual(a.tried.map((t) => t.httpStatus), [404, 200]);
   const b = await detectPrefix(mk('/api'));
   assert.equal(b.prefix, '/api');
-  const c = await detectPrefix(() => ({ listProperties: async () => { throw Object.assign(new Error('x'), { code: 'SMOOBU_AUTH_REJECTED', status: 401 }); } }));
-  assert.equal(c.tried.length, 1); // un 401 no se confunde con ruta equivocada
+  const c = await detectPrefix(() => ({ listProperties: async () => { throw Object.assign(new Error('x'), { code: 'SMOOBU_UPSTREAM_UNAVAILABLE', status: 503 }); } }));
+  assert.equal(c.tried.length, 1); // un 5xx corta: no es un problema de ruta
   const d = await detectPrefix(mk('/otro'));
   assert.equal(d.prefix, null);
 });

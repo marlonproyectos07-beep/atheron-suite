@@ -1,4 +1,4 @@
-import { ConnectorError, httpError } from './errors.mjs';
+import { ConnectorError, httpError, sanitizeDetail } from './errors.mjs';
 import { canonicalQuery, hmacHeaders } from './smoobu-hmac.mjs';
 
 /**
@@ -30,7 +30,14 @@ export class SmoobuClient {
     } catch (e) {
       throw new ConnectorError(e?.name === 'TimeoutError' || e?.name === 'AbortError' ? 'SMOOBU_TIMEOUT' : 'SMOOBU_NETWORK_ERROR', { retryable: true });
     }
-    if (!res.ok) throw httpError('SMOOBU', res.status);
+    if (!res.ok) {
+      const err = httpError('SMOOBU', res.status);
+      err.serverDate = res.headers?.get?.('date') ?? null;
+      if (res.status === 401 || res.status === 403) {
+        try { err.detail = sanitizeDetail(await res.text(), [this.apiKey, this.apiSecret]); } catch { err.detail = null; }
+      }
+      throw err;
+    }
     try { return await res.json(); } catch { throw new ConnectorError('SMOOBU_RESPONSE_INVALID'); }
   }
 
