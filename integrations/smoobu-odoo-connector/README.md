@@ -3,33 +3,42 @@
 Solo lectura. Sin dependencias. `npm test` (Node >= 20). No activa webhooks ni escrituras;
 no toca NOBEDS ni las automatizaciones 167/169.
 
-## Estado honesto
+## Estado honesto (ATH-DEV-002)
 | Pieza | Estado |
 |---|---|
 | Cliente Smoobu (GET, paginacion, errores saneados) | HECHO, probado con fetch simulado |
-| Firma HMAC-SHA256 | HECHO, **formato canonico NO verificado**: docs.smoobu.com no fue accesible desde la sesion. Ajustar `src/smoobu-hmac.mjs` (`canonicalString`, `HEADER_NAMES`) al contrastar. `SMOOBU_AUTH_MODE=api-key` como alternativa (tambien sin verificar) |
-| Cliente Odoo JSON-2 (solo `search_read`, `read`, `fields_get`...) | HECHO, probado simulado. Depende de que el plan de atheron1.odoo.com ofrezca JSON-2 |
-| Mapa de 6 unidades (Carrera 19 excluida) | HECHO, `src/unit-map.mjs` |
-| Plan entrante/saliente, dedupe, anti-bucle | HECHO como funciones puras (`src/sync-plan.mjs`); nada se aplica |
-| Consultas reales / reserva 161419736 vs rol 37 | **NO EJECUTADO**: sin credenciales en el entorno (`npm run probe` -> BLOCKED) |
+| Firma HMAC-SHA256 | CORREGIDA (ver abajo). Corroborada por fuentes secundarias; pagina oficial inaccesible desde el sandbox; sin vector de prueba oficial publicado |
+| Cliente Odoo JSON-2 (solo lectura) | HECHO, simulado. Depende de que el plan de atheron1.odoo.com ofrezca JSON-2 |
+| Diagnostico `npm run diagnose` | HECHO, probado con simulados |
+| Consultas reales a Smoobu / Odoo | **NO EJECUTADAS**: sin credenciales en el entorno -> BLOCKED |
+
+## HMAC (cambios respecto de ATH-DEV-001)
+Antes: cabeceras inventadas (`X-Smoobu-*`), firma en hex, orden de campos distinto. Ahora:
+```
+CANONICAL = METHOD \n PATH \n QUERY \n TIMESTAMP \n NONCE \n SHA256_HEX(BODY) \n API_KEY
+X-Signature = Base64( HMAC-SHA256( key = API_SECRET, CANONICAL ) )
+```
+Cabeceras: `X-API-Key`, `X-Timestamp` (UTC ISO 8601 sin milisegundos, tolerancia 5 min), `X-Nonce` (UUID v4), `X-Signature`.
+Query ordenada por clave. El modo `api-key` se **elimino**: Smoobu retira la cabecera sola desde 2026-09-25.
+Pendiente de confirmar con una llamada real: (a) prefijo de ruta `/api/...` vs `/api/v1/...` (la ruta entra en la firma), (b) codificacion exacta de la query con caracteres especiales (las consultas actuales solo usan fechas y enteros).
+
+## Variables (6; ya no hay `SMOOBU_KEY_ID` ni `SMOOBU_AUTH_MODE`)
+| Variable | Tipo | Nota |
+|---|---|---|
+| `SMOOBU_BASE_URL` | publica, opcional | por defecto `https://login.smoobu.com` |
+| `ODOO_BASE_URL` | publica | https://atheron1.odoo.com |
+| `ODOO_DATABASE` | publica | nombre de la base |
+| `SMOOBU_API_KEY` | **SECRETA** | va en la cabecera `X-API-Key` y dentro de la firma |
+| `SMOOBU_API_SECRET` | **SECRETA** | solo firma, nunca viaja |
+| `ODOO_API_KEY` | **SECRETA** | API key de un usuario Odoo de solo lectura (Bearer) |
+
+Donde configurarlas: (1) sesiones en la nube: Ajustes del entorno de Claude Code -> Variables/Secretos de entorno; (2) local Windows: el almacen de `integrations/odoo-hotel-gateway/scripts/secure-store`. Nunca en el chat, en `.env` versionado ni en el repo. Las publicas pueden ir como variables normales; las tres secretas solo como secretos.
+
+## Diagnostico
+`npm run diagnose` (salida 0 = OK, 1 = fallo, 2 = bloqueado por variables). Comprueba autenticacion Smoobu, que existan las seis unidades, lee la reserva 161419736 (debe ser 301), y en Odoo verifica `planning.role` 37 y los `planning.slot` del rol en esas fechas. Imprime solo ids, fechas, conteos y codigos.
 
 ## Mapa
 201: 3557506 -> rol 29 | 202: 3557511 -> 19 | 203: 3557516 -> 30 | 301: 3557521 -> 37 | 302: 3557526 -> 18 | Casa Completa: 3557501 -> 69
-
-## Variables de entorno (nombres; los valores nunca van al chat ni al repo)
-| Variable | Uso |
-|---|---|
-| `SMOOBU_BASE_URL` | URL base de la API de Smoobu |
-| `SMOOBU_KEY_ID` | Identificador de clave (modo hmac) |
-| `SMOOBU_SECRET` | Secreto HMAC (o clave API en modo api-key) |
-| `SMOOBU_AUTH_MODE` | `hmac` (defecto) o `api-key` |
-| `ODOO_BASE_URL` | https://atheron1.odoo.com |
-| `ODOO_DATABASE` | Nombre de la base (cabecera `X-Odoo-Database`) |
-| `ODOO_API_KEY` | API key de Odoo de un usuario con permiso de solo lectura |
-
-Configurarlas en el secret store del entorno de Claude Code en la nube (Ajustes del entorno ->
-variables/secretos) o, en local, con el store de `integrations/odoo-hotel-gateway/scripts/secure-store`.
-Luego: `npm run probe` imprime solo fechas, unidad, rol esperado y conteo de turnos, sin datos de huesped.
 
 ## Diseno bidireccional (resumen)
 - Entrante: huella por reserva (`fingerprint`) -> duplicado ignorado; claves de turno `SMOOBU-<id>:<unidad>:<noche>` hacen la creacion idempotente; modificar solo anade/quita noches; cancelar libera las claves.

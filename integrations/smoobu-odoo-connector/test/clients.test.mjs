@@ -2,32 +2,31 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SmoobuClient } from '../src/smoobu-client.mjs';
 import { OdooJson2Client } from '../src/odoo-json2-client.mjs';
-import { loadSmoobuConfig, loadOdooConfig } from '../src/config.mjs';
-import { HEADER_NAMES } from '../src/smoobu-hmac.mjs';
+import { loadSmoobuConfig, loadOdooConfig, PUBLIC_VARS, SECRET_VARS } from '../src/config.mjs';
 
 const ok = (body) => ({ ok: true, status: 200, json: async () => body });
 const SECRET = 'TEST-SECRET-FICTICIO';
 
 test('Smoobu: GET firmado, paginacion y sin secreto en la peticion', async () => {
   const calls = [];
-  const c = new SmoobuClient({ baseUrl: 'https://smoobu.test/', keyId: 'kid', secret: SECRET, now: () => 1000,
+  const c = new SmoobuClient({ baseUrl: 'https://smoobu.test/', apiKey: 'kid', apiSecret: SECRET, now: () => 1000,
     fetchImpl: async (url, init) => { calls.push({ url, init }); return ok({ bookings: [{ id: calls.length }], page_count: 2 }); } });
   const all = await c.listReservations({ from: '2026-01-01' });
   assert.equal(all.length, 2);
-  assert.ok(calls.every((x) => x.init.method === 'GET' && x.init.headers[HEADER_NAMES.signature]));
+  assert.ok(calls.every((x) => x.init.method === 'GET' && x.init.headers['X-Signature'] && x.init.headers['X-API-Key'] === 'kid'));
   assert.ok(calls.every((x) => !JSON.stringify(x).includes(SECRET)));
   assert.match(calls[1].url, /page=2/);
 });
 
-test('Smoobu: modo api-key y errores saneados', async () => {
-  const c = new SmoobuClient({ baseUrl: 'https://s.test', secret: SECRET, authMode: 'api-key',
-    fetchImpl: async (u, init) => (init.headers['Api-Key'] === SECRET ? { ok: false, status: 429 } : ok({})) });
+test('Smoobu: errores saneados', async () => {
+  const c = new SmoobuClient({ baseUrl: 'https://s.test', apiKey: 'k', apiSecret: SECRET,
+    fetchImpl: async () => ({ ok: false, status: 429 }) });
   await assert.rejects(c.listProperties(), (e) => e.code === 'SMOOBU_UPSTREAM_UNAVAILABLE' && e.retryable && !String(e.message).includes(SECRET));
   await assert.rejects(c.getReservation('abc'), { code: 'SMOOBU_INVALID_ID' });
 });
 
 test('Smoobu: respuesta invalida', async () => {
-  const c = new SmoobuClient({ baseUrl: 'https://s.test', keyId: 'k', secret: SECRET, fetchImpl: async () => ok({ nada: 1 }) });
+  const c = new SmoobuClient({ baseUrl: 'https://s.test', apiKey: 'k', apiSecret: SECRET, fetchImpl: async () => ok({ nada: 1 }) });
   await assert.rejects(c.listProperties(), { code: 'SMOOBU_RESPONSE_INVALID' });
 });
 
@@ -50,7 +49,9 @@ test('Odoo JSON-2: 404 por plan sin JSON-2 se traduce a codigo', async () => {
 });
 
 test('config: falta de variables informa nombres, nunca valores', () => {
-  assert.throws(() => loadSmoobuConfig({ SMOOBU_SECRET: SECRET }), (e) => e.code === 'SMOOBU_ENV_MISSING' && !JSON.stringify(e.missing).includes(SECRET));
+  assert.throws(() => loadSmoobuConfig({ SMOOBU_API_SECRET: SECRET }), (e) => e.code === 'SMOOBU_ENV_MISSING' && e.missing.join() === 'SMOOBU_API_KEY' && !JSON.stringify(e.missing).includes(SECRET));
   assert.throws(() => loadOdooConfig({}), { code: 'ODOO_ENV_MISSING' });
-  assert.equal(loadSmoobuConfig({ SMOOBU_BASE_URL: 'u', SMOOBU_KEY_ID: 'k', SMOOBU_SECRET: 's' }).authMode, 'hmac');
+  const cfg = loadSmoobuConfig({ SMOOBU_API_KEY: 'k', SMOOBU_API_SECRET: 's' });
+  assert.equal(cfg.baseUrl, 'https://login.smoobu.com');
+  assert.deepEqual([PUBLIC_VARS.length, SECRET_VARS.length], [3, 3]);
 });

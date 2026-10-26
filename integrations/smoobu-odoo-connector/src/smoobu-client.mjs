@@ -1,29 +1,25 @@
 import { ConnectorError, httpError } from './errors.mjs';
-import { hmacHeaders } from './smoobu-hmac.mjs';
+import { canonicalQuery, hmacHeaders } from './smoobu-hmac.mjs';
 
 /**
  * Cliente Smoobu de SOLO LECTURA. Solo emite GET; no existe ningun metodo de
- * escritura. `authMode: 'api-key'` usa la cabecera `Api-Key` (esquema clasico
- * de Smoobu, no verificado en esta sesion); `hmac` es el esquema de la orden.
+ * escritura. Autenticacion solo HMAC (la cabecera Api-Key sola esta retirada).
  */
 export class SmoobuClient {
-  constructor({ baseUrl, keyId, secret, authMode = 'hmac', fetchImpl = globalThis.fetch, now = Date.now, timeoutMs = 15000 }) {
-    if (!baseUrl || !secret) throw new ConnectorError('SMOOBU_CONFIG_INVALID');
+  constructor({ baseUrl = 'https://login.smoobu.com', apiKey, apiSecret, fetchImpl = globalThis.fetch, now = Date.now, timeoutMs = 15000 }) {
+    if (!baseUrl || !apiKey || !apiSecret) throw new ConnectorError('SMOOBU_CONFIG_INVALID');
     this.baseUrl = baseUrl.replace(/\/$/, '');
-    this.keyId = keyId;
-    this.secret = secret;
-    this.authMode = authMode;
+    this.apiKey = apiKey;
+    this.apiSecret = apiSecret;
     this.fetch = fetchImpl;
     this.now = now;
     this.timeoutMs = timeoutMs;
   }
 
   async get(path, query = {}) {
-    const headers = { accept: 'application/json' };
-    if (this.authMode === 'api-key') headers['Api-Key'] = this.secret;
-    else Object.assign(headers, hmacHeaders({ keyId: this.keyId, secret: this.secret, method: 'GET', path, query, now: this.now() }));
-    const qs = Object.entries(query).filter(([, v]) => v != null)
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).sort().join('&');
+    const headers = { accept: 'application/json',
+      ...hmacHeaders({ apiKey: this.apiKey, apiSecret: this.apiSecret, method: 'GET', path, query, now: this.now() }) };
+    const qs = canonicalQuery(query); // misma cadena que se firma
     let res;
     try {
       res = await this.fetch(`${this.baseUrl}${path}${qs ? `?${qs}` : ''}`, {

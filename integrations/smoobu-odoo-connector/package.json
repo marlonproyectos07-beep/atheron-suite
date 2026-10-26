@@ -5,6 +5,6 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "test": "node --test",
-    "probe": "node scripts/probe-readonly.mjs"
+    "diagnose": "node scripts/diagnose.mjs"
   }
 }

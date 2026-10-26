@@ -1,6 +1,9 @@
 import { ConnectorError } from './errors.mjs';
 
-export const SMOOBU_VARS = ['SMOOBU_BASE_URL', 'SMOOBU_KEY_ID', 'SMOOBU_SECRET'];
+/** Seis variables. PUBLICAS: no son secretas (URLs y nombre de base). SECRETAS: se cargan solo en un almacen seguro. */
+export const PUBLIC_VARS = ['SMOOBU_BASE_URL', 'ODOO_BASE_URL', 'ODOO_DATABASE'];
+export const SECRET_VARS = ['SMOOBU_API_KEY', 'SMOOBU_API_SECRET', 'ODOO_API_KEY'];
+export const SMOOBU_VARS = ['SMOOBU_API_KEY', 'SMOOBU_API_SECRET'];
 export const ODOO_VARS = ['ODOO_BASE_URL', 'ODOO_DATABASE', 'ODOO_API_KEY'];
 
 function need(env, names, prefix) {
@@ -15,10 +18,9 @@ function need(env, names, prefix) {
 export function loadSmoobuConfig(env = process.env) {
   need(env, SMOOBU_VARS, 'SMOOBU');
   return {
-    baseUrl: env.SMOOBU_BASE_URL.trim(),
-    keyId: env.SMOOBU_KEY_ID,
-    secret: env.SMOOBU_SECRET,
-    authMode: env.SMOOBU_AUTH_MODE === 'api-key' ? 'api-key' : 'hmac',
+    baseUrl: env.SMOOBU_BASE_URL?.trim() || 'https://login.smoobu.com',
+    apiKey: env.SMOOBU_API_KEY,
+    apiSecret: env.SMOOBU_API_SECRET,
   };
 }
 
@@ -33,5 +35,5 @@ export function loadOdooConfig(env = process.env) {
 
 /** Estado seguro para imprimir: solo presente/ausente. */
 export function envStatus(env = process.env) {
-  return Object.fromEntries([...SMOOBU_VARS, ...ODOO_VARS].map((n) => [n, Boolean(env[n]?.trim())]));
+  return Object.fromEntries([...PUBLIC_VARS, ...SECRET_VARS].map((n) => [n, Boolean(env[n]?.trim())]));
 }

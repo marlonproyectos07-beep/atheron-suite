@@ -1,52 +1,55 @@
-import { createHash, createHmac, randomBytes } from 'node:crypto';
+import { createHash, createHmac, randomUUID } from 'node:crypto';
 
 /**
- * Firma HMAC-SHA256 para Smoobu.
+ * Firma HMAC-SHA256 de Smoobu (obligatoria desde 2026-09-25; la cabecera
+ * `Api-Key` sola queda retirada).
  *
- * ESTADO: el formato canonico de abajo sigue la orden ATH-DEV-001, pero NO se
- * pudo contrastar con https://docs.smoobu.com/ (sin acceso de red desde la
- * sesion que lo escribio). Esta aislado en `canonicalString` y los nombres de
- * cabecera en HEADER_NAMES para corregirlo en un solo sitio al verificar.
+ *   CANONICAL = METHOD \n PATH \n QUERY \n TIMESTAMP \n NONCE \n SHA256_HEX(BODY) \n API_KEY
+ *   SIGNATURE = Base64( HMAC-SHA256( key = API_SECRET, message = CANONICAL ) )
  *
- * Canonico (lineas separadas por \n):
- *   METHOD en mayusculas / path / query ordenada y codificada /
- *   sha256 hex del cuerpo / timestamp (segundos unix) / nonce
+ * Cabeceras: X-API-Key, X-Timestamp (UTC ISO 8601, sin milisegundos, +-5 min),
+ * X-Nonce (UUID v4 irrepetible), X-Signature. PATH sin query; QUERY ordenada
+ * alfabeticamente por clave (`k=v&k=v`), vacia si no hay.
+ *
+ * Fuentes de la verificacion (ver README): resumen de la documentacion oficial
+ * via buscador y dos implementaciones de terceros que la siguen. La pagina
+ * oficial NO fue alcanzable desde el sandbox, y no se encontro vector de
+ * prueba publicado: los vectores de test/hmac.test.mjs son calculados aqui.
  */
 export const HEADER_NAMES = Object.freeze({
-  keyId: 'X-Smoobu-Key-Id',
-  timestamp: 'X-Smoobu-Timestamp',
-  nonce: 'X-Smoobu-Nonce',
-  contentSha256: 'X-Smoobu-Content-Sha256',
-  signature: 'X-Smoobu-Signature',
+  apiKey: 'X-API-Key',
+  timestamp: 'X-Timestamp',
+  nonce: 'X-Nonce',
+  signature: 'X-Signature',
 });
 
 export const sha256Hex = (data = '') => createHash('sha256').update(data).digest('hex');
+export const EMPTY_BODY_HASH = sha256Hex('');
+
+export const isoTimestamp = (now = Date.now()) => new Date(now).toISOString().replace(/\.\d{3}Z$/, 'Z');
 
 export function canonicalQuery(params = {}) {
   return Object.entries(params)
     .filter(([, v]) => v !== undefined && v !== null)
-    .map(([k, v]) => [encodeURIComponent(k), encodeURIComponent(String(v))])
+    .map(([k, v]) => [String(k), String(v)])
     .sort(([a, av], [b, bv]) => (a === b ? (av < bv ? -1 : av > bv ? 1 : 0) : a < b ? -1 : 1))
-    .map(([k, v]) => `${k}=${v}`)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
     .join('&');
 }
 
-export function canonicalString({ method, path, query, body = '', timestamp, nonce }) {
-  return [method.toUpperCase(), path, canonicalQuery(query), sha256Hex(body), String(timestamp), nonce].join('\n');
+export function canonicalString({ method, path, query, body = '', timestamp, nonce, apiKey }) {
+  return [method.toUpperCase(), path, canonicalQuery(query), timestamp, nonce, sha256Hex(body), apiKey].join('\n');
 }
 
-export function sign(secret, parts) {
-  return createHmac('sha256', secret).update(canonicalString(parts)).digest('hex');
-}
+export const sign = (apiSecret, parts) => createHmac('sha256', apiSecret).update(canonicalString(parts)).digest('base64');
 
-/** Devuelve las cabeceras de autenticacion. `now` y `nonce` inyectables para pruebas. */
-export function hmacHeaders({ keyId, secret, method, path, query, body = '', now = Date.now(), nonce = randomBytes(16).toString('hex') }) {
-  const timestamp = Math.floor(now / 1000);
+/** `now` y `nonce` inyectables para pruebas deterministas. */
+export function hmacHeaders({ apiKey, apiSecret, method, path, query, body = '', now = Date.now(), nonce = randomUUID() }) {
+  const timestamp = isoTimestamp(now);
   return {
-    [HEADER_NAMES.keyId]: keyId,
-    [HEADER_NAMES.timestamp]: String(timestamp),
+    [HEADER_NAMES.apiKey]: apiKey,
+    [HEADER_NAMES.timestamp]: timestamp,
     [HEADER_NAMES.nonce]: nonce,
-    [HEADER_NAMES.contentSha256]: sha256Hex(body),
-    [HEADER_NAMES.signature]: sign(secret, { method, path, query, body, timestamp, nonce }),
+    [HEADER_NAMES.signature]: sign(apiSecret, { method, path, query, body, timestamp, nonce, apiKey }),
   };
 }
