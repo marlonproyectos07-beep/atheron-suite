@@ -189,7 +189,10 @@ export function evaluateGates(result) {
   const wideEffects = (e.mods ?? []).filter((m) => /channex|channel/i.test(m.name));
   g.noChannelModuleInstalled = Boolean(c.effects) && wideEffects.length === 0;
   g.noWebhookOnAvailability = Boolean(c.effects) && (e.webhooksOnAvail ?? []).length === 0;
-  g.noAutomationOnAvailability = (byName['cascade.flag-users']?.automationsOnModelXAvailability ?? []).length === 0 && Boolean(c.effects) && (e.autosAll ?? []).length === 0;
+  // Las automatizaciones 22-29 mencionan x_availability en su CODIGO pero se disparan por escrituras en planning.slot,
+  // resource.calendar.leaves, resource.resource y product.template. La 1493 solo escribe x_availability, y sobre ese modelo no hay ninguna.
+  g.noAutomationOnAvailability = Boolean(c.effects) && (byName['cascade.flag-users']?.automationsOnModelXAvailability ?? []).length === 0
+    && (e.autosAll ?? []).every((a) => a.model !== 'x_availability');
   const activeCronsOnFlag = (byName['cascade.flag-users']?.cronsRunningThem ?? []).filter((x) => x.active);
   const otherActiveCrons = (e.allCrons ?? []);
   g.noActiveRecurringTriggerOnOthers = Boolean(c.effects) && activeCronsOnFlag.length === 0 && otherActiveCrons.length === 0;

@@ -1,0 +1,44 @@
+# ============================================================
+# RECALCULO ACOTADO DE DISPONIBILIDAD (ATH-DEV-020). SOLO workflow_dispatch (sin push: no se ejecuta al registrarse).
+# Sin la frase exacta en "confirm" solo se reevaluan las puertas (lectura). Con ella, y SOLO si TODAS las puertas
+# se demuestran en ese momento, ejecuta UNA vez la accion de servidor 1493 (nunca un cron) y verifica.
+# No llama a Smoobu. Secretos/variables: ODOO_API_KEY, ODOO_BASE_URL, ODOO_DATABASE.
+# ============================================================
+name: smoobu-odoo-recompute-run
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Frase de autorizacion (vacia = solo puertas, lectura)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoobu-odoo-recompute-run
+  cancel-in-progress: false
+
+jobs:
+  recompute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: integrations/smoobu-odoo-connector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pruebas unitarias
+        run: npm test
+      - name: Recalculo acotado
+        env:
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          RECOMPUTE_AUTHORIZATION: ${{ inputs.confirm }}
+        run: npm run --silent recompute-run
