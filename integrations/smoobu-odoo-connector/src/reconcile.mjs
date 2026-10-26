@@ -377,7 +377,7 @@ function reconcileStays({ bookings, slots, nightWindow = defaultNightWindow, min
       startUtc: new Date(startMs).toISOString(), endUtc: new Date(endMs).toISOString(),
       resourceId: roleResources[d.unit.odooRoleId] ?? null, resourceIdPending: roleResources[d.unit.odooRoleId] == null,
       companyId: ODOO_FACTS.companyId, state: ODOO_FACTS.slotState, virtualUnit: d.unit.unit === 'CASA' };
-    if (existing?.length === 1) out.proposals.push(proposal('UPDATE_SLOT', { ...base, slotId: existing[0].id, autoApply: false,
+    if (existing?.length === 1) out.proposals.push(proposal('UPDATE_SLOT', { ...base, slotId: existing[0].id, autoApply: false, status: 'BLOCKED_STALE_MIRROR_RISK', blockedBecause: 'las reglas 167/169 no actualizan un espejo existente al cambiar fechas del origen (hueco en Casa)',
       previous: { startUtc: new Date(existing[0].start).toISOString(), endUtc: new Date(existing[0].end).toISOString() } }));
     else if (!existing) out.proposals.push(proposal('CREATE_SLOT', base));
   }

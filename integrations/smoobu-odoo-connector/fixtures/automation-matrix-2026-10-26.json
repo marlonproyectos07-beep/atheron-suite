@@ -1,0 +1,338 @@
+{
+ "_nota": "Matriz derivada de la lectura de solo lectura del 2026-10-26 (run 40405341572). Solo ids, nombres y analisis; el codigo de las acciones no se copia.",
+ "run": "https://github.com/marlonproyectos07-beep/atheron-suite/actions/runs/40405341572",
+ "automations": [
+  {
+   "id": 12,
+   "accion": 1481,
+   "name": "Fix Slot Times",
+   "events": [
+    "create",
+    "write"
+   ],
+   "effect": "Normaliza inicio/fin de turnos de roles de habitacion a la hora de entrada/salida de sale_renting.recurrence_nightly en la zona de website; si hay sale_line_id actualiza fechas y reinicia precio.",
+   "external": false,
+   "risk": "BAJO",
+   "control": "Verificar tras crear que inicio/fin coinciden con 15:00/11:00 Bogota (si no, Odoo los reescribe y el motor deja de ser idempotente). Confirmar la zona del sitio web en staging.",
+   "conector_toca": true
+  },
+  {
+   "id": 22,
+   "accion": 1500,
+   "name": "Booking Engine: marcar disponibilidades a recalcular (cambio de turno)",
+   "events": [
+    "create",
+    "write"
+   ],
+   "effect": "Marca x_availability de las fechas viejas y nuevas y ejecuta el ayudante 1495, que enlaza el turno con las disponibilidades de las ofertas del recurso y dispara el recalculo 1493. El calculo IGNORA state, x_checkin_state y x_bloqueo_ref: cualquier turno con recurso bloquea las noches [inicio, fin).",
+   "external": true,
+   "risk": "ALTO",
+   "control": "Staging: sitio web/motor de reservas despublicado y sin trafico; comprobar que la noche del turno sintetico desaparece de x_availability y que el borrador/cancelado NO la libera.",
+   "conector_toca": true
+  },
+  {
+   "id": 23,
+   "accion": 1496,
+   "name": "Booking Engine: marcar disponibilidades a recalcular (borrado)",
+   "events": [
+    "unlink"
+   ],
+   "effect": "Marca disponibilidades a recalcular y dispara el cron del Booking Engine tras borrar. Unica via que libera disponibilidad.",
+   "external": true,
+   "risk": "MEDIO",
+   "control": "No se borra nada automaticamente (decision B). Solo en staging y a mano.",
+   "conector_toca": false
+  },
+  {
+   "id": 51,
+   "accion": 1648,
+   "name": "NOBEDS -> Odoo: recibir reserva (webhook)",
+   "events": [
+    "webhook externo"
+   ],
+   "effect": "Crea/actualiza turnos desde NOBEDS (canal, huesped como res.partner con correo y telefono, x_nobeds_id); booking.cancelled pasa el turno a state=draft.",
+   "external": true,
+   "risk": "ALTO",
+   "control": "Webhook inactivo en staging y NOBEDS/Worker sin configurar contra el host de staging. El conector nunca llama a este webhook.",
+   "conector_toca": false
+  },
+  {
+   "id": 55,
+   "accion": null,
+   "name": "iCal: actualizar feed al cambiar reserva",
+   "events": [
+    "create",
+    "write (state=published)"
+   ],
+   "effect": "SIN acciones enlazadas (action_server_ids vacio): inerte salvo otro mecanismo de enlace.",
+   "external": false,
+   "risk": "BAJO",
+   "control": "Reconfirmar en staging que no hace nada; la regeneracion real la hace el cron 147.",
+   "conector_toca": false
+  },
+  {
+   "id": 157,
+   "accion": null,
+   "name": "Regenerar iCal NOBEDS al cambiar reserva",
+   "events": [
+    "create",
+    "write"
+   ],
+   "effect": "SIN acciones enlazadas: inerte.",
+   "external": false,
+   "risk": "BAJO",
+   "control": "Igual que 55.",
+   "conector_toca": false
+  },
+  {
+   "id": 158,
+   "accion": 1654,
+   "name": "Regenerar iCal NOBEDS al borrar reserva",
+   "events": [
+    "unlink"
+   ],
+   "effect": "Ejecuta 1654: regenera los .ics publicos de todas las habitaciones.",
+   "external": true,
+   "risk": "ALTO",
+   "control": "Adjuntos .ics de staging solo en el host de staging; ninguna OTA/NOBEDS apunta a el.",
+   "conector_toca": false
+  },
+  {
+   "id": 164,
+   "accion": 1841,
+   "name": "Anti-duplicado NOBEDS",
+   "events": [
+    "create (x_nobeds_id no vacio)"
+   ],
+   "effect": "Borra un turno NOBEDS nuevo si ya hay otro del mismo rol el mismo dia; asigna recurso si falta.",
+   "external": false,
+   "risk": "BAJO para el conector (no usa x_nobeds_id); ALTO si se usara",
+   "control": "PROHIBIDO escribir x_nobeds_id desde el conector (borraria el turno y activaria 170/171).",
+   "conector_toca": false
+  },
+  {
+   "id": 167,
+   "accion": 1853,
+   "name": "Casa Completa bloquea Habitaciones",
+   "events": [
+    "create",
+    "write (state=published y x_bloqueo_ref vacio)"
+   ],
+   "effect": "Crea un turno espejo por habitacion libre con el mismo intervalo y x_bloqueo_ref=id origen; OMITE una habitacion con cualquier solape; no actualiza un espejo existente.",
+   "external": true,
+   "risk": "ALTO",
+   "control": "Probar tambien el caso de solape parcial (MIRROR_GAP_ROOM) y que un turno en borrador no genera espejos.",
+   "conector_toca": true
+  },
+  {
+   "id": 168,
+   "accion": 1854,
+   "name": "Limpiar bloques al borrar reserva (casa/hab)",
+   "events": [
+    "unlink"
+   ],
+   "effect": "Borra todos los turnos con x_bloqueo_ref=id del turno borrado, aunque el espejo cubriera tambien a otra habitacion (espejo compartido).",
+   "external": true,
+   "risk": "ALTO",
+   "control": "Nunca borrar sin revisar espejos compartidos; en staging reproducir y medir el hueco de Casa.",
+   "conector_toca": false
+  },
+  {
+   "id": 169,
+   "accion": 1855,
+   "name": "Habitacion bloquea Casa Completa",
+   "events": [
+    "create",
+    "write (state=published y x_bloqueo_ref vacio)"
+   ],
+   "effect": "Crea un espejo en Casa con el mismo intervalo salvo que Casa tenga CUALQUIER turno solapado; no actualiza un espejo existente (si cambian las fechas del origen el espejo queda desfasado).",
+   "external": true,
+   "risk": "ALTO",
+   "control": "El motor rechaza noches con espejo parcial (MIRROR_GAP_CASA) y no modifica fechas de turnos existentes.",
+   "conector_toca": true
+  },
+  {
+   "id": 170,
+   "accion": 1857,
+   "name": "Orden borrador desde reserva OTA",
+   "events": [
+    "create (x_nobeds_id no vacio y x_bloqueo_ref vacio)"
+   ],
+   "effect": "Crea res.partner y sale.order borrador con linea y enlaza sale_line_id.",
+   "external": false,
+   "risk": "BAJO para el conector (sin x_nobeds_id); ALTO si se usara (crea ventas)",
+   "control": "No escribir x_nobeds_id. Verificar en staging que un turno sintetico sin x_nobeds_id NO crea orden ni partner.",
+   "conector_toca": false
+  },
+  {
+   "id": 171,
+   "accion": 1858,
+   "name": "Cancelar orden al cancelar reserva OTA",
+   "events": [
+    "create",
+    "write (state=draft, x_nobeds_id, sale_line_id)"
+   ],
+   "effect": "Cancela la orden vinculada o publica un aviso en el chatter si ya hay factura (message_post: puede enviar correo a seguidores).",
+   "external": true,
+   "risk": "MEDIO",
+   "control": "Sin correo saliente en staging; el conector no usa x_nobeds_id ni sale_line_id.",
+   "conector_toca": false
+  }
+ ],
+ "crons": [
+  {
+   "id": 147,
+   "name": "Refrescar iCal NOBEDS (salida)",
+   "every": "5 minutos",
+   "effect": "Ejecuta 1654: regenera los .ics PUBLICOS de cada habitacion. Un turno publicado de la habitacion con x_nobeds_id vacio (los del conector) entra en el feed en <= 5 min; el feed lo consume NOBEDS/Worker y llega a las OTAs. SUMMARY usa x_guest_id.name o slot.name: la clave del conector quedaria visible en el .ics publico.",
+   "external": true,
+   "risk": "ALTO",
+   "control": "Cron apagado en staging; en produccion es el canal por el que una escritura llega a Booking/Airbnb (y de vuelta a Smoobu si esta conectado a esos canales): requiere decision de arquitectura anti-eco."
+  },
+  {
+   "id": 150,
+   "name": "NOBEDS Healthcheck de sincronizacion",
+   "every": "15 minutos",
+   "effect": "Crea y envia un mail.mail de alerta si nobeds.health_enabled y la sincronizacion esta caida.",
+   "external": true,
+   "risk": "MEDIO",
+   "control": "Sin servidor de correo saliente; nobeds.health_enabled apagado."
+  },
+  {
+   "id": 148,
+   "name": "NOBEDS Podar fantasmas vencidos",
+   "every": "1 dia",
+   "effect": "Poda parametros de configuracion nobeds.phantoms vencidos.",
+   "external": false,
+   "risk": "BAJO",
+   "control": "Apagado en staging."
+  },
+  {
+   "id": 103,
+   "name": "Sync stock Zipaquira en productos",
+   "every": "1 hora",
+   "effect": "Ejecuta la accion 1667 (stock/productos).",
+   "external": false,
+   "risk": "BAJO",
+   "control": "Apagado; fuera de alcance."
+  },
+  {
+   "id": 143,
+   "name": "Sync saldos bancarios (Gerencial)",
+   "every": "15 minutos",
+   "effect": "Lee parametros de configuracion y diarios contables.",
+   "external": true,
+   "risk": "MEDIO",
+   "control": "Apagado en staging; sin conexiones bancarias."
+  },
+  {
+   "id": 32,
+   "name": "Account: Journal online sync",
+   "every": "12 horas",
+   "effect": "Sincronizacion bancaria en linea.",
+   "external": true,
+   "risk": "MEDIO",
+   "control": "Apagado en staging."
+  },
+  {
+   "id": 58,
+   "name": "Google Calendar: synchronization",
+   "every": "12 horas",
+   "effect": "Sincronizacion externa con Google Calendar.",
+   "external": true,
+   "risk": "MEDIO",
+   "control": "Apagado en staging."
+  },
+  {
+   "id": 70,
+   "name": "Marketing Automation: sync participants",
+   "every": "12 horas",
+   "effect": "Puede disparar campanas de marketing.",
+   "external": true,
+   "risk": "MEDIO",
+   "control": "Apagado en staging."
+  },
+  {
+   "id": 26,
+   "name": "Send invoices automatically",
+   "every": "1 dia",
+   "effect": "Envia facturas por correo.",
+   "external": true,
+   "risk": "MEDIO",
+   "control": "Apagado en staging."
+  },
+  {
+   "id": 42,
+   "name": "Send account reports automatically",
+   "every": "1 dia",
+   "effect": "Envia informes por correo.",
+   "external": true,
+   "risk": "BAJO",
+   "control": "Apagado en staging."
+  },
+  {
+   "id": 75,
+   "name": "Base VAT: Sync updates from IAP VIES",
+   "every": "1 dia",
+   "effect": "Llamada externa (IAP).",
+   "external": true,
+   "risk": "BAJO",
+   "control": "Apagado en staging."
+  }
+ ],
+ "events": [
+  {
+   "event": "CREAR turno de habitacion (publicado, sin x_nobeds_id, sin x_bloqueo_ref)",
+   "chain": [
+    "12",
+    "22/1500->1495->1493 (disponibilidad)",
+    "169 (espejo en Casa si no hay solape)",
+    "cron 147 -> iCal publico (<=5 min)"
+   ],
+   "net": "Cierra la noche en el Booking Engine, crea espejo de Casa y expone el turno en el iCal consumido por OTAs."
+  },
+  {
+   "event": "CREAR turno de Casa Completa (publicado, sin x_bloqueo_ref)",
+   "chain": [
+    "12",
+    "22",
+    "167 (espejos en habitaciones libres)",
+    "cron 147"
+   ],
+   "net": "Cierra Casa y las habitaciones libres; omite las ocupadas."
+  },
+  {
+   "event": "MODIFICAR fechas/recurso de un turno",
+   "chain": [
+    "12",
+    "22 (viejas y nuevas fechas)",
+    "167/169 NO actualizan el espejo existente"
+   ],
+   "net": "El espejo queda desfasado: hueco de bloqueo en Casa. Por eso el motor no modifica turnos: libera y crea (bloqueado)."
+  },
+  {
+   "event": "BORRAR un turno (unlink)",
+   "chain": [
+    "23",
+    "168/1854 borra espejos por x_bloqueo_ref",
+    "158 -> 1654 (iCal)"
+   ],
+   "net": "Unica via que libera disponibilidad; borra tambien espejos que otra habitacion pudiera estar usando."
+  },
+  {
+   "event": "state = draft",
+   "chain": [
+    "22 (recalculo)",
+    "167/169/170 no actuan (exigen published)"
+   ],
+   "net": "NO libera disponibilidad (el Booking Engine ignora state); solo sale del iCal en el siguiente cron 147. Estado inconsistente."
+  },
+  {
+   "event": "x_checkin_state = cancelled",
+   "chain": [
+    "22 (recalculo)"
+   ],
+   "net": "NO libera disponibilidad ni sale del iCal. Sin efecto de inventario."
+  }
+ ]
+}

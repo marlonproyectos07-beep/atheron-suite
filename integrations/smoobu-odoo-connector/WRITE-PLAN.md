@@ -44,3 +44,9 @@ Nunca: borrado fisico, edicion de turnos sin clave `SMOOBU-`, escritura en `sale
 - Staging inexistente (HTTP 404) y sin credenciales separadas: **ninguna prueba con escrituras se ejecuto**. La guardia `assertStagingWriteTarget` exige base y host de staging autorizados, credencial distinta de la de produccion e interruptor explicito.
 - Esquema de produccion verificado (`PRODUCTION_SCHEMA`): sin `x_hotel_block_kind`; `x_channel` sin valor smoobu; `x_bloqueo_ref` char escribible. El motor no envia canal ni tipo de bloque.
 - Nueva puerta: leer el codigo de las automatizaciones que se disparan al crear un turno (12, 22, 55, 157, 158, 164, 168, 170, 171) antes de cualquier escritura.
+
+
+## Actualizacion ATH-DEV-016
+- Auditoria completa de automatizaciones y crons: `AUDITORIA-AUTOMATIZACIONES.md`. **Draft y cancelled no liberan** (Booking Engine y iCal los ignoran); borrar es la unica via nativa y arrastra espejos. La liberacion automatica sigue prohibida y bloqueada.
+- `UPDATE_SLOT` (solo modo por estancia, ya desactivado) queda `BLOCKED_STALE_MIRROR_RISK`: 167/169 no actualizan espejos.
+- Puertas nuevas antes de cualquier escritura de produccion: decision sobre la clave visible en el .ics publico, decision anti-eco (el turno llega a las OTAs en <= 5 min por el cron 147) y staging aislado segun `STAGING-PLAN.md`.

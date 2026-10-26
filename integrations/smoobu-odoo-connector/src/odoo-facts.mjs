@@ -22,29 +22,36 @@ export const RELEASE_UNLOCKED = false;
 export const RELEASE_MECHANISM_ANALYSIS = Object.freeze({
   'state=draft': Object.freeze({
     inFavor: [
-      'ota-adoption-action-code.mjs (esquema de STAGING) filtra planning.slot por state=published al buscar solapes (lineas 81, 123, 170)',
-      'las reglas 167/169 solo se disparan con state=published',
+      'el feed iCal publico (accion 1654) solo incluye turnos con state=published: un borrador sale del iCal en el siguiente refresco (cron 147, 5 min)',
+      'las reglas 167/169 y 170 exigen published',
     ],
     against: [
-      'las reglas 167/169 comprueban solapes con search_count SIN filtro de estado: un borrador sigue impidiendo el espejo de otro turno',
-      'los espejos ya creados por la regla 169 NO se limpian al despublicar el origen',
-      'el motor de disponibilidad real de produccion (Booking Engine 1493/1495 + reglas ATHERON) no se ha leido; la accion 1914 NO es ese motor',
+      'DEMOSTRADO POR CODIGO (acciones 1493/1495, ATH-DEV-016): el calculo de disponibilidad del Booking Engine busca planning.slot por recurso y fechas SIN filtrar state: un borrador sigue cerrando la noche',
+      'los espejos ya creados por la regla 169 no se limpian al pasar el origen a borrador',
+      'la regla 169 comprueba solapes sin filtro de estado: un borrador sigue impidiendo el espejo de otro turno',
+      'estado inconsistente: fuera de las OTAs pero cerrado en el motor de reservas directo',
     ],
-    notes: ['en produccion existen las acciones 1844 (quitar bloque al cancelar orden) y 1854/automatizacion 168 (limpiar bloques al borrar): la via nativa de liberar parece ser cancelar la ORDEN o borrar el bloque; sin leer'],
-    verdict: 'NO_DEMOSTRADO',
+    notes: ['NOBEDS marca sus cancelaciones como state=draft (accion 1648) y la orden se cancela por la regla 171; la liberacion real de esos turnos no esta demostrada'],
+    verdict: 'REFUTADO_COMO_LIBERACION_DE_INVENTARIO',
   }),
   'x_checkin_state=cancelled': Object.freeze({
     inFavor: [
-      'ota-adoption-action-code.mjs (esquema de STAGING) trata x_checkin_state==cancelled como bloque no vigente (lineas 70, 83, 125, 171)',
-      'fields_get: x_checkin_state existe con el valor cancelled (campo propio del flujo de check-in)',
+      'el campo existe con el valor cancelled (fields_get)',
+      'codigo de staging (ota-adoption-action-code.mjs) lo trataba como no vigente; ese esquema no existe en produccion',
     ],
     against: [
-      'las reglas 167/169 no miran x_checkin_state en sus comprobaciones de solape',
-      'el motor de disponibilidad real de produccion no se ha leido; en produccion x_checkin_state es false en 516 de 517 turnos (casi no se usa)',
-      'la evidencia a favor viene del codigo de staging (esquema x_hotel_block_kind) que NO existe en produccion',
-      'semantica pensada para el check-in del huesped, no para inventario',
+      'DEMOSTRADO POR CODIGO (1493/1495/1654): ni el Booking Engine ni el feed iCal leen x_checkin_state; el turno sigue cerrando la noche y sigue en el iCal',
+      'en produccion x_checkin_state es false en 516 de 517 turnos: casi no se usa',
     ],
-    verdict: 'NO_DEMOSTRADO',
+    verdict: 'REFUTADO_COMO_LIBERACION_DE_INVENTARIO',
+  }),
+  'unlink (borrar)': Object.freeze({
+    inFavor: ['unica via que libera: la automatizacion 23 recalcula disponibilidad y 158 regenera el iCal'],
+    against: [
+      'la automatizacion 168 borra TODO turno con x_bloqueo_ref = id borrado, tambien un espejo de Casa que cubra a otra habitacion (espejo compartido): puede reabrir Casa',
+      'prohibido borrar automaticamente (decision B)',
+    ],
+    verdict: 'VIA_NATIVA_PERO_PROHIBIDA_AUTOMATICAMENTE',
   }),
 });
 

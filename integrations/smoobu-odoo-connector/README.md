@@ -54,6 +54,9 @@ Alternativa: levantar el entorno de Claude Code con red "Limited" + dominios per
 ## Blindaje (ATH-DEV-014)
 Modo por noche predeterminado; el de estancia exige `allowStayMode:true`. Noches sin bloqueo espejo correcto se rechazan (`MIRROR_GAP_*`); `coverGaps` (apagado) propone cobertura de Casa bloqueada hasta staging; liberaciones solo de turnos propios y bloqueadas (`RELEASE_UNLOCKED=false`). Politica y riesgos: `CALIBRACION.md`. Pruebas de staging: `STAGING-TESTS.md`.
 
+## Auditoria de automatizaciones (ATH-DEV-016)
+`npm run audit` (workflow `smoobu-odoo-audit`, solo lectura). Resultados: `AUDITORIA-AUTOMATIZACIONES.md`; plan de staging: `STAGING-PLAN.md`; lista de neutralizacion: `src/staging-plan.mjs`.
+
 ## Mapa
 201: 3557506 -> rol 29 | 202: 3557511 -> 19 | 203: 3557516 -> 30 | 301: 3557521 -> 37 | 302: 3557526 -> 18 | Casa Completa: 3557501 -> 69
 

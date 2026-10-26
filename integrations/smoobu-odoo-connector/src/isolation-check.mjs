@@ -3,6 +3,8 @@
  * leer cuenta como NO aprobado. Debe ejecutarse con la credencial de STAGING, nunca con la de produccion.
  */
 const EXTERNAL_WORDS = /smoobu|beds24|nobeds|booking|airbnb|ical|channel|webhook|whatsapp|sync|ota/i;
+// Unicos crons permitidos en staging: el recalculo del Booking Engine (necesario para probar disponibilidad). Todo lo demas apagado.
+export const ALLOWED_STAGING_CRON = /^booking engine/i;
 
 async function check(name, fn) {
   try { return { name, ...(await fn()) }; } catch (e) {
@@ -17,10 +19,19 @@ export async function runIsolationCheck({ odoo, database, expectedDatabase }) {
     const rows = await odoo.searchRead('ir.mail_server', [['active', '=', true]], ['id']);
     return { passed: rows.length === 0, activeCount: rows.length };
   }));
-  checks.push(await check('active-crons-without-external-names', async () => {
-    const rows = await odoo.searchRead('ir.cron', [['active', '=', true]], ['id', 'cron_name', 'ir_actions_server_id']);
-    const flagged = rows.filter((r) => EXTERNAL_WORDS.test(String(r.cron_name ?? '')));
+  checks.push(await check('active-crons-only-booking-engine', async () => {
+    const rows = await odoo.searchRead('ir.cron', [['active', '=', true]], ['id', 'cron_name']);
+    const flagged = rows.filter((r) => !ALLOWED_STAGING_CRON.test(String(r.cron_name ?? '')));
     return { passed: flagged.length === 0, activeCrons: rows.length, flagged: flagged.map((r) => ({ id: r.id, name: r.cron_name })) };
+  }));
+  checks.push(await check('no-active-webhook-automations', async () => {
+    const rows = await odoo.searchRead('base.automation', [['active', '=', true], ['trigger', '=', 'on_webhook']], ['id', 'name']);
+    return { passed: rows.length === 0, count: rows.length, ids: rows.map((r) => r.id) };
+  }));
+  checks.push(await check('nobeds-health-alerts-off', async () => {
+    const rows = await odoo.searchRead('ir.config_parameter', [['key', '=', 'nobeds.health_enabled']], ['key', 'value']);
+    const on = rows.some((r) => ['1', 'true', 'yes', 'on'].includes(String(r.value).trim().toLowerCase()));
+    return { passed: !on, present: rows.length > 0 };
   }));
   checks.push(await check('no-webhook-server-actions', async () => {
     const rows = await odoo.searchRead('ir.actions.server', [['state', '=', 'webhook']], ['id', 'name']);

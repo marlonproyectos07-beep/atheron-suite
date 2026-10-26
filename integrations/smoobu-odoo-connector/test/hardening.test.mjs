@@ -182,16 +182,17 @@ test('LIBERACION: con huesped presente o ya salido se rechaza', () => {
   assert.equal(raw.checkinState, 'checked_in'); assert.equal(raw.blockRef, null);
 });
 
-test('state=draft vs x_checkin_state=cancelled: NO demostrado, la liberacion queda bloqueada', () => {
+test('state=draft y x_checkin_state=cancelled NO liberan disponibilidad (codigo del Booking Engine); borrar es la via nativa y esta prohibida', () => {
   assert.equal(RELEASE_UNLOCKED, false);
-  for (const [name, a] of Object.entries(RELEASE_MECHANISM_ANALYSIS)) {
-    assert.equal(a.verdict, 'NO_DEMOSTRADO', name);
-    assert.ok(a.inFavor.length >= 2 && a.against.length >= 2);
-    assert.ok(a.against.some((t) => /disponibilidad|167\/169/.test(t)));
-  }
+  const A = RELEASE_MECHANISM_ANALYSIS;
+  assert.equal(A['state=draft'].verdict, 'REFUTADO_COMO_LIBERACION_DE_INVENTARIO');
+  assert.equal(A['x_checkin_state=cancelled'].verdict, 'REFUTADO_COMO_LIBERACION_DE_INVENTARIO');
+  assert.equal(A['unlink (borrar)'].verdict, 'VIA_NATIVA_PERO_PROHIBIDA_AUTOMATICAMENTE');
+  for (const a of Object.values(A)) assert.ok(a.inFavor.length >= 1 && a.against.length >= 2);
+  assert.ok(A['state=draft'].against.some((t) => /1493\/1495/.test(t)));
   const slots = [mk(10, 37, '2026-11-10', '2026-11-10', { key: slotKey(1, '301', '2026-11-10') })];
   const r = reconcile({ bookings: [bk(1, A[301], '2026-11-10', '2026-11-11', { type: 'cancellation' })], slots });
-  assert.deepEqual([r.proposals[0].status, r.proposals[0].mechanism, r.proposals[0].candidates], ['BLOCKED_UNTIL_STAGING_PROOF', 'TO_BE_DECIDED', ['state=draft', 'x_checkin_state=cancelled']]);
+  assert.deepEqual([r.proposals[0].status, r.proposals[0].mechanism, r.proposals[0].candidates], ['BLOCKED_UNTIL_STAGING_PROOF', 'TO_BE_DECIDED', ['state=draft', 'x_checkin_state=cancelled', 'unlink (borrar)']]);
 });
 
 test('seguridad global: ninguna propuesta puede aplicarse y writesEnabled siempre false', () => {
