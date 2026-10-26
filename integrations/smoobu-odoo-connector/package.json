@@ -1,0 +1,10 @@
+{
+  "name": "@atheron/smoobu-odoo-connector",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test",
+    "probe": "node scripts/probe-readonly.mjs"
+  }
+}
