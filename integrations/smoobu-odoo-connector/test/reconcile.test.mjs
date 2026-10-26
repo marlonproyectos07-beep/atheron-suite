@@ -5,21 +5,40 @@ import { reconcile, simulateApply, normalizeSlot, slotKey, defaultNightWindow } 
 
 const A = { 201: 3557506, 202: 3557511, 301: 3557521, CASA: 3557501, C19: 3567496 };
 const bk = (id, apt, arrival, departure, extra = {}) => ({ id, apartment: { id: apt }, arrival, departure, ...extra });
-const slot = (id, roleId, night, key = null, hours = 24) => {
-  const [s] = defaultNightWindow(night);
-  return { id, roleId, start: s, end: s + hours * 3600000, key, active: true };
+const slot = (id, roleId, night, key = null) => {
+  const [s, e] = defaultNightWindow(night);
+  return { id, roleId, start: s, end: e, key, active: true };
 };
 const ops = (r, op) => r.proposals.filter((p) => p.op === op);
 
 test('PILOTO 161419736 (301, 26-27 oct): exactamente un turno propuesto en rol 37, sin crearlo', () => {
   const fx = JSON.parse(readFileSync(new URL('../fixtures/pilot-161419736.json', import.meta.url)));
-  const r = reconcile({ bookings: [fx.booking], slots: fx.odooSlotsRole37 });
+  const real = JSON.parse(readFileSync(new URL('../fixtures/real-calibration-2026-10-26.json', import.meta.url)));
+  const r = reconcile({ bookings: [fx.booking], slots: real.slots });
   assert.equal(r.proposals.length, 1);
   const [p] = r.proposals;
   assert.deepEqual([p.op, p.roleId, p.night, p.externalKey, p.status, p.writesEnabled],
     ['CREATE_SLOT', 37, '2026-10-26', 'SMOOBU-161419736:301:2026-10-26', 'PENDING_APPROVAL', false]);
-  assert.equal(p.startUtc, '2026-10-26T05:00:00.000Z');
-  assert.deepEqual([r.conflicts.length, r.warnings.length], [0, 0]);
+  assert.equal(p.startUtc, '2026-10-26T20:00:00.000Z'); // 15:00 Bogota, como los turnos reales
+  assert.equal(p.endUtc, '2026-10-27T16:00:00.000Z');   // 11:00 Bogota del dia siguiente
+  assert.equal(p.resourceIdPending, true);
+  assert.equal(r.conflicts.length, 0);
+  // el turno de Casa (39648) de esa noche es un espejo de 201/302, no una reserva de Casa
+  assert.deepEqual(r.warnings, [{ code: 'CASA_SLOT_TREATED_AS_MIRROR', key: p.externalKey, slotIds: [39648] }]);
+});
+
+test('REGRESION con datos reales: 203 ocupada por turno largo, Casa bloqueada por habitaciones, mismo horario', () => {
+  const real = JSON.parse(readFileSync(new URL('../fixtures/real-calibration-2026-10-26.json', import.meta.url)));
+  const r203 = reconcile({ bookings: [bk(1, 3557516, '2026-10-26', '2026-10-27')], slots: real.slots });
+  assert.equal(r203.conflicts[0].code, 'ODOO_OCCUPIED'); assert.equal(r203.conflicts[0].slots[0].slotId, 39670);
+  assert.equal(reconcile({ bookings: [bk(2, A.CASA, '2026-10-26', '2026-10-27')], slots: real.slots }).conflicts[0].code, 'ODOO_OCCUPIED');
+  const r202 = reconcile({ bookings: [bk(3, A[202], '2026-10-25', '2026-10-26')], slots: real.slots }); // 202 libre esa noche; solo hay espejo de Casa
+  assert.equal(r202.proposals.length, 1);
+  // turnos reales de 20 h consecutivos no chocan con la noche vecina (hueco 11:00-15:00)
+  const [s0, e0] = defaultNightWindow('2026-10-26'); const [s1] = defaultNightWindow('2026-10-27');
+  assert.equal((e0 - s0) / 3600000, 20); assert.equal((s1 - e0) / 3600000, 4);
+  const applied = simulateApply(real.slots, reconcile({ bookings: [bk(161419736, A[301], '2026-10-26', '2026-10-27')], slots: real.slots }));
+  assert.equal(reconcile({ bookings: [bk(161419736, A[301], '2026-10-26', '2026-10-27')], slots: applied }).proposals.length, 0);
 });
 
 test('repeticion de importacion: aplicar y volver a conciliar da cero propuestas', () => {
@@ -63,7 +82,7 @@ test('conflicto de ocupacion: turno ajeno (p. ej. NOBEDS) en el mismo rol y noch
 
 test('turno ajeno de la noche vecina (solape menor a 60 min) no es conflicto', () => {
   const [s] = defaultNightWindow('2026-10-25');
-  const edge = { id: 5, roleId: 37, start: s, end: s + 24 * 3600000 + 30 * 60000, key: null, active: true }; // se pasa 30 min
+  const edge = { id: 5, roleId: 37, start: s, end: defaultNightWindow('2026-10-26')[0] + 30 * 60000, key: null, active: true }; // invade 30 min
   assert.equal(reconcile({ bookings: [bk(1, A[301], '2026-10-26', '2026-10-27')], slots: [edge] }).proposals.length, 1);
 });
 
@@ -73,11 +92,16 @@ test('Casa Completa: un solo turno en rol 69, ninguno en fisicas', () => {
   assert.ok(r.proposals.every((p) => p.roleId === 69 && p.virtualUnit === true && p.unit === 'CASA'));
 });
 
-test('Casa Completa cruzada: ocupa una fisica -> conflicto; fisica con Casa ocupada -> conflicto', () => {
+test('Casa Completa cruzada: Casa sobre fisica ocupada -> conflicto; espejo vs reserva real de Casa', () => {
   const a = reconcile({ bookings: [bk(5, A.CASA, '2026-10-26', '2026-10-27')], slots: [slot(1, 29, '2026-10-26')] });
   assert.equal(a.proposals.length, 0); assert.equal(a.conflicts[0].code, 'ODOO_CASA_CROSS_OCCUPIED');
-  const b = reconcile({ bookings: [bk(6, A[301], '2026-10-26', '2026-10-27')], slots: [slot(2, 69, '2026-10-26')] });
-  assert.equal(b.proposals.length, 0); assert.equal(b.conflicts[0].slots[0].unit, 'CASA');
+  // fisica con un turno de Casa y las otras fisicas libres: espejo de las reglas, se propone
+  const b = reconcile({ bookings: [bk(6, A[301], '2026-10-26', '2026-10-27')], slots: [slot(2, 69, '2026-10-26'), slot(3, 29, '2026-10-26')] });
+  assert.equal(b.proposals.length, 1); assert.equal(b.warnings[0].code, 'CASA_SLOT_TREATED_AS_MIRROR');
+  // Casa con las otras cuatro fisicas ocupadas y la destino libre: parece reserva real de Casa -> conflicto
+  const rooms = [201, 202, 203, 302].map((u, i) => slot(10 + i, { 201: 29, 202: 19, 203: 30, 302: 18 }[u], '2026-10-26'));
+  const c = reconcile({ bookings: [bk(7, A[301], '2026-10-26', '2026-10-27')], slots: [slot(2, 69, '2026-10-26'), ...rooms] });
+  assert.equal(c.proposals.length, 0); assert.equal(c.conflicts[0].code, 'ODOO_CASA_CROSS_OCCUPIED');
 });
 
 test('Casa ya conciliada con turnos espejo sin clave (automatizaciones) no se reporta como conflicto propio', () => {
@@ -115,10 +139,10 @@ test('turno con clave de reserva fuera de la ventana: advertencia, sin liberar',
 });
 
 test('normalizeSlot lee registros JSON-2 crudos (role_id par, fechas UTC, clave en name)', () => {
-  const s = normalizeSlot({ id: 3, role_id: [37, '301 ...'], start_datetime: '2026-10-26 05:00:00', end_datetime: '2026-10-27 05:00:00', name: 'SMOOBU-161419736:301:2026-10-26 nota' });
-  assert.deepEqual([s.roleId, s.key, s.start], [37, 'SMOOBU-161419736:301:2026-10-26', Date.parse('2026-10-26T05:00:00Z')]);
-  assert.equal(normalizeSlot({ id: 4, role_id: false, name: false, start_datetime: '2026-10-26 05:00:00', end_datetime: '2026-10-27 05:00:00' }).key, null);
-  const r = reconcile({ bookings: [bk(161419736, A[301], '2026-10-26', '2026-10-27')], slots: [{ id: 3, role_id: [37, 'x'], start_datetime: '2026-10-26 05:00:00', end_datetime: '2026-10-27 05:00:00', name: 'SMOOBU-161419736:301:2026-10-26' }] });
+  const s = normalizeSlot({ id: 3, role_id: [37, '301 ...'], start_datetime: '2026-10-26 20:00:00', end_datetime: '2026-10-27 16:00:00', name: 'SMOOBU-161419736:301:2026-10-26 nota' });
+  assert.deepEqual([s.roleId, s.key, s.start], [37, 'SMOOBU-161419736:301:2026-10-26', Date.parse('2026-10-26T20:00:00Z')]);
+  assert.equal(normalizeSlot({ id: 4, role_id: false, name: false, start_datetime: '2026-10-26 20:00:00', end_datetime: '2026-10-27 16:00:00' }).key, null);
+  const r = reconcile({ bookings: [bk(161419736, A[301], '2026-10-26', '2026-10-27')], slots: [{ id: 3, role_id: [37, 'x'], start_datetime: '2026-10-26 20:00:00', end_datetime: '2026-10-27 16:00:00', name: 'SMOOBU-161419736:301:2026-10-26' }] });
   assert.equal(r.proposals.length, 0);
 });
 

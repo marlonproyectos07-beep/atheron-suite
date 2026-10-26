@@ -35,7 +35,12 @@ export function analyzeSlots(rows) {
     bump(perRole, `${role}:${unitForOdooRole(role)?.unit ?? '?'}`);
     if (Array.isArray(r.resource_id) ? r.resource_id[0] : r.resource_id) withResource += 1;
   }
-  return { sampleSize: rows.length, withResource, startHourUtc: top(startUtc), endHourUtc: top(endUtc), startHourBogota: top(startBog),
+  const roleResources = {};
+  for (const r of rows) {
+    const role = Array.isArray(r.role_id) ? r.role_id[0] : r.role_id; const res = Array.isArray(r.resource_id) ? r.resource_id[0] : r.resource_id;
+    if (role && res) { roleResources[role] ??= {}; bump(roleResources[role], String(res)); }
+  }
+  return { sampleSize: rows.length, withResource, roleResources, stateCounts: rows.reduce((m, r) => { bump(m, String(r.state)); return m; }, {}), startHourUtc: top(startUtc), endHourUtc: top(endUtc), startHourBogota: top(startBog),
     endHourBogota: top(endBog), durations: top(durations), nameShapes: top(shapes), perRole };
 }
 

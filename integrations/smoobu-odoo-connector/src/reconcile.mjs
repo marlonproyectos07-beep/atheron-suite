@@ -1,5 +1,5 @@
 import { stayId, nightlySlots } from './sync-plan.mjs';
-import { unitForSmoobuApartment, unitForOdooRole, unitForName, isExcludedApartment, conflictsWith, UNITS } from './unit-map.mjs';
+import { unitForSmoobuApartment, unitForOdooRole, unitForName, isExcludedApartment, conflictsWith, PHYSICAL_UNITS, UNITS } from './unit-map.mjs';
 
 /**
  * MOTOR DE CONCILIACION Smoobu -> Odoo (SOLO SIMULACION).
@@ -9,25 +9,32 @@ import { unitForSmoobuApartment, unitForOdooRole, unitForName, isExcludedApartme
  * `PENDING_APPROVAL` con `writesEnabled: false`. Es una funcion pura e
  * idempotente: aplicar las propuestas y volver a conciliar produce cero propuestas.
  *
- * Clave externa de turno: `SMOOBU-<reserva>:<unidad>:<noche>` guardada en el campo
- * de texto del turno (`name` por defecto, configurable). No se crea ningun modelo.
+ * Clave externa de turno: `SMOOBU-<reserva>:<unidad>:<noche>` guardada en
+ * `planning.slot.name` (texto, no obligatorio, vacio en los 409 turnos observados).
  *
- * Hora de la noche: la convencion historica de Odoo (hora de entrada/salida de los
- * turnos existentes) NO esta verificada. Por defecto 00:00-24:00 de Bogota (UTC-5,
- * sin horario de verano); es un parametro (`nightWindow`) que debe calibrarse con
- * una lectura real de turnos antes de escribir.
+ * CALIBRADO CON DATOS REALES (ATH-DEV-011, lectura de Odoo del 2026-10-26):
+ * los turnos reales van de las 15:00 a las 11:00 del dia siguiente, hora de Bogota
+ * (20:00Z -> 16:00Z, 20 h), zona America/Bogota en los 26 recursos. Un turno de
+ * una noche mide 20 h; las estancias largas aparecen como un solo turno de 44, 68 h...
+ *
+ * Reglas 167/169 (base.automation activas, al crear/editar planning.slot): una
+ * habitacion ocupada genera un turno ESPEJO en Casa Completa y Casa Completa genera
+ * turnos en las cinco habitaciones. Un turno de Casa con la habitacion destino
+ * libre es por tanto un espejo, no una reserva de Casa.
  */
 
 const HOUR = 3600000;
 const BOGOTA_OFFSET_MS = -5 * HOUR;
+export const CHECKIN_HOUR = 15;
+export const CHECKOUT_HOUR = 11;
 export const KEY_RE = /^SMOOBU-(\d+):([A-Z0-9]+):(\d{4}-\d{2}-\d{2})/;
 
 export const slotKey = (reservationId, unit, night) => `${stayId(reservationId)}:${unit}:${night}`;
 
-/** [inicio, fin) en ms UTC de una noche local de Bogota. */
+/** [inicio, fin) en ms UTC: 15:00 de la noche -> 11:00 del dia siguiente, hora de Bogota (UTC-5, sin DST). */
 export function defaultNightWindow(night) {
-  const start = Date.parse(`${night}T00:00:00Z`) - BOGOTA_OFFSET_MS;
-  return [start, start + 24 * HOUR];
+  const start = Date.parse(`${night}T00:00:00Z`) + CHECKIN_HOUR * HOUR - BOGOTA_OFFSET_MS;
+  return [start, start + (24 - CHECKIN_HOUR + CHECKOUT_HOUR) * HOUR];
 }
 
 const toMs = (v) => (typeof v === 'number' ? v : Date.parse(String(v).includes('T') ? v : `${String(v).replace(' ', 'T')}Z`));
@@ -42,7 +49,7 @@ export function normalizeSlot(rec, { keyField = 'name' } = {}) {
     roleId: Number(role),
     start: toMs(rec.start_datetime ?? rec.start),
     end: toMs(rec.end_datetime ?? rec.end),
-    key: m ? `SMOOBU-${m[1]}:${m[2]}:${m[3]}` : null,
+    key: 'key' in rec ? rec.key : (m ? `SMOOBU-${m[1]}:${m[2]}:${m[3]}` : null),
     active: rec.active !== false,
   };
 }
@@ -50,9 +57,9 @@ export function normalizeSlot(rec, { keyField = 'name' } = {}) {
 const overlapMs = (aS, aE, bS, bE) => Math.max(0, Math.min(aE, bE) - Math.max(aS, bS));
 const proposal = (op, extra) => ({ op, status: 'PENDING_APPROVAL', writesEnabled: false, ...extra });
 
-export function reconcile({ bookings, slots, nightWindow = defaultNightWindow, minOverlapMinutes = 60, keyField = 'name' }) {
+export function reconcile({ bookings, slots, nightWindow = defaultNightWindow, minOverlapMinutes = 60, keyField = 'name', roleResources = {} }) {
   const out = { proposals: [], matched: [], conflicts: [], warnings: [], ignored: [] };
-  const all = slots.map((s) => (s.roleId != null && 'key' in s ? s : normalizeSlot(s, { keyField }))).filter((s) => s.active);
+  const all = slots.map((s) => normalizeSlot(s, { keyField })).filter((s) => s.active);
   const minOverlap = minOverlapMinutes * 60000;
 
   // 1) Indice de turnos con clave; duplicados se reportan y NUNCA se borran solos.
@@ -115,6 +122,20 @@ export function reconcile({ bookings, slots, nightWindow = defaultNightWindow, m
       const role = unitForName(other).odooRoleId;
       for (const s of occupiedBy(role, d.night, own)) clash.push({ slotId: s.id, unit: other, roleId: role, keyed: Boolean(s.key) });
     }
+    // Una habitacion con turno de Casa y la habitacion destino LIBRE es un espejo de las reglas 167/169
+    // (otra habitacion ocupada), salvo que las otras cuatro fisicas tambien esten ocupadas: entonces
+    // parece una reserva real de Casa con el espejo de esta habitacion ausente -> conflicto.
+    if (d.unit.unit !== 'CASA') {
+      const casaHits = clash.filter((c) => c.unit === 'CASA');
+      if (casaHits.length) {
+        const others = PHYSICAL_UNITS.filter((u) => u !== d.unit.unit);
+        const allOthersBusy = others.every((u) => occupiedBy(unitForName(u).odooRoleId, d.night, own).length > 0);
+        if (!allOthersBusy) {
+          for (let i = clash.length - 1; i >= 0; i -= 1) if (clash[i].unit === 'CASA') clash.splice(i, 1);
+          out.warnings.push({ code: 'CASA_SLOT_TREATED_AS_MIRROR', key, slotIds: casaHits.map((c) => c.slotId) });
+        }
+      }
+    }
     if (clash.length) {
       out.conflicts.push({ code: clash.some((c) => c.unit === d.unit.unit) ? 'ODOO_OCCUPIED' : 'ODOO_CASA_CROSS_OCCUPIED',
         key, reservationId: d.reservationId, unit: d.unit.unit, night: d.night, slots: clash });
@@ -124,6 +145,7 @@ export function reconcile({ bookings, slots, nightWindow = defaultNightWindow, m
     out.proposals.push(proposal('CREATE_SLOT', {
       externalKey: key, stayId: stayId(d.reservationId), reservationId: d.reservationId, unit: d.unit.unit,
       roleId: d.unit.odooRoleId, night: d.night, startUtc: new Date(ws).toISOString(), endUtc: new Date(we).toISOString(),
+      resourceId: roleResources[d.unit.odooRoleId] ?? null, resourceIdPending: roleResources[d.unit.odooRoleId] == null,
       virtualUnit: d.unit.unit === 'CASA', // Casa Completa es un solo turno en el rol 69; no se generan turnos en las fisicas
     }));
   }
