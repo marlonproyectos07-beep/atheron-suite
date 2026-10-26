@@ -49,7 +49,7 @@ El sandbox de Claude Code **no tiene salida** a login.smoobu.com ni atheron1.odo
 Alternativa: levantar el entorno de Claude Code con red "Limited" + dominios permitidos `login.smoobu.com` y `atheron1.odoo.com`, y los secretos del entorno.
 
 ## Motor de conciliacion (ATH-DEV-010, solo simulacion)
-`src/reconcile.mjs`: reservas Smoobu + `planning.slot` leidos de Odoo -> propuestas `CREATE_SLOT` / `RELEASE_SLOT`, conflictos y advertencias; idempotente y sin escrituras. `npm run simulate` ejecuta el piloto 161419736. Plan de escrituras y puertas: `WRITE-PLAN.md`. Calibrado con turnos reales de Odoo (`CALIBRACION.md`): horario 15:00->11:00 Bogota, espejos de las reglas 167/169. Limitacion principal: no ha visto reservas reales (Smoobu 401). `npm run calibrate` (solo lectura; workflow `smoobu-odoo-calibrate`) repite la lectura anonimizada.
+`src/reconcile.mjs`: reservas Smoobu + `planning.slot` leidos de Odoo -> propuestas `CREATE_SLOT` / `RELEASE_SLOT`, conflictos y advertencias; idempotente y sin escrituras. `npm run simulate` ejecuta el piloto 161419736. Modo `granularity: 'night'` (predeterminado) o `'stay'` (ver decision en `CALIBRACION.md`; `npm run simulate -- --stay`). Hechos de Odoo verificados en `src/odoo-facts.mjs`. Plan de escrituras y puertas: `WRITE-PLAN.md`. Calibrado con turnos reales de Odoo (`CALIBRACION.md`): horario 15:00->11:00 Bogota, espejos de las reglas 167/169. Limitacion principal: no ha visto reservas reales (Smoobu 401). `npm run calibrate` (solo lectura; workflow `smoobu-odoo-calibrate`) repite la lectura anonimizada.
 
 ## Mapa
 201: 3557506 -> rol 29 | 202: 3557511 -> 19 | 203: 3557516 -> 30 | 301: 3557521 -> 37 | 302: 3557526 -> 18 | Casa Completa: 3557501 -> 69

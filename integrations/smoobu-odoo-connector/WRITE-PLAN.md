@@ -6,7 +6,8 @@
 | Operacion | Efecto en Odoo | Modelo |
 |---|---|---|
 | `CREATE_SLOT` | un `planning.slot` por noche, `role_id` del mapa, `resource_id` si el rol lo exige, clave externa en el campo de texto | `planning.slot` |
-| `RELEASE_SLOT` | liberar el turno (archivar/desasignar, a decidir) en reserva cancelada, acortada o cambiada de unidad | `planning.slot` |
+| `RELEASE_SLOT` | solo PROPUESTA (`autoApply:false`, mecanismo por decidir: sin `active`; existen `state` y `x_checkin_state`) en reserva cancelada, acortada o cambiada de unidad | `planning.slot` |
+| `UPDATE_SLOT` | solo modo por estancia: propuesta de nuevas fechas para un turno con clave (`autoApply:false`) | `planning.slot` |
 Nunca: borrado fisico, edicion de turnos sin clave `SMOOBU-`, escritura en `sale.order`, NOBEDS, tarifas, inventario ni automatizaciones 167/169.
 
 ## Clave externa e idempotencia
@@ -22,10 +23,11 @@ Nunca: borrado fisico, edicion de turnos sin clave `SMOOBU-`, escritura en `sale
 ## Antes de la primera escritura (puertas)
 1. Smoobu API autenticada (hoy 401): sin lectura real no hay reservas reales que conciliar.
 2. ~~Calibrar horario~~ HECHO (15:00->11:00 Bogota, ver `CALIBRACION.md`). Pendiente: decidir turno por noche vs por estancia.
-3. ~~Campo de la clave~~ `name` confirmado (texto, vacio en todos los turnos). `resource_id` no es obligatorio; falta el mapa rol->recurso y el valor de `company_id` (obligatorio).
+3. ~~Campo de la clave, recurso y compania~~ HECHO: `name`; recursos 28/29/30/31/32/79; `company_id` 5 (ver `CALIBRACION.md`).
 4. Punto de restauracion en Odoo/Git y autorizacion expresa de Marlon.
 5. Ensayo en la base de staging antes de produccion.
-6. Reglas 167/169 leidas a nivel de automatizacion (activas, al crear/editar); falta leer el codigo de sus acciones. Crear un turno de habitacion generara un espejo de Casa.
+6. ~~Reglas 167/169~~ LEIDAS (acciones 1853/1855): exigen `state='published'`, omiten el espejo ante cualquier solape. Crear un turno de habitacion publicado genera un espejo de Casa del mismo intervalo.
+6b. Granularidad: se mantiene un turno por noche; el modo por estancia queda disponible pero bloqueado ante `AUTOMATION_169_MIRROR_GAP`.
 7. Interruptor de apagado (`writesEnabled`) en variable de entorno, apagado por defecto.
 
 ## Piloto 161419736 (301, 26-27 oct 2026)

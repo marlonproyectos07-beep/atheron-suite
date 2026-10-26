@@ -21,7 +21,7 @@ test('PILOTO 161419736 (301, 26-27 oct): exactamente un turno propuesto en rol 3
     ['CREATE_SLOT', 37, '2026-10-26', 'SMOOBU-161419736:301:2026-10-26', 'PENDING_APPROVAL', false]);
   assert.equal(p.startUtc, '2026-10-26T20:00:00.000Z'); // 15:00 Bogota, como los turnos reales
   assert.equal(p.endUtc, '2026-10-27T16:00:00.000Z');   // 11:00 Bogota del dia siguiente
-  assert.equal(p.resourceIdPending, true);
+  assert.deepEqual([p.resourceId, p.resourceIdPending, p.companyId, p.state], [31, false, 5, 'published']); // verificado en Odoo
   assert.equal(r.conflicts.length, 0);
   // el turno de Casa (39648) de esa noche es un espejo de 201/302, no una reserva de Casa
   assert.deepEqual(r.warnings, [{ code: 'CASA_SLOT_TREATED_AS_MIRROR', key: p.externalKey, slotIds: [39648] }]);
