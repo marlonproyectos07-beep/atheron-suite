@@ -46,17 +46,19 @@ const toMs = (v) => (typeof v === 'number' ? v : Date.parse(String(v).includes('
 const slotMirrorState = (all, id) => all.find((x) => x.id === id)?.mirror;
 
 /** Acepta un registro crudo de planning.slot (JSON-2) o uno ya normalizado. */
-export function normalizeSlot(rec, { keyField = 'name' } = {}) {
+export function normalizeSlot(rec, { keyField = 'name', decodeMap = null } = {}) {
   const role = Array.isArray(rec.role_id) ? rec.role_id[0] : (rec.role_id ?? rec.roleId);
   const text = rec[keyField] === false || rec[keyField] == null ? '' : String(rec[keyField]);
   const m = KEY_RE.exec(text);
   const sm = m ? null : STAY_KEY_RE.exec(text);
+  const opaque = /^SM-[0-9a-f]{16}$/.test(text.trim()) ? text.trim() : null; // token opaco (opaque-key.mjs)
   return {
     id: rec.id,
     roleId: Number(role),
     start: toMs(rec.start_datetime ?? rec.start),
     end: toMs(rec.end_datetime ?? rec.end),
-    key: 'key' in rec ? rec.key : (m ? `SMOOBU-${m[1]}:${m[2]}:${m[3]}` : (sm ? `SMOOBU-${sm[1]}:${sm[2]}` : null)),
+    key: 'key' in rec ? rec.key : (opaque ? (decodeMap?.get(opaque) ?? null) : (m ? `SMOOBU-${m[1]}:${m[2]}:${m[3]}` : (sm ? `SMOOBU-${sm[1]}:${sm[2]}` : null))),
+    opaqueUnknown: Boolean(opaque && !decodeMap?.get(opaque)),
     active: rec.active !== false,
     blockRef: rec[ODOO_FACTS.mirrorMarkerField] ? String(rec[ODOO_FACTS.mirrorMarkerField]) : (rec.blockRef ?? null),
     checkinState: rec[ODOO_FACTS.checkinStateField] ?? rec.checkinState ?? null,
@@ -129,9 +131,10 @@ export function reconcile(opts) {
   return reconcileNights(opts);
 }
 
-function reconcileNights({ bookings, slots, nightWindow = defaultNightWindow, minOverlapMinutes = 60, keyField = 'name', roleResources = ODOO_FACTS.roleResources, coverGaps = false }) {
+function reconcileNights({ bookings, slots, nightWindow = defaultNightWindow, minOverlapMinutes = 60, keyField = 'name', roleResources = ODOO_FACTS.roleResources, coverGaps = false, keyCodec = null }) {
   const out = { proposals: [], matched: [], conflicts: [], warnings: [], ignored: [] };
-  const all = slots.map((s) => normalizeSlot(s, { keyField })).filter((s) => s.active);
+  const all = slots.map((s) => normalizeSlot(s, { keyField, decodeMap: keyCodec?.decode })).filter((s) => s.active);
+  for (const s of all) if (s.opaqueUnknown) out.warnings.push({ code: 'UNKNOWN_OPAQUE_TOKEN', slotId: s.id, hint: 'turno con token opaco que no corresponde a ninguna reserva consultada: no se toca' });
   const minOverlap = minOverlapMinutes * 60000;
 
   // 1) Indice de turnos con clave; duplicados se reportan y NUNCA se borran solos.
@@ -185,7 +188,7 @@ function reconcileNights({ bookings, slots, nightWindow = defaultNightWindow, mi
       if (ex && ex.length === 1 && Math.abs(ex[0].start - a) < 60000 && Math.abs(ex[0].end - b) < 60000) { out.matched.push({ key: coverKey, slotIds: [ex[0].id] }); return; }
       if (ex) { out.warnings.push({ code: 'COVER_SLOT_DIFFERS', key: coverKey, slotIds: ex.map((x) => x.id) }); return; }
       out.proposals.push(proposal('COVER_CASA_GAP', {
-        externalKey: coverKey, stayId: stayP, forKey: slotKey(d.reservationId, d.unit.unit, d.night), night: d.night,
+        externalKey: coverKey, nameValue: keyCodec ? keyCodec.encode(coverKey) : coverKey, stayId: stayP, forKey: slotKey(d.reservationId, d.unit.unit, d.night), night: d.night,
         roleId: CASA_ROLE, resourceId: roleResources[CASA_ROLE] ?? null, companyId: ODOO_FACTS.companyId, state: ODOO_FACTS.slotState,
         startUtc: iso(a), endUtc: iso(b), blockRef: coverKey, status: 'BLOCKED_UNTIL_STAGING_PROOF', autoApply: false,
         requiresStagingProof: ['otras automatizaciones sobre planning.slot (12, 22, 55, 157, 164, 170, 171) no producen efectos laterales con un turno marcado', 'el calculo real de disponibilidad (Booking Engine / reglas ATHERON) cuenta el turno de cobertura como ocupado'],
@@ -263,7 +266,7 @@ function reconcileNights({ bookings, slots, nightWindow = defaultNightWindow, mi
     }
     if (coverFor) wantCovers(d, coverFor);
     out.proposals.push(proposal('CREATE_SLOT', {
-      externalKey: key, stayId: stayId(d.reservationId), reservationId: d.reservationId, unit: d.unit.unit,
+      externalKey: key, nameValue: keyCodec ? keyCodec.encode(key) : key, stayId: stayId(d.reservationId), reservationId: d.reservationId, unit: d.unit.unit,
       roleId: d.unit.odooRoleId, night: d.night, startUtc: new Date(ws).toISOString(), endUtc: new Date(we).toISOString(),
       resourceId: roleResources[d.unit.odooRoleId] ?? null, resourceIdPending: roleResources[d.unit.odooRoleId] == null,
       companyId: ODOO_FACTS.companyId, state: ODOO_FACTS.slotState,
@@ -301,9 +304,10 @@ function reconcileNights({ bookings, slots, nightWindow = defaultNightWindow, mi
  * (propuesta); nunca se borra, archiva ni desasigna nada: las liberaciones son
  * `RELEASE_SLOT` con `autoApply:false` y mecanismo por decidir.
  */
-function reconcileStays({ bookings, slots, nightWindow = defaultNightWindow, minOverlapMinutes = 60, keyField = 'name', roleResources = ODOO_FACTS.roleResources }) {
+function reconcileStays({ bookings, slots, nightWindow = defaultNightWindow, minOverlapMinutes = 60, keyField = 'name', roleResources = ODOO_FACTS.roleResources, keyCodec = null }) {
   const out = { proposals: [], matched: [], conflicts: [], warnings: [], ignored: [] };
-  const all = slots.map((s) => normalizeSlot(s, { keyField })).filter((s) => s.active);
+  const all = slots.map((s) => normalizeSlot(s, { keyField, decodeMap: keyCodec?.decode })).filter((s) => s.active);
+  for (const s of all) if (s.opaqueUnknown) out.warnings.push({ code: 'UNKNOWN_OPAQUE_TOKEN', slotId: s.id, hint: 'turno con token opaco que no corresponde a ninguna reserva consultada: no se toca' });
   const minOverlap = minOverlapMinutes * 60000;
   const keyed = new Map();
   for (const s of all) if (s.key && STAY_KEY_RE.test(s.key) && !KEY_RE.test(s.key)) keyed.set(s.key, [...(keyed.get(s.key) ?? []), s]);
@@ -372,7 +376,7 @@ function reconcileStays({ bookings, slots, nightWindow = defaultNightWindow, min
       }
     }
     if (blocked.length) { out.conflicts.push({ key, reservationId: d.reservationId, unit: d.unit.unit, nights: blocked }); continue; }
-    const base = { externalKey: key, stayId: stay, reservationId: d.reservationId, unit: d.unit.unit, roleId: d.unit.odooRoleId,
+    const base = { externalKey: key, nameValue: keyCodec ? keyCodec.encode(key) : key, stayId: stay, reservationId: d.reservationId, unit: d.unit.unit, roleId: d.unit.odooRoleId,
       firstNight: d.nights[0], lastNight: d.nights[d.nights.length - 1], nights: d.nights.length,
       startUtc: new Date(startMs).toISOString(), endUtc: new Date(endMs).toISOString(),
       resourceId: roleResources[d.unit.odooRoleId] ?? null, resourceIdPending: roleResources[d.unit.odooRoleId] == null,
@@ -406,7 +410,7 @@ export function simulateApply(slots, result, startId = 900000) {
     return u ? { ...s, start: Date.parse(u.startUtc), end: Date.parse(u.endUtc) } : s;
   });
   const created = result.proposals.filter((p) => p.op === 'CREATE_SLOT' || p.op === 'COVER_CASA_GAP').map((p) => ({
-    id: next++, roleId: p.roleId, start: Date.parse(p.startUtc), end: Date.parse(p.endUtc), key: p.externalKey, active: true,
+    id: next++, roleId: p.roleId, start: Date.parse(p.startUtc), end: Date.parse(p.endUtc), key: p.externalKey, name: p.nameValue, active: true,
     ...(p.op === 'COVER_CASA_GAP' ? { mirror: true, blockRef: p.blockRef } : {}),
   }));
   return [...kept, ...created];

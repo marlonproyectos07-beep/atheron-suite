@@ -1,0 +1,159 @@
+{
+ "_nota": "Resumen ANONIMIZADO del ensayo sin escrituras del 2026-10-26 (run 40407989596). Solo ids, roles, conteos y fechas; sin nombres ni valores de x_nobeds_id. La reserva del piloto es FICTICIA (900000001), distinta de 161419736.",
+ "run": "https://github.com/marlonproyectos07-beep/atheron-suite/actions/runs/40407989596",
+ "roles": {
+  "CASA": {
+   "role": 69,
+   "resource": 79
+  },
+  "201": {
+   "role": 29,
+   "resource": 28
+  },
+  "202": {
+   "role": 19,
+   "resource": 29
+  },
+  "203": {
+   "role": 30,
+   "resource": 30
+  },
+  "301": {
+   "role": 37,
+   "resource": 31
+  },
+  "302": {
+   "role": 18,
+   "resource": 32
+  },
+  "allRoomOffers": true,
+  "allHaveNobedsRoomMapped": true
+ },
+ "slotsWindow": {
+  "from": "2026-09-11",
+  "to": "2027-01-24",
+  "count": 166,
+  "allPublished": true,
+  "withNobedsId": 0,
+  "mirrorsWithBloqueoRef": {
+   "CASA": 37,
+   "201": 1,
+   "202": 1,
+   "203": 1,
+   "301": 1,
+   "302": 1
+  },
+  "realBookingsWithoutRef": {
+   "201": 25,
+   "202": 20,
+   "203": 26,
+   "301": 22,
+   "302": 30,
+   "CASA": 1
+  }
+ },
+ "recurrenceNights": {
+  "pickup": 15,
+  "return": 11
+ },
+ "websiteTimezone": "NO_LEGIBLE",
+ "bookingEngine": {
+  "offers": 6,
+  "availabilityRows": 680,
+  "pendingRecompute": 0,
+  "resourceLeaves": 0
+ },
+ "icalFeeds": {
+  "casaFeedBytes": 101008,
+  "emptyFeedBytes": 110,
+  "lastRefresh": "2026-10-26 21:50:00",
+  "public": true,
+  "cadenceMinutes": 5
+ },
+ "partner7": {
+  "exists": true,
+  "genericLooking": false
+ },
+ "actionsUsingGuestField": [
+  1651,
+  1652,
+  1654,
+  1648
+ ],
+ "candidates": {
+  "pastFree": [
+   "2026-10-15",
+   "2026-10-13",
+   "2026-10-12"
+  ],
+  "futureFreeCount": 85,
+  "futureSellableCount": 85
+ },
+ "predictions": {
+  "P0_draft_past_2026-10-15": {
+   "created": 1,
+   "mirror": null,
+   "feedsChanged": [],
+   "firedAutomations": [
+    12,
+    22
+   ],
+   "availabilityBookedChange": [
+    {
+     "offer": 12136,
+     "date": "2026-10-15",
+     "from": 0,
+     "to": 1
+    }
+   ],
+   "sideEffects": {
+    "saleOrders": 0,
+    "partners": 0,
+    "emails": 0
+   }
+  },
+  "P1_published_past_2026-10-15": {
+   "created": 2,
+   "mirror": "Casa 20:00Z->16:00Z",
+   "feedsChanged": [
+    "301:+1",
+    "CASA:+2"
+   ],
+   "firedAutomations": [
+    12,
+    22,
+    169
+   ],
+   "icalWithinMinutes": 5,
+   "keyVisibleInPublicIcal": true,
+   "availabilityBookedChange": [
+    {
+     "offer": 12136
+    },
+    {
+     "offer": 58223
+    }
+   ],
+   "echo": "no descartable"
+  },
+  "P1_published_future_2026-11-01": {
+   "created": 2,
+   "feedsChanged": [
+    "301:+1",
+    "CASA:+2"
+   ],
+   "commerciallySellable": true
+  }
+ },
+ "authorization": {
+  "P0": "AUTORIZABLE_CON_APROBACION_EXPRESA",
+  "P1": "PILOTO_PRODUCTIVO_NO_SEGURO",
+  "P2": "PILOTO_PRODUCTIVO_NO_SEGURO",
+  "P3": "BLOQUEADA",
+  "P4": "BLOQUEADA",
+  "P5": "INEFICAZ_Y_BLOQUEADA",
+  "P6": "SOLO_MANUAL_NUNCA_AUTOMATICA",
+  "P7": "PROHIBIDA",
+  "P8": "BLOQUEADA"
+ }
+}

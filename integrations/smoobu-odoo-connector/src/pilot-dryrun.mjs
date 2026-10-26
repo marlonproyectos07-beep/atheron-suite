@@ -138,7 +138,7 @@ export function selectCandidates({ state, today = new Date().toISOString().slice
 }
 
 /** Prediccion (por lectura del codigo, ATH-DEV-016) de lo que dispararia crear UN turno ficticio de la habitacion 301. */
-export function predictCreate({ state, night, variant, unit = '301', reservationId = FICTIONAL_RESERVATION_ID, guestPlaceholder = false }) {
+export function predictCreate({ state, night, variant, unit = '301', reservationId = FICTIONAL_RESERVATION_ID, guestPlaceholder = false, opaqueToken = null }) {
   const u = UNITS.find((x) => x.unit === unit); const [ws, we] = defaultNightWindow(night);
   const roleRec = state.roles.find((r) => r.id === u.odooRoleId);
   const casaRole = state.roles.find((r) => /completa/i.test(r.name || ''));
@@ -172,13 +172,13 @@ export function predictCreate({ state, night, variant, unit = '301', reservation
   const after = [...before, { ...hypo, id: -1 }, ...(mirror?.created ? [{ id: -2, roleId: casaRole.id, resourceId: casaRole.resourceIds[0], start: ws, end: we, state: 'published', blockRef: '-1', hasNobeds: false }] : [])];
   const fb = feedMembership(before, state.roles); const fa = feedMembership(after, state.roles);
   const feedsChanged = Object.keys(fa).filter((r) => JSON.stringify(fa[r]) !== JSON.stringify(fb[r])).map((r) => ({ roleId: Number(r), unit: unitForOdooRole(Number(r))?.unit, addedEvents: fa[r].filter((i) => !fb[r].includes(i)).length }));
-  const guestLabel = guestPlaceholder ? '(nombre del huesped marcador)' : key;
+  const guestLabel = opaqueToken ?? (guestPlaceholder ? '(nombre del huesped marcador)' : key);
   const date = night; const offers = state.offers ?? [];
   const avBefore = availabilityFor({ slots: before, offers, dates: [date] }); const avAfter = availabilityFor({ slots: after, offers, dates: [date] });
   const avDiff = avAfter.map((a, i) => ({ ...a, bookedBefore: avBefore[i].booked })).filter((a) => a.booked !== a.bookedBefore);
   return {
     variant, night, key, created, triggers, mirror, feedsChanged: published ? feedsChanged : [],
-    ical: { reachesPublicFeedWithinMinutes: published ? 5 : null, summaryWouldShow: published ? `ODOO <unidad> - ${guestLabel}` : null, keyVisibleInPublicIcal: published && !guestPlaceholder },
+    ical: { reachesPublicFeedWithinMinutes: published ? 5 : null, summaryWouldShow: published ? `ODOO <unidad> - ${guestLabel}` : null, keyVisibleInPublicIcal: published && !guestPlaceholder && !opaqueToken, opaqueToken: Boolean(opaqueToken) },
     availabilityChange: avDiff,
     sideEffects: { saleOrders: 0, partners: 0, emails: 0, webhooksFromOdoo: 0 },
     echoWithSmoobu: published ? 'NO DESCARTABLE: el turno es "directo" (sin x_nobeds_id), entra en el .ics que consume NOBEDS/Worker; si Smoobu o un canal conectado a Smoobu importa ese calendario, la reserva volveria como bloqueo. Mitigacion: filtro anti-eco del conector y marcador ODOO' : 'no aplica: un borrador no entra en el iCal',

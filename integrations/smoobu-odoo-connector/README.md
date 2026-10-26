@@ -57,6 +57,9 @@ Modo por noche predeterminado; el de estancia exige `allowStayMode:true`. Noches
 ## Auditoria de automatizaciones (ATH-DEV-016)
 `npm run audit` (workflow `smoobu-odoo-audit`, solo lectura). Resultados: `AUDITORIA-AUTOMATIZACIONES.md`; plan de staging: `STAGING-PLAN.md`; lista de neutralizacion: `src/staging-plan.mjs`.
 
+## Piloto sobre Odoo original (ATH-DEV-017)
+`npm run pilot-dryrun` (workflow `smoobu-odoo-pilot-dryrun`, solo `search_read` y `fields_get`). Informe, comparacion ANTES/PROPUESTO/RIESGOS, candidato y matriz de autorizaciones: `PILOTO-ODOO-ORIGINAL.md`. Piezas: `src/pilot-dryrun.mjs`, `src/opaque-key.mjs`, `src/echo-guard.mjs`, `src/authorization-matrix.mjs`.
+
 ## Mapa
 201: 3557506 -> rol 29 | 202: 3557511 -> 19 | 203: 3557516 -> 30 | 301: 3557521 -> 37 | 302: 3557526 -> 18 | Casa Completa: 3557501 -> 69
 

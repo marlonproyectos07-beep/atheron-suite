@@ -50,3 +50,9 @@ Nunca: borrado fisico, edicion de turnos sin clave `SMOOBU-`, escritura en `sale
 - Auditoria completa de automatizaciones y crons: `AUDITORIA-AUTOMATIZACIONES.md`. **Draft y cancelled no liberan** (Booking Engine y iCal los ignoran); borrar es la unica via nativa y arrastra espejos. La liberacion automatica sigue prohibida y bloqueada.
 - `UPDATE_SLOT` (solo modo por estancia, ya desactivado) queda `BLOCKED_STALE_MIRROR_RISK`: 167/169 no actualizan espejos.
 - Puertas nuevas antes de cualquier escritura de produccion: decision sobre la clave visible en el .ics publico, decision anti-eco (el turno llega a las OTAs en <= 5 min por el cron 147) y staging aislado segun `STAGING-PLAN.md`.
+
+
+## Actualizacion ATH-DEV-017 (sin staging, sobre Odoo original)
+- Decision del CEO: no duplicar la base ni crear staging. Ensayo real de solo lectura y prediccion de efectos: `PILOTO-ODOO-ORIGINAL.md`.
+- Unico candidato real evaluable: P0 (turno BORRADOR de 301, noche pasada 2026-10-15, reserva ficticia 900000001), autorizable solo con aprobacion expresa. P1/P2 (publicados) son **piloto productivo NO SEGURO** por el cron 147 y el eco no descartable.
+- Identificador privado: token opaco HMAC en `name` (`src/opaque-key.mjs`, requiere el secreto `SMOOBU_KEY_SAL`, no configurado). No se usa `x_guest_id`.
