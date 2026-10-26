@@ -10,6 +10,7 @@
     "simulate": "node scripts/simulate-pilot.mjs",
     "calibrate": "node scripts/calibrate.mjs",
     "calibrate2": "node scripts/calibrate2.mjs",
-    "calibrate3": "node scripts/calibrate3.mjs"
+    "calibrate3": "node scripts/calibrate3.mjs",
+    "audit": "node scripts/audit.mjs"
   }
 }
