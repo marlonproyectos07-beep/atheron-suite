@@ -207,3 +207,34 @@ export async function runP0({ reader, writer = null, cfg, mode = 'precheck', sle
   if (!clean) report.note = 'el turno se borro pero algun contador no volvio al estado previo: revisar por lectura';
   return report;
 }
+
+
+/**
+ * EVIDENCIA de solo lectura sobre un turno P0 ya creado (ATH-DEV-018, tras un efecto inesperado).
+ * No escribe nada. Solo ids, estados, fechas, conteos y banderas; el nombre se reduce a "es el marcador".
+ */
+export async function collectEvidence({ reader, slotId }) {
+  const fields = ['id', 'role_id', 'resource_id', 'company_id', 'state', 'start_datetime', 'end_datetime', 'name', 'x_bloqueo_ref', 'x_nobeds_id', 'x_guest_id', 'sale_line_id', 'create_date', 'write_date', 'x_checkin_state'];
+  const row = (r) => ({ id: r.id, role: idOf(r.role_id), resource: idOf(r.resource_id), company: idOf(r.company_id), state: r.state, start: r.start_datetime, end: r.end_datetime,
+    isP0Marker: r.name === P0_MARKER_NAME, hasBloqueoRef: Boolean(r.x_bloqueo_ref), bloqueoRefEqualsP0Id: r.x_bloqueo_ref === String(slotId), hasNobeds: Boolean(r.x_nobeds_id), hasGuest: Boolean(idOf(r.x_guest_id)), hasSaleLine: Boolean(idOf(r.sale_line_id)), checkin: r.x_checkin_state || null, created: r.create_date, written: r.write_date });
+  const out = { slotId };
+  out.slot = (await reader.searchRead('planning.slot', [['id', '=', slotId]], fields)).map(row);
+  out.mirrors = (await reader.searchRead('planning.slot', [['x_bloqueo_ref', '=', String(slotId)]], fields)).map(row);
+  out.windowSlots = (await reader.searchRead('planning.slot', [['role_id', 'in', [...SIX_ROLE_IDS]], ['start_datetime', '<', P0_WINDOW.end], ['end_datetime', '>', P0_WINDOW.start]], ['id', 'role_id', 'state'])).map((r) => ({ id: r.id, role: idOf(r.role_id), state: r.state }));
+  const snap = await snapshot(reader, slotId);
+  out.counts = snap.counts; out.availability = snap.availability; out.feeds = snap.feeds; out.mirrorsOfSlot = snap.mirrorsOfSlot; out.messagesOfSlot = snap.messagesOfSlot;
+  out.mailMessagesForMirrors = [];
+  for (const m of out.mirrors) out.mailMessagesForMirrors.push({ id: m.id, messages: await reader.searchCount('mail.message', [['model', '=', 'planning.slot'], ['res_id', '=', m.id]]) });
+  // posible causa de la publicacion automatica: atributos del rol (solo los que existan)
+  try {
+    const f = await reader.fieldsGet('planning.role', ['type']);
+    const want = ['sync_shift_rental', 'x_is_a_room_offer', 'x_casa'].filter((k) => f[k]);
+    const r = (await reader.searchRead('planning.role', [['id', '=', 37]], ['id', ...want]))[0] ?? {};
+    out.roleAttributes = Object.fromEntries(want.map((k) => [k, k === 'x_casa' ? Boolean(r[k]) : r[k]]));
+  } catch { out.roleAttributes = 'NO_LEGIBLE'; }
+  try {
+    const f = await reader.fieldsGet('planning.slot', ['type', 'readonly', 'store', 'selection']);
+    out.stateFieldMeta = { readonly: Boolean(f.state?.readonly), store: f.state?.store !== false, selection: (f.state?.selection ?? []).map((x) => x[0]) };
+  } catch { out.stateFieldMeta = 'NO_LEGIBLE'; }
+  return out;
+}

@@ -3,6 +3,7 @@
 # Autorizado expresamente por el CEO: crear y retirar UN turno, nada mas.
 #
 #  - push (solo al editar este archivo) y workflow_dispatch con modo "precheck": SOLO LECTURA.
+#  - modo "evidence": SOLO LECTURA de un turno P0 ya creado.
 #  - modo "execute": unicamente por workflow_dispatch, con la frase de autorizacion exacta en "confirm".
 #  - No llama a Smoobu. No toca reglas, crons ni ajustes. Un solo escritor a la vez.
 # Usa los secretos/variables ya configurados: ODOO_API_KEY, ODOO_BASE_URL, ODOO_DATABASE.
@@ -17,7 +18,11 @@ on:
         required: true
         default: 'precheck'
         type: choice
-        options: [precheck, execute]
+        options: [precheck, evidence, execute]
+      slot_id:
+        description: 'Id del turno P0 (solo para evidence, solo lectura)'
+        required: false
+        default: ''
       confirm:
         description: 'Frase de autorizacion (solo para execute)'
         required: false
@@ -55,4 +60,5 @@ jobs:
           ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
           P0_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'precheck' }}
           P0_AUTHORIZATION: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm || '' }}
+          P0_EVIDENCE_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.slot_id || '' }}
         run: npm run --silent p0

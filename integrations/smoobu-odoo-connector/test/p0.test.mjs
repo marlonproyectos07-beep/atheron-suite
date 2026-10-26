@@ -148,3 +148,13 @@ test('el unico lugar con capacidad de escritura es odoo-json2-p0-client.mjs y el
   assert.ok(!/writer\.\w+\(/.test(run.replace(/writer\.(createExactlyOne|adoptCreatedId|unlinkOwn|createdIds)/g, '')), 'p0-run usa metodos del escritor no previstos');
   assert.equal(P0_MARKER_NAME.includes('161419736'), false);
 });
+
+test('evidencia (solo lectura) de un turno P0 ya creado: no emite ninguna escritura', async () => {
+  const { collectEvidence } = await import('../src/p0-run.mjs');
+  const r = rig();
+  const id = await r.writer.createExactlyOne({ ...P0_VALS });
+  const before = r.st.calls.filter((c) => /create|unlink|write/.test(c)).length;
+  const ev = await collectEvidence({ reader: r.reader, slotId: id });
+  assert.equal(ev.slot[0].isP0Marker, true); assert.equal(ev.mirrors.length, 0);
+  assert.equal(r.st.calls.filter((c) => /create|unlink|write/.test(c)).length, before);
+});
