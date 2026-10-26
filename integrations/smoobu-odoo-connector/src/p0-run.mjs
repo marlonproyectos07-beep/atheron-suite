@@ -225,6 +225,12 @@ export async function collectEvidence({ reader, slotId }) {
   out.counts = snap.counts; out.availability = snap.availability; out.feeds = snap.feeds; out.mirrorsOfSlot = snap.mirrorsOfSlot; out.messagesOfSlot = snap.messagesOfSlot;
   out.mailMessagesForMirrors = [];
   for (const m of out.mirrors) out.mailMessagesForMirrors.push({ id: m.id, messages: await reader.searchCount('mail.message', [['model', '=', 'planning.slot'], ['res_id', '=', m.id]]) });
+  // atribucion de cambios en contadores: registros creados desde las 22:00 UTC (solo id, hora de creacion y, en correos, el estado)
+  try {
+    const since = '2026-10-26 22:00:00';
+    const rec = async (model, extra = []) => (await reader.searchRead(model, [['create_date', '>=', since]], ['id', 'create_date', ...extra], { limit: 50, order: 'id' })).map((r) => ({ id: r.id, created: r.create_date, ...(extra.includes('state') ? { state: r.state } : {}) }));
+    out.createdSince2200 = { saleOrders: await rec('sale.order'), partners: await rec('res.partner'), mailMail: await rec('mail.mail', ['state']) };
+  } catch (e) { out.createdSince2200 = { status: 'NO_LEGIBLE', code: e.code ?? 'UNKNOWN' }; }
   // exposicion publica: que .ics contienen ya el marcador (busqueda en el indice de texto del adjunto; no se lee el contenido)
   try {
     const hits = await reader.searchRead('ir.attachment', [['name', 'like', 'ical_atheron_role_'], ['res_model', '=', 'planning.role'], ['index_content', 'ilike', 'ATH-DEV-018 PRUEBA P0']], ['id', 'res_id', 'write_date', 'file_size']);
