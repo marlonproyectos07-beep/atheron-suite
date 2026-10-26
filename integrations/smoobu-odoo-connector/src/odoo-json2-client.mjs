@@ -1,7 +1,7 @@
 import { ConnectorError, httpError } from './errors.mjs';
 
 /** Metodos permitidos: solo lectura. Cualquier otro se rechaza antes de la red. */
-export const READ_METHODS = Object.freeze(new Set(['search_read', 'read', 'search', 'search_count', 'fields_get', 'name_search']));
+export const READ_METHODS = Object.freeze(new Set(['search_read', 'read', 'search', 'search_count', 'fields_get', 'name_search', 'context_get']));
 // modelos estandar (con punto) y modelos propios de Studio (x_..., sin punto)
 const MODEL_RE = /^(x_[a-z0-9_]+|[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+)$/;
 
@@ -23,6 +23,11 @@ export class OdooJson2Client {
 
   async call(model, method, params = {}) {
     if (!MODEL_RE.test(model) || !READ_METHODS.has(method)) throw new ConnectorError('ODOO_READ_ONLY_VIOLATION');
+    return this._request(model, method, params);
+  }
+
+  /** Peticion sin lista blanca: SOLO para subclases que imponen su propia guardia (P0WriteClient). */
+  async _request(model, method, params = {}) {
     let res;
     try {
       res = await this.fetch(`${this.baseUrl}/json/2/${model}/${method}`, {
@@ -45,6 +50,7 @@ export class OdooJson2Client {
   searchRead(model, domain, fields, { limit, offset, order } = {}) {
     return this.call(model, 'search_read', { domain, fields, ...(limit != null && { limit }), ...(offset != null && { offset }), ...(order && { order }) });
   }
+  searchCount(model, domain) { return this.call(model, 'search_count', { domain }); }
   fieldsGet(model, attributes = ['string', 'type', 'relation']) { return this.call(model, 'fields_get', { attributes }); }
   listRoles(fields = ['id', 'name']) { return this.searchRead('planning.role', [], fields); }
   listResources(fields = ['id', 'name', 'resource_type']) { return this.searchRead('resource.resource', [], fields); }

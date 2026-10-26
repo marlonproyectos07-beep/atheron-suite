@@ -1,0 +1,58 @@
+# ============================================================
+# PILOTO P0 (ATH-DEV-018) — UN planning.slot ficticio en BORRADOR, 301, noche pasada 2026-10-15.
+# Autorizado expresamente por el CEO: crear y retirar UN turno, nada mas.
+#
+#  - push (solo al editar este archivo) y workflow_dispatch con modo "precheck": SOLO LECTURA.
+#  - modo "execute": unicamente por workflow_dispatch, con la frase de autorizacion exacta en "confirm".
+#  - No llama a Smoobu. No toca reglas, crons ni ajustes. Un solo escritor a la vez.
+# Usa los secretos/variables ya configurados: ODOO_API_KEY, ODOO_BASE_URL, ODOO_DATABASE.
+# ============================================================
+name: smoobu-odoo-p0
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'precheck (solo lectura) o execute (crea y retira UN borrador)'
+        required: true
+        default: 'precheck'
+        type: choice
+        options: [precheck, execute]
+      confirm:
+        description: 'Frase de autorizacion (solo para execute)'
+        required: false
+        default: ''
+  push:
+    branches: [feature/ath-odoo-hotel-017-booking-airbnb-level1]
+    paths:
+      - '.github/workflows/smoobu-odoo-p0.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoobu-odoo-p0
+  cancel-in-progress: false
+
+jobs:
+  p0:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: integrations/smoobu-odoo-connector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pruebas unitarias
+        run: npm test
+      - name: P0
+        env:
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          P0_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'precheck' }}
+          P0_AUTHORIZATION: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm || '' }}
+        run: npm run --silent p0
