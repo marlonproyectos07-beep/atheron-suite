@@ -38,3 +38,22 @@ Modo `recover` del workflow `smoobu-odoo-p0` (codigo en `runRecovery`, probado c
 1. Un borrador no es posible en roles con `sync_shift_rental`: no existe una operacion de escritura de un turno que evite 169 y el iCal.
 2. Toda prediccion por lectura de codigo debe validarse antes de una escritura; faltaba leer `sync_shift_rental` y la logica de `create` de planning (no es una automatizacion visible).
 3. La API key actual es la de un administrador: crear un usuario tecnico de minimo privilegio antes de cualquier otra escritura.
+
+---
+# Recuperacion autorizada (frase `ATH-DEV-018-RETIRAR-39686-Y-SU-ESPEJO`) — 2026-10-26
+
+Ejecucion: [run 40412139111](https://github.com/marlonproyectos07-beep/atheron-suite/actions/runs/40412139111) (modo `recover`, 22:24:19 UTC). Verificacion de solo lectura: [run 40412860666](https://github.com/marlonproyectos07-beep/atheron-suite/actions/runs/40412860666) (22:29:53 UTC).
+
+**Comprobaciones previas (todas verdaderas):** 39686 era exactamente el piloto (rol 37, recurso 31, compania 5, 2026-10-15 20:00 -> 2026-10-16 16:00 UTC, marcador exacto, sin huesped/canal/pedido/`x_nobeds_id`/`x_bloqueo_ref`); 39687 era el unico turno con `x_bloqueo_ref='39686'` (rol 69, fechas identicas); no habia nada mas en la ventana.
+**Escritura:** un solo borrado, del id 39686. La regla 168 retiro el espejo 39687.
+
+| Comprobacion | Resultado (22:29:53 UTC) |
+|---|---|
+| 39686 y 39687 existen | **no** (ambos desaparecieron) |
+| Turnos totales / rol 37 | 601 / 85 = linea base |
+| Ventana 15-16 oct | vacia; sin espejos del id |
+| .ics publicos (301 y Casa) | **marcador ausente**; refrescados 22:28:13 por el cron 147 (sin invocarlo); Casa 101 008 bytes = tamano previo al piloto |
+| Disponibilidad 301, 2026-10-15 | **booked sigue en 1 con recalculo pendiente** (y el 16 tambien marcado pendiente); aun no se ha ejecutado el recalculo del Booking Engine disparado por la automatizacion 23 |
+| Ventas / contactos / correos | +1 / +2 / +3 frente a la linea base, **creados entre 22:17 y 22:23, es decir despues de la creacion y ANTES de la retirada** (sin relacion con el turno: la cadena de codigo no crea ventas, contactos ni correos y el turno no tenia pedido). Los 3 correos estan en estado `exception` (no se enviaron). Parecen actividad real del negocio; no se puede probar causa por lectura |
+
+**Resultado: RECUPERACION PARCIAL.** Registros y feeds restaurados; falta solo que el Booking Engine recalcule la disponibilidad historica (contador de una fecha pasada). No se invoco ningun cron ni se toco nada mas. Siguiente paso sin intervencion: esperar el cron del Booking Engine y confirmar por lectura; si no se corrige, decision humana (recalculo desde Odoo) o autorizacion expresa.
