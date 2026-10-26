@@ -32,3 +32,9 @@ Nunca: borrado fisico, edicion de turnos sin clave `SMOOBU-`, escritura en `sale
 
 ## Piloto 161419736 (301, 26-27 oct 2026)
 `npm run simulate` produce exactamente un `CREATE_SLOT`: rol 37, 2026-10-26T20:00Z->2026-10-27T16:00Z, clave `SMOOBU-161419736:301:2026-10-26`, contra turnos reales anonimizados de Odoo. La reserva es sintetica; no es una lectura de Smoobu.
+
+
+## Actualizacion ATH-DEV-014
+- Operaciones adicionales **solo propuestas**: `COVER_CASA_GAP` (bloqueada hasta staging). `RELEASE_SLOT` y `UPDATE_SLOT` llevan `autoApply:false`; las liberaciones salen `BLOCKED_UNTIL_STAGING_PROOF`.
+- Lista minima de pruebas previas a produccion: `STAGING-TESTS.md`.
+- Ninguna escritura esta activa; no hay credencial de escritura configurada.

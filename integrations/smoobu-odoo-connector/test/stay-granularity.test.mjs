@@ -7,7 +7,7 @@ import { ODOO_FACTS } from '../src/odoo-facts.mjs';
 const real = JSON.parse(readFileSync(new URL('../fixtures/real-calibration-2026-10-26.json', import.meta.url)));
 const A = { 201: 3557506, 202: 3557511, 301: 3557521, CASA: 3557501 };
 const bk = (id, apt, arrival, departure, extra = {}) => ({ id, apartment: { id: apt }, arrival, departure, ...extra });
-const stay = (o) => reconcile({ granularity: 'stay', ...o });
+const stay = (o) => reconcile({ granularity: 'stay', allowStayMode: true, ...o });
 const night = (o) => reconcile({ granularity: 'night', ...o });
 const mk = (id, roleId, n0, n1, extra = {}) => ({ id, roleId, start: defaultNightWindow(n0)[0], end: defaultNightWindow(n1)[1], key: null, active: true, ...extra });
 
@@ -103,4 +103,8 @@ test('x_bloqueo_ref identifica espejos: Casa con marca no bloquea; Casa sin marc
 test('modo por noche sigue siendo el predeterminado', () => {
   const r = reconcile({ bookings: [bk(1, A[301], '2026-11-10', '2026-11-12')], slots: [] });
   assert.equal(r.proposals.length, 2); assert.match(r.proposals[0].externalKey, /^SMOOBU-1:301:2026-11-10$/);
+});
+
+test('el modo por estancia esta BLOQUEADO salvo aceptacion explicita', () => {
+  assert.throws(() => reconcile({ granularity: 'stay', bookings: [], slots: [] }), { code: 'STAY_MODE_DISABLED' });
 });

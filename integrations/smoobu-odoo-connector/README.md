@@ -51,6 +51,9 @@ Alternativa: levantar el entorno de Claude Code con red "Limited" + dominios per
 ## Motor de conciliacion (ATH-DEV-010, solo simulacion)
 `src/reconcile.mjs`: reservas Smoobu + `planning.slot` leidos de Odoo -> propuestas `CREATE_SLOT` / `RELEASE_SLOT`, conflictos y advertencias; idempotente y sin escrituras. `npm run simulate` ejecuta el piloto 161419736. Modo `granularity: 'night'` (predeterminado) o `'stay'` (ver decision en `CALIBRACION.md`; `npm run simulate -- --stay`). Hechos de Odoo verificados en `src/odoo-facts.mjs`. Plan de escrituras y puertas: `WRITE-PLAN.md`. Calibrado con turnos reales de Odoo (`CALIBRACION.md`): horario 15:00->11:00 Bogota, espejos de las reglas 167/169. Limitacion principal: no ha visto reservas reales (Smoobu 401). `npm run calibrate` (solo lectura; workflow `smoobu-odoo-calibrate`) repite la lectura anonimizada.
 
+## Blindaje (ATH-DEV-014)
+Modo por noche predeterminado; el de estancia exige `allowStayMode:true`. Noches sin bloqueo espejo correcto se rechazan (`MIRROR_GAP_*`); `coverGaps` (apagado) propone cobertura de Casa bloqueada hasta staging; liberaciones solo de turnos propios y bloqueadas (`RELEASE_UNLOCKED=false`). Politica y riesgos: `CALIBRACION.md`. Pruebas de staging: `STAGING-TESTS.md`.
+
 ## Mapa
 201: 3557506 -> rol 29 | 202: 3557511 -> 19 | 203: 3557516 -> 30 | 301: 3557521 -> 37 | 302: 3557526 -> 18 | Casa Completa: 3557501 -> 69
 

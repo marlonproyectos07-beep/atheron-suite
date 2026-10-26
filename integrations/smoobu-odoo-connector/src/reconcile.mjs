@@ -1,5 +1,5 @@
 import { stayId, nightlySlots } from './sync-plan.mjs';
-import { ODOO_FACTS } from './odoo-facts.mjs';
+import { ODOO_FACTS, RELEASE_UNLOCKED, RELEASE_MECHANISM_ANALYSIS, UNVERIFIED_SLOT_FIELDS } from './odoo-facts.mjs';
 import { unitForSmoobuApartment, unitForOdooRole, unitForName, isExcludedApartment, conflictsWith, PHYSICAL_UNITS, UNITS } from './unit-map.mjs';
 
 /**
@@ -58,18 +58,78 @@ export function normalizeSlot(rec, { keyField = 'name' } = {}) {
     end: toMs(rec.end_datetime ?? rec.end),
     key: 'key' in rec ? rec.key : (m ? `SMOOBU-${m[1]}:${m[2]}:${m[3]}` : (sm ? `SMOOBU-${sm[1]}:${sm[2]}` : null)),
     active: rec.active !== false,
+    blockRef: rec[ODOO_FACTS.mirrorMarkerField] ? String(rec[ODOO_FACTS.mirrorMarkerField]) : (rec.blockRef ?? null),
+    checkinState: rec[ODOO_FACTS.checkinStateField] ?? rec.checkinState ?? null,
     mirror: rec.mirror !== undefined ? rec.mirror : (rec[ODOO_FACTS.mirrorMarkerField] === undefined ? undefined : Boolean(rec[ODOO_FACTS.mirrorMarkerField])),
   };
 }
 
 const overlapMs = (aS, aE, bS, bE) => Math.max(0, Math.min(aE, bE) - Math.max(aS, bS));
+const CASA_ROLE = unitForName('CASA').odooRoleId;
+const unitOfKey = (u) => (u.startsWith('COVER') ? 'CASA' : u);
+
+/** Subintervalos de [ws,we) que NO cubre ningun turno de la lista (tolerancia 1 min). */
+export function uncoveredIntervals(ws, we, list) {
+  const spans = list.map((x) => [Math.max(x.start, ws), Math.min(x.end, we)]).filter(([a, b]) => b > a).sort((a, b) => a[0] - b[0]);
+  const gaps = []; let cur = ws;
+  for (const [a, b] of spans) { if (a - cur > 60000) gaps.push([cur, a]); cur = Math.max(cur, b); }
+  if (we - cur > 60000) gaps.push([cur, we]);
+  return gaps;
+}
+const iso = (ms) => new Date(ms).toISOString();
+
+/**
+ * Regla 169 (habitacion -> Casa): crea el espejo SOLO si Casa no tiene ningun turno solapado. Devuelve los
+ * tramos de la ventana que Casa Completa dejaria sin bloquear. [] = bloqueo correcto.
+ */
+export function casaMirrorGap(all, ws, we, stay) {
+  const overlapping = all.filter((c) => c.roleId === CASA_ROLE && !(c.key && c.key.startsWith(`${stay}:COVER`)) && overlapMs(c.start, c.end, ws, we) > 0);
+  return overlapping.length ? uncoveredIntervals(ws, we, overlapping) : [];
+}
+
+/** Regla 167 (Casa -> habitaciones): omite una habitacion con cualquier solape. Devuelve habitaciones con bloqueo incompleto. */
+export function roomMirrorGaps(all, ws, we, stay) {
+  const out = [];
+  for (const u of PHYSICAL_UNITS) {
+    const role = unitForName(u).odooRoleId;
+    const overlapping = all.filter((x) => x.roleId === role && !(x.key && x.key.startsWith(`${stay}:`)) && overlapMs(x.start, x.end, ws, we) > 0);
+    if (!overlapping.length) continue;
+    const gaps = uncoveredIntervals(ws, we, overlapping);
+    if (gaps.length) out.push({ unit: u, uncovered: gaps.map(([a, b]) => [iso(a), iso(b)]) });
+  }
+  return out;
+}
+
+/** Propuesta de liberacion de un turno PROPIO (con clave). Bloqueada hasta prueba en staging. */
+function releaseProposal(s, key, all, reason, out) {
+  if (s.checkinState === 'checked_in' || s.checkinState === 'checked_out') {
+    out.warnings.push({ code: 'RELEASE_REFUSED_GUEST_PRESENT_OR_DEPARTED', key, slotId: s.id, checkinState: s.checkinState });
+    return;
+  }
+  const dependentMirrors = all.filter((m) => m.blockRef === String(s.id)).map((m) => ({
+    slotId: m.id, roleId: m.roleId, startUtc: iso(m.start), endUtc: iso(m.end),
+    sharedWith: all.filter((o) => o.id !== m.id && o.id !== s.id && o.roleId !== CASA_ROLE && o.roleId !== s.roleId && overlapMs(o.start, o.end, m.start, m.end) > 0).map((o) => o.id),
+  }));
+  out.proposals.push(proposal('RELEASE_SLOT', {
+    externalKey: key, slotId: s.id, roleId: s.roleId, reason, autoApply: false, ownSlot: true,
+    status: RELEASE_UNLOCKED ? 'PENDING_APPROVAL' : 'BLOCKED_UNTIL_STAGING_PROOF',
+    mechanism: 'TO_BE_DECIDED', candidates: Object.keys(RELEASE_MECHANISM_ANALYSIS),
+    dependentMirrors, mirrorPolicy: 'NUNCA_LIBERAR_AUTOMATICAMENTE_REVISION_MANUAL',
+  }));
+  if (dependentMirrors.length) out.warnings.push({ code: 'MIRROR_REMAINS_AFTER_RELEASE', key, slotId: s.id, mirrors: dependentMirrors.map((m) => ({ slotId: m.slotId, shared: m.sharedWith.length > 0 })) });
+}
 const proposal = (op, extra) => ({ op, status: 'PENDING_APPROVAL', writesEnabled: false, ...extra });
 
 export function reconcile(opts) {
-  return opts.granularity === 'stay' ? reconcileStays(opts) : reconcileNights(opts);
+  if (opts.granularity === 'stay') {
+    // Bloqueado: tiene brechas con la regla 169 (ver CALIBRACION.md). Solo para estudio, con aceptacion explicita.
+    if (opts.allowStayMode !== true) { const e = new Error('STAY_MODE_DISABLED'); e.code = 'STAY_MODE_DISABLED'; throw e; }
+    return reconcileStays(opts);
+  }
+  return reconcileNights(opts);
 }
 
-function reconcileNights({ bookings, slots, nightWindow = defaultNightWindow, minOverlapMinutes = 60, keyField = 'name', roleResources = ODOO_FACTS.roleResources }) {
+function reconcileNights({ bookings, slots, nightWindow = defaultNightWindow, minOverlapMinutes = 60, keyField = 'name', roleResources = ODOO_FACTS.roleResources, coverGaps = false }) {
   const out = { proposals: [], matched: [], conflicts: [], warnings: [], ignored: [] };
   const all = slots.map((s) => normalizeSlot(s, { keyField })).filter((s) => s.active);
   const minOverlap = minOverlapMinutes * 60000;
@@ -113,10 +173,35 @@ function reconcileNights({ bookings, slots, nightWindow = defaultNightWindow, mi
       .concat(all.filter((s) => s.key && !exceptKeys.has(s.key) && s.roleId === roleId && overlapMs(s.start, s.end, ws, we) >= minOverlap));
   };
 
+  // Cobertura de huecos de la regla 169 SIN tocarla: un turno de Casa propio con x_bloqueo_ref no vacio
+  // (las reglas no lo procesan) que cubre exactamente los tramos que el espejo omitido dejaria libres.
+  const coverWanted = new Set();
+  const wantCovers = (d, gaps) => {
+    const stayP = stayId(d.reservationId);
+    gaps.forEach(([a, b], i) => {
+      const coverKey = `${stayP}:COVER${i + 1}:${d.night}`;
+      coverWanted.add(coverKey);
+      const ex = keyed.get(coverKey);
+      if (ex && ex.length === 1 && Math.abs(ex[0].start - a) < 60000 && Math.abs(ex[0].end - b) < 60000) { out.matched.push({ key: coverKey, slotIds: [ex[0].id] }); return; }
+      if (ex) { out.warnings.push({ code: 'COVER_SLOT_DIFFERS', key: coverKey, slotIds: ex.map((x) => x.id) }); return; }
+      out.proposals.push(proposal('COVER_CASA_GAP', {
+        externalKey: coverKey, stayId: stayP, forKey: slotKey(d.reservationId, d.unit.unit, d.night), night: d.night,
+        roleId: CASA_ROLE, resourceId: roleResources[CASA_ROLE] ?? null, companyId: ODOO_FACTS.companyId, state: ODOO_FACTS.slotState,
+        startUtc: iso(a), endUtc: iso(b), blockRef: coverKey, status: 'BLOCKED_UNTIL_STAGING_PROOF', autoApply: false,
+        requiresStagingProof: ['x_bloqueo_ref escribible y no vacio', 'las reglas 167/169 no se disparan con x_bloqueo_ref', 'el motor 1914 cuenta el turno de cobertura'],
+        unverifiedFields: Object.keys(UNVERIFIED_SLOT_FIELDS),
+      }));
+    });
+  };
+
   // 3) Crear / emparejar.
   for (const [key, d] of desired) {
     const existing = keyed.get(key);
-    if (existing) { out.matched.push({ key, slotIds: existing.map((x) => x.id) }); continue; }
+    if (existing) {
+      out.matched.push({ key, slotIds: existing.map((x) => x.id) });
+      if (coverGaps && d.unit.unit !== 'CASA') { const [ws0, we0] = nightWindow(d.night); wantCovers(d, casaMirrorGap(all, ws0, we0, stayId(d.reservationId))); }
+      continue;
+    }
 
     const own = new Set([key]);
     // choque interno: otra reserva de Smoobu en la misma unidad/noche, o cruce con Casa Completa
@@ -157,6 +242,26 @@ function reconcileNights({ bookings, slots, nightWindow = defaultNightWindow, mi
       continue;
     }
     const [ws, we] = nightWindow(d.night);
+    // Bloqueo espejo incompleto: toda noche que no quede bloqueada correctamente en Casa (o en las habitaciones) se RECHAZA.
+    let coverFor = null;
+    if (d.unit.unit !== 'CASA') {
+      const gap = casaMirrorGap(all, ws, we, stayId(d.reservationId));
+      if (gap.length && !coverGaps) {
+        out.conflicts.push({ code: 'MIRROR_GAP_CASA', key, reservationId: d.reservationId, unit: d.unit.unit, night: d.night,
+          uncovered: gap.map(([a, b]) => [iso(a), iso(b)]), casaSlotIds: all.filter((c) => c.roleId === CASA_ROLE && overlapMs(c.start, c.end, ws, we) > 0).map((c) => c.id),
+          hint: 'la regla 169 omite el espejo ante cualquier solape; use coverGaps tras prueba en staging' });
+        continue;
+      }
+      if (gap.length) coverFor = gap;
+    } else {
+      const rg = roomMirrorGaps(all, ws, we, stayId(d.reservationId));
+      if (rg.length) {
+        out.conflicts.push({ code: 'MIRROR_GAP_ROOM', key, reservationId: d.reservationId, unit: 'CASA', night: d.night, rooms: rg,
+          hint: 'la regla 167 omite una habitacion con cualquier solape; resolver a mano' });
+        continue;
+      }
+    }
+    if (coverFor) wantCovers(d, coverFor);
     out.proposals.push(proposal('CREATE_SLOT', {
       externalKey: key, stayId: stayId(d.reservationId), reservationId: d.reservationId, unit: d.unit.unit,
       roleId: d.unit.odooRoleId, night: d.night, startUtc: new Date(ws).toISOString(), endUtc: new Date(we).toISOString(),
@@ -168,19 +273,20 @@ function reconcileNights({ bookings, slots, nightWindow = defaultNightWindow, mi
 
   // 4) Turnos con clave que ya no corresponden (modificacion, cancelacion, cambio de unidad).
   for (const [key, list] of keyed) {
-    if (desired.has(key)) continue;
+    if (desired.has(key) || coverWanted.has(key)) continue;
     const m = KEY_RE.exec(key);
     const stay = `SMOOBU-${m[1]}`;
     if (!seenStays.has(stay)) {
       out.warnings.push({ code: 'ORPHAN_KEYED_SLOT', key, slotIds: list.map((x) => x.id), hint: 'reserva fuera de la ventana consultada; no se propone nada' });
       continue;
     }
-    for (const s of list) out.proposals.push(proposal('RELEASE_SLOT', { externalKey: key, slotId: s.id, roleId: s.roleId, reason: 'STAY_CANCELLED_OR_CHANGED', autoApply: false, mechanism: 'TO_BE_DECIDED' }));
+    if (list.length > 1) continue; // duplicados con clave: solo advertencia, nunca liberar
+    for (const s of list) releaseProposal(s, key, all, 'STAY_CANCELLED_OR_CHANGED', out);
   }
 
   // 5) Coherencia rol <-> unidad de los turnos con clave.
   for (const [key, list] of keyed) {
-    const unit = KEY_RE.exec(key)[2];
+    const unit = unitOfKey(KEY_RE.exec(key)[2]);
     for (const s of list) {
       if (unitForOdooRole(s.roleId)?.unit !== unit) out.warnings.push({ code: 'KEYED_SLOT_WRONG_ROLE', key, slotId: s.id });
     }
@@ -280,7 +386,8 @@ function reconcileStays({ bookings, slots, nightWindow = defaultNightWindow, min
     if (desired.has(key)) continue;
     const stay = `SMOOBU-${STAY_KEY_RE.exec(key)[1]}`;
     if (!seenStays.has(stay)) { out.warnings.push({ code: 'ORPHAN_KEYED_SLOT', key, slotIds: list.map((x) => x.id), hint: 'reserva fuera de la ventana consultada; no se propone nada' }); continue; }
-    for (const sl of list) out.proposals.push(proposal('RELEASE_SLOT', { externalKey: key, slotId: sl.id, roleId: sl.roleId, reason: 'STAY_CANCELLED_OR_CHANGED', autoApply: false, mechanism: 'TO_BE_DECIDED' }));
+    if (list.length > 1) continue;
+    for (const sl of list) releaseProposal(sl, key, all, 'STAY_CANCELLED_OR_CHANGED', out);
   }
   for (const [key, list] of keyed) {
     const unit = STAY_KEY_RE.exec(key)[2];
@@ -298,8 +405,9 @@ export function simulateApply(slots, result, startId = 900000) {
     const u = updated.get(s.id);
     return u ? { ...s, start: Date.parse(u.startUtc), end: Date.parse(u.endUtc) } : s;
   });
-  const created = result.proposals.filter((p) => p.op === 'CREATE_SLOT').map((p) => ({
+  const created = result.proposals.filter((p) => p.op === 'CREATE_SLOT' || p.op === 'COVER_CASA_GAP').map((p) => ({
     id: next++, roleId: p.roleId, start: Date.parse(p.startUtc), end: Date.parse(p.endUtc), key: p.externalKey, active: true,
+    ...(p.op === 'COVER_CASA_GAP' ? { mirror: true, blockRef: p.blockRef } : {}),
   }));
   return [...kept, ...created];
 }

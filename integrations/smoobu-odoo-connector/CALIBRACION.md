@@ -73,3 +73,30 @@ Reproduccion con datos reales (prueba `INCOMPATIBILIDAD con la regla 169`): 301 
 
 ## Parametros que debe llevar un turno propuesto
 `role_id`, `resource_id` del mapa, `company_id: 5`, `state: 'published'` (imprescindible para que las reglas actuen), `start/end` 15:00 -> 11:00 Bogota (20:00Z -> 16:00Z), `name` = clave externa, sin `x_bloqueo_ref`.
+
+
+---
+# Blindaje (ATH-DEV-014): mirada de seguridad del motor
+
+## Deteccion de bloqueo incompleto (modo por noche, predeterminado)
+- Habitacion -> Casa (regla 169): la regla omite el espejo si Casa tiene CUALQUIER turno solapado. El motor calcula los tramos de la noche que Casa no cubre (`casaMirrorGap`) y **rechaza la noche** con `MIRROR_GAP_CASA`.
+- Casa -> habitaciones (regla 167): igual con una habitacion con solape diminuto: `MIRROR_GAP_ROOM`.
+- Una noche rechazada no genera propuesta; las demas noches de la misma reserva si.
+- El modo por estancia esta **bloqueado** (`STAY_MODE_DISABLED`) salvo `allowStayMode:true`, solo para estudio.
+
+## Alternativa segura sin modificar la regla (`coverGaps`, apagada por defecto)
+Turno propio de Casa (rol 69, recurso 79, compania 5, publicado) que cubre exactamente el tramo omitido, con `x_bloqueo_ref` no vacio para que las reglas no lo procesen. Clave `SMOOBU-<reserva>:COVER<n>:<noche>`. Sale como `COVER_CASA_GAP` con estado `BLOCKED_UNTIL_STAGING_PROOF`: hace falta demostrar en staging que `x_bloqueo_ref` es escribible, que 167/169 no se disparan y que el motor 1914 lo cuenta como ocupado. Con un simulador fiel del codigo de las acciones 1853/1855 la prueba demuestra que, con la cobertura, no queda ninguna noche sin bloquear.
+
+## Politica propuesta de cancelacion
+1. Solo se propone liberar turnos **propios** (clave `SMOOBU-`). Los ajenos, los espejos de otros y los turnos con clave duplicada **nunca**.
+2. Jamas con `checked_in` o `checked_out`.
+3. Si el turno tiene espejos dependientes (`x_bloqueo_ref` = su id) se listan, se avisa si estan **compartidos** con otra habitacion, y **no se liberan automaticamente**: revision manual.
+4. Mecanismo de liberacion sin decidir (`state=draft` y `x_checkin_state=cancelled` evaluados: NO demostrados, ver `RELEASE_MECHANISM_ANALYSIS`). Mientras `RELEASE_UNLOCKED=false`, toda liberacion es `BLOCKED_UNTIL_STAGING_PROOF` y `autoApply:false`.
+5. Cancelacion de reserva con turnos de cobertura propios: se proponen liberar tambien (bloqueadas igual).
+
+## Riesgo residual
+- Smoobu en 401: el motor no ha procesado reservas reales.
+- `x_hotel_block_kind`/`x_channel`: sin leer; si el motor 1914 solo cuenta ciertos tipos de bloque, un turno sin ellos no cerraria la oferta (prueba 3 de staging).
+- Los espejos de la regla 169 sobreviven a la liberacion del turno origen y pueden quedar compartidos.
+- El simulador de reglas de las pruebas replica el codigo leido, no el comportamiento real de Odoo.
+- Horario 15:00-11:00 verificado en 409 turnos pero no impuesto por Odoo.
