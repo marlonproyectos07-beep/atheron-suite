@@ -57,3 +57,39 @@ Ejecucion: [run 40412139111](https://github.com/marlonproyectos07-beep/atheron-s
 | Ventas / contactos / correos | +1 / +2 / +3 frente a la linea base, **creados entre 22:17 y 22:23, es decir despues de la creacion y ANTES de la retirada** (sin relacion con el turno: la cadena de codigo no crea ventas, contactos ni correos y el turno no tenia pedido). Los 3 correos estan en estado `exception` (no se enviaron). Parecen actividad real del negocio; no se puede probar causa por lectura |
 
 **Resultado: RECUPERACION PARCIAL.** Registros y feeds restaurados; falta solo que el Booking Engine recalcule la disponibilidad historica (contador de una fecha pasada). No se invoco ningun cron ni se toco nada mas. Siguiente paso sin intervencion: esperar el cron del Booking Engine y confirmar por lectura; si no se corrige, decision humana (recalculo desde Odoo) o autorizacion expresa.
+
+---
+
+## ATH-DEV-020 — Cierre seguro de la recuperacion (2026-10-26)
+
+**Estado: BLOQUEADA.** Los dos turnos de P0 siguen ausentes y los iCal limpios, pero las filas de disponibilidad 1171/1172
+(oferta 12136, noches 2026-10-15 y 2026-10-16) siguen con `x_to_recompute=true` y la 1171 con `x_booked=1`.
+
+### Lo realmente identificado (lectura)
+| Elemento | Hallazgo |
+|---|---|
+| Cron llamado por la accion 1496 | `booking_engine.ir_cron_create_500_days_availability` = `ir.cron` 86, "Booking Engine: Daily availability creation", **active=false**, ultima ejecucion 2026-05-06 06:00, accion de servidor 1494 |
+| Que hace ese cron | Archiva disponibilidades pasadas, **crea** 500 dias por oferta, marca `x_to_recompute=true` en **todas** las filas desde hoy y ejecuta la 1493. Es global; no se ejecuta |
+| Consecuencia | Como el cron esta inactivo, `_trigger()` (automatizacion 23 / accion 1496) no ejecuta nada: **borrar un turno no recalcula la disponibilidad** en esta base. Por eso 1171 quedo en 1 |
+| Metodo minimo | Accion de servidor **1493** "Update Availabilities": lee solo filas `x_to_recompute=true`, consulta `planning.slot` y `resource.calendar.leaves` (lectura) y escribe unicamente `x_total_units`, `x_booked`, `x_to_recompute=false` en `x_availability` |
+| Pendientes en toda la base | 2 (1171 y 1172), ambas de la oferta 12136 |
+| Efectos externos posibles | Sin modulo de canal instalado (solo `booking_engine`), sin webhooks, sin automatizaciones ni crons activos sobre `x_availability`, sin campos almacenados derivados |
+
+Las 15 puertas de seguridad quedaron demostradas por lectura (ejecucion 40414544108 y 40414747923, esta ultima sin frase).
+
+### Ejecucion unica (run 40414826949)
+- Metodo: `POST /json/2/ir.actions.server/run` con `ids=[1493]` y contexto `x_availability` [1171, 1172]. Una sola llamada, sin reintento.
+- Resultado: **HTTP 403 `ODOO_AUTH_REJECTED`**. Odoo no permitio ejecutar la accion por la API.
+- Antes/despues identicos: 2 pendientes; huella del resto de disponibilidades sin cambios (3182 filas); pedidos 1442, contactos 2729, correos 5087, turnos 601, iCal (40 feeds) sin cambios.
+- Se detuvo y no se reintento. No hubo otra escritura.
+
+### Opciones (requieren nueva autorizacion)
+1. Cambio de un turno real en una habitacion de esa oferta no es aceptable (afecta inventario).
+2. Ejecutar la accion 1493 desde la interfaz de Odoo (Ajustes tecnicos > Acciones de servidor > "Update Availabilities" > Ejecutar) por un administrador: solo procesa las 2 filas.
+3. Dejar las 2 filas como estan: la noche 2026-10-15 ya es pasada y no afecta ventas actuales ni futuras.
+
+### Usuario tecnico (Fase 4)
+- Documentacion oficial JSON-2 (Odoo 19): clave API como `Authorization: bearer`; recomienda **usuarios bot dedicados** para integraciones continuas, sin contrasena, con permisos limitados; las claves duran como maximo 3 meses; la API respeta ACL, reglas de registro y permisos de campo; acceso externo solo en plan Custom.
+- La documentacion **no dice** si un usuario bot cuenta como licencia: **COSTO PENDIENTE DE ODOO**. No se envio ninguna consulta (no hay contacto oficial verificado ni via autorizada desde esta sesion).
+- Permisos minimos del futuro conector (solo lectura): `planning.slot`, `planning.role`, `resource.resource`, `x_availability`, `product.template` (campos de oferta), `ir.attachment` (solo para verificar iCal). Sin escritura, sin grupos de Ajustes. Requiere grupo propio con ACL de lectura y revisar reglas de registro (el usuario "Planning/User" solo ve turnos publicados).
+- Consulta comercial a enviar (borrador): "Tenemos Odoo Online 19 (plan Custom, base atheron1). Queremos un usuario exclusivo para integracion por API JSON-2, interno, sin acceso a la interfaz y con permisos de solo lectura. Preguntas: 1) ¿cuenta como usuario facturable y cual es el costo mensual? 2) ¿hay cupo de usuarios o alguna categoria de usuario API/bot sin costo? 3) ¿las claves API pueden superar los 3 meses? No aceptamos cambios contractuales por esta consulta."
