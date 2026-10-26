@@ -38,3 +38,9 @@ Nunca: borrado fisico, edicion de turnos sin clave `SMOOBU-`, escritura en `sale
 - Operaciones adicionales **solo propuestas**: `COVER_CASA_GAP` (bloqueada hasta staging). `RELEASE_SLOT` y `UPDATE_SLOT` llevan `autoApply:false`; las liberaciones salen `BLOCKED_UNTIL_STAGING_PROOF`.
 - Lista minima de pruebas previas a produccion: `STAGING-TESTS.md`.
 - Ninguna escritura esta activa; no hay credencial de escritura configurada.
+
+
+## Actualizacion ATH-DEV-015
+- Staging inexistente (HTTP 404) y sin credenciales separadas: **ninguna prueba con escrituras se ejecuto**. La guardia `assertStagingWriteTarget` exige base y host de staging autorizados, credencial distinta de la de produccion e interruptor explicito.
+- Esquema de produccion verificado (`PRODUCTION_SCHEMA`): sin `x_hotel_block_kind`; `x_channel` sin valor smoobu; `x_bloqueo_ref` char escribible. El motor no envia canal ni tipo de bloque.
+- Nueva puerta: leer el codigo de las automatizaciones que se disparan al crear un turno (12, 22, 55, 157, 158, 164, 168, 170, 171) antes de cualquier escritura.

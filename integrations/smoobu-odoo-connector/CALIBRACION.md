@@ -100,3 +100,29 @@ Turno propio de Casa (rol 69, recurso 79, compania 5, publicado) que cubre exact
 - Los espejos de la regla 169 sobreviven a la liberacion del turno origen y pueden quedar compartidos.
 - El simulador de reglas de las pruebas replica el codigo leido, no el comportamiento real de Odoo.
 - Horario 15:00-11:00 verificado en 409 turnos pero no impuesto por Odoo.
+
+
+---
+# Tercera lectura y verificacion de staging (ATH-DEV-015)
+Fuente: [run 40404188846](https://github.com/marlonproyectos07-beep/atheron-suite/actions/runs/40404188846) (la consulta de valores fallo con 500 porque pedi campos que no existen) y su repeticion corregida [run 40404394738](https://github.com/marlonproyectos07-beep/atheron-suite/actions/runs/40404394738). Solo lectura de PRODUCCION (`atheron1`), anonimizada; cero escrituras; Smoobu no consultado.
+
+## Campos pedidos
+| Campo | Resultado en produccion |
+|---|---|
+| `x_hotel_block_kind` | **NO EXISTE** (solo en el esquema del staging antiguo) |
+| `x_bloqueo_src_id` | **NO EXISTE** |
+| `x_bloqueo_ref` | `char`, no obligatorio, **escribible**; 112 de 517 turnos de las seis unidades lo tienen, todos numericos (id del turno origen), 111 resolubles en la muestra |
+| `x_channel` | `selection`: booking, airbnb, expedia, presencial, web, whatsapp, otro. **Sin valor smoobu.** Vacio en los 517 turnos |
+| `x_checkin_state` | `false` en 516 de 517; `checked_in` en 1 |
+Los 517 turnos no tienen tipo de bloque ni canal: la convencion de produccion es dejarlos vacios.
+
+## Accion 1914 y logica de disponibilidad
+- **La accion 1914 de produccion NO es el motor de disponibilidad**: es "SEC - Autorizar liquidacion y contabilizar obligaciones" (modelo FSM Task). El 1914 de los documentos es de la base de staging.
+- Piezas de produccion ligadas a `planning.slot` (solo nombres): Booking Engine 1493/1495 y automatizaciones 22/23 (recalculo de disponibilidad), "Anti-doble-reserva hotel" 1815, "Anti-duplicado NOBEDS" 164/1841, "Fix Slot Times" 12, "Orden borrador desde reserva OTA" 170, "Cancelar orden al cancelar reserva OTA" 171, regeneracion de iCal 55/157/158, "Quitar bloque al cancelar orden" 1844, "Limpiar bloques al borrar" 168/1854. **Su codigo no se ha leido** (salvo 167/169).
+- Consecuencias potenciales de crear un turno que aun no se han descartado: ajuste de horarios (12), orden borrador (170), regeneracion de iCal hacia OTAs (55/157/158), recalculo de disponibilidad (22).
+
+## Staging
+- `https://atheron1-hotel-staging-20260923.odoo.com` y `...-20261009.odoo.com` responden HTTP 404 "No database is selected": **la base de staging no esta accesible** (probablemente la prueba gratuita expiro). No se pudo comprobar su existencia ni su aislamiento.
+- No hay credenciales de staging en GitHub; la unica credencial configurada es la de PRODUCCION (`ODOO_DATABASE=atheron1`). La guardia (`src/staging-guard.mjs`) rechaza usarla contra staging.
+- Fase 3 (pruebas A-C con escrituras) **no se ejecuto**, por mandato de detener las escrituras.
+- Ademas: el staging antiguo tenia un esquema distinto al de produccion (campos y acciones propios), asi que sus resultados no serian transferibles. Un staging valido debe ser un duplicado neutralizado de la base de produccion.

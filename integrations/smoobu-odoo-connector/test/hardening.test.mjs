@@ -78,7 +78,7 @@ test('ALTERNATIVA segura: coverGaps propone un turno de Casa solo para el tramo 
     [69, 79, 5, 'published', 'BLOCKED_UNTIL_STAGING_PROOF', false, false]);
   assert.equal(cover.startUtc, new Date(ws + 10 * 3600000).toISOString()); assert.equal(cover.endUtc, new Date(we).toISOString());
   assert.ok(cover.blockRef && cover.blockRef === cover.externalKey); // x_bloqueo_ref no vacio: las reglas no lo procesan
-  assert.ok(cover.requiresStagingProof.length >= 3 && cover.unverifiedFields.includes('x_bloqueo_ref'));
+  assert.ok(cover.requiresStagingProof.length >= 2 && cover.unverifiedFields.includes('slot_triggered_automations'));
   // con la cobertura y el resultado de las reglas reales no queda ninguna noche sin bloquear
   const after = runRules(simulateApply([partial], r));
   assert.deepEqual(violations(after), []);
@@ -187,7 +187,7 @@ test('state=draft vs x_checkin_state=cancelled: NO demostrado, la liberacion que
   for (const [name, a] of Object.entries(RELEASE_MECHANISM_ANALYSIS)) {
     assert.equal(a.verdict, 'NO_DEMOSTRADO', name);
     assert.ok(a.inFavor.length >= 2 && a.against.length >= 2);
-    assert.ok(a.against.some((t) => /1914|167\/169/.test(t)));
+    assert.ok(a.against.some((t) => /disponibilidad|167\/169/.test(t)));
   }
   const slots = [mk(10, 37, '2026-11-10', '2026-11-10', { key: slotKey(1, '301', '2026-11-10') })];
   const r = reconcile({ bookings: [bk(1, A[301], '2026-11-10', '2026-11-11', { type: 'cancellation' })], slots });
@@ -201,4 +201,15 @@ test('seguridad global: ninguna propuesta puede aplicarse y writesEnabled siempr
   assert.ok(r.proposals.length > 0);
   assert.ok(r.proposals.every((p) => p.writesEnabled === false));
   assert.ok(r.proposals.filter((p) => p.op !== 'CREATE_SLOT').every((p) => p.status.startsWith('BLOCKED') || p.autoApply === false));
+});
+
+test('esquema de produccion verificado: campos presentes/ausentes y valores de x_channel', async () => {
+  const { PRODUCTION_SCHEMA, PRODUCTION_SLOT_AUTOMATIONS } = await import('../src/odoo-facts.mjs');
+  assert.deepEqual([PRODUCTION_SCHEMA.x_bloqueo_ref.type, PRODUCTION_SCHEMA.x_bloqueo_ref.readonly], ['char', false]);
+  assert.ok(!PRODUCTION_SCHEMA.x_channel.values.includes('smoobu'));
+  assert.deepEqual(PRODUCTION_SCHEMA.absentInProduction, ['x_hotel_block_kind', 'x_bloqueo_src_id']);
+  assert.ok([167, 169, 170, 171, 55, 157, 164, 12].every((id) => PRODUCTION_SLOT_AUTOMATIONS[id]));
+  // las propuestas no inventan canal ni tipo de bloque
+  const r = reconcile({ bookings: [bk(1, A[301], '2026-11-10', '2026-11-11')], slots: [] });
+  assert.ok(!('x_channel' in r.proposals[0]) && !('x_hotel_block_kind' in r.proposals[0]));
 });

@@ -188,7 +188,7 @@ function reconcileNights({ bookings, slots, nightWindow = defaultNightWindow, mi
         externalKey: coverKey, stayId: stayP, forKey: slotKey(d.reservationId, d.unit.unit, d.night), night: d.night,
         roleId: CASA_ROLE, resourceId: roleResources[CASA_ROLE] ?? null, companyId: ODOO_FACTS.companyId, state: ODOO_FACTS.slotState,
         startUtc: iso(a), endUtc: iso(b), blockRef: coverKey, status: 'BLOCKED_UNTIL_STAGING_PROOF', autoApply: false,
-        requiresStagingProof: ['x_bloqueo_ref escribible y no vacio', 'las reglas 167/169 no se disparan con x_bloqueo_ref', 'el motor 1914 cuenta el turno de cobertura'],
+        requiresStagingProof: ['otras automatizaciones sobre planning.slot (12, 22, 55, 157, 164, 170, 171) no producen efectos laterales con un turno marcado', 'el calculo real de disponibilidad (Booking Engine / reglas ATHERON) cuenta el turno de cobertura como ocupado'],
         unverifiedFields: Object.keys(UNVERIFIED_SLOT_FIELDS),
       }));
     });
