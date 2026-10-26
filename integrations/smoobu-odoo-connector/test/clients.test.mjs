@@ -40,6 +40,8 @@ test('Odoo JSON-2: bearer, base de datos, y rechazo de escrituras antes de la re
   req = null;
   for (const m of ['create', 'write', 'unlink', 'action_confirm']) await assert.rejects(c.call('planning.slot', m, {}), { code: 'ODOO_READ_ONLY_VIOLATION' });
   await assert.rejects(c.call('../x', 'read', {}), { code: 'ODOO_READ_ONLY_VIOLATION' });
+  await assert.rejects(c.call('x_availability/../planning.slot', 'read', {}), { code: 'ODOO_READ_ONLY_VIOLATION' });
+  await assert.rejects(c.call('x_availability', 'write', {}), { code: 'ODOO_READ_ONLY_VIOLATION' });
   assert.equal(req, null);
 });
 
@@ -54,4 +56,11 @@ test('config: falta de variables informa nombres, nunca valores', () => {
   const cfg = loadSmoobuConfig({ SMOOBU_API_KEY: 'k', SMOOBU_API_SECRET: 's' });
   assert.equal(cfg.baseUrl, 'https://login.smoobu.com');
   assert.deepEqual([PUBLIC_VARS.length, SECRET_VARS.length], [3, 3]);
+});
+
+test('Odoo JSON-2: modelos propios de Studio (x_...) se pueden LEER, no escribir', async () => {
+  const urls = [];
+  const c = new OdooJson2Client({ baseUrl: 'https://o.test', database: 'db', apiKey: 'k', fetchImpl: async (u) => { urls.push(u); return ok([]); } });
+  await c.call('x_availability', 'search_read', {});
+  assert.deepEqual(urls, ['https://o.test/json/2/x_availability/search_read']);
 });

@@ -2,7 +2,8 @@ import { ConnectorError, httpError } from './errors.mjs';
 
 /** Metodos permitidos: solo lectura. Cualquier otro se rechaza antes de la red. */
 export const READ_METHODS = Object.freeze(new Set(['search_read', 'read', 'search', 'search_count', 'fields_get', 'name_search']));
-const MODEL_RE = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/;
+// modelos estandar (con punto) y modelos propios de Studio (x_..., sin punto)
+const MODEL_RE = /^(x_[a-z0-9_]+|[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+)$/;
 
 /**
  * Cliente JSON-2 de Odoo 19 (POST /json/2/<modelo>/<metodo>, Bearer API key,
