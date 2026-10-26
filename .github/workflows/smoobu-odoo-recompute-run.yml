@@ -1,5 +1,5 @@
 # ============================================================
-# RECALCULO ACOTADO DE DISPONIBILIDAD (ATH-DEV-020). SOLO workflow_dispatch (sin push: no se ejecuta al registrarse).
+# RECALCULO ACOTADO DE DISPONIBILIDAD (ATH-DEV-020). workflow_dispatch; el push (solo de este archivo) unicamente registra el workflow y corre sin frase = solo lectura.
 # Sin la frase exacta en "confirm" solo se reevaluan las puertas (lectura). Con ella, y SOLO si TODAS las puertas
 # se demuestran en ese momento, ejecuta UNA vez la accion de servidor 1493 (nunca un cron) y verifica.
 # No llama a Smoobu. Secretos/variables: ODOO_API_KEY, ODOO_BASE_URL, ODOO_DATABASE.
@@ -13,6 +13,11 @@ on:
         description: 'Frase de autorizacion (vacia = solo puertas, lectura)'
         required: false
         default: ''
+  # push limitado a ESTE archivo, solo para registrar el workflow: sin la frase el job SOLO LEE (puertas), no hay escritor.
+  push:
+    branches: [feature/ath-odoo-hotel-017-booking-airbnb-level1]
+    paths:
+      - '.github/workflows/smoobu-odoo-recompute-run.yml'
 
 permissions:
   contents: read
