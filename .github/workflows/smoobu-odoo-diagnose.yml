@@ -19,13 +19,10 @@
 # ============================================================
 name: smoobu-odoo-diagnose
 
+# Solo manual mientras Smoobu siga respondiendo 401: un push al conector
+# ya no lanza llamadas a Smoobu (ATH-DEV-011).
 on:
   workflow_dispatch:
-  push:
-    branches: [feature/ath-odoo-hotel-017-booking-airbnb-level1]
-    paths:
-      - 'integrations/smoobu-odoo-connector/**'
-      - '.github/workflows/smoobu-odoo-diagnose.yml'
 
 permissions:
   contents: read

@@ -1,6 +1,6 @@
 # ============================================================
 # CALIBRACION DE SOLO LECTURA DE planning.slot (ATH-DEV-011)
-# Solo manual (workflow_dispatch). NO llama a Smoobu. Solo ejecuta
+# Manual (workflow_dispatch) o al editar este archivo. NO llama a Smoobu. Solo ejecuta
 # fields_get y search_read contra Odoo. Salida anonimizada: ids,
 # horas, conteos y la "forma" del texto; nunca nombres ni secretos.
 # Usa los mismos secretos/variables que smoobu-odoo-diagnose:
@@ -8,8 +8,14 @@
 # ============================================================
 name: smoobu-odoo-calibrate
 
+# push limitado a ESTE archivo: GitHub solo registra un workflow nuevo de una rama
+# de trabajo al recibir un push, y asi el primer cambio lanza la unica lectura.
 on:
   workflow_dispatch:
+  push:
+    branches: [feature/ath-odoo-hotel-017-booking-airbnb-level1]
+    paths:
+      - '.github/workflows/smoobu-odoo-calibrate.yml'
 
 permissions:
   contents: read
