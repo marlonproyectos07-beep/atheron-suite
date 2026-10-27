@@ -83,3 +83,16 @@ Cambio minimo recomendado (NO realizado): que Marlon intercambie directamente en
 (`SMOOBU_API_KEY` <- la clave `usr_live_...`; `SMOOBU_API_SECRET` <- el valor de 44 caracteres), sin pegarlos en el chat.
 Alternativa en codigo (peor, deja nombres engañosos): cruzar las dos referencias `secrets.*` en los workflows que usan Smoobu.
 Despues, una unica comprobacion `apartments-once`; solo un HTTP 200 real declara la API operativa.
+
+---
+
+## ATH-DEV-026 — Prueba controlada con asignacion invertida (2026-10-27)
+Modo `apartments-once-swapped` del workflow de diagnostico (cruce `apiKey = secrets.SMOOBU_API_SECRET`,
+`apiSecret = secrets.SMOOBU_API_KEY` SOLO en ese paso; secretos sin modificar). Run 40521652324, una solicitud.
+
+- `GET /api/apartments` -> **HTTP 200**, par autenticado, **7 apartamentos**.
+- Ids tecnicos: 3557501, 3557506, 3557511, 3557516, 3557521, 3557526, 3567496. Los cinco de unidades mas la Casa
+  (3557501) estan en `unit-map.mjs`; 3557506 coincide con la unidad restante del mapa de seis y 3567496 es Carrera 19 (excluida del mapa).
+- Resultado: **API OPERATIVA EN LECTURA CON ASIGNACION INVERTIDA**. Queda demostrado que el valor de 44 caracteres es el secreto HMAC.
+- No se consultaron reservas ni huespedes; sin escrituras; sin Odoo.
+- Pendiente (accion posterior, no hecha): corregir la asignacion permanente de los GitHub Secrets (intercambiar sus valores).
