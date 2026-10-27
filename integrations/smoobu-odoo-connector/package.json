@@ -20,6 +20,8 @@
     "smoobu-once": "node scripts/smoobu-once.mjs",
     "credential-shape": "node scripts/credential-shape.mjs",
     "credential-swap": "node scripts/credential-swap.mjs",
-    "smoobu-reservations": "node scripts/smoobu-reservations.mjs"
+    "smoobu-reservations": "node scripts/smoobu-reservations.mjs",
+    "smoobu-semantics": "node scripts/smoobu-semantics.mjs",
+    "reconcile-window": "node scripts/reconcile-window.mjs"
   }
 }

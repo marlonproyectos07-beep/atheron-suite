@@ -156,6 +156,8 @@ function reconcileNights({ bookings, slots, nightWindow = defaultNightWindow, mi
     if (isExcludedApartment(b.apartment?.id)) { out.ignored.push({ reservationId: id, reason: 'EXCLUDED_CARRERA_19' }); continue; }
     const unit = unitForSmoobuApartment(b.apartment?.id);
     if (!unit) { out.ignored.push({ reservationId: id, reason: 'UNMAPPED_APARTMENT' }); continue; }
+    // Bloqueos de calendario de Smoobu (is-blocked-booking): no son huespedes. Nunca crean turnos ni ventas desde aqui (ATH-DEV-029).
+    if (b['is-blocked-booking'] === true) { out.ignored.push({ reservationId: id, reason: 'BLOCKED_ENTRY_NOT_A_GUEST_STAY' }); continue; }
     if (b.type === 'cancellation') continue; // desired vacio: sus turnos con clave quedan obsoletos
     let nights;
     try { nights = nightlySlots({ arrival: b.arrival, departure: b.departure }); } catch {

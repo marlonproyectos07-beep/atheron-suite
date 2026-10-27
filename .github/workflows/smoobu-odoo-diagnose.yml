@@ -29,7 +29,7 @@ on:
         required: false
         default: 'full'
         type: choice
-        options: [full, apartments-once, reservations-window, credential-shape, credential-swap]
+        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, credential-shape, credential-swap]
 
 permissions:
   contents: read
@@ -70,6 +70,19 @@ jobs:
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
         run: npm run --silent smoobu-reservations
+      - name: Contraste de la semantica from/to (ATH-DEV-029, UNA lectura)
+        if: ${{ inputs.mode == 'semantics-probe' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+        run: npm run --silent smoobu-semantics
+      - name: Conciliacion real en memoria, sin escrituras (ATH-DEV-029)
+        if: ${{ inputs.mode == 'reconcile-window' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+        run: npm run --silent reconcile-window
       - name: Forma de las credenciales (ATH-DEV-022, sin red)
         if: ${{ inputs.mode == 'credential-shape' }}
         env:
