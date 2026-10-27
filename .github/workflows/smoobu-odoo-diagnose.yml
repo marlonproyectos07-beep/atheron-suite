@@ -29,7 +29,7 @@ on:
         required: false
         default: 'full'
         type: choice
-        options: [full, apartments-once, credential-shape]
+        options: [full, apartments-once, credential-shape, credential-swap]
 
 permissions:
   contents: read
@@ -66,6 +66,12 @@ jobs:
           SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_KEY }}
           SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_SECRET }}
         run: npm run --silent credential-shape
+      - name: Comprobacion de credenciales intercambiadas (ATH-DEV-025, sin red)
+        if: ${{ inputs.mode == 'credential-swap' }}
+        env:
+          SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_KEY }}
+          SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_SECRET }}
+        run: npm run --silent credential-swap
       - name: Conectividad (sin credenciales)
         if: ${{ inputs.mode == 'full' || inputs.mode == '' }}
         env:
