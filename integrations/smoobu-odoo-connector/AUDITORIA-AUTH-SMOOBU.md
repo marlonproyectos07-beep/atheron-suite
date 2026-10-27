@@ -117,3 +117,36 @@ Cuando se intercambien los valores en GitHub, hay que deshacer SOLO ese cruce.
 - **Ventana**: entran estancias que empiezan antes (18-oct -> 1-nov), asi que el filtro `from/to` no es por fecha de llegada; hay que definir y probar la semantica antes de sincronizar.
 - **Disponibilidad en Odoo**: con el cron 86 inactivo, borrar turnos no recalcula `x_booked`; las cancelaciones de Smoobu no liberarian inventario por si solas (HECHO, ATH-DEV-020).
 - Sin escrituras en Odoo, sin turnos, conector sin activar.
+
+---
+
+## ATH-DEV-029 — Lectura y conciliacion real Smoobu -> Odoo, sin escrituras (2026-10-27)
+
+### Semantica de `from`/`to` de GET /api/reservations
+- Documentacion oficial: **no accesible** desde el sandbox (docs.smoobu.com y support.smoobu.com bloqueados); las busquedas solo confirman que existen `from`/`to` y que hay filtros por fechas de creacion, llegada, salida y modificacion, sin los nombres exactos. No aclara si `from`/`to` filtran llegada, salida o solapamiento.
+- Una lectura adicional acotada (run 40524554514, ventana de un dia: 2026-10-20): 4 registros, todos con llegada <= 20 y salida >= 20; entre ellos 160905511 (llegada 18-oct, salida 1-nov, que abarca el dia). Ninguna de las 7 estancias que empiezan el 26-27 aparecio.
+- Conclusion: **solapamiento de estancia CONFIRMADO EMPIRICAMENTE** para esta cuenta (dos ventanas coherentes: 26..27 y 20..20). Descartadas "solo llegada" y "solo salida". NO probado: tratamiento exacto de los extremos ni de `modifiedAt`. Marcado como empirico, no documental.
+
+### Clasificacion de los 14 registros (26..27 oct; fixture `smoobu-window-2026-10-26-sanitized.json`)
+| Clase | Cantidad |
+|---|---|
+| Estancias de huesped vigentes (`reservation` 7 + `modification of booking` 1) | 8 |
+| Cancelaciones de huesped (`cancellation`, no bloqueo) | 1 |
+| Bloqueos (`is-blocked-booking`=true): 3 vigentes (2 `modification of booking`, 1 `reservation`) + 2 canceladas | 5 |
+| Carrera 19 / fuera del mapa | 0 |
+**Correccion**: informes anteriores decian 6 bloqueos; los registros muestran **5**. Los 14 ids son distintos (sin duplicados de id ni estancias duplicadas por unidad+fechas).
+Todos los bloqueos usan el canal 7192161 y ningun registro que no sea bloqueo lo usa (HECHO); que ese canal sea el "canal bloqueado" de Smoobu es HIPOTESIS.
+Mapa confirmado: 201, 202, 203, 301, 302 y Casa (3557501) -> roles 29, 19, 30, 37, 18, 69; Carrera 19 (3567496) excluida.
+
+### Piloto 161419736 (Smoobu)
+`reservation`, 2026-10-26 -> 2026-10-27, apartamento 3557521 = 301 = rol 37, no es bloqueo, canal 7192171. En la misma unidad y fechas existe la cancelacion bloqueada 161416801 (sin efecto: las canceladas y los bloqueos no generan turnos).
+
+### Conciliacion contra Odoo: **BLOQUEADA**
+`reconcile-window` (run 40524678848) leyo Smoobu una vez y fallo al primer `fields_get` de Odoo con **HTTP 401 `ODOO_AUTH_REJECTED`**; una lectura de comprobacion (run 40524804481) dio 401 en todos los pasos. Ayer (2026-10-26) la misma clave funcionaba. Causa NO demostrada: la clave pudo caducar (las claves duran <= 3 meses) o haberse rotado/revocado; no se modifico ninguna credencial desde esta sesion. No hay verdictos MATCH/CREATE_SLOT/CONFLICTO contra Odoo porque no se pudo leer el estado real; no se inventan.
+Desde este commit el script imprime la clasificacion de Smoobu **antes** de leer Odoo, para no perderla si Odoo falla.
+
+### Motor y seguridad (probado en memoria con datos ficticios, 170 tests)
+- `is-blocked-booking` ya no crea turnos (se ignora con motivo `BLOCKED_ENTRY_NOT_A_GUEST_STAY`); cancelaciones no generan propuestas ni liberaciones; liberar sigue `BLOCKED_UNTIL_STAGING_PROOF` (`RELEASE_UNLOCKED=false`); `writesEnabled=false`.
+- Cada propuesta usa un nombre opaco (`SM-<16 hex>`), nunca el id legible; idempotente (0 propuestas tras aplicar); el filtro anti-eco reconoce bloqueos y turnos ajenos equivalentes (MATCH).
+- Riesgo iCal: un turno `published` entra en el .ics de su rol y de Casa (accion 1654, cron 147 cada 5 min); si Smoobu importa ese calendario volveria como bloqueo (ignorado por el filtro, no probado de extremo a extremo).
+- Cron 86 sigue inactivo (ATH-DEV-020): borrar turnos no recalcula `x_booked`; las contabilidades de 1171/1172 siguen pendientes.

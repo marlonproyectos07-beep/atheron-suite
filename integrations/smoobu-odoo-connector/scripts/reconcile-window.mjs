@@ -7,6 +7,7 @@ import { OdooJson2Client } from '../src/odoo-json2-client.mjs';
 import { buildLiveReport } from '../src/live-reconcile.mjs';
 import { ODOO_FACTS } from '../src/odoo-facts.mjs';
 import { UNITS } from '../src/unit-map.mjs';
+import { classifyAll } from '../src/classify.mjs';
 
 const WINDOW = { from: '2026-10-26', to: '2026-10-27' };
 let sc; let oc;
@@ -18,6 +19,10 @@ let data;
 try { data = await smoobu.listReservationsPage({ ...WINDOW, page: 1, pageSize: 100, includeCancelled: true }); } catch (e) {
   console.log(JSON.stringify({ result: 'SMOOBU_ERROR', httpStatus: e.status ?? null, code: e.code ?? 'UNKNOWN', smoobuRequests: 1 })); process.exit(1);
 }
+// La lectura de Smoobu ya se hizo: se imprime su clasificacion saneada ANTES de tocar Odoo, para no perderla si Odoo falla.
+const cls = classifyAll(data.bookings ?? []);
+console.log(JSON.stringify({ stage: 'SMOOBU_CLASIFICACION', smoobuRequests: 1, window: WINDOW, smoobuPage: { page: data.page ?? null, pageCount: data.page_count ?? null, totalItems: data.total_items ?? null }, ...cls, odooStage: 'PENDIENTE' }));
+try {
 const have = async (model, wanted) => { const f = await odoo.fieldsGet(model, ['type']); return wanted.filter((k) => f[k]); };
 const roleIds = UNITS.map((u) => u.odooRoleId);
 const slotFields = await have('planning.slot', ['id', 'role_id', 'resource_id', 'start_datetime', 'end_datetime', 'state', 'x_bloqueo_ref', 'x_nobeds_id', 'sale_line_id', 'x_guest_id', 'x_checkin_state', 'x_channel']);
@@ -33,3 +38,7 @@ const availability = avRows.map((a) => ({ unit: unitOfOffer(offers.find((o) => o
 const report = buildLiveReport({ bookings: data.bookings ?? [], rawSlots, rawRoles, availability });
 console.log(JSON.stringify({ at: new Date().toISOString(), result: 'CONCILIACION_EN_MEMORIA', smoobuRequests: 1, smoobuEndpoint: 'GET /api/reservations', window: WINDOW, smoobuPage: { page: data.page ?? null, pageCount: data.page_count ?? null, totalItems: data.total_items ?? null },
   odooReads: { slotsRead: rawSlots.length, rolesRead: rawRoles.length, availabilityRows: availability.length, writes: 0 }, ...report }));
+} catch (e) {
+  console.log(JSON.stringify({ stage: 'ODOO_ERROR', result: 'CONCILIACION_NO_REALIZADA', smoobuRequests: 1, odooWrites: 0, httpStatus: e.status ?? null, code: e.code ?? 'UNKNOWN' }));
+  process.exit(1);
+}

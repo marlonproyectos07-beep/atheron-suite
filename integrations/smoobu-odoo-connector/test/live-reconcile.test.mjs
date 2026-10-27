@@ -57,3 +57,17 @@ test('cancelacion de huesped (no bloqueo): sin accion y sin propuesta', () => {
   const r = buildLiveReport({ bookings: [bk(50, '301', '2026-10-30', '2026-10-31', { type: 'cancellation' })], rawSlots: [], rawRoles: roles });
   assert.equal(r.perBooking[0].verdict, 'CANCELADA_SIN_ACCION'); assert.equal(r.engine.proposals.length, 0);
 });
+
+test('ventana real observada (ATH-DEV-028, sin datos personales): clasificacion de los 14 registros', async () => {
+  const { readFileSync } = await import('node:fs');
+  const fx = JSON.parse(readFileSync(new URL('./fixtures/smoobu-window-2026-10-26-sanitized.json', import.meta.url), 'utf8'));
+  const c = classifyAll(fx.bookings);
+  assert.equal(c.total, 14);
+  assert.deepEqual(c.byType, { 'modification of booking': 3, cancellation: 3, reservation: 8 });
+  assert.equal(c.blocksActive, 3); assert.equal(c.blocksCancelled, 2);          // 5 bloqueos (no 6)
+  assert.equal(c.guestStays, 8); assert.equal(c.cancellations, 1);                 // 8 estancias de huesped vigentes + 1 cancelacion de huesped + 5 bloqueos = 14
+  assert.equal(c.excluded, 0); assert.equal(c.unmapped, 0);
+  assert.deepEqual(c.duplicateIds, []); assert.deepEqual(c.possibleDuplicateStays, []);
+  const pilot = c.items.find((x) => x.id === 161419736);
+  assert.equal(pilot.kind, 'RESERVATION'); assert.equal(pilot.unit, '301'); assert.equal(pilot.roleId, 37);
+});
