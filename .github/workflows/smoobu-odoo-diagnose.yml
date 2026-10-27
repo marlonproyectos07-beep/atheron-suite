@@ -25,11 +25,11 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'full (diagnostico completo) o apartments-once (ATH-DEV-021: UNA sola solicitud GET /api/apartments)'
+        description: 'full | apartments-once (UN GET /api/apartments) | reservations-window (UN GET /api/reservations acotado) | credential-shape y credential-swap (sin red)'
         required: false
         default: 'full'
         type: choice
-        options: [full, apartments-once, apartments-once-swapped, credential-shape, credential-swap]
+        options: [full, apartments-once, reservations-window, credential-shape, credential-swap]
 
 permissions:
   contents: read
@@ -42,6 +42,14 @@ jobs:
   diagnose:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # ATH-DEV-028 — ADAPTACION TEMPORAL A LOS VALORES INVERTIDOS ALMACENADOS EN GITHUB.
+    # Hoy el secreto SMOOBU_API_SECRET contiene la clave real (usr_live_...) y SMOOBU_API_KEY el secreto HMAC
+    # (demostrado por huella y por HTTP 200, ATH-DEV-025/026). Este es el UNICO sitio del repositorio donde se cruzan;
+    # ningun paso ni modo vuelve a cruzarlos. Los valores de los secretos NO se tocan. Cuando alguien intercambie los
+    # valores en GitHub, se deshace SOLO este cruce (y el test test/smoobu-secret-mapping.test.mjs lo senala).
+    env:
+      SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_SECRET }}
+      SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_KEY }}
     defaults:
       run:
         working-directory: integrations/smoobu-odoo-connector
@@ -56,30 +64,19 @@ jobs:
         if: ${{ inputs.mode == 'apartments-once' }}
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
-          SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_KEY }}
-          SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_SECRET }}
         run: npm run --silent smoobu-once
-      # ATH-DEV-026: UNICO lugar con el cruce. Los GitHub Secrets no se modifican; solo se leen en orden inverso.
-      - name: Comprobacion unica con asignacion invertida (ATH-DEV-026)
-        if: ${{ inputs.mode == 'apartments-once-swapped' }}
+      - name: Primera lectura acotada de reservas (ATH-DEV-028)
+        if: ${{ inputs.mode == 'reservations-window' }}
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
-          SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_SECRET }}
-          SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_KEY }}
-          SMOOBU_ASSIGNMENT: swapped
-        run: npm run --silent smoobu-once
+        run: npm run --silent smoobu-reservations
       - name: Forma de las credenciales (ATH-DEV-022, sin red)
         if: ${{ inputs.mode == 'credential-shape' }}
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
-          SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_KEY }}
-          SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_SECRET }}
         run: npm run --silent credential-shape
       - name: Comprobacion de credenciales intercambiadas (ATH-DEV-025, sin red)
         if: ${{ inputs.mode == 'credential-swap' }}
-        env:
-          SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_KEY }}
-          SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_SECRET }}
         run: npm run --silent credential-swap
       - name: Conectividad (sin credenciales)
         if: ${{ inputs.mode == 'full' || inputs.mode == '' }}
@@ -93,8 +90,6 @@ jobs:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
           ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
           ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
-          SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_KEY }}
-          SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_SECRET }}
           ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
         run: |
           set +e

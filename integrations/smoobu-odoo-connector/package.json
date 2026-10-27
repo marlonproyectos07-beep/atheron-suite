@@ -19,6 +19,7 @@
     "recompute-run": "node scripts/recompute-run.mjs",
     "smoobu-once": "node scripts/smoobu-once.mjs",
     "credential-shape": "node scripts/credential-shape.mjs",
-    "credential-swap": "node scripts/credential-swap.mjs"
+    "credential-swap": "node scripts/credential-swap.mjs",
+    "smoobu-reservations": "node scripts/smoobu-reservations.mjs"
   }
 }
