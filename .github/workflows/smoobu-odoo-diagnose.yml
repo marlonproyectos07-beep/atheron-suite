@@ -29,7 +29,7 @@ on:
         required: false
         default: 'full'
         type: choice
-        options: [full, apartments-once]
+        options: [full, apartments-once, credential-shape]
 
 permissions:
   contents: read
@@ -59,14 +59,21 @@ jobs:
           SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_KEY }}
           SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_SECRET }}
         run: npm run --silent smoobu-once
+      - name: Forma de las credenciales (ATH-DEV-022, sin red)
+        if: ${{ inputs.mode == 'credential-shape' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_KEY }}
+          SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_SECRET }}
+        run: npm run --silent credential-shape
       - name: Conectividad (sin credenciales)
-        if: ${{ inputs.mode != 'apartments-once' }}
+        if: ${{ inputs.mode == 'full' || inputs.mode == '' }}
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
           ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
         run: node scripts/connectivity.mjs
       - name: Diagnostico de solo lectura
-        if: ${{ inputs.mode != 'apartments-once' }}
+        if: ${{ inputs.mode == 'full' || inputs.mode == '' }}
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
           ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
