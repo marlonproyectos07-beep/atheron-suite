@@ -181,3 +181,38 @@ La hora de creacion coincide con el inicio de las lecturas de Odoo de ese dia (l
 
 ### Si hace falta sustituirla (requiere autorizacion expresa; no se hizo nada)
 Crear una clave nueva con la duracion mas larga que permita el rol (la documentacion indica 3 meses como maximo), guardarla directamente en el secreto `ODOO_API_KEY` de GitHub (sin pegarla en el chat) y repetir `odoo-auth-readonly` y `reconcile-window`. Anotar una fecha de renovacion antes de la caducidad. A medio plazo, la clave debe pertenecer a un usuario tecnico de solo lectura (ver ATH-DEV-020).
+
+---
+
+## ATH-DEV-033 — Primera conciliacion Smoobu -> Odoo en memoria (2026-10-27 15:34 UTC)
+Run 40532295374 (`reconcile-window`, una sola ejecucion). Smoobu `GET /api/reservations` 26..27 oct: **HTTP 200**, 15 registros, una pagina (uno mas que ayer: la 161628206, 301, 27->28, aparecio despues). Odoo: **HTTP 200**, 37 turnos, 6 roles y 4 filas de disponibilidad leidos; **0 escrituras**. Fixture saneado: `test/fixtures/reconcile-2026-10-27-sanitized.json`.
+
+| Veredicto | Registros |
+|---|---|
+| MATCH (turno de Odoo ya equivalente) | 3 — 160829161 (201, turno 39664), 160905511 (203, turno 39670, 18-oct a 1-nov), 160906566 (302, turno 39647) |
+| CREATE_SLOT_PROPUESTO | 6 reservas / 9 noches — 161419736 y 161628206 (301), 161376576 y 161556506 (202), 161558916 (201), 161538491 (302) |
+| CONFLICTO / BLOQUEADO (hueco de espejo) | 0 / 0 |
+| Bloqueo, no huesped (sin turno ni venta) | 5 |
+| Cancelada sin accion | 1 |
+Carrera 19: 0 registros. Idempotencia: aplicar las propuestas y reconciliar de nuevo da 0 propuestas. Todas las propuestas `writesEnabled=false`, nombre opaco `SM-<16 hex>`, ninguna liberacion.
+
+### Piloto 161419736 (301, rol 37, 26 -> 27 oct): CREATE_SLOT_PROPUESTO
+En Odoo no hay turno en el rol 37 para esa noche; en Casa Completa si hay un turno ESPEJO (39648, publicado, mismo horario). Disponibilidad de la 301: `booked=0` de `total=1` el 26 y el 27 de octubre.
+**Alerta operativa (HECHO):** Smoobu tiene reservas activas en la 301 el 26->27 y el 27->28, y Odoo ofrece la habitacion como libre esas noches: riesgo de doble venta por el motor de reservas del sitio. Lo mismo ocurre con 202 (26, 27-29), 201 (27) y 302 (27-28), que Odoo no tiene.
+**Matiz:** la noche del 26 termina a las 11:00 (hora de Bogota) de hoy; crear ese turno ya aporta poco. Las noches utiles son las del 27 en adelante.
+
+### Por que "no hay turno" NO basta para crearlo (efectos colaterales, lectura de codigo de ATH-DEV-016/018)
+- Un turno `published` dispara la regla 169 (espejo en Casa; la omite si Casa ya tiene solape — aqui Casa ya esta ocupada en esas noches por espejos, entre ellos los de la estancia larga de la 203, por lo que no se esperan huecos: 4 propuestas llevan la advertencia `CASA_SLOT_TREATED_AS_MIRROR`), la accion 1654 (iCal) y el recalculo de disponibilidad (automatizacion 22, unico camino de disponibilidad que hoy funciona).
+- P0 (ATH-DEV-018) mostro que un turno publicado entra en el iCal y crea espejo; ademas, borrar espejos compartidos (regla 168) deja Casa sin bloqueo mientras otras habitaciones siguen ocupadas.
+- Hay turnos que Odoo ya recibe por otro canal (NOBEDS, `x_nobeds_id`): si los 6 "faltantes" llegan despues por ese canal, crearlos antes produciria solapes o los quitaria la regla anti-duplicado 164. **Causa de la ausencia: NO DEMOSTRADA.**
+- El efecto de crear un turno con clave propia sobre las automatizaciones 170/171 (pedido borrador desde OTA) no esta probado.
+
+### Riesgos
+- **Casa Completa:** bloqueada de hecho del 18-oct al 1-nov por la estancia larga de la 203; espejos compartidos: borrar un origen puede desbloquear Casa (la liberacion sigue bloqueada, `RELEASE_UNLOCKED=false`).
+- **iCal / eco:** los turnos nuevos entrarian a los feeds de los roles 201, 202, 301, 302 y Casa (cron 147 cada 5 min). 5 de 15 registros de Smoobu son bloqueos (3 vigentes, 2 canceladas), posiblemente el eco de los calendarios actuales (HIPOTESIS). Un turno nuevo reaparecera en Smoobu como bloqueo y el filtro anti-eco lo ignora, pero no se ha probado de extremo a extremo.
+- **Cron 86:** sigue inactivo (no se toco). Crear turnos SI recalcula `x_booked` (automatizacion 22); borrarlos NO. Cualquier error de creacion no se podria deshacer limpiamente. Las filas 1171/1172 siguen en su estado.
+
+### Caducidad de la clave Odoo nueva: **PENDIENTE** (no se conoce la duracion elegida; no se infiere).
+
+### Proxima accion minima segura (sin escrituras)
+Repetir esta misma lectura mas tarde (p. ej. el 28-oct por la manana) y comprobar si los 6 "faltantes" pasaron a MATCH por el canal existente. Si siguen faltando, decidir con Marlon quien es la fuente de verdad antes de cualquier escritura, y entonces diseñar un primer piloto sobre UNA noche futura (no la del 26).

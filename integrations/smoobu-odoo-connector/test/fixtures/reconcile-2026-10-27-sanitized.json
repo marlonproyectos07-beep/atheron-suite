@@ -1,0 +1,182 @@
+{
+ "source": "ATH-DEV-033 run 40532295374 (salida saneada: sin datos personales, nada escrito)",
+ "readAt": "2026-10-27T15:34Z",
+ "window": [
+  "2026-10-26",
+  "2026-10-27"
+ ],
+ "byVerdict": {
+  "MATCH": 3,
+  "CREATE_SLOT_PROPUESTO": 6,
+  "CONFLICTO": 0,
+  "BLOQUEADO": 0,
+  "BLOQUEO_NO_ES_HUESPED": 5,
+  "CANCELADA_SIN_ACCION": 1
+ },
+ "proposedSlotNights": 9,
+ "perBooking": [
+  {
+   "id": 160829151,
+   "unit": "201",
+   "type": "cancellation",
+   "arrival": "2026-10-25",
+   "departure": "2026-10-26",
+   "verdict": "CANCELADA_SIN_ACCION",
+   "odooSlotIds": []
+  },
+  {
+   "id": 160829161,
+   "unit": "201",
+   "type": "reservation",
+   "arrival": "2026-10-26",
+   "departure": "2026-10-27",
+   "verdict": "MATCH",
+   "odooSlotIds": [
+    39664
+   ]
+  },
+  {
+   "id": 160905511,
+   "unit": "203",
+   "type": "modification of booking",
+   "arrival": "2026-10-18",
+   "departure": "2026-11-01",
+   "verdict": "MATCH",
+   "odooSlotIds": [
+    39670
+   ]
+  },
+  {
+   "id": 160906566,
+   "unit": "302",
+   "type": "reservation",
+   "arrival": "2026-10-26",
+   "departure": "2026-10-27",
+   "verdict": "MATCH",
+   "odooSlotIds": [
+    39647
+   ]
+  },
+  {
+   "id": 161357231,
+   "unit": "302",
+   "type": "modification of booking",
+   "arrival": "2026-10-25",
+   "departure": "2026-10-26",
+   "verdict": "BLOQUEO_NO_ES_HUESPED",
+   "odooSlotIds": []
+  },
+  {
+   "id": 161357321,
+   "unit": "301",
+   "type": "cancellation",
+   "arrival": "2026-10-25",
+   "departure": "2026-10-26",
+   "verdict": "BLOQUEO_NO_ES_HUESPED",
+   "odooSlotIds": []
+  },
+  {
+   "id": 161357426,
+   "unit": "202",
+   "type": "modification of booking",
+   "arrival": "2026-10-25",
+   "departure": "2026-10-26",
+   "verdict": "BLOQUEO_NO_ES_HUESPED",
+   "odooSlotIds": []
+  },
+  {
+   "id": 161376576,
+   "unit": "202",
+   "type": "reservation",
+   "arrival": "2026-10-26",
+   "departure": "2026-10-27",
+   "verdict": "CREATE_SLOT_PROPUESTO",
+   "odooSlotIds": []
+  },
+  {
+   "id": 161416801,
+   "unit": "301",
+   "type": "cancellation",
+   "arrival": "2026-10-26",
+   "departure": "2026-10-27",
+   "verdict": "BLOQUEO_NO_ES_HUESPED",
+   "odooSlotIds": []
+  },
+  {
+   "id": 161419736,
+   "unit": "301",
+   "type": "reservation",
+   "arrival": "2026-10-26",
+   "departure": "2026-10-27",
+   "verdict": "CREATE_SLOT_PROPUESTO",
+   "odooSlotIds": []
+  },
+  {
+   "id": 161421616,
+   "unit": "301",
+   "type": "reservation",
+   "arrival": "2026-10-25",
+   "departure": "2026-10-26",
+   "verdict": "BLOQUEO_NO_ES_HUESPED",
+   "odooSlotIds": []
+  },
+  {
+   "id": 161538491,
+   "unit": "302",
+   "type": "reservation",
+   "arrival": "2026-10-27",
+   "departure": "2026-10-29",
+   "verdict": "CREATE_SLOT_PROPUESTO",
+   "odooSlotIds": []
+  },
+  {
+   "id": 161556506,
+   "unit": "202",
+   "type": "reservation",
+   "arrival": "2026-10-27",
+   "departure": "2026-10-30",
+   "verdict": "CREATE_SLOT_PROPUESTO",
+   "odooSlotIds": []
+  },
+  {
+   "id": 161558916,
+   "unit": "201",
+   "type": "reservation",
+   "arrival": "2026-10-27",
+   "departure": "2026-10-28",
+   "verdict": "CREATE_SLOT_PROPUESTO",
+   "odooSlotIds": []
+  },
+  {
+   "id": 161628206,
+   "unit": "301",
+   "type": "reservation",
+   "arrival": "2026-10-27",
+   "departure": "2026-10-28",
+   "verdict": "CREATE_SLOT_PROPUESTO",
+   "odooSlotIds": []
+  }
+ ],
+ "pilot": {
+  "id": 161419736,
+  "unit": "301",
+  "roleId": 37,
+  "verdict": "CREATE_SLOT_PROPUESTO",
+  "odooSlotsRoom": [],
+  "odooCasaMirrorSlotIds": [
+   39648
+  ],
+  "availability301": [
+   {
+    "date": "2026-10-26",
+    "total": 1,
+    "booked": 0
+   },
+   {
+    "date": "2026-10-27",
+    "total": 1,
+    "booked": 0
+   }
+  ]
+ }
+}

@@ -71,3 +71,13 @@ test('ventana real observada (ATH-DEV-028, sin datos personales): clasificacion 
   const pilot = c.items.find((x) => x.id === 161419736);
   assert.equal(pilot.kind, 'RESERVATION'); assert.equal(pilot.unit, '301'); assert.equal(pilot.roleId, 37);
 });
+
+test('resultado real (ATH-DEV-033): los conteos cuadran y no hay datos personales', async () => {
+  const { readFileSync } = await import('node:fs');
+  const fx = JSON.parse(readFileSync(new URL('./fixtures/reconcile-2026-10-27-sanitized.json', import.meta.url), 'utf8'));
+  const by = {}; for (const p of fx.perBooking) by[p.verdict] = (by[p.verdict] ?? 0) + 1;
+  assert.deepEqual(by, { CANCELADA_SIN_ACCION: 1, MATCH: 3, BLOQUEO_NO_ES_HUESPED: 5, CREATE_SLOT_PROPUESTO: 6 });
+  assert.equal(fx.perBooking.length, 15);
+  assert.equal(fx.perBooking.find((p) => p.id === 161419736).verdict, 'CREATE_SLOT_PROPUESTO');
+  assert.ok(!/@|guest|phone|email|price/i.test(JSON.stringify(fx)));
+});
