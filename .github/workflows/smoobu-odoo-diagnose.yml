@@ -29,7 +29,7 @@ on:
         required: false
         default: 'full'
         type: choice
-        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, credential-shape, credential-swap]
+        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, odoo-auth-readonly, credential-shape, credential-swap]
 
 permissions:
   contents: read
@@ -83,6 +83,13 @@ jobs:
           ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
           ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
         run: npm run --silent reconcile-window
+      - name: Autenticacion Odoo, UNA lectura (ATH-DEV-030)
+        if: ${{ inputs.mode == 'odoo-auth-readonly' }}
+        env:
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+        run: npm run --silent odoo-auth-readonly
       - name: Forma de las credenciales (ATH-DEV-022, sin red)
         if: ${{ inputs.mode == 'credential-shape' }}
         env:

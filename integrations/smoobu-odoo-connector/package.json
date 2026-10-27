@@ -22,6 +22,7 @@
     "credential-swap": "node scripts/credential-swap.mjs",
     "smoobu-reservations": "node scripts/smoobu-reservations.mjs",
     "smoobu-semantics": "node scripts/smoobu-semantics.mjs",
-    "reconcile-window": "node scripts/reconcile-window.mjs"
+    "reconcile-window": "node scripts/reconcile-window.mjs",
+    "odoo-auth-readonly": "node scripts/odoo-auth-readonly.mjs"
   }
 }

@@ -1,4 +1,4 @@
-import { ConnectorError, httpError } from './errors.mjs';
+import { ConnectorError, httpError, sanitizeDetail } from './errors.mjs';
 
 /** Metodos permitidos: solo lectura. Cualquier otro se rechaza antes de la red. */
 export const READ_METHODS = Object.freeze(new Set(['search_read', 'read', 'search', 'search_count', 'fields_get', 'name_search', 'context_get']));
@@ -43,7 +43,12 @@ export class OdooJson2Client {
     } catch (e) {
       throw new ConnectorError(e?.name === 'TimeoutError' || e?.name === 'AbortError' ? 'ODOO_TIMEOUT' : 'ODOO_NETWORK_ERROR', { retryable: true });
     }
-    if (!res.ok) throw httpError('ODOO', res.status);
+    if (!res.ok) {
+      const err = httpError('ODOO', res.status);
+      // ATH-DEV-030: solo en 401/403 (no llevan datos de negocio) se conserva el mensaje de Odoo, saneado y con la clave redactada
+      if (res.status === 401 || res.status === 403) { try { err.detail = sanitizeDetail(await res.text(), [this.apiKey]); } catch { err.detail = null; } }
+      throw err;
+    }
     try { return await res.json(); } catch { throw new ConnectorError('ODOO_RESPONSE_INVALID'); }
   }
 
