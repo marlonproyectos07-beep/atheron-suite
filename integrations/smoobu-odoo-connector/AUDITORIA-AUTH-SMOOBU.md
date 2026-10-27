@@ -150,3 +150,34 @@ Desde este commit el script imprime la clasificacion de Smoobu **antes** de leer
 - Cada propuesta usa un nombre opaco (`SM-<16 hex>`), nunca el id legible; idempotente (0 propuestas tras aplicar); el filtro anti-eco reconoce bloqueos y turnos ajenos equivalentes (MATCH).
 - Riesgo iCal: un turno `published` entra en el .ics de su rol y de Casa (accion 1654, cron 147 cada 5 min); si Smoobu importa ese calendario volveria como bloqueo (ignorado por el filtro, no probado de extremo a extremo).
 - Cron 86 sigue inactivo (ATH-DEV-020): borrar turnos no recalcula `x_booked`; las contabilidades de 1171/1172 siguen pendientes.
+
+---
+
+## ATH-DEV-030 — Diagnostico de autenticacion Odoo JSON-2 (2026-10-27)
+
+### Inspeccion sin red
+- Cliente (`odoo-json2-client.mjs`), configuracion (`config.mjs`) y errores (`errors.mjs`): **sin cambios** desde 2026-10-26; los workflows de Odoo tampoco cambiaron entre la ultima ejecucion con exito (2026-10-26 22:45 UTC, precheck y recalculo) y los fallos de hoy (14:48 UTC). Los commits posteriores solo tocan Smoobu y el workflow de diagnostico (para sus modos nuevos).
+- URL `https://atheron1.odoo.com`, base `atheron1`, endpoint `POST /json/2/<modelo>/<metodo>`, cabeceras `Authorization: bearer <clave>` y `X-Odoo-Database`: correctos y coherentes con las ejecuciones que funcionaron. La empresa 5 solo se usa como dato al crear turnos; no interviene en la autenticacion.
+- Secreto `ODOO_API_KEY`: presente (GitHub lo muestra enmascarado), sin espacios exteriores/interiores, comillas ni caracteres no ASCII (solo booleanos; no se imprimen valor, longitud, hash ni prefijo).
+- El cliente trataba 401 y 403 con el mismo codigo `ODOO_AUTH_REJECTED` y solo los distinguia por `status`; ahora conserva ademas el mensaje de Odoo saneado (clave redactada) en 401/403.
+
+### Comprobacion minima (una sola llamada, run 40525941841)
+`POST /json/2/res.users/context_get`, sin reintentos, 0 escrituras:
+- **HTTP 401**, Odoo responde `werkzeug.exceptions.Unauthorized`, mensaje **"Invalid apikey"**.
+- Veredicto: **credencial rechazada por Odoo**. Odoo reconoce el destino (host/base correctos) pero no acepta la clave.
+- Antes (runs 40524678848 y 40524804481) el mismo 401 en todos los pasos: es persistente, no transitorio.
+
+### Causa: PROBABLE, no demostrada
+Metadatos de claves del usuario de la API (run 40413552436 del 2026-10-26, solo lectura, sin valores):
+siete claves; seis sin caducidad (ids 4, 15, 16, 17, 18, 19) y **una (id 20), creada el 2026-10-26 15:16:28 UTC, con caducidad 2026-10-27 00:00:00**.
+La hora de creacion coincide con el inicio de las lecturas de Odoo de ese dia (las primeras ejecuciones con Odoo son de la tarde del 26) y la caducidad de 1 dia coincide con el primer 401 (2026-10-27 14:48 UTC, posterior a las 00:00).
+**HIPOTESIS fuerte:** el secreto `ODOO_API_KEY` es la clave id 20 y caduco. NO DEMOSTRADO: no hay forma, sin la clave en claro ni acceso a Odoo, de vincular el secreto con un id; "Invalid apikey" tambien lo devolveria una clave revocada o mal copiada. No se puede descartar que el secreto sea otra de las seis claves (sin caducidad) y que se haya revocado.
+
+### Comprobacion en Odoo (la hace una persona con acceso, sin crear ni revocar nada)
+1. Odoo -> avatar del usuario -> *Preferencias* -> *Seguridad de la cuenta* -> *Claves API*.
+2. Anotar, para cada clave, descripcion, fecha de creacion y de caducidad (la lista no muestra el valor).
+3. Buscar la creada el 2026-10-26 hacia las 10:16 (hora de Colombia, UTC-5) con caducidad 2026-10-27: si aparece como caducada o ya no existe, la hipotesis queda confirmada.
+4. Si hay otras claves vigentes pero el secreto sigue rechazado, el secreto no corresponde a ninguna: hay que sustituirlo.
+
+### Si hace falta sustituirla (requiere autorizacion expresa; no se hizo nada)
+Crear una clave nueva con la duracion mas larga que permita el rol (la documentacion indica 3 meses como maximo), guardarla directamente en el secreto `ODOO_API_KEY` de GitHub (sin pegarla en el chat) y repetir `odoo-auth-readonly` y `reconcile-window`. Anotar una fecha de renovacion antes de la caducidad. A medio plazo, la clave debe pertenecer a un usuario tecnico de solo lectura (ver ATH-DEV-020).
