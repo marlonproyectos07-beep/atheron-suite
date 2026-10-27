@@ -25,3 +25,10 @@ test('recompute-run solo usa el metodo unico del escritor y nunca llama a un cro
   assert.ok(!/writer\.\w+\(/.test(src.replace(/writer\.runUpdateAvailabilitiesOnce/g, '')));
   assert.ok(!/ir\.cron|_trigger|\.write\(|'write'|'create'|'unlink'/.test(src));
 });
+
+test('smoobu-once: una sola solicitud GET a /apartments, sin reintentos ni Odoo', async () => {
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../scripts/smoobu-once.mjs', import.meta.url), 'utf8');
+  assert.equal((src.match(/listProperties\(\)/g) ?? []).length, 1);
+  assert.ok(!/Odoo|getReservation|listReservations|detectPrefix|for \(|while/.test(src.replace(/\/\/.*$/gm, '')));
+});

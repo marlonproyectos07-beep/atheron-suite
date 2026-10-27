@@ -16,6 +16,7 @@
     "p0": "node scripts/p0.mjs",
     "recovery-check": "node scripts/recovery-check.mjs",
     "recompute-precheck": "node scripts/recompute-precheck.mjs",
-    "recompute-run": "node scripts/recompute-run.mjs"
+    "recompute-run": "node scripts/recompute-run.mjs",
+    "smoobu-once": "node scripts/smoobu-once.mjs"
   }
 }

@@ -23,6 +23,13 @@ name: smoobu-odoo-diagnose
 # ya no lanza llamadas a Smoobu (ATH-DEV-011).
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'full (diagnostico completo) o apartments-once (ATH-DEV-021: UNA sola solicitud GET /api/apartments)'
+        required: false
+        default: 'full'
+        type: choice
+        options: [full, apartments-once]
 
 permissions:
   contents: read
@@ -45,12 +52,21 @@ jobs:
           node-version: 22
       - name: Pruebas unitarias
         run: npm test
+      - name: Comprobacion unica de acceso API (ATH-DEV-021)
+        if: ${{ inputs.mode == 'apartments-once' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_KEY }}
+          SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_SECRET }}
+        run: npm run --silent smoobu-once
       - name: Conectividad (sin credenciales)
+        if: ${{ inputs.mode != 'apartments-once' }}
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
           ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
         run: node scripts/connectivity.mjs
       - name: Diagnostico de solo lectura
+        if: ${{ inputs.mode != 'apartments-once' }}
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
           ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
