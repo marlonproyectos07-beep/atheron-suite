@@ -91,8 +91,7 @@ Modo `apartments-once-swapped` del workflow de diagnostico (cruce `apiKey = secr
 `apiSecret = secrets.SMOOBU_API_KEY` SOLO en ese paso; secretos sin modificar). Run 40521652324, una solicitud.
 
 - `GET /api/apartments` -> **HTTP 200**, par autenticado, **7 apartamentos**.
-- Ids tecnicos: 3557501, 3557506, 3557511, 3557516, 3557521, 3557526, 3567496. Los cinco de unidades mas la Casa
-  (3557501) estan en `unit-map.mjs`; 3557506 coincide con la unidad restante del mapa de seis y 3567496 es Carrera 19 (excluida del mapa).
+- Ids tecnicos: 3557501, 3557506, 3557511, 3557516, 3557521, 3557526, 3567496. Los seis primeros son exactamente los de `unit-map.mjs` (Casa 3557501, 201 3557506, 202 3557511, 203 3557516, 301 3557521, 302 3557526); el septimo, 3567496, es Carrera 19, excluida del mapa.
 - Resultado: **API OPERATIVA EN LECTURA CON ASIGNACION INVERTIDA**. Queda demostrado que el valor de 44 caracteres es el secreto HMAC.
 - No se consultaron reservas ni huespedes; sin escrituras; sin Odoo.
 - Pendiente (accion posterior, no hecha): corregir la asignacion permanente de los GitHub Secrets (intercambiar sus valores).
