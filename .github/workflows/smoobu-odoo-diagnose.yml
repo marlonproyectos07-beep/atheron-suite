@@ -29,7 +29,7 @@ on:
         required: false
         default: 'full'
         type: choice
-        options: [full, apartments-once, credential-shape, credential-swap]
+        options: [full, apartments-once, apartments-once-swapped, credential-shape, credential-swap]
 
 permissions:
   contents: read
@@ -58,6 +58,15 @@ jobs:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
           SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_KEY }}
           SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_SECRET }}
+        run: npm run --silent smoobu-once
+      # ATH-DEV-026: UNICO lugar con el cruce. Los GitHub Secrets no se modifican; solo se leen en orden inverso.
+      - name: Comprobacion unica con asignacion invertida (ATH-DEV-026)
+        if: ${{ inputs.mode == 'apartments-once-swapped' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_SECRET }}
+          SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_KEY }}
+          SMOOBU_ASSIGNMENT: swapped
         run: npm run --silent smoobu-once
       - name: Forma de las credenciales (ATH-DEV-022, sin red)
         if: ${{ inputs.mode == 'credential-shape' }}
