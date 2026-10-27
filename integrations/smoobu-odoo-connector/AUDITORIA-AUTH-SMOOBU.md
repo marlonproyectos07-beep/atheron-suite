@@ -95,3 +95,25 @@ Modo `apartments-once-swapped` del workflow de diagnostico (cruce `apiKey = secr
 - Resultado: **API OPERATIVA EN LECTURA CON ASIGNACION INVERTIDA**. Queda demostrado que el valor de 44 caracteres es el secreto HMAC.
 - No se consultaron reservas ni huespedes; sin escrituras; sin Odoo.
 - Pendiente (accion posterior, no hecha): corregir la asignacion permanente de los GitHub Secrets (intercambiar sus valores).
+
+---
+
+## ATH-DEV-028 — Autenticacion normalizada y primera lectura de reservas (2026-10-27)
+Cruce de referencias hecho **una sola vez**, a nivel de job, en `smoobu-odoo-diagnose.yml` (adaptacion TEMPORAL a los valores
+invertidos que hoy guardan los secretos; los secretos no se tocaron; se eliminó el modo `apartments-once-swapped` para no invertir dos veces).
+Test `smoobu-secret-mapping.test.mjs` vigila que el cruce aparezca una sola vez y que ningun otro workflow use los secretos de Smoobu.
+Cuando se intercambien los valores en GitHub, hay que deshacer SOLO ese cruce.
+
+- `GET /api/apartments` (modo normal `apartments-once`, run 40523290706): **HTTP 200, 7 apartamentos**.
+- `GET /api/reservations` ventana 2026-10-26..2026-10-27, pagina 1 (run 40523444352): **HTTP 200**, 14 reservas, `page_count` 1, `page_size` 100, `total_items` 14.
+- Tipos devueltos: `reservation` 8, `cancellation` 3, `modification of booking` 3. Los 14 registros pertenecen al mapa de unidades; ninguno a Carrera 19.
+- **Reserva piloto 161419736: ENCONTRADA** — `reservation`, 2026-10-26 -> 2026-10-27, apartamento 3557521 = unidad 301 = rol 37, `blocked=false`.
+- Esquema: `bookings[]` con `apartment`, `arrival`, `departure`, `channel`, `type`, `is-blocked-booking`, `modifiedAt`, `related`, etc. (los campos de huesped existen en la respuesta pero no se imprimen).
+
+### Riesgos observados (HECHO) / por validar (HIPOTESIS)
+- **Cancelaciones como registros aparte**: la misma unidad y fecha tiene a la vez `cancellation` y `reservation` (p. ej. 301 el 25 y el 26). Sin una regla por tipo y `modifiedAt`, se podria bloquear una noche ya cancelada o duplicarla.
+- **`modification of booking`** llega como registro propio (3 de 14): hay que resolver cual version manda para el mismo huésped/estancia (`related`, `modifiedAt` — HIPOTESIS no verificada).
+- **`is-blocked-booking=true`** aparece en 6 de 14 (canal 7192161), tambien en 301 y 302: son bloqueos, no estancias de huesped. Podrian ser el eco de bloqueos creados desde Odoo (HIPOTESIS); deben pasar por el echo-guard y nunca crear turnos nuevos.
+- **Ventana**: entran estancias que empiezan antes (18-oct -> 1-nov), asi que el filtro `from/to` no es por fecha de llegada; hay que definir y probar la semantica antes de sincronizar.
+- **Disponibilidad en Odoo**: con el cron 86 inactivo, borrar turnos no recalcula `x_booked`; las cancelaciones de Smoobu no liberarian inventario por si solas (HECHO, ATH-DEV-020).
+- Sin escrituras en Odoo, sin turnos, conector sin activar.
