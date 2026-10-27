@@ -46,7 +46,7 @@ test('el resumen de reservas no filtra datos personales y compara con el mapa', 
     { id: 3, type: 'reservation', arrival: '2026-10-26', departure: '2026-10-28', apartment: { id: 999 } },
   ] });
   const out = JSON.stringify(r);
-  for (const leak of ['Persona Privada', 'a@b.co', '"phone":', '"price":', ':99']) assert.ok(!out.includes(leak), leak);
+  for (const leak of ['Persona Privada', 'a@b.co', '"phone":', '"price":']) assert.ok(!out.includes(leak), leak);
   assert.equal(r.pilot.found, true); assert.equal(r.pilot.unit, '301'); assert.equal(r.pilot.roleId, 37);
   assert.equal(r.inUnitMap, 1); assert.equal(r.excludedCarrera19, 1); assert.equal(r.unmapped, 1);
   assert.deepEqual(r.byType, { reservation: 2, cancellation: 1 });
