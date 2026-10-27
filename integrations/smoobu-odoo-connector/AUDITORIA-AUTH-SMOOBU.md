@@ -62,3 +62,24 @@ Cuenta 1923561 (prueba gratuita). Solicitud `GET https://login.smoobu.com/api/ap
 `401 {"status":401,"title":"Unauthorized","detail":"Authentication required"}` (ejecuciones del 2026-10-27, una solicitud cada una).
 Preguntas: 1) ¿Esta habilitada la API en esta prueba? 2) ¿La clave y el secreto generados pertenecen al mismo par y estan activos?
 3) ¿Que ve su servidor en la solicitud rechazada (motivo concreto)? 4) ¿La ruta correcta es `/api/apartments`?
+
+---
+
+## ATH-DEV-025 — Credenciales intercambiadas (2026-10-27)
+Diagnostico sin red (`npm run credential-swap`, modo `credential-swap` del workflow de diagnostico, run 40520451829):
+huella SHA-256 (12 primeros caracteres) contra la referencia de la clave real de Smoobu, sin imprimir huellas ni valores.
+
+```
+SMOOBU_API_KEY: NO MATCH
+SMOOBU_API_SECRET: MATCH
+FORMATO_CORRECTO: SMOOBU_API_SECRET
+RESULTADO: CREDENCIALES PROBABLEMENTE INTERCAMBIADAS
+```
+Esto explica el 401: la cabecera `X-API-Key` y el ultimo campo de la cadena canonica llevaban el valor equivocado, y
+el HMAC se calculaba con la clave `usr_live_...` en lugar del secreto.
+HIPOTESIS no verificada: el valor de 44 caracteres guardado en `SMOOBU_API_KEY` es el secreto HMAC (no se comprobo; solo el servidor puede confirmarlo).
+
+Cambio minimo recomendado (NO realizado): que Marlon intercambie directamente en GitHub los **valores** de los dos secretos
+(`SMOOBU_API_KEY` <- la clave `usr_live_...`; `SMOOBU_API_SECRET` <- el valor de 44 caracteres), sin pegarlos en el chat.
+Alternativa en codigo (peor, deja nombres engañosos): cruzar las dos referencias `secrets.*` en los workflows que usan Smoobu.
+Despues, una unica comprobacion `apartments-once`; solo un HTTP 200 real declara la API operativa.
