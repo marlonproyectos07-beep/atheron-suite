@@ -4,6 +4,7 @@ import { parseReferences, normalizeOtaRef } from './reference-parse.mjs';
 import { addDays, stayNightsInWindow } from './window.mjs';
 import { RELEASE_UNLOCKED } from './odoo-facts.mjs';
 import { WRITES_ENABLED } from './live-reconcile.mjs';
+import { isOverbookingType } from './overbooking-watch.mjs';
 
 /**
  * ATH-DEV-041 — Conciliacion Smoobu -> Odoo POR IDENTIFICADORES. Pura: no hace red ni escribe.
@@ -70,13 +71,16 @@ export function reconcileByIds({ bookings, window, orders, slots, manualReviewId
     return { ...c, otaRef: normalizeOtaRef(b?.['reference-id']), channelId: Number.isInteger(Number(b?.channel?.id)) ? Number(b.channel.id) : null };
   });
 
-  const counts = { blocksActive: 0, blocksCancelled: 0, excludedCarrera19: 0, unmapped: 0, outsideWindow: 0, otherTypes: 0, invalid: 0 };
+  const counts = { blocksActive: 0, blocksCancelled: 0, excludedCarrera19: 0, unmapped: 0, outsideWindow: 0, otherTypes: 0, invalid: 0, overbookingInList: 0 };
   const inScope = [];
+  // ATH-DEV-053: si el listado llegara a traer un registro `type: OverBooking`, se separa como ALERTA de revision manual (sin veredicto ni propuesta)
+  const overbookingInList = [];
   for (const c of classified) {
     if (c.kind === KINDS.BLOCK) { counts[c.blockedActive ? 'blocksActive' : 'blocksCancelled'] += 1; continue; }
     if (c.kind === KINDS.EXCLUDED) { counts.excludedCarrera19 += 1; continue; }
     if (c.kind === KINDS.UNMAPPED) { counts.unmapped += 1; continue; }
     if (c.kind === KINDS.INVALID) { counts.invalid += 1; continue; }
+    if (c.kind === KINDS.OTHER_TYPE && isOverbookingType(c.type)) { counts.overbookingInList += 1; overbookingInList.push({ smoobuId: c.id, unit: c.unit, arrival: c.arrival, departure: c.departure, channelId: c.channelId, manualReview: 'REVISION_MANUAL_SOBREVENTA', automaticAction: 'NINGUNA', writesEnabled: false }); continue; }
     if (c.kind === KINDS.OTHER_TYPE) { counts.otherTypes += 1; continue; }
     const nights = stayNightsInWindow(c, window);
     if (!nights.length) { counts.outsideWindow += 1; continue; }
@@ -160,6 +164,7 @@ export function reconcileByIds({ bookings, window, orders, slots, manualReviewId
     summary, counts, perReservation,
     availabilityRisk: perReservation.filter((r) => r.smoobuStatus === 'ACTIVE' && r.odooOccupancy !== 'FULL').map((r) => ({ smoobuId: r.smoobuId, unit: r.unit, freeNightsInOdoo: r.odooFreeNights })),
     smoobuOverbooking: overlapPairs,
+    overbookingInList,
     ordersNotReturnedBySmoobu,
     controlCases,
     safety: { writesEnabled: WRITES_ENABLED, releaseUnlocked: RELEASE_UNLOCKED, proposals: 0, identifiedOnlyByLabeledIds: true, rawReferenceTextPrinted: false, guestNamesPrinted: false },

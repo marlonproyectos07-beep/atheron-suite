@@ -1,6 +1,7 @@
 import { ConnectorError } from './errors.mjs';
 import { UNITS, unitForOdooRole } from './unit-map.mjs';
 import { reconcileByIds } from './id-reconcile.mjs';
+import { readWatchlist } from './overbooking-watch.mjs';
 
 /**
  * ATH-DEV-041 — Orquestacion de la conciliacion por identificadores. SOLO LECTURA:
@@ -83,16 +84,20 @@ export async function readOdooWindow(odoo, window, limits = LIMITS) {
 }
 
 /** Ejecuta la conciliacion completa y devuelve un informe sin datos personales. */
-export async function runReconcileIds({ smoobu, odoo, window }) {
+export async function runReconcileIds({ smoobu, odoo, window, watchIds = [] }) {
   const s = await readSmoobuWindow(smoobu, window);
   if (!s.complete) throw new ConnectorError('SMOOBU_INCOMPLETE_READ');
+  // ATH-DEV-053: el listado no devuelve las sobreventas; los ids vigilados se leen uno a uno (GET, con tope, sin reintentos)
+  const watch = await readWatchlist(smoobu, watchIds, { listed: new Map(s.bookings.map((b) => [Number(b?.id), b])) });
   const o = await readOdooWindow(odoo, window);
   const report = reconcileByIds({ bookings: s.bookings, window, orders: o.orders, slots: o.slots });
   return {
     reads: {
+      smoobuWatch: { endpoint: 'GET /api/reservations/{id}', requests: watch.requests, watched: watchIds.length },
       smoobu: { endpoint: 'GET /api/reservations', requests: s.requests, pageCount: s.pageCount, totalItems: s.totalItems, recordsRead: s.bookings.length, query: window.smoobuQuery },
       odoo: { calls: o.calls, methods: ['fields_get', 'search_read'], ...o.counts, writes: 0 },
     },
     ...report,
+    overbookingWatch: watch,
   };
 }

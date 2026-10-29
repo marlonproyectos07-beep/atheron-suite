@@ -47,6 +47,19 @@ El repositorio es publico y cualquier usuario con sesion en GitHub puede leer lo
 - Pendiente fuera de este cambio: los modos `reconcile-window` y `reservations-window` siguen imprimiendo IDs de Smoobu
   completos, y los IDs reales de los casos de control estan en el codigo, las pruebas y el historial de Git publicos.
 
+## Sobreventas (ATH-DEV-052/053)
+Comprobado (run #20): una reserva marcada "Overbooking" en Smoobu existe en la API con `type: "OverBooking"`
+(GET /api/reservations/{id} -> HTTP 200), pero **GET /api/reservations no la devuelve**. El listado NO es exhaustivo:
+una sobreventa desconocida no se puede detectar desde la API.
+- `src/overbooking-watch.mjs`: lista de vigilancia de ids AUTORIZADOS en codigo (hoy solo 160829171). `OVERBOOKING_WATCH_IDS`
+  solo elige un subconjunto o `none`; ids fuera de la lista, mal formados o mas de 5 -> error sin lecturas.
+- `reconcile-ids` lee cada id vigilado con UN GET individual (sin reintentos; si ya vino en el listado, no se relee).
+  Un 404 queda `NOT_FOUND`, otro error `READ_ERROR`, y ninguno detiene el resto.
+- `type: OverBooking` (en el GET o, si algun dia llega, en el listado) -> `OVERBOOKING_ALERT` con
+  `manualReview = REVISION_MANUAL_SOBREVENTA` y `automaticAction = NINGUNA`. Nunca se propone pedido, turno ni cambio.
+- Salida publica enmascarada (`overbookingWatch`, `overbookingInList`).
+Para vigilar otra reserva hay que anadir su id a la lista autorizada en el codigo (cambio revisable en un PR).
+
 ## Evidencia local y supuestos no verificados
 El respaldo de campos de `sale.order` en `AI/staging-backup` registra `x_pms_reference` como `char`, `x_checkin`/`x_checkout`
 como `date`, y `x_booking_source`/`x_reservation_status` como `selection`. `CALIBRACION.md` confirma los roles de las seis

@@ -60,6 +60,12 @@ export function toPublicReport(out) {
       found: k.found, consistentWithControl: k.consistentWithControl ?? null, verdict: k.verdict ?? null, reason: k.reason ?? null,
       odooOccupancy: k.odooOccupancy ?? null, manualReview: k.manualReview ?? null, overbookingWith: (k.overbookingWith ?? []).map(maskSmoobu), note: k.note ?? null,
     })),
+    overbookingInList: (out.overbookingInList ?? []).map((x) => ({ smoobuRef: maskSmoobu(x.smoobuId), unit: x.unit, arrival: x.arrival, departure: x.departure, channelId: x.channelId ?? null, manualReview: x.manualReview, automaticAction: x.automaticAction, writesEnabled: x.writesEnabled })),
+    overbookingWatch: out.overbookingWatch ? {
+      requests: out.overbookingWatch.requests, alerts: out.overbookingWatch.alerts, errors: out.overbookingWatch.errors, notFound: out.overbookingWatch.notFound,
+      entries: out.overbookingWatch.entries.map((e) => ({ smoobuRef: maskSmoobu(e.smoobuId), source: e.source, httpStatus: e.httpStatus, code: e.code ?? null, status: e.status, type: e.type,
+        unit: e.unit, arrival: e.arrival, departure: e.departure, channelId: e.channelId, missingFromList: e.missingFromList, manualReview: e.manualReview, automaticAction: e.automaticAction, writesEnabled: e.writesEnabled })),
+    } : null,
     safety: out.safety,
   };
 }
@@ -72,6 +78,8 @@ export function sensitiveValues(out) {
   for (const k of out.controlCases ?? []) { add(k.smoobuId); add(k.otaRef); }
   for (const p of out.smoobuOverbooking ?? []) for (const x of p) add(x);
   for (const x of out.availabilityRisk ?? []) add(x.smoobuId);
+  for (const x of out.overbookingInList ?? []) add(x.smoobuId);
+  for (const e of out.overbookingWatch?.entries ?? []) add(e.smoobuId);
   return [...vals];
 }
 
