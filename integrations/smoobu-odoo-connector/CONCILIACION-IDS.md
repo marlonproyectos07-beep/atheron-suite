@@ -34,6 +34,19 @@ El texto de `x_pms_reference` puede llevar nombres, cedulas o comprobantes: nunc
 solo se comparan en memoria y, si coinciden, el veredicto es AMBIGUOUS. Tampoco se solicitan ni imprimen los nombres libres de
 `sale.order`; `x_reservation_status` se usa internamente, pero no se imprime. La salida lleva ids, fechas, codigos y conteos.
 
+### Registros publicos (ATH-DEV-048)
+El repositorio es publico y cualquier usuario con sesion en GitHub puede leer los registros de Actions. Por eso
+`scripts/reconcile-ids.mjs` ya no imprime el informe interno: imprime `toPublicReport()` (`src/public-report.mjs`).
+- IDs de Smoobu y de la OTA: enmascarados con sus 3 ultimos caracteres (`SM*...781`, `OTA*...870`). La comparacion interna
+  sigue usando los valores completos; la logica de conciliacion no cambia.
+- Pedidos de Odoo: solo conteo y estado; no se imprimen sus IDs. Casos de control: `CONTROL_1..3` con ID enmascarado.
+- Se conservan veredicto, motivo, habitacion, fechas, ocupacion, alertas, conteos y codigos de error. Habitacion + fechas
+  indican que una habitacion esta ocupada una noche (lo mismo que la OTA publica como "no disponible"), no quien la ocupa.
+- Barrera final `assertPublicSafe`: si la cadena a imprimir contiene un ID completo o una credencial, se imprime solo
+  `PRIVACY_GUARD_TRIPPED` con conteos (sin revelar el valor).
+- Pendiente fuera de este cambio: los modos `reconcile-window` y `reservations-window` siguen imprimiendo IDs de Smoobu
+  completos, y los IDs reales de los casos de control estan en el codigo, las pruebas y el historial de Git publicos.
+
 ## Evidencia local y supuestos no verificados
 El respaldo de campos de `sale.order` en `AI/staging-backup` registra `x_pms_reference` como `char`, `x_checkin`/`x_checkout`
 como `date`, y `x_booking_source`/`x_reservation_status` como `selection`. `CALIBRACION.md` confirma los roles de las seis
