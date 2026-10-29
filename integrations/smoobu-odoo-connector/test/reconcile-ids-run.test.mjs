@@ -53,7 +53,7 @@ test('extremo a extremo: solo GET a Smoobu y solo fields_get/search_read a Odoo;
   assert.equal(out.reads.odoo.writes, 0);
   assert.deepEqual(out.summary, { MATCH: 1, MISSING_IN_ODOO: 6, CONFLICT: 2, CANCELLED: 1, AMBIGUOUS: 3 });
   const text = JSON.stringify(out);
-  for (const banned of ['PRIVADO', 'privado@', '1014198033', 'clave_prueba', 'k_prueba', 's_prueba']) assert.ok(!text.includes(banned), banned);
+  for (const banned of ['PRIVADO', 'privado@', '0000000000', 'clave_prueba', 'k_prueba', 's_prueba']) assert.ok(!text.includes(banned), banned);
 });
 
 test('paginacion: tope de paginas y lectura incompleta detienen la conciliacion', async () => {
@@ -62,8 +62,21 @@ test('paginacion: tope de paginas y lectura incompleta detienen la conciliacion'
   await assert.rejects(runReconcileIds({ smoobu: fakeSmoobu(SMOOBU_BOOKINGS, { totalItems: 99 }).client, odoo: fakeOdoo().client, window }), { code: 'SMOOBU_INCOMPLETE_READ' });
 });
 
+test('paginacion: metadatos ausentes, pagina incorrecta o IDs repetidos detienen la lectura', async () => {
+  const invalid = async (data) => assert.rejects(readSmoobuWindow({ listReservationsPage: async () => data }, window), { code: 'SMOOBU_PAGINATION_INVALID' });
+  await invalid({ page_count: 1, bookings: [] });
+  await invalid({ total_items: 0, bookings: [] });
+  await invalid({ page: 2, page_count: 1, total_items: 0, bookings: [] });
+  await invalid({ page: 1, page_count: 1, total_items: 2, bookings: [{ id: 1 }, { id: 1 }] });
+});
+
 test('Odoo: llegar al tope de resultados detiene la lectura (nunca un informe parcial)', async () => {
   await assert.rejects(readOdooWindow(fakeOdoo().client, window, { ...LIMITS, odooSlots: 2 }), { code: 'ODOO_SLOT_LIMIT' });
+});
+
+test('Odoo: campos de turno indispensables ausentes detienen el informe', async () => {
+  const odoo = { fieldsGet: async () => ({ id: { type: 'integer' } }), searchRead: async () => { throw new Error('no se debe consultar'); } };
+  await assert.rejects(readOdooWindow(odoo, window), { code: 'ODOO_FIELDS_MISSING' });
 });
 
 test('el cliente Odoo rechaza escrituras antes de la red', async () => {

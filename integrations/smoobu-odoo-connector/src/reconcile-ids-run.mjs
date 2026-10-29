@@ -21,12 +21,17 @@ export async function readSmoobuWindow(smoobu, window, { pageSize = LIMITS.smoob
   for (let page = 1; page <= maxPages; page += 1) {
     const data = await smoobu.listReservationsPage({ ...window.smoobuQuery, page, pageSize, includeCancelled: true });
     requests += 1;
-    pageCount = Number.isInteger(data.page_count) ? data.page_count : 1;
-    totalItems = Number.isInteger(data.total_items) ? data.total_items : totalItems;
+    if (!Number.isInteger(data.page_count) || data.page_count < 1 || !Number.isInteger(data.total_items) || data.total_items < 0 || (data.page != null && data.page !== page)) throw new ConnectorError('SMOOBU_PAGINATION_INVALID');
+    if (pageCount == null) { pageCount = data.page_count; totalItems = data.total_items; }
+    else if (pageCount !== data.page_count || totalItems !== data.total_items) throw new ConnectorError('SMOOBU_PAGINATION_INVALID');
     rawCount += data.bookings.length;
-    for (const b of data.bookings) byId.set(b?.id, b); // un id = un registro (el tipo mas reciente)
+    for (const b of data.bookings) {
+      const id = Number(b?.id);
+      if (!Number.isSafeInteger(id) || byId.has(id)) throw new ConnectorError('SMOOBU_PAGINATION_INVALID');
+      byId.set(id, b);
+    }
     if (page >= pageCount) {
-      return { bookings: [...byId.values()], requests, pageCount, totalItems, rawCount, complete: totalItems == null || totalItems === rawCount };
+      return { bookings: [...byId.values()], requests, pageCount, totalItems, rawCount, complete: totalItems === rawCount };
     }
   }
   throw new ConnectorError('SMOOBU_PAGINATION_LIMIT');
@@ -40,11 +45,12 @@ export async function readOdooWindow(odoo, window, limits = LIMITS) {
 
   const roleIds = UNITS.map((u) => u.odooRoleId);
   const slotFields = await have('planning.slot', ['id', 'role_id', 'start_datetime', 'end_datetime', 'state', 'x_bloqueo_ref', 'sale_line_id']);
+  for (const required of ['role_id', 'start_datetime', 'end_datetime']) if (!slotFields.includes(required)) throw new ConnectorError('ODOO_FIELDS_MISSING');
   const slots = capped(await call(() => odoo.searchRead('planning.slot',
     [['role_id', 'in', roleIds], ['start_datetime', '<', window.odooSlotRange.end], ['end_datetime', '>', window.odooSlotRange.start]],
     slotFields, { limit: limits.odooSlots, order: 'start_datetime' })), limits.odooSlots, 'ODOO_SLOT_LIMIT');
 
-  const orderFields = await have('sale.order', ['id', 'name', 'state', 'x_pms_reference', 'x_booking_source', 'x_checkin', 'x_checkout', 'x_reservation_status']);
+  const orderFields = await have('sale.order', ['id', 'state', 'x_pms_reference', 'x_booking_source', 'x_checkin', 'x_checkout', 'x_reservation_status']);
   for (const required of ['x_pms_reference', 'x_checkin', 'x_checkout']) if (!orderFields.includes(required)) throw new ConnectorError('ODOO_FIELDS_MISSING');
   const { checkinOnOrBefore, checkoutAfter } = window.orderRange;
   // todos los pedidos con referencia escrita (son pocos) + los pedidos cuyas fechas tocan la ventana

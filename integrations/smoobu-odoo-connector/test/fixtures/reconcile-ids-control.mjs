@@ -36,7 +36,7 @@ export const ODOO_ORDERS = [
   order(3, 'COT/T/0003', 'Booking 2222222222', '2026-11-08', '2026-11-10', ['202']),
   order(4, 'COT/T/0004', 'Smoobu 170000004', '2026-11-12', '2026-11-13', ['201']),
   order(5, 'COT/T/0005', 'Booking.com #4444444444', '2026-11-12', '2026-11-13', ['201']),
-  order(6, 'COT/T/0006', 'pago 3333333333 Nequi - huesped NOMBRE_PRIVADO CC 1014198033', '2026-11-14', '2026-11-15', ['203']),
+  order(6, 'COT/T/0006', 'pago 3333333333 Nequi - huesped NOMBRE_PRIVADO CC 0000000000', '2026-11-14', '2026-11-15', ['203']),
   order(7, 'COT/T/0007', false, '2026-11-01', '2026-11-02', ['302'], { x_booking_source: 'direct' }),
   order(8, 'COT/T/0008', 'Smoobu 170009999', '2026-11-28', '2026-11-29', ['203']),
   order(9, 'COT/T/0009', 'Smoobu 170000008', '2026-11-22', '2026-11-23', ['202'], { state: 'cancel' }),

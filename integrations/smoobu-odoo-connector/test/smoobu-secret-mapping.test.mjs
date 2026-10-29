@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { summarizeReservationsPage } from '../src/reservations-probe.mjs';
 
 const root = new URL('../../../', import.meta.url);
-const wf = readFileSync(new URL('.github/workflows/smoobu-odoo-diagnose.yml', root), 'utf8');
+const wf = readFileSync(new URL('.github/workflows/smoobu-odoo-diagnose.yml', root), 'utf8').replace(/\r\n/g, '\n');
 
 test('el cruce de secretos ocurre UNA sola vez, a nivel de job, y ningun paso lo repite', () => {
   const crossedKey = wf.match(/SMOOBU_API_KEY: \$\{\{ secrets\.SMOOBU_API_SECRET \}\}/g) ?? [];

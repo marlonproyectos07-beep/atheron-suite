@@ -15,8 +15,8 @@ test('referencias: solo cuentan los identificadores con etiqueta; numeros suelto
   assert.deepEqual(parseReferences('Booking COP 80.000').booking, []);
   assert.deepEqual(parseReferences('Airbnb hmabc12345').airbnb, ['HMABC12345']);
   assert.deepEqual(parseReferences('Booking.com #6044417870').booking, ['6044417870']);
-  const r = parseReferences('huesped X (CC 1014198033) - Nequi M11030822');
-  assert.deepEqual([r.smoobu, r.booking, r.unlabeled], [[], [], ['1014198033']]);
+  const r = parseReferences('huesped X (CC 0000000000) - Nequi M11030822');
+  assert.deepEqual([r.smoobu, r.booking, r.unlabeled], [[], [], ['0000000000']]);
   assert.deepEqual(parseReferences(false).smoobu, []);
   assert.equal(normalizeOtaRef(' 6044417870 '), '6044417870'); assert.equal(normalizeOtaRef('x y'), null); assert.equal(normalizeOtaRef(null), null);
 });
@@ -61,8 +61,10 @@ test('conflictos de identificador y de estado', () => {
   assert.equal(mk('Smoobu 160965780 / Booking 6044417870').reason, 'ID_SMOOBU_DISTINTO_EN_EL_PEDIDO');
   assert.equal(mk('Smoobu 160965781', { units: ['301'] }).reason, 'HABITACION_DISTINTA');
   assert.equal(mk('Smoobu 160965781', { units: [] }).reason, 'HABITACION_DEL_PEDIDO_DESCONOCIDA');
+  assert.deepEqual([mk('Smoobu 160965781', { units: ['302', '201'] }).verdict, mk('Smoobu 160965781', { units: ['302', '201'] }).reason], ['AMBIGUOUS', 'PEDIDO_CON_VARIAS_HABITACIONES']);
   assert.equal(mk('Smoobu 160965781', { state: 'cancel' }).reason, 'VIGENTE_EN_SMOOBU_CANCELADA_EN_ODOO');
   assert.equal(mk('Smoobu 160965781 y Smoobu 161787956').reason, 'PEDIDO_REFERENCIA_VARIAS_RESERVAS');
+  assert.deepEqual([mk('Smoobu 160965781 / Booking 6044417870 / Booking 9999999999').verdict, mk('Smoobu 160965781 / Booking 6044417870 / Booking 9999999999').reason], ['AMBIGUOUS', 'PEDIDO_REFERENCIA_VARIAS_RESERVAS']);
   assert.equal(mk('Smoobu 160965781', { x_reservation_status: 'cancelled' }).verdict, 'CONFLICT');
 });
 
@@ -76,12 +78,22 @@ test('sobreventa en Smoobu: misma habitacion, Casa Completa contra habitacion; n
 });
 
 test('pedidos de Odoo con ID que Smoobu no devolvio; cancelados y sin etiqueta no se listan', () => {
-  assert.deepEqual(run().ordersNotReturnedBySmoobu, [{ id: 8, name: 'COT/T/0008', refKinds: ['smoobu'] }]);
+  assert.deepEqual(run().ordersNotReturnedBySmoobu, [{ id: 8, refKinds: ['smoobu'] }]);
+});
+
+test('un turno draft bloquea disponibilidad en Odoo y el informe nunca imprime texto libre del pedido', () => {
+  const orders = ODOO_ORDERS.map((o) => ({ ...o, name: 'NOMBRE_PRIVADO', x_reservation_status: o.id === 2 ? 'NOMBRE_PRIVADO' : o.x_reservation_status }));
+  const draft = { id: 70, role_id: [18, 'ROL_PRIVADO'], start_datetime: '2026-10-31 20:00:00', end_datetime: '2026-11-01 16:00:00', state: 'draft' };
+  const r = run({ orders, slots: [...ODOO_SLOTS, draft] });
+  const control = byId(r)[160965781];
+  assert.equal(control.odooOccupancy, 'FULL');
+  assert.ok(!r.availabilityRisk.some((x) => x.smoobuId === 160965781));
+  assert.ok(!JSON.stringify(r).includes('NOMBRE_PRIVADO'));
 });
 
 test('seguridad: sin propuestas ni escrituras, y el informe no lleva nombres, textos libres ni cedulas', () => {
   const r = run(); const out = JSON.stringify(r);
   assert.equal(r.safety.writesEnabled, false); assert.equal(r.safety.releaseUnlocked, false); assert.equal(r.safety.proposals, 0);
   assert.ok(r.perReservation.every((x) => x.writesEnabled === false));
-  for (const banned of ['PRIVADO', 'privado@', '1014198033', 'Nequi', 'pago ', 'Booking.com']) assert.ok(!out.includes(banned), `no debe aparecer: ${banned}`);
+  for (const banned of ['PRIVADO', 'privado@', '0000000000', 'Nequi', 'pago ', 'Booking.com']) assert.ok(!out.includes(banned), `no debe aparecer: ${banned}`);
 });

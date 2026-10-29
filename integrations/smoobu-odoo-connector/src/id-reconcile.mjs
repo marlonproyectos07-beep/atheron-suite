@@ -36,9 +36,9 @@ const m2oId = (v) => (Array.isArray(v) ? v[0] : (v ?? null));
 const isCancelledOrder = (o) => o.state === 'cancel' || o.x_reservation_status === 'cancelled';
 const dateOnly = (v) => (typeof v === 'string' && v.length >= 10 ? v.slice(0, 10) : null);
 
-/** Una noche D esta ocupada en Odoo si algun turno PUBLICADO del rol cubre D+1 03:00 UTC (22:00 de D en Bogota). */
+/** Una noche D esta ocupada en Odoo si algun turno del rol cubre D+1 03:00 UTC (22:00 de D en Bogota). El Booking Engine cuenta tambien los draft. */
 function occupiedNights(slots, roleId, nights) {
-  const own = slots.filter((s) => m2oId(s.role_id) === roleId && s.state === 'published');
+  const own = slots.filter((s) => m2oId(s.role_id) === roleId);
   return nights.filter((d) => { const probe = `${addDays(d, 1)} 03:00:00`; return own.some((s) => s.start_datetime <= probe && s.end_datetime > probe); });
 }
 
@@ -102,7 +102,7 @@ export function reconcileByIds({ bookings, window, orders, slots, manualReviewId
     const base = {
       smoobuId: c.id, otaRef: c.otaRef, channelId: c.channelId, unit: c.unit, arrival: c.arrival, departure: c.departure,
       smoobuStatus: isGuestStay(c.kind) ? 'ACTIVE' : 'CANCELLED', nightsInWindow: c.nights.length,
-      odooOrders: matched.map((o) => ({ id: o.id, name: o.name ?? null, state: o.state ?? null })),
+      odooOrders: matched.map((o) => ({ id: o.id, state: o.state ?? null })),
       odooOccupancy: occupancy, odooFreeNights: isGuestStay(c.kind) ? freeNights : [],
       overbookingWith: isGuestStay(c.kind) ? overlapsOf(c.id) : [],
       manualReview: manualReviewIds.has(c.id) ? 'ALERTA_SOBREVENTA_NO_RESOLVER_AUTOMATICAMENTE' : null,
@@ -123,12 +123,14 @@ export function reconcileByIds({ bookings, window, orders, slots, manualReviewId
       if (o.refs.smoobu.length > 1) return verdict(VERDICTS.AMBIGUOUS, 'PEDIDO_REFERENCIA_VARIAS_RESERVAS', extra);
       if (o.refs.smoobu.length && !o.refs.smoobu.includes(String(c.id))) return verdict(VERDICTS.CONFLICT, 'ID_SMOOBU_DISTINTO_EN_EL_PEDIDO', extra);
       const otaRefsInOrder = [...o.refs.booking, ...o.refs.airbnb];
+      if (otaRefsInOrder.length > 1) return verdict(VERDICTS.AMBIGUOUS, 'PEDIDO_REFERENCIA_VARIAS_RESERVAS', extra);
       if (c.otaRef && otaRefsInOrder.length && !otaRefsInOrder.includes(c.otaRef)) return verdict(VERDICTS.CONFLICT, 'ID_OTA_DISTINTO_EN_EL_PEDIDO', extra);
       if (isCancelledOrder(o)) return verdict(VERDICTS.CONFLICT, 'VIGENTE_EN_SMOOBU_CANCELADA_EN_ODOO', extra);
       if (!o.units?.length) return verdict(VERDICTS.AMBIGUOUS, 'HABITACION_DEL_PEDIDO_DESCONOCIDA', extra);
+      if (o.units.length > 1) return verdict(VERDICTS.AMBIGUOUS, 'PEDIDO_CON_VARIAS_HABITACIONES', extra);
       if (!o.units.includes(c.unit)) return verdict(VERDICTS.CONFLICT, 'HABITACION_DISTINTA', extra);
       if (dateOnly(o.x_checkin) !== c.arrival || dateOnly(o.x_checkout) !== c.departure) return verdict(VERDICTS.CONFLICT, 'FECHAS_DISTINTAS', extra);
-      return verdict(VERDICTS.MATCH, 'ID_Y_DATOS_COINCIDEN', { ...extra, odooReservationStatus: o.x_reservation_status ?? null });
+      return verdict(VERDICTS.MATCH, 'ID_Y_DATOS_COINCIDEN', extra);
     }
     if (unlabeledFor(c).length) return verdict(VERDICTS.AMBIGUOUS, 'NUMERO_SIN_ETIQUETA_EN_REFERENCIA');
     if (occupancy !== 'NONE') return verdict(VERDICTS.AMBIGUOUS, 'ODOO_OCUPADO_SIN_ID');
@@ -142,7 +144,7 @@ export function reconcileByIds({ bookings, window, orders, slots, manualReviewId
     .filter((o) => !isCancelledOrder(o) && (o.refs.smoobu.length || o.refs.booking.length || o.refs.airbnb.length))
     .filter((o) => dateOnly(o.x_checkin) && dateOnly(o.x_checkout) && dateOnly(o.x_checkin) <= window.to && dateOnly(o.x_checkout) > window.from)
     .filter((o) => !o.refs.smoobu.some((x) => returnedIds.has(x)) && ![...o.refs.booking, ...o.refs.airbnb].some((x) => returnedOta.has(x)))
-    .map((o) => ({ id: o.id, name: o.name ?? null, refKinds: ['smoobu', 'booking', 'airbnb'].filter((k) => o.refs[k].length) }));
+    .map((o) => ({ id: o.id, refKinds: ['smoobu', 'booking', 'airbnb'].filter((k) => o.refs[k].length) }));
 
   const summary = Object.fromEntries(Object.values(VERDICTS).map((v) => [v, perReservation.filter((r) => r.verdict === v).length]));
   const byId = new Map(perReservation.map((r) => [r.smoobuId, r]));
