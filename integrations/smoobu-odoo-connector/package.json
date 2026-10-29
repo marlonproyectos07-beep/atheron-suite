@@ -23,6 +23,7 @@
     "smoobu-reservations": "node scripts/smoobu-reservations.mjs",
     "smoobu-semantics": "node scripts/smoobu-semantics.mjs",
     "reconcile-window": "node scripts/reconcile-window.mjs",
+    "reconcile-ids": "node scripts/reconcile-ids.mjs",
     "odoo-auth-readonly": "node scripts/odoo-auth-readonly.mjs"
   }
 }

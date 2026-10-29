@@ -25,11 +25,21 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'full | apartments-once (UN GET /api/apartments) | reservations-window (UN GET /api/reservations acotado) | credential-shape y credential-swap (sin red)'
+        description: 'full | apartments-once (UN GET /api/apartments) | reservations-window (UN GET /api/reservations acotado) | reconcile-ids (conciliacion por IDs, solo lectura) | credential-shape y credential-swap (sin red)'
         required: false
         default: 'full'
         type: choice
-        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, odoo-auth-readonly, credential-shape, credential-swap]
+        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, odoo-auth-readonly, credential-shape, credential-swap]
+      from:
+        description: 'reconcile-window / reconcile-ids: primera noche YYYY-MM-DD (vacio = ventana historica 26..27 oct)'
+        required: false
+        default: ''
+        type: string
+      to:
+        description: 'reconcile-window / reconcile-ids: ultima noche YYYY-MM-DD (inclusive; maximo 120 noches)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -82,7 +92,20 @@ jobs:
           ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
           ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
           ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          RECONCILE_FROM: ${{ inputs.from }}
+          RECONCILE_TO: ${{ inputs.to }}
         run: npm run --silent reconcile-window
+      - name: Conciliacion por identificadores, en memoria y sin escrituras (ATH-DEV-041)
+        if: ${{ inputs.mode == 'reconcile-ids' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          # las fechas van por entorno (nunca interpoladas en el script) y las valida src/window.mjs
+          RECONCILE_FROM: ${{ inputs.from }}
+          RECONCILE_TO: ${{ inputs.to }}
+        run: npm run --silent reconcile-ids
       - name: Autenticacion Odoo, UNA lectura (ATH-DEV-030)
         if: ${{ inputs.mode == 'odoo-auth-readonly' }}
         env:
