@@ -29,7 +29,7 @@ on:
         required: false
         default: 'full'
         type: choice
-        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, odoo-auth-readonly, credential-shape, credential-swap]
+        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reservation-once, odoo-auth-readonly, credential-shape, credential-swap]
       from:
         description: 'reconcile-window / reconcile-ids: primera noche YYYY-MM-DD (vacio = ventana historica 26..27 oct)'
         required: false
@@ -37,6 +37,11 @@ on:
         type: string
       to:
         description: 'reconcile-window / reconcile-ids: ultima noche YYYY-MM-DD (inclusive; maximo 120 noches)'
+        required: false
+        default: ''
+        type: string
+      reservation_id:
+        description: 'reservation-once: id de Smoobu (solo ids de la lista blanca de src/reservation-probe.mjs)'
         required: false
         default: ''
         type: string
@@ -106,6 +111,13 @@ jobs:
           RECONCILE_FROM: ${{ inputs.from }}
           RECONCILE_TO: ${{ inputs.to }}
         run: npm run --silent reconcile-ids
+      - name: Lectura individual de una reserva Smoobu, UNA solicitud GET (ATH-DEV-052)
+        if: ${{ inputs.mode == 'reservation-once' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          # el id va por entorno (nunca interpolado en el script) y se valida contra una lista blanca
+          RESERVATION_ID: ${{ inputs.reservation_id }}
+        run: npm run --silent smoobu-reservation-once
       - name: Autenticacion Odoo, UNA lectura (ATH-DEV-030)
         if: ${{ inputs.mode == 'odoo-auth-readonly' }}
         env:
