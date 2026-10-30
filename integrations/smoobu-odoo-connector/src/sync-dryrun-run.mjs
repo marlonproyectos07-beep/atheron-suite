@@ -61,7 +61,8 @@ export async function runSyncDryRun({ smoobu, odoo, window, today, watchIds = []
   const orderIds = [...new Set(report.perReservation.flatMap((r) => (r.odooOrders ?? []).map((x) => x.id)))];
   const cancelOrderIds = report.perReservation.filter((r) => r.verdict === VERDICTS.CONFLICT && r.reason === 'CANCELADA_EN_SMOOBU_VIGENTE_EN_ODOO').flatMap((r) => (r.odooOrders ?? []).map((x) => x.id));
   const extras = await readSyncExtras(odoo, { orderIds, cancelOrderIds });
-  const plan = planSync({ report, bookings: s.bookings, orders: o.orders, extras, today, slots: o.slots });
+  const watchAlerts = (watch.entries ?? []).filter((e) => e.status === 'OVERBOOKING_ALERT');
+  const plan = planSync({ report, bookings: s.bookings, orders: o.orders, extras, today, slots: o.slots, watchAlerts });
   return {
     plan, report,
     reads: { smoobu: { requests: s.requests + watch.requests, recordsRead: s.bookings.length }, odoo: { calls: o.calls + extras.calls, methods: ['fields_get', 'search_read'], writes: 0 } },

@@ -3,7 +3,7 @@ import { VERDICTS } from './id-reconcile.mjs';
 import { parseReferences, normalizeOtaRef } from './reference-parse.mjs';
 import { addDays } from './window.mjs';
 import { maskSmoobu, maskOta } from './public-report.mjs';
-import { unitForName } from './unit-map.mjs';
+import { unitForName, conflictsWith } from './unit-map.mjs';
 import { WRITES_ENABLED } from './live-reconcile.mjs';
 import { RELEASE_UNLOCKED } from './odoo-facts.mjs';
 
@@ -91,7 +91,9 @@ export function buildCreatePayload({ smoobuId, unit, arrival, departure, source,
  * @param {string}  p.today     fecha de hoy en Bogota (YYYY-MM-DD)
  * @param {object[]} [p.slots]  turnos de la ventana (para comprobar noches libres en cambios de fecha)
  */
-export function planSync({ report, bookings, orders, extras, today, slots = [], taxPolicy = TAX_POLICY }) {
+export function planSync({ report, bookings, orders, extras, today, slots = [], taxPolicy = TAX_POLICY, watchAlerts = [] }) {
+  const watched = watchAlerts.filter((w) => w && w.unit && w.arrival && w.departure);
+  const clashesWatch = (r) => watched.some((w) => w.smoobuId !== r.smoobuId && (w.unit === r.unit || conflictsWith(w.unit).includes(r.unit)) && r.arrival < w.departure && w.arrival < r.departure);
   const raw = new Map(bookings.map((b) => [Number(b?.id), b]));
   const orderById = new Map(orders.map((o) => [o.id, { ...o, refs: parseReferences(o.x_pms_reference) }]));
   const ops = [];
@@ -108,6 +110,7 @@ export function planSync({ report, bookings, orders, extras, today, slots = [], 
     const risky = [];
     if ((r.overbookingWith ?? []).length) risky.push(GUARDS.SOBREVENTA);
     if (r.manualReview) risky.push(GUARDS.REVISION_MANUAL);
+    if (clashesWatch(r)) risky.push(GUARDS.SOBREVENTA);
 
     switch (r.verdict) {
       case VERDICTS.CANCELLED:
@@ -162,7 +165,8 @@ export function planSync({ report, bookings, orders, extras, today, slots = [], 
         if (Object.keys(fill).length || lineFill) {
           if (blockingForFill.length || invoiced) { add(r, OPS.BLOCKED, STATUS.BLOQUEADO, { guards: [...guards, ...(invoiced ? [GUARDS.PEDIDO_FACTURADO] : [])], orderId: o.id }); break; }
           const payload = { order: fill, line: lineFill };
-          add(r, OPS.UPDATE_ORDER, STATUS.LISTO, { orderId: o.id, payload, changes: [...Object.keys(fill), ...(lineFill ? ['line.x_precio_manual'] : [])],
+          // un borrador puede estar retenido a proposito (p. ej. 03824, pendiente del contador): nunca se toca sin una persona
+          add(r, OPS.UPDATE_ORDER, o.state === 'draft' || o.state === 'sent' ? STATUS.REQUIERE_APROBACION : STATUS.LISTO, { orderId: o.id, payload, changes: [...Object.keys(fill), ...(lineFill ? ['line.x_precio_manual'] : [])],
             preconditions: ['PEDIDO_SIN_CAMBIOS_DESDE_LA_LECTURA (write_date)', 'PRECIO_UNITARIO_IGUAL_AL_DE_SMOOBU'] });
           break;
         }

@@ -25,10 +25,10 @@ const slot = (id, unit, from, to, lineId) => ({ id, role_id: [ROLE[unit], 'x'], 
 const info = (extra = {}) => ({ client_order_ref: 'Smoobu x', x_booking_source: 'direct', rental_start_date: 'x', rental_return_date: 'x', transactions: 0, qtyInvoiced: 0, ...extra });
 const line = (id, extra = {}) => ({ id, price_unit: 100000, x_precio_manual: 100000, taxes: 0, ...extra });
 
-function plan({ bookings, orders = [], slots = [], orderInfo = {}, lineInfo = {}, payments = {}, today = TODAY }) {
+function plan({ bookings, orders = [], slots = [], orderInfo = {}, lineInfo = {}, payments = {}, today = TODAY, watchAlerts = [] }) {
   const report = reconcileByIds({ bookings, window: W, orders, slots });
   const extras = { orderInfo: new Map(Object.entries(orderInfo).map(([k, v]) => [Number(k), v])), lineInfo: new Map(Object.entries(lineInfo).map(([k, v]) => [Number(k), v])), paymentsByOrder: new Map(Object.entries(payments).map(([k, v]) => [Number(k), v])) };
-  return planSync({ report, bookings, orders, extras, today, slots });
+  return planSync({ report, bookings, orders, extras, today, slots, watchAlerts });
 }
 const opOf = (p, id) => p.ops.find((o) => o.smoobuId === id);
 
@@ -200,4 +200,21 @@ test('sin camino de escritura: interruptores en false y ningun metodo de escritu
     const src = readFileSync(new URL(f, import.meta.url), 'utf8').replace(/\/\/.*$/gm, '');
     assert.ok(!/\.(create|write|unlink|executeKw|_request|callKw)\(|P0WriteClient|recompute-client|p0-client|odoo-json2-p0|method:\s*'(POST|PUT|DELETE|PATCH)'/.test(src), f);
   }
+});
+
+test('sobreventa vigilada fuera del listado (caso Casa/301 del 04/01): la reserva que la pisa se bloquea', () => {
+  const watchAlerts = [{ smoobuId: 170300399, unit: '301', arrival: '2026-11-25', departure: '2026-11-26', status: 'OVERBOOKING_ALERT' }];
+  // (Casa y 203 se prueban por separado: entre ellas ya serian sobreventa dentro del listado)
+  const casa = plan({ bookings: [bk(170300300, 'CASA', '2026-11-25', '2026-11-26')], watchAlerts });
+  assert.ok(opOf(casa, 170300300).guards.includes(GUARDS.SOBREVENTA)); // Casa pisa la 301
+  const other = plan({ bookings: [bk(170300301, '203', '2026-11-25', '2026-11-26'), bk(170300302, '201', '2026-11-27', '2026-11-28')], watchAlerts });
+  assert.equal(opOf(other, 170300301).op, OPS.CREATE_ORDER); // otra habitacion fisica no
+  assert.equal(opOf(other, 170300302).op, OPS.CREATE_ORDER); // otra fecha no
+});
+
+test('borrador retenido (caso 03824): rellenar datos requiere aprobacion, nunca LISTO', () => {
+  const p = plan({ bookings: [bk(170300310, '202', '2026-11-03', '2026-11-05')], orders: [order(31, 170300310, '202', '2026-11-03', '2026-11-05', { state: 'draft' })],
+    orderInfo: { 31: info({ rental_start_date: null, rental_return_date: null }) }, lineInfo: { 310: line(310) } });
+  const o = opOf(p, 170300310);
+  assert.deepEqual([o.op, o.status], [OPS.UPDATE_ORDER, STATUS.REQUIERE_APROBACION]);
 });
