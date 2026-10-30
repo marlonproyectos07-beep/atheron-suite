@@ -28,7 +28,7 @@ try {
   const pub = { at: now.toISOString(), result: 'PLAN_SIMULADO_SIN_ESCRITURAS', window: { from: window.from, to: window.to }, today, reads: res.reads, ...toPublicPlan(res.plan) };
   const text = JSON.stringify(pub);
   // ademas de los IDs, nada del payload (nombres, correos, telefonos) puede aparecer
-  const piiValues = res.plan.ops.flatMap((o) => [o.payload?.partner?.createIfMissing?.name, o.payload?.partner?.createIfMissing?.email, o.payload?.partner?.createIfMissing?.phone]).filter((v) => typeof v === 'string' && v.length > 3);
+  const piiValues = res.plan.ops.flatMap((o) => [o.payload?.partner?.guest?.name, o.payload?.partner?.guest?.email, o.payload?.partner?.guest?.phone]).filter((v) => typeof v === 'string' && v.length > 3);
   const guard = assertPublicSafe(text, { identifiers: [...sensitiveValues(res.report), ...piiValues], secrets: [sc.apiKey, sc.apiSecret, oc.apiKey] });
   if (!guard.safe) out({ result: 'FALLO', category: 'PRIVACIDAD', code: 'PRIVACY_GUARD_TRIPPED', hits: guard.hits, totals: res.plan.totals, writes: 0 }, 3);
   console.log(text);

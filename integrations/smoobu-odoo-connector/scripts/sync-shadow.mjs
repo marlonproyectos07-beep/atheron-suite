@@ -45,7 +45,7 @@ try {
     safety: { ...plan.safety, writerSimulated: true, odooWritesSent: 0 },
   };
   const text = JSON.stringify(pub);
-  const pii = plan.ops.flatMap((o) => [o.payload?.partner?.createIfMissing?.name, o.payload?.partner?.createIfMissing?.email, o.payload?.partner?.createIfMissing?.phone]).filter((v) => typeof v === 'string' && v.length > 3);
+  const pii = plan.ops.flatMap((o) => [o.payload?.partner?.guest?.name, o.payload?.partner?.guest?.email, o.payload?.partner?.guest?.phone]).filter((v) => typeof v === 'string' && v.length > 3);
   const guard = assertPublicSafe(text, { identifiers: [...sensitiveValues(report), ...pii], secrets: [sc.apiKey, sc.apiSecret, oc.apiKey] });
   if (!guard.safe) out({ result: 'FALLO', category: 'PRIVACIDAD', code: 'PRIVACY_GUARD_TRIPPED', hits: guard.hits, writes: 0 }, 3);
   console.log(text);

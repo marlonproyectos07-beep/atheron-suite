@@ -3,6 +3,7 @@ import { OPS, STATUS, GUARDS, CASA_UNITS } from './sync-intent.mjs';
 import { parseReferences } from './reference-parse.mjs';
 import { unitForName, unitForSmoobuApartment } from './unit-map.mjs';
 import { PHASES } from './sync-journal.mjs';
+import { resolveContact, contactQueries } from './sync-contact.mjs';
 
 /**
  * ATH-DEV-116 — EJECUTOR de un plan de sincronizacion. Orden fijo por operacion:
@@ -64,18 +65,23 @@ const HANDLERS = {
       need(op.payload.lines.every((l) => typeof l.price_unit === 'number' && l.price_unit > 0), 'PRECIO_DE_LINEA_SIN_DEFINIR');
       need(near(Number(b.price), total), 'PRECIO_CAMBIO_EN_SMOOBU');
       need(await nightsFree(reader, op.unit, op.arrival, op.departure), 'NOCHES_OCUPADAS_EN_ODOO');
-      const p = op.payload.partner;
-      if (p.email) {
-        const found = await reader.searchRead('res.partner', [['email', '=ilike', p.email]], ['id'], { limit: 5 });
-        need(found.length <= 1, 'CONTACTOS_DUPLICADOS');
-        return { partnerId: found[0]?.id ?? null };
-      }
-      need(approved, 'CONTACTO_SIN_CORREO_REQUIERE_APROBACION');
-      return { partnerId: null };
+      // contactos: lecturas frescas por ref de Smoobu, correo, telefono y nombre; nunca se adivina una identidad
+      const q = contactQueries({ smoobuId: op.smoobuId, guest: op.payload.partner.guest });
+      const LIMIT = 200;
+      const read = async (domain) => {
+        if (!domain) return [];
+        const rows = await reader.searchRead('res.partner', domain, ['id', 'name', 'email', 'phone', 'ref'], { limit: LIMIT });
+        need(rows.length < LIMIT, 'CONTACTO_BUSQUEDA_INCOMPLETA'); // lectura truncada = no se puede descartar un duplicado
+        return rows;
+      };
+      const candidates = { byRef: await read(q.byRef), byEmail: await read(q.byEmail), byPhone: await read(q.byPhone), byName: await read(q.byName) };
+      const c = resolveContact({ smoobuId: op.smoobuId, guest: op.payload.partner.guest, candidates });
+      need(!c.block, c.block);
+      return c.action === 'REUSE' ? { partnerId: c.partnerId } : { partnerId: null, createVals: c.vals };
     };
-    const execute = async ({ partnerId }) => {
+    const execute = async ({ partnerId, createVals }) => {
       let pid = partnerId;
-      if (!pid) { [pid] = await writer.execute('res.partner', 'create', { vals_list: [op.payload.partner.createIfMissing] }); steps.push('partner.create'); }
+      if (!pid) { [pid] = await writer.execute('res.partner', 'create', { vals_list: [createVals] }); steps.push('partner.create'); }
       const vals = { partner_id: pid, ...op.payload.order, order_line: op.payload.lines.map((l) => [0, 0, { ...l, tax_ids: [[6, 0, []]] }]) };
       const [orderId] = await writer.execute('sale.order', 'create', { vals_list: [vals] }); steps.push('sale.order.create');
       await writer.execute('sale.order', 'message_post', { ids: [orderId], body: note(op), message_type: 'comment', subtype_xmlid: 'mail.mt_note' }); steps.push('note');
@@ -144,6 +150,12 @@ const HANDLERS = {
       for (const [id, p] of prices) need(near(o.lines.find((l) => l.id === id)?.price_unit, p), 'VERIFICACION_TARIFA_SOBRESCRITA');
       const slots = await reader.searchRead('planning.slot', [['sale_line_id', 'in', o.lines.map((l) => l.id)]], ['id'], { limit: 50 });
       need(slots.length >= 1, 'VERIFICACION_SIN_TURNO');
+      if (op.unit === 'CASA') {
+        // Casa Completa: Odoo debe haber bloqueado las cinco habitaciones fisicas a partir del turno de Casa (automatizacion 167)
+        const rooms = CASA_UNITS.map((u) => unitForName(u).odooRoleId);
+        const blocks = await reader.searchRead('planning.slot', [['role_id', 'in', rooms], ['x_bloqueo_ref', 'in', slots.map((s) => String(s.id))]], ['id', 'role_id'], { limit: 50 });
+        need(new Set(blocks.map((b) => m2oId(b.role_id))).size === rooms.length, 'VERIFICACION_HABITACIONES_NO_BLOQUEADAS');
+      }
     };
     return { prevalidate, execute, verify, steps };
   },
@@ -185,7 +197,8 @@ async function recover(entry, { reader, plan }) {
     if (live.length > 1) return { halt: 'RECUPERACION_DUPLICADO_DETECTADO' };
     if (live.length === 1) return { phase: PHASES.RECOVERED_DONE, orderId: live[0].id };
     const contact = entry.partnerId || (entry.steps ?? []).includes('partner.create');
-    return { phase: PHASES.RECOVERED_NOT_APPLIED, ...(contact ? { partnerId: entry.partnerId ?? null, code: 'CONTACTO_CREADO_SIN_PEDIDO_REVISAR' } : {}) };
+    // el contacto creado lleva ref SMOOBU-<id>: el siguiente intento lo reutiliza en vez de duplicarlo
+    return { phase: PHASES.RECOVERED_NOT_APPLIED, ...(contact ? { partnerId: entry.partnerId ?? null, code: 'CONTACTO_CREADO_SE_REUTILIZA_POR_REF' } : {}) };
   }
   if (!entry.orderId) return { halt: 'RECUPERACION_SIN_PEDIDO' };
   const o = await readOrder(reader, entry.orderId);

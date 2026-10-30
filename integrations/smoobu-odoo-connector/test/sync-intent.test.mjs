@@ -18,7 +18,7 @@ const TMPL = { 201: 12135, 202: 12139, 302: 12141 };
 const W = { from: '2026-11-01', to: '2026-11-30', nights: 30 };
 const TODAY = '2026-11-05';
 const bk = (id, unit, arrival, departure, extra = {}) => ({ id, type: 'reservation', arrival, departure, apartment: { id: APT[unit] }, channel: { id: CH.DIRECTA },
-  'guest-name': 'NOMBRE_SINTETICO', email: 'sintetico@example.invalid', phone: '+00 000 0000', price: 100000, ...extra });
+  'guest-name': 'Ana Sintetica Ficticia', email: 'sintetico@example.invalid', phone: '+00 000 0000', price: 100000, ...extra });
 const order = (id, sid, unit, checkin, checkout, extra = {}) => ({ id, state: 'sale', x_pms_reference: `SMOOBU-${sid}`, x_checkin: checkin, x_checkout: checkout,
   amount_untaxed: 100000, amount_tax: 0, amount_total: 100000, units: [unit], lineIds: [id * 10], lines: [{ price_unit: 100000, x_precio_manual: 100000 }], invoices: [], ...extra });
 const slot = (id, unit, from, to, lineId) => ({ id, role_id: [ROLE[unit], 'x'], start_datetime: `${from} 20:00:00`, end_datetime: `${to} 16:00:00`, sale_line_id: lineId ? [lineId, 'x'] : false });
@@ -51,7 +51,7 @@ test('crear se bloquea: Casa sin producto, precio 0, canal desconocido y noches 
       bk(170300004, '202', '2026-11-03', '2026-11-04', { channel: { id: 999 } }), bk(170300005, '203', '2026-11-10', '2026-11-11')],
     slots: [slot(1, '203', '2026-11-10', '2026-11-11', null)],
   });
-  assert.ok(opOf(p, 170300002).guards.includes(GUARDS.CASA_REPARTO_PENDIENTE));
+  assert.ok(opOf(p, 170300002).guards.includes(GUARDS.PERSONAS_DESCONOCIDAS)); // Smoobu sin numero de personas: no se inventa
   assert.ok(opOf(p, 170300003).guards.includes(GUARDS.PRECIO_FALTANTE));
   assert.ok(opOf(p, 170300004).guards.includes(GUARDS.CANAL_DESCONOCIDO));
   assert.deepEqual([opOf(p, 170300005).op, opOf(p, 170300005).guards], [OPS.BLOCKED, [GUARDS.AMBIGUA]]); // ocupado sin ID = AMBIGUOUS
@@ -142,19 +142,19 @@ test('idempotencia: misma entrada = mismas claves; una reserva ya creada (MATCH)
 test('vista publica: IDs enmascarados, solo nombres de campos; sin nombres, correos, telefonos ni importes', () => {
   const p = plan({ bookings: [bk(170300100, '302', '2026-11-22', '2026-11-23', { price: 87654, channel: { id: CH.BOOKING }, 'reference-id': '5409999999' })] });
   const text = JSON.stringify(toPublicPlan(p));
-  for (const banned of ['NOMBRE_SINTETICO', 'sintetico@', '+00 000', '87654', '170300100', '5409999999', '"payload"']) assert.ok(!text.includes(banned), banned);
+  for (const banned of ['Ana Sintetica', 'sintetico@', '+00 000', '87654', '170300100', '5409999999', '"payload"']) assert.ok(!text.includes(banned), banned);
   assert.match(text, /SM\*\.\.\.0100/); assert.match(text, /line\.x_precio_manual/);
-  assert.ok(assertPublicSafe(text, { identifiers: ['170300100', '5409999999', 'NOMBRE_SINTETICO'] }).safe);
+  assert.ok(assertPublicSafe(text, { identifiers: ['170300100', '5409999999', 'Ana Sintetica Ficticia'] }).safe);
 });
 
 test('referencia y payload: formato de los pedidos hechos a mano (03839/03845/03846)', () => {
   assert.deepEqual(referenceFor({ smoobuId: 1, source: 'booking_com', otaRef: '9' }), { x_pms_reference: 'SMOOBU-1 / Booking 9', client_order_ref: 'Smoobu 1 / Booking 9' });
   assert.deepEqual(referenceFor({ smoobuId: 2, source: 'direct', otaRef: null }), { x_pms_reference: 'SMOOBU-2', client_order_ref: 'Smoobu 2' });
   const pl = buildCreatePayload({ smoobuId: 3, unit: '301', arrival: '2026-11-01', departure: '2026-11-03', source: 'direct', price: 200000, guest: { name: 'N', email: null } });
-  assert.equal(pl.partner.match, 'ninguno'); assert.equal(pl.lines[0].product_id, 57845); assert.equal(pl.lines[0].product_uom_qty, 1);
-  const casa = buildCreatePayload({ smoobuId: 4, unit: 'CASA', arrival: '2026-11-01', departure: '2026-11-02', source: 'direct', price: 500000, guest: {} });
-  assert.deepEqual(casa.lines.map((l) => l.product_id), [57846, 57848, 57849, 57845, 57847]); // cinco habitaciones, ningun sexto producto
-  assert.ok(casa.lines.every((l) => l.price_unit === null)); // sin reparto definido no hay precios inventados
+  assert.deepEqual(pl.partner, { smoobuId: 3, guest: { name: 'N', email: null, phone: null } }); // solo datos crudos de Smoobu; assert.equal(pl.lines[0].product_id, 57845); assert.equal(pl.lines[0].product_uom_qty, 1);
+  const casa = buildCreatePayload({ smoobuId: 4, unit: 'CASA', arrival: '2026-11-01', departure: '2026-11-02', source: 'direct', price: 500000, guest: {}, persons: 12 });
+  // Casa Completa: UNA linea con el producto existente CASA-MAGIA, un solo ingreso; Odoo bloquea las cinco habitaciones
+  assert.deepEqual(casa.lines, [{ product_id: 57850, product_uom_qty: 1, price_unit: 500000, x_precio_manual: 500000, tax_ids: [], x_personas: 12 }]);
 });
 
 // ---- lecturas reales simuladas: solo fields_get/search_read ----
@@ -220,4 +220,30 @@ test('borrador retenido (caso 03824): rellenar datos requiere aprobacion, nunca 
     orderInfo: { 31: info({ rental_start_date: null, rental_return_date: null }) }, lineInfo: { 310: line(310) } });
   const o = opOf(p, 170300310);
   assert.deepEqual([o.op, o.status], [OPS.UPDATE_ORDER, STATUS.REQUIERE_APROBACION]);
+});
+
+test('Casa Completa: una sola reserva comercial con CASA-MAGIA si Smoobu trae 10+ personas; si trae menos, bloqueada', () => {
+  const ok = plan({ bookings: [bk(170300400, 'CASA', '2026-11-25', '2026-11-26', { adults: 8, children: 3, price: 600000 })] });
+  const o = opOf(ok, 170300400);
+  assert.deepEqual([o.op, o.status, o.payload.lines.length, o.payload.lines[0].product_id, o.payload.lines[0].x_personas], [OPS.CREATE_ORDER, STATUS.LISTO, 1, 57850, 11]);
+  const few = opOf(plan({ bookings: [bk(170300401, 'CASA', '2026-11-25', '2026-11-26', { adults: 6 })] }), 170300401);
+  assert.ok(few.guards.includes(GUARDS.CASA_MINIMO_10_PERSONAS));
+});
+
+test('nombre no identificable (notas, cifras, una palabra o genericos): no se planifica crear', () => {
+  for (const name of ['OCUPADA 301 — Alejandro Acevedo — 22/10/2026', 'Walter Mosquera C. — Suite adicional', 'Huesped Airbnb', 'Raphael', '', 'MEDICO - VILLALBA - BEDS24 94517233']) {
+    const p = plan({ bookings: [bk(170300410, '201', '2026-11-25', '2026-11-26', { 'guest-name': name })] });
+    assert.ok(opOf(p, 170300410).guards.includes(GUARDS.NOMBRE_NO_IDENTIFICABLE), name);
+  }
+});
+
+test('contactos: reglas puras de nombre, telefono y correo', async () => {
+  const { assessGuestName, resolveContact, normalizePhone } = await import('../src/sync-contact.mjs');
+  assert.equal(assessGuestName('José Ángel Pérez').ok, true);
+  assert.equal(normalizePhone('+57 300 111-2233'), '3001112233'); assert.equal(normalizePhone('12'), null);
+  const c = (o) => resolveContact({ smoobuId: 5, guest: { name: 'Ana Sintetica Ficticia', ...o.guest }, candidates: { byRef: [], byEmail: [], byPhone: [], byName: [], ...o.cand } });
+  assert.deepEqual(c({}).vals, { name: 'Ana Sintetica Ficticia', ref: 'SMOOBU-5' }); // sin correo ni telefono: no se inventan
+  assert.equal(c({ cand: { byRef: [{ id: 9, ref: 'SMOOBU-5', name: 'x' }] } }).partnerId, 9); // el que ya creo esta reserva
+  assert.equal(c({ guest: { email: 'a@b.co' }, cand: { byEmail: [{ id: 3, name: 'Ana Sintetica', email: 'A@B.co' }] } }).matchedBy, 'CORREO');
+  assert.equal(resolveContact({ smoobuId: null, guest: { name: 'Ana Sintetica Ficticia' }, candidates: {} }).block, 'SIN_ID_SMOOBU');
 });

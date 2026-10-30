@@ -1,7 +1,8 @@
 // ATH-DEV-116 — Odoo JSON-2 SIMULADO en memoria para pruebas del ejecutor. Nada de esto toca la red.
 // Reproduce lo relevante de las automatizaciones reales: 151 (turno al confirmar), 161 (precio manual protege de la tarifa 17),
 // 141 (CHOQUE DE RESERVA) y 166 (al cancelar se borran los turnos enlazados). Permite inyectar fallos antes/despues de aplicar.
-export const ROLE_BY_PRODUCT = { 57846: 29, 57848: 19, 57849: 30, 57845: 37, 57847: 18 };
+export const ROLE_BY_PRODUCT = { 57846: 29, 57848: 19, 57849: 30, 57845: 37, 57847: 18, 57850: 69 };
+const CASA_ROOMS = [29, 19, 30, 37, 18];
 const M2O = new Set(['partner_id', 'order_id', 'product_id', 'role_id', 'sale_line_id']);
 const res = (data, status = 200) => ({ ok: status < 400, status, headers: { get: () => null }, json: async () => data, text: async () => JSON.stringify(data) });
 
@@ -57,7 +58,7 @@ export class FakeOdoo {
   apply(model, method, p) {
     const T = this.t[model];
     if (method === 'fields_get') return Object.fromEntries(['id', 'name', 'state', 'write_date', 'email', 'phone', 'partner_id', 'x_pms_reference', 'client_order_ref', 'x_booking_source', 'x_checkin', 'x_checkout',
-      'rental_start_date', 'rental_return_date', 'invoice_ids', 'order_line', 'order_id', 'product_id', 'price_unit', 'x_precio_manual', 'qty_invoiced', 'tax_ids', 'role_id', 'start_datetime', 'end_datetime', 'sale_line_id', 'move_type'].map((k) => [k, { type: 'char' }]));
+      'rental_start_date', 'rental_return_date', 'invoice_ids', 'order_line', 'order_id', 'product_id', 'price_unit', 'x_precio_manual', 'qty_invoiced', 'tax_ids', 'role_id', 'start_datetime', 'end_datetime', 'sale_line_id', 'move_type', 'x_bloqueo_ref', 'x_personas', 'ref'].map((k) => [k, { type: 'char' }]));
     if (method === 'search_read') return T.filter((r) => (p.domain ?? []).every((c) => this.match(r, c))).slice(0, p.limit ?? 1e9).map((r) => this.view(model, r, p.fields));
     if (method === 'search_count') return T.filter((r) => (p.domain ?? []).every((c) => this.match(r, c))).length;
     if (method === 'create') {
@@ -65,8 +66,10 @@ export class FakeOdoo {
       if (model === 'sale.order') {
         const lines = v.order_line ?? []; delete v.order_line;
         T.push({ id, state: 'draft', write_date: this.stamp(), ...v });
+        // automatizacion 71: Casa La Magia Completa exige minimo 10 personas
+        for (const [, , l] of lines) if (l.product_id === 57850 && !((l.x_personas ?? 0) >= 10)) { T.pop(); throw new Error('Casa requiere minimo 10 personas'); }
         for (const [, , l] of lines) this.t['sale.order.line'].push({ id: (this.next += 1), order_id: id, product_id: l.product_id, product_uom_qty: l.product_uom_qty,
-          price_unit: this.priceOverwriteOnCreate ? 50000 : l.price_unit, x_precio_manual: l.x_precio_manual, qty_invoiced: 0, tax_ids: (l.tax_ids?.[0]?.[2] ?? []) });
+          price_unit: this.priceOverwriteOnCreate ? 50000 : l.price_unit, x_precio_manual: l.x_precio_manual, x_personas: l.x_personas, qty_invoiced: 0, tax_ids: (l.tax_ids?.[0]?.[2] ?? []) });
       } else T.push({ id, ...v });
       return [id];
     }
@@ -80,13 +83,20 @@ export class FakeOdoo {
       const lines = this.t['sale.order.line'].filter((l) => l.order_id === o.id);
       const start = o.rental_start_date; const end = o.rental_return_date;
       for (const l of lines) if (this.overlap(ROLE_BY_PRODUCT[l.product_id], start, end, lines.map((x) => x.id))) throw new Error('CHOQUE DE RESERVA');
-      for (const l of lines) { if (!(l.x_precio_manual > 0)) l.price_unit = 50000; this.t['planning.slot'].push({ id: (this.next += 1), role_id: ROLE_BY_PRODUCT[l.product_id], start_datetime: start, end_datetime: end, sale_line_id: l.id }); }
+      for (const l of lines) {
+        if (!(l.x_precio_manual > 0)) l.price_unit = 50000;
+        const sid = (this.next += 1);
+        this.t['planning.slot'].push({ id: sid, role_id: ROLE_BY_PRODUCT[l.product_id], start_datetime: start, end_datetime: end, sale_line_id: l.id });
+        // automatizacion 167: el turno de Casa bloquea las cinco habitaciones (x_bloqueo_ref = id del turno de Casa)
+        if (l.product_id === 57850 && !this.skipCasaBlocks) for (const r of CASA_ROOMS) this.t['planning.slot'].push({ id: (this.next += 1), role_id: r, start_datetime: start, end_datetime: end, sale_line_id: false, x_bloqueo_ref: String(sid) });
+      }
       o.state = 'sale'; o.write_date = this.stamp(); return true;
     }
     if (method === 'action_cancel') {
       const o = T.find((x) => x.id === p.ids[0]);
       const lineIds = this.t['sale.order.line'].filter((l) => l.order_id === o.id).map((l) => l.id);
-      this.t['planning.slot'] = this.t['planning.slot'].filter((s) => !lineIds.includes(s.sale_line_id));
+      const casaSlots = this.t['planning.slot'].filter((s) => lineIds.includes(s.sale_line_id)).map((s) => String(s.id));
+      this.t['planning.slot'] = this.t['planning.slot'].filter((s) => !lineIds.includes(s.sale_line_id) && !casaSlots.includes(s.x_bloqueo_ref));
       o.state = 'cancel'; o.write_date = this.stamp(); return true;
     }
     throw new Error(`metodo no simulado ${model}/${method}`);

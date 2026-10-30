@@ -4,6 +4,7 @@ import { parseReferences, normalizeOtaRef } from './reference-parse.mjs';
 import { addDays } from './window.mjs';
 import { maskSmoobu, maskOta } from './public-report.mjs';
 import { unitForName, conflictsWith } from './unit-map.mjs';
+import { assessGuestName } from './sync-contact.mjs';
 import { WRITES_ENABLED } from './live-reconcile.mjs';
 import { RELEASE_UNLOCKED } from './odoo-facts.mjs';
 
@@ -25,7 +26,10 @@ import { RELEASE_UNLOCKED } from './odoo-facts.mjs';
  *     confirmacion queda en REQUIERE_APROBACION.
  *  4. Cancelaciones: una cancelacion en Smoobu NO prueba que el huesped no se alojara (caso 302, 30/10). Nunca es LISTO:
  *     como mucho REQUIERE_APROBACION, y se BLOQUEA si la estancia ya empezo, si hay facturas o si hay pagos.
- *  5. Sobreventa, ambiguedad, cambio de habitacion, pedido facturado, Casa Completa sin producto: BLOQUEADO.
+ *  5. Sobreventa, ambiguedad, cambio de habitacion, pedido facturado: BLOQUEADO.
+ *  6. (ATH-DEV-117) Casa Completa = UNA reserva comercial con el producto existente CASA-MAGIA; las cinco habitaciones las
+ *     bloquea Odoo (automatizacion 167 al publicarse el turno de Casa). Minimo 10 personas (automatizacion 71).
+ *  7. (ATH-DEV-117) Contactos sin correo permitidos: ver sync-contact.mjs (nombre identificable + ID de Smoobu).
  */
 export const OPS = Object.freeze({ CREATE_ORDER: 'CREATE_ORDER', UPDATE_ORDER: 'UPDATE_ORDER', CONFIRM_ORDER: 'CONFIRM_ORDER', CANCEL_ORDER: 'CANCEL_ORDER', NOOP: 'NOOP', BLOCKED: 'BLOCKED' });
 export const STATUS = Object.freeze({ LISTO: 'LISTO', REQUIERE_APROBACION: 'REQUIERE_APROBACION', BLOQUEADO: 'BLOQUEADO', SIN_CAMBIOS: 'SIN_CAMBIOS' });
@@ -36,18 +40,21 @@ export const GUARDS = Object.freeze({
   ESTANCIA_INICIADA: 'ESTANCIA_INICIADA', NOCHES_OCUPADAS: 'NOCHES_OCUPADAS', IMPUESTO_PENDIENTE: 'IMPUESTO_PENDIENTE',
   CANCELADA_EN_ODOO_VIGENTE_EN_SMOOBU: 'CANCELADA_EN_ODOO_VIGENTE_EN_SMOOBU', ID_DISTINTO: 'ID_DISTINTO', SIN_TURNO: 'SIN_TURNO',
   USO_DIURNO: 'USO_DIURNO', DATOS_EXTRA_FALTANTES: 'DATOS_EXTRA_FALTANTES', PEDIDO_SIN_RESERVA_EN_SMOOBU: 'PEDIDO_SIN_RESERVA_EN_SMOOBU',
-  VARIAS_LINEAS: 'VARIAS_LINEAS', CASA_REPARTO_PENDIENTE: 'CASA_REPARTO_PENDIENTE',
+  VARIAS_LINEAS: 'VARIAS_LINEAS', CASA_MINIMO_10_PERSONAS: 'CASA_MINIMO_10_PERSONAS', PERSONAS_DESCONOCIDAS: 'PERSONAS_DESCONOCIDAS',
+  NOMBRE_NO_IDENTIFICABLE: 'NOMBRE_NO_IDENTIFICABLE',
 });
 
 /** Producto de habitacion en Odoo (product.product) por unidad. Casa Completa no tiene producto de venta confirmado: se bloquea. */
 export const PRODUCT_BY_UNIT = Object.freeze({ 201: 57846, 202: 57848, 203: 57849, 301: 57845, 302: 57847 });
 /**
- * ATH-DEV-116 — Casa Completa es un producto DERIVADO: un pedido con las cinco lineas de habitacion (no existe un sexto
- * producto ni una sexta habitacion). Como repartir el precio total entre las cinco lineas es una decision comercial y
- * contable, mientras `CASA_PRICE_SPLIT` sea 'PENDIENTE' cualquier reserva de Casa queda BLOQUEADA (CASA_REPARTO_PENDIENTE).
+ * ATH-DEV-117 — Casa Completa: producto comercial EXISTENTE `CASA-MAGIA` (product.product 57850, rol 69). Una sola linea,
+ * un solo ingreso. No es una sexta habitacion: al confirmarse, el turno de Casa hace que Odoo bloquee las cinco fisicas
+ * (automatizacion 167, `x_bloqueo_ref`). Odoo exige minimo 10 personas en esa linea (automatizacion 71): el conector solo
+ * envia el numero que trae Smoobu (adultos + ninos); si falta o es menor, BLOQUEA en vez de inventarlo.
  */
 export const CASA_UNITS = Object.freeze(['201', '202', '203', '301', '302']);
-export const CASA_PRICE_SPLIT = 'PENDIENTE';
+export const CASA_PRODUCT = 57850;
+export const CASA_MIN_PERSONS = 10;
 /** Canal de Smoobu -> valor de `x_booking_source`. */
 export const SOURCE_BY_CHANNEL = Object.freeze({ 7192171: 'direct', 7208046: 'booking_com', 7208051: 'airbnb' });
 const OTA_LABEL = Object.freeze({ booking_com: 'Booking', airbnb: 'Airbnb' });
@@ -74,13 +81,12 @@ export function referenceFor({ smoobuId, source, otaRef }) {
 export const opKey = (smoobuId, op, payload) => createHash('sha256').update(JSON.stringify([smoobuId, op, payload ?? null])).digest('hex').slice(0, 16);
 
 /** Valores exactos de un pedido NUEVO (borrador). Puro; no incluye impuestos mientras la politica este pendiente. */
-export function buildCreatePayload({ smoobuId, unit, arrival, departure, source, otaRef, price, guest, casaShares = null }) {
-  const units = unit === 'CASA' ? CASA_UNITS : [unit];
-  const shares = unit === 'CASA' ? casaShares : [price];
-  const lines = units.map((u, i) => ({ product_id: PRODUCT_BY_UNIT[u], product_uom_qty: 1, price_unit: shares?.[i] ?? null, x_precio_manual: shares?.[i] ?? null, tax_ids: [] }));
+export function buildCreatePayload({ smoobuId, unit, arrival, departure, source, otaRef, price, guest, persons = null }) {
+  const line = { product_id: unit === 'CASA' ? CASA_PRODUCT : PRODUCT_BY_UNIT[unit], product_uom_qty: 1, price_unit: price, x_precio_manual: price, tax_ids: [] };
+  if (unit === 'CASA') line.x_personas = persons;
+  const lines = [line];
   return {
-    partner: guest?.email ? { match: 'email_exacto', email: guest.email, createIfMissing: { name: guest.name ?? null, email: guest.email, phone: guest.phone ?? null } }
-      : { match: 'ninguno', createIfMissing: { name: guest?.name ?? null, email: null, phone: guest?.phone ?? null } },
+    partner: { smoobuId, guest: { name: guest?.name ?? null, email: guest?.email ?? null, phone: guest?.phone ?? null } },
     order: {
       ...referenceFor({ smoobuId, source, otaRef }),
       x_booking_source: source, x_checkin: arrival, x_checkout: departure,
@@ -133,14 +139,20 @@ export function planSync({ report, bookings, orders, extras, today, slots = [], 
       case VERDICTS.MISSING_IN_ODOO: {
         const guards = [...risky];
         if (r.smoobuStatus !== 'ACTIVE') { add(r, OPS.NOOP, STATUS.SIN_CAMBIOS); break; }
-        if (r.unit === 'CASA') { if (CASA_PRICE_SPLIT === 'PENDIENTE') guards.push(GUARDS.CASA_REPARTO_PENDIENTE); }
-        else if (!PRODUCT_BY_UNIT[r.unit]) guards.push(GUARDS.PRODUCTO_NO_MAPEADO);
+        let persons = null;
+        if (r.unit === 'CASA') {
+          const a = num(b.adults); const ch = num(b.children) ?? 0;
+          persons = a != null ? a + ch : null;
+          if (persons == null) guards.push(GUARDS.PERSONAS_DESCONOCIDAS);
+          else if (persons < CASA_MIN_PERSONS) guards.push(GUARDS.CASA_MINIMO_10_PERSONAS);
+        } else if (!PRODUCT_BY_UNIT[r.unit]) guards.push(GUARDS.PRODUCTO_NO_MAPEADO);
+        if (!assessGuestName(b['guest-name']).ok) guards.push(GUARDS.NOMBRE_NO_IDENTIFICABLE);
         if (!source) guards.push(GUARDS.CANAL_DESCONOCIDO);
         if (price == null || price <= 0) guards.push(GUARDS.PRECIO_FALTANTE);
         if (r.odooOccupancy !== 'NONE') guards.push(GUARDS.NOCHES_OCUPADAS);
         if (guards.length) { add(r, OPS.BLOCKED, STATUS.BLOQUEADO, { guards }); break; }
         const otaRef = normalizeOtaRef(b['reference-id']) ?? r.otaRef ?? null;
-        const payload = buildCreatePayload({ smoobuId: r.smoobuId, unit: r.unit, arrival: r.arrival, departure: r.departure, source, otaRef, price,
+        const payload = buildCreatePayload({ smoobuId: r.smoobuId, unit: r.unit, arrival: r.arrival, departure: r.departure, source, otaRef, price, persons,
           guest: { name: b['guest-name'] ?? null, email: b.email ?? null, phone: b.phone ?? null } });
         add(r, OPS.CREATE_ORDER, STATUS.LISTO, {
           changes: ['partner', ...Object.keys(payload.order), ...Object.keys(payload.lines[0]).map((k) => `line.${k}`)], payload,

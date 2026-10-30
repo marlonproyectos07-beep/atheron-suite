@@ -15,11 +15,11 @@ import { RELEASE_UNLOCKED } from '../src/odoo-facts.mjs';
 
 // ATH-DEV-116 — Todo SINTETICO y en memoria (ids 17xxxxxxx, nombres, correos e importes inventados). Ninguna llamada de red.
 const TODAY = '2026-11-05';
-const APT = { 201: 3557506, 202: 3557511, 302: 3557526 };
+const APT = { 201: 3557506, 202: 3557511, 302: 3557526, CASA: 3557501 };
 const smoobuOf = (map) => ({ requests: 0, async getReservation(id) { this.requests += 1; const b = map[id]; if (!b) { const e = new Error('SMOOBU_NOT_FOUND'); e.code = 'SMOOBU_NOT_FOUND'; e.status = 404; throw e; } return b; } });
 const booking = (id, unit, arrival, departure, price, extra = {}) => ({ id, type: 'reservation', apartment: { id: APT[unit] }, arrival, departure, price, ...extra });
-const createOp = (id, unit, arrival, departure, price, { email = 'sintetico@example.invalid', status = STATUS.LISTO, source = 'direct' } = {}) => {
-  const payload = buildCreatePayload({ smoobuId: id, unit, arrival, departure, source, otaRef: null, price, guest: { name: 'NOMBRE_SINTETICO', email, phone: null } });
+const createOp = (id, unit, arrival, departure, price, { email = 'sintetico@example.invalid', status = STATUS.LISTO, source = 'direct', name = 'Ana Sintetica Ficticia', phone = null } = {}) => {
+  const payload = buildCreatePayload({ smoobuId: id, unit, arrival, departure, source, otaRef: null, price, guest: { name, email, phone } });
   return { smoobuId: id, unit, arrival, departure, op: OPS.CREATE_ORDER, status, guards: [GUARDS.IMPUESTO_PENDIENTE], payload, changes: [], key: opKey(id, OPS.CREATE_ORDER, payload) };
 };
 const opOn = (op, id, orderId, payload, { status = STATUS.REQUIERE_APROBACION, guards = [], snapshot = null, unit = '201', arrival = '2026-11-20', departure = '2026-11-21', changes = [] } = {}) =>
@@ -69,7 +69,8 @@ test('lista blanca: rechaza borrar, pagos, facturas, turnos, cambiar precio, imp
 test('el escritor de simulacion aplica la MISMA lista blanca y no envia nada', async () => {
   const w = new RecordingWriter();
   await assert.rejects(w.execute('sale.order', 'unlink', { ids: [1] }), /SYNC_WRITE_NOT_ALLOWED/);
-  assert.deepEqual(await w.execute('res.partner', 'create', { vals_list: [{ name: 'N', email: null, phone: null }] }), [-1]);
+  await assert.rejects(w.execute('res.partner', 'create', { vals_list: [{ name: 'N' }] }), /SYNC_WRITE_PARTNER_REF_REQUIRED/);
+  assert.deepEqual(await w.execute('res.partner', 'create', { vals_list: [{ name: 'N', ref: 'SMOOBU-1' }] }), [-1]);
   assert.equal(w.log.length, 1);
 });
 
@@ -93,7 +94,7 @@ test('CREAR: borrador con referencia unica, precio = precio manual, sin impuesto
 });
 
 test('CREAR: reutiliza el contacto por correo exacto; correo repetido en dos contactos = no se crea nada', async () => {
-  const e = env({ 'res.partner': [{ id: 5, name: 'X', email: 'Sintetico@Example.invalid' }] }, { 170400002: booking(170400002, '201', '2026-11-24', '2026-11-25', 85000) });
+  const e = env({ 'res.partner': [{ id: 5, name: 'Ana Sintetica', email: 'Sintetico@Example.invalid' }] }, { 170400002: booking(170400002, '201', '2026-11-24', '2026-11-25', 85000) });
   await run(e, [createOp(170400002, '201', '2026-11-24', '2026-11-25', 85000)]);
   assert.equal(e.odoo.t['res.partner'].length, 1); assert.equal(e.odoo.t['sale.order'][0].partner_id, 5);
   const d = env({ 'res.partner': [{ id: 5, email: 'sintetico@example.invalid' }, { id: 6, email: 'sintetico@example.invalid' }] }, { 170400003: booking(170400003, '201', '2026-11-24', '2026-11-25', 85000) });
@@ -113,11 +114,55 @@ test('CREAR: si Smoobu cambio el precio o las noches se ocuparon desde el plan, 
   for (const x of [e, f, g]) assert.equal(x.writer.writes, 0);
 });
 
-test('CREAR sin correo: requiere aprobacion expresa para crear el contacto (evita duplicar contactos)', async () => {
+test('CREAR sin correo (Airbnb): crea el contacto con nombre real y ref SMOOBU-<id>, sin inventar correo ni telefono', async () => {
   const e = env({}, { 170400007: booking(170400007, '201', '2026-11-24', '2026-11-25', 85000) });
   const op = createOp(170400007, '201', '2026-11-24', '2026-11-25', 85000, { email: null });
-  assert.equal((await run(e, [op])).results[0].code, 'CONTACTO_SIN_CORREO_REQUIERE_APROBACION');
-  assert.equal((await run(e, [op], { approvals: new Set([op.key]) })).results[0].result, RESULT.APLICADA);
+  assert.equal((await run(e, [op])).results[0].result, RESULT.APLICADA);
+  assert.deepEqual(e.odoo.t['res.partner'][0], { id: e.odoo.t['res.partner'][0].id, name: 'Ana Sintetica Ficticia', ref: 'SMOOBU-170400007' });
+});
+
+test('CONTACTOS: telefono reutiliza; mismo correo con otro nombre, dos coincidencias o solo nombre = bloqueo sin escribir', async () => {
+  const mk = (seed, opts) => { const e = env({ 'res.partner': seed }, { 170400100: booking(170400100, '201', '2026-11-24', '2026-11-25', 85000) }); return [e, createOp(170400100, '201', '2026-11-24', '2026-11-25', 85000, opts)]; };
+  let [e, op] = mk([{ id: 5, name: 'Ana Sintetica', phone: '+57 300 111 2233' }], { email: null, phone: '3001112233' });
+  assert.equal((await run(e, [op])).results[0].result, RESULT.APLICADA); assert.equal(e.odoo.t['sale.order'][0].partner_id, 5);
+  for (const [seed, opts, code] of [
+    [[{ id: 5, name: 'Pedro Otro Distinto', email: 'sintetico@example.invalid' }], {}, 'IDENTIDAD_AMBIGUA'],
+    [[{ id: 5, name: 'Ana Sintetica', email: 'sintetico@example.invalid' }, { id: 6, name: 'Ana Sintetica', phone: '3001112233' }], { phone: '3001112233' }, 'IDENTIDAD_AMBIGUA'],
+    [[{ id: 5, name: 'Ana Sintetica', phone: '3001112233' }, { id: 6, name: 'Ana S', phone: '(300) 111-2233' }], { email: null, phone: '3001112233' }, 'CONTACTOS_DUPLICADOS'],
+    [[{ id: 5, name: 'ANA SINTÉTICA FICTICIA' }], { email: null }, 'COINCIDENCIA_SOLO_POR_NOMBRE'],
+  ]) { [e, op] = mk(seed, opts); const r = await run(e, [op]); assert.deepEqual([r.results[0].code, e.writer.writes], [code, 0], code); }
+});
+
+test('CONTACTOS concurrentes/recuperacion: el contacto creado por un intento fallido se reutiliza por ref, nunca se duplica', async () => {
+  const e = env({}, { 170400101: booking(170400101, '201', '2026-11-24', '2026-11-25', 85000) });
+  const op = createOp(170400101, '201', '2026-11-24', '2026-11-25', 85000, { email: null });
+  e.odoo.fault({ model: 'sale.order', method: 'create', when: 'before', status: 400 }); // Odoo rechaza el pedido tras crear el contacto
+  const r1 = await run(e, [op]);
+  assert.equal(r1.halted, 'FALLO_PARCIAL');
+  const r2 = await run(e, [op]);
+  assert.deepEqual(r2.recovered.map((x) => x.code), ['CONTACTO_CREADO_SE_REUTILIZA_POR_REF']);
+  assert.equal(r2.results[0].result, RESULT.APLICADA);
+  assert.deepEqual([e.odoo.t['res.partner'].length, e.odoo.t['sale.order'].length], [1, 1]);
+});
+
+test('CASA COMPLETA: un pedido con CASA-MAGIA; al confirmar Odoo bloquea las cinco habitaciones y se verifica; con menos de 10 personas Odoo rechaza', async () => {
+  const e = env({}, { 170400110: booking(170400110, 'CASA', '2026-11-28', '2026-11-29', 600000) });
+  const payload = buildCreatePayload({ smoobuId: 170400110, unit: 'CASA', arrival: '2026-11-28', departure: '2026-11-29', source: 'direct', price: 600000, persons: 12, guest: { name: 'Ana Sintetica Ficticia', email: null } });
+  const create = { smoobuId: 170400110, unit: 'CASA', arrival: '2026-11-28', departure: '2026-11-29', op: OPS.CREATE_ORDER, status: STATUS.LISTO, guards: [], payload, changes: [], key: opKey(170400110, OPS.CREATE_ORDER, payload) };
+  assert.equal((await run(e, [create])).results[0].result, RESULT.APLICADA);
+  assert.deepEqual(e.odoo.t['sale.order.line'].map((l) => [l.product_id, l.price_unit, l.x_personas]), [[57850, 600000, 12]]); // un solo ingreso
+  const orderId = e.odoo.t['sale.order'][0].id; e.odoo.t['sale.order'][0].write_date = 'W1';
+  const confirm = opOn(OPS.CONFIRM_ORDER, 170400110, orderId, { action: 'action_confirm' }, { unit: 'CASA', arrival: '2026-11-28', departure: '2026-11-29' });
+  assert.equal((await run(e, [confirm], { approvals: new Set([confirm.key]) })).results[0].result, RESULT.APLICADA);
+  assert.equal(e.odoo.t['planning.slot'].filter((s) => s.x_bloqueo_ref).length, 5);
+  // si Odoo no bloqueara las habitaciones, la verificacion lo detecta
+  const f = env({}, { 170400111: booking(170400111, 'CASA', '2026-11-28', '2026-11-29', 600000) }); f.odoo.skipCasaBlocks = true;
+  const p2 = buildCreatePayload({ smoobuId: 170400111, unit: 'CASA', arrival: '2026-11-28', departure: '2026-11-29', source: 'direct', price: 600000, persons: 12, guest: { name: 'Bea Sintetica Ficticia' } });
+  await run(f, [{ ...create, smoobuId: 170400111, payload: p2, key: opKey(170400111, OPS.CREATE_ORDER, p2) }]);
+  const c2 = opOn(OPS.CONFIRM_ORDER, 170400111, f.odoo.t['sale.order'][0].id, { action: 'action_confirm' }, { unit: 'CASA', arrival: '2026-11-28', departure: '2026-11-29' });
+  assert.equal((await run(f, [c2], { approvals: new Set([c2.key]) })).results[0].code, 'VERIFICACION_HABITACIONES_NO_BLOQUEADAS');
+  // la lista blanca no deja enviar Casa con menos de 10 personas (Odoo tambien lo rechazaria: automatizacion 71)
+  assert.throws(() => validateWrite('sale.order', 'create', { vals_list: [{ partner_id: 1, x_pms_reference: 'SMOOBU-1', order_line: [[0, 0, { product_id: 57850, product_uom_qty: 1, price_unit: 1, x_precio_manual: 1, tax_ids: [[6, 0, []]], x_personas: 6 }]] }] }), /SYNC_WRITE_CASA_PERSONAS/);
 });
 
 /* ---------- actualizacion ---------- */
@@ -194,7 +239,7 @@ test('red caida ANTES de aplicar: resultado ambiguo y parada; la siguiente ejecu
   assert.deepEqual([r1.results[0].result, r1.halted], [RESULT.AMBIGUA, 'RESULTADO_AMBIGUO']);
   assert.equal(e.odoo.t['sale.order'].length, 0);
   const r2 = await run(e, [op]);
-  assert.deepEqual(r2.recovered.map((x) => [x.phase, x.code]), [[PHASES.RECOVERED_NOT_APPLIED, 'CONTACTO_CREADO_SIN_PEDIDO_REVISAR']]);
+  assert.deepEqual(r2.recovered.map((x) => [x.phase, x.code]), [[PHASES.RECOVERED_NOT_APPLIED, 'CONTACTO_CREADO_SE_REUTILIZA_POR_REF']]);
   assert.equal(r2.results[0].result, RESULT.APLICADA);
   assert.equal(e.odoo.t['sale.order'].length, 1);
   assert.equal(e.odoo.t['res.partner'].length, 1); // el contacto del primer intento se reutiliza por correo, no se duplica
@@ -256,7 +301,7 @@ test('interruptor de parada y tope por ejecucion', async () => {
   const stop = await run(e, [createOp(170400051, '201', '2026-11-24', '2026-11-25', 85000)], { halt: true });
   assert.deepEqual([stop.halted, e.odoo.calls.length], ['PARADA_MANUAL', 0]);
   const map = {}; const ops = [];
-  for (let i = 0; i < 4; i += 1) { const id = 170400060 + i; const d = `2026-11-${10 + i * 2}`; const d2 = `2026-11-${11 + i * 2}`; map[id] = booking(id, '201', d, d2, 85000); ops.push(createOp(id, '201', d, d2, 85000, { email: `s${i}@example.invalid` })); }
+  for (let i = 0; i < 4; i += 1) { const id = 170400060 + i; const d = `2026-11-${10 + i * 2}`; const d2 = `2026-11-${11 + i * 2}`; map[id] = booking(id, '201', d, d2, 85000); ops.push(createOp(id, '201', d, d2, 85000, { email: `s${i}@example.invalid`, name: ['Ana Uno Ficticia', 'Bea Dos Ficticia', 'Carla Tres Ficticia', 'Dora Cuatro Ficticia'][i] })); }
   const t = env({}, map);
   const r = await run(t, ops, { maxOps: 2 });
   assert.deepEqual(r.results.map((x) => x.result), [RESULT.APLICADA, RESULT.APLICADA, RESULT.NO_PROCESADA, RESULT.NO_PROCESADA]);
@@ -264,7 +309,7 @@ test('interruptor de parada y tope por ejecucion', async () => {
 
 test('operaciones BLOQUEADAS o sin aprobar nunca se ejecutan', async () => {
   const e = env({}, {});
-  const blocked = { ...createOp(170400070, 'CASA', '2026-11-24', '2026-11-25', 500000), status: STATUS.BLOQUEADO, guards: [GUARDS.CASA_REPARTO_PENDIENTE] };
+  const blocked = { ...createOp(170400070, 'CASA', '2026-11-24', '2026-11-25', 500000), status: STATUS.BLOQUEADO, guards: [GUARDS.CASA_MINIMO_10_PERSONAS] };
   const r = await run(e, [blocked]);
   assert.deepEqual([r.results[0].result, e.odoo.calls.length], [RESULT.NO_ELEGIBLE, 0]);
 });
