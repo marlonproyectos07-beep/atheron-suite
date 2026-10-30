@@ -29,7 +29,7 @@ on:
         required: false
         default: 'full'
         type: choice
-        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reconcile-daily, reservation-once, odoo-auth-readonly, credential-shape, credential-swap]
+        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reconcile-daily, sync-dryrun, reservation-once, odoo-auth-readonly, credential-shape, credential-swap]
       from:
         description: 'reconcile-window / reconcile-ids: primera noche YYYY-MM-DD (vacio = ventana historica 26..27 oct)'
         required: false
@@ -122,6 +122,17 @@ jobs:
           RECONCILE_FROM: ${{ inputs.from }}
           RECONCILE_TO: ${{ inputs.to }}
         run: npm run --silent reconcile-daily
+      - name: Simulacion del plan de sincronizacion, sin escrituras (ATH-DEV-115)
+        if: ${{ inputs.mode == 'sync-dryrun' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          # vacio = hoy (Bogota) + 90 noches; las fechas las valida src/window.mjs
+          RECONCILE_FROM: ${{ inputs.from }}
+          RECONCILE_TO: ${{ inputs.to }}
+        run: npm run --silent sync-dryrun
       - name: Lectura individual de una reserva Smoobu, UNA solicitud GET (ATH-DEV-052)
         if: ${{ inputs.mode == 'reservation-once' }}
         env:

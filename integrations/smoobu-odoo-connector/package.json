@@ -28,6 +28,7 @@
     "reconcile-ids": "node scripts/reconcile-ids.mjs",
     "smoobu-reservation-once": "node scripts/smoobu-reservation-once.mjs",
     "odoo-auth-readonly": "node scripts/odoo-auth-readonly.mjs",
-    "reconcile-daily": "node scripts/reconcile-daily.mjs"
+    "reconcile-daily": "node scripts/reconcile-daily.mjs",
+    "sync-dryrun": "node scripts/sync-dryrun.mjs"
   }
 }
