@@ -1,0 +1,76 @@
+# Escritura de la sincronizacion Smoobu -> Odoo (ATH-DEV-116)
+
+Estado: **desarrollado y probado solo en simulacion**. El cliente real esta DESARMADO: `WRITES_ENABLED=false`,
+`RELEASE_UNLOCKED=false`. No se han creado credenciales ni se ha escrito en Odoo.
+
+## Arquitectura
+
+```
+Smoobu (GET) ─┐
+              ├─> conciliacion por ID ─> planSync (sync-intent) ─> applyPlan (sync-apply)
+Odoo (lectura)┘                                                       │
+                                                                      ├─ prevalidacion: lecturas frescas
+                                                                      ├─ Journal INTENT (sync-journal)
+                                                                      ├─ writer.execute ─> validateWrite (sync-write-guard)
+                                                                      │                    └─ SyncWriteClient (3 llaves) | RecordingWriter (sombra)
+                                                                      ├─ postvalidacion: relectura
+                                                                      └─ Journal DONE / AMBIGUOUS / VERIFY_FAILED
+```
+
+| Pieza | Responsabilidad |
+|---|---|
+| `sync-write-guard.mjs` | Lista blanca pura de modelo, metodo y campos. Sin `unlink`, sin `account.*`, sin `planning.slot`; `price_unit` solo al crear; impuestos vacios; solo los 5 productos de habitacion; notas internas `ATH-SYNC`. |
+| `sync-write-client.mjs` | `SyncWriteClient`: armado solo si `WRITES_ENABLED && RELEASE_UNLOCKED && arm === SYNC_ARM_PHRASE`; host/base `atheron1`; tope de escrituras; cuenta antes de enviar (un fallo ambiguo no se reintenta). `RecordingWriter`: misma lista blanca, no envia. |
+| `sync-journal.mjs` | Diario write-ahead (JSONL, sin datos personales) y cerrojo exclusivo (`FileLock` con `wx`). |
+| `sync-apply.mjs` | Elegibilidad, idempotencia, prevalidacion, escritura, postvalidacion, paradas y recuperacion. |
+
+### Garantias
+
+- **Idempotencia doble**: clave de operacion en el diario + busqueda de `SMOOBU-<id>` en Odoo antes de crear.
+  Aunque se pierda el diario, no se duplica el pedido. Contacto por correo exacto; 2+ contactos con el mismo correo = no se crea nada.
+- **Prevalidacion**: la reserva se relee en Smoobu (estado, habitacion, fechas, precio); el pedido se relee en Odoo
+  (`write_date` igual al del plan, sin facturas, precio intacto); noches libres; pagos del cliente para cancelar.
+- **Postvalidacion**: relectura del pedido (un solo pedido con la referencia, estado, precio = precio manual, sin
+  impuesto; tras confirmar, turno creado y tarifa NO sobrescrita; tras cancelar, turnos liberados).
+- **Paradas**: cerrojo ocupado, interruptor `halt`, incompletas sin resolver, error de red durante una escritura,
+  fallo parcial o postvalidacion fallida. Un fallo de PREvalidacion solo salta esa operacion.
+- **Recuperacion**: al empezar, cada entrada abierta del diario se resuelve leyendo Odoo (hecha / no aplicada /
+  duplicado -> parada). Nunca se borra nada para deshacer; un contacto creado sin pedido queda senalado para revision.
+- **Concurrencia**: cerrojo de archivo + `concurrency` de GitHub Actions (sin cancelar la ejecucion en curso).
+
+## Reglas de negocio aplicadas
+
+- Smoobu es la fuente; el pedido se identifica solo por `SMOOBU-<id>`.
+- Precios: total de Smoobu = `price_unit` = `x_precio_manual` al crear; nunca se modifica un precio existente.
+- IVA no validado: crear borrador sin impuesto si; **confirmar, bloqueado** (incluso con aprobacion).
+- Casa Completa: pedido con las 5 lineas de habitacion (producto derivado). Sin regla de reparto del precio,
+  BLOQUEADO (`CASA_REPARTO_PENDIENTE`). Nunca un sexto producto.
+- Facturadas, pagadas, con estancia iniciada, con sobreventa o ambiguas: no se tocan.
+
+## Pendiente del contador
+
+1. IVA por canal: reserva directa, Booking.com, Airbnb; y huesped extranjero no residente (posible exencion).
+2. Si el precio de Smoobu se registra con IVA incluido o excluido en cada canal (hoy hay pedidos de ambos tipos).
+3. Tratamiento de la comision de Booking (hoy se deja fuera del pedido).
+4. Reparto del precio de Casa Completa entre las 5 habitaciones (o alternativa contable).
+5. Serie de factura (VENT interna o FAC electronica) cuando la sincronizacion cree pedidos.
+
+## Usuario tecnico de Odoo (requisitos; NO creado)
+
+- Usuario interno dedicado, sin acceso de administrador, solo compania ATHERON S.A.S. (id 5).
+- Permisos: Ventas (usuario: sus documentos y todos los documentos), Contactos (crear), lectura de Planning,
+  lectura de Contabilidad (facturas y pagos) sin derechos de creacion ni validacion.
+- Sin permisos de Ajustes, Contabilidad (escritura), Planning (escritura), Sitio web ni usuarios.
+- Clave API propia con caducidad (p. ej. 1 ano), guardada solo como secreto `ODOO_SYNC_API_KEY` de GitHub.
+- Comprobacion previa con `odoo-auth-readonly` y una sombra completa con esa clave.
+
+## Activacion gradual (cada paso con orden expresa de gerencia)
+
+0. Hoy: sombra diaria manual (`sync-shadow`), sin escrituras.
+1. Decisiones del contador y producto/regla de Casa; usuario tecnico y su clave.
+2. PR de activacion aparte: `WRITES_ENABLED=true`, `RELEASE_UNLOCKED=true`, frase de armado por variable de entorno,
+   workflow manual (no programado), `maxOps=1`, solo `CREATE_ORDER` en borrador.
+3. Una operacion real aprobada, conciliacion de verificacion y revision en Odoo.
+4. Ampliar a rellenos `UPDATE_ORDER`, despues `maxOps` mayor.
+5. Confirmar y cancelar: siempre con aprobacion por clave de operacion; nunca automatico.
+6. Programacion diaria solo cuando 2-5 lleven al menos 2 semanas sin incidencias.
