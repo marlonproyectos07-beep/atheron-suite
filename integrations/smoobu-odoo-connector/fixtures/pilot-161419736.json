@@ -1,0 +1,11 @@
+{
+ "_nota": "Reserva piloto SINTETICA y minima (sin datos de huesped); no es una respuesta de la API Smoobu. Los turnos reales estan en real-calibration-2026-10-26.json.",
+ "booking": {
+  "id": 161419736,
+  "apartment": {
+   "id": 3557521
+  },
+  "arrival": "2026-10-26",
+  "departure": "2026-10-27"
+ }
+}

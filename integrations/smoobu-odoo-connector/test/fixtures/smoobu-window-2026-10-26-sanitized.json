@@ -1,0 +1,191 @@
+{
+ "source": "ATH-DEV-028 run 40523444352 (campos tecnicos; sin datos personales)",
+ "window": [
+  "2026-10-26",
+  "2026-10-27"
+ ],
+ "bookings": [
+  {
+   "id": 160905511,
+   "type": "modification of booking",
+   "arrival": "2026-10-18",
+   "departure": "2026-11-01",
+   "apartment": {
+    "id": 3557516
+   },
+   "channel": {
+    "id": 7192171
+   },
+   "is-blocked-booking": false
+  },
+  {
+   "id": 160829151,
+   "type": "cancellation",
+   "arrival": "2026-10-25",
+   "departure": "2026-10-26",
+   "apartment": {
+    "id": 3557506
+   },
+   "channel": {
+    "id": 7208046
+   },
+   "is-blocked-booking": false
+  },
+  {
+   "id": 161357231,
+   "type": "modification of booking",
+   "arrival": "2026-10-25",
+   "departure": "2026-10-26",
+   "apartment": {
+    "id": 3557526
+   },
+   "channel": {
+    "id": 7192161
+   },
+   "is-blocked-booking": true
+  },
+  {
+   "id": 161357321,
+   "type": "cancellation",
+   "arrival": "2026-10-25",
+   "departure": "2026-10-26",
+   "apartment": {
+    "id": 3557521
+   },
+   "channel": {
+    "id": 7192161
+   },
+   "is-blocked-booking": true
+  },
+  {
+   "id": 161357426,
+   "type": "modification of booking",
+   "arrival": "2026-10-25",
+   "departure": "2026-10-26",
+   "apartment": {
+    "id": 3557511
+   },
+   "channel": {
+    "id": 7192161
+   },
+   "is-blocked-booking": true
+  },
+  {
+   "id": 161421616,
+   "type": "reservation",
+   "arrival": "2026-10-25",
+   "departure": "2026-10-26",
+   "apartment": {
+    "id": 3557521
+   },
+   "channel": {
+    "id": 7192161
+   },
+   "is-blocked-booking": true
+  },
+  {
+   "id": 160829161,
+   "type": "reservation",
+   "arrival": "2026-10-26",
+   "departure": "2026-10-27",
+   "apartment": {
+    "id": 3557506
+   },
+   "channel": {
+    "id": 7208046
+   },
+   "is-blocked-booking": false
+  },
+  {
+   "id": 160906566,
+   "type": "reservation",
+   "arrival": "2026-10-26",
+   "departure": "2026-10-27",
+   "apartment": {
+    "id": 3557526
+   },
+   "channel": {
+    "id": 7192171
+   },
+   "is-blocked-booking": false
+  },
+  {
+   "id": 161376576,
+   "type": "reservation",
+   "arrival": "2026-10-26",
+   "departure": "2026-10-27",
+   "apartment": {
+    "id": 3557511
+   },
+   "channel": {
+    "id": 7208046
+   },
+   "is-blocked-booking": false
+  },
+  {
+   "id": 161416801,
+   "type": "cancellation",
+   "arrival": "2026-10-26",
+   "departure": "2026-10-27",
+   "apartment": {
+    "id": 3557521
+   },
+   "channel": {
+    "id": 7192161
+   },
+   "is-blocked-booking": true
+  },
+  {
+   "id": 161419736,
+   "type": "reservation",
+   "arrival": "2026-10-26",
+   "departure": "2026-10-27",
+   "apartment": {
+    "id": 3557521
+   },
+   "channel": {
+    "id": 7192171
+   },
+   "is-blocked-booking": false
+  },
+  {
+   "id": 161558916,
+   "type": "reservation",
+   "arrival": "2026-10-27",
+   "departure": "2026-10-28",
+   "apartment": {
+    "id": 3557506
+   },
+   "channel": {
+    "id": 7208046
+   },
+   "is-blocked-booking": false
+  },
+  {
+   "id": 161538491,
+   "type": "reservation",
+   "arrival": "2026-10-27",
+   "departure": "2026-10-29",
+   "apartment": {
+    "id": 3557526
+   },
+   "channel": {
+    "id": 7192171
+   },
+   "is-blocked-booking": false
+  },
+  {
+   "id": 161556506,
+   "type": "reservation",
+   "arrival": "2026-10-27",
+   "departure": "2026-10-30",
+   "apartment": {
+    "id": 3557511
+   },
+   "channel": {
+    "id": 7192171
+   },
+   "is-blocked-booking": false
+  }
+ ]
+}

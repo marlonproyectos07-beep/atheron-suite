@@ -1,0 +1,33 @@
+{
+  "name": "@atheron/smoobu-odoo-connector",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "diagnose": "node scripts/diagnose.mjs",
+    "connectivity": "node scripts/connectivity.mjs",
+    "simulate": "node scripts/simulate-pilot.mjs",
+    "calibrate": "node scripts/calibrate.mjs",
+    "calibrate2": "node scripts/calibrate2.mjs",
+    "calibrate3": "node scripts/calibrate3.mjs",
+    "audit": "node scripts/audit.mjs",
+    "pilot-dryrun": "node scripts/pilot-dryrun.mjs",
+    "p0": "node scripts/p0.mjs",
+    "recovery-check": "node scripts/recovery-check.mjs",
+    "recompute-precheck": "node scripts/recompute-precheck.mjs",
+    "recompute-run": "node scripts/recompute-run.mjs",
+    "smoobu-once": "node scripts/smoobu-once.mjs",
+    "credential-shape": "node scripts/credential-shape.mjs",
+    "credential-swap": "node scripts/credential-swap.mjs",
+    "smoobu-reservations": "node scripts/smoobu-reservations.mjs",
+    "smoobu-semantics": "node scripts/smoobu-semantics.mjs",
+    "reconcile-window": "node scripts/reconcile-window.mjs",
+    "reconcile-ids": "node scripts/reconcile-ids.mjs",
+    "smoobu-reservation-once": "node scripts/smoobu-reservation-once.mjs",
+    "odoo-auth-readonly": "node scripts/odoo-auth-readonly.mjs",
+    "reconcile-daily": "node scripts/reconcile-daily.mjs"
+  }
+}

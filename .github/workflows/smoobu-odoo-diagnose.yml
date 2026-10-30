@@ -1,0 +1,165 @@
+# ============================================================
+# DIAGNOSTICO SMOOBU <-> ODOO (SOLO LECTURA) — ATH-DEV-003
+#
+# Runner autorizado con salida HTTPS (el sandbox de Claude Code no
+# llega a login.smoobu.com ni a atheron1.odoo.com). No despliega, no
+# escribe, no activa webhooks; solo ejecuta pruebas y `npm run diagnose`.
+#
+# SECRETOS (Settings > Secrets and variables > Actions > Secrets).
+# Los escribe Marlon directamente ahi; nunca en el chat:
+#   SMOOBU_API_KEY, SMOOBU_API_SECRET, ODOO_API_KEY
+# VARIABLES publicas (pestana Variables): ODOO_BASE_URL, ODOO_DATABASE
+#   (SMOOBU_BASE_URL es opcional; por defecto https://login.smoobu.com)
+#
+# Se ejecuta a mano (Actions > Run workflow; GitHub solo lista el
+# boton si el archivo esta en la rama por defecto) o al subir cambios
+# al conector en la rama de trabajo. Sin secretos termina en BLOQUEADO
+# (codigo 2) sin fallar la tuberia. El registro solo contiene ids,
+# fechas, conteos y codigos HTTP.
+# ============================================================
+name: smoobu-odoo-diagnose
+
+# Solo manual mientras Smoobu siga respondiendo 401: un push al conector
+# ya no lanza llamadas a Smoobu (ATH-DEV-011).
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'full | apartments-once (UN GET /api/apartments) | reservations-window (UN GET /api/reservations acotado) | reconcile-ids (conciliacion por IDs, solo lectura) | credential-shape y credential-swap (sin red)'
+        required: false
+        default: 'full'
+        type: choice
+        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reconcile-daily, reservation-once, odoo-auth-readonly, credential-shape, credential-swap]
+      from:
+        description: 'reconcile-window / reconcile-ids: primera noche YYYY-MM-DD (vacio = ventana historica 26..27 oct)'
+        required: false
+        default: ''
+        type: string
+      to:
+        description: 'reconcile-window / reconcile-ids: ultima noche YYYY-MM-DD (inclusive; maximo 120 noches)'
+        required: false
+        default: ''
+        type: string
+      reservation_id:
+        description: 'reservation-once: id de Smoobu (solo ids de la lista blanca de src/reservation-probe.mjs)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoobu-odoo-diagnose
+  cancel-in-progress: true
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # ATH-DEV-028 — ADAPTACION TEMPORAL A LOS VALORES INVERTIDOS ALMACENADOS EN GITHUB.
+    # Hoy el secreto SMOOBU_API_SECRET contiene la clave real (usr_live_...) y SMOOBU_API_KEY el secreto HMAC
+    # (demostrado por huella y por HTTP 200, ATH-DEV-025/026). Este es el UNICO sitio del repositorio donde se cruzan;
+    # ningun paso ni modo vuelve a cruzarlos. Los valores de los secretos NO se tocan. Cuando alguien intercambie los
+    # valores en GitHub, se deshace SOLO este cruce (y el test test/smoobu-secret-mapping.test.mjs lo senala).
+    env:
+      SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_SECRET }}
+      SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_KEY }}
+    defaults:
+      run:
+        working-directory: integrations/smoobu-odoo-connector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pruebas unitarias
+        run: npm test
+      - name: Comprobacion unica de acceso API (ATH-DEV-021)
+        if: ${{ inputs.mode == 'apartments-once' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+        run: npm run --silent smoobu-once
+      - name: Primera lectura acotada de reservas (ATH-DEV-028)
+        if: ${{ inputs.mode == 'reservations-window' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+        run: npm run --silent smoobu-reservations
+      - name: Contraste de la semantica from/to (ATH-DEV-029, UNA lectura)
+        if: ${{ inputs.mode == 'semantics-probe' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+        run: npm run --silent smoobu-semantics
+      - name: Conciliacion real en memoria, sin escrituras (ATH-DEV-029)
+        if: ${{ inputs.mode == 'reconcile-window' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          RECONCILE_FROM: ${{ inputs.from }}
+          RECONCILE_TO: ${{ inputs.to }}
+        run: npm run --silent reconcile-window
+      - name: Conciliacion por identificadores, en memoria y sin escrituras (ATH-DEV-041)
+        if: ${{ inputs.mode == 'reconcile-ids' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          # las fechas van por entorno (nunca interpoladas en el script) y las valida src/window.mjs
+          RECONCILE_FROM: ${{ inputs.from }}
+          RECONCILE_TO: ${{ inputs.to }}
+        run: npm run --silent reconcile-ids
+      - name: Prueba de desarrollo del modo diario, solo lectura (ATH-DEV-108)
+        if: ${{ inputs.mode == 'reconcile-daily' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          # vacio = hoy (Bogota) + 90 noches, igual que el workflow diario; las fechas las valida src/window.mjs
+          RECONCILE_FROM: ${{ inputs.from }}
+          RECONCILE_TO: ${{ inputs.to }}
+        run: npm run --silent reconcile-daily
+      - name: Lectura individual de una reserva Smoobu, UNA solicitud GET (ATH-DEV-052)
+        if: ${{ inputs.mode == 'reservation-once' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          # el id va por entorno (nunca interpolado en el script) y se valida contra una lista blanca
+          RESERVATION_ID: ${{ inputs.reservation_id }}
+        run: npm run --silent smoobu-reservation-once
+      - name: Autenticacion Odoo, UNA lectura (ATH-DEV-030)
+        if: ${{ inputs.mode == 'odoo-auth-readonly' }}
+        env:
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+        run: npm run --silent odoo-auth-readonly
+      - name: Forma de las credenciales (ATH-DEV-022, sin red)
+        if: ${{ inputs.mode == 'credential-shape' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+        run: npm run --silent credential-shape
+      - name: Comprobacion de credenciales intercambiadas (ATH-DEV-025, sin red)
+        if: ${{ inputs.mode == 'credential-swap' }}
+        run: npm run --silent credential-swap
+      - name: Conectividad (sin credenciales)
+        if: ${{ inputs.mode == 'full' || inputs.mode == '' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+        run: node scripts/connectivity.mjs
+      - name: Diagnostico de solo lectura
+        if: ${{ inputs.mode == 'full' || inputs.mode == '' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+        run: |
+          set +e
+          npm run --silent diagnose
+          code=$?
+          if [ "$code" -eq 2 ]; then echo "::warning::BLOQUEADO: faltan variables o secretos (ver lista arriba)"; exit 0; fi
+          exit $code

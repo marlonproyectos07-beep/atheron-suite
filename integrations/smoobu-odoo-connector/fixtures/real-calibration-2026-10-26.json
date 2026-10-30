@@ -1,0 +1,85 @@
+{
+ "_nota": "Turnos REALES de Odoo (lectura de solo lectura del 2026-10-26, ATH-DEV-011) en la ventana 25-28 oct 2026. Anonimizados: solo ids, rol y horas UTC; el campo name estaba vacio. Sin datos de huespedes.",
+ "slots": [
+  {
+   "id": 39670,
+   "roleId": 30,
+   "start": "2026-10-18T20:00:00Z",
+   "end": "2026-11-01T16:00:00Z",
+   "key": null,
+   "active": true
+  },
+  {
+   "id": 39684,
+   "roleId": 18,
+   "start": "2026-10-23T20:00:00Z",
+   "end": "2026-10-25T16:00:00Z",
+   "key": null,
+   "active": true
+  },
+  {
+   "id": 39685,
+   "roleId": 19,
+   "start": "2026-10-23T20:00:00Z",
+   "end": "2026-10-25T16:00:00Z",
+   "key": null,
+   "active": true
+  },
+  {
+   "id": 39674,
+   "roleId": 69,
+   "start": "2026-10-24T20:00:00Z",
+   "end": "2026-10-25T16:00:00Z",
+   "key": null,
+   "active": true
+  },
+  {
+   "id": 39673,
+   "roleId": 29,
+   "start": "2026-10-24T20:00:00Z",
+   "end": "2026-10-25T16:00:00Z",
+   "key": null,
+   "active": true
+  },
+  {
+   "id": 39675,
+   "roleId": 29,
+   "start": "2026-10-25T20:00:00Z",
+   "end": "2026-10-26T16:00:00Z",
+   "key": null,
+   "active": true
+  },
+  {
+   "id": 39676,
+   "roleId": 69,
+   "start": "2026-10-25T20:00:00Z",
+   "end": "2026-10-26T16:00:00Z",
+   "key": null,
+   "active": true
+  },
+  {
+   "id": 39664,
+   "roleId": 29,
+   "start": "2026-10-26T20:00:00Z",
+   "end": "2026-10-27T16:00:00Z",
+   "key": null,
+   "active": true
+  },
+  {
+   "id": 39648,
+   "roleId": 69,
+   "start": "2026-10-26T20:00:00Z",
+   "end": "2026-10-27T16:00:00Z",
+   "key": null,
+   "active": true
+  },
+  {
+   "id": 39647,
+   "roleId": 18,
+   "start": "2026-10-26T20:00:00Z",
+   "end": "2026-10-27T16:00:00Z",
+   "key": null,
+   "active": true
+  }
+ ]
+}
