@@ -95,3 +95,14 @@ documentada en `src/classify.mjs`.
 ## Ejecucion (cuando exista la credencial y haya autorizacion)
 Actions -> `smoobu-odoo-diagnose` -> Run workflow -> rama de este cambio -> `mode = reconcile-ids`, `from = 2026-10-28`, `to = 2027-01-05`.
 Antes, una vez `mode = odoo-auth-readonly` para confirmar HTTP 200 con la clave nueva.
+
+## Ejecucion diaria (ATH-DEV-108)
+
+Workflow `.github/workflows/smoobu-odoo-reconcile-daily.yml` + `npm run reconcile-daily` (`src/daily-run.mjs`).
+
+- Solo lectura: Smoobu GET, Odoo `fields_get`/`search_read`; se aborta (codigo 4) si `WRITES_ENABLED` o `RELEASE_UNLOCKED` no son `false`.
+- Ventana: hoy (Bogota) + `RECONCILE_DAYS` noches (90 por defecto, 1..120).
+- Salida enmascarada: resumen JSON, tabla en el resumen del job y artefacto de 14 dias. Barrera de privacidad sobre todo (codigo 3).
+- Fallo seguro con codigo 1 y categoria: `CREDENCIALES_RECHAZADAS`, `API_INCOMPLETA` (paginacion o lectura incompleta), `RED_O_SERVICIO`; codigo 2 si falta configuracion. Nunca se publica un informe parcial.
+- Sin ejecuciones simultaneas (`concurrency`, sin cancelar la que esta en curso).
+- Doble candado de la programacion: `schedule` solo corre desde `main`, y ademas exige la variable de repositorio `RECONCILE_DAILY_ENABLED=true`. La ejecucion manual siempre esta disponible.
