@@ -3,7 +3,7 @@
 // Ventana: RECONCILE_FROM / RECONCILE_TO (YYYY-MM-DD, noches inclusive, maximo 120). Sin ellas usa la ventana historica.
 // Smoobu: solo GET /api/reservations (paginado, con tope). Odoo: solo fields_get y search_read.
 // No ejecuta create/write/unlink, acciones de servidor ni crons. Salida PUBLICA (ATH-DEV-048): IDs de Smoobu/OTA enmascarados
-// (3 ultimos caracteres), fechas, habitaciones, codigos y conteos; sin nombres, textos libres ni IDs internos de Odoo.
+// (4 ultimos caracteres), fechas, habitaciones, codigos y conteos; sin nombres, textos libres ni IDs internos de Odoo.
 import { loadSmoobuConfig, loadOdooConfig } from '../src/config.mjs';
 import { SmoobuClient } from '../src/smoobu-client.mjs';
 import { OdooJson2Client } from '../src/odoo-json2-client.mjs';

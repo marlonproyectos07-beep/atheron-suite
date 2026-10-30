@@ -108,7 +108,7 @@ test('extremo a extremo: listado sin la sobreventa + GET individual; solo GET y 
   assert.ok(odooCalls.every((c) => /^POST [a-z._]+\/(fields_get|search_read)$/.test(c)), odooCalls.join(','));
   assert.deepEqual([out.overbookingWatch.alerts, out.reads.smoobuWatch.requests], [1, 1]);
   const pub = toPublicReport(out); const text = JSON.stringify(pub);
-  assert.deepEqual([pub.overbookingWatch.entries[0].smoobuRef, pub.overbookingWatch.entries[0].status, pub.overbookingWatch.entries[0].type], ['SM*...171', 'OVERBOOKING_ALERT', 'OverBooking']);
+  assert.deepEqual([pub.overbookingWatch.entries[0].smoobuRef, pub.overbookingWatch.entries[0].status, pub.overbookingWatch.entries[0].type], ['SM*...9171', 'OVERBOOKING_ALERT', 'OverBooking']);
   for (const banned of ['160829171', '160827596', '5046108535', 'HMPRIVADOYBW', 'PRIVADO', 'privado@', 'k_prueba', 's_prueba', 'clave_prueba']) assert.ok(!text.includes(banned), banned);
   assert.equal(assertPublicSafe(text, { identifiers: sensitiveValues(out) }).safe, true);
 });

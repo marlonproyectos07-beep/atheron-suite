@@ -11,8 +11,8 @@ const internal = reconcileByIds({ bookings: SMOOBU_BOOKINGS, window, orders: ODO
 const fullIds = [...new Set(SMOOBU_BOOKINGS.flatMap((b) => [String(b.id), b['reference-id']]).filter(Boolean))];
 const publicText = JSON.stringify(toPublicReport(internal));
 
-test('enmascarado: solo los 3 ultimos caracteres, con prefijo; nulos quedan en null', () => {
-  assert.equal(maskSmoobu(160965781), 'SM*...781'); assert.equal(maskOta('6044417870'), 'OTA*...870');
+test('enmascarado: solo los 4 ultimos caracteres, con prefijo; nulos quedan en null', () => {
+  assert.equal(maskSmoobu(160965781), 'SM*...5781'); assert.equal(maskOta('6044417870'), 'OTA*...7870');
   assert.equal(maskOta(null), null); assert.equal(maskSmoobu(''), null);
 });
 
@@ -34,10 +34,10 @@ test('se conserva lo necesario para diagnosticar: resumen, motivos, habitaciones
   assert.deepEqual(p.summary, internal.summary); assert.deepEqual(p.counts, internal.counts);
   assert.equal(p.perReservation.length, internal.perReservation.length);
   const c1 = p.controlCases[0];
-  assert.deepEqual([c1.control, c1.smoobuRef, c1.unit, c1.arrival, c1.verdict], ['CONTROL_1', 'SM*...781', '302', '2026-10-31', 'MISSING_IN_ODOO']);
+  assert.deepEqual([c1.control, c1.smoobuRef, c1.unit, c1.arrival, c1.verdict], ['CONTROL_1', 'SM*...5781', '302', '2026-10-31', 'MISSING_IN_ODOO']);
   const c3 = p.controlCases[2];
-  assert.equal(c3.manualReview, 'ALERTA_SOBREVENTA_NO_RESOLVER_AUTOMATICAMENTE'); assert.ok(c3.overbookingWith.every((x) => /^SM\*\.\.\.\d{3}$/.test(x)));
-  assert.ok(p.smoobuOverbooking.flat().every((x) => /^SM\*\.\.\.\d{3}$/.test(x)));
+  assert.equal(c3.manualReview, 'ALERTA_SOBREVENTA_NO_RESOLVER_AUTOMATICAMENTE'); assert.ok(c3.overbookingWith.every((x) => /^SM\*\.\.\.\d{4}$/.test(x)));
+  assert.ok(p.smoobuOverbooking.flat().every((x) => /^SM\*\.\.\.\d{4}$/.test(x)));
   assert.equal(p.safety.writesEnabled, false); assert.equal(p.safety.releaseUnlocked, false);
 });
 

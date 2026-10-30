@@ -23,7 +23,7 @@ test('lista blanca: solo ids permitidos y con formato numerico', () => {
 
 test('resumen: campos tecnicos y de estado visibles; id y referencia OTA enmascarados', () => {
   const s = summarizeReservation(sample);
-  assert.equal(s.smoobuRef, 'SM*...171'); assert.equal(s.otaRef, 'OTA*...535'); assert.equal(s.hasOtaRef, true);
+  assert.equal(s.smoobuRef, 'SM*...9171'); assert.equal(s.otaRef, 'OTA*...8535'); assert.equal(s.hasOtaRef, true);
   assert.deepEqual([s.apartmentId, s.channelId, s.channelName], [3557521, 7208046, 'Booking.com']);
   assert.deepEqual(s.technical, { type: 'reservation', arrival: '2027-01-04', departure: '2027-01-05', 'created-at': '2026-10-20 15:40', modifiedAt: '2026-10-20 15:41', 'is-blocked-booking': false, adults: 2, children: 0 });
   assert.equal(s.statusLikeFields.status, 'overbooking'); assert.equal(s.statusLikeFields['is-overbooking'], true);

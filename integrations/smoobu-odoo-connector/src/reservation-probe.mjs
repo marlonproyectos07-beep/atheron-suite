@@ -8,7 +8,7 @@ import { maskSmoobu, maskOta } from './public-report.mjs';
  *  - los NOMBRES de todos los campos que devuelve la API (sin valores), para ver si existe algun campo de estado;
  *  - SOLO los valores de una lista blanca de campos tecnicos (tipo, fechas, unidad, canal, bloqueo, marcas de tiempo);
  *  - los valores de campos cuyo NOMBRE sugiera estado/sobreventa, solo si son booleanos, numeros o textos cortos sin '@';
- *  - el id y la referencia OTA enmascarados (3 ultimos caracteres).
+ *  - el id y la referencia OTA enmascarados (4 ultimos caracteres).
  * Nunca: nombre del huesped, correo, telefono, direccion, notas, mensajes, precios ni ningun otro valor fuera de la lista.
  */
 export const ALLOWED_RESERVATION_IDS = Object.freeze(new Set([160829171]));

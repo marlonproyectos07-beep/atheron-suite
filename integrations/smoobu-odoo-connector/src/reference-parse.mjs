@@ -8,8 +8,8 @@
  *  - el texto original nunca sale de este modulo ni se imprime.
  */
 const LABELED = [
-  // "Smoobu 160965781", "Smoobu ID: 160965781", "Smoobu #160965781"
-  { kind: 'smoobu', re: /\bsmoobu\s*(?:id|reserva|n[oº°.]*)?\s*[:#]?\s*(\d{6,12})\b/gi },
+  // "Smoobu 160965781", "Smoobu ID: 160965781", "Smoobu #160965781" y (ATH-DEV-074) "SMOOBU-160965781", el formato que se usa en Odoo
+  { kind: 'smoobu', re: /\bsmoobu\s*(?:id|reserva|n[oº°.]*)?\s*[:#-]?\s*(\d{6,12})\b/gi },
   // "Booking 6044417870", "Booking.com #6044417870", "Booking ID 6044417870", "Booking N. 6044417870"
   { kind: 'booking', re: /\bbooking(?:\.com)?\s*(?:id|reserva|number|n[oº°.]*)?\s*[:#]?\s*(\d{6,14})\b/gi },
   // "Airbnb HMABCD1234" (codigo alfanumerico) o "Airbnb 1234567890"

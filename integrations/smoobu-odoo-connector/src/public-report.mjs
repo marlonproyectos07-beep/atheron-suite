@@ -4,8 +4,8 @@
  * El repositorio es publico: los registros de GitHub Actions los puede leer cualquier usuario con sesion en GitHub.
  * La conciliacion compara internamente los identificadores COMPLETOS (sin cambios en la logica); este modulo solo decide
  * que se IMPRIME:
- *  - IDs de Smoobu y numeros de reserva de la OTA (Booking/Airbnb): enmascarados, solo los 3 ultimos caracteres
- *    (`SM*...781`, `OTA*...870`). Basta para que una persona con acceso a Smoobu localice la reserva junto con habitacion
+ *  - IDs de Smoobu y numeros de reserva de la OTA (Booking/Airbnb): enmascarados, solo los 4 ultimos caracteres
+ *    (`SM*...5781`, `OTA*...7870`). Basta para que una persona con acceso a Smoobu localice la reserva junto con habitacion
  *    y fechas; no basta para buscarla en la OTA ni en Smoobu desde fuera.
  *  - Se conservan: veredictos, motivos, habitacion, fechas, ocupacion, conteos, estados y codigos de error.
  *    Habitacion + fechas revelan que una habitacion esta ocupada una noche (dato que la OTA ya publica como "no disponible"),
@@ -15,7 +15,7 @@
  *  - Nunca: nombres, correos, telefonos, documentos, textos libres (`x_pms_reference`), ni credenciales (ya no llegan aqui).
  * Ademas `assertPublicSafe` comprueba la cadena final: si aparece cualquier identificador completo, no se imprime el detalle.
  */
-const KEEP = 3;
+const KEEP = 4; // ATH-DEV-074: 4 ultimos caracteres (con 3 hubo colision entre dos reservas reales)
 
 /** Enmascara un identificador dejando visibles los ultimos 3 caracteres. Nulos y vacios quedan en null. */
 export function maskId(value, prefix) {

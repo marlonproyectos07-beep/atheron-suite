@@ -8,7 +8,7 @@ Solo lectura. No crea, modifica ni borra nada en Odoo ni en Smoobu. `RELEASE_UNL
 2. **Odoo** (solo `fields_get` y `search_read`, por `OdooJson2Client`, que rechaza cualquier otro metodo antes de la red):
    `planning.slot` de las seis unidades en la ventana; `sale.order` con `x_pms_reference` escrita o con fechas en la ventana;
    `sale.order.line` y `product.template` de esos pedidos (para saber la habitacion). Tope de resultados = parada.
-3. Cruza **solo por identificadores con etiqueta** en `x_pms_reference` (`Smoobu <id>`, `Booking <id>`, `Airbnb <codigo>`) contra el id de Smoobu y su `reference-id`.
+3. Cruza **solo por identificadores con etiqueta** en `x_pms_reference` (`Smoobu <id>`, `SMOOBU-<id>` (ATH-DEV-074, formato usado en Odoo), `Booking <id>`, `Airbnb <codigo>`) contra el id de Smoobu y su `reference-id`. Un numero etiquetado en el canal equivocado nunca da MATCH.
 
 ## Ventana
 `RECONCILE_FROM` / `RECONCILE_TO` (YYYY-MM-DD, noches inclusive, maximo 120). Sin ninguna de las dos: ventana historica 26..27 oct
@@ -37,7 +37,7 @@ solo se comparan en memoria y, si coinciden, el veredicto es AMBIGUOUS. Tampoco 
 ### Registros publicos (ATH-DEV-048)
 El repositorio es publico y cualquier usuario con sesion en GitHub puede leer los registros de Actions. Por eso
 `scripts/reconcile-ids.mjs` ya no imprime el informe interno: imprime `toPublicReport()` (`src/public-report.mjs`).
-- IDs de Smoobu y de la OTA: enmascarados con sus 3 ultimos caracteres (`SM*...781`, `OTA*...870`). La comparacion interna
+- IDs de Smoobu y de la OTA: enmascarados con sus 4 ultimos caracteres (`SM*...5781`, `OTA*...7870`; ATH-DEV-074: con 3 hubo una colision real). La comparacion interna
   sigue usando los valores completos; la logica de conciliacion no cambia.
 - Pedidos de Odoo: solo conteo y estado; no se imprimen sus IDs. Casos de control: `CONTROL_1..3` con ID enmascarado.
 - Se conservan veredicto, motivo, habitacion, fechas, ocupacion, alertas, conteos y codigos de error. Habitacion + fechas
