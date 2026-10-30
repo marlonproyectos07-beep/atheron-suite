@@ -43,8 +43,12 @@ Odoo (lectura)┘                                                       │
 - Smoobu es la fuente; el pedido se identifica solo por `SMOOBU-<id>`.
 - Precios: total de Smoobu = `price_unit` = `x_precio_manual` al crear; nunca se modifica un precio existente.
 - IVA no validado: crear borrador sin impuesto si; **confirmar, bloqueado** (incluso con aprobacion).
-- Casa Completa: pedido con las 5 lineas de habitacion (producto derivado). Sin regla de reparto del precio,
-  BLOQUEADO (`CASA_REPARTO_PENDIENTE`). Nunca un sexto producto.
+- Casa Completa (ATH-DEV-117): UNA reserva comercial con el producto existente `CASA-MAGIA` (57850, rol 69), un solo
+  ingreso. Las cinco habitaciones las bloquea Odoo (automatizacion 167) y la postvalidacion comprueba los cinco bloqueos.
+  Minimo 10 personas (automatizacion 71): si Smoobu no trae el numero o es menor, BLOQUEADO. La sobreventa del 04/01 sigue bloqueada.
+- Contactos (ATH-DEV-117, `sync-contact.mjs`): correo opcional. Nombre identificable obligatorio; `ref` = `SMOOBU-<id>` en el
+  contacto creado (idempotencia y recuperacion). Busca por ref, correo exacto, telefono normalizado y nombre; coincidencias
+  multiples, llaves que apuntan a personas distintas o coincidencia solo por nombre = BLOQUEO. Nunca se inventa un dato.
 - Facturadas, pagadas, con estancia iniciada, con sobreventa o ambiguas: no se tocan.
 
 ## Pendiente del contador
@@ -54,6 +58,18 @@ Odoo (lectura)┘                                                       │
 3. Tratamiento de la comision de Booking (hoy se deja fuera del pedido).
 4. Reparto del precio de Casa Completa entre las 5 habitaciones (o alternativa contable).
 5. Serie de factura (VENT interna o FAC electronica) cuando la sincronizacion cree pedidos.
+
+## Usuario tecnico de Odoo: hechos leidos (30/10/2026, solo lectura) y requisitos (NO creado)
+
+- Hoy hay **1 usuario interno activo** (el del gerente, administrador) y 2 de portal. Suscripcion con renovacion el 02/01/2027.
+- Odoo cobra por usuario; un usuario interno adicional implica, con alta probabilidad, una licencia mas (confirmar en el portal
+  de suscripcion de Odoo antes de crearlo). Un usuario de portal NO sirve: no puede leer ni escribir pedidos de venta.
+- Compañias: ATHERON S.A.S. (5) y Atheron_Administrador (1). El usuario puede limitarse a la compañia 5 (`company_ids`=[5]).
+- Grupos minimos: Usuario interno; Ventas / Usuario: todos los documentos (16); Contacto / Creacion (9); Planning / Usuario (57)
+  para leer turnos; Contabilidad / Solo lectura (35) para comprobar facturas y pagos. SIN: Ventas Administrador, Contabilidad
+  Facturacion/Contable/Administrador, Planning Administrador, Administrador del sistema, Funciones tecnicas.
+- Alternativa sin licencia extra: seguir con la clave del gerente (administrador). Es mas simple pero da al conector mas
+  permisos de los necesarios; la lista blanca del cliente lo compensa en parte, no del todo.
 
 ## Usuario tecnico de Odoo (requisitos; NO creado)
 

@@ -1,5 +1,5 @@
 import { ConnectorError } from './errors.mjs';
-import { PRODUCT_BY_UNIT } from './sync-intent.mjs';
+import { PRODUCT_BY_UNIT, CASA_PRODUCT, CASA_MIN_PERSONS } from './sync-intent.mjs';
 
 /**
  * ATH-DEV-116 — Lista blanca de ESCRITURAS de la sincronizacion Smoobu -> Odoo. Pura: valida, no envia.
@@ -9,13 +9,14 @@ import { PRODUCT_BY_UNIT } from './sync-intent.mjs';
  *    (los turnos los crean, mueven y borran las automatizaciones 151/165/166 de Odoo, no el conector);
  *  - `price_unit` solo al CREAR la linea de un pedido nuevo; jamas en `write`;
  *  - `x_pms_reference` en `write` solo si el pedido no tenia referencia (lo comprueba la prevalidacion);
- *  - productos de linea: solo los cinco de habitacion (Casa Completa = esas cinco lineas, nunca un sexto producto).
+ *  - productos de linea: los cinco de habitacion o el producto existente de Casa Completa (CASA-MAGIA); UNA sola linea;
+ *  - contactos: nombre obligatorio, `ref` = SMOOBU-<id> obligatorio (idempotencia), correo y telefono opcionales.
  */
-const ROOM_PRODUCTS = new Set(Object.values(PRODUCT_BY_UNIT));
+const ROOM_PRODUCTS = new Set([...Object.values(PRODUCT_BY_UNIT), CASA_PRODUCT]);
 const ORDER_CREATE = new Set(['partner_id', 'client_order_ref', 'x_pms_reference', 'x_booking_source', 'x_checkin', 'x_checkout', 'rental_start_date', 'rental_return_date', 'order_line']);
 const ORDER_WRITE = new Set(['client_order_ref', 'x_pms_reference', 'x_booking_source', 'x_checkin', 'x_checkout', 'rental_start_date', 'rental_return_date']);
-const LINE_CREATE = new Set(['product_id', 'product_uom_qty', 'price_unit', 'x_precio_manual', 'tax_ids']);
-const PARTNER_CREATE = new Set(['name', 'email', 'phone']);
+const LINE_CREATE = new Set(['product_id', 'product_uom_qty', 'price_unit', 'x_precio_manual', 'tax_ids', 'x_personas']);
+const PARTNER_CREATE = new Set(['name', 'email', 'phone', 'ref']);
 
 export const WRITE_ALLOWLIST = Object.freeze({
   'res.partner': Object.freeze(['create']),
@@ -37,6 +38,8 @@ function validateLineCommand(cmd) {
   if (!(typeof v.price_unit === 'number' && v.price_unit >= 0)) fail('SYNC_WRITE_PRICE_INVALID');
   if (v.x_precio_manual !== v.price_unit) fail('SYNC_WRITE_MANUAL_PRICE_MISMATCH');
   if (JSON.stringify(v.tax_ids) !== JSON.stringify([[6, 0, []]])) fail('SYNC_WRITE_TAXES_NOT_ALLOWED'); // impuestos: politica pendiente
+  if (v.product_id === CASA_PRODUCT) { if (!(Number.isInteger(v.x_personas) && v.x_personas >= CASA_MIN_PERSONS)) fail('SYNC_WRITE_CASA_PERSONAS'); }
+  else if ('x_personas' in v) fail('SYNC_WRITE_LINE_FIELD_FORBIDDEN');
 }
 
 /** Lanza ConnectorError si la escritura no esta permitida. Devuelve true si lo esta. */
@@ -47,15 +50,13 @@ export function validateWrite(model, method, params) {
     const list = params?.vals_list;
     if (!Array.isArray(list) || list.length !== 1) fail('SYNC_WRITE_ONE_RECORD_ONLY');
     const v = list[0];
-    if (model === 'res.partner') { onlyKeys(v, PARTNER_CREATE, 'SYNC_WRITE_FIELD_FORBIDDEN'); if (!v.name) fail('SYNC_WRITE_PARTNER_NAME_REQUIRED'); }
+    if (model === 'res.partner') { onlyKeys(v, PARTNER_CREATE, 'SYNC_WRITE_FIELD_FORBIDDEN'); if (!v.name) fail('SYNC_WRITE_PARTNER_NAME_REQUIRED'); if (!/^SMOOBU-\d+$/.test(String(v.ref ?? ''))) fail('SYNC_WRITE_PARTNER_REF_REQUIRED'); }
     if (model === 'sale.order') {
       onlyKeys(v, ORDER_CREATE, 'SYNC_WRITE_FIELD_FORBIDDEN');
       if (!/^SMOOBU-\d+( \/ (Booking|Airbnb) \S+)?$/.test(String(v.x_pms_reference ?? ''))) fail('SYNC_WRITE_REFERENCE_INVALID');
       if (!Number.isInteger(v.partner_id)) fail('SYNC_WRITE_PARTNER_REQUIRED');
-      if (!Array.isArray(v.order_line) || v.order_line.length < 1 || v.order_line.length > 5) fail('SYNC_WRITE_LINE_COMMAND_FORBIDDEN');
+      if (!Array.isArray(v.order_line) || v.order_line.length !== 1) fail('SYNC_WRITE_LINE_COMMAND_FORBIDDEN'); // una reserva = una linea
       v.order_line.forEach(validateLineCommand);
-      const products = v.order_line.map((c) => c[2].product_id);
-      if (new Set(products).size !== products.length) fail('SYNC_WRITE_PRODUCT_REPEATED');
     }
     return true;
   }
