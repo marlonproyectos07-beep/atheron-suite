@@ -51,7 +51,7 @@ test('extremo a extremo: solo GET a Smoobu y solo fields_get/search_read a Odoo;
   const slotCall = o.calls.find((c) => c.model === 'planning.slot' && c.method === 'search_read');
   assert.deepEqual(slotCall.domain.slice(1), [['start_datetime', '<', '2027-01-07 00:00:00'], ['end_datetime', '>', '2026-10-27 00:00:00']]);
   assert.equal(out.reads.odoo.writes, 0);
-  assert.deepEqual(out.summary, { MATCH: 1, MISSING_IN_ODOO: 6, CONFLICT: 2, CANCELLED: 1, AMBIGUOUS: 3 });
+  assert.deepEqual(out.summary, { MATCH: 1, MATCH_DRAFT: 0, DAYUSE_OK: 0, ROOM_MOVED: 0, MISSING_IN_ODOO: 6, CONFLICT: 2, CANCELLED: 1, AMBIGUOUS: 3 });
   const text = JSON.stringify(out);
   for (const banned of ['PRIVADO', 'privado@', '0000000000', 'clave_prueba', 'k_prueba', 's_prueba']) assert.ok(!text.includes(banned), banned);
 });

@@ -8,7 +8,10 @@ import { resolveWindow } from '../src/window.mjs';
 const window = resolveWindow({ RECONCILE_FROM: '2026-10-28', RECONCILE_TO: '2027-01-05' });
 const booking = (id, unit, arrival, departure, otaRef, extra = {}) => ({ id, type: 'reservation', arrival, departure, apartment: { id: { 201: 3557506, 202: 3557511, 301: 3557521, 302: 3557526 }[unit] }, channel: { id: 7208046 }, ...(otaRef && { 'reference-id': otaRef }), ...extra });
 const order = (id, ref, unit, checkin, checkout, extra = {}) => ({ id, state: 'sale', x_pms_reference: ref, x_checkin: checkin, x_checkout: checkout, units: [unit], ...extra });
-const verdictOf = (bookings, orders) => reconcileByIds({ bookings, window, orders, slots: [] }).perReservation.map((r) => [r.smoobuId, r.verdict, r.reason, r.matchedBy ?? null]);
+// ATH-CEO-PMS-100: un MATCH exige turno; cada pedido confirmado de prueba trae su turno (rol de su habitacion, 15:00 -> 11:00)
+const ROLE = { 201: 29, 202: 19, 301: 37, 302: 18 };
+const slotsFor = (orders) => orders.filter((o) => o.state === 'sale').map((o, i) => ({ id: 900 + i, role_id: [ROLE[o.units[0]], 'x'], start_datetime: `${o.x_checkin} 20:00:00`, end_datetime: `${o.x_checkout} 16:00:00`, state: 'published' }));
+const verdictOf = (bookings, orders) => reconcileByIds({ bookings, window, orders, slots: slotsFor(orders) }).perReservation.map((r) => [r.smoobuId, r.verdict, r.reason, r.matchedBy ?? null]);
 
 test('formato SMOOBU-<id>: reconocido como identificador etiquetado (mayusculas, minusculas y espacios)', () => {
   for (const t of ['SMOOBU-160965781', 'smoobu-160965781', 'Smoobu - 160965781', 'SMOOBU-160965781 pago Nequi']) {
@@ -57,8 +60,12 @@ test('ambiguos y conflictos con SMOOBU-<id>: dos IDs, dos pedidos, fechas u OTA 
 test('colisiones entre canales: un numero etiquetado en el canal equivocado nunca produce MATCH', () => {
   const b = booking(160965781, '302', '2026-10-31', '2026-11-01', '6044417870');
   // el ID de Smoobu escrito como numero de Booking, y el numero de Booking escrito como ID de Smoobu
-  assert.deepEqual(verdictOf([b], [order(1, 'Booking 160965781', '302', '2026-10-31', '2026-11-01')])[0].slice(1, 3), ['MISSING_IN_ODOO', 'SIN_PEDIDO_NI_OCUPACION_EN_ODOO']);
-  assert.deepEqual(verdictOf([b], [order(1, 'SMOOBU-6044417870', '302', '2026-10-31', '2026-11-01')])[0].slice(1, 3), ['MISSING_IN_ODOO', 'SIN_PEDIDO_NI_OCUPACION_EN_ODOO']);
+  // (pedidos en borrador, sin turno: el resultado depende solo de la etiqueta)
+  const draft = (ref) => order(1, ref, '302', '2026-10-31', '2026-11-01', { state: 'draft' });
+  assert.deepEqual(verdictOf([b], [draft('Booking 160965781')])[0].slice(1, 3), ['MISSING_IN_ODOO', 'SIN_PEDIDO_NI_OCUPACION_EN_ODOO']);
+  assert.deepEqual(verdictOf([b], [draft('SMOOBU-6044417870')])[0].slice(1, 3), ['MISSING_IN_ODOO', 'SIN_PEDIDO_NI_OCUPACION_EN_ODOO']);
+  // y con el pedido confirmado y ocupando la habitacion, tampoco hay MATCH: queda AMBIGUOUS (ocupado sin ID)
+  assert.deepEqual(verdictOf([b], [order(1, 'Booking 160965781', '302', '2026-10-31', '2026-11-01')])[0].slice(1, 3), ['AMBIGUOUS', 'ODOO_OCUPADO_SIN_ID']);
   // un pedido con el ID de OTRA reserva de Smoobu no se asigna a esta
   const otra = booking(161787956, '201', '2026-11-01', '2026-11-02', '5122466816');
   const r = verdictOf([b, otra], [order(1, 'SMOOBU-161787956', '201', '2026-11-01', '2026-11-02')]);
@@ -69,7 +76,7 @@ test('escenario del 29/10: cinco pedidos SMOOBU-<id> pasan de AMBIGUOUS (sin eti
   const casos = [[171000001, '201', '2026-10-29', '2026-10-30'], [171000002, '202', '2026-10-29', '2026-10-31'], [171000003, '302', '2026-10-29', '2026-10-30'], [171000004, '301', '2026-10-29', '2026-10-30'], [171000005, '201', '2026-10-30', '2026-10-31']];
   const bookings = casos.map(([id, u, a, d]) => booking(id, u, a, d, null, { channel: { id: 7192171 } }));
   const orders = casos.map(([id, u, a, d], i) => order(i + 1, `SMOOBU-${id}`, u, a, d));
-  const r = reconcileByIds({ bookings, window, orders, slots: [] });
-  assert.deepEqual(r.summary, { MATCH: 5, MISSING_IN_ODOO: 0, CONFLICT: 0, CANCELLED: 0, AMBIGUOUS: 0 });
+  const r = reconcileByIds({ bookings, window, orders, slots: slotsFor(orders) });
+  assert.deepEqual(r.summary, { MATCH: 5, MATCH_DRAFT: 0, DAYUSE_OK: 0, ROOM_MOVED: 0, MISSING_IN_ODOO: 0, CONFLICT: 0, CANCELLED: 0, AMBIGUOUS: 0 });
   assert.ok(r.perReservation.every((x) => x.writesEnabled === false)); assert.equal(r.safety.proposals, 0);
 });

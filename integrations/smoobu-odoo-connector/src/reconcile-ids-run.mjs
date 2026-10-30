@@ -9,7 +9,7 @@ import { readWatchlist } from './overbooking-watch.mjs';
  *  - Odoo: fields_get y search_read (OdooJson2Client rechaza cualquier otro metodo antes de la red).
  * Si una lectura llega al tope de resultados o la paginacion no termina, se DETIENE (resultado incompleto = no hay informe).
  */
-export const LIMITS = Object.freeze({ smoobuPageSize: 100, smoobuMaxPages: 10, odooSlots: 5000, odooOrders: 2000, odooLines: 5000, odooTemplates: 500 });
+export const LIMITS = Object.freeze({ smoobuPageSize: 100, smoobuMaxPages: 10, odooSlots: 5000, odooOrders: 2000, odooLines: 5000, odooTemplates: 500, odooInvoices: 2000, odooDayuseSlots: 500 });
 
 /** Codigos internos de producto de La Magia -> unidad (respaldo si el producto no trae `planning_role_id`). */
 const UNIT_BY_CODE = Object.freeze({ 'MAGIA-201': '201', 'MAGIA-202': '202', 'MAGIA-203': '203', 'MAGIA-301': '301', 'MAGIA-302': '302', 'CASA-MAGIA': 'CASA' });
@@ -51,7 +51,13 @@ export async function readOdooWindow(odoo, window, limits = LIMITS) {
     [['role_id', 'in', roleIds], ['start_datetime', '<', window.odooSlotRange.end], ['end_datetime', '>', window.odooSlotRange.start]],
     slotFields, { limit: limits.odooSlots, order: 'start_datetime' })), limits.odooSlots, 'ODOO_SLOT_LIMIT');
 
-  const orderFields = await have('sale.order', ['id', 'state', 'x_pms_reference', 'x_booking_source', 'x_checkin', 'x_checkout', 'x_reservation_status']);
+  // ATH-CEO-PMS-100: turnos de uso diurno (nota DAYUSE..., cualquier rol) en la ventana; la nota solo se usa en memoria
+  const dayuseFields = slotFields.includes('id') ? await have('planning.slot', ['id', 'name', 'role_id', 'resource_id', 'start_datetime', 'end_datetime', 'state']) : [];
+  const dayuseSlots = dayuseFields.includes('name') ? capped(await call(() => odoo.searchRead('planning.slot',
+    [['name', '=ilike', 'DAYUSE%'], ['start_datetime', '<', window.odooSlotRange.end], ['end_datetime', '>', window.odooSlotRange.start]],
+    dayuseFields, { limit: limits.odooDayuseSlots, order: 'start_datetime' })), limits.odooDayuseSlots, 'ODOO_DAYUSE_SLOT_LIMIT') : [];
+
+  const orderFields = await have('sale.order', ['id', 'state', 'x_pms_reference', 'x_booking_source', 'x_checkin', 'x_checkout', 'x_reservation_status', 'amount_untaxed', 'amount_tax', 'amount_total', 'invoice_ids']);
   for (const required of ['x_pms_reference', 'x_checkin', 'x_checkout']) if (!orderFields.includes(required)) throw new ConnectorError('ODOO_FIELDS_MISSING');
   const { checkinOnOrBefore, checkoutAfter } = window.orderRange;
   // todos los pedidos con referencia escrita (son pocos) + los pedidos cuyas fechas tocan la ventana
@@ -59,9 +65,9 @@ export async function readOdooWindow(odoo, window, limits = LIMITS) {
     ['|', ['x_pms_reference', '!=', false], '&', ['x_checkin', '<=', checkinOnOrBefore], ['x_checkout', '>', checkoutAfter]],
     orderFields, { limit: limits.odooOrders, order: 'id' })), limits.odooOrders, 'ODOO_ORDER_LIMIT');
 
-  let lines = []; let templates = [];
+  let lines = []; let templates = []; let invoices = [];
   if (orders.length) {
-    const lineFields = await have('sale.order.line', ['id', 'order_id', 'product_template_id']);
+    const lineFields = await have('sale.order.line', ['id', 'order_id', 'product_template_id', 'price_unit', 'x_precio_manual']);
     if (lineFields.includes('product_template_id')) {
       lines = capped(await call(() => odoo.searchRead('sale.order.line', [['order_id', 'in', orders.map((o) => o.id)]], lineFields, { limit: limits.odooLines })), limits.odooLines, 'ODOO_LINE_LIMIT');
       const tmplIds = [...new Set(lines.map((l) => m2oId(l.product_template_id)).filter(Boolean))];
@@ -70,7 +76,16 @@ export async function readOdooWindow(odoo, window, limits = LIMITS) {
         templates = capped(await call(() => odoo.searchRead('product.template', [['id', 'in', tmplIds]], tmplFields, { limit: limits.odooTemplates })), limits.odooTemplates, 'ODOO_TEMPLATE_LIMIT');
       }
     }
+    // ATH-CEO-PMS-100: facturas de esos pedidos (solo estado, tipo y total) para el aviso INVOICE_DIFF
+    const invIds = [...new Set(orders.flatMap((o) => (Array.isArray(o.invoice_ids) ? o.invoice_ids : [])))];
+    if (invIds.length) {
+      const invFields = await have('account.move', ['id', 'state', 'move_type', 'amount_total']);
+      invoices = capped(await call(() => odoo.searchRead('account.move', [['id', 'in', invIds]], invFields, { limit: limits.odooInvoices })), limits.odooInvoices, 'ODOO_INVOICE_LIMIT');
+    }
   }
+  const invoiceById = new Map(invoices.map((i) => [i.id, i]));
+  const linesOfOrder = new Map();
+  for (const l of lines) { const oid = m2oId(l.order_id); linesOfOrder.set(oid, [...(linesOfOrder.get(oid) ?? []), l]); }
   const unitOfTemplate = new Map(templates.map((t) => [t.id, unitForOdooRole(m2oId(t.planning_role_id))?.unit ?? UNIT_BY_CODE[t.default_code] ?? null]));
   const unitsOfOrder = new Map();
   for (const l of lines) {
@@ -79,8 +94,16 @@ export async function readOdooWindow(odoo, window, limits = LIMITS) {
     const oid = m2oId(l.order_id);
     unitsOfOrder.set(oid, [...new Set([...(unitsOfOrder.get(oid) ?? []), u])]);
   }
-  const ordersWithUnits = orders.map((o) => ({ ...o, units: unitsOfOrder.get(o.id) ?? [] }));
-  return { slots, orders: ordersWithUnits, calls, counts: { slotsRead: slots.length, ordersRead: orders.length, linesRead: lines.length, templatesRead: templates.length } };
+  const ordersWithUnits = orders.map((o) => {
+    const own = linesOfOrder.get(o.id) ?? [];
+    return {
+      ...o, units: unitsOfOrder.get(o.id) ?? [],
+      lineIds: own.map((l) => l.id),
+      lines: own.map((l) => ({ price_unit: l.price_unit ?? null, x_precio_manual: l.x_precio_manual ?? null })),
+      invoices: (Array.isArray(o.invoice_ids) ? o.invoice_ids : []).map((id) => invoiceById.get(id)).filter(Boolean),
+    };
+  });
+  return { slots, dayuseSlots, orders: ordersWithUnits, calls, counts: { slotsRead: slots.length, dayuseSlotsRead: dayuseSlots.length, ordersRead: orders.length, linesRead: lines.length, templatesRead: templates.length, invoicesRead: invoices.length } };
 }
 
 /** Ejecuta la conciliacion completa y devuelve un informe sin datos personales. */
@@ -90,7 +113,7 @@ export async function runReconcileIds({ smoobu, odoo, window, watchIds = [] }) {
   // ATH-DEV-053: el listado no devuelve las sobreventas; los ids vigilados se leen uno a uno (GET, con tope, sin reintentos)
   const watch = await readWatchlist(smoobu, watchIds, { listed: new Map(s.bookings.map((b) => [Number(b?.id), b])) });
   const o = await readOdooWindow(odoo, window);
-  const report = reconcileByIds({ bookings: s.bookings, window, orders: o.orders, slots: o.slots });
+  const report = reconcileByIds({ bookings: s.bookings, window, orders: o.orders, slots: o.slots, dayuseSlots: o.dayuseSlots });
   return {
     reads: {
       smoobuWatch: { endpoint: 'GET /api/reservations/{id}', requests: watch.requests, watched: watchIds.length },

@@ -40,6 +40,8 @@ const publicReservation = (r) => ({
   odooOccupancy: r.odooOccupancy, odooFreeNights: r.odooFreeNights ?? [],
   overbookingWith: (r.overbookingWith ?? []).map(maskSmoobu),
   manualReview: r.manualReview ?? null,
+  // ATH-CEO-PMS-100: solo codigos de aviso; nunca importes, notas de turnos ni textos de referencia
+  alerts: [...(r.alerts ?? [])],
   writesEnabled: r.writesEnabled,
 });
 
@@ -50,6 +52,7 @@ export function toPublicReport(out) {
     reads: out.reads,
     window: out.window,
     summary: out.summary,
+    alertCounts: out.alertCounts ?? null,
     counts: out.counts,
     perReservation: (out.perReservation ?? []).map(publicReservation),
     availabilityRisk: (out.availabilityRisk ?? []).map((x) => ({ smoobuRef: maskSmoobu(x.smoobuId), unit: x.unit, freeNightsInOdoo: x.freeNightsInOdoo })),

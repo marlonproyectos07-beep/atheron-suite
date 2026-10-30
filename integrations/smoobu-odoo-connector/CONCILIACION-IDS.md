@@ -24,6 +24,21 @@ Smoobu se pide con un dia de margen a cada lado (los extremos de `from`/`to` no 
 | CANCELLED | cancelada en Smoobu y sin pedido vigente en Odoo |
 | AMBIGUOUS | varios pedidos con el ID, numero sin etiqueta, ocupacion en Odoo sin ID, pedido compartido o varias habitaciones |
 
+### Estados y avisos (ATH-CEO-PMS-100)
+| Veredicto | Significado |
+|---|---|
+| MATCH | ademas de lo anterior: pedido **confirmado** (sale/done) y turnos que cubren todas las noches |
+| MATCH_DRAFT | ID y datos coinciden, pero `PEDIDO_EN_BORRADOR` o `CONFIRMADO_SIN_TURNO`: no es ocupacion real en Odoo |
+| DAYUSE_OK | uso diurno: Smoobu reserva 1 noche tecnica; el pedido tiene entrada = salida = llegada y hay un turno con nota `DAYUSE ... SMOOBU-<id>` de menos de 24 h ese dia. Sin ese turno: CONFLICT `USO_DIURNO_SIN_TURNO_DAYUSE` |
+| ROOM_MOVED | el producto del pedido es otra habitacion (bloqueado al confirmar) pero los turnos **enlazados** al pedido estan en la de Smoobu y cubren las noches |
+
+Avisos (`alerts`, no cambian el veredicto; el informe publico solo imprime el codigo y `alertCounts`, nunca importes):
+`PRICE_DIFF` (precio de Smoobu distinto de la base y del total del pedido), `TAX_MISSING` (Booking.com con pedido sin impuesto;
+las directas no lo disparan porque su IVA lo decide el contador), `INVOICE_DIFF` (facturas publicadas menos notas credito
+distintas del total del pedido), `MANUAL_PRICE_DIFF` (linea con "Precio Manual (fijo)" distinto del precio unitario).
+Lecturas nuevas, todas `search_read`: importes y facturas del pedido, `price_unit`/`x_precio_manual` de las lineas,
+`account.move` (estado, tipo, total) y turnos `DAYUSE%` de cualquier rol; la nota del turno solo se usa en memoria.
+
 Habitacion, fechas o nombre **nunca** dan un MATCH. Ademas el informe trae: `availabilityRisk` (noches vendidas en Smoobu que Odoo
 muestra libres), `smoobuOverbooking` (estancias vigentes que se pisan, incluida Casa Completa contra una habitacion),
 `ordersNotReturnedBySmoobu`, y `controlCases` (160965781, 161787956, 160829171). La 160829171 lleva siempre

@@ -19,8 +19,25 @@ import { isOverbookingType } from './overbooking-watch.mjs';
  *  CANCELLED        cancelada en Smoobu y sin pedido vigente en Odoo.
  *  AMBIGUOUS        no se puede decidir sin una persona: varios pedidos con el ID, numero sin etiqueta,
  *                   ocupacion en Odoo sin ID, pedido compartido o con varias reservas.
+ * ATH-CEO-PMS-100:
+ *  MATCH            exige ademas pedido CONFIRMADO (sale/done) y turnos que cubran todas las noches de la habitacion.
+ *  MATCH_DRAFT      el ID y los datos coinciden, pero el pedido esta en borrador (PEDIDO_EN_BORRADOR) o confirmado sin
+ *                   turno que cubra las noches (CONFIRMADO_SIN_TURNO). No es ocupacion real en Odoo.
+ *  DAYUSE_OK        uso diurno legitimo: Smoobu bloquea 1 noche tecnica, el pedido tiene entrada = salida = llegada y existe un
+ *                   turno `DAYUSE ... SMOOBU-<id>` de menos de 24 h ese dia. No es pernocta.
+ *  ROOM_MOVED       el producto del pedido es otra habitacion (producto bloqueado al confirmar), pero los turnos ENLAZADOS al
+ *                   pedido estan en la habitacion de Smoobu y cubren las noches (intercambio operativo).
+ * Avisos (lista `alerts`, no cambian el veredicto; solo codigos, nunca importes en el informe publico):
+ *  PRICE_DIFF        el precio de Smoobu no coincide ni con la base ni con el total del pedido.
+ *  TAX_MISSING       reserva de Booking.com (que cobra IVA) con pedido sin impuesto.
+ *  INVOICE_DIFF      las facturas publicadas del pedido no suman el total del pedido.
+ *  MANUAL_PRICE_DIFF una linea tiene "Precio Manual (fijo)" distinto de su precio unitario.
  */
-export const VERDICTS = Object.freeze({ MATCH: 'MATCH', MISSING_IN_ODOO: 'MISSING_IN_ODOO', CONFLICT: 'CONFLICT', CANCELLED: 'CANCELLED', AMBIGUOUS: 'AMBIGUOUS' });
+export const VERDICTS = Object.freeze({ MATCH: 'MATCH', MATCH_DRAFT: 'MATCH_DRAFT', DAYUSE_OK: 'DAYUSE_OK', ROOM_MOVED: 'ROOM_MOVED', MISSING_IN_ODOO: 'MISSING_IN_ODOO', CONFLICT: 'CONFLICT', CANCELLED: 'CANCELLED', AMBIGUOUS: 'AMBIGUOUS' });
+export const ALERTS = Object.freeze({ PRICE_DIFF: 'PRICE_DIFF', TAX_MISSING: 'TAX_MISSING', INVOICE_DIFF: 'INVOICE_DIFF', MANUAL_PRICE_DIFF: 'MANUAL_PRICE_DIFF' });
+const BOOKING_CHANNEL_ID = 7208046;
+const CONFIRMED_STATES = new Set(['sale', 'done']);
+const AMOUNT_TOLERANCE = 1; // COP
 
 /** Reservas que nunca se resuelven de forma automatica (alerta de sobreventa vigente, ATH-DEV-039/041). */
 export const MANUAL_REVIEW_IDS = Object.freeze(new Set([160829171]));
@@ -43,6 +60,43 @@ function occupiedNights(slots, roleId, nights) {
   return nights.filter((d) => { const probe = `${addDays(d, 1)} 03:00:00`; return own.some((s) => s.start_datetime <= probe && s.end_datetime > probe); });
 }
 
+const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : (typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : null));
+const near = (a, b) => a != null && b != null && Math.abs(a - b) <= AMOUNT_TOLERANCE;
+
+/** Noches cubiertas por un conjunto concreto de turnos (misma regla de las 22:00 de Bogota). */
+function coveredNights(own, nights) {
+  return nights.filter((d) => { const probe = `${addDays(d, 1)} 03:00:00`; return own.some((s) => s.start_datetime <= probe && s.end_datetime > probe); });
+}
+
+/** Turno DAYUSE que respalda un uso diurno: etiquetado con el ID, empieza el dia de llegada (UTC-5) y dura menos de 24 h. */
+function dayuseSlotFor(dayuseSlots, smoobuId, arrival) {
+  return dayuseSlots.find((s) => {
+    if (!/^\s*DAYUSE\b/i.test(String(s.name ?? ''))) return false;
+    if (!parseReferences(String(s.name)).smoobu.includes(String(smoobuId))) return false;
+    if (!s.start_datetime || !s.end_datetime) return false;
+    const start = new Date(`${s.start_datetime.replace(' ', 'T')}Z`); const end = new Date(`${s.end_datetime.replace(' ', 'T')}Z`);
+    const hours = (end - start) / 3600000;
+    const localDay = new Date(start.getTime() - 5 * 3600000).toISOString().slice(0, 10);
+    return hours > 0 && hours < 24 && localDay === arrival;
+  }) ?? null;
+}
+
+/** Avisos de importes de un pedido emparejado. Solo codigos. */
+function amountAlerts(c, o, rawBooking) {
+  const alerts = [];
+  const smoobuPrice = num(rawBooking?.price);
+  const untaxed = num(o.amount_untaxed); const total = num(o.amount_total); const tax = num(o.amount_tax);
+  if (smoobuPrice != null && smoobuPrice > 0 && (untaxed != null || total != null) && !near(smoobuPrice, untaxed) && !near(smoobuPrice, total)) alerts.push(ALERTS.PRICE_DIFF);
+  if (c.channelId === BOOKING_CHANNEL_ID && tax != null && tax === 0) alerts.push(ALERTS.TAX_MISSING);
+  const posted = (o.invoices ?? []).filter((i) => i.state === 'posted');
+  if (posted.length && total != null) {
+    const invoiced = posted.reduce((acc, i) => acc + (i.move_type === 'out_refund' ? -1 : 1) * (num(i.amount_total) ?? 0), 0);
+    if (!near(invoiced, total)) alerts.push(ALERTS.INVOICE_DIFF);
+  }
+  if ((o.lines ?? []).some((l) => { const pm = num(l.x_precio_manual); return pm != null && pm !== 0 && !near(pm, num(l.price_unit)); })) alerts.push(ALERTS.MANUAL_PRICE_DIFF);
+  return alerts;
+}
+
 /** Grupos de estancias VIGENTES de Smoobu que se pisan (misma habitacion, o Casa Completa contra una habitacion). */
 export function smoobuOverlaps(stays) {
   const pairs = [];
@@ -63,9 +117,11 @@ export function smoobuOverlaps(stays) {
  * @param {{from:string,to:string}} p.window ventana validada (window.mjs)
  * @param {object[]} p.orders    sale.order leidos, con `units` (nombres de unidad) ya resueltos por quien llama
  * @param {object[]} p.slots     planning.slot leidos
+ * @param {object[]} [p.dayuseSlots] turnos cuya nota empieza por DAYUSE (cualquier rol); solo se usan en memoria
  */
-export function reconcileByIds({ bookings, window, orders, slots, manualReviewIds = MANUAL_REVIEW_IDS }) {
+export function reconcileByIds({ bookings, window, orders, slots, dayuseSlots = [], manualReviewIds = MANUAL_REVIEW_IDS }) {
   const parsedOrders = orders.map((o) => ({ ...o, refs: parseReferences(o.x_pms_reference) }));
+  const rawById = new Map(bookings.map((b) => [Number(b?.id), b]));
   const classified = bookings.map((b) => {
     const c = classifyBooking(b);
     return { ...c, otaRef: normalizeOtaRef(b?.['reference-id']), channelId: Number.isInteger(Number(b?.channel?.id)) ? Number(b.channel.id) : null };
@@ -130,10 +186,26 @@ export function reconcileByIds({ bookings, window, orders, slots, manualReviewId
       if (otaRefsInOrder.length > 1) return verdict(VERDICTS.AMBIGUOUS, 'PEDIDO_REFERENCIA_VARIAS_RESERVAS', extra);
       if (c.otaRef && otaRefsInOrder.length && !otaRefsInOrder.includes(c.otaRef)) return verdict(VERDICTS.CONFLICT, 'ID_OTA_DISTINTO_EN_EL_PEDIDO', extra);
       if (isCancelledOrder(o)) return verdict(VERDICTS.CONFLICT, 'VIGENTE_EN_SMOOBU_CANCELADA_EN_ODOO', extra);
+      extra.alerts = amountAlerts(c, o, rawById.get(c.id));
       if (!o.units?.length) return verdict(VERDICTS.AMBIGUOUS, 'HABITACION_DEL_PEDIDO_DESCONOCIDA', extra);
       if (o.units.length > 1) return verdict(VERDICTS.AMBIGUOUS, 'PEDIDO_CON_VARIAS_HABITACIONES', extra);
-      if (!o.units.includes(c.unit)) return verdict(VERDICTS.CONFLICT, 'HABITACION_DISTINTA', extra);
-      if (dateOnly(o.x_checkin) !== c.arrival || dateOnly(o.x_checkout) !== c.departure) return verdict(VERDICTS.CONFLICT, 'FECHAS_DISTINTAS', extra);
+      const confirmed = CONFIRMED_STATES.has(o.state);
+      const sameDates = dateOnly(o.x_checkin) === c.arrival && dateOnly(o.x_checkout) === c.departure;
+      if (!o.units.includes(c.unit)) {
+        // intercambio: el producto quedo en otra habitacion, pero los turnos ENLAZADOS al pedido estan en la de Smoobu
+        const linked = slots.filter((s) => (o.lineIds ?? []).includes(m2oId(s.sale_line_id)) && m2oId(s.role_id) === unit?.odooRoleId);
+        if (confirmed && sameDates && linked.length && coveredNights(linked, c.nights).length === c.nights.length) return verdict(VERDICTS.ROOM_MOVED, 'TURNO_EN_HABITACION_DE_SMOOBU_PRODUCTO_DISTINTO', extra);
+        return verdict(VERDICTS.CONFLICT, 'HABITACION_DISTINTA', extra);
+      }
+      // uso diurno: Smoobu reserva 1 noche tecnica; Odoo entrada = salida = llegada + turno DAYUSE etiquetado
+      const dayuse = dateOnly(o.x_checkin) === c.arrival && dateOnly(o.x_checkout) === c.arrival && c.departure === addDays(c.arrival, 1);
+      if (dayuse) {
+        if (confirmed && dayuseSlotFor(dayuseSlots, c.id, c.arrival)) return verdict(VERDICTS.DAYUSE_OK, 'USO_DIURNO_SIN_PERNOCTA', extra);
+        return verdict(VERDICTS.CONFLICT, 'USO_DIURNO_SIN_TURNO_DAYUSE', extra);
+      }
+      if (!sameDates) return verdict(VERDICTS.CONFLICT, 'FECHAS_DISTINTAS', extra);
+      if (!confirmed) return verdict(VERDICTS.MATCH_DRAFT, 'PEDIDO_EN_BORRADOR', extra);
+      if (occupancy !== 'FULL') return verdict(VERDICTS.MATCH_DRAFT, 'CONFIRMADO_SIN_TURNO', extra);
       return verdict(VERDICTS.MATCH, 'ID_Y_DATOS_COINCIDEN', extra);
     }
     if (unlabeledFor(c).length) return verdict(VERDICTS.AMBIGUOUS, 'NUMERO_SIN_ETIQUETA_EN_REFERENCIA');
@@ -151,6 +223,7 @@ export function reconcileByIds({ bookings, window, orders, slots, manualReviewId
     .map((o) => ({ id: o.id, refKinds: ['smoobu', 'booking', 'airbnb'].filter((k) => o.refs[k].length) }));
 
   const summary = Object.fromEntries(Object.values(VERDICTS).map((v) => [v, perReservation.filter((r) => r.verdict === v).length]));
+  const alertCounts = Object.fromEntries(Object.values(ALERTS).map((a) => [a, perReservation.filter((r) => (r.alerts ?? []).includes(a)).length]));
   const byId = new Map(perReservation.map((r) => [r.smoobuId, r]));
   const controlCases = CONTROL_CASES.map((k) => {
     const r = byId.get(k.smoobuId);
@@ -161,7 +234,7 @@ export function reconcileByIds({ bookings, window, orders, slots, manualReviewId
 
   return {
     window: { from: window.from, to: window.to, nights: window.nights },
-    summary, counts, perReservation,
+    summary, alertCounts, counts, perReservation,
     availabilityRisk: perReservation.filter((r) => r.smoobuStatus === 'ACTIVE' && r.odooOccupancy !== 'FULL').map((r) => ({ smoobuId: r.smoobuId, unit: r.unit, freeNightsInOdoo: r.odooFreeNights })),
     smoobuOverbooking: overlapPairs,
     overbookingInList,

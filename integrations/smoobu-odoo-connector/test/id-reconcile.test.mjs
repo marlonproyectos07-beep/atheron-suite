@@ -41,7 +41,7 @@ test('cinco veredictos: MATCH, CONFLICT (fechas / cancelada vigente), CANCELLED,
   assert.deepEqual([v[170000004].verdict, v[170000004].reason], ['AMBIGUOUS', 'VARIOS_PEDIDOS_CON_EL_MISMO_ID']);
   assert.deepEqual([v[170000005].verdict, v[170000005].reason], ['AMBIGUOUS', 'NUMERO_SIN_ETIQUETA_EN_REFERENCIA']);
   assert.deepEqual([v[161661036].verdict, v[161661036].reason], ['AMBIGUOUS', 'ODOO_OCUPADO_SIN_ID']);
-  assert.deepEqual(r.summary, { MATCH: 1, MISSING_IN_ODOO: 6, CONFLICT: 2, CANCELLED: 1, AMBIGUOUS: 3 });
+  assert.deepEqual(r.summary, { MATCH: 1, MATCH_DRAFT: 0, DAYUSE_OK: 0, ROOM_MOVED: 0, MISSING_IN_ODOO: 6, CONFLICT: 2, CANCELLED: 1, AMBIGUOUS: 3 });
   assert.deepEqual([r.counts.blocksActive, r.counts.excludedCarrera19, r.counts.outsideWindow], [1, 1, 1]);
   assert.ok(!r.perReservation.some((x) => x.smoobuId === 170000011), 'Carrera 19 nunca entra');
 });
@@ -55,7 +55,9 @@ test('habitacion, fecha o nombre NUNCA bastan: sin ID etiquetado no hay MATCH au
 
 test('conflictos de identificador y de estado', () => {
   const bk = SMOOBU_BOOKINGS[0];
-  const mk = (ref, extra = {}) => reconcileByIds({ bookings: [bk], window, slots: [], orders: [{ id: 80, name: 'COT/T/0080', state: 'sale', x_pms_reference: ref, x_checkin: '2026-10-31', x_checkout: '2026-11-01', units: ['302'], ...extra }] }).perReservation[0];
+  // ATH-CEO-PMS-100: un MATCH exige pedido confirmado con turno que cubra la noche
+  const cover = [{ id: 1, role_id: [18, 'x'], start_datetime: '2026-10-31 20:00:00', end_datetime: '2026-11-01 16:00:00', state: 'published' }];
+  const mk = (ref, extra = {}) => reconcileByIds({ bookings: [bk], window, slots: cover, orders: [{ id: 80, name: 'COT/T/0080', state: 'sale', x_pms_reference: ref, x_checkin: '2026-10-31', x_checkout: '2026-11-01', units: ['302'], ...extra }] }).perReservation[0];
   assert.equal(mk('Smoobu 160965781 / Booking 6044417870').verdict, 'MATCH');
   assert.equal(mk('Smoobu 160965781 / Booking 1234567890').reason, 'ID_OTA_DISTINTO_EN_EL_PEDIDO');
   assert.equal(mk('Smoobu 160965780 / Booking 6044417870').reason, 'ID_SMOOBU_DISTINTO_EN_EL_PEDIDO');
