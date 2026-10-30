@@ -8,8 +8,12 @@ import { buildLiveReport } from '../src/live-reconcile.mjs';
 import { ODOO_FACTS } from '../src/odoo-facts.mjs';
 import { UNITS } from '../src/unit-map.mjs';
 import { classifyAll } from '../src/classify.mjs';
+import { resolveWindow } from '../src/window.mjs';
 
-const WINDOW = { from: '2026-10-26', to: '2026-10-27' };
+// ATH-DEV-041: ventana por RECONCILE_FROM/RECONCILE_TO; sin ellas, la ventana historica 26..27 oct con sus rangos de Odoo de siempre.
+let W;
+try { W = resolveWindow(process.env); } catch (e) { console.log(JSON.stringify({ result: 'WINDOW_ERROR', code: e.code, smoobuRequests: 0 })); process.exit(2); }
+const WINDOW = { from: W.smoobuQuery.from, to: W.smoobuQuery.to };
 let sc; let oc;
 try { sc = loadSmoobuConfig(process.env); oc = loadOdooConfig(process.env); } catch (e) { console.log(JSON.stringify({ result: 'CONFIG_ERROR', code: e.code, missing: e.missing, smoobuRequests: 0 })); process.exit(2); }
 const smoobu = new SmoobuClient({ ...sc, pathPrefix: '/api' });
@@ -26,13 +30,13 @@ try {
 const have = async (model, wanted) => { const f = await odoo.fieldsGet(model, ['type']); return wanted.filter((k) => f[k]); };
 const roleIds = UNITS.map((u) => u.odooRoleId);
 const slotFields = await have('planning.slot', ['id', 'role_id', 'resource_id', 'start_datetime', 'end_datetime', 'state', 'x_bloqueo_ref', 'x_nobeds_id', 'sale_line_id', 'x_guest_id', 'x_checkin_state', 'x_channel']);
-const rawSlots = await odoo.searchRead('planning.slot', [['role_id', 'in', roleIds], ['end_datetime', '>=', '2026-10-17 00:00:00'], ['start_datetime', '<=', '2026-11-02 00:00:00']], slotFields, { limit: 2000, order: 'start_datetime' });
+const rawSlots = await odoo.searchRead('planning.slot', [['role_id', 'in', roleIds], ['end_datetime', '>=', W.odooSlotRange.start], ['start_datetime', '<=', W.odooSlotRange.end]], slotFields, { limit: 2000, order: 'start_datetime' });
 const roleFields = await have('planning.role', ['id', 'name', 'x_casa']);
 const rawRoles = await odoo.searchRead('planning.role', [['id', 'in', roleIds]], roleFields);
 const res301 = ODOO_FACTS.roleResources[37]; const resCasa = ODOO_FACTS.roleResources[69];
 const offers = await odoo.searchRead('product.template', [['x_resource_ids', 'in', [res301, resCasa]]], ['id', 'x_resource_ids']);
 const unitOfOffer = (o) => (o.x_resource_ids ?? []).includes(res301) ? '301' : ((o.x_resource_ids ?? []).includes(resCasa) ? 'CASA' : null);
-const avRows = offers.length ? await odoo.searchRead('x_availability', [['x_date', '>=', '2026-10-25'], ['x_date', '<=', '2026-10-28'], ['x_stay_offer_id', 'in', offers.map((o) => o.id)]], ['id', 'x_date', 'x_stay_offer_id', 'x_total_units', 'x_booked', 'x_to_recompute'], { order: 'x_date' }) : [];
+const avRows = offers.length ? await odoo.searchRead('x_availability', [['x_date', '>=', W.availabilityRange.from], ['x_date', '<=', W.availabilityRange.to], ['x_stay_offer_id', 'in', offers.map((o) => o.id)]], ['id', 'x_date', 'x_stay_offer_id', 'x_total_units', 'x_booked', 'x_to_recompute'], { order: 'x_date' }) : [];
 const availability = avRows.map((a) => ({ unit: unitOfOffer(offers.find((o) => o.id === (Array.isArray(a.x_stay_offer_id) ? a.x_stay_offer_id[0] : a.x_stay_offer_id))), date: a.x_date, total: a.x_total_units, booked: a.x_booked, pending: Boolean(a.x_to_recompute) }));
 
 const report = buildLiveReport({ bookings: data.bookings ?? [], rawSlots, rawRoles, availability });

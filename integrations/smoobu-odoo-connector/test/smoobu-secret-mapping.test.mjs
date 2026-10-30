@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { summarizeReservationsPage } from '../src/reservations-probe.mjs';
 
 const root = new URL('../../../', import.meta.url);
-const wf = readFileSync(new URL('.github/workflows/smoobu-odoo-diagnose.yml', root), 'utf8');
+const wf = readFileSync(new URL('.github/workflows/smoobu-odoo-diagnose.yml', root), 'utf8').replace(/\r\n/g, '\n');
 
 test('el cruce de secretos ocurre UNA sola vez, a nivel de job, y ningun paso lo repite', () => {
   const crossedKey = wf.match(/SMOOBU_API_KEY: \$\{\{ secrets\.SMOOBU_API_SECRET \}\}/g) ?? [];
@@ -18,11 +18,23 @@ test('el cruce de secretos ocurre UNA sola vez, a nivel de job, y ningun paso lo
   assert.match(jobEnv, /SMOOBU_API_SECRET: \$\{\{ secrets\.SMOOBU_API_KEY \}\}/);
   assert.match(wf, /ADAPTACION TEMPORAL/);
 });
+// ATH-DEV-108: lista blanca EXPLICITA de workflows que pueden leer los secretos de Smoobu. El diario repite exactamente
+// el mismo cruce (una vez, a nivel de job); cualquier otro workflow que los use hace fallar esta prueba.
+const SMOOBU_SECRET_WORKFLOWS = new Set(['smoobu-odoo-diagnose.yml', 'smoobu-odoo-reconcile-daily.yml']);
+test('el workflow diario hace el mismo cruce UNA sola vez a nivel de job, sin modo swapped ni escritura de secretos', () => {
+  const d = readFileSync(new URL('.github/workflows/smoobu-odoo-reconcile-daily.yml', root), 'utf8').replace(/\r\n/g, '\n');
+  assert.equal((d.match(/SMOOBU_API_KEY: \$\{\{ secrets\.SMOOBU_API_SECRET \}\}/g) ?? []).length, 1);
+  assert.equal((d.match(/SMOOBU_API_SECRET: \$\{\{ secrets\.SMOOBU_API_KEY \}\}/g) ?? []).length, 1);
+  assert.equal((d.match(/SMOOBU_API_(KEY|SECRET): \$\{\{ secrets\.[A-Z_]+ \}\}/g) ?? []).length, 2);
+  const jobEnv = d.slice(d.indexOf('    env:\n      SMOOBU_API_KEY'), d.indexOf('    defaults:'));
+  assert.match(jobEnv, /SMOOBU_API_KEY: \$\{\{ secrets\.SMOOBU_API_SECRET \}\}/);
+  assert.ok(!/swapped|gh secret|secrets:\s*write|GITHUB_ENV/.test(d));
+});
 test('ningun otro workflow consume los secretos de Smoobu ni hay modo swapped', async () => {
   const { readdirSync } = await import('node:fs');
   for (const f of readdirSync(new URL('.github/workflows/', root))) {
     const t = readFileSync(new URL(`.github/workflows/${f}`, root), 'utf8');
-    if (f !== 'smoobu-odoo-diagnose.yml') assert.ok(!/secrets\.SMOOBU_/.test(t), `${f} usa secretos de Smoobu`);
+    if (!SMOOBU_SECRET_WORKFLOWS.has(f)) assert.ok(!/secrets\.SMOOBU_/.test(t), `${f} usa secretos de Smoobu`);
   }
   assert.ok(!/swapped/.test(wf));
   assert.ok(!/gh secret|secrets:\s*write|GITHUB_ENV/.test(wf));

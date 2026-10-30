@@ -1,0 +1,78 @@
+# ============================================================
+# CONCILIACION DIARIA SMOOBU -> ODOO (SOLO LECTURA) — ATH-DEV-108
+#
+# Que hace: cada dia lee las reservas de Smoobu (solo GET) y los pedidos/turnos de Odoo (solo
+# fields_get/search_read), las compara por identificadores y publica un resumen ENMASCARADO
+# (IDs con 4 digitos, habitacion, fechas, veredictos y codigos). Nunca crea, modifica ni cancela nada.
+#
+# DOBLE CANDADO para la ejecucion programada:
+#   1) GitHub solo ejecuta `schedule` desde la rama por defecto (main): mientras este archivo
+#      viva solo en la rama del PR #87, la programacion NO se dispara.
+#   2) Aunque llegue a main, el job programado solo corre si la variable de repositorio
+#      RECONCILE_DAILY_ENABLED vale exactamente 'true' (Settings > Secrets and variables > Actions > Variables).
+# La ejecucion manual (Run workflow) siempre esta disponible y es igual de solo lectura.
+#
+# SECRETOS: SMOOBU_API_KEY, SMOOBU_API_SECRET, ODOO_API_KEY (nunca en el chat ni en el codigo).
+# VARIABLES: ODOO_BASE_URL, ODOO_DATABASE (SMOOBU_BASE_URL opcional).
+# El repositorio es publico: el registro, el resumen y el artefacto solo llevan datos enmascarados.
+# ============================================================
+name: smoobu-odoo-reconcile-daily
+
+on:
+  schedule:
+    # 11:17 UTC = 06:17 Bogota (minuto no redondo para evitar la congestion de :00)
+    - cron: '17 11 * * *'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Noches a revisar desde hoy (Bogota), 1..120'
+        required: false
+        default: '90'
+        type: string
+
+permissions:
+  contents: read
+
+# Nunca dos conciliaciones a la vez; una nueva espera a que termine la anterior (no la cancela)
+concurrency:
+  group: smoobu-odoo-reconcile-daily
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.RECONCILE_DAILY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # ATH-DEV-028: los secretos de Smoobu estan guardados intercambiados; este cruce es el mismo del workflow
+    # smoobu-odoo-diagnose y el test test/smoobu-secret-mapping.test.mjs lo vigila.
+    env:
+      SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_SECRET }}
+      SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_KEY }}
+    defaults:
+      run:
+        working-directory: integrations/smoobu-odoo-connector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pruebas unitarias (si fallan, no se consulta ninguna API)
+        run: npm test
+      - name: Conciliacion diaria por identificadores, en memoria y sin escrituras
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          # el numero de noches va por entorno (nunca interpolado en el script) y lo valida src/daily-run.mjs
+          RECONCILE_DAYS: ${{ inputs.days || '90' }}
+          REPORT_FILE: ${{ runner.temp }}/conciliacion-diaria.json
+        run: npm run --silent reconcile-daily
+      - name: Guardar el informe enmascarado
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: conciliacion-diaria-${{ github.run_number }}
+          path: ${{ runner.temp }}/conciliacion-diaria.json
+          if-no-files-found: ignore
+          retention-days: 14

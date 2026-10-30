@@ -72,3 +72,9 @@ Modo por noche predeterminado; el de estancia exige `allowStayMode:true`. Noches
 - Casa Completa bloquea las cinco fisicas y viceversa (`blocks`).
 - Anti-bucle: reservas originadas en Odoo (`ownOrigin`) se ignoran al volver como evento.
 - Saliente: `PENDING_PMS` -> `CONFIRMED` solo con respuesta positiva del PMS; `writesEnabled:false`.
+
+## Conciliacion por identificadores (ATH-DEV-041)
+`npm run reconcile-ids` (workflow `smoobu-odoo-diagnose`, modo `reconcile-ids`, entradas `from`/`to`). Ventana configurable y validada
+(`src/window.mjs`; sin parametros = ventana historica, prueba de regresion), paginacion completa de Smoobu, cruce SOLO por IDs
+etiquetados en `sale.order.x_pms_reference` (`src/reference-parse.mjs`, `src/id-reconcile.mjs`) con veredictos MATCH /
+MISSING_IN_ODOO / CONFLICT / CANCELLED / AMBIGUOUS. Solo lectura. Detalle: `CONCILIACION-IDS.md`. `reconcile-window` acepta la misma ventana.

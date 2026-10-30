@@ -2,7 +2,9 @@
   "name": "@atheron/smoobu-odoo-connector",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "test": "node --test",
     "diagnose": "node scripts/diagnose.mjs",
@@ -23,6 +25,9 @@
     "smoobu-reservations": "node scripts/smoobu-reservations.mjs",
     "smoobu-semantics": "node scripts/smoobu-semantics.mjs",
     "reconcile-window": "node scripts/reconcile-window.mjs",
-    "odoo-auth-readonly": "node scripts/odoo-auth-readonly.mjs"
+    "reconcile-ids": "node scripts/reconcile-ids.mjs",
+    "smoobu-reservation-once": "node scripts/smoobu-reservation-once.mjs",
+    "odoo-auth-readonly": "node scripts/odoo-auth-readonly.mjs",
+    "reconcile-daily": "node scripts/reconcile-daily.mjs"
   }
 }
