@@ -38,7 +38,7 @@ test('reserva que falta: CREATE_ORDER LISTO con precio manual = precio de Smoobu
   assert.deepEqual([o.op, o.status], [OPS.CREATE_ORDER, STATUS.LISTO]);
   assert.ok(o.guards.includes(GUARDS.IMPUESTO_PENDIENTE));
   assert.equal(o.payload.state, 'draft');
-  assert.deepEqual(o.payload.line, { product_id: PRODUCT_BY_UNIT[302], product_uom_qty: 1, price_unit: 90100, x_precio_manual: 90100, tax_ids: [] });
+  assert.deepEqual(o.payload.lines, [{ product_id: PRODUCT_BY_UNIT[302], product_uom_qty: 1, price_unit: 90100, x_precio_manual: 90100, tax_ids: [] }]);
   assert.equal(o.payload.order.x_pms_reference, 'SMOOBU-170300001 / Airbnb HMSINTET01');
   assert.equal(o.payload.order.x_booking_source, 'airbnb');
   assert.deepEqual([o.payload.order.rental_start_date, o.payload.order.rental_return_date], ['2026-11-14 20:00:00', '2026-11-15 16:00:00']);
@@ -51,7 +51,7 @@ test('crear se bloquea: Casa sin producto, precio 0, canal desconocido y noches 
       bk(170300004, '202', '2026-11-03', '2026-11-04', { channel: { id: 999 } }), bk(170300005, '203', '2026-11-10', '2026-11-11')],
     slots: [slot(1, '203', '2026-11-10', '2026-11-11', null)],
   });
-  assert.ok(opOf(p, 170300002).guards.includes(GUARDS.PRODUCTO_NO_MAPEADO));
+  assert.ok(opOf(p, 170300002).guards.includes(GUARDS.CASA_REPARTO_PENDIENTE));
   assert.ok(opOf(p, 170300003).guards.includes(GUARDS.PRECIO_FALTANTE));
   assert.ok(opOf(p, 170300004).guards.includes(GUARDS.CANAL_DESCONOCIDO));
   assert.deepEqual([opOf(p, 170300005).op, opOf(p, 170300005).guards], [OPS.BLOCKED, [GUARDS.AMBIGUA]]); // ocupado sin ID = AMBIGUOUS
@@ -151,7 +151,10 @@ test('referencia y payload: formato de los pedidos hechos a mano (03839/03845/03
   assert.deepEqual(referenceFor({ smoobuId: 1, source: 'booking_com', otaRef: '9' }), { x_pms_reference: 'SMOOBU-1 / Booking 9', client_order_ref: 'Smoobu 1 / Booking 9' });
   assert.deepEqual(referenceFor({ smoobuId: 2, source: 'direct', otaRef: null }), { x_pms_reference: 'SMOOBU-2', client_order_ref: 'Smoobu 2' });
   const pl = buildCreatePayload({ smoobuId: 3, unit: '301', arrival: '2026-11-01', departure: '2026-11-03', source: 'direct', price: 200000, guest: { name: 'N', email: null } });
-  assert.equal(pl.partner.match, 'ninguno'); assert.equal(pl.line.product_id, 57845); assert.equal(pl.line.product_uom_qty, 1);
+  assert.equal(pl.partner.match, 'ninguno'); assert.equal(pl.lines[0].product_id, 57845); assert.equal(pl.lines[0].product_uom_qty, 1);
+  const casa = buildCreatePayload({ smoobuId: 4, unit: 'CASA', arrival: '2026-11-01', departure: '2026-11-02', source: 'direct', price: 500000, guest: {} });
+  assert.deepEqual(casa.lines.map((l) => l.product_id), [57846, 57848, 57849, 57845, 57847]); // cinco habitaciones, ningun sexto producto
+  assert.ok(casa.lines.every((l) => l.price_unit === null)); // sin reparto definido no hay precios inventados
 });
 
 // ---- lecturas reales simuladas: solo fields_get/search_read ----

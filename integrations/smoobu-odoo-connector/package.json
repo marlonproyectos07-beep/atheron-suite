@@ -29,6 +29,7 @@
     "smoobu-reservation-once": "node scripts/smoobu-reservation-once.mjs",
     "odoo-auth-readonly": "node scripts/odoo-auth-readonly.mjs",
     "reconcile-daily": "node scripts/reconcile-daily.mjs",
-    "sync-dryrun": "node scripts/sync-dryrun.mjs"
+    "sync-dryrun": "node scripts/sync-dryrun.mjs",
+    "sync-shadow": "node scripts/sync-shadow.mjs"
   }
 }

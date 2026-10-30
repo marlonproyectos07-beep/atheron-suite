@@ -36,11 +36,18 @@ export const GUARDS = Object.freeze({
   ESTANCIA_INICIADA: 'ESTANCIA_INICIADA', NOCHES_OCUPADAS: 'NOCHES_OCUPADAS', IMPUESTO_PENDIENTE: 'IMPUESTO_PENDIENTE',
   CANCELADA_EN_ODOO_VIGENTE_EN_SMOOBU: 'CANCELADA_EN_ODOO_VIGENTE_EN_SMOOBU', ID_DISTINTO: 'ID_DISTINTO', SIN_TURNO: 'SIN_TURNO',
   USO_DIURNO: 'USO_DIURNO', DATOS_EXTRA_FALTANTES: 'DATOS_EXTRA_FALTANTES', PEDIDO_SIN_RESERVA_EN_SMOOBU: 'PEDIDO_SIN_RESERVA_EN_SMOOBU',
-  VARIAS_LINEAS: 'VARIAS_LINEAS',
+  VARIAS_LINEAS: 'VARIAS_LINEAS', CASA_REPARTO_PENDIENTE: 'CASA_REPARTO_PENDIENTE',
 });
 
 /** Producto de habitacion en Odoo (product.product) por unidad. Casa Completa no tiene producto de venta confirmado: se bloquea. */
 export const PRODUCT_BY_UNIT = Object.freeze({ 201: 57846, 202: 57848, 203: 57849, 301: 57845, 302: 57847 });
+/**
+ * ATH-DEV-116 — Casa Completa es un producto DERIVADO: un pedido con las cinco lineas de habitacion (no existe un sexto
+ * producto ni una sexta habitacion). Como repartir el precio total entre las cinco lineas es una decision comercial y
+ * contable, mientras `CASA_PRICE_SPLIT` sea 'PENDIENTE' cualquier reserva de Casa queda BLOQUEADA (CASA_REPARTO_PENDIENTE).
+ */
+export const CASA_UNITS = Object.freeze(['201', '202', '203', '301', '302']);
+export const CASA_PRICE_SPLIT = 'PENDIENTE';
 /** Canal de Smoobu -> valor de `x_booking_source`. */
 export const SOURCE_BY_CHANNEL = Object.freeze({ 7192171: 'direct', 7208046: 'booking_com', 7208051: 'airbnb' });
 const OTA_LABEL = Object.freeze({ booking_com: 'Booking', airbnb: 'Airbnb' });
@@ -67,8 +74,10 @@ export function referenceFor({ smoobuId, source, otaRef }) {
 export const opKey = (smoobuId, op, payload) => createHash('sha256').update(JSON.stringify([smoobuId, op, payload ?? null])).digest('hex').slice(0, 16);
 
 /** Valores exactos de un pedido NUEVO (borrador). Puro; no incluye impuestos mientras la politica este pendiente. */
-export function buildCreatePayload({ smoobuId, unit, arrival, departure, source, otaRef, price, guest }) {
-  const product = PRODUCT_BY_UNIT[unit];
+export function buildCreatePayload({ smoobuId, unit, arrival, departure, source, otaRef, price, guest, casaShares = null }) {
+  const units = unit === 'CASA' ? CASA_UNITS : [unit];
+  const shares = unit === 'CASA' ? casaShares : [price];
+  const lines = units.map((u, i) => ({ product_id: PRODUCT_BY_UNIT[u], product_uom_qty: 1, price_unit: shares?.[i] ?? null, x_precio_manual: shares?.[i] ?? null, tax_ids: [] }));
   return {
     partner: guest?.email ? { match: 'email_exacto', email: guest.email, createIfMissing: { name: guest.name ?? null, email: guest.email, phone: guest.phone ?? null } }
       : { match: 'ninguno', createIfMissing: { name: guest?.name ?? null, email: null, phone: guest?.phone ?? null } },
@@ -77,7 +86,7 @@ export function buildCreatePayload({ smoobuId, unit, arrival, departure, source,
       x_booking_source: source, x_checkin: arrival, x_checkout: departure,
       rental_start_date: `${arrival} ${CHECKIN_UTC}`, rental_return_date: `${departure} ${CHECKOUT_UTC}`,
     },
-    line: { product_id: product, product_uom_qty: 1, price_unit: price, x_precio_manual: price, tax_ids: [] },
+    lines,
     state: 'draft',
   };
 }
@@ -97,9 +106,9 @@ export function planSync({ report, bookings, orders, extras, today, slots = [], 
   const raw = new Map(bookings.map((b) => [Number(b?.id), b]));
   const orderById = new Map(orders.map((o) => [o.id, { ...o, refs: parseReferences(o.x_pms_reference) }]));
   const ops = [];
-  const add = (r, op, status, { guards = [], changes = [], payload = null, preconditions = [], orderId = null } = {}) => {
+  const add = (r, op, status, { guards = [], changes = [], payload = null, preconditions = [], orderId = null, snapshot = null } = {}) => {
     ops.push({ smoobuId: r.smoobuId, otaRef: r.otaRef ?? null, unit: r.unit, arrival: r.arrival, departure: r.departure, channelId: r.channelId ?? null,
-      verdict: r.verdict, reason: r.reason, op, status, guards: [...new Set(guards)], changes, payload, preconditions, orderId, key: opKey(r.smoobuId, op, payload) });
+      verdict: r.verdict, reason: r.reason, op, status, guards: [...new Set(guards)], changes, payload, preconditions, orderId, snapshot, key: opKey(r.smoobuId, op, payload) });
   };
   const liveOrderOf = (r) => (r.odooOrders ?? []).map((x) => orderById.get(x.id)).filter(ACTIVE_ORDER);
 
@@ -124,7 +133,8 @@ export function planSync({ report, bookings, orders, extras, today, slots = [], 
       case VERDICTS.MISSING_IN_ODOO: {
         const guards = [...risky];
         if (r.smoobuStatus !== 'ACTIVE') { add(r, OPS.NOOP, STATUS.SIN_CAMBIOS); break; }
-        if (!PRODUCT_BY_UNIT[r.unit]) guards.push(GUARDS.PRODUCTO_NO_MAPEADO);
+        if (r.unit === 'CASA') { if (CASA_PRICE_SPLIT === 'PENDIENTE') guards.push(GUARDS.CASA_REPARTO_PENDIENTE); }
+        else if (!PRODUCT_BY_UNIT[r.unit]) guards.push(GUARDS.PRODUCTO_NO_MAPEADO);
         if (!source) guards.push(GUARDS.CANAL_DESCONOCIDO);
         if (price == null || price <= 0) guards.push(GUARDS.PRECIO_FALTANTE);
         if (r.odooOccupancy !== 'NONE') guards.push(GUARDS.NOCHES_OCUPADAS);
@@ -133,7 +143,7 @@ export function planSync({ report, bookings, orders, extras, today, slots = [], 
         const payload = buildCreatePayload({ smoobuId: r.smoobuId, unit: r.unit, arrival: r.arrival, departure: r.departure, source, otaRef, price,
           guest: { name: b['guest-name'] ?? null, email: b.email ?? null, phone: b.phone ?? null } });
         add(r, OPS.CREATE_ORDER, STATUS.LISTO, {
-          changes: ['partner', ...Object.keys(payload.order), ...Object.keys(payload.line).map((k) => `line.${k}`)], payload,
+          changes: ['partner', ...Object.keys(payload.order), ...Object.keys(payload.lines[0]).map((k) => `line.${k}`)], payload,
           guards: taxPolicy[source] === 'PENDIENTE' ? [GUARDS.IMPUESTO_PENDIENTE] : [],
           preconditions: ['NINGUN_PEDIDO_CON_SMOOBU_ID', 'NOCHES_LIBRES_EN_LA_HABITACION_Y_CASA', 'RESERVA_SIGUE_VIGENTE_EN_SMOOBU', 'MISMO_PRECIO_Y_FECHAS_EN_SMOOBU'],
         });
@@ -166,14 +176,14 @@ export function planSync({ report, bookings, orders, extras, today, slots = [], 
           if (blockingForFill.length || invoiced) { add(r, OPS.BLOCKED, STATUS.BLOQUEADO, { guards: [...guards, ...(invoiced ? [GUARDS.PEDIDO_FACTURADO] : [])], orderId: o.id }); break; }
           const payload = { order: fill, line: lineFill };
           // un borrador puede estar retenido a proposito (p. ej. 03824, pendiente del contador): nunca se toca sin una persona
-          add(r, OPS.UPDATE_ORDER, o.state === 'draft' || o.state === 'sent' ? STATUS.REQUIERE_APROBACION : STATUS.LISTO, { orderId: o.id, payload, changes: [...Object.keys(fill), ...(lineFill ? ['line.x_precio_manual'] : [])],
+          add(r, OPS.UPDATE_ORDER, o.state === 'draft' || o.state === 'sent' ? STATUS.REQUIERE_APROBACION : STATUS.LISTO, { orderId: o.id, payload, snapshot: { writeDate: info.writeDate ?? null, state: o.state }, changes: [...Object.keys(fill), ...(lineFill ? ['line.x_precio_manual'] : [])],
             preconditions: ['PEDIDO_SIN_CAMBIOS_DESDE_LA_LECTURA (write_date)', 'PRECIO_UNITARIO_IGUAL_AL_DE_SMOOBU'] });
           break;
         }
         if (r.verdict === VERDICTS.MATCH_DRAFT) {
           const g = [...guards]; if (taxPolicy[source] === 'PENDIENTE' || !source) g.push(GUARDS.IMPUESTO_PENDIENTE);
           if (g.some((x) => x !== GUARDS.IMPUESTO_PENDIENTE)) { add(r, OPS.BLOCKED, STATUS.BLOQUEADO, { guards: g, orderId: o.id }); break; }
-          add(r, OPS.CONFIRM_ORDER, STATUS.REQUIERE_APROBACION, { guards: g, orderId: o.id, changes: ['state'], payload: { action: 'action_confirm' },
+          add(r, OPS.CONFIRM_ORDER, STATUS.REQUIERE_APROBACION, { guards: g, orderId: o.id, changes: ['state'], payload: { action: 'action_confirm' }, snapshot: { writeDate: info.writeDate ?? null, state: o.state, price },
             preconditions: ['PRECIO_MANUAL_PROTEGIDO', 'NOCHES_LIBRES_EN_LA_HABITACION_Y_CASA', 'POLITICA_DE_IMPUESTOS_DEFINIDA_O_APROBADA'] });
           break;
         }
@@ -191,7 +201,7 @@ export function planSync({ report, bookings, orders, extras, today, slots = [], 
           if ((o.invoices ?? []).some((i) => i.state === 'posted') || info.qtyInvoiced > 0) guards.push(GUARDS.PEDIDO_FACTURADO);
           if ((extras.paymentsByOrder?.get(o.id) ?? 0) > 0 || info.transactions > 0) guards.push(GUARDS.PAGOS_EXISTENTES);
           add(r, guards.length ? OPS.BLOCKED : OPS.CANCEL_ORDER, guards.length ? STATUS.BLOQUEADO : STATUS.REQUIERE_APROBACION, {
-            guards, orderId: o.id, changes: guards.length ? [] : ['state'], payload: guards.length ? null : { action: 'action_cancel', note: 'Cancelada en Smoobu' },
+            guards, orderId: o.id, snapshot: { writeDate: info.writeDate ?? null, state: o.state }, changes: guards.length ? [] : ['state'], payload: guards.length ? null : { action: 'action_cancel', note: 'Cancelada en Smoobu' },
             preconditions: ['RESERVA_SIGUE_CANCELADA_EN_SMOOBU', 'CONFIRMACION_HUMANA_DE_QUE_NO_SE_ALOJO', 'SIN_FACTURAS_NI_PAGOS'] });
           break;
         }
@@ -215,7 +225,7 @@ export function planSync({ report, bookings, orders, extras, today, slots = [], 
           }
           const payload = { order: { x_checkin: r.arrival, x_checkout: r.departure, rental_start_date: `${r.arrival} ${CHECKIN_UTC}`, rental_return_date: `${r.departure} ${CHECKOUT_UTC}` } };
           add(r, guards.length ? OPS.BLOCKED : OPS.UPDATE_ORDER, guards.length ? STATUS.BLOQUEADO : STATUS.REQUIERE_APROBACION, {
-            guards, orderId: o.id, payload: guards.length ? null : payload, changes: guards.length ? [] : Object.keys(payload.order),
+            guards, orderId: o.id, snapshot: { writeDate: info.writeDate ?? null, state: o.state }, payload: guards.length ? null : payload, changes: guards.length ? [] : Object.keys(payload.order),
             preconditions: ['PEDIDO_SIN_CAMBIOS_DESDE_LA_LECTURA (write_date)', 'NOCHES_LIBRES_EN_LA_HABITACION_Y_CASA', 'EL_TURNO_SE_MUEVE_CON_EL_PEDIDO (automatizacion 165)'] });
           break;
         }
