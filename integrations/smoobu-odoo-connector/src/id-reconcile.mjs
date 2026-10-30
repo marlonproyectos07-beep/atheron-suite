@@ -174,9 +174,13 @@ export function reconcileByIds({ bookings, window, orders, slots, dayuseSlots = 
       const active = matched.filter((o) => !isCancelledOrder(o));
       return active.length ? verdict(VERDICTS.CONFLICT, 'CANCELADA_EN_SMOOBU_VIGENTE_EN_ODOO') : verdict(VERDICTS.CANCELLED, matched.length ? 'CANCELADA_EN_AMBOS' : 'CANCELADA_SIN_PEDIDO_EN_ODOO');
     }
-    if (matched.length > 1) return verdict(VERDICTS.AMBIGUOUS, 'VARIOS_PEDIDOS_CON_EL_MISMO_ID');
-    if (matched.length === 1) {
-      const o = matched[0];
+    // ATH-CEO-PMS-101: un pedido CANCELADO sustituido por otro vigente con el mismo ID (p. ej. intercambio de habitacion)
+    // no es un duplicado; si queda exactamente un pedido vigente, se concilia contra ese.
+    const live = matched.filter((o) => !isCancelledOrder(o));
+    const candidates = matched.length > 1 && live.length === 1 ? live : matched;
+    if (candidates.length > 1) return verdict(VERDICTS.AMBIGUOUS, 'VARIOS_PEDIDOS_CON_EL_MISMO_ID');
+    if (candidates.length === 1) {
+      const o = candidates[0];
       const matchedBy = [o.refs.smoobu.includes(String(c.id)) && 'SMOOBU_ID', c.otaRef && (o.refs.booking.includes(c.otaRef) || o.refs.airbnb.includes(c.otaRef)) && 'OTA_ID'].filter(Boolean).join('+');
       const extra = { matchedBy };
       if ((orderUsage.get(o.id) ?? []).length > 1) return verdict(VERDICTS.AMBIGUOUS, 'PEDIDO_COMPARTIDO_POR_VARIAS_RESERVAS', extra);

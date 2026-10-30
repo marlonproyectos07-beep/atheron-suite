@@ -48,6 +48,18 @@ test('DAYUSE_OK: entrada = salida = llegada, pedido confirmado y turno DAYUSE et
   assert.deepEqual(pick(one([b2], [order(3, 'SMOOBU-170100003', '301', '2026-10-31', '2026-10-31')], [], [{ ...du, name: 'DAYUSE SMOOBU-170100003' }])), ['CONFLICT', 'FECHAS_DISTINTAS']);
 });
 
+test('pedido cancelado sustituido por uno vigente con el mismo ID: se concilia contra el vigente (no es duplicado)', () => {
+  const b = booking(170100011, '302', '2026-10-30', '2026-10-31');
+  const cancelled = order(11, 'SMOOBU-170100011', '201', '2026-10-30', '2026-10-31', { state: 'cancel' });
+  const current = order(12, 'SMOOBU-170100011', '302', '2026-10-30', '2026-10-31');
+  assert.deepEqual(pick(one([b], [cancelled, current], [night('302', '2026-10-30', '2026-10-31')])), ['MATCH', 'ID_Y_DATOS_COINCIDEN']);
+  // dos vigentes con el mismo ID siguen siendo AMBIGUOUS
+  assert.deepEqual(pick(one([b], [current, { ...current, id: 13 }], [night('302', '2026-10-30', '2026-10-31')])), ['AMBIGUOUS', 'VARIOS_PEDIDOS_CON_EL_MISMO_ID']);
+  // solo cancelados: la reserva vigente en Smoobu queda en CONFLICT
+  assert.deepEqual(pick(one([b], [cancelled, { ...cancelled, id: 14 }], [])), ['AMBIGUOUS', 'VARIOS_PEDIDOS_CON_EL_MISMO_ID']);
+  assert.deepEqual(pick(one([b], [cancelled], [])), ['CONFLICT', 'VIGENTE_EN_SMOOBU_CANCELADA_EN_ODOO']);
+});
+
 test('ROOM_MOVED: producto de otra habitacion, pero turnos ENLAZADOS al pedido en la habitacion de Smoobu', () => {
   const b = booking(170100004, '302', '2026-10-30', '2026-10-31');
   const o = order(4, 'SMOOBU-170100004', '201', '2026-10-30', '2026-10-31', { lineIds: [41] });
