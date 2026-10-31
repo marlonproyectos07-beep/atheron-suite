@@ -350,3 +350,16 @@ test('ATH-DEV-132: prueba controlada del bloqueo: solo manual, solo tras una sin
   assert.ok(!/prueba_bloqueo/.test(sync), 'la prueba no cambia la sincronizacion');
 });
 
+test('ATH-DEV-134: la sobreventa VIGILADA (registro overbooking de Smoobu, fuera del plan) es aviso individual; no apaga ni bloquea', () => {
+  const watch = [{ smoobuId: 160829171, unit: '301', arrival: '2027-01-04', departure: '2027-01-05' }];
+  const run = { halted: null, results: [], plan: { ops: [] } };
+  const alerts = alertsFrom({ run, report: { perReservation: [] }, watch });
+  assert.deepEqual(alerts, [{ level: 'warning', text: 'SM*...9171 301 2027-01-04: SOBREVENTA_VIGILADA (revision manual)' }]);
+  assert.equal(shutdownReason({ run, report: { perReservation: [] } }), null);
+  assert.deepEqual(alertsFrom({ run, report: {} }), [], 'sin vigilancia no hay aviso');
+  const src = readFileSync(new URL('../scripts/sync-auto.mjs', import.meta.url), 'utf8');
+  assert.match(src, /const \{ plan, report, watchAlerts \} = await runSyncDryRun\(/); assert.match(src, /alertsFrom\(\{ run, report, watch: watchAlerts \}\)/);
+  const dry = readFileSync(new URL('../src/sync-dryrun-run.mjs', import.meta.url), 'utf8');
+  assert.match(dry, /watchAlerts: watchAlerts\.map\(\(e\) => \(\{ smoobuId: e\.smoobuId, unit: e\.unit, arrival: e\.arrival, departure: e\.departure \}\)\)/);
+});
+

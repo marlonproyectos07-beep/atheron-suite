@@ -65,6 +65,8 @@ export async function runSyncDryRun({ smoobu, odoo, window, today, watchIds = []
   const plan = planSync({ report, bookings: s.bookings, orders: o.orders, extras, today, slots: o.slots, watchAlerts });
   return {
     plan, report,
+    // ATH-DEV-134: sobreventas vigiladas (registros 'overbooking' de Smoobu, no son reservas del plan): solo para avisar
+    watchAlerts: watchAlerts.map((e) => ({ smoobuId: e.smoobuId, unit: e.unit, arrival: e.arrival, departure: e.departure })),
     reads: { smoobu: { requests: s.requests + watch.requests, recordsRead: s.bookings.length }, odoo: { calls: o.calls + extras.calls, methods: ['fields_get', 'search_read'], writes: 0 } },
   };
 }
