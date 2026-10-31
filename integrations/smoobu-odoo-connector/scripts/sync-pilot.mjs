@@ -49,14 +49,16 @@ try {
       journal: Journal.fromFile(process.env.SYNC_JOURNAL_PATH ?? 'sync-journal.jsonl'), lock: new FileLock(process.env.SYNC_LOCK_PATH ?? 'sync.lock'), today });
   }
   const pub = { at: now.toISOString(), result: dry ? 'PILOTO_SIMULADO' : 'PILOTO_REAL', target: { ref: maskSmoobu(op.smoobuId), unit: op.unit, arrival: op.arrival, departure: op.departure, op: op.op, status: op.status, guards: op.guards },
-    keyIsAdmin: admin, tokensRequired: tokens, preflight: preflight.checks.map((c) => `${c.name}:${c.ok ? 'OK' : c.code}`), halted: res.halted ?? null, results: (res.results ?? []).map((r) => ({ result: r.result, code: r.code ?? null, steps: r.steps ?? [] })), writesSentToOdoo: dry ? 0 : (res.writes ?? 0) };
+    keyIsAdmin: admin, ...(dry ? { tokensRequired: tokens } : { tokensRequired: 'NO_SE_PUBLICAN_EN_MODO_REAL' }), preflight: preflight.checks.map((c) => `${c.name}:${c.ok ? 'OK' : c.code}`), halted: res.halted ?? null, results: (res.results ?? []).map((r) => ({ result: r.result, code: r.code ?? null, steps: r.steps ?? [] })), writesSentToOdoo: dry ? 0 : (res.writes ?? 0) };
   const text = JSON.stringify(pub);
   const pii = [op.payload?.partner?.guest?.name, op.payload?.partner?.guest?.email, op.payload?.partner?.guest?.phone].filter((v) => typeof v === 'string' && v.length > 3);
-  const guard = assertPublicSafe(text, { identifiers: [...sensitiveValues(report), ...pii], secrets: [sc.apiKey, sc.apiSecret, oc.apiKey] });
-  if (!guard.safe) out({ result: 'FALLO', category: 'PRIVACIDAD', code: 'PRIVACY_GUARD_TRIPPED', hits: guard.hits, writes: 0 }, 3);
+  const tokenValues = dry ? [] : [tokens.approval, tokens.admin, process.env.PILOT_APPROVAL, process.env.PILOT_ADMIN_APPROVAL, process.env.PILOT_ARM].filter((v) => typeof v === 'string' && v.length > 3);
+  const guard = assertPublicSafe(text, { identifiers: [...sensitiveValues(report), ...pii], secrets: [sc.apiKey, sc.apiSecret, oc.apiKey, ...tokenValues] });
+  if (!guard.safe) out({ result: 'DETALLE_RETENIDO', category: 'PRIVACIDAD', code: 'PRIVACY_GUARD_TRIPPED', hits: guard.hits, halted: pub.halted, results: pub.results.map((r) => r.result), writesSentToOdoo: pub.writesSentToOdoo }, 3);
   console.log(text);
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, [`## Piloto de una reserva (${dry ? 'SIMULADO, sin escrituras' : 'REAL'})`, '',
     `Reserva: ${pub.target.ref} | ${op.unit} | ${op.arrival} -> ${op.departure} | ${op.op} ${op.status} ${op.guards.join(',')}`,
-    `Clave de administrador: ${admin ? 'SI (exige doble aprobacion)' : 'no'}`, `Verificacion previa: ${pub.preflight.join(' | ')}`, `Token de aprobacion: \`${tokens.approval}\``, tokens.admin ? `Token de administrador: \`${tokens.admin}\`` : '',
+    `Clave de administrador: ${admin ? 'SI (exige doble aprobacion)' : 'no'}`, `Verificacion previa: ${pub.preflight.join(' | ')}`,
+    ...(dry ? [`Token de aprobacion: \`${tokens.approval}\``, tokens.admin ? `Token de administrador: \`${tokens.admin}\`` : ''] : ['Tokens: no se publican en modo real']),
     `Resultado: ${pub.results.map((r) => `${r.result} ${r.code ?? ''} [${r.steps.join(', ')}]`).join('; ') || pub.halted}`, `Escrituras enviadas a Odoo: ${pub.writesSentToOdoo}`, ''].join('\n'));
 } catch (e) { out({ result: 'FALLO', code: e.code ?? 'UNKNOWN', httpStatus: e.status ?? null, writes: 0 }, 1); }

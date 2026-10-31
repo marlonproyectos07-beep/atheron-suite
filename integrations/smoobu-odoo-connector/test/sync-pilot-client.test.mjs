@@ -27,13 +27,18 @@ function env({ admin = true, reservation = RES } = {}) {
   return { odoo, cfg, reader: new OdooJson2Client(cfg), smoobu: { async getReservation() { return reservation; } }, journal: new Journal(), lock: new MemoryLock() };
 }
 /** Cliente del piloto ARMADO solo para la prueba (en el codigo real PILOT_ARMED=false lo impide). */
-const armedClient = (e, o = op) => { const c = new PilotWriteClient({ ...e.cfg, op: o, arm: PILOT_ARM_PHRASE }); c.armed = true; return c; };
+const armedClient = (e, o = op) => { const c = new PilotWriteClient({ ...e.cfg, op: o, arm: PILOT_ARM_PHRASE }); c.armCheck = () => true; return c; };
 const run = (e, writer, extra = {}) => runPilot({ plan: { ops: [op] }, smoobuId: ID, approval: pilotApprovalToken(op, FP), adminApproval: adminApprovalToken(op, FP), reader: e.reader, writer, smoobu: e.smoobu, journal: e.journal, lock: e.lock, today: '2026-10-30', ...extra });
 
 test('desactivado: PILOT_ARMED=false y sin fecha limite; ni la frase de armado permite escribir; interruptores globales en false', async () => {
-  assert.deepEqual([PILOT_ARMED, PILOT_NOT_BEFORE, PILOT_NOT_AFTER, WRITES_ENABLED, RELEASE_UNLOCKED, PILOT_MAX_WINDOW_MINUTES], [false, null, null, false, false, 15]);
+  // en el repositorio: desarmado, o (solo durante la activacion autorizada) armado con una ventana de 15 minutos como maximo
+  const disarmed = PILOT_ARMED === false && PILOT_NOT_BEFORE === null && PILOT_NOT_AFTER === null;
+  const validWindow = PILOT_ARMED === true && Date.parse(PILOT_NOT_AFTER) - Date.parse(PILOT_NOT_BEFORE) <= PILOT_MAX_WINDOW_MINUTES * 60000;
+  assert.ok(disarmed || validWindow, 'configuracion del piloto fuera de lo autorizado');
+  assert.deepEqual([WRITES_ENABLED, RELEASE_UNLOCKED, PILOT_MAX_WINDOW_MINUTES], [false, false, 15]);
   let fetched = 0;
-  const c = new PilotWriteClient({ baseUrl: 'https://atheron1.odoo.com', database: 'atheron1', apiKey: 'k', op, arm: PILOT_ARM_PHRASE, fetchImpl: async () => { fetched += 1; return { ok: true, json: async () => [1] }; } });
+  // reloj muy en el futuro: aunque estuviera activado, la ventana estaria cerrada
+  const c = new PilotWriteClient({ baseUrl: 'https://atheron1.odoo.com', database: 'atheron1', apiKey: 'k', op, arm: PILOT_ARM_PHRASE, clock: () => new Date('2099-01-01T00:00:00Z'), fetchImpl: async () => { fetched += 1; return { ok: true, json: async () => [1] }; } });
   await assert.rejects(c.execute('sale.order', 'create', { vals_list: [{}] }), /SYNC_WRITES_DISABLED/); assert.equal(fetched, 0);
   const now = new Date('2027-01-10T12:00:00Z');
   const w = { notBefore: '2027-01-10T11:55:00Z', notAfter: '2027-01-10T12:10:00Z' }; // 15 minutos
@@ -87,7 +92,7 @@ test('presupuesto: si el escritor no puede completar contacto + pedido + nota, n
   const e = env();
   const r = await run(e, new RecordingWriter({ maxWrites: PILOT_REQUIRED_WRITES - 1 }));
   assert.deepEqual([r.halted, r.writes], ['PILOTO_PRESUPUESTO_INSUFICIENTE', 0]);
-  assert.equal(new PilotWriteClient({ ...e.cfg, op }).maxWrites, PILOT_REQUIRED_WRITES); // el cliente del piloto cubre la operacion completa
+  assert.equal(new PilotWriteClient({ ...e.cfg, op, arm: null }).maxWrites, PILOT_REQUIRED_WRITES); // el cliente del piloto cubre la operacion completa
 });
 
 test('doble aprobacion ligada al ESTADO ACTUAL: si la reserva cambia (precio, telefono, fechas, tipo), los tokens dejan de valer', async () => {
@@ -128,7 +133,7 @@ test('workflow del piloto: solo manual, sin programacion, permisos de lectura, s
 
 test('modo real con el piloto desactivado: se para antes de leer Smoobu u Odoo y sin tocar la bitacora', async () => {
   const e = env(); let smoobuReads = 0; e.smoobu = { async getReservation() { smoobuReads += 1; return RES; } };
-  const r = await run(e, new PilotWriteClient({ ...e.cfg, op, arm: PILOT_ARM_PHRASE }));
+  const r = await run(e, new PilotWriteClient({ ...e.cfg, op, arm: null }));
   assert.deepEqual([r.halted, smoobuReads, e.odoo.calls.length, e.journal.entries.length], ['PILOTO_DESACTIVADO', 0, 0, 0]);
 });
 
@@ -157,4 +162,34 @@ test('duplicado previo en Odoo (dos pedidos con la referencia): se detiene sin e
   const c = armedClient(e);
   assert.equal((await run(e, c)).halted, 'PILOTO_DUPLICADO_DETECTADO'); assert.equal(c.writes, 0);
   assert.deepEqual(await pilotRecoveryRead({ op, reader: e.reader }), { found: 2 });
+});
+
+test('ATH-DEV-124: la ventana se comprueba en CADA escritura; si vence entre dos escrituras, se corta y el cliente queda consumido', async () => {
+  const e = env();
+  let t = Date.parse('2027-01-10T12:00:00Z');
+  const window = { notBefore: '2027-01-10T11:55:00Z', notAfter: '2027-01-10T12:10:00Z' };
+  const c = new PilotWriteClient({ ...e.cfg, op, arm: PILOT_ARM_PHRASE, clock: () => new Date(t) });
+  c.armCheck = () => pilotArmedBy({ armed: true, ...window, arm: PILOT_ARM_PHRASE, now: new Date(t) }); // misma regla, constantes simuladas
+  // la ventana vence justo despues de crear el contacto
+  const inner = c._request.bind(c);
+  c._request = async (m, meth, p) => { const r = await inner(m, meth, p); if (m === 'res.partner') t = Date.parse('2027-01-10T12:11:00Z'); return r; };
+  const r = await run(e, c);
+  assert.deepEqual([r.halted, c.writes, c.spent], ['SYNC_WRITE_WINDOW_CLOSED', 1, true]);
+  assert.deepEqual([e.odoo.t['res.partner'].length, e.odoo.t['sale.order'].length], [1, 0]); // nada despues del vencimiento
+  await assert.rejects(c.execute('sale.order', 'create', { vals_list: [{}] }), /PILOT_CONSUMED/);
+  // ventana ya vencida antes de la primera escritura: ninguna escritura
+  const e2 = env(); t = Date.parse('2027-01-10T12:20:00Z');
+  const c2 = new PilotWriteClient({ ...e2.cfg, op, arm: PILOT_ARM_PHRASE, clock: () => new Date(t) });
+  c2.armCheck = () => pilotArmedBy({ armed: true, ...window, arm: PILOT_ARM_PHRASE, now: new Date(t) });
+  assert.equal((await run(e2, c2)).halted, 'PILOTO_DESACTIVADO'); assert.equal(e2.odoo.calls.length, 0);
+});
+
+test('ATH-DEV-124: el modo real no publica tokens (script y workflow)', () => {
+  const src = readFileSync(new URL('../scripts/sync-pilot.mjs', import.meta.url), 'utf8');
+  assert.match(src, /dry \? \{ tokensRequired: tokens \} : \{ tokensRequired: 'NO_SE_PUBLICAN_EN_MODO_REAL' \}/);
+  assert.match(src, /dry \? \[`Token de aprobacion/);
+  assert.match(src, /process\.env\.PILOT_APPROVAL, process\.env\.PILOT_ADMIN_APPROVAL, process\.env\.PILOT_ARM\]/); // barrera de privacidad sobre los tokens
+  const wf = readFileSync(new URL('../../../.github/workflows/smoobu-odoo-pilot-run.yml', import.meta.url), 'utf8');
+  assert.match(wf, /::add-mask::\$v/);
+  assert.ok(!/echo .*PILOT_(APPROVAL|ADMIN_APPROVAL|ARM)(?!.*add-mask)/.test(wf.replace(/for v in .*$/m, '')));
 });

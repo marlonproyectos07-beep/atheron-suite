@@ -60,7 +60,10 @@ jobs:
           PILOT_ADMIN_APPROVAL: ${{ inputs.admin_approval }}
           SYNC_JOURNAL_PATH: ${{ runner.temp }}/piloto-bitacora.jsonl
           SYNC_LOCK_PATH: ${{ runner.temp }}/piloto.lock
-        run: npm run --silent sync-pilot
+        # ATH-DEV-124: los tokens y la frase de armado se enmascaran antes de ejecutar (nunca aparecen en el registro)
+        run: |
+          for v in "$PILOT_APPROVAL" "$PILOT_ADMIN_APPROVAL" "$PILOT_ARM"; do if [ -n "$v" ]; then echo "::add-mask::$v"; fi; done
+          npm run --silent sync-pilot
       - name: Guardar la bitacora (sin datos personales)
         if: ${{ always() }}
         uses: actions/upload-artifact@v4

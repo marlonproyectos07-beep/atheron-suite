@@ -34,14 +34,17 @@ export function pilotArmedBy({ armed, notBefore, notAfter, arm, now }) {
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 export class PilotWriteClient extends OdooJson2Client {
-  constructor({ op, arm = null, now = new Date(), ...opts }) {
+  constructor({ op, arm = null, clock = () => new Date(), ...opts }) {
     super(opts);
     if (!op || op.op !== 'CREATE_ORDER') throw new ConnectorError('PILOT_CLIENT_OP_REQUIRED');
-    this.armed = pilotArmedBy({ armed: PILOT_ARMED, notBefore: PILOT_NOT_BEFORE, notAfter: PILOT_NOT_AFTER, arm, now });
+    // ATH-DEV-124: la ventana se evalua en CADA escritura (no solo al crear el cliente)
+    this.armCheck = () => pilotArmedBy({ armed: PILOT_ARMED, notBefore: PILOT_NOT_BEFORE, notAfter: PILOT_NOT_AFTER, arm, now: clock() });
     let host = ''; try { host = new URL(this.baseUrl).hostname; } catch { /* invalido */ }
     this.targetOk = host === EXPECTED_TARGET.host && this.database === EXPECTED_TARGET.database;
     this.op = op; this.maxWrites = PILOT_REQUIRED_WRITES; this.writes = 0; this.orderId = null; this.partnerCreated = false; this.spent = false;
   }
+
+  get armed() { return this.armCheck(); }
 
   assertInScope(model, method, params) {
     const op = this.op;
@@ -69,9 +72,13 @@ export class PilotWriteClient extends OdooJson2Client {
   }
 
   async execute(model, method, params) {
-    if (!this.armed) throw new ConnectorError('SYNC_WRITES_DISABLED');
-    if (!this.targetOk) throw new ConnectorError('SYNC_TARGET_NOT_AUTHORIZED');
     if (this.spent) throw new ConnectorError('PILOT_CONSUMED');
+    if (!this.targetOk) throw new ConnectorError('SYNC_TARGET_NOT_AUTHORIZED');
+    if (!this.armCheck()) {
+      // fuera de la ventana: si ya se escribio algo, el cliente queda consumido (la recuperacion se hace por lectura)
+      if (this.writes > 0) { this.spent = true; throw new ConnectorError('SYNC_WRITE_WINDOW_CLOSED'); }
+      throw new ConnectorError('SYNC_WRITES_DISABLED');
+    }
     validateWrite(model, method, params);
     this.assertInScope(model, method, params);
     if (this.writes >= this.maxWrites) throw new ConnectorError('SYNC_WRITE_PILOT_BUDGET');
