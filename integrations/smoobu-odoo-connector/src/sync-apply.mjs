@@ -48,6 +48,11 @@ async function smoobuStillMatches(smoobu, op, { expectCancelled = false } = {}) 
   const cancelled = b?.type === 'cancellation';
   if (expectCancelled) return need(cancelled, 'RESERVA_YA_NO_ESTA_CANCELADA_EN_SMOOBU');
   need(!cancelled, 'RESERVA_CANCELADA_EN_SMOOBU');
+  // ATH-DEV-128: solo reservas vigentes de huesped; sobreventa, bloqueo de calendario o tipo desconocido = no se escribe
+  need(['reservation', 'modification of booking'].includes(b?.type) && b?.['is-blocked-booking'] !== true, 'ESTADO_NO_VALIDO_EN_SMOOBU');
+  if (op.channelId != null && b?.channel?.id != null) need(Number(b.channel.id) === Number(op.channelId), 'CANAL_CAMBIO_EN_SMOOBU');
+  const guestName = op.payload?.partner?.guest?.name;
+  if (guestName != null && b?.['guest-name'] != null) need(String(b['guest-name']).trim() === String(guestName).trim(), 'HUESPED_CAMBIO_EN_SMOOBU');
   need(unitForSmoobuApartment(b?.apartment?.id)?.unit === op.unit, 'HABITACION_CAMBIO_EN_SMOOBU');
   need(String(b?.arrival).slice(0, 10) === op.arrival && String(b?.departure).slice(0, 10) === op.departure, 'FECHAS_CAMBIARON_EN_SMOOBU');
   return b;
@@ -63,7 +68,7 @@ const HANDLERS = {
       const b = await smoobuStillMatches(smoobu, op);
       const total = op.payload.lines.reduce((a, l) => a + (l.price_unit ?? NaN), 0);
       need(op.payload.lines.every((l) => typeof l.price_unit === 'number' && l.price_unit > 0), 'PRECIO_DE_LINEA_SIN_DEFINIR');
-      need(near(Number(b.price), total), 'PRECIO_CAMBIO_EN_SMOOBU');
+      need(Math.abs(Number(b.price) - total) < 0.005, 'PRECIO_CAMBIO_EN_SMOOBU'); // ATH-DEV-128: precio EXACTO
       need(await nightsFree(reader, op.unit, op.arrival, op.departure), 'NOCHES_OCUPADAS_EN_ODOO');
       // contactos: lecturas frescas por ref de Smoobu, correo, telefono y nombre; nunca se adivina una identidad
       const q = contactQueries({ smoobuId: op.smoobuId, guest: op.payload.partner.guest });

@@ -30,11 +30,12 @@ test('incremental: crea en lote solo los borradores que faltan, con tope SYNC_MA
   const e = env(); const items = [0, 1, 2, 3].map((i) => mk(i));
   const plan = { ops: items.map((x) => x.op) };
   const r1 = await runAuto({ plan, env: { ...ON, SYNC_MAX_OPS: '2' }, reader: e.reader, writer: fakeWriter(e.odoo, validateWrite), smoobu: sm(items.map((x) => x.bk)), journal: e.journal, lock: e.lock, today: '2026-11-05' });
-  assert.deepEqual(r1.results.map((x) => x.result), [RESULT.APLICADA, RESULT.APLICADA, RESULT.NO_PROCESADA, RESULT.NO_PROCESADA]);
+  // ATH-DEV-128: la variable pide 2, pero el tope fijo de la fase es 1 reserva por ejecucion
+  assert.deepEqual(r1.results.map((x) => x.result), [RESULT.APLICADA, RESULT.NO_PROCESADA, RESULT.NO_PROCESADA, RESULT.NO_PROCESADA]);
   assert.ok(e.odoo.t['sale.order'].every((o) => o.state === 'draft'));
   const r2 = await runAuto({ plan, env: { ...ON, SYNC_MAX_OPS: '2' }, reader: e.reader, writer: fakeWriter(e.odoo, validateWrite), smoobu: sm(items.map((x) => x.bk)), journal: e.journal, lock: e.lock, today: '2026-11-05' });
-  assert.deepEqual(r2.results.map((x) => x.result), [RESULT.YA_APLICADA, RESULT.YA_APLICADA, RESULT.APLICADA, RESULT.APLICADA]);
-  assert.equal(e.odoo.t['sale.order'].length, 4); assert.equal(e.odoo.t['planning.slot'].length, 0);
+  assert.deepEqual(r2.results.map((x) => x.result), [RESULT.YA_APLICADA, RESULT.APLICADA, RESULT.NO_PROCESADA, RESULT.NO_PROCESADA]);
+  assert.equal(e.odoo.t['sale.order'].length, 2); assert.equal(e.odoo.t['planning.slot'].length, 0);
 });
 
 test('nunca confirma, cancela ni modifica: ni con tokens de aprobacion; y el escritor rechaza esos metodos', async () => {
@@ -53,7 +54,7 @@ test('apagado y limites: sin SYNC_ENABLED no arranca; SYNC_MAX_OPS fuera de 1..1
   const e = env();
   assert.equal((await runAuto({ plan: { ops: [mk(0).op] }, env: {}, reader: e.reader, writer: new RecordingWriter(), smoobu: sm([]), journal: e.journal, lock: e.lock, today: '2026-11-05' })).halted, 'APAGADO_NO_HABILITADO');
   assert.equal(e.odoo.calls.length, 0);
-  assert.equal(maxOpsFromEnv({}), 3); for (const bad of ['0', '11', 'x', '2.5']) assert.throws(() => maxOpsFromEnv({ SYNC_MAX_OPS: bad }), /SYNC_MAX_OPS_INVALID/);
+  assert.equal(maxOpsFromEnv({}), 1); assert.equal(maxOpsFromEnv({ SYNC_MAX_OPS: '3' }), 1); for (const bad of ['0', '11', 'x', '2.5']) assert.throws(() => maxOpsFromEnv({ SYNC_MAX_OPS: bad }), /SYNC_MAX_OPS_INVALID/);
   assert.equal(autoWriter(new RecordingWriter(), { maxOps: 2 }).maxWrites, 6);
 });
 
@@ -119,4 +120,37 @@ test('interruptor propio: AUTO_ARMED=false y sin depender de los globales (el co
   const src = readFileSync(new URL('../scripts/sync-auto.mjs', import.meta.url), 'utf8').replace(/\/\/.*$/gm, '');
   assert.ok(!/WRITES_ENABLED|RELEASE_UNLOCKED|SyncWriteClient/.test(src), 'el script no depende de los interruptores globales');
   assert.deepEqual([WRITES_ENABLED, RELEASE_UNLOCKED], [false, false]);
+});
+
+test('ATH-DEV-128: precio EXACTO, estado vigente, canal y huesped sin cambios en Smoobu; si no, no se escribe y se avisa', async () => {
+  const base = mk(0);
+  const op = { ...base.op, channelId: 7192171 };
+  const cases = [
+    [{ price: base.bk.price + 1 }, 'PRECIO_CAMBIO_EN_SMOOBU'],
+    [{ type: 'OverBooking' }, 'ESTADO_NO_VALIDO_EN_SMOOBU'],
+    [{ 'is-blocked-booking': true }, 'ESTADO_NO_VALIDO_EN_SMOOBU'],
+    [{ channel: { id: 7208046 } }, 'CANAL_CAMBIO_EN_SMOOBU'],
+    [{ 'guest-name': 'Otra Persona Distinta' }, 'HUESPED_CAMBIO_EN_SMOOBU'],
+  ];
+  for (const [change, code] of cases) {
+    const e = env();
+    const r = await runAuto({ plan: { ops: [op] }, env: ON, reader: e.reader, writer: fakeWriter(e.odoo, validateWrite), smoobu: sm([{ ...base.bk, channel: { id: 7192171 }, 'guest-name': NAMES[0], ...change }]), journal: e.journal, lock: e.lock, today: '2026-11-05' });
+    assert.deepEqual([r.results[0].result, r.results[0].code, e.odoo.t['sale.order'].length], [RESULT.PRECONDICION_FALLIDA, code, 0], code);
+    assert.ok(alertsFrom({ run: r, report: { perReservation: [] } }).some((a) => a.level === 'warning' && a.text.includes(code)));
+  }
+});
+
+test('ATH-DEV-128: el cliente automatico no puede anotar ni tocar pedidos existentes ni crear dos pedidos con la misma referencia', async () => {
+  const { AutoWriteClient, AUTO_ARM_PHRASE } = await import('../src/sync-auto-client.mjs');
+  const odoo = new FakeOdoo({ 'sale.order': [{ id: 22192, state: 'draft', x_pms_reference: 'SMOOBU-1' }] });
+  const c = new AutoWriteClient({ baseUrl: 'https://atheron1.odoo.com', database: 'atheron1', apiKey: 'k', arm: AUTO_ARM_PHRASE, fetchImpl: odoo.fetch });
+  c.armed = true; // solo en la prueba
+  const note = (id) => ({ ids: [id], body: 'ATH-SYNC | x', message_type: 'comment', subtype_xmlid: 'mail.mt_note' });
+  await assert.rejects(c.execute('sale.order', 'message_post', note(22192)), /SYNC_WRITE_AUTO_EXISTING_ORDER_FORBIDDEN/); // p. ej. COT/2026/03847
+  const { op } = mk(1);
+  const vals = { vals_list: [{ partner_id: 1, ...op.payload.order, order_line: op.payload.lines.map((l) => [0, 0, { ...l, tax_ids: [[6, 0, []]] }]) }] };
+  const [id] = await c.execute('sale.order', 'create', vals);
+  await c.execute('sale.order', 'message_post', note(id)); // sobre su propio pedido: permitido
+  await assert.rejects(c.execute('sale.order', 'create', vals), /SYNC_WRITE_AUTO_DUPLICATE_REF/);
+  assert.equal(odoo.t['sale.order'].length, 2); assert.equal(odoo.t.notes.length, 1);
 });

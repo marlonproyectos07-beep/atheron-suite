@@ -12,20 +12,22 @@ import { maskSmoobu } from './public-report.mjs';
  *    Lo ya sincronizado aparece como MATCH/MATCH_DRAFT y no se toca: la referencia SMOOBU-<id> hace la sincronizacion
  *    incremental e idempotente.
  *  - Nunca: confirmar, cancelar, modificar pedidos existentes, pagos, facturas (escritor restringido + lista blanca).
- *  - Lote: SYNC_MAX_OPS (1..10, por defecto 3) creaciones por ejecucion.
+ *  - Lote: SYNC_MAX_OPS (1..10), recortado al tope de la fase actual AUTO_PHASE_MAX_OPS (hoy 1) por ejecucion.
  *  - Apagado: sin SYNC_ENABLED=true no arranca; SYNC_KILL=1 lo detiene antes de cada operacion.
  *  - Los borradores NO crean turnos en Planning (Odoo los crea al confirmar, automatizacion 151): el tablero de ocupacion
  *    de este modulo muestra las cinco habitaciones fisicas con lo confirmado, los borradores y lo pendiente.
  */
 export const AUTO_METHODS = Object.freeze(new Set(['res.partner.create', 'sale.order.create', 'sale.order.message_post']));
 export const AUTO_MAX_OPS_CAP = 10;
+/** ATH-DEV-128 — Tope FIJO de la fase de arranque: una reserva por ejecucion, diga lo que diga la variable. Subirlo exige PR. */
+export const AUTO_PHASE_MAX_OPS = 1;
 export const WRITES_PER_CREATE = 3;
 
 export function maxOpsFromEnv(env = {}) {
-  if (env.SYNC_MAX_OPS == null || env.SYNC_MAX_OPS === '') return 3;
+  if (env.SYNC_MAX_OPS == null || env.SYNC_MAX_OPS === '') return AUTO_PHASE_MAX_OPS;
   const n = Number(env.SYNC_MAX_OPS);
   if (!Number.isInteger(n) || n < 1 || n > AUTO_MAX_OPS_CAP) throw new ConnectorError('SYNC_MAX_OPS_INVALID');
-  return n;
+  return Math.min(n, AUTO_PHASE_MAX_OPS);
 }
 
 /** Escritor restringido de la sincronizacion programada: solo crear contacto, crear pedido y la nota; tope por lote. */
@@ -67,6 +69,8 @@ export function alertsFrom({ run, report }) {
   const out = [];
   if (run.halted && ALERT_HALTS.test(run.halted)) out.push({ level: 'error', text: `Sincronizacion detenida: ${run.halted}` });
   for (const r of run.results ?? []) if (['AMBIGUA', 'VERIFICACION_FALLIDA', 'RECHAZADA_POR_ODOO'].includes(r.result)) out.push({ level: 'error', text: `${maskSmoobu(r.smoobuId)} ${r.op}: ${r.result} ${r.code ?? ''}`.trim() });
+  // ATH-DEV-128: una creacion planificada que no supera la validacion previa (duplicado, precio, fechas, estado...) se avisa
+  for (const r of run.results ?? []) if (r.result === 'PRECONDICION_FALLIDA') out.push({ level: 'warning', text: `${maskSmoobu(r.smoobuId)} ${r.op}: no se escribio (${r.code})` });
   for (const r of report.perReservation ?? []) {
     if (r.verdict === 'CONFLICT' || r.verdict === 'AMBIGUOUS') out.push({ level: 'warning', text: `${maskSmoobu(r.smoobuId)} ${r.unit} ${r.arrival}: ${r.verdict} ${r.reason}` });
     if ((r.overbookingWith ?? []).length || r.manualReview) out.push({ level: 'warning', text: `${maskSmoobu(r.smoobuId)} ${r.unit} ${r.arrival}: SOBREVENTA` });

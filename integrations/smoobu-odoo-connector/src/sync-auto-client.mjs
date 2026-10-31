@@ -21,15 +21,21 @@ export class AutoWriteClient extends OdooJson2Client {
     this.armed = autoArmedBy({ armed: AUTO_ARMED, arm });
     let host = ''; try { host = new URL(this.baseUrl).hostname; } catch { /* invalido */ }
     this.targetOk = host === EXPECTED_TARGET.host && this.database === EXPECTED_TARGET.database;
-    this.maxWrites = maxWrites; this.writes = 0;
+    this.maxWrites = maxWrites; this.writes = 0; this.createdOrders = new Set(); this.createdRefs = new Set();
   }
   async execute(model, method, params) {
     if (!this.armed) throw new ConnectorError('SYNC_WRITES_DISABLED');
     if (!this.targetOk) throw new ConnectorError('SYNC_TARGET_NOT_AUTHORIZED');
     if (!AUTO_METHODS.has(`${model}.${method}`)) throw new ConnectorError('SYNC_WRITE_AUTO_METHOD_FORBIDDEN');
     validateWrite(model, method, params);
+    // ATH-DEV-128: la nota solo en un pedido creado por ESTE cliente; nunca dos pedidos con la misma referencia
+    if (method === 'message_post' && !this.createdOrders.has(params.ids[0])) throw new ConnectorError('SYNC_WRITE_AUTO_EXISTING_ORDER_FORBIDDEN');
+    const ref = model === 'sale.order' && method === 'create' ? String(params.vals_list[0].x_pms_reference).split(' ')[0] : null;
+    if (ref && this.createdRefs.has(ref)) throw new ConnectorError('SYNC_WRITE_AUTO_DUPLICATE_REF');
     if (this.writes >= this.maxWrites) throw new ConnectorError('SYNC_WRITE_AUTO_BUDGET');
     this.writes += 1; // se cuenta antes de enviar
-    return this._request(model, method, params);
+    const r = await this._request(model, method, params);
+    if (ref) { this.createdRefs.add(ref); if (Array.isArray(r) && Number.isInteger(r[0])) this.createdOrders.add(r[0]); }
+    return r;
   }
 }
