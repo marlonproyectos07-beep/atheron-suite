@@ -16,10 +16,10 @@ import { assessGuestName, normalizeEmail } from './sync-contact.mjs';
  * la referencia y lineas del plan, y la nota sobre el pedido que el mismo creo. Tope: 3 escrituras.
  * Al terminar (nota escrita) o ante cualquier error queda CONSUMIDO: no acepta ninguna escritura mas.
  */
-export const PILOT_ARMED = false;
+export const PILOT_ARMED = true;
 /** Ventana de activacion (UTC). El PR de activacion fija ambas; la ventana no puede superar PILOT_MAX_WINDOW_MINUTES. */
-export const PILOT_NOT_BEFORE = null;
-export const PILOT_NOT_AFTER = null;
+export const PILOT_NOT_BEFORE = '2026-10-31T02:29:05Z';
+export const PILOT_NOT_AFTER = '2026-10-31T02:43:05Z';
 export const PILOT_MAX_WINDOW_MINUTES = 15;
 export const PILOT_ARM_PHRASE = 'EJECUTAR PILOTO SMOOBU ODOO UNA RESERVA CON DOBLE APROBACION';
 
