@@ -1,7 +1,9 @@
 import { createHash } from 'node:crypto';
 import { ConnectorError } from './errors.mjs';
 import { OPS, STATUS } from './sync-intent.mjs';
-import { applyPlan } from './sync-apply.mjs';
+import { applyPlan, ordersWithRef, nightsFree } from './sync-apply.mjs';
+import { resolveContact, contactQueries } from './sync-contact.mjs';
+import { unitForSmoobuApartment } from './unit-map.mjs';
 import { validateWrite } from './sync-write-guard.mjs';
 
 /**
@@ -84,6 +86,50 @@ export async function isAdminKey(reader) {
  * Ejecuta el piloto. Orden: estado fresco de la reserva -> token de gerencia ligado a ese estado -> si la clave es de
  * administrador, segundo token ligado al mismo estado -> presupuesto suficiente para la operacion COMPLETA -> applyPlan.
  */
+/** Nota que deja la sincronizacion en cada pedido que crea; su existencia en Odoo significa "piloto ya ejecutado". */
+export const SYNC_NOTE_MARK = 'ATH-SYNC | clave';
+
+/**
+ * ATH-DEV-123 — Lista de verificacion previa a escribir, SOLO LECTURAS. Cada control devuelve ok/codigo.
+ * Se usa en la simulacion (se publica) y dentro de runPilot (cualquier control fallido = no se escribe).
+ */
+export async function pilotPreflight({ op, fresh, fp, approval, adminApproval, admin, reader, writer }) {
+  const checks = [];
+  const add = (name, ok, code = null) => checks.push({ name, ok: !!ok, code: ok ? null : code });
+  add('TOKEN_GERENCIA_ESTADO_ACTUAL', approval === pilotApprovalToken(op, fp), 'TOKEN_NO_CORRESPONDE');
+  add('TOKEN_ADMINISTRADOR', !admin || adminApproval === adminApprovalToken(op, fp), 'FALTA_TOKEN_ADMIN');
+  add('RESERVA_VIGENTE', fresh?.type !== 'cancellation' && fresh?.type !== 'OverBooking', 'RESERVA_NO_VIGENTE');
+  add('HABITACION', unitForSmoobuApartment(fresh?.apartment?.id)?.unit === op.unit, 'HABITACION_DISTINTA');
+  add('FECHAS', String(fresh?.arrival).slice(0, 10) === op.arrival && String(fresh?.departure).slice(0, 10) === op.departure, 'FECHAS_DISTINTAS');
+  const total = op.payload.lines.reduce((a, l) => a + (l.price_unit ?? NaN), 0);
+  add('PRECIO_EXACTO', Math.abs(Number(fresh?.price) - total) <= 1 && op.payload.lines.every((l) => l.price_unit === l.x_precio_manual), 'PRECIO_DISTINTO');
+  const dup = (await ordersWithRef(reader, op.smoobuId)).filter((o) => o.state !== 'cancel');
+  add('SIN_PEDIDO_DUPLICADO', dup.length === 0, 'PEDIDO_YA_EXISTE');
+  const marks = await reader.searchRead('mail.message', [['model', '=', 'sale.order'], ['body', 'ilike', SYNC_NOTE_MARK]], ['id'], { limit: 1 });
+  add('PILOTO_NO_EJECUTADO_ANTES', marks.length === 0, 'PILOTO_YA_EJECUTADO');
+  add('DISPONIBILIDAD', await nightsFree(reader, op.unit, op.arrival, op.departure), 'NOCHES_OCUPADAS');
+  const q = contactQueries({ smoobuId: op.smoobuId, guest: op.payload.partner.guest });
+  const read = async (d) => (d ? reader.searchRead('res.partner', d, ['id', 'name', 'email', 'phone', 'ref'], { limit: 200 }) : []);
+  const c = resolveContact({ smoobuId: op.smoobuId, guest: op.payload.partner.guest, candidates: { byRef: await read(q.byRef), byEmail: await read(q.byEmail), byPhone: await read(q.byPhone), byName: await read(q.byName) } });
+  add('IDENTIDAD_CONTACTO', !c.block, c.block);
+  const remaining = (writer?.maxWrites ?? Infinity) - (writer?.writes ?? 0);
+  add('LIMITE_3_ESCRITURAS', remaining >= PILOT_REQUIRED_WRITES && (writer?.maxWrites ?? PILOT_REQUIRED_WRITES) <= PILOT_REQUIRED_WRITES, 'PRESUPUESTO_INCORRECTO');
+  return { ok: checks.every((x) => x.ok), checks, contact: c.action ?? null };
+}
+
+/** Recuperacion por LECTURA: si el pedido ya existe (p. ej. tras un fallo parcial), se verifica y se informa; nunca se recrea. */
+export async function pilotRecoveryRead({ op, reader }) {
+  const live = (await ordersWithRef(reader, op.smoobuId)).filter((o) => o.state !== 'cancel');
+  if (live.length !== 1) return { found: live.length };
+  const [o] = live;
+  const lines = await reader.searchRead('sale.order.line', [['order_id', '=', o.id]], ['product_id', 'price_unit', 'x_precio_manual', 'tax_ids'], { limit: 10 });
+  const exp = op.payload.lines[0];
+  const linesOk = lines.length === 1 && (Array.isArray(lines[0].product_id) ? lines[0].product_id[0] : lines[0].product_id) === exp.product_id
+    && lines[0].price_unit === exp.price_unit && lines[0].x_precio_manual === exp.price_unit && (lines[0].tax_ids ?? []).length === 0;
+  const note = await reader.searchRead('mail.message', [['model', '=', 'sale.order'], ['res_id', '=', o.id], ['body', 'ilike', SYNC_NOTE_MARK]], ['id'], { limit: 1 });
+  return { found: 1, state: o.state, linesOk, noteOk: note.length === 1 };
+}
+
 export async function runPilot({ plan, smoobuId, approval, adminApproval = null, reader, writer, smoobu, journal, lock, today }) {
   // cliente real desarmado: se para ANTES de cualquier lectura o anotacion en la bitacora
   if (writer?.armed === false) return { halted: 'PILOTO_DESACTIVADO', results: [], writes: 0 };
@@ -99,6 +145,11 @@ export async function runPilot({ plan, smoobuId, approval, adminApproval = null,
   // presupuesto: nunca empezar una operacion que no se pueda terminar (contacto + pedido + nota)
   const remaining = (writer.maxWrites ?? Infinity) - (writer.writes ?? 0);
   if (remaining < PILOT_REQUIRED_WRITES) return halt('PILOTO_PRESUPUESTO_INSUFICIENTE', { admin });
+  // si el pedido ya existe: recuperacion por lectura, sin escribir (cubre un fallo parcial de una ejecucion anterior)
+  const prior = await pilotRecoveryRead({ op, reader });
+  if (prior.found >= 1) return halt(prior.found === 1 ? 'PILOTO_YA_APLICADO_VERIFICADO_POR_LECTURA' : 'PILOTO_DUPLICADO_DETECTADO', { admin, recovery: prior });
+  const pre = await pilotPreflight({ op, fresh, fp, approval, adminApproval, admin, reader, writer });
+  if (!pre.ok) return halt('PILOTO_VERIFICACION_PREVIA_FALLIDA', { admin, checks: pre.checks });
   const res = await applyPlan({ plan: { ops: [op] }, reader, writer: pilotWriter(writer), smoobu, journal, lock, approvals: new Set([op.key]), maxOps: 1, today });
   return { ...res, admin, fingerprint: fp };
 }

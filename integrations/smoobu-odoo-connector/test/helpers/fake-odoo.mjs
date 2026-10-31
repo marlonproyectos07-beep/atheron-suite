@@ -8,7 +8,7 @@ const res = (data, status = 200) => ({ ok: status < 400, status, headers: { get:
 
 export class FakeOdoo {
   constructor(seed = {}) {
-    this.t = { 'res.partner': [], 'sale.order': [], 'sale.order.line': [], 'planning.slot': [], 'account.payment': [], 'account.move': [], notes: [] };
+    this.t = { 'res.partner': [], 'sale.order': [], 'sale.order.line': [], 'planning.slot': [], 'account.payment': [], 'account.move': [], 'mail.message': [], notes: [] };
     for (const [k, rows] of Object.entries(seed)) this.t[k] = rows.map((r) => ({ ...r }));
     this.next = 900000; this.clock = 0; this.faults = []; this.calls = []; this.priceOverwriteOnCreate = false;
   }
@@ -58,7 +58,7 @@ export class FakeOdoo {
   apply(model, method, p) {
     const T = this.t[model];
     if (method === 'fields_get') return Object.fromEntries(['id', 'name', 'state', 'write_date', 'email', 'phone', 'partner_id', 'x_pms_reference', 'client_order_ref', 'x_booking_source', 'x_checkin', 'x_checkout',
-      'rental_start_date', 'rental_return_date', 'invoice_ids', 'order_line', 'order_id', 'product_id', 'price_unit', 'x_precio_manual', 'qty_invoiced', 'tax_ids', 'role_id', 'start_datetime', 'end_datetime', 'sale_line_id', 'move_type', 'x_bloqueo_ref', 'x_personas', 'ref', 'group_ids', 'res_id', 'module', 'model'].map((k) => [k, { type: 'char' }]));
+      'rental_start_date', 'rental_return_date', 'invoice_ids', 'order_line', 'order_id', 'product_id', 'price_unit', 'x_precio_manual', 'qty_invoiced', 'tax_ids', 'role_id', 'start_datetime', 'end_datetime', 'sale_line_id', 'move_type', 'x_bloqueo_ref', 'x_personas', 'ref', 'group_ids', 'res_id', 'module', 'model', 'body'].map((k) => [k, { type: 'char' }]));
     if (method === 'search_read') return T.filter((r) => (p.domain ?? []).every((c) => this.match(r, c))).slice(0, p.limit ?? 1e9).map((r) => this.view(model, r, p.fields));
     if (method === 'search_count') return T.filter((r) => (p.domain ?? []).every((c) => this.match(r, c))).length;
     if (method === 'create') {
@@ -77,7 +77,7 @@ export class FakeOdoo {
       for (const id of p.ids) { const r = T.find((x) => x.id === id); Object.assign(r, p.vals); if (model === 'sale.order') r.write_date = this.stamp(); else { const o = this.t['sale.order'].find((x) => x.id === r.order_id); if (o) o.write_date = this.stamp(); } }
       return true;
     }
-    if (method === 'message_post') { this.t.notes.push({ id: p.ids[0], body: p.body }); return [1]; }
+    if (method === 'message_post') { this.t.notes.push({ id: p.ids[0], body: p.body }); this.t['mail.message'].push({ id: (this.next += 1), model, res_id: p.ids[0], body: p.body }); return [1]; }
     if (method === 'action_confirm') {
       const o = T.find((x) => x.id === p.ids[0]);
       const lines = this.t['sale.order.line'].filter((l) => l.order_id === o.id);

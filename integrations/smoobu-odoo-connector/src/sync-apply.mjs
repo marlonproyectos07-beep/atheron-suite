@@ -26,7 +26,7 @@ const need = (cond, code) => { if (!cond) throw new Precondition(code); };
 const rolesFor = (unit) => (unit === 'CASA' ? [...CASA_UNITS, 'CASA'] : [unit]).map((u) => unitForName(u).odooRoleId);
 const note = (op, extra = '') => `ATH-SYNC | clave ${op.key} | SMOOBU-${op.smoobuId} | ${op.op}${extra}`;
 
-async function ordersWithRef(reader, smoobuId) {
+export async function ordersWithRef(reader, smoobuId) {
   const rows = await reader.searchRead('sale.order', [['x_pms_reference', 'ilike', `SMOOBU-${smoobuId}`]], ['id', 'state', 'x_pms_reference'], { limit: 20 });
   return rows.filter((o) => parseReferences(o.x_pms_reference).smoobu.includes(String(smoobuId)));
 }
@@ -38,7 +38,7 @@ async function readOrder(reader, id) {
   return { ...o, lines, invoices };
 }
 const invoiced = (o) => o.invoices.some((i) => i.state === 'posted') || o.lines.some((l) => Number(l.qty_invoiced) > 0);
-async function nightsFree(reader, unit, arrival, departure, excludeLineIds = []) {
+export async function nightsFree(reader, unit, arrival, departure, excludeLineIds = []) {
   const domain = [['role_id', 'in', rolesFor(unit)], ['start_datetime', '<', `${departure} ${SLOT_END}`], ['end_datetime', '>', `${arrival} ${SLOT_START}`]];
   const slots = await reader.searchRead('planning.slot', domain, ['id', 'sale_line_id'], { limit: 50 });
   return slots.filter((s) => !excludeLineIds.includes(m2oId(s.sale_line_id))).length === 0;

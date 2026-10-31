@@ -17,13 +17,18 @@ import { assessGuestName, normalizeEmail } from './sync-contact.mjs';
  * Al terminar (nota escrita) o ante cualquier error queda CONSUMIDO: no acepta ninguna escritura mas.
  */
 export const PILOT_ARMED = false;
+/** Ventana de activacion (UTC). El PR de activacion fija ambas; la ventana no puede superar PILOT_MAX_WINDOW_MINUTES. */
+export const PILOT_NOT_BEFORE = null;
 export const PILOT_NOT_AFTER = null;
+export const PILOT_MAX_WINDOW_MINUTES = 15;
 export const PILOT_ARM_PHRASE = 'EJECUTAR PILOTO SMOOBU ODOO UNA RESERVA CON DOBLE APROBACION';
 
-export function pilotArmedBy({ armed, notAfter, arm, now }) {
-  if (armed !== true || typeof notAfter !== 'string' || arm !== PILOT_ARM_PHRASE) return false;
-  const limit = Date.parse(notAfter);
-  return Number.isFinite(limit) && now.getTime() <= limit;
+export function pilotArmedBy({ armed, notBefore, notAfter, arm, now }) {
+  if (armed !== true || typeof notBefore !== 'string' || typeof notAfter !== 'string' || arm !== PILOT_ARM_PHRASE) return false;
+  const from = Date.parse(notBefore); const to = Date.parse(notAfter);
+  if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from) return false;
+  if (to - from > PILOT_MAX_WINDOW_MINUTES * 60000) return false; // ventana demasiado larga = desarmado
+  return now.getTime() >= from && now.getTime() <= to;
 }
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -32,7 +37,7 @@ export class PilotWriteClient extends OdooJson2Client {
   constructor({ op, arm = null, now = new Date(), ...opts }) {
     super(opts);
     if (!op || op.op !== 'CREATE_ORDER') throw new ConnectorError('PILOT_CLIENT_OP_REQUIRED');
-    this.armed = pilotArmedBy({ armed: PILOT_ARMED, notAfter: PILOT_NOT_AFTER, arm, now });
+    this.armed = pilotArmedBy({ armed: PILOT_ARMED, notBefore: PILOT_NOT_BEFORE, notAfter: PILOT_NOT_AFTER, arm, now });
     let host = ''; try { host = new URL(this.baseUrl).hostname; } catch { /* invalido */ }
     this.targetOk = host === EXPECTED_TARGET.host && this.database === EXPECTED_TARGET.database;
     this.op = op; this.maxWrites = PILOT_REQUIRED_WRITES; this.writes = 0; this.orderId = null; this.partnerCreated = false; this.spent = false;

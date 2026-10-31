@@ -63,7 +63,7 @@ test('usuario tecnico (no administrador): crea contacto y pedido en BORRADOR, si
   assert.deepEqual(e.odoo.t['res.partner'].map((p) => [p.name, p.ref]), [['Ana Sintetica Ficticia', 'SMOOBU-170500001']]);
   // repetir el piloto no duplica nada
   const again = await pilot(e, fakeWriter(e.odoo, validateWrite));
-  assert.equal(again.results[0].result, RESULT.YA_APLICADA);
+  assert.equal(again.halted, 'PILOTO_YA_APLICADO_VERIFICADO_POR_LECTURA');
   assert.deepEqual([e.odoo.t['sale.order'].length, e.odoo.t['res.partner'].length], [1, 1]);
 });
 

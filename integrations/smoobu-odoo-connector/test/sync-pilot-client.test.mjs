@@ -8,7 +8,8 @@ import { Journal, MemoryLock } from '../src/sync-journal.mjs';
 import { RESULT } from '../src/sync-apply.mjs';
 import { buildCreatePayload, opKey, OPS, STATUS } from '../src/sync-intent.mjs';
 import { runPilot, pilotApprovalToken, adminApprovalToken, stateFingerprint, PILOT_REQUIRED_WRITES } from '../src/sync-pilot.mjs';
-import { PilotWriteClient, pilotArmedBy, PILOT_ARMED, PILOT_NOT_AFTER, PILOT_ARM_PHRASE } from '../src/sync-pilot-client.mjs';
+import { PilotWriteClient, pilotArmedBy, PILOT_ARMED, PILOT_NOT_BEFORE, PILOT_NOT_AFTER, PILOT_ARM_PHRASE, PILOT_MAX_WINDOW_MINUTES } from '../src/sync-pilot-client.mjs';
+import { pilotPreflight, pilotRecoveryRead } from '../src/sync-pilot.mjs';
 import { WRITES_ENABLED } from '../src/live-reconcile.mjs';
 import { RELEASE_UNLOCKED } from '../src/odoo-facts.mjs';
 
@@ -30,14 +31,18 @@ const armedClient = (e, o = op) => { const c = new PilotWriteClient({ ...e.cfg, 
 const run = (e, writer, extra = {}) => runPilot({ plan: { ops: [op] }, smoobuId: ID, approval: pilotApprovalToken(op, FP), adminApproval: adminApprovalToken(op, FP), reader: e.reader, writer, smoobu: e.smoobu, journal: e.journal, lock: e.lock, today: '2026-10-30', ...extra });
 
 test('desactivado: PILOT_ARMED=false y sin fecha limite; ni la frase de armado permite escribir; interruptores globales en false', async () => {
-  assert.deepEqual([PILOT_ARMED, PILOT_NOT_AFTER, WRITES_ENABLED, RELEASE_UNLOCKED], [false, null, false, false]);
+  assert.deepEqual([PILOT_ARMED, PILOT_NOT_BEFORE, PILOT_NOT_AFTER, WRITES_ENABLED, RELEASE_UNLOCKED, PILOT_MAX_WINDOW_MINUTES], [false, null, null, false, false, 15]);
   let fetched = 0;
   const c = new PilotWriteClient({ baseUrl: 'https://atheron1.odoo.com', database: 'atheron1', apiKey: 'k', op, arm: PILOT_ARM_PHRASE, fetchImpl: async () => { fetched += 1; return { ok: true, json: async () => [1] }; } });
   await assert.rejects(c.execute('sale.order', 'create', { vals_list: [{}] }), /SYNC_WRITES_DISABLED/); assert.equal(fetched, 0);
   const now = new Date('2027-01-10T12:00:00Z');
-  assert.equal(pilotArmedBy({ armed: true, notAfter: '2027-01-11T00:00:00Z', arm: PILOT_ARM_PHRASE, now }), true);
-  for (const k of [{ armed: false, notAfter: '2027-01-11T00:00:00Z' }, { armed: true, notAfter: null }, { armed: true, notAfter: '2027-01-09T00:00:00Z' }, { armed: true, notAfter: 'x' }]) assert.equal(pilotArmedBy({ arm: PILOT_ARM_PHRASE, now, ...k }), false, JSON.stringify(k)); // caduca solo
-  assert.equal(pilotArmedBy({ armed: true, notAfter: '2027-01-11T00:00:00Z', arm: 'si', now }), false);
+  const w = { notBefore: '2027-01-10T11:55:00Z', notAfter: '2027-01-10T12:10:00Z' }; // 15 minutos
+  assert.equal(pilotArmedBy({ armed: true, ...w, arm: PILOT_ARM_PHRASE, now }), true);
+  for (const k of [{ armed: false, ...w }, { armed: true, notBefore: null, notAfter: w.notAfter }, { armed: true, notBefore: '2027-01-10T11:00:00Z', notAfter: '2027-01-10T11:10:00Z' }, // caducada
+    { armed: true, notBefore: '2027-01-10T12:01:00Z', notAfter: '2027-01-10T12:10:00Z' }, // aun no empieza
+    { armed: true, notBefore: '2027-01-10T11:50:00Z', notAfter: '2027-01-10T12:10:00Z' }, // 20 minutos: demasiado larga
+    { armed: true, notBefore: 'x', notAfter: 'y' }]) assert.equal(pilotArmedBy({ arm: PILOT_ARM_PHRASE, now, ...k }), false, JSON.stringify(k));
+  assert.equal(pilotArmedBy({ armed: true, ...w, arm: 'si', now }), false);
 });
 
 test('piloto completo con el cliente exclusivo: contacto + borrador + nota = 3 escrituras; despues queda CONSUMIDO', async () => {
@@ -51,7 +56,8 @@ test('piloto completo con el cliente exclusivo: contacto + borrador + nota = 3 e
   await assert.rejects(c.execute('sale.order', 'message_post', { ids: [o.id], body: 'ATH-SYNC | x', message_type: 'comment', subtype_xmlid: 'mail.mt_note' }), /PILOT_CONSUMED/);
   // una segunda ejecucion (cliente nuevo) no duplica: Odoo ya tiene el pedido
   const r2 = await run({ ...e, journal: new Journal() }, armedClient(e));
-  assert.equal(r2.results[0].code, 'PEDIDO_YA_EXISTE'); assert.equal(e.odoo.t['sale.order'].length, 1);
+  assert.deepEqual([r2.halted, r2.recovery], ['PILOTO_YA_APLICADO_VERIFICADO_POR_LECTURA', { found: 1, state: 'draft', linesOk: true, noteOk: true }]);
+  assert.equal(e.odoo.t['sale.order'].length, 1);
 });
 
 test('fuera del piloto: otro contacto, otro pedido, otras lineas, nota en otro pedido, confirmar, cancelar, facturas o pagos = rechazo antes de la red', async () => {
@@ -104,7 +110,8 @@ test('fallo de red a mitad: el cliente queda consumido, la ejecucion para y la s
   const r = await run(e, c);
   assert.deepEqual([r.halted, c.spent], ['RESULTADO_AMBIGUO', true]);
   const r2 = await run(e, armedClient(e));
-  assert.equal(r2.recovered[0].phase, 'RECOVERED_DONE'); assert.equal(r2.results[0].result, RESULT.YA_APLICADA);
+  // el pedido llego a crearse pero no la nota: se detecta por lectura, no se recrea ni se reintenta la nota sin una persona
+  assert.deepEqual([r2.halted, r2.recovery.found, r2.recovery.linesOk, r2.recovery.noteOk], ['PILOTO_YA_APLICADO_VERIFICADO_POR_LECTURA', 1, true, false]);
   assert.equal(e.odoo.t['sale.order'].length, 1);
 });
 
@@ -123,4 +130,31 @@ test('modo real con el piloto desactivado: se para antes de leer Smoobu u Odoo y
   const e = env(); let smoobuReads = 0; e.smoobu = { async getReservation() { smoobuReads += 1; return RES; } };
   const r = await run(e, new PilotWriteClient({ ...e.cfg, op, arm: PILOT_ARM_PHRASE }));
   assert.deepEqual([r.halted, smoobuReads, e.odoo.calls.length, e.journal.entries.length], ['PILOTO_DESACTIVADO', 0, 0, 0]);
+});
+
+test('verificacion previa: reserva vigente, identidad, duplicados, precio, fechas, disponibilidad, tokens y limite; todo en verde en el caso limpio', async () => {
+  const e = env();
+  const pre = await pilotPreflight({ op, fresh: RES, fp: FP, approval: pilotApprovalToken(op, FP), adminApproval: adminApprovalToken(op, FP), admin: true, reader: e.reader, writer: { maxWrites: 3, writes: 0 } });
+  assert.equal(pre.ok, true, JSON.stringify(pre.checks));
+  assert.deepEqual(pre.checks.map((c) => c.name), ['TOKEN_GERENCIA_ESTADO_ACTUAL', 'TOKEN_ADMINISTRADOR', 'RESERVA_VIGENTE', 'HABITACION', 'FECHAS', 'PRECIO_EXACTO', 'SIN_PEDIDO_DUPLICADO', 'PILOTO_NO_EJECUTADO_ANTES', 'DISPONIBILIDAD', 'IDENTIDAD_CONTACTO', 'LIMITE_3_ESCRITURAS']);
+  const big = await pilotPreflight({ op, fresh: RES, fp: FP, approval: pilotApprovalToken(op, FP), adminApproval: adminApprovalToken(op, FP), admin: true, reader: e.reader, writer: { maxWrites: 20, writes: 0 } });
+  assert.equal(big.checks.find((c) => c.name === 'LIMITE_3_ESCRITURAS').ok, false); // un escritor con mas presupuesto no sirve para el piloto
+});
+
+test('ejecucion unica: si Odoo ya tiene un pedido creado por la sincronizacion (otra reserva), el piloto no escribe', async () => {
+  const e = env();
+  e.odoo.t['mail.message'].push({ id: 1, model: 'sale.order', res_id: 99, body: 'ATH-SYNC | clave abc | SMOOBU-1 | CREATE_ORDER' });
+  const c = armedClient(e);
+  const r = await run(e, c);
+  assert.equal(r.halted, 'PILOTO_VERIFICACION_PREVIA_FALLIDA');
+  assert.equal(r.checks.find((x) => x.name === 'PILOTO_NO_EJECUTADO_ANTES').code, 'PILOTO_YA_EJECUTADO');
+  assert.deepEqual([c.writes, e.odoo.t['sale.order'].length], [0, 0]);
+});
+
+test('duplicado previo en Odoo (dos pedidos con la referencia): se detiene sin escribir', async () => {
+  const e = env();
+  e.odoo.t['sale.order'].push({ id: 1, state: 'draft', x_pms_reference: `SMOOBU-${ID}` }, { id: 2, state: 'draft', x_pms_reference: `SMOOBU-${ID} / Airbnb X` });
+  const c = armedClient(e);
+  assert.equal((await run(e, c)).halted, 'PILOTO_DUPLICADO_DETECTADO'); assert.equal(c.writes, 0);
+  assert.deepEqual(await pilotRecoveryRead({ op, reader: e.reader }), { found: 2 });
 });
