@@ -141,7 +141,8 @@ test('el unico lugar con capacidad de escritura es odoo-json2-p0-client.mjs y el
   for (const f of readdirSync(dir)) {
     const src = readFileSync(new URL(f, dir), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
     const usesRequest = /\._request\(/.test(src);
-    if (usesRequest) assert.ok(['odoo-json2-p0-client.mjs', 'odoo-json2-client.mjs', 'odoo-json2-recompute-client.mjs'].includes(f), `${f} usa _request`);
+    // ATH-DEV-116: sync-write-client.mjs es el segundo cliente con _request; esta DESARMADO por defecto (ver test/sync-apply.test.mjs)
+    if (usesRequest) assert.ok(['odoo-json2-p0-client.mjs', 'odoo-json2-client.mjs', 'odoo-json2-recompute-client.mjs', 'sync-write-client.mjs', 'sync-pilot-client.mjs'].includes(f), `${f} usa _request`);
     if (/['"](create|write|unlink)['"]/.test(src)) assert.ok(['odoo-json2-p0-client.mjs', 'odoo-json2-client.mjs', 'p0-run.mjs'].includes(f) || /READ_METHODS|rechaz|ODOO_READ_ONLY/.test(src) === false, `${f} nombra una mutacion`);
   }
   const run = readFileSync(new URL('../src/p0-run.mjs', import.meta.url), 'utf8');
