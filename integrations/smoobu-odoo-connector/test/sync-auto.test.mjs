@@ -8,7 +8,7 @@ import { RecordingWriter } from '../src/sync-write-client.mjs';
 import { Journal, MemoryLock } from '../src/sync-journal.mjs';
 import { RESULT } from '../src/sync-apply.mjs';
 import { buildCreatePayload, opKey, OPS, STATUS, GUARDS } from '../src/sync-intent.mjs';
-import { runAuto, autoWriter, autoPlan, maxOpsFromEnv, alertsFrom, buildOccupancyBoard, renderOccupancyBoard, CELL, readDailyCreates, readTotalCreates, shutdownReason, haltOnPrecondition, AUTO_DAILY_MAX, DAILY_READ_LIMIT } from '../src/sync-auto.mjs';
+import { runAuto, autoWriter, autoPlan, maxOpsFromEnv, alertsFrom, renderAlerts, buildOccupancyBoard, renderOccupancyBoard, CELL, readDailyCreates, readTotalCreates, shutdownReason, haltOnPrecondition, AUTO_DAILY_MAX, DAILY_READ_LIMIT } from '../src/sync-auto.mjs';
 import { approvalToken, DEFAULT_LIMITS } from '../src/sync-semiauto.mjs';
 import { WRITES_ENABLED } from '../src/live-reconcile.mjs';
 import { RELEASE_UNLOCKED } from '../src/odoo-facts.mjs';
@@ -311,5 +311,42 @@ test('ATH-DEV-130: cerrojo en Odoo: contacto sin pedido o pedido duplicado de la
   const e = env(); e.odoo.t['res.partner'].push({ id: 3, ref: 'SMOOBU-170900002' });
   const r = await runAuto({ plan: { ops: [mk(0).op] }, env: ON, reader: e.reader, writer: fakeWriter(e.odoo, validateWrite), smoobu: { async getReservation() { throw new Error('no debe leer'); } }, journal: e.journal, lock: e.lock, today: '2026-11-05' });
   assert.deepEqual([r.halted, r.writes, e.odoo.t['sale.order'].length], ['AUDITORIA_ESCRITURAS', 0, 0]);
+});
+
+/* ---------------- ATH-DEV-132: alertas de conflictos conocidos y prueba controlada del bloqueo ---------------- */
+
+test('ATH-DEV-132: pedido facturado, sobreventa y demas bloqueos del plan son AVISOS de GitHub y salen en el resumen; no apagan', () => {
+  const blk = (id, unit, arrival, guards) => ({ smoobuId: id, unit, arrival, departure: '2027-01-05', op: OPS.BLOCKED, status: STATUS.BLOQUEADO, guards, payload: null, changes: [], key: 'k' });
+  const plan = { ops: [blk(170825511, '203', '2026-10-18', ['PEDIDO_FACTURADO']), blk(170827596, 'CASA', '2027-01-04', ['SOBREVENTA']), { ...mk(0).op }] };
+  const report = { perReservation: [{ smoobuId: 170829171, unit: '301', arrival: '2027-01-04', verdict: 'MATCH', overbookingWith: [1] }] };
+  const run = { halted: null, results: [{ result: RESULT.SIMULADA }], plan };
+  const alerts = alertsFrom({ run, report });
+  assert.deepEqual(alerts, [
+    { level: 'warning', text: 'SM*...9171 301 2027-01-04: SOBREVENTA' },
+    { level: 'warning', text: 'SM*...5511 203 2026-10-18: BLOQUEADO PEDIDO_FACTURADO' },
+    { level: 'warning', text: 'SM*...7596 CASA 2027-01-04: BLOQUEADO SOBREVENTA' },
+  ]);
+  assert.ok(alerts.every((a) => !/1708\d{5}/.test(a.text)), 'IDs enmascarados');
+  assert.equal(shutdownReason({ run, report }), null, 'conflictos conocidos: no paran la vigilancia ni abren bloqueo');
+  const md = renderAlerts(alerts);
+  assert.match(md, /^### Alertas/); assert.match(md, /- \*\*AVISO\*\* SM\*\.\.\.5511 203 2026-10-18: BLOQUEADO PEDIDO_FACTURADO/);
+  assert.match(renderAlerts([]), /\(ninguna\)/);
+  // sin duplicados si el mismo aviso aparece dos veces
+  assert.equal(alertsFrom({ run: { ...run, plan: { ops: [plan.ops[0], plan.ops[0]] } }, report: {} }).length, 1);
+  const src = readFileSync(new URL('../scripts/sync-auto.mjs', import.meta.url), 'utf8');
+  assert.match(src, /renderOccupancyBoard\(board\), renderAlerts\(alerts\)/); assert.match(src, /console\.log\(`::\$\{a\.level\}::/);
+});
+
+test('ATH-DEV-132: prueba controlada del bloqueo: solo manual, solo tras una sincronizacion correcta, solo puede anadir un bloqueo', () => {
+  const wf = readFileSync(new URL('../../../.github/workflows/smoobu-odoo-sync-scheduled.yml', import.meta.url), 'utf8');
+  assert.match(wf, /\n {6}prueba_bloqueo:\n(?: {8}#[^\n]*\n)* {8}description: [^\n]+\n {8}type: boolean\n {8}default: false\n/);
+  const off = wf.slice(wf.indexOf('\n  apagado:'));
+  assert.match(off, /\(github\.event_name == 'workflow_dispatch' && inputs\.prueba_bloqueo == true && needs\.sync\.result == 'success'\)/);
+  // misma ruta que un fallo real: mismo paso, mismo titulo, misma deduplicacion; nada que quite un bloqueo
+  assert.equal((off.match(/gh api -X POST "repos\/\$GH_REPO\/issues"/g) ?? []).length, 1);
+  assert.match(off, /if \[ "\$MAX" -gt "\$ACK" \]/);
+  assert.ok(!/state=closed|-X (PATCH|DELETE)|variables|SYNC_DESBLOQUEO=/.test(off), 'el apagado nunca cierra incidencias ni toca variables');
+  const sync = wf.slice(wf.indexOf('\n  sync:'), wf.indexOf('\n  apagado:'));
+  assert.ok(!/prueba_bloqueo/.test(sync), 'la prueba no cambia la sincronizacion');
 });
 

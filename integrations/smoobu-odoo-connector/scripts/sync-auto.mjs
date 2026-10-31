@@ -14,7 +14,7 @@ import { resolveWindow } from '../src/window.mjs';
 import { resolveWatchIds } from '../src/overbooking-watch.mjs';
 import { dailyWindowEnv, DAILY_DEFAULT_DAYS } from '../src/daily-run.mjs';
 import { runSyncDryRun } from '../src/sync-dryrun-run.mjs';
-import { runAuto, alertsFrom, buildOccupancyBoard, renderOccupancyBoard, shutdownReason, readTotalCreates } from '../src/sync-auto.mjs';
+import { runAuto, alertsFrom, renderAlerts, buildOccupancyBoard, renderOccupancyBoard, shutdownReason, readTotalCreates } from '../src/sync-auto.mjs';
 import { buildDashboard, renderDashboard, readPendingPayments } from '../src/sync-dashboard.mjs';
 import { RecordingWriter } from '../src/sync-write-client.mjs';
 import { AutoWriteClient, autoArmedBy, AUTO_ARMED } from '../src/sync-auto-client.mjs';
@@ -52,7 +52,7 @@ try {
   if (stop) alerts.push({ level: 'error', text: `APAGADO AUTOMATICO: ${stop}` });
   const historic = await readTotalCreates(reader);
   const cupo = run.daily ? `${run.daily.used}/${run.daily.max} hoy` : '-';
-  const md = [renderDashboard(dash, { title: `Sincronizacion ${real ? 'REAL' : 'EN SOMBRA (sin escrituras)'} ${window.from} -> ${window.to}` }), renderOccupancyBoard(board),
+  const md = [renderDashboard(dash, { title: `Sincronizacion ${real ? 'REAL' : 'EN SOMBRA (sin escrituras)'} ${window.from} -> ${window.to}` }), renderOccupancyBoard(board), renderAlerts(alerts),
     `Seguridad: modo ${real ? 'REAL' : 'SOMBRA'}; escrituras enviadas a Odoo = ${real ? run.writes : 0}; lote maximo = ${run.maxOps ?? '-'}; bloqueo de escritura = ${latch.latched ? `SI (${latch.reason}${latch.pending.length ? ` #${latch.pending.join(',#')}` : ''})` : 'no'}; auditoria Odoo = ${run.audit && !run.audit.ok ? run.audit.problems.map((p) => p.code).join(',') : 'ok'}; cupo diario = ${cupo} (pedidos de la sincronizacion en total: ${historic}); apagado automatico = ${stop ?? 'no'}; confirmar, cancelar, pagos y facturas bloqueados.`, ''].join('\n');
   const summary = { at: now.toISOString(), mode: real ? 'REAL' : 'SOMBRA', halted: run.halted ?? null, results: (run.results ?? []).map((r) => ({ op: r.op, result: r.result, code: r.code ?? null })), writesSentToOdoo: real ? run.writes : 0, latch: { latched: latch.latched, reason: latch.reason, pending: latch.pending.length }, audit: run.audit?.ok === false ? run.audit.problems.map((p) => p.code) : 'ok', daily: run.daily ?? null, historicCreates: historic, shutdown: stop, alerts: alerts.length };
   const text = JSON.stringify(summary) + md + JSON.stringify(alerts);
