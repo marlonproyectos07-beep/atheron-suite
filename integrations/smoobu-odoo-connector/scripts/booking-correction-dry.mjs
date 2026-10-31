@@ -8,7 +8,10 @@ import { OdooJson2Client } from '../src/odoo-json2-client.mjs';
 import { parseReferences } from '../src/reference-parse.mjs';
 import { planTotalCorrection, validateCorrection, CORRECTION_TARGET } from '../src/booking-correction.mjs';
 import { assessBookingAmounts } from '../src/booking-amounts.mjs';
-import { assertPublicSafe } from '../src/public-report.mjs';
+import { assertPublicSafe, maskSmoobu } from '../src/public-report.mjs';
+import { readSmoobuWindow } from '../src/reconcile-ids-run.mjs';
+import { resolveWindow } from '../src/window.mjs';
+import { dailyWindowEnv } from '../src/daily-run.mjs';
 
 const out = (o, code = 0) => { console.log(JSON.stringify(o)); if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Simulacion correccion ${CORRECTION_TARGET.orderName}\n\n\`\`\`\n${JSON.stringify(o, null, 2)}\n\`\`\`\n`); process.exit(code); };
 const label = (e) => (/^\s*(iva|vat|impuesto|impuestos|tax|taxes)\b/i.test(String(e?.name ?? '')) ? 'IMPUESTO' : (e?.type === 'basePrice' ? 'TARIFA' : (e?.type === 'commission' ? 'COMISION' : 'OTRO')));
@@ -26,7 +29,21 @@ try {
   const a = assessBookingAmounts({ booking, elements });
   const plan = planTotalCorrection({ order, lines, booking, elements });
   const slots = await odoo.searchCount('planning.slot', [['sale_line_id', 'in', lines.map((l) => l.id)]]);
+  // ATH-DEV-138: diagnostico de las reservas VIGENTES de Booking de la ventana diaria (solo estructura y codigos)
+  const win = resolveWindow(dailyWindowEnv(new Date(), 90));
+  const listed = await readSmoobuWindow(smoobu, win);
+  const recent = []; const hidden = [];
+  for (const b of listed.bookings.filter((x) => Number(x?.channel?.id) === 7208046 && x?.type !== 'cancellation').slice(0, 25)) {
+    const els = await smoobu.getPriceElements(Number(b.id));
+    const as = assessBookingAmounts({ booking: b, elements: els });
+    const baseSum = (els ?? []).filter((e) => e.type === 'basePrice').reduce((acc, e) => acc + (typeof e.amount === 'number' ? e.amount : NaN), 0);
+    hidden.push(String(b.id));
+    recent.push({ ref: maskSmoobu(b.id), llegada: String(b.arrival).slice(0, 10), fiable: as.ok, motivo: as.block ?? null, modo: as.taxMode ?? null,
+      tarifaIgualAPrice: Number.isFinite(baseSum) ? Math.round(baseSum * 100) === Math.round(Number(b.price) * 100) : null,
+      elementos: (els ?? []).map((e) => `${e.type}/${label(e)}/${e.currencyCode}/q${e.quantity ?? '-'}${e.priceIncludedInId ? '/incl' : ''}`) });
+  }
   const r = {
+    reservasBooking: recent,
     result: plan.ok ? (plan.noop ? 'YA_CORREGIDO' : 'CORRECCION_LISTA_SIN_EJECUTAR') : 'BLOQUEADA', block: plan.block ?? null,
     writesSentToOdoo: 0,
     smoobu: { elementos: (elements ?? []).map((e) => ({ tipo: e.type, clase: label(e), moneda: e.currencyCode, cantidad: e.quantity ?? null, incluidoEnOtro: e.priceIncludedInId != null && e.priceIncludedInId !== 0 })),
@@ -38,7 +55,7 @@ try {
       facturasQueSeCrearian: 0, pagosQueSeCrearian: 0, turnosQueSeCrearian: 0, confirmaria: false,
     } : null,
   };
-  const guard = assertPublicSafe(JSON.stringify(r), { identifiers: [String(sid), String(booking?.['guest-name'] ?? 'x-sin-nombre-x'), String(a.base ?? 'x'), String(a.total ?? 'x')], secrets: [sc.apiKey, sc.apiSecret, oc.apiKey] });
+  const guard = assertPublicSafe(JSON.stringify(r), { identifiers: [...hidden, String(sid), String(booking?.['guest-name'] ?? 'x-sin-nombre-x'), String(a.base ?? 'x'), String(a.total ?? 'x')], secrets: [sc.apiKey, sc.apiSecret, oc.apiKey] });
   if (!guard.safe) out({ result: 'DETALLE_RETENIDO', code: 'PRIVACY_GUARD_TRIPPED', writesSentToOdoo: 0 }, 3);
   out(r, 0);
 } catch (e) { out({ result: 'FALLO', code: e.code ?? 'UNKNOWN', httpStatus: e.status ?? null, writesSentToOdoo: 0 }, 1); }
