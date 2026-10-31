@@ -14,9 +14,8 @@ import { dailyWindowEnv, DAILY_DEFAULT_DAYS } from '../src/daily-run.mjs';
 import { runSyncDryRun } from '../src/sync-dryrun-run.mjs';
 import { runAuto, alertsFrom, buildOccupancyBoard, renderOccupancyBoard, ALERT_HALTS } from '../src/sync-auto.mjs';
 import { buildDashboard, renderDashboard, readPendingPayments } from '../src/sync-dashboard.mjs';
-import { RecordingWriter, SyncWriteClient, armedBy } from '../src/sync-write-client.mjs';
-import { WRITES_ENABLED } from '../src/live-reconcile.mjs';
-import { RELEASE_UNLOCKED } from '../src/odoo-facts.mjs';
+import { RecordingWriter } from '../src/sync-write-client.mjs';
+import { AutoWriteClient, autoArmedBy, AUTO_ARMED } from '../src/sync-auto-client.mjs';
 import { Journal, FileLock, MemoryLock } from '../src/sync-journal.mjs';
 import { sensitiveValues, assertPublicSafe } from '../src/public-report.mjs';
 
@@ -28,12 +27,13 @@ try {
   watchIds = resolveWatchIds(process.env); sc = loadSmoobuConfig(process.env); oc = loadOdooConfig(process.env);
 } catch (e) { out({ result: 'FALLO', category: 'CONFIGURACION', code: e.code ?? 'CONFIG_ERROR', writes: 0 }, 2); }
 const today = new Date(now.getTime() - 5 * 3600000).toISOString().slice(0, 10);
-const real = process.env.SYNC_SHADOW !== '1' && armedBy({ writesEnabled: WRITES_ENABLED, releaseUnlocked: RELEASE_UNLOCKED, arm: process.env.SYNC_ARM ?? null });
+// interruptor PROPIO (AUTO_ARMED + frase SYNC_ARM); los globales de escritura siguen en false
+const real = process.env.SYNC_SHADOW !== '1' && autoArmedBy({ armed: AUTO_ARMED, arm: process.env.SYNC_ARM ?? null });
 try {
   const smoobu = new SmoobuClient({ ...sc, pathPrefix: '/api' });
   const reader = new OdooJson2Client(oc);
   const { plan, report } = await runSyncDryRun({ smoobu, odoo: reader, window, today, watchIds });
-  const writer = real ? new SyncWriteClient({ ...oc, arm: process.env.SYNC_ARM, maxWrites: 30 }) : new RecordingWriter({ maxWrites: 30 });
+  const writer = real ? new AutoWriteClient({ ...oc, arm: process.env.SYNC_ARM, maxWrites: 30 }) : new RecordingWriter({ maxWrites: 30 });
   const journal = process.env.SYNC_JOURNAL_PATH ? Journal.fromFile(process.env.SYNC_JOURNAL_PATH) : new Journal();
   const lock = process.env.SYNC_LOCK_PATH ? new FileLock(process.env.SYNC_LOCK_PATH) : new MemoryLock();
   const env = real ? process.env : { ...process.env, SYNC_ENABLED: process.env.SYNC_SHADOW === '1' ? 'true' : process.env.SYNC_ENABLED };

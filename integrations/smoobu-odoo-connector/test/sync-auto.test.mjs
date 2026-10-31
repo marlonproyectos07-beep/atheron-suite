@@ -105,3 +105,18 @@ test('tablero: una operacion pendiente o bloqueada sobre un pedido existente no 
   const b = buildOccupancyBoard({ report, plan, from: '2026-11-05', nights: 1 });
   assert.deepEqual(b.rows.slice(0, 3).map((r) => r.cells[0]), ['C', 'C', 'B']);
 });
+
+test('interruptor propio: AUTO_ARMED=false y sin depender de los globales (el conciliador diario exige que sigan en false)', async () => {
+  const { AutoWriteClient, AUTO_ARMED, AUTO_ARM_PHRASE, autoArmedBy } = await import('../src/sync-auto-client.mjs');
+  assert.equal(AUTO_ARMED, false);
+  assert.deepEqual([autoArmedBy({ armed: true, arm: AUTO_ARM_PHRASE }), autoArmedBy({ armed: true, arm: 'si' }), autoArmedBy({ armed: false, arm: AUTO_ARM_PHRASE })], [true, false, false]);
+  let sent = 0;
+  const c = new AutoWriteClient({ baseUrl: 'https://atheron1.odoo.com', database: 'atheron1', apiKey: 'k', arm: AUTO_ARM_PHRASE, fetchImpl: async () => { sent += 1; return { ok: true, json: async () => [1] }; } });
+  await assert.rejects(c.execute('sale.order', 'create', { vals_list: [{}] }), /SYNC_WRITES_DISABLED/); assert.equal(sent, 0);
+  c.armed = true; // solo en la prueba: aun armado, nada fuera de crear contacto/pedido/nota
+  for (const [m, meth] of [['sale.order', 'action_confirm'], ['sale.order', 'action_cancel'], ['sale.order', 'write'], ['account.payment', 'create']]) await assert.rejects(c.execute(m, meth, { ids: [1] }), /SYNC_WRITE_AUTO_METHOD_FORBIDDEN/);
+  assert.equal(sent, 0);
+  const src = readFileSync(new URL('../scripts/sync-auto.mjs', import.meta.url), 'utf8').replace(/\/\/.*$/gm, '');
+  assert.ok(!/WRITES_ENABLED|RELEASE_UNLOCKED|SyncWriteClient/.test(src), 'el script no depende de los interruptores globales');
+  assert.deepEqual([WRITES_ENABLED, RELEASE_UNLOCKED], [false, false]);
+});
