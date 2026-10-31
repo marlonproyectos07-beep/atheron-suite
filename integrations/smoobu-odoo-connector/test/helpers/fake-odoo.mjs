@@ -58,7 +58,7 @@ export class FakeOdoo {
   apply(model, method, p) {
     const T = this.t[model];
     if (method === 'fields_get') return Object.fromEntries(['id', 'name', 'state', 'write_date', 'email', 'phone', 'partner_id', 'x_pms_reference', 'client_order_ref', 'x_booking_source', 'x_checkin', 'x_checkout',
-      'rental_start_date', 'rental_return_date', 'invoice_ids', 'order_line', 'order_id', 'product_id', 'price_unit', 'x_precio_manual', 'qty_invoiced', 'tax_ids', 'role_id', 'start_datetime', 'end_datetime', 'sale_line_id', 'move_type', 'x_bloqueo_ref', 'x_personas', 'ref'].map((k) => [k, { type: 'char' }]));
+      'rental_start_date', 'rental_return_date', 'invoice_ids', 'order_line', 'order_id', 'product_id', 'price_unit', 'x_precio_manual', 'qty_invoiced', 'tax_ids', 'role_id', 'start_datetime', 'end_datetime', 'sale_line_id', 'move_type', 'x_bloqueo_ref', 'x_personas', 'ref', 'group_ids', 'res_id', 'module', 'model'].map((k) => [k, { type: 'char' }]));
     if (method === 'search_read') return T.filter((r) => (p.domain ?? []).every((c) => this.match(r, c))).slice(0, p.limit ?? 1e9).map((r) => this.view(model, r, p.fields));
     if (method === 'search_count') return T.filter((r) => (p.domain ?? []).every((c) => this.match(r, c))).length;
     if (method === 'create') {

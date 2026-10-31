@@ -90,3 +90,12 @@ Odoo (lectura)┘                                                       │
 4. Ampliar a rellenos `UPDATE_ORDER`, despues `maxOps` mayor.
 5. Confirmar y cancelar: siempre con aprobacion por clave de operacion; nunca automatico.
 6. Programacion diaria solo cuando 2-5 lleven al menos 2 semanas sin incidencias.
+
+## Piloto controlado (ATH-DEV-118, `src/sync-pilot.mjs`)
+
+- Una sola reserva: exactamente una operacion `CREATE_ORDER` en estado LISTO, del ID de Smoobu indicado y con su clave aprobada.
+- Solo `res.partner.create`, `sale.order.create` y la nota interna, con un tope de 3 escrituras. Nunca confirma, cancela,
+  modifica, factura ni cobra; el pedido queda en borrador y sin turno.
+- Si la clave pertenece a un administrador (hoy la unica clave es del gerente), exige una segunda aprobacion ligada a la
+  operacion: `APROBADO-ADMIN-SMOOBU-<id>-<clave>`. Si no se puede comprobar el grupo, se trata como administrador.
+- Sigue sin poder escribir: necesita ademas las tres llaves del cliente real (PR de activacion aparte).
