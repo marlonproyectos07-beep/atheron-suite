@@ -32,6 +32,7 @@
     "sync-dryrun": "node scripts/sync-dryrun.mjs",
     "sync-shadow": "node scripts/sync-shadow.mjs",
     "sync-semiauto": "node scripts/sync-semiauto.mjs",
-    "sync-pilot": "node scripts/sync-pilot.mjs"
+    "sync-pilot": "node scripts/sync-pilot.mjs",
+    "sync-auto": "node scripts/sync-auto.mjs"
   }
 }
