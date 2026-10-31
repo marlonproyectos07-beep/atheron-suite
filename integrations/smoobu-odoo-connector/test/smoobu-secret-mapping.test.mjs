@@ -20,9 +20,9 @@ test('el cruce de secretos ocurre UNA sola vez, a nivel de job, y ningun paso lo
 });
 // ATH-DEV-108: lista blanca EXPLICITA de workflows que pueden leer los secretos de Smoobu. El diario repite exactamente
 // el mismo cruce (una vez, a nivel de job); cualquier otro workflow que los use hace fallar esta prueba.
-const SMOOBU_SECRET_WORKFLOWS = new Set(['smoobu-odoo-diagnose.yml', 'smoobu-odoo-reconcile-daily.yml']);
-test('el workflow diario hace el mismo cruce UNA sola vez a nivel de job, sin modo swapped ni escritura de secretos', () => {
-  const d = readFileSync(new URL('.github/workflows/smoobu-odoo-reconcile-daily.yml', root), 'utf8').replace(/\r\n/g, '\n');
+const SMOOBU_SECRET_WORKFLOWS = new Set(['smoobu-odoo-diagnose.yml', 'smoobu-odoo-reconcile-daily.yml', 'smoobu-odoo-pilot-run.yml']);
+for (const wfName of ['smoobu-odoo-reconcile-daily.yml', 'smoobu-odoo-pilot-run.yml']) test(`${wfName} hace el mismo cruce UNA sola vez a nivel de job, sin modo swapped ni escritura de secretos`, () => {
+  const d = readFileSync(new URL(`.github/workflows/${wfName}`, root), 'utf8').replace(/\r\n/g, '\n');
   assert.equal((d.match(/SMOOBU_API_KEY: \$\{\{ secrets\.SMOOBU_API_SECRET \}\}/g) ?? []).length, 1);
   assert.equal((d.match(/SMOOBU_API_SECRET: \$\{\{ secrets\.SMOOBU_API_KEY \}\}/g) ?? []).length, 1);
   assert.equal((d.match(/SMOOBU_API_(KEY|SECRET): \$\{\{ secrets\.[A-Z_]+ \}\}/g) ?? []).length, 2);

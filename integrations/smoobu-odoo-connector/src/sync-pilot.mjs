@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { ConnectorError } from './errors.mjs';
 import { OPS, STATUS } from './sync-intent.mjs';
 import { applyPlan } from './sync-apply.mjs';
@@ -15,10 +16,21 @@ import { validateWrite } from './sync-write-guard.mjs';
  */
 export const PILOT_METHODS = Object.freeze(new Set(['res.partner.create', 'sale.order.create', 'sale.order.message_post']));
 export const PILOT_MAX_WRITES = 3;
-/** Tokens del piloto (sin IDs ni datos personales: se pueden publicar). */
-export const pilotApprovalToken = (op) => `APROBADO-CREATE_ORDER-${op.key}`;
-export const adminApprovalToken = (op) => `APROBADO-ADMIN-${op.key}`;
-export const keyFromApproval = (token) => (/^APROBADO-CREATE_ORDER-([0-9a-f]{16})$/.exec(String(token ?? '').trim()) ?? [])[1] ?? null;
+/**
+ * ATH-DEV-122 — Huella del ESTADO ACTUAL de la reserva en Smoobu (lectura fresca). Cualquier cambio en tipo, habitacion,
+ * fechas, precio, personas, canal, referencia OTA, datos del huesped o fecha de modificacion la cambia.
+ */
+export function stateFingerprint(b) {
+  const pick = ['id', 'type', 'arrival', 'departure', 'price', 'adults', 'children', 'reference-id', 'guest-name', 'email', 'phone', 'modifiedAt', 'modified-at', 'updated-at'];
+  const v = Object.fromEntries(pick.map((k) => [k, b?.[k] ?? null]));
+  v.apartment = b?.apartment?.id ?? null; v.channel = b?.channel?.id ?? null;
+  return createHash('sha256').update(JSON.stringify(v)).digest('hex').slice(0, 12);
+}
+/** Tokens del piloto: operacion (clave del plan) + estado actual de la reserva. Sin IDs ni datos personales. */
+export const pilotApprovalToken = (op, fp) => `APROBADO-PILOTO-${op.key}-${fp}`;
+export const adminApprovalToken = (op, fp) => `APROBADO-ADMIN-${op.key}-${fp}`;
+/** Escrituras que necesita UNA creacion completa: contacto (si no existe) + pedido + nota. */
+export const PILOT_REQUIRED_WRITES = 3;
 /** Reserva piloto acordada (ATH-DEV-121): Airbnb, habitacion 302, 14/01/2027. Se identifica por sufijo + habitacion + fecha. */
 export const PILOT_TARGET = Object.freeze({ suffix: '7631', unit: '302', arrival: '2027-01-14', departure: '2027-01-15', channelId: 7208051 });
 
@@ -68,11 +80,25 @@ export async function isAdminKey(reader) {
   return { admin: !u || (u[groupField] ?? []).includes(xml.res_id), uid };
 }
 
-export async function runPilot({ plan, smoobuId, approvedKey, adminApproval = null, reader, writer, smoobu, journal, lock, today }) {
-  const op = selectPilotOp(plan, { smoobuId, approvedKey });
+/**
+ * Ejecuta el piloto. Orden: estado fresco de la reserva -> token de gerencia ligado a ese estado -> si la clave es de
+ * administrador, segundo token ligado al mismo estado -> presupuesto suficiente para la operacion COMPLETA -> applyPlan.
+ */
+export async function runPilot({ plan, smoobuId, approval, adminApproval = null, reader, writer, smoobu, journal, lock, today }) {
+  // cliente real desarmado: se para ANTES de cualquier lectura o anotacion en la bitacora
+  if (writer?.armed === false) return { halted: 'PILOTO_DESACTIVADO', results: [], writes: 0 };
+  const fresh = await smoobu.getReservation(Number(smoobuId));
+  const fp = stateFingerprint(fresh);
+  const halt = (code, extra = {}) => ({ halted: code, results: [], writes: 0, fingerprint: fp, ...extra });
+  const candidate = plan.ops.find((o) => o.smoobuId === Number(smoobuId));
+  if (!candidate || approval !== pilotApprovalToken(candidate, fp)) return halt('PILOTO_TOKEN_NO_CORRESPONDE_AL_ESTADO_ACTUAL');
+  const op = selectPilotOp(plan, { smoobuId, approvedKey: candidate.key });
   const who = await isAdminKey(reader);
   const admin = who === true || who.admin;
-  if (admin && adminApproval !== adminApprovalToken(op)) return { halted: 'PILOTO_REQUIERE_APROBACION_ADMIN', admin: true, results: [], writes: 0 };
+  if (admin && adminApproval !== adminApprovalToken(op, fp)) return halt('PILOTO_REQUIERE_APROBACION_ADMIN', { admin: true });
+  // presupuesto: nunca empezar una operacion que no se pueda terminar (contacto + pedido + nota)
+  const remaining = (writer.maxWrites ?? Infinity) - (writer.writes ?? 0);
+  if (remaining < PILOT_REQUIRED_WRITES) return halt('PILOTO_PRESUPUESTO_INSUFICIENTE', { admin });
   const res = await applyPlan({ plan: { ops: [op] }, reader, writer: pilotWriter(writer), smoobu, journal, lock, approvals: new Set([op.key]), maxOps: 1, today });
-  return { ...res, admin };
+  return { ...res, admin, fingerprint: fp };
 }

@@ -13,9 +13,10 @@ import { resolveWindow } from '../src/window.mjs';
 import { resolveWatchIds } from '../src/overbooking-watch.mjs';
 import { dailyWindowEnv, DAILY_DEFAULT_DAYS } from '../src/daily-run.mjs';
 import { runSyncDryRun } from '../src/sync-dryrun-run.mjs';
-import { RecordingWriter, SyncWriteClient } from '../src/sync-write-client.mjs';
+import { RecordingWriter } from '../src/sync-write-client.mjs';
+import { PilotWriteClient } from '../src/sync-pilot-client.mjs';
 import { Journal, MemoryLock, FileLock } from '../src/sync-journal.mjs';
-import { findPilotTarget, runPilot, isAdminKey, pilotApprovalToken, adminApprovalToken, keyFromApproval, PILOT_TARGET } from '../src/sync-pilot.mjs';
+import { findPilotTarget, runPilot, isAdminKey, pilotApprovalToken, adminApprovalToken, stateFingerprint, PILOT_TARGET } from '../src/sync-pilot.mjs';
 import { maskSmoobu, sensitiveValues, assertPublicSafe } from '../src/public-report.mjs';
 
 const out = (o, code) => { console.log(JSON.stringify(o)); process.exit(code); };
@@ -33,14 +34,15 @@ try {
   const { plan, report } = await runSyncDryRun({ smoobu, odoo: reader, window, today, watchIds });
   const op = findPilotTarget(plan, PILOT_TARGET);
   const who = await isAdminKey(reader); const admin = who === true || who.admin;
-  const tokens = { approval: pilotApprovalToken(op), admin: admin ? adminApprovalToken(op) : null };
+  const fp = stateFingerprint(await smoobu.getReservation(op.smoobuId));
+  const tokens = { approval: pilotApprovalToken(op, fp), admin: admin ? adminApprovalToken(op, fp) : null };
   let res;
   if (dry) {
-    res = await runPilot({ plan, smoobuId: op.smoobuId, approvedKey: op.key, adminApproval: tokens.admin, reader, writer: new RecordingWriter(), smoobu, journal: new Journal(), lock: new MemoryLock(), today });
+    res = await runPilot({ plan, smoobuId: op.smoobuId, approval: tokens.approval, adminApproval: tokens.admin, reader, writer: new RecordingWriter({ maxWrites: 3 }), smoobu, journal: new Journal(), lock: new MemoryLock(), today });
   } else {
-    const key = keyFromApproval(process.env.PILOT_APPROVAL);
-    res = await runPilot({ plan, smoobuId: op.smoobuId, approvedKey: key, adminApproval: process.env.PILOT_ADMIN_APPROVAL ?? null, reader,
-      writer: new SyncWriteClient({ ...oc, arm: process.env.SYNC_ARM ?? null, maxWrites: 3 }), smoobu,
+    // REAL: cliente exclusivo del piloto, atado a esta operacion; hoy desarmado (PILOT_ARMED=false)
+    res = await runPilot({ plan, smoobuId: op.smoobuId, approval: process.env.PILOT_APPROVAL ?? null, adminApproval: process.env.PILOT_ADMIN_APPROVAL ?? null, reader,
+      writer: new PilotWriteClient({ ...oc, op, arm: process.env.PILOT_ARM ?? null }), smoobu,
       journal: Journal.fromFile(process.env.SYNC_JOURNAL_PATH ?? 'sync-journal.jsonl'), lock: new FileLock(process.env.SYNC_LOCK_PATH ?? 'sync.lock'), today });
   }
   const pub = { at: now.toISOString(), result: dry ? 'PILOTO_SIMULADO' : 'PILOTO_REAL', target: { ref: maskSmoobu(op.smoobuId), unit: op.unit, arrival: op.arrival, departure: op.departure, op: op.op, status: op.status, guards: op.guards },

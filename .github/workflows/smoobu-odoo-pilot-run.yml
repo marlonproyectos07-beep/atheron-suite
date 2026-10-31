@@ -1,0 +1,71 @@
+# ============================================================
+# PILOTO SMOOBU -> ODOO, UNA SOLA RESERVA (ATH-DEV-122) — SOLO MANUAL
+#
+# Crea, como maximo, el contacto y el pedido en BORRADOR de la reserva piloto (Airbnb 302, 14/01/2027) y una nota interna.
+# Nunca confirma, cancela, factura ni cobra. Sin programacion.
+# Hoy NO puede escribir: el cliente del piloto (src/sync-pilot-client.mjs) tiene PILOT_ARMED=false y PILOT_NOT_AFTER=null.
+# Para ejecutarlo hacen falta, a la vez: PR de activacion fusionado (PILOT_ARMED=true + fecha limite), variable PILOT_ARM con
+# la frase de armado, y los dos tokens de gerencia ligados al estado ACTUAL de la reserva (los publica el modo
+# sync-pilot-dry del workflow de diagnostico). Al terminar, el cliente queda consumido y caduca en PILOT_NOT_AFTER.
+# ============================================================
+name: smoobu-odoo-pilot-run
+
+on:
+  workflow_dispatch:
+    inputs:
+      approval:
+        description: 'Token APROBADO-PILOTO-... (gerencia)'
+        required: true
+        type: string
+      admin_approval:
+        description: 'Token APROBADO-ADMIN-... (obligatorio si la clave es de administrador)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoobu-odoo-pilot-run
+  cancel-in-progress: false
+
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # ATH-DEV-028: secretos de Smoobu guardados intercambiados; mismo cruce que diagnose y el diario (vigilado por test)
+    env:
+      SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_SECRET }}
+      SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_KEY }}
+    defaults:
+      run:
+        working-directory: integrations/smoobu-odoo-connector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pruebas unitarias (si fallan, no se toca nada)
+        run: npm test
+      - name: Piloto de una reserva (contacto + borrador)
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          PILOT_DRY: '0'
+          PILOT_ARM: ${{ vars.PILOT_ARM }}
+          PILOT_APPROVAL: ${{ inputs.approval }}
+          PILOT_ADMIN_APPROVAL: ${{ inputs.admin_approval }}
+          SYNC_JOURNAL_PATH: ${{ runner.temp }}/piloto-bitacora.jsonl
+          SYNC_LOCK_PATH: ${{ runner.temp }}/piloto.lock
+        run: npm run --silent sync-pilot
+      - name: Guardar la bitacora (sin datos personales)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: piloto-bitacora-${{ github.run_number }}
+          path: ${{ runner.temp }}/piloto-bitacora.jsonl
+          if-no-files-found: ignore
+          retention-days: 30

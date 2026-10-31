@@ -7,7 +7,7 @@ import { RecordingWriter, SyncWriteClient, SYNC_ARM_PHRASE } from '../src/sync-w
 import { Journal, MemoryLock } from '../src/sync-journal.mjs';
 import { RESULT } from '../src/sync-apply.mjs';
 import { buildCreatePayload, opKey, OPS, STATUS } from '../src/sync-intent.mjs';
-import { selectPilotOp, pilotWriter, runPilot, adminApprovalToken, pilotApprovalToken, keyFromApproval, findPilotTarget, PILOT_TARGET } from '../src/sync-pilot.mjs';
+import { selectPilotOp, pilotWriter, runPilot, adminApprovalToken, pilotApprovalToken, findPilotTarget, stateFingerprint, PILOT_TARGET } from '../src/sync-pilot.mjs';
 import { WRITES_ENABLED } from '../src/live-reconcile.mjs';
 import { RELEASE_UNLOCKED } from '../src/odoo-facts.mjs';
 
@@ -15,7 +15,9 @@ import { RELEASE_UNLOCKED } from '../src/odoo-facts.mjs';
 const ID = 170500001;
 const payload = buildCreatePayload({ smoobuId: ID, unit: '302', arrival: '2026-11-22', departure: '2026-11-23', source: 'airbnb', otaRef: 'HMSINTET', price: 90100, guest: { name: 'Ana Sintetica Ficticia', email: null, phone: '3001112233' } });
 const create = { smoobuId: ID, unit: '302', arrival: '2026-11-22', departure: '2026-11-23', op: OPS.CREATE_ORDER, status: STATUS.LISTO, guards: [], payload, changes: [], key: opKey(ID, OPS.CREATE_ORDER, payload) };
-const smoobu = { async getReservation() { return { id: ID, type: 'reservation', apartment: { id: 3557526 }, arrival: '2026-11-22', departure: '2026-11-23', price: 90100 }; } };
+const RES = { id: ID, type: 'reservation', apartment: { id: 3557526 }, arrival: '2026-11-22', departure: '2026-11-23', price: 90100 };
+const smoobu = { async getReservation() { return RES; } };
+const FP = stateFingerprint(RES);
 
 function env({ admin }) {
   const odoo = new FakeOdoo({ 'ir.model.data': [{ id: 1, module: 'base', name: 'group_system', model: 'res.groups', res_id: 4 }], 'res.users': [{ id: 2, group_ids: admin ? [1, 4] : [1, 16] }] });
@@ -25,7 +27,7 @@ function env({ admin }) {
   const reader = new OdooJson2Client({ baseUrl: 'https://odoo.invalid', database: 'p', apiKey: 'k', fetchImpl: odoo.fetch });
   return { odoo, reader, journal: new Journal(), lock: new MemoryLock() };
 }
-const pilot = (e, writer, extra = {}) => runPilot({ plan: { ops: [create] }, smoobuId: ID, approvedKey: create.key, reader: e.reader, writer, smoobu, journal: e.journal, lock: e.lock, today: '2026-11-05', ...extra });
+const pilot = (e, writer, extra = {}) => runPilot({ plan: { ops: [create] }, smoobuId: ID, approval: pilotApprovalToken(create, FP), reader: e.reader, writer, smoobu, journal: e.journal, lock: e.lock, today: '2026-11-05', ...extra });
 
 test('seleccion: exactamente una reserva, solo CREAR, solo LISTO y con su clave aprobada', () => {
   assert.equal(selectPilotOp({ ops: [create] }, { smoobuId: ID, approvedKey: create.key }), create);
@@ -48,7 +50,7 @@ test('clave de ADMINISTRADOR: el piloto se detiene sin leer reservas ni escribir
   assert.deepEqual([r.halted, e.odoo.t['sale.order'].length], ['PILOTO_REQUIERE_APROBACION_ADMIN', 0]);
   const wrong = await pilot(e, fakeWriter(e.odoo, validateWrite), { adminApproval: 'APROBADO' });
   assert.equal(wrong.halted, 'PILOTO_REQUIERE_APROBACION_ADMIN');
-  const ok = await pilot(e, fakeWriter(e.odoo, validateWrite), { adminApproval: adminApprovalToken(create) });
+  const ok = await pilot(e, fakeWriter(e.odoo, validateWrite), { adminApproval: adminApprovalToken(create, FP) });
   assert.equal(ok.results[0].result, RESULT.APLICADA);
 });
 
@@ -71,7 +73,7 @@ test('con las escrituras desactivadas el cliente real no puede ejecutar el pilot
   let sent = 0;
   const real = new SyncWriteClient({ baseUrl: 'https://atheron1.odoo.com', database: 'atheron1', apiKey: 'k', arm: SYNC_ARM_PHRASE, fetchImpl: async () => { sent += 1; return { ok: true, json: async () => [1] }; } });
   const r = await pilot(e, real);
-  assert.ok(['RESULTADO_AMBIGUO', 'SYNC_WRITES_DISABLED'].includes(r.halted) || r.results[0]?.code === 'SYNC_WRITES_DISABLED', JSON.stringify(r));
+  assert.equal(r.halted, 'PILOTO_DESACTIVADO', JSON.stringify(r)); // el cliente global desarmado para antes de leer nada
   assert.deepEqual([sent, e.odoo.t['sale.order'].length, e.odoo.t['res.partner'].length], [0, 0, 0]);
 });
 
@@ -88,6 +90,6 @@ test('reserva piloto (Airbnb 302, 14/01): se localiza por sufijo, habitacion, fe
   assert.throws(() => findPilotTarget({ ops: [op, { ...op, key: 'x' }] }), /PILOTO_RESERVA_NO_UNICA/);
   assert.throws(() => findPilotTarget({ ops: [{ ...op, channelId: 7208046 }] }), /PILOTO_RESERVA_NO_UNICA/);
   assert.deepEqual([PILOT_TARGET.unit, PILOT_TARGET.arrival], ['302', '2027-01-14']);
-  for (const t of [pilotApprovalToken(op), adminApprovalToken(op)]) assert.ok(!t.includes('170527631') && t.endsWith(op.key));
-  assert.equal(keyFromApproval(pilotApprovalToken(op)), op.key); assert.equal(keyFromApproval(adminApprovalToken(op)), null); // un token no sirve por el otro
+  for (const t of [pilotApprovalToken(op, 'abc'), adminApprovalToken(op, 'abc')]) assert.ok(!t.includes('170527631') && t.includes(op.key));
+  assert.notEqual(pilotApprovalToken(op, 'abc'), adminApprovalToken(op, 'abc')); // un token no sirve por el otro
 });
