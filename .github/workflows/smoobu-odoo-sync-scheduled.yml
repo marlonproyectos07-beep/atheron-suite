@@ -1,0 +1,72 @@
+# ============================================================
+# SINCRONIZACION PROGRAMADA SMOOBU -> ODOO (ATH-DEV-125)
+#
+# Crea SOLO contactos y pedidos en BORRADOR para reservas nuevas y validas de Smoobu (referencia unica SMOOBU-<id>).
+# Nunca confirma, cancela, modifica pedidos existentes, registra pagos ni factura.
+# Interruptores:
+#   - vars.SYNC_ENABLED == 'true'  -> si no, el job no corre (ni programado ni manual).
+#   - vars.SYNC_KILL == '1'        -> apagado inmediato (se comprueba antes de cada operacion).
+#   - Escritura REAL solo si AUTO_ARMED es true en src/sync-auto-client.mjs Y vars.SYNC_ARM trae la frase; hoy
+#     AUTO_ARMED=false: corre EN SOMBRA (lecturas reales, 0 escrituras). Los interruptores globales de escritura no se
+#     tocan (el conciliador diario exige que sigan en false).
+# Lote: vars.SYNC_MAX_OPS (1..10, por defecto 3). Alertas: anotaciones + fallo del job (GitHub notifica).
+# ============================================================
+name: smoobu-odoo-sync-scheduled
+
+on:
+  schedule:
+    # cada 2 horas, minuto 23 (UTC)
+    - cron: '23 */2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoobu-odoo-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: ${{ vars.SYNC_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # ATH-DEV-028: secretos de Smoobu guardados intercambiados; mismo cruce que diagnose (vigilado por test)
+    env:
+      SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_SECRET }}
+      SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_KEY }}
+    defaults:
+      run:
+        working-directory: integrations/smoobu-odoo-connector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pruebas unitarias (si fallan, no se toca nada)
+        run: npm test
+      - name: Sincronizacion (solo borradores)
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          SYNC_ENABLED: ${{ vars.SYNC_ENABLED }}
+          SYNC_KILL: ${{ vars.SYNC_KILL }}
+          SYNC_MAX_OPS: ${{ vars.SYNC_MAX_OPS }}
+          SYNC_MAX_AMOUNT: ${{ vars.SYNC_MAX_AMOUNT }}
+          SYNC_MAX_NIGHTS: ${{ vars.SYNC_MAX_NIGHTS }}
+          SYNC_ARM: ${{ vars.SYNC_ARM }}
+          SYNC_JOURNAL_PATH: ${{ runner.temp }}/sync-bitacora.jsonl
+          SYNC_LOCK_PATH: ${{ runner.temp }}/sync.lock
+        run: |
+          if [ -n "$SYNC_ARM" ]; then echo "::add-mask::$SYNC_ARM"; fi
+          npm run --silent sync-auto
+      - name: Guardar la bitacora (sin datos personales)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-bitacora-${{ github.run_number }}
+          path: ${{ runner.temp }}/sync-bitacora.jsonl
+          if-no-files-found: ignore
+          retention-days: 30
