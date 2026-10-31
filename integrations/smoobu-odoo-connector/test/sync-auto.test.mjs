@@ -117,13 +117,21 @@ test('tablero: una operacion pendiente o bloqueada sobre un pedido existente no 
   assert.deepEqual(b.rows.slice(0, 3).map((r) => r.cells[0]), ['C', 'C', 'B']);
 });
 
-test('interruptor propio: AUTO_ARMED=false y sin depender de los globales (el conciliador diario exige que sigan en false)', async () => {
+test('interruptor propio: AUTO_ARMED=true (ATH-DEV-134) pero SIN la frase SYNC_ARM no escribe; sin depender de los globales', async () => {
   const { AutoWriteClient, AUTO_ARMED, AUTO_ARM_PHRASE, autoArmedBy } = await import('../src/sync-auto-client.mjs');
-  assert.equal(AUTO_ARMED, false);
+  assert.equal(AUTO_ARMED, true);
   assert.deepEqual([autoArmedBy({ armed: true, arm: AUTO_ARM_PHRASE }), autoArmedBy({ armed: true, arm: 'si' }), autoArmedBy({ armed: false, arm: AUTO_ARM_PHRASE })], [true, false, false]);
   let sent = 0;
-  const c = new AutoWriteClient({ baseUrl: 'https://atheron1.odoo.com', database: 'atheron1', apiKey: 'k', arm: AUTO_ARM_PHRASE, fetchImpl: async () => { sent += 1; return { ok: true, json: async () => [1] }; } });
-  await assert.rejects(c.execute('sale.order', 'create', { vals_list: [{}] }), /SYNC_WRITES_DISABLED/); assert.equal(sent, 0);
+  const fetchImpl = async () => { sent += 1; return { ok: true, json: async () => [1] }; };
+  // sin SYNC_ARM (hoy no existe), con otra frase o contra otro Odoo: ni una peticion
+  for (const opts of [{ arm: null }, { arm: '' }, { arm: 'ACTIVAR' }, { arm: AUTO_ARM_PHRASE.toLowerCase() }]) {
+    const off = new AutoWriteClient({ baseUrl: 'https://atheron1.odoo.com', database: 'atheron1', apiKey: 'k', fetchImpl, ...opts });
+    await assert.rejects(off.execute('sale.order', 'create', { vals_list: [{}] }), /SYNC_WRITES_DISABLED/);
+  }
+  const other = new AutoWriteClient({ baseUrl: 'https://otro.odoo.com', database: 'otro', apiKey: 'k', arm: AUTO_ARM_PHRASE, fetchImpl });
+  await assert.rejects(other.execute('sale.order', 'create', { vals_list: [{}] }), /SYNC_TARGET_NOT_AUTHORIZED/);
+  assert.equal(sent, 0);
+  const c = new AutoWriteClient({ baseUrl: 'https://atheron1.odoo.com', database: 'atheron1', apiKey: 'k', arm: null, fetchImpl });
   c.armed = true; // solo en la prueba: aun armado, nada fuera de crear contacto/pedido/nota
   for (const [m, meth] of [['sale.order', 'action_confirm'], ['sale.order', 'action_cancel'], ['sale.order', 'write'], ['account.payment', 'create']]) await assert.rejects(c.execute(m, meth, { ids: [1] }), /SYNC_WRITE_AUTO_METHOD_FORBIDDEN/);
   assert.equal(sent, 0);

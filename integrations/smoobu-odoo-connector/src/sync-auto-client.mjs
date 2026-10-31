@@ -7,11 +7,11 @@ import { AUTO_METHODS } from './sync-auto.mjs';
 /**
  * ATH-DEV-125 — Cliente de escritura de la SINCRONIZACION PROGRAMADA, con interruptor PROPIO.
  * No usa WRITES_ENABLED/RELEASE_UNLOCKED: esos interruptores globales deben seguir en false porque el conciliador diario
- * (src/daily-run.mjs) se niega a correr si no lo estan. Armado solo si `AUTO_ARMED === true` (constante; hoy false; la cambia
- * un PR de activacion con orden de gerencia) y `arm === AUTO_ARM_PHRASE` (variable SYNC_ARM). Solo crear contacto, crear
+ * (src/daily-run.mjs) se niega a correr si no lo estan. Armado solo si `AUTO_ARMED === true` (constante; ATH-DEV-134 la pone en true
+ * con orden de gerencia) y `arm === AUTO_ARM_PHRASE` (variable SYNC_ARM). Solo crear contacto, crear
  * pedido y nota interna (ademas de la lista blanca general); destino atheron1.
  */
-export const AUTO_ARMED = false;
+export const AUTO_ARMED = true; // ATH-DEV-134: activacion controlada; sin la variable SYNC_ARM sigue sin escribir
 export const AUTO_ARM_PHRASE = 'ACTIVAR SINCRONIZACION PROGRAMADA SMOOBU ODOO SOLO BORRADORES';
 export const autoArmedBy = ({ armed, arm }) => armed === true && arm === AUTO_ARM_PHRASE;
 
