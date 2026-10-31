@@ -88,10 +88,12 @@ export function buildOccupancyBoard({ report, plan, from, nights = 14 }) {
   const days = Array.from({ length: nights }, (_, i) => addDays(from, i));
   const grid = Object.fromEntries(CASA_UNITS.map((u) => [u, days.map(() => ({ code: CELL.LIBRE, casa: false }))]));
   const opBy = new Map((plan?.ops ?? []).map((o) => [o.smoobuId, o]));
+  // el codigo refleja la OCUPACION (veredicto); una operacion pendiente o bloqueada sobre un pedido existente (rellenar
+  // datos, pedido facturado) no cambia su ocupacion. Solo una reserva SIN pedido usa el estado de su creacion.
   const codeFor = (r) => {
     const op = opBy.get(r.smoobuId);
-    if (r.verdict === 'CONFLICT' || r.verdict === 'AMBIGUOUS' || op?.status === STATUS.BLOQUEADO) return CELL.CONFLICTO;
-    if (r.verdict === 'MISSING_IN_ODOO' || op?.status === STATUS.REQUIERE_APROBACION) return CELL.PENDIENTE;
+    if (r.verdict === 'CONFLICT' || r.verdict === 'AMBIGUOUS') return CELL.CONFLICTO;
+    if (r.verdict === 'MISSING_IN_ODOO') return op?.status === STATUS.BLOQUEADO ? CELL.CONFLICTO : CELL.PENDIENTE;
     if (r.verdict === 'MATCH_DRAFT') return CELL.BORRADOR;
     if (r.verdict === 'MATCH' || r.verdict === 'ROOM_MOVED' || r.verdict === 'DAYUSE_OK') return CELL.CONFIRMADA;
     return null;

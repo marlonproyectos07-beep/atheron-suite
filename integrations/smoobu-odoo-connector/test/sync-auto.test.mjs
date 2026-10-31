@@ -94,3 +94,14 @@ test('workflow programado: cron + manual, guardado por SYNC_ENABLED, solo lectur
   const diag = readFileSync(new URL('../../../.github/workflows/smoobu-odoo-diagnose.yml', import.meta.url), 'utf8');
   assert.match(diag.slice(diag.indexOf("inputs.mode == 'sync-auto-shadow'")).slice(0, 500), /SYNC_SHADOW: '1'/);
 });
+
+test('tablero: una operacion pendiente o bloqueada sobre un pedido existente no cambia su ocupacion (caso real 30/10)', () => {
+  const report = { perReservation: [
+    { smoobuId: 11, unit: '201', arrival: '2026-11-05', departure: '2026-11-06', smoobuStatus: 'ACTIVE', verdict: 'MATCH' }, // relleno pendiente
+    { smoobuId: 12, unit: '202', arrival: '2026-11-05', departure: '2026-11-06', smoobuStatus: 'ACTIVE', verdict: 'MATCH' }, // facturado: relleno bloqueado
+    { smoobuId: 13, unit: '203', arrival: '2026-11-05', departure: '2026-11-06', smoobuStatus: 'ACTIVE', verdict: 'MATCH_DRAFT' }, // borrador con aprobacion pendiente
+  ] };
+  const plan = { ops: [{ smoobuId: 11, status: STATUS.REQUIERE_APROBACION }, { smoobuId: 12, status: STATUS.BLOQUEADO }, { smoobuId: 13, status: STATUS.REQUIERE_APROBACION }] };
+  const b = buildOccupancyBoard({ report, plan, from: '2026-11-05', nights: 1 });
+  assert.deepEqual(b.rows.slice(0, 3).map((r) => r.cells[0]), ['C', 'C', 'B']);
+});
