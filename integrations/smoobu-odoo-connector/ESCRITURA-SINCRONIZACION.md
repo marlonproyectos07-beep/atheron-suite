@@ -131,3 +131,27 @@ Odoo (lectura)┘                                                       │
   cada vez desde Odoo; el pedido se identifica por `SMOOBU-<id>` en `x_pms_reference` (se revalida justo antes de crear)
   y el contacto por `ref = SMOOBU-<id>`. Un corte entre escrituras nunca duplica: deja el contacto sin pedido, lo que activa
   el cerrojo de Odoo hasta revision humana.
+
+## Reservas de Booking por el TOTAL del huesped (ATH-DEV-137, `src/booking-amounts.mjs`)
+
+Regla autorizada por gerencia: el pedido interno de una reserva de Booking se registra por el **total aceptado por el
+huesped** (tarifa base + impuestos que muestra Booking), **sin** impuesto de Odoo encima (no se duplica el IVA). La
+facturacion electronica sigue siendo manual y con autorizacion de gerencia.
+
+- Fuente: `GET /api/reservations/<id>` (`price` = tarifa base) y `GET /api/reservations/<id>/price-elements`.
+- Total fiable solo si: todo en COP; tipos `basePrice` + `addon` de impuesto (IVA/VAT/impuesto/tax); cantidad vacia o 1;
+  suma de tarifas = `price`; impuestos todos adicionales o todos incluidos. Si no: `BLOQUEADO TOTAL_NO_FIABLE` + motivo.
+  Nunca se calcula un 19 % propio.
+- Modos: ADICIONAL (total = tarifa + impuesto), INCLUIDO (total = tarifa), SIN_IMPUESTO (total = tarifa).
+- Linea: `price_unit = x_precio_manual = total`, `tax_ids` vacio. Nota interna: tarifa, impuestos, modo, total y comision
+  (la comision NUNCA entra en el total; si Smoobu no la da: "no disponible").
+- Antes de escribir se vuelve a leer el desglose: si cambio, `IMPORTES_CAMBIARON_EN_SMOOBU` -> parada y bloqueo.
+- Directas y Airbnb: sin cambios (precio de Smoobu, impuesto pendiente del contador).
+- Correccion de COT/2026/03848 (`src/booking-correction.mjs`): SOLO planificada y simulada (modo diagnose
+  `booking-correction-dry`). Ejecutarla exige PR aparte y autorizacion especifica; la lista blanca general sigue prohibiendo
+  cambiar `price_unit` en pedidos existentes.
+- Conciliador (ATH-DEV-138): para Booking con desglose fiable compara el TOTAL del huesped con el total del pedido
+  (`PRICE_DIFF` solo si no coinciden; la comision nunca cuenta). `TAX_MISSING` se sustituye por `REVISION_TRIBUTARIA`
+  (IVA del canal dentro del total sin impuesto de Odoo: decision del contador al facturar). Nuevos: `IVA_DUPLICADO` y
+  `TOTAL_NO_FIABLE` (desglose no fiable: se aplican las reglas antiguas). Directas y Airbnb sin cambios. El desglose
+  (base, impuestos, comision) se guarda aparte en el informe interno; el publico solo lleva codigos.

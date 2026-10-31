@@ -32,9 +32,17 @@ import { isOverbookingType } from './overbooking-watch.mjs';
  *  TAX_MISSING       reserva de Booking.com (que cobra IVA) con pedido sin impuesto.
  *  INVOICE_DIFF      las facturas publicadas del pedido no suman el total del pedido.
  *  MANUAL_PRICE_DIFF una linea tiene "Precio Manual (fijo)" distinto de su precio unitario.
+ * ATH-DEV-138 — Booking con total FIABLE de Smoobu (`bookingAmounts`: tarifa + impuestos del canal; comision aparte):
+ *  PRICE_DIFF        el TOTAL del huesped no coincide con el total del pedido (la comision nunca cuenta).
+ *  REVISION_TRIBUTARIA el total incluye el IVA del canal pero el pedido no tiene impuesto de Odoo: la factura (manual)
+ *                    necesita la decision del contador. Sustituye a TAX_MISSING para estas reservas.
+ *  IVA_DUPLICADO     la base del pedido ya es el total del huesped y ademas lleva impuesto de Odoo.
+ *  TOTAL_NO_FIABLE   se intento leer el desglose y no es fiable: se aplican las reglas antiguas (base) y se avisa.
+ *  Sin `bookingAmounts` para la reserva (o reservas directas/Airbnb): reglas antiguas sin cambios.
  */
 export const VERDICTS = Object.freeze({ MATCH: 'MATCH', MATCH_DRAFT: 'MATCH_DRAFT', DAYUSE_OK: 'DAYUSE_OK', ROOM_MOVED: 'ROOM_MOVED', MISSING_IN_ODOO: 'MISSING_IN_ODOO', CONFLICT: 'CONFLICT', CANCELLED: 'CANCELLED', AMBIGUOUS: 'AMBIGUOUS' });
-export const ALERTS = Object.freeze({ PRICE_DIFF: 'PRICE_DIFF', TAX_MISSING: 'TAX_MISSING', INVOICE_DIFF: 'INVOICE_DIFF', MANUAL_PRICE_DIFF: 'MANUAL_PRICE_DIFF' });
+export const ALERTS = Object.freeze({ PRICE_DIFF: 'PRICE_DIFF', TAX_MISSING: 'TAX_MISSING', INVOICE_DIFF: 'INVOICE_DIFF', MANUAL_PRICE_DIFF: 'MANUAL_PRICE_DIFF',
+  REVISION_TRIBUTARIA: 'REVISION_TRIBUTARIA', IVA_DUPLICADO: 'IVA_DUPLICADO', TOTAL_NO_FIABLE: 'TOTAL_NO_FIABLE' });
 const BOOKING_CHANNEL_ID = 7208046;
 const CONFIRMED_STATES = new Set(['sale', 'done']);
 const AMOUNT_TOLERANCE = 1; // COP
@@ -82,12 +90,21 @@ function dayuseSlotFor(dayuseSlots, smoobuId, arrival) {
 }
 
 /** Avisos de importes de un pedido emparejado. Solo codigos. */
-function amountAlerts(c, o, rawBooking) {
+function amountAlerts(c, o, rawBooking, amounts = null) {
   const alerts = [];
   const smoobuPrice = num(rawBooking?.price);
   const untaxed = num(o.amount_untaxed); const total = num(o.amount_total); const tax = num(o.amount_tax);
-  if (smoobuPrice != null && smoobuPrice > 0 && (untaxed != null || total != null) && !near(smoobuPrice, untaxed) && !near(smoobuPrice, total)) alerts.push(ALERTS.PRICE_DIFF);
-  if (c.channelId === BOOKING_CHANNEL_ID && tax != null && tax === 0) alerts.push(ALERTS.TAX_MISSING);
+  const booking = c.channelId === BOOKING_CHANNEL_ID;
+  if (booking && amounts?.ok) {
+    // ATH-DEV-138: total del huesped (tarifa + impuestos del canal) contra el total comercial del pedido
+    if (!near(amounts.total, total)) alerts.push(ALERTS.PRICE_DIFF);
+    if (amounts.tax > 0 && tax === 0) alerts.push(ALERTS.REVISION_TRIBUTARIA);
+    if (amounts.tax > 0 && tax > 0 && near(untaxed, amounts.total)) alerts.push(ALERTS.IVA_DUPLICADO);
+  } else {
+    if (booking && amounts && !amounts.ok) alerts.push(ALERTS.TOTAL_NO_FIABLE);
+    if (smoobuPrice != null && smoobuPrice > 0 && (untaxed != null || total != null) && !near(smoobuPrice, untaxed) && !near(smoobuPrice, total)) alerts.push(ALERTS.PRICE_DIFF);
+    if (booking && tax != null && tax === 0) alerts.push(ALERTS.TAX_MISSING);
+  }
   const posted = (o.invoices ?? []).filter((i) => i.state === 'posted');
   if (posted.length && total != null) {
     const invoiced = posted.reduce((acc, i) => acc + (i.move_type === 'out_refund' ? -1 : 1) * (num(i.amount_total) ?? 0), 0);
@@ -119,7 +136,7 @@ export function smoobuOverlaps(stays) {
  * @param {object[]} p.slots     planning.slot leidos
  * @param {object[]} [p.dayuseSlots] turnos cuya nota empieza por DAYUSE (cualquier rol); solo se usan en memoria
  */
-export function reconcileByIds({ bookings, window, orders, slots, dayuseSlots = [], manualReviewIds = MANUAL_REVIEW_IDS }) {
+export function reconcileByIds({ bookings, window, orders, slots, dayuseSlots = [], manualReviewIds = MANUAL_REVIEW_IDS, bookingAmounts = new Map() }) {
   const parsedOrders = orders.map((o) => ({ ...o, refs: parseReferences(o.x_pms_reference) }));
   const rawById = new Map(bookings.map((b) => [Number(b?.id), b]));
   const classified = bookings.map((b) => {
@@ -190,7 +207,9 @@ export function reconcileByIds({ bookings, window, orders, slots, dayuseSlots = 
       if (otaRefsInOrder.length > 1) return verdict(VERDICTS.AMBIGUOUS, 'PEDIDO_REFERENCIA_VARIAS_RESERVAS', extra);
       if (c.otaRef && otaRefsInOrder.length && !otaRefsInOrder.includes(c.otaRef)) return verdict(VERDICTS.CONFLICT, 'ID_OTA_DISTINTO_EN_EL_PEDIDO', extra);
       if (isCancelledOrder(o)) return verdict(VERDICTS.CONFLICT, 'VIGENTE_EN_SMOOBU_CANCELADA_EN_ODOO', extra);
-      extra.alerts = amountAlerts(c, o, rawById.get(c.id));
+      extra.alerts = amountAlerts(c, o, rawById.get(c.id), bookingAmounts.get(c.id) ?? null);
+      // desglose de Booking por separado (uso interno; el informe publico no imprime importes)
+      if (bookingAmounts.get(c.id)?.ok) extra.bookingAmounts = bookingAmounts.get(c.id);
       if (!o.units?.length) return verdict(VERDICTS.AMBIGUOUS, 'HABITACION_DEL_PEDIDO_DESCONOCIDA', extra);
       if (o.units.length > 1) return verdict(VERDICTS.AMBIGUOUS, 'PEDIDO_CON_VARIAS_HABITACIONES', extra);
       const confirmed = CONFIRMED_STATES.has(o.state);

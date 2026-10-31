@@ -106,7 +106,7 @@ test('resumen y conteos de avisos incluyen todos los codigos; seguridad intacta'
   const r = reconcileByIds({ bookings: [b], window, orders: [order(7, 'SMOOBU-170100007', '202', '2026-10-31', '2026-11-02', { state: 'draft', amount_untaxed: 85000, amount_total: 85000 })], slots: [] });
   assert.deepEqual(Object.keys(r.summary), ['MATCH', 'MATCH_DRAFT', 'DAYUSE_OK', 'ROOM_MOVED', 'MISSING_IN_ODOO', 'CONFLICT', 'CANCELLED', 'AMBIGUOUS']);
   assert.equal(r.summary.MATCH_DRAFT, 1);
-  assert.deepEqual(r.alertCounts, { PRICE_DIFF: 1, TAX_MISSING: 0, INVOICE_DIFF: 0, MANUAL_PRICE_DIFF: 0 });
+  assert.deepEqual(r.alertCounts, { PRICE_DIFF: 1, TAX_MISSING: 0, INVOICE_DIFF: 0, MANUAL_PRICE_DIFF: 0, REVISION_TRIBUTARIA: 0, IVA_DUPLICADO: 0, TOTAL_NO_FIABLE: 0 });
   assert.deepEqual([r.safety.writesEnabled, r.safety.releaseUnlocked, WRITES_ENABLED, RELEASE_UNLOCKED], [false, false, false, false]);
 });
 
@@ -118,7 +118,7 @@ test('informe publico: solo codigos de aviso; nunca importes, notas DAYUSE, refe
   assert.deepEqual([internal.perReservation[0].verdict, internal.perReservation[0].alerts], ['DAYUSE_OK', ['PRICE_DIFF']]);
   const pub = toPublicReport(internal); const text = JSON.stringify(pub);
   assert.deepEqual(pub.perReservation[0].alerts, ['PRICE_DIFF']);
-  assert.deepEqual(pub.alertCounts, { PRICE_DIFF: 1, TAX_MISSING: 0, INVOICE_DIFF: 0, MANUAL_PRICE_DIFF: 0 });
+  assert.deepEqual(pub.alertCounts, { PRICE_DIFF: 1, TAX_MISSING: 0, INVOICE_DIFF: 0, MANUAL_PRICE_DIFF: 0, REVISION_TRIBUTARIA: 0, IVA_DUPLICADO: 0, TOTAL_NO_FIABLE: 0 });
   for (const banned of ['170100008', '123457', '100000', 'DAYUSE SMOOBU', 'NOTA_PRIVADA', 'COT/T', 'Nequi', '0000000000', 'NOMBRE_PRIVADO']) assert.ok(!text.includes(banned), banned);
   assert.equal(assertPublicSafe(text, { identifiers: sensitiveValues(internal) }).safe, true);
 });

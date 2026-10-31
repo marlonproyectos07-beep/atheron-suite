@@ -29,7 +29,7 @@ on:
         required: false
         default: 'full'
         type: choice
-        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reconcile-daily, sync-dryrun, sync-shadow, sync-semiauto, sync-pilot-dry, sync-auto-shadow, reservation-once, odoo-auth-readonly, credential-shape, credential-swap]
+        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reconcile-daily, sync-dryrun, sync-shadow, sync-semiauto, sync-pilot-dry, sync-auto-shadow, booking-correction-dry, reservation-once, odoo-auth-readonly, credential-shape, credential-swap]
       from:
         description: 'reconcile-window / reconcile-ids: primera noche YYYY-MM-DD (vacio = ventana historica 26..27 oct)'
         required: false
@@ -175,6 +175,14 @@ jobs:
           # siempre en sombra desde diagnose
           SYNC_SHADOW: '1'
         run: npm run --silent sync-auto
+      - name: Simulacion de la correccion de COT/2026/03848 al total de Booking, solo lectura (ATH-DEV-137)
+        if: ${{ inputs.mode == 'booking-correction-dry' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+        run: npm run --silent booking-correction-dry
       - name: Lectura individual de una reserva Smoobu, UNA solicitud GET (ATH-DEV-052)
         if: ${{ inputs.mode == 'reservation-once' }}
         env:

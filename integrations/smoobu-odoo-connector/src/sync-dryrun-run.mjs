@@ -3,6 +3,7 @@ import { readSmoobuWindow, readOdooWindow } from './reconcile-ids-run.mjs';
 import { reconcileByIds, VERDICTS } from './id-reconcile.mjs';
 import { readWatchlist } from './overbooking-watch.mjs';
 import { planSync } from './sync-intent.mjs';
+import { readBookingAmounts } from './booking-amounts-read.mjs';
 import { WRITES_ENABLED } from './live-reconcile.mjs';
 import { RELEASE_UNLOCKED } from './odoo-facts.mjs';
 
@@ -12,6 +13,7 @@ import { RELEASE_UNLOCKED } from './odoo-facts.mjs';
  * lecturas extra solo para los pedidos que el plan necesita evaluar. No existe aqui ningun camino de escritura.
  */
 export const EXTRA_LIMITS = Object.freeze({ orders: 500, lines: 2000, payments: 2000 });
+export { readBookingAmounts, PRICE_ELEMENT_READS } from './booking-amounts-read.mjs';
 const m2oId = (v) => (Array.isArray(v) ? v[0] : (v ?? null));
 
 export async function readSyncExtras(odoo, { orderIds, cancelOrderIds = [] }, limits = EXTRA_LIMITS) {
@@ -54,7 +56,10 @@ export async function runSyncDryRun({ smoobu, odoo, window, today, watchIds = []
   if (!s.complete) throw new ConnectorError('SMOOBU_INCOMPLETE_READ');
   const watch = await readWatchlist(smoobu, watchIds, { listed: new Map(s.bookings.map((b) => [Number(b?.id), b])) });
   const o = await readOdooWindow(odoo, window);
-  const report = reconcileByIds({ bookings: s.bookings, window, orders: o.orders, slots: o.slots, dayuseSlots: o.dayuseSlots });
+  const first = reconcileByIds({ bookings: s.bookings, window, orders: o.orders, slots: o.slots, dayuseSlots: o.dayuseSlots });
+  // ATH-DEV-137/138: desglose de Booking y SEGUNDA pasada del conciliador (pura) con el total del huesped
+  const booking = await readBookingAmounts(smoobu, first, s.bookings);
+  const report = reconcileByIds({ bookings: s.bookings, window, orders: o.orders, slots: o.slots, dayuseSlots: o.dayuseSlots, bookingAmounts: booking.amounts });
   // las alertas de la vigilancia de sobreventas cuentan como revision manual
   const alerted = new Set((watch.entries ?? []).filter((e) => e.status === 'OVERBOOKING_ALERT').map((e) => e.smoobuId));
   for (const r of report.perReservation) if (alerted.has(r.smoobuId)) r.manualReview = r.manualReview ?? 'ALERTA_SOBREVENTA_VIGILANCIA';
@@ -62,11 +67,11 @@ export async function runSyncDryRun({ smoobu, odoo, window, today, watchIds = []
   const cancelOrderIds = report.perReservation.filter((r) => r.verdict === VERDICTS.CONFLICT && r.reason === 'CANCELADA_EN_SMOOBU_VIGENTE_EN_ODOO').flatMap((r) => (r.odooOrders ?? []).map((x) => x.id));
   const extras = await readSyncExtras(odoo, { orderIds, cancelOrderIds });
   const watchAlerts = (watch.entries ?? []).filter((e) => e.status === 'OVERBOOKING_ALERT');
-  const plan = planSync({ report, bookings: s.bookings, orders: o.orders, extras, today, slots: o.slots, watchAlerts });
+  const plan = planSync({ report, bookings: s.bookings, orders: o.orders, extras, today, slots: o.slots, watchAlerts, amounts: booking.amounts });
   return {
     plan, report,
     // ATH-DEV-134: sobreventas vigiladas (registros 'overbooking' de Smoobu, no son reservas del plan): solo para avisar
     watchAlerts: watchAlerts.map((e) => ({ smoobuId: e.smoobuId, unit: e.unit, arrival: e.arrival, departure: e.departure })),
-    reads: { smoobu: { requests: s.requests + watch.requests, recordsRead: s.bookings.length }, odoo: { calls: o.calls + extras.calls, methods: ['fields_get', 'search_read'], writes: 0 } },
+    reads: { smoobu: { requests: s.requests + watch.requests + booking.requests, recordsRead: s.bookings.length }, odoo: { calls: o.calls + extras.calls, methods: ['fields_get', 'search_read'], writes: 0 } },
   };
 }

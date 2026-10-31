@@ -70,4 +70,11 @@ export class SmoobuClient {
     if (!Number.isInteger(Number(id))) throw new ConnectorError('SMOOBU_INVALID_ID');
     return this.get(`/reservations/${Number(id)}`);
   }
+
+  /** ATH-DEV-137: elementos de precio de una reserva (tarifa base, impuestos, extras). Solo GET. */
+  async getPriceElements(id) {
+    if (!Number.isInteger(Number(id))) throw new ConnectorError('SMOOBU_INVALID_ID');
+    const r = await this.get(`/reservations/${Number(id)}/price-elements`);
+    return Array.isArray(r?.priceElements) ? r.priceElements : null;
+  }
 }

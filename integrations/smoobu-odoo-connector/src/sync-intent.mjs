@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { BOOKING_SOURCE, planAmounts } from './booking-amounts.mjs';
 import { VERDICTS } from './id-reconcile.mjs';
 import { parseReferences, normalizeOtaRef } from './reference-parse.mjs';
 import { addDays } from './window.mjs';
@@ -42,6 +43,8 @@ export const GUARDS = Object.freeze({
   USO_DIURNO: 'USO_DIURNO', DATOS_EXTRA_FALTANTES: 'DATOS_EXTRA_FALTANTES', PEDIDO_SIN_RESERVA_EN_SMOOBU: 'PEDIDO_SIN_RESERVA_EN_SMOOBU',
   VARIAS_LINEAS: 'VARIAS_LINEAS', CASA_MINIMO_10_PERSONAS: 'CASA_MINIMO_10_PERSONAS', PERSONAS_DESCONOCIDAS: 'PERSONAS_DESCONOCIDAS',
   NOMBRE_NO_IDENTIFICABLE: 'NOMBRE_NO_IDENTIFICABLE',
+  // ATH-DEV-137: reserva de Booking sin un total fiable en Smoobu (no se calcula ni se inventa)
+  TOTAL_NO_FIABLE: 'TOTAL_NO_FIABLE',
 });
 
 /** Producto de habitacion en Odoo (product.product) por unidad. Casa Completa no tiene producto de venta confirmado: se bloquea. */
@@ -81,7 +84,7 @@ export function referenceFor({ smoobuId, source, otaRef }) {
 export const opKey = (smoobuId, op, payload) => createHash('sha256').update(JSON.stringify([smoobuId, op, payload ?? null])).digest('hex').slice(0, 16);
 
 /** Valores exactos de un pedido NUEVO (borrador). Puro; no incluye impuestos mientras la politica este pendiente. */
-export function buildCreatePayload({ smoobuId, unit, arrival, departure, source, otaRef, price, guest, persons = null }) {
+export function buildCreatePayload({ smoobuId, unit, arrival, departure, source, otaRef, price, guest, persons = null, amounts = null }) {
   const line = { product_id: unit === 'CASA' ? CASA_PRODUCT : PRODUCT_BY_UNIT[unit], product_uom_qty: 1, price_unit: price, x_precio_manual: price, tax_ids: [] };
   if (unit === 'CASA') line.x_personas = persons;
   const lines = [line];
@@ -94,6 +97,8 @@ export function buildCreatePayload({ smoobuId, unit, arrival, departure, source,
     },
     lines,
     state: 'draft',
+    // ATH-DEV-137: desglose de Booking (tarifa, impuestos, total, comision); solo trazabilidad, no se envia como campo
+    ...(amounts ? { amounts } : {}),
   };
 }
 
@@ -106,7 +111,7 @@ export function buildCreatePayload({ smoobuId, unit, arrival, departure, source,
  * @param {string}  p.today     fecha de hoy en Bogota (YYYY-MM-DD)
  * @param {object[]} [p.slots]  turnos de la ventana (para comprobar noches libres en cambios de fecha)
  */
-export function planSync({ report, bookings, orders, extras, today, slots = [], taxPolicy = TAX_POLICY, watchAlerts = [] }) {
+export function planSync({ report, bookings, orders, extras, today, slots = [], taxPolicy = TAX_POLICY, watchAlerts = [], amounts = new Map() }) {
   const watched = watchAlerts.filter((w) => w && w.unit && w.arrival && w.departure);
   const clashesWatch = (r) => watched.some((w) => w.smoobuId !== r.smoobuId && (w.unit === r.unit || conflictsWith(w.unit).includes(r.unit)) && r.arrival < w.departure && w.arrival < r.departure);
   const raw = new Map(bookings.map((b) => [Number(b?.id), b]));
@@ -122,6 +127,10 @@ export function planSync({ report, bookings, orders, extras, today, slots = [], 
     const b = raw.get(r.smoobuId) ?? {};
     const source = SOURCE_BY_CHANNEL[r.channelId] ?? null;
     const price = num(b.price);
+    // ATH-DEV-137: Booking se registra por el TOTAL aceptado por el huesped (tarifa + impuestos de Booking), si es fiable
+    const isBooking = source === BOOKING_SOURCE;
+    const amt = isBooking ? amounts.get(r.smoobuId) ?? null : null;
+    const expected = amt?.ok ? amt.total : null;
     const risky = [];
     if ((r.overbookingWith ?? []).length) risky.push(GUARDS.SOBREVENTA);
     if (r.manualReview) risky.push(GUARDS.REVISION_MANUAL);
@@ -149,10 +158,12 @@ export function planSync({ report, bookings, orders, extras, today, slots = [], 
         if (!assessGuestName(b['guest-name']).ok) guards.push(GUARDS.NOMBRE_NO_IDENTIFICABLE);
         if (!source) guards.push(GUARDS.CANAL_DESCONOCIDO);
         if (price == null || price <= 0) guards.push(GUARDS.PRECIO_FALTANTE);
+        if (isBooking && !amt?.ok) guards.push(GUARDS.TOTAL_NO_FIABLE, ...(amt?.block ? [amt.block] : []));
         if (r.odooOccupancy !== 'NONE') guards.push(GUARDS.NOCHES_OCUPADAS);
         if (guards.length) { add(r, OPS.BLOCKED, STATUS.BLOQUEADO, { guards }); break; }
         const otaRef = normalizeOtaRef(b['reference-id']) ?? r.otaRef ?? null;
-        const payload = buildCreatePayload({ smoobuId: r.smoobuId, unit: r.unit, arrival: r.arrival, departure: r.departure, source, otaRef, price, persons,
+        const payload = buildCreatePayload({ smoobuId: r.smoobuId, unit: r.unit, arrival: r.arrival, departure: r.departure, source, otaRef, persons,
+          price: isBooking ? amt.total : price, amounts: isBooking ? planAmounts(amt) : null,
           guest: { name: b['guest-name'] ?? null, email: b.email ?? null, phone: b.phone ?? null } });
         add(r, OPS.CREATE_ORDER, STATUS.LISTO, {
           changes: ['partner', ...Object.keys(payload.order), ...Object.keys(payload.lines[0]).map((k) => `line.${k}`)], payload,
@@ -172,7 +183,7 @@ export function planSync({ report, bookings, orders, extras, today, slots = [], 
         const lines = (o.lineIds ?? []).map((id) => extras.lineInfo?.get(id)).filter(Boolean);
         if (lines.length !== 1) guards.push(GUARDS.VARIAS_LINEAS);
         const total = num(o.amount_total); const untaxed = num(o.amount_untaxed);
-        if (price != null && price > 0 && !near(price, total) && !near(price, untaxed)) guards.push(GUARDS.TARIFA_DISTINTA);
+        if (price != null && price > 0 && !near(price, total) && !near(price, untaxed) && !near(expected, total)) guards.push(GUARDS.TARIFA_DISTINTA);
         // relleno de datos que faltan, sin tocar precio_unit, fechas ni habitacion
         const fill = {};
         const ref = referenceFor({ smoobuId: r.smoobuId, source, otaRef: r.otaRef });
@@ -181,7 +192,7 @@ export function planSync({ report, bookings, orders, extras, today, slots = [], 
         if (!info.x_booking_source && source) fill.x_booking_source = source;
         if (!info.rental_start_date) fill.rental_start_date = `${r.arrival} ${CHECKIN_UTC}`;
         if (!info.rental_return_date) fill.rental_return_date = `${r.departure} ${CHECKOUT_UTC}`;
-        const lineFill = lines.length === 1 && !(num(lines[0].x_precio_manual) > 0) && near(num(lines[0].price_unit), price) ? { lineId: lines[0].id, x_precio_manual: num(lines[0].price_unit) } : null;
+        const lineFill = lines.length === 1 && !(num(lines[0].x_precio_manual) > 0) && (near(num(lines[0].price_unit), price) || near(num(lines[0].price_unit), expected)) ? { lineId: lines[0].id, x_precio_manual: num(lines[0].price_unit) } : null;
         const blockingForFill = guards.filter((g) => g !== GUARDS.IMPUESTO_PENDIENTE);
         if (r.verdict === VERDICTS.MATCH_DRAFT && r.reason === 'CONFIRMADO_SIN_TURNO') { add(r, OPS.BLOCKED, STATUS.BLOQUEADO, { guards: [GUARDS.SIN_TURNO, ...guards], orderId: o.id }); break; }
         if (Object.keys(fill).length || lineFill) {
