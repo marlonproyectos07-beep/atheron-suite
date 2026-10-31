@@ -9,7 +9,11 @@
 #   - Escritura REAL solo si AUTO_ARMED es true en src/sync-auto-client.mjs Y vars.SYNC_ARM trae la frase; hoy
 #     AUTO_ARMED=false: corre EN SOMBRA (lecturas reales, 0 escrituras). Los interruptores globales de escritura no se
 #     tocan (el conciliador diario exige que sigan en false).
-# Lote: vars.SYNC_MAX_OPS (1..10, por defecto 3). Alertas: anotaciones + fallo del job (GitHub notifica).
+# Lote: 1 reserva por ejecucion (tope fijo de fase) y como mucho 3 por dia de Bogota (cupo PERSISTENTE leido de Odoo).
+# Alertas: anotaciones + fallo del job (GitHub notifica).
+# ATH-DEV-129 APAGADO AUTOMATICO: si `sync` no termina bien (error, duplicado, cambio inesperado, escritura parcial,
+#   pruebas fallidas, tiempo agotado o cancelacion), el job `apagado` DESHABILITA este workflow. Queda deshabilitado
+#   hasta que una persona lo revise y lo vuelva a habilitar (Actions > este workflow > Enable workflow).
 # ============================================================
 name: smoobu-odoo-sync-scheduled
 
@@ -70,3 +74,23 @@ jobs:
           path: ${{ runner.temp }}/sync-bitacora.jsonl
           if-no-files-found: ignore
           retention-days: 30
+
+  # ATH-DEV-129: unico job con un permiso de escritura, y solo sobre Actions (deshabilitar ESTE workflow). No lee
+  # secretos, no hace checkout, no toca Odoo ni Smoobu.
+  apagado:
+    needs: sync
+    if: ${{ always() && vars.SYNC_ENABLED == 'true' && needs.sync.result != 'success' && needs.sync.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Apagado automatico (deshabilita este workflow)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RESULTADO: ${{ needs.sync.result }}
+        run: |
+          gh workflow disable smoobu-odoo-sync-scheduled.yml
+          echo "::error::Sincronizacion APAGADA automaticamente (resultado: $RESULTADO). Revisar y volver a habilitar a mano."
+          echo "### Sincronizacion APAGADA automaticamente (resultado: $RESULTADO). Revisar el job sync antes de volver a habilitar." >> "$GITHUB_STEP_SUMMARY"

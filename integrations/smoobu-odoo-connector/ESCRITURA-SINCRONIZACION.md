@@ -99,3 +99,20 @@ Odoo (lectura)┘                                                       │
 - Si la clave pertenece a un administrador (hoy la unica clave es del gerente), exige una segunda aprobacion ligada a la
   operacion: `APROBADO-ADMIN-SMOOBU-<id>-<clave>`. Si no se puede comprobar el grupo, se trata como administrador.
 - Sigue sin poder escribir: necesita ademas las tres llaves del cliente real (PR de activacion aparte).
+
+## Estabilidad de la sincronizacion programada (ATH-DEV-129, `src/sync-auto.mjs`)
+
+- **Cupo diario persistente**: como mucho 3 reservas nuevas por dia de Bogota y 1 por ejecucion. El contador se LEE de
+  Odoo en cada ejecucion (notas internas `ATH-SYNC | clave ... | CREATE_ORDER` desde las 05:00 UTC), asi que no se
+  reinicia entre ejecuciones ni tras reinicios de GitHub Actions. Si no se puede leer completo, no se escribe y se apaga.
+  Cupo agotado = parada normal (`CUPO_DIARIO_AGOTADO`), no apaga.
+- **Apagado automatico**: si el job `sync` no termina bien, el job `apagado` (unico con permiso, `actions: write`) ejecuta
+  `gh workflow disable` sobre este mismo workflow. Queda deshabilitado hasta que una persona lo revise y lo habilite.
+  Motivos (`shutdownReason`): error de lectura/configuracion/pruebas, escritura parcial (`FALLO_PARCIAL`), resultado
+  ambiguo, verificacion fallida, rechazo de Odoo, duplicados (en Odoo o al revalidar: `DUPLICADO_DETECTADO`), cambio
+  inesperado entre el plan y la escritura (precio, fechas, habitacion, canal, huesped, estado, noches: `CAMBIO_INESPERADO`),
+  privacidad. No apagan: identidad dudosa del contacto (queda para una persona y no consume el cupo), conflictos ya
+  conocidos del conciliador (pedido facturado, sobreventa: se avisan), cupo agotado, `SYNC_KILL=1`.
+- **Idempotencia entre ejecuciones**: no depende de la bitacora (que es temporal por ejecucion). El plan se recalcula
+  cada vez desde Odoo; el pedido se identifica por `SMOOBU-<id>` en `x_pms_reference` (se revalida justo antes de crear)
+  y el contacto por `ref = SMOOBU-<id>`, de modo que un corte entre escrituras reutiliza el contacto y nunca duplica.
