@@ -5,6 +5,7 @@ import { applyPlan } from './sync-apply.mjs';
 import { validateWrite } from './sync-write-guard.mjs';
 import { addDays } from './window.mjs';
 import { maskSmoobu } from './public-report.mjs';
+import { auditSyncWrites } from './sync-latch.mjs';
 
 /**
  * ATH-DEV-125 — SINCRONIZACION PROGRAMADA (incremental por referencia unica de Smoobu).
@@ -14,6 +15,10 @@ import { maskSmoobu } from './public-report.mjs';
  *  - Nunca: confirmar, cancelar, modificar pedidos existentes, pagos, facturas (escritor restringido + lista blanca).
  *  - Lote: SYNC_MAX_OPS (1..10), recortado al tope de la fase actual AUTO_PHASE_MAX_OPS (hoy 1) por ejecucion.
  *  - Apagado: sin SYNC_ENABLED=true no arranca; SYNC_KILL=1 lo detiene antes de cada operacion.
+ *  - ATH-DEV-129: cupo diario persistente (3/dia, leido de Odoo) y apagado automatico (shutdownReason) ante errores,
+ *    duplicados, cambios inesperados o escrituras parciales.
+ *  - ATH-DEV-130: el apagado NO deshabilita el workflow: bloquea la ESCRITURA de forma persistente (src/sync-latch.mjs) y la
+ *    vigilancia en sombra sigue corriendo. Solo gerencia lo desbloquea.
  *  - Los borradores NO crean turnos en Planning (Odoo los crea al confirmar, automatizacion 151): el tablero de ocupacion
  *    de este modulo muestra las cinco habitaciones fisicas con lo confirmado, los borradores y lo pendiente.
  */
@@ -22,6 +27,41 @@ export const AUTO_MAX_OPS_CAP = 10;
 /** ATH-DEV-128 — Tope FIJO de la fase de arranque: una reserva por ejecucion, diga lo que diga la variable. Subirlo exige PR. */
 export const AUTO_PHASE_MAX_OPS = 1;
 export const WRITES_PER_CREATE = 3;
+/**
+ * ATH-DEV-129 — CUPO DIARIO PERSISTENTE: como mucho 3 reservas nuevas por dia de Bogota, sumando TODAS las ejecuciones.
+ * El contador no vive en GitHub Actions (que no guarda estado entre ejecuciones ni tras reinicios): se LEE de Odoo, contando
+ * los pedidos con la nota interna "ATH-SYNC | clave ... | CREATE_ORDER" escrita desde las 00:00 de Bogota (05:00 UTC).
+ * Si no se puede leer el contador, no se escribe (error -> apagado).
+ */
+export const AUTO_DAILY_MAX = 3;
+export const DAILY_READ_LIMIT = 100;
+export const dayStartUtc = (today) => `${today} 05:00:00`;
+const SYNC_CREATE_NOTE = [['model', '=', 'sale.order'], ['message_type', '=', 'comment'], ['body', 'ilike', 'ATH-SYNC | clave'], ['body', 'ilike', '| CREATE_ORDER']];
+
+export async function readDailyCreates(reader, today) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(today ?? ''))) throw new ConnectorError('CUPO_DIARIO_FECHA_INVALIDA');
+  const rows = await reader.searchRead('mail.message', [...SYNC_CREATE_NOTE, ['date', '>=', dayStartUtc(today)]], ['res_id'], { limit: DAILY_READ_LIMIT });
+  if (!Array.isArray(rows) || rows.length >= DAILY_READ_LIMIT) throw new ConnectorError('CUPO_DIARIO_NO_VERIFICABLE');
+  return new Set(rows.map((r) => r.res_id)).size;
+}
+/** Total historico de pedidos creados por la sincronizacion (solo para comprobar que el contador encuentra las notas). */
+export async function readTotalCreates(reader) { return reader.searchCount('mail.message', SYNC_CREATE_NOTE); }
+
+/**
+ * ATH-DEV-129 — APAGADO AUTOMATICO. Precondiciones que indican un CAMBIO INESPERADO o un DUPLICADO: detienen la ejecucion
+ * entera y el workflow se deshabilita a si mismo. Las de identidad (nombre ambiguo, solo coincide el nombre) no son un
+ * fallo: la reserva queda pendiente de una persona, se avisa y no consume el cupo de la ejecucion.
+ */
+export const DUPLICATE_PRECONDITIONS = Object.freeze(new Set(['PEDIDO_YA_EXISTE', 'CONTACTOS_DUPLICADOS']));
+export const HUMAN_REVIEW_PRECONDITIONS = Object.freeze(new Set(['NOMBRE_NO_IDENTIFICABLE', 'IDENTIDAD_AMBIGUA', 'COINCIDENCIA_SOLO_POR_NOMBRE', 'SIN_ID_SMOOBU']));
+export function haltOnPrecondition(code) {
+  if (DUPLICATE_PRECONDITIONS.has(code)) return 'DUPLICADO_DETECTADO';
+  if (HUMAN_REVIEW_PRECONDITIONS.has(code)) return null;
+  return 'CAMBIO_INESPERADO'; // precio, fechas, habitacion, canal, huesped, estado, noches ocupadas, lectura incompleta...
+}
+/** Veredictos del conciliador que significan pedidos duplicados para una misma reserva: no se escribe nada. */
+export const DUPLICATE_REASONS = Object.freeze(new Set(['VARIOS_PEDIDOS_CON_EL_MISMO_ID', 'PEDIDO_COMPARTIDO_POR_VARIAS_RESERVAS', 'PEDIDO_REFERENCIA_VARIAS_RESERVAS']));
+export const duplicatesIn = (report) => (report?.perReservation ?? []).filter((r) => r.verdict === 'AMBIGUOUS' && DUPLICATE_REASONS.has(r.reason));
 
 export function maxOpsFromEnv(env = {}) {
   if (env.SYNC_MAX_OPS == null || env.SYNC_MAX_OPS === '') return AUTO_PHASE_MAX_OPS;
@@ -51,18 +91,42 @@ export function autoPlan(plan, { limits }) {
   return { ...semi, ops: semi.ops.map((o) => (o.op === OPS.CREATE_ORDER || o.status !== STATUS.LISTO ? o : { ...o, status: STATUS.REQUIERE_APROBACION })) };
 }
 
-export async function runAuto({ plan, env = {}, isKilled = () => false, reader, writer, smoobu, journal, lock, today }) {
+export async function runAuto({ plan, report = null, env = {}, isKilled = () => false, reader, writer, smoobu, journal, lock, today }) {
   const off = killState(env);
   if (off) return { halted: off, results: [], writes: 0, plan };
-  const limits = limitsFromEnv(env); const maxOps = maxOpsFromEnv(env);
+  const limits = limitsFromEnv(env); const phaseMax = maxOpsFromEnv(env);
   const auto = autoPlan(plan, { limits });
+  // duplicados ya presentes en Odoo para una reserva de la ventana: no se escribe nada hasta que una persona lo revise
+  if (duplicatesIn(report).length) return { halted: 'DUPLICADO_DETECTADO', results: [], writes: 0, plan: auto, limits, maxOps: 0 };
+  // ATH-DEV-130: cerrojo en Odoo. Restos de una escritura parcial o duplicados creados por la sincronizacion = no se escribe
+  const audit = await auditSyncWrites(reader);
+  if (!audit.ok) return { halted: 'AUDITORIA_ESCRITURAS', audit, results: [], writes: 0, plan: auto, limits, maxOps: 0 };
+  // cupo diario persistente (leido de Odoo): lote = min(tope de fase, lo que queda del dia)
+  const used = await readDailyCreates(reader, today);
+  const daily = { used, max: AUTO_DAILY_MAX, remaining: Math.max(0, AUTO_DAILY_MAX - used) };
+  if (daily.remaining === 0) return { halted: 'CUPO_DIARIO_AGOTADO', results: [], writes: 0, plan: auto, limits, maxOps: 0, daily };
+  const maxOps = Math.min(phaseMax, daily.remaining);
   // sin aprobaciones: confirmar, cancelar o modificar no se ejecutan nunca desde la sincronizacion programada
-  const res = await applyPlan({ plan: auto, reader, writer: autoWriter(writer, { maxOps }), smoobu, journal, lock, approvals: new Set(), maxOps, today, shouldStop: isKilled });
-  return { ...res, plan: auto, limits, maxOps };
+  const res = await applyPlan({ plan: auto, reader, writer: autoWriter(writer, { maxOps }), smoobu, journal, lock, approvals: new Set(), maxOps, today, shouldStop: isKilled, preconditionUsesSlot: false, haltOnPrecondition });
+  return { ...res, plan: auto, limits, maxOps, daily };
 }
 
-/** Paradas que deben avisar (fallan el job y GitHub notifica). */
-export const ALERT_HALTS = /AMBIGUO|VERIFICACION|FALLO_PARCIAL|RECUPERACION|PRIVACIDAD|SYNC_WRITE/;
+/** Paradas que deben avisar (fallan el job, GitHub notifica y se BLOQUEA la escritura de forma persistente: ATH-DEV-130). */
+export const ALERT_HALTS = /AMBIGUO|VERIFICACION|FALLO_PARCIAL|RECUPERACION|PRIVACIDAD|SYNC_WRITE|DUPLICADO|CAMBIO_INESPERADO|LECTURA|ODOO_|SMOOBU_|LOCK|AUDITORIA/;
+/** Resultados por operacion que exigen apagar la sincronizacion. */
+export const SHUTDOWN_RESULTS = Object.freeze(new Set(['AMBIGUA', 'VERIFICACION_FALLIDA', 'RECHAZADA_POR_ODOO']));
+
+/**
+ * ATH-DEV-129 — ¿Hay que APAGAR la sincronizacion? Devuelve el motivo o null. Paradas normales (cupo diario agotado,
+ * interruptores apagados) NO apagan: son el funcionamiento esperado.
+ */
+export function shutdownReason({ run, report }) {
+  if (run?.halted && ALERT_HALTS.test(run.halted)) return run.halted;
+  const bad = (run?.results ?? []).find((r) => SHUTDOWN_RESULTS.has(r.result));
+  if (bad) return `${bad.result}${bad.code ? `_${bad.code}` : ''}`;
+  if (duplicatesIn(report).length) return 'DUPLICADO_DETECTADO';
+  return null;
+}
 
 /** Alertas enmascaradas para anotaciones de GitHub (::warning:: / ::error::). */
 export function alertsFrom({ run, report }) {

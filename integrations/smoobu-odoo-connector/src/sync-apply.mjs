@@ -231,8 +231,10 @@ async function recover(entry, { reader, plan }) {
  * @param {Journal} p.journal
  * @param {object} p.lock         FileLock/MemoryLock
  * @param {Set<string>} [p.approvals] claves de operaciones REQUIERE_APROBACION aprobadas por gerencia
+ * @param {boolean} [p.preconditionUsesSlot] si una precondicion fallida consume el cupo de la ejecucion (por defecto si)
+ * @param {(code:string)=>string|null} [p.haltOnPrecondition] codigo de parada para precondiciones graves (ATH-DEV-129)
  */
-export async function applyPlan({ plan, reader, writer, smoobu, journal, lock, approvals = new Set(), maxOps = DEFAULT_MAX_OPS, today, halt = false, shouldStop = () => false }) {
+export async function applyPlan({ plan, reader, writer, smoobu, journal, lock, approvals = new Set(), maxOps = DEFAULT_MAX_OPS, today, halt = false, shouldStop = () => false, preconditionUsesSlot = true, haltOnPrecondition = () => null }) {
   const shadow = writer?.simulated === true;
   const out = { mode: shadow ? 'SIMULACION' : 'REAL', halted: null, recovered: [], results: [], writes: 0 };
   if (halt) { out.halted = 'PARADA_MANUAL'; return out; }
@@ -255,13 +257,19 @@ export async function applyPlan({ plan, reader, writer, smoobu, journal, lock, a
       if (!eligible) { if (HANDLERS[op.op]) out.results.push({ ...base, result: RESULT.NO_ELEGIBLE }); continue; }
       if (journal.isDone(op.key)) { out.results.push({ ...base, result: RESULT.YA_APLICADA }); continue; }
       if (processed >= maxOps) { out.results.push({ ...base, result: RESULT.NO_PROCESADA, code: 'TOPE_POR_EJECUCION' }); continue; }
-      processed += 1;
       const h = await HANDLERS[op.op]({ op, reader, writer, smoobu, today, approved });
       let pre;
       try { pre = await h.prevalidate(); } catch (e) {
-        if (e instanceof Precondition) { out.results.push({ ...base, result: RESULT.PRECONDICION_FALLIDA, code: e.code }); continue; }
+        if (e instanceof Precondition) {
+          out.results.push({ ...base, result: RESULT.PRECONDICION_FALLIDA, code: e.code });
+          // ATH-DEV-129: un cambio inesperado o un duplicado detiene TODA la ejecucion (sin escribir nada mas)
+          const stop = haltOnPrecondition(e.code); if (stop) { out.halted = stop; return out; }
+          if (preconditionUsesSlot) processed += 1;
+          continue;
+        }
         out.halted = e.code ?? 'LECTURA_FALLIDA'; out.results.push({ ...base, result: RESULT.NO_PROCESADA, code: out.halted }); return out;
       }
+      processed += 1;
       journal.record({ key: op.key, smoobuId: op.smoobuId, op: op.op, phase: PHASES.INTENT });
       let res;
       try { res = await h.execute(pre); } catch (e) {

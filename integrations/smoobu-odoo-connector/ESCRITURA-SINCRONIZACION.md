@@ -99,3 +99,29 @@ Odoo (lectura)┘                                                       │
 - Si la clave pertenece a un administrador (hoy la unica clave es del gerente), exige una segunda aprobacion ligada a la
   operacion: `APROBADO-ADMIN-SMOOBU-<id>-<clave>`. Si no se puede comprobar el grupo, se trata como administrador.
 - Sigue sin poder escribir: necesita ademas las tres llaves del cliente real (PR de activacion aparte).
+
+## Estabilidad de la sincronizacion programada (ATH-DEV-129, `src/sync-auto.mjs`)
+
+- **Cupo diario persistente**: como mucho 3 reservas nuevas por dia de Bogota y 1 por ejecucion. El contador se LEE de
+  Odoo en cada ejecucion (notas internas `ATH-SYNC | clave ... | CREATE_ORDER` desde las 05:00 UTC), asi que no se
+  reinicia entre ejecuciones ni tras reinicios de GitHub Actions. Si no se puede leer completo, no se escribe y se apaga.
+  Cupo agotado = parada normal (`CUPO_DIARIO_AGOTADO`), no apaga.
+- **Apagado automatico = BLOQUEO PERSISTENTE DE ESCRITURA (ATH-DEV-130)**: si el job `sync` no termina bien, el job
+  `apagado` (unico con permiso de escritura, `issues: write`) abre una incidencia `BLOQUEO-ESCRITURA-SYNC`. El workflow NO se
+  deshabilita: sigue corriendo cada 2 horas, pero SIEMPRE EN SOMBRA (vigila, avisa, tablero), sin poder crear pedidos.
+  Motivos (`shutdownReason`): error de lectura/configuracion/pruebas, escritura parcial (`FALLO_PARCIAL`), resultado
+  ambiguo, verificacion fallida, rechazo de Odoo, duplicados (`DUPLICADO_DETECTADO`), cambio inesperado entre el plan y la
+  escritura (`CAMBIO_INESPERADO`), auditoria de Odoo, privacidad. No bloquean: identidad dudosa del contacto (queda para
+  una persona y no consume el cupo), conflictos ya conocidos (pedido facturado, sobreventa), cupo agotado, `SYNC_KILL=1`.
+- **Desbloqueo, solo gerencia**: revisar el fallo y fijar la variable de Actions `SYNC_DESBLOQUEO = DESBLOQUEO-<numero de
+  la incidencia>` (GitHub pide confirmacion 2FA). Cerrar la incidencia, relanzar, reiniciar o cambiar `SYNC_ENABLED`,
+  `SYNC_KILL`, `SYNC_MAX_OPS` o `SYNC_ARM` no desbloquea. Si el pestillo no se puede leer, se trata como bloqueado.
+  Solo cuentan incidencias creadas por `github-actions[bot]`: nadie puede falsificar un desbloqueo.
+- **Segundo cerrojo en Odoo** (`auditSyncWrites`, independiente de GitHub): un contacto `SMOOBU-<id>` sin pedido (resto de
+  una escritura parcial) o una reserva con mas de un pedido vigente entre los creados por la sincronizacion impiden escribir
+  hasta que una persona lo corrija en Odoo. Lectura truncada = bloqueado.
+- El conciliador diario es otro workflow, solo lectura, y no depende de nada de esto.
+- **Idempotencia entre ejecuciones**: no depende de la bitacora (que es temporal por ejecucion). El plan se recalcula
+  cada vez desde Odoo; el pedido se identifica por `SMOOBU-<id>` en `x_pms_reference` (se revalida justo antes de crear)
+  y el contacto por `ref = SMOOBU-<id>`. Un corte entre escrituras nunca duplica: deja el contacto sin pedido, lo que activa
+  el cerrojo de Odoo hasta revision humana.
