@@ -1,6 +1,7 @@
 import { ConnectorError } from './errors.mjs';
 import { UNITS, unitForOdooRole } from './unit-map.mjs';
 import { reconcileByIds } from './id-reconcile.mjs';
+import { readBookingAmounts } from './booking-amounts-read.mjs';
 import { readWatchlist } from './overbooking-watch.mjs';
 
 /**
@@ -113,9 +114,13 @@ export async function runReconcileIds({ smoobu, odoo, window, watchIds = [] }) {
   // ATH-DEV-053: el listado no devuelve las sobreventas; los ids vigilados se leen uno a uno (GET, con tope, sin reintentos)
   const watch = await readWatchlist(smoobu, watchIds, { listed: new Map(s.bookings.map((b) => [Number(b?.id), b])) });
   const o = await readOdooWindow(odoo, window);
-  const report = reconcileByIds({ bookings: s.bookings, window, orders: o.orders, slots: o.slots, dayuseSlots: o.dayuseSlots });
+  const first = reconcileByIds({ bookings: s.bookings, window, orders: o.orders, slots: o.slots, dayuseSlots: o.dayuseSlots });
+  // ATH-DEV-138: Booking se concilia por el TOTAL del huesped (desglose de Smoobu); segunda pasada pura con esos importes
+  const booking = await readBookingAmounts(smoobu, first, s.bookings);
+  const report = reconcileByIds({ bookings: s.bookings, window, orders: o.orders, slots: o.slots, dayuseSlots: o.dayuseSlots, bookingAmounts: booking.amounts });
   return {
     reads: {
+      smoobuPriceElements: { endpoint: 'GET /api/reservations/{id}/price-elements', requests: booking.requests },
       smoobuWatch: { endpoint: 'GET /api/reservations/{id}', requests: watch.requests, watched: watchIds.length },
       smoobu: { endpoint: 'GET /api/reservations', requests: s.requests, pageCount: s.pageCount, totalItems: s.totalItems, recordsRead: s.bookings.length, query: window.smoobuQuery },
       odoo: { calls: o.calls, methods: ['fields_get', 'search_read'], ...o.counts, writes: 0 },

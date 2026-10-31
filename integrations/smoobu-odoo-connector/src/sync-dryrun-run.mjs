@@ -2,8 +2,8 @@ import { ConnectorError } from './errors.mjs';
 import { readSmoobuWindow, readOdooWindow } from './reconcile-ids-run.mjs';
 import { reconcileByIds, VERDICTS } from './id-reconcile.mjs';
 import { readWatchlist } from './overbooking-watch.mjs';
-import { planSync, SOURCE_BY_CHANNEL } from './sync-intent.mjs';
-import { assessBookingAmounts, BOOKING_SOURCE, AMOUNT_BLOCKS } from './booking-amounts.mjs';
+import { planSync } from './sync-intent.mjs';
+import { readBookingAmounts } from './booking-amounts-read.mjs';
 import { WRITES_ENABLED } from './live-reconcile.mjs';
 import { RELEASE_UNLOCKED } from './odoo-facts.mjs';
 
@@ -13,27 +13,7 @@ import { RELEASE_UNLOCKED } from './odoo-facts.mjs';
  * lecturas extra solo para los pedidos que el plan necesita evaluar. No existe aqui ningun camino de escritura.
  */
 export const EXTRA_LIMITS = Object.freeze({ orders: 500, lines: 2000, payments: 2000 });
-/** ATH-DEV-137: como mucho N lecturas de elementos de precio por ejecucion; las que no se leen quedan sin total (bloqueadas). */
-export const PRICE_ELEMENT_READS = 40;
-
-/**
- * Importes de las reservas de Booking que pueden crear o comparar un pedido (sin pedido o emparejadas). Solo lecturas.
- * Un fallo de lectura NO inventa nada: esa reserva queda con total desconocido (bloqueada), las demas siguen.
- */
-export async function readBookingAmounts(smoobu, report, bookings, { max = PRICE_ELEMENT_READS } = {}) {
-  const raw = new Map(bookings.map((b) => [Number(b?.id), b]));
-  const want = (report.perReservation ?? []).filter((r) => r.smoobuStatus === 'ACTIVE' && SOURCE_BY_CHANNEL[r.channelId] === BOOKING_SOURCE
-    && ['MISSING_IN_ODOO', 'MATCH', 'MATCH_DRAFT'].includes(r.verdict));
-  const amounts = new Map(); let requests = 0;
-  for (const r of want) {
-    if (requests >= max || typeof smoobu.getPriceElements !== 'function') { amounts.set(r.smoobuId, { ok: false, block: AMOUNT_BLOCKS.TOTAL_DESCONOCIDO }); continue; }
-    requests += 1;
-    let elements = null;
-    try { elements = await smoobu.getPriceElements(r.smoobuId); } catch { elements = null; }
-    amounts.set(r.smoobuId, assessBookingAmounts({ booking: raw.get(r.smoobuId), elements }));
-  }
-  return { amounts, requests };
-}
+export { readBookingAmounts, PRICE_ELEMENT_READS } from './booking-amounts-read.mjs';
 const m2oId = (v) => (Array.isArray(v) ? v[0] : (v ?? null));
 
 export async function readSyncExtras(odoo, { orderIds, cancelOrderIds = [] }, limits = EXTRA_LIMITS) {
@@ -76,7 +56,10 @@ export async function runSyncDryRun({ smoobu, odoo, window, today, watchIds = []
   if (!s.complete) throw new ConnectorError('SMOOBU_INCOMPLETE_READ');
   const watch = await readWatchlist(smoobu, watchIds, { listed: new Map(s.bookings.map((b) => [Number(b?.id), b])) });
   const o = await readOdooWindow(odoo, window);
-  const report = reconcileByIds({ bookings: s.bookings, window, orders: o.orders, slots: o.slots, dayuseSlots: o.dayuseSlots });
+  const first = reconcileByIds({ bookings: s.bookings, window, orders: o.orders, slots: o.slots, dayuseSlots: o.dayuseSlots });
+  // ATH-DEV-137/138: desglose de Booking y SEGUNDA pasada del conciliador (pura) con el total del huesped
+  const booking = await readBookingAmounts(smoobu, first, s.bookings);
+  const report = reconcileByIds({ bookings: s.bookings, window, orders: o.orders, slots: o.slots, dayuseSlots: o.dayuseSlots, bookingAmounts: booking.amounts });
   // las alertas de la vigilancia de sobreventas cuentan como revision manual
   const alerted = new Set((watch.entries ?? []).filter((e) => e.status === 'OVERBOOKING_ALERT').map((e) => e.smoobuId));
   for (const r of report.perReservation) if (alerted.has(r.smoobuId)) r.manualReview = r.manualReview ?? 'ALERTA_SOBREVENTA_VIGILANCIA';
@@ -84,7 +67,6 @@ export async function runSyncDryRun({ smoobu, odoo, window, today, watchIds = []
   const cancelOrderIds = report.perReservation.filter((r) => r.verdict === VERDICTS.CONFLICT && r.reason === 'CANCELADA_EN_SMOOBU_VIGENTE_EN_ODOO').flatMap((r) => (r.odooOrders ?? []).map((x) => x.id));
   const extras = await readSyncExtras(odoo, { orderIds, cancelOrderIds });
   const watchAlerts = (watch.entries ?? []).filter((e) => e.status === 'OVERBOOKING_ALERT');
-  const booking = await readBookingAmounts(smoobu, report, s.bookings);
   const plan = planSync({ report, bookings: s.bookings, orders: o.orders, extras, today, slots: o.slots, watchAlerts, amounts: booking.amounts });
   return {
     plan, report,

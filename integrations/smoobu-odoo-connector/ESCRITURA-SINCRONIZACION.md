@@ -150,5 +150,8 @@ facturacion electronica sigue siendo manual y con autorizacion de gerencia.
 - Correccion de COT/2026/03848 (`src/booking-correction.mjs`): SOLO planificada y simulada (modo diagnose
   `booking-correction-dry`). Ejecutarla exige PR aparte y autorizacion especifica; la lista blanca general sigue prohibiendo
   cambiar `price_unit` en pedidos existentes.
-- Pendiente: el conciliador diario aun compara contra la tarifa base, asi que para estos pedidos mostrara `PRICE_DIFF` y
-  `TAX_MISSING` (avisos, no cambian nada) hasta que lea tambien los elementos de precio.
+- Conciliador (ATH-DEV-138): para Booking con desglose fiable compara el TOTAL del huesped con el total del pedido
+  (`PRICE_DIFF` solo si no coinciden; la comision nunca cuenta). `TAX_MISSING` se sustituye por `REVISION_TRIBUTARIA`
+  (IVA del canal dentro del total sin impuesto de Odoo: decision del contador al facturar). Nuevos: `IVA_DUPLICADO` y
+  `TOTAL_NO_FIABLE` (desglose no fiable: se aplican las reglas antiguas). Directas y Airbnb sin cambios. El desglose
+  (base, impuestos, comision) se guarda aparte en el informe interno; el publico solo lleva codigos.
