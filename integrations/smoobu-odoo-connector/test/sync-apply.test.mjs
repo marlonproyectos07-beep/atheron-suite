@@ -54,7 +54,7 @@ test('lista blanca: rechaza borrar, pagos, facturas, turnos, cambiar precio, imp
   const order = (o = {}) => ({ vals_list: [{ partner_id: 1, x_pms_reference: 'SMOOBU-1', order_line: [line()], ...o }] });
   assert.ok(validateWrite('sale.order', 'create', order()));
   const bad = [
-    ['sale.order', 'unlink', { ids: [1] }, 'SYNC_WRITE_NOT_ALLOWED'], ['account.payment', 'create', {}, 'SYNC_WRITE_NOT_ALLOWED'], ['account.move', 'write', {}, 'SYNC_WRITE_NOT_ALLOWED'],
+    ['sale.order', 'unlink', { ids: [1] }, 'SYNC_WRITE_NOT_ALLOWED'], ['account.payment', 'create', {}, 'SYNC_WRITE_FINANCIAL_MODEL_FORBIDDEN'], ['account.move', 'write', {}, 'SYNC_WRITE_FINANCIAL_MODEL_FORBIDDEN'],
     ['planning.slot', 'create', {}, 'SYNC_WRITE_NOT_ALLOWED'], ['sale.order.line', 'write', { ids: [1], vals: { price_unit: 1 } }, 'SYNC_WRITE_FIELD_FORBIDDEN'],
     ['sale.order', 'write', { ids: [1], vals: { state: 'sale' } }, 'SYNC_WRITE_FIELD_FORBIDDEN'], ['sale.order', 'write', { ids: [1, 2], vals: { x_checkin: 'x' } }, 'SYNC_WRITE_ONE_RECORD_ONLY'],
     ['sale.order', 'create', order({ order_line: [line({ tax_ids: [[6, 0, [251]]] })] }), 'SYNC_WRITE_TAXES_NOT_ALLOWED'], ['sale.order', 'create', order({ order_line: [line({ product_id: 1 })] }), 'SYNC_WRITE_PRODUCT_NOT_ALLOWED'],

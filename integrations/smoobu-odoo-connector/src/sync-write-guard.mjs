@@ -43,7 +43,11 @@ function validateLineCommand(cmd) {
 }
 
 /** Lanza ConnectorError si la escritura no esta permitida. Devuelve true si lo esta. */
+/** ATH-DEV-120: modelos PROHIBIDOS de forma explicita (ademas de no estar en la lista blanca): pagos, facturas, asientos y banca. */
+export const FORBIDDEN_MODELS = /^(account\.|payment\.|res\.partner\.bank$|res\.bank$|account_)/;
+
 export function validateWrite(model, method, params) {
+  if (FORBIDDEN_MODELS.test(String(model))) fail('SYNC_WRITE_FINANCIAL_MODEL_FORBIDDEN');
   const methods = WRITE_ALLOWLIST[model];
   if (!methods || !methods.includes(method)) fail('SYNC_WRITE_NOT_ALLOWED');
   if (method === 'create') {

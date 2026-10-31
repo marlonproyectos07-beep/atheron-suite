@@ -227,10 +227,11 @@ async function recover(entry, { reader, plan }) {
  * @param {object} p.lock         FileLock/MemoryLock
  * @param {Set<string>} [p.approvals] claves de operaciones REQUIERE_APROBACION aprobadas por gerencia
  */
-export async function applyPlan({ plan, reader, writer, smoobu, journal, lock, approvals = new Set(), maxOps = DEFAULT_MAX_OPS, today, halt = false }) {
+export async function applyPlan({ plan, reader, writer, smoobu, journal, lock, approvals = new Set(), maxOps = DEFAULT_MAX_OPS, today, halt = false, shouldStop = () => false }) {
   const shadow = writer?.simulated === true;
   const out = { mode: shadow ? 'SIMULACION' : 'REAL', halted: null, recovered: [], results: [], writes: 0 };
   if (halt) { out.halted = 'PARADA_MANUAL'; return out; }
+  if (shouldStop()) { out.halted = 'APAGADO_INMEDIATO'; return out; }
   try { lock.acquire(); } catch (e) { out.halted = e.code ?? 'SYNC_LOCKED'; return out; }
   try {
     for (const entry of journal.incomplete()) {
@@ -241,6 +242,8 @@ export async function applyPlan({ plan, reader, writer, smoobu, journal, lock, a
     }
     let processed = 0;
     for (const op of plan.ops) {
+      // apagado inmediato: se consulta antes de CADA operacion (no interrumpe una escritura ya enviada)
+      if (shouldStop()) { out.halted = 'APAGADO_INMEDIATO'; return out; }
       const base = { key: op.key, smoobuId: op.smoobuId, unit: op.unit, arrival: op.arrival, departure: op.departure, op: op.op, status: op.status };
       const approved = approvals.has(op.key);
       const eligible = HANDLERS[op.op] && (op.status === STATUS.LISTO || (op.status === STATUS.REQUIERE_APROBACION && approved));
