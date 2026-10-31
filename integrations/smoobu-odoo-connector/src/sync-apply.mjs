@@ -4,6 +4,7 @@ import { parseReferences } from './reference-parse.mjs';
 import { unitForName, unitForSmoobuApartment } from './unit-map.mjs';
 import { PHASES } from './sync-journal.mjs';
 import { resolveContact, contactQueries } from './sync-contact.mjs';
+import { assessBookingAmounts, sameAmounts, amountsNote, BOOKING_SOURCE } from './booking-amounts.mjs';
 
 /**
  * ATH-DEV-116 — EJECUTOR de un plan de sincronizacion. Orden fijo por operacion:
@@ -68,7 +69,17 @@ const HANDLERS = {
       const b = await smoobuStillMatches(smoobu, op);
       const total = op.payload.lines.reduce((a, l) => a + (l.price_unit ?? NaN), 0);
       need(op.payload.lines.every((l) => typeof l.price_unit === 'number' && l.price_unit > 0), 'PRECIO_DE_LINEA_SIN_DEFINIR');
-      need(Math.abs(Number(b.price) - total) < 0.005, 'PRECIO_CAMBIO_EN_SMOOBU'); // ATH-DEV-128: precio EXACTO
+      if (op.payload.order?.x_booking_source === BOOKING_SOURCE || op.payload.amounts) {
+        // ATH-DEV-137: Booking = TOTAL aceptado por el huesped. Se vuelve a leer el desglose y debe ser IDENTICO al planificado.
+        need(!!op.payload.amounts, 'TOTAL_NO_FIABLE');
+        const elements = typeof smoobu.getPriceElements === 'function' ? await smoobu.getPriceElements(op.smoobuId) : null;
+        const fresh = assessBookingAmounts({ booking: b, elements });
+        need(fresh.ok, fresh.block ?? 'TOTAL_NO_FIABLE');
+        need(sameAmounts(fresh, { ok: true, ...op.payload.amounts }), 'IMPORTES_CAMBIARON_EN_SMOOBU');
+        need(Math.abs(fresh.total - total) < 0.005, 'PRECIO_CAMBIO_EN_SMOOBU');
+      } else {
+        need(Math.abs(Number(b.price) - total) < 0.005, 'PRECIO_CAMBIO_EN_SMOOBU'); // ATH-DEV-128: precio EXACTO
+      }
       need(await nightsFree(reader, op.unit, op.arrival, op.departure), 'NOCHES_OCUPADAS_EN_ODOO');
       // contactos: lecturas frescas por ref de Smoobu, correo, telefono y nombre; nunca se adivina una identidad
       const q = contactQueries({ smoobuId: op.smoobuId, guest: op.payload.partner.guest });
@@ -89,7 +100,7 @@ const HANDLERS = {
       if (!pid) { [pid] = await writer.execute('res.partner', 'create', { vals_list: [createVals] }); steps.push('partner.create'); }
       const vals = { partner_id: pid, ...op.payload.order, order_line: op.payload.lines.map((l) => [0, 0, { ...l, tax_ids: [[6, 0, []]] }]) };
       const [orderId] = await writer.execute('sale.order', 'create', { vals_list: [vals] }); steps.push('sale.order.create');
-      await writer.execute('sale.order', 'message_post', { ids: [orderId], body: note(op), message_type: 'comment', subtype_xmlid: 'mail.mt_note' }); steps.push('note');
+      await writer.execute('sale.order', 'message_post', { ids: [orderId], body: note(op, op.payload.amounts ? amountsNote(op.payload.amounts) : ''), message_type: 'comment', subtype_xmlid: 'mail.mt_note' }); steps.push('note');
       return { orderId, partnerId: pid, steps };
     };
     const verify = async ({ orderId }) => {

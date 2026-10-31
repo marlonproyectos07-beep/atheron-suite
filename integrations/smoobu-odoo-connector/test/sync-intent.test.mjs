@@ -25,10 +25,10 @@ const slot = (id, unit, from, to, lineId) => ({ id, role_id: [ROLE[unit], 'x'], 
 const info = (extra = {}) => ({ client_order_ref: 'Smoobu x', x_booking_source: 'direct', rental_start_date: 'x', rental_return_date: 'x', transactions: 0, qtyInvoiced: 0, ...extra });
 const line = (id, extra = {}) => ({ id, price_unit: 100000, x_precio_manual: 100000, taxes: 0, ...extra });
 
-function plan({ bookings, orders = [], slots = [], orderInfo = {}, lineInfo = {}, payments = {}, today = TODAY, watchAlerts = [] }) {
+function plan({ bookings, orders = [], slots = [], orderInfo = {}, lineInfo = {}, payments = {}, today = TODAY, watchAlerts = [], amounts = new Map() }) {
   const report = reconcileByIds({ bookings, window: W, orders, slots });
   const extras = { orderInfo: new Map(Object.entries(orderInfo).map(([k, v]) => [Number(k), v])), lineInfo: new Map(Object.entries(lineInfo).map(([k, v]) => [Number(k), v])), paymentsByOrder: new Map(Object.entries(payments).map(([k, v]) => [Number(k), v])) };
-  return planSync({ report, bookings, orders, extras, today, slots, watchAlerts });
+  return planSync({ report, bookings, orders, extras, today, slots, watchAlerts, amounts });
 }
 const opOf = (p, id) => p.ops.find((o) => o.smoobuId === id);
 
@@ -140,9 +140,12 @@ test('idempotencia: misma entrada = mismas claves; una reserva ya creada (MATCH)
 });
 
 test('vista publica: IDs enmascarados, solo nombres de campos; sin nombres, correos, telefonos ni importes', () => {
-  const p = plan({ bookings: [bk(170300100, '302', '2026-11-22', '2026-11-23', { price: 87654, channel: { id: CH.BOOKING }, 'reference-id': '5409999999' })] });
+  // ATH-DEV-137: Booking con total fiable (tarifa + IVA de Booking); ningun importe sale en la vista publica
+  const amounts = new Map([[170300100, { ok: true, base: 87654, tax: 16654, total: 104308, taxMode: 'ADICIONAL', commission: 13148, currency: 'COP' }]]);
+  const p = plan({ bookings: [bk(170300100, '302', '2026-11-22', '2026-11-23', { price: 87654, channel: { id: CH.BOOKING }, 'reference-id': '5409999999' })], amounts });
+  assert.equal(opOf(p, 170300100).op, OPS.CREATE_ORDER);
   const text = JSON.stringify(toPublicPlan(p));
-  for (const banned of ['Ana Sintetica', 'sintetico@', '+00 000', '87654', '170300100', '5409999999', '"payload"']) assert.ok(!text.includes(banned), banned);
+  for (const banned of ['Ana Sintetica', 'sintetico@', '+00 000', '87654', '16654', '104308', '13148', '170300100', '5409999999', '"payload"', '"amounts"']) assert.ok(!text.includes(banned), banned);
   assert.match(text, /SM\*\.\.\.0100/); assert.match(text, /line\.x_precio_manual/);
   assert.ok(assertPublicSafe(text, { identifiers: ['170300100', '5409999999', 'Ana Sintetica Ficticia'] }).safe);
 });
