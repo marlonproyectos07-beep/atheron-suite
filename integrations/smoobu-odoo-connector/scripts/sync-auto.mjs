@@ -38,7 +38,7 @@ const real = armed && !latch.latched;
 try {
   const smoobu = new SmoobuClient({ ...sc, pathPrefix: '/api' });
   const reader = new OdooJson2Client(oc);
-  const { plan, report } = await runSyncDryRun({ smoobu, odoo: reader, window, today, watchIds });
+  const { plan, report, watchAlerts } = await runSyncDryRun({ smoobu, odoo: reader, window, today, watchIds });
   const writer = real ? new AutoWriteClient({ ...oc, arm: process.env.SYNC_ARM, maxWrites: 30 }) : new RecordingWriter({ maxWrites: 30 });
   const journal = process.env.SYNC_JOURNAL_PATH ? Journal.fromFile(process.env.SYNC_JOURNAL_PATH) : new Journal();
   const lock = process.env.SYNC_LOCK_PATH ? new FileLock(process.env.SYNC_LOCK_PATH) : new MemoryLock();
@@ -47,7 +47,7 @@ try {
   const pending = await readPendingPayments(reader, { today, sinceDays: 30 });
   const dash = buildDashboard({ report, plan: run.plan, run, pendingPayments: pending });
   const board = buildOccupancyBoard({ report, plan: run.plan, from: today, nights: 14 });
-  const alerts = alertsFrom({ run, report });
+  const alerts = alertsFrom({ run, report, watch: watchAlerts });
   const stop = shutdownReason({ run, report });
   if (stop) alerts.push({ level: 'error', text: `APAGADO AUTOMATICO: ${stop}` });
   const historic = await readTotalCreates(reader);

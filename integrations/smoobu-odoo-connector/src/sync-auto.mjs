@@ -129,7 +129,7 @@ export function shutdownReason({ run, report }) {
 }
 
 /** Alertas enmascaradas para anotaciones de GitHub (::warning:: / ::error::). */
-export function alertsFrom({ run, report }) {
+export function alertsFrom({ run, report, watch = [] }) {
   const out = [];
   if (run.halted && ALERT_HALTS.test(run.halted)) out.push({ level: 'error', text: `Sincronizacion detenida: ${run.halted}` });
   for (const r of run.results ?? []) if (['AMBIGUA', 'VERIFICACION_FALLIDA', 'RECHAZADA_POR_ODOO'].includes(r.result)) out.push({ level: 'error', text: `${maskSmoobu(r.smoobuId)} ${r.op}: ${r.result} ${r.code ?? ''}`.trim() });
@@ -145,6 +145,9 @@ export function alertsFrom({ run, report }) {
     if (o.status !== STATUS.BLOQUEADO) continue;
     out.push({ level: 'warning', text: `${maskSmoobu(o.smoobuId)} ${o.unit} ${o.arrival}: BLOQUEADO ${(o.guards ?? []).join(',') || 'SIN_MOTIVO'}` });
   }
+  // ATH-DEV-134: la sobreventa vigilada (p. ej. 301 del 04/01) es un registro 'overbooking' de Smoobu: no entra en el plan ni
+  // en perReservation, asi que se avisa aparte. Bloquea por solape a quien choque con ella (guarda SOBREVENTA); nunca se escribe.
+  for (const w of watch ?? []) out.push({ level: 'warning', text: `${maskSmoobu(w.smoobuId)} ${w.unit} ${w.arrival}: SOBREVENTA_VIGILADA (revision manual)` });
   const seen = new Set();
   return out.filter((a) => { const k = `${a.level}|${a.text}`; if (seen.has(k)) return false; seen.add(k); return true; });
 }
