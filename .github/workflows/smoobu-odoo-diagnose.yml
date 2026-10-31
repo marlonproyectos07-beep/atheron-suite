@@ -29,7 +29,7 @@ on:
         required: false
         default: 'full'
         type: choice
-        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reconcile-daily, sync-dryrun, sync-shadow, sync-semiauto, reservation-once, odoo-auth-readonly, credential-shape, credential-swap]
+        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reconcile-daily, sync-dryrun, sync-shadow, sync-semiauto, sync-pilot-dry, reservation-once, odoo-auth-readonly, credential-shape, credential-swap]
       from:
         description: 'reconcile-window / reconcile-ids: primera noche YYYY-MM-DD (vacio = ventana historica 26..27 oct)'
         required: false
@@ -155,6 +155,16 @@ jobs:
           RECONCILE_FROM: ${{ inputs.from }}
           RECONCILE_TO: ${{ inputs.to }}
         run: npm run --silent sync-semiauto
+      - name: Piloto de una reserva SIMULADO, escritor simulado (ATH-DEV-121)
+        if: ${{ inputs.mode == 'sync-pilot-dry' }}
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          # siempre simulado desde este workflow: no existe forma de pasar PILOT_DRY=0 aqui
+          PILOT_DRY: '1'
+        run: npm run --silent sync-pilot
       - name: Lectura individual de una reserva Smoobu, UNA solicitud GET (ATH-DEV-052)
         if: ${{ inputs.mode == 'reservation-once' }}
         env:

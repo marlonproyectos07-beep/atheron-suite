@@ -29,7 +29,7 @@ try {
   const smoobu = new SmoobuClient({ ...sc, pathPrefix: '/api' });
   const reader = new OdooJson2Client(oc);
   const { plan, report } = await runSyncDryRun({ smoobu, odoo: reader, window, today, watchIds });
-  const pendingPayments = await readPendingPayments(reader);
+  const pendingPayments = await readPendingPayments(reader, { today, sinceDays: 30 });
   const journal = process.env.SYNC_JOURNAL_PATH ? Journal.fromFile(process.env.SYNC_JOURNAL_PATH) : new Journal();
   // SOMBRA: se habilita el modo solo porque el escritor es simulado; el apagado SYNC_KILL sigue mandando
   const run = await runSemiauto({ plan, env: { ...process.env, SYNC_ENABLED: 'true' }, isKilled: () => process.env.SYNC_KILL === '1', reader, writer: new RecordingWriter(), smoobu, journal, lock: new MemoryLock(), today });

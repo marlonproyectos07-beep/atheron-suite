@@ -7,7 +7,7 @@ import { RecordingWriter, SyncWriteClient, SYNC_ARM_PHRASE } from '../src/sync-w
 import { Journal, MemoryLock } from '../src/sync-journal.mjs';
 import { RESULT } from '../src/sync-apply.mjs';
 import { buildCreatePayload, opKey, OPS, STATUS } from '../src/sync-intent.mjs';
-import { selectPilotOp, pilotWriter, runPilot, adminApprovalToken } from '../src/sync-pilot.mjs';
+import { selectPilotOp, pilotWriter, runPilot, adminApprovalToken, pilotApprovalToken, keyFromApproval, findPilotTarget, PILOT_TARGET } from '../src/sync-pilot.mjs';
 import { WRITES_ENABLED } from '../src/live-reconcile.mjs';
 import { RELEASE_UNLOCKED } from '../src/odoo-facts.mjs';
 
@@ -80,4 +80,14 @@ test('si no se puede comprobar el grupo del usuario, se trata como administrador
   const orig = e.odoo.apply.bind(e.odoo);
   e.odoo.apply = (m, meth, p) => (m === 'res.users' && meth === 'fields_get' ? { id: { type: 'integer' } } : orig(m, meth, p));
   assert.equal((await pilot(e, fakeWriter(e.odoo, validateWrite))).halted, 'PILOTO_REQUIERE_APROBACION_ADMIN');
+});
+
+test('reserva piloto (Airbnb 302, 14/01): se localiza por sufijo, habitacion, fechas y canal; debe ser unica; tokens sin IDs', () => {
+  const op = { ...create, smoobuId: 170527631, unit: '302', arrival: '2027-01-14', departure: '2027-01-15', channelId: 7208051 };
+  assert.equal(findPilotTarget({ ops: [op, { ...op, smoobuId: 170520001 }] }), op);
+  assert.throws(() => findPilotTarget({ ops: [op, { ...op, key: 'x' }] }), /PILOTO_RESERVA_NO_UNICA/);
+  assert.throws(() => findPilotTarget({ ops: [{ ...op, channelId: 7208046 }] }), /PILOTO_RESERVA_NO_UNICA/);
+  assert.deepEqual([PILOT_TARGET.unit, PILOT_TARGET.arrival], ['302', '2027-01-14']);
+  for (const t of [pilotApprovalToken(op), adminApprovalToken(op)]) assert.ok(!t.includes('170527631') && t.endsWith(op.key));
+  assert.equal(keyFromApproval(pilotApprovalToken(op)), op.key); assert.equal(keyFromApproval(adminApprovalToken(op)), null); // un token no sirve por el otro
 });

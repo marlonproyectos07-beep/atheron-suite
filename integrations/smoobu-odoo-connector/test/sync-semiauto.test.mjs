@@ -86,12 +86,21 @@ test('lista blanca: pagos, facturas, asientos y banca prohibidos de forma explic
 });
 
 test('tablero: recibidas, borradores, aprobaciones, conflictos y pagos sin confirmar; sin nombres ni importes', async () => {
-  const e = env({ 'account.payment': [{ id: 1, name: 'PBC/00684', date: '2026-10-28', state: 'draft', company_id: 5, amount: 315000 }, { id: 2, name: 'PBC/00700', date: '2026-10-29', state: 'paid', company_id: 5 }] });
-  const pending = await readPendingPayments(e.reader);
+  const e = env({
+    'account.journal': [{ id: 79, name: 'Efectivo_Atheron_Suite', type: 'cash', company_id: 5 }, { id: 65, name: 'Bancolombia', type: 'bank', company_id: 5 }, { id: 61, name: 'Efectivo_Atheron_Security', type: 'cash', company_id: 5 }],
+    'account.payment': [
+      { id: 1, name: 'PEFHS/2026/00999', date: '2026-10-28', state: 'draft', company_id: 5, journal_id: 79, amount: 315000 }, // Suite, reciente, sin confirmar -> SI
+      { id: 2, name: 'PEFHS/2026/00998', date: '2026-10-29', state: 'paid', company_id: 5, journal_id: 79 }, // confirmado -> no
+      { id: 3, name: 'PEFHS/2026/00100', date: '2026-07-11', state: 'in_process', company_id: 5, journal_id: 79 }, // antiguo -> no
+      { id: 4, name: 'PBC/00684', date: '2026-10-28', state: 'draft', company_id: 5, journal_id: 65 }, // Bancolombia compartido -> no
+      { id: 5, name: 'CSH1/0001', date: '2026-10-28', state: 'draft', company_id: 5, journal_id: 61 }, // Security -> no
+    ] });
+  const pending = await readPendingPayments(e.reader, { today: '2026-10-30', sinceDays: 30 });
+  await assert.rejects(readPendingPayments(e.reader, {}), /DASHBOARD_TODAY_REQUIRED/);
   const report = { perReservation: [{ smoobuId: 170600099, unit: '202', arrival: '2026-10-31', departure: '2026-11-02', smoobuStatus: 'ACTIVE', verdict: 'MATCH_DRAFT' }, { smoobuId: 170600098, unit: '302', arrival: '2026-10-30', departure: '2026-10-31', smoobuStatus: 'CANCELLED', verdict: 'CONFLICT', reason: 'CANCELADA_EN_SMOOBU_VIGENTE_EN_ODOO' }] };
   const plan = semiautoPlan({ ops: [mkCreate(170600097, '201', '2026-11-24', '2026-11-25', 85000), mkOp(OPS.CONFIRM_ORDER, 170600099, 9), { ...mkOp(OPS.BLOCKED, 170600096, null), status: STATUS.BLOQUEADO, guards: [GUARDS.SOBREVENTA] }] });
   const d = buildDashboard({ report, plan, pendingPayments: pending });
-  assert.deepEqual([d.received, d.drafts.existing.length, d.drafts.toCreate.length, d.approvalsPending.length, d.conflicts.length, d.paymentsReportedNotConfirmed.map((p) => p.ref)], [1, 1, 1, 1, 2, ['PBC/00684']]);
+  assert.deepEqual([d.received, d.drafts.existing.length, d.drafts.toCreate.length, d.approvalsPending.length, d.conflicts.length, d.paymentsReportedNotConfirmed.map((p) => p.ref)], [1, 1, 1, 1, 2, ['PEFHS/2026/00999']]);
   const md = renderDashboard(d);
   for (const banned of ['Ana Sintetica', '315000', '85000', '170600097', '170600099']) assert.ok(!md.includes(banned) && !JSON.stringify(d).includes(banned), banned);
 });

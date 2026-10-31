@@ -15,7 +15,19 @@ import { validateWrite } from './sync-write-guard.mjs';
  */
 export const PILOT_METHODS = Object.freeze(new Set(['res.partner.create', 'sale.order.create', 'sale.order.message_post']));
 export const PILOT_MAX_WRITES = 3;
-export const adminApprovalToken = (op) => `APROBADO-ADMIN-SMOOBU-${op.smoobuId}-${op.key}`;
+/** Tokens del piloto (sin IDs ni datos personales: se pueden publicar). */
+export const pilotApprovalToken = (op) => `APROBADO-CREATE_ORDER-${op.key}`;
+export const adminApprovalToken = (op) => `APROBADO-ADMIN-${op.key}`;
+export const keyFromApproval = (token) => (/^APROBADO-CREATE_ORDER-([0-9a-f]{16})$/.exec(String(token ?? '').trim()) ?? [])[1] ?? null;
+/** Reserva piloto acordada (ATH-DEV-121): Airbnb, habitacion 302, 14/01/2027. Se identifica por sufijo + habitacion + fecha. */
+export const PILOT_TARGET = Object.freeze({ suffix: '7631', unit: '302', arrival: '2027-01-14', departure: '2027-01-15', channelId: 7208051 });
+
+/** Localiza la reserva piloto en el plan SIN pasar el ID completo por la ejecucion (repositorio publico). Debe ser unica. */
+export function findPilotTarget(plan, t = PILOT_TARGET) {
+  const hits = plan.ops.filter((o) => String(o.smoobuId).endsWith(t.suffix) && o.unit === t.unit && o.arrival === t.arrival && o.departure === t.departure && (t.channelId == null || o.channelId === t.channelId));
+  if (hits.length !== 1) throw new ConnectorError('PILOTO_RESERVA_NO_UNICA');
+  return hits[0];
+}
 
 export function selectPilotOp(plan, { smoobuId, approvedKey }) {
   const candidates = plan.ops.filter((o) => o.smoobuId === Number(smoobuId));
