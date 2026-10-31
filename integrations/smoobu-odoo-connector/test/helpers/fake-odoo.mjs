@@ -24,7 +24,7 @@ export class FakeOdoo {
       case 'in': return (Array.isArray(val) ? val.some((x) => v.includes(x)) : v.includes(val));
       case 'not in': return !v.includes(val);
       case 'ilike': return String(val ?? '').toLowerCase().includes(String(v).toLowerCase());
-      case '=ilike': return String(val ?? '').toLowerCase() === String(v).toLowerCase();
+      case '=ilike': return new RegExp(`^${String(v).toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*')}$`).test(String(val ?? '').toLowerCase());
       case '<': return val < v; case '>': return val > v; case '<=': return val <= v; case '>=': return val >= v;
       default: throw new Error(`operador no simulado ${op}`);
     }

@@ -11,9 +11,12 @@
 #     tocan (el conciliador diario exige que sigan en false).
 # Lote: 1 reserva por ejecucion (tope fijo de fase) y como mucho 3 por dia de Bogota (cupo PERSISTENTE leido de Odoo).
 # Alertas: anotaciones + fallo del job (GitHub notifica).
-# ATH-DEV-129 APAGADO AUTOMATICO: si `sync` no termina bien (error, duplicado, cambio inesperado, escritura parcial,
-#   pruebas fallidas, tiempo agotado o cancelacion), el job `apagado` DESHABILITA este workflow. Queda deshabilitado
-#   hasta que una persona lo revise y lo vuelva a habilitar (Actions > este workflow > Enable workflow).
+# ATH-DEV-130 BLOQUEO PERSISTENTE DE ESCRITURA (sustituye al deshabilitado del workflow de ATH-DEV-129): si `sync` no
+#   termina bien (error, duplicado, cambio inesperado, escritura parcial, pruebas fallidas, tiempo agotado o cancelacion),
+#   el job `apagado` abre una incidencia `BLOQUEO-ESCRITURA-SYNC`. Desde ese momento la sincronizacion corre SIEMPRE EN
+#   SOMBRA (vigila, avisa y muestra el tablero, sin crear pedidos) hasta que gerencia revise y fije la variable
+#   SYNC_DESBLOQUEO = DESBLOQUEO-<numero de la incidencia>. Reiniciar, relanzar, cerrar la incidencia o cambiar otras
+#   variables NO desbloquea. El workflow y el conciliador diario siguen activos.
 # ============================================================
 name: smoobu-odoo-sync-scheduled
 
@@ -35,6 +38,10 @@ jobs:
     if: ${{ vars.SYNC_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # contents: leer el repo; issues: leer el pestillo de bloqueo (ATH-DEV-130). Ningun permiso de escritura.
+    permissions:
+      contents: read
+      issues: read
     # ATH-DEV-028: secretos de Smoobu guardados intercambiados; mismo cruce que diagnose (vigilado por test)
     env:
       SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_SECRET }}
@@ -61,6 +68,9 @@ jobs:
           SYNC_MAX_AMOUNT: ${{ vars.SYNC_MAX_AMOUNT }}
           SYNC_MAX_NIGHTS: ${{ vars.SYNC_MAX_NIGHTS }}
           SYNC_ARM: ${{ vars.SYNC_ARM }}
+          SYNC_DESBLOQUEO: ${{ vars.SYNC_DESBLOQUEO }}
+          SYNC_LATCH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
           SYNC_JOURNAL_PATH: ${{ runner.temp }}/sync-bitacora.jsonl
           SYNC_LOCK_PATH: ${{ runner.temp }}/sync.lock
         run: |
@@ -75,22 +85,31 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-  # ATH-DEV-129: unico job con un permiso de escritura, y solo sobre Actions (deshabilitar ESTE workflow). No lee
-  # secretos, no hace checkout, no toca Odoo ni Smoobu.
+  # ATH-DEV-130: unico job con un permiso de escritura, y solo sobre incidencias (abrir el pestillo de bloqueo). No lee
+  # secretos, no hace checkout, no toca Odoo ni Smoobu y NO deshabilita el workflow (la vigilancia en sombra sigue).
   apagado:
     needs: sync
     if: ${{ always() && vars.SYNC_ENABLED == 'true' && needs.sync.result != 'success' && needs.sync.result != 'skipped' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
-      actions: write
+      issues: write
     steps:
-      - name: Apagado automatico (deshabilita este workflow)
+      - name: Bloqueo persistente de escritura (abre BLOQUEO-ESCRITURA-SYNC si no hay uno pendiente)
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RESULTADO: ${{ needs.sync.result }}
+          RUN_ID: ${{ github.run_id }}
+          SYNC_DESBLOQUEO: ${{ vars.SYNC_DESBLOQUEO }}
         run: |
-          gh workflow disable smoobu-odoo-sync-scheduled.yml
-          echo "::error::Sincronizacion APAGADA automaticamente (resultado: $RESULTADO). Revisar y volver a habilitar a mano."
-          echo "### Sincronizacion APAGADA automaticamente (resultado: $RESULTADO). Revisar el job sync antes de volver a habilitar." >> "$GITHUB_STEP_SUMMARY"
+          ACK=$(printf '%s' "$SYNC_DESBLOQUEO" | sed -n 's/^DESBLOQUEO-\([0-9]\{1,9\}\)$/\1/p'); ACK=${ACK:-0}
+          # si no se puede leer, se abre uno nuevo (falla cerrado)
+          MAX=$(gh api "repos/$GH_REPO/issues?state=all&creator=github-actions%5Bbot%5D&per_page=100" --jq '[.[] | select(.pull_request == null and (.title | startswith("BLOQUEO-ESCRITURA-SYNC"))) | .number] | max // 0') || MAX=-1
+          if [ "$MAX" -gt "$ACK" ]; then
+            echo "Ya hay un bloqueo pendiente (#$MAX > reconocido $ACK): la escritura sigue bloqueada."
+          else
+            gh api -X POST "repos/$GH_REPO/issues" -f title="BLOQUEO-ESCRITURA-SYNC ejecucion $RUN_ID" -f body="La sincronizacion programada Smoobu -> Odoo fallo (resultado: $RESULTADO, ejecucion $RUN_ID). Desde ahora corre SOLO EN SOMBRA: no puede crear pedidos. Para desbloquear, gerencia revisa el fallo y fija la variable de Actions SYNC_DESBLOQUEO = DESBLOQUEO-<numero de esta incidencia>. Cerrar esta incidencia no desbloquea." --jq '"Bloqueo abierto: #" + (.number|tostring)'
+          fi
+          echo "::error::Escritura de la sincronizacion BLOQUEADA (resultado: $RESULTADO). La vigilancia en sombra sigue activa."
+          echo "### Escritura BLOQUEADA tras un fallo (resultado: $RESULTADO). Sigue en sombra hasta SYNC_DESBLOQUEO de gerencia." >> "$GITHUB_STEP_SUMMARY"

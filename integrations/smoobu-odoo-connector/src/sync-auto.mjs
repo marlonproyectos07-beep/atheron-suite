@@ -5,6 +5,7 @@ import { applyPlan } from './sync-apply.mjs';
 import { validateWrite } from './sync-write-guard.mjs';
 import { addDays } from './window.mjs';
 import { maskSmoobu } from './public-report.mjs';
+import { auditSyncWrites } from './sync-latch.mjs';
 
 /**
  * ATH-DEV-125 — SINCRONIZACION PROGRAMADA (incremental por referencia unica de Smoobu).
@@ -14,8 +15,10 @@ import { maskSmoobu } from './public-report.mjs';
  *  - Nunca: confirmar, cancelar, modificar pedidos existentes, pagos, facturas (escritor restringido + lista blanca).
  *  - Lote: SYNC_MAX_OPS (1..10), recortado al tope de la fase actual AUTO_PHASE_MAX_OPS (hoy 1) por ejecucion.
  *  - Apagado: sin SYNC_ENABLED=true no arranca; SYNC_KILL=1 lo detiene antes de cada operacion.
- *  - ATH-DEV-129: cupo diario persistente (3/dia, leido de Odoo) y apagado automatico (shutdownReason -> el workflow se
- *    deshabilita a si mismo) ante errores, duplicados, cambios inesperados o escrituras parciales.
+ *  - ATH-DEV-129: cupo diario persistente (3/dia, leido de Odoo) y apagado automatico (shutdownReason) ante errores,
+ *    duplicados, cambios inesperados o escrituras parciales.
+ *  - ATH-DEV-130: el apagado NO deshabilita el workflow: bloquea la ESCRITURA de forma persistente (src/sync-latch.mjs) y la
+ *    vigilancia en sombra sigue corriendo. Solo gerencia lo desbloquea.
  *  - Los borradores NO crean turnos en Planning (Odoo los crea al confirmar, automatizacion 151): el tablero de ocupacion
  *    de este modulo muestra las cinco habitaciones fisicas con lo confirmado, los borradores y lo pendiente.
  */
@@ -95,6 +98,9 @@ export async function runAuto({ plan, report = null, env = {}, isKilled = () => 
   const auto = autoPlan(plan, { limits });
   // duplicados ya presentes en Odoo para una reserva de la ventana: no se escribe nada hasta que una persona lo revise
   if (duplicatesIn(report).length) return { halted: 'DUPLICADO_DETECTADO', results: [], writes: 0, plan: auto, limits, maxOps: 0 };
+  // ATH-DEV-130: cerrojo en Odoo. Restos de una escritura parcial o duplicados creados por la sincronizacion = no se escribe
+  const audit = await auditSyncWrites(reader);
+  if (!audit.ok) return { halted: 'AUDITORIA_ESCRITURAS', audit, results: [], writes: 0, plan: auto, limits, maxOps: 0 };
   // cupo diario persistente (leido de Odoo): lote = min(tope de fase, lo que queda del dia)
   const used = await readDailyCreates(reader, today);
   const daily = { used, max: AUTO_DAILY_MAX, remaining: Math.max(0, AUTO_DAILY_MAX - used) };
@@ -105,8 +111,8 @@ export async function runAuto({ plan, report = null, env = {}, isKilled = () => 
   return { ...res, plan: auto, limits, maxOps, daily };
 }
 
-/** Paradas que deben avisar (fallan el job, GitHub notifica y el workflow se deshabilita: ATH-DEV-129). */
-export const ALERT_HALTS = /AMBIGUO|VERIFICACION|FALLO_PARCIAL|RECUPERACION|PRIVACIDAD|SYNC_WRITE|DUPLICADO|CAMBIO_INESPERADO|LECTURA|ODOO_|SMOOBU_|LOCK/;
+/** Paradas que deben avisar (fallan el job, GitHub notifica y se BLOQUEA la escritura de forma persistente: ATH-DEV-130). */
+export const ALERT_HALTS = /AMBIGUO|VERIFICACION|FALLO_PARCIAL|RECUPERACION|PRIVACIDAD|SYNC_WRITE|DUPLICADO|CAMBIO_INESPERADO|LECTURA|ODOO_|SMOOBU_|LOCK|AUDITORIA/;
 /** Resultados por operacion que exigen apagar la sincronizacion. */
 export const SHUTDOWN_RESULTS = Object.freeze(new Set(['AMBIGUA', 'VERIFICACION_FALLIDA', 'RECHAZADA_POR_ODOO']));
 

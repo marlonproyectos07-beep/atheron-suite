@@ -90,13 +90,16 @@ test('workflow programado: cron + manual, guardado por SYNC_ENABLED, solo lectur
   assert.match(wf, /\n {2}schedule:\n(?: {4}#[^\n]*\n)* {4}- cron: '\d+ [^']+'/); assert.match(wf, /\n {2}workflow_dispatch:/);
   assert.match(wf, /if: \$\{\{ vars\.SYNC_ENABLED == 'true' \}\}/);
   assert.match(wf, /\npermissions:\n {2}contents: read\n/);
-  // ATH-DEV-129: el UNICO permiso de escritura es actions:write en el job de apagado (deshabilitar este mismo workflow)
-  assert.deepEqual(wf.match(/^.*: write.*$/gm), ['      actions: write']);
+  // ATH-DEV-130: el UNICO permiso de escritura es issues:write en el job de apagado (abrir el pestillo); nada deshabilita el workflow
+  assert.deepEqual(wf.match(/^.*: write.*$/gm), ['      issues: write']);
+  assert.ok(!/workflow disable|actions: write/.test(wf), 'el apagado ya no deshabilita la vigilancia en sombra');
   const off = wf.slice(wf.indexOf('\n  apagado:'));
   assert.match(off, /needs: sync/); assert.match(off, /needs\.sync\.result != 'success' && needs\.sync\.result != 'skipped'/);
-  assert.match(off, /\n {4}permissions:\n {6}actions: write\n {4}steps:/); assert.match(off, /gh workflow disable smoobu-odoo-sync-scheduled\.yml/);
+  assert.match(off, /\n {4}permissions:\n {6}issues: write\n {4}steps:/); assert.match(off, /BLOQUEO-ESCRITURA-SYNC/); assert.match(off, /\|\| MAX=-1/);
   assert.ok(!/secrets\.|checkout|npm /.test(off), 'el job de apagado no lee secretos ni ejecuta codigo del repo');
-  assert.ok(!/actions: write/.test(wf.slice(0, wf.indexOf('\n  apagado:'))));
+  const sync = wf.slice(wf.indexOf('\n  sync:'), wf.indexOf('\n  apagado:'));
+  assert.match(sync, /\n {4}permissions:\n {6}contents: read\n {6}issues: read\n/);
+  assert.match(sync, /SYNC_DESBLOQUEO: \$\{\{ vars\.SYNC_DESBLOQUEO \}\}/); assert.match(sync, /GH_TOKEN: \$\{\{ github\.token \}\}/);
   assert.match(wf, /cancel-in-progress: false/); assert.match(wf, /::add-mask::\$SYNC_ARM/); assert.match(wf, /SYNC_KILL: \$\{\{ vars\.SYNC_KILL \}\}/);
   assert.ok(!/run:.*\$\{\{/.test(wf));
   const diag = readFileSync(new URL('../../../.github/workflows/smoobu-odoo-diagnose.yml', import.meta.url), 'utf8');
@@ -213,13 +216,15 @@ test('ATH-DEV-129: idempotencia tras reinicio: bitacora perdida + plan viejo -> 
   assert.deepEqual([stale.results[0].code, stale.halted, stale.results.length], ['PEDIDO_YA_EXISTE', 'DUPLICADO_DETECTADO', 1]);
   assert.deepEqual([e.odoo.t['sale.order'].length, e.odoo.t['res.partner'].length], [1, 1]);
   assert.equal(shutdownReason({ run: stale, report: {} }), 'DUPLICADO_DETECTADO');
-  // contacto creado y pedido NO (corte entre las dos escrituras): la siguiente ejecucion reutiliza el contacto por su ref
+  // contacto creado y pedido NO (corte entre las dos escrituras): ATH-DEV-130 -> la siguiente ejecucion NO escribe (cerrojo
+  // en Odoo: contacto SMOOBU-<id> sin pedido) hasta que una persona lo resuelva; nunca duplica
   const e2 = env(); const [x] = [mk(2)];
   e2.odoo.fault({ model: 'sale.order', method: 'create', when: 'before', kind: 'network' });
   const cut = await fresh(e2, [x]);
   assert.deepEqual([cut.halted, shutdownReason({ run: cut, report: {} }) != null, e2.odoo.t['res.partner'].length, e2.odoo.t['sale.order'].length], ['RESULTADO_AMBIGUO', true, 1, 0]);
   const again = await fresh(e2, [x]);
-  assert.deepEqual([again.results[0].result, e2.odoo.t['res.partner'].length, e2.odoo.t['sale.order'].length], [RESULT.APLICADA, 1, 1]);
+  assert.deepEqual([again.halted, again.audit.problems.map((p) => p.code), again.writes, e2.odoo.t['res.partner'].length, e2.odoo.t['sale.order'].length], ['AUDITORIA_ESCRITURAS', ['CONTACTO_SIN_PEDIDO'], 0, 1, 0]);
+  assert.equal(shutdownReason({ run: again, report: {} }), 'AUDITORIA_ESCRITURAS');
 });
 
 test('ATH-DEV-129: apagado automatico ante cambios inesperados, duplicados, escrituras parciales o rechazos; no ante identidad dudosa', async () => {
@@ -253,5 +258,58 @@ test('ATH-DEV-129: el script programado sale con error ante cualquier motivo de 
   const src = readFileSync(new URL('../scripts/sync-auto.mjs', import.meta.url), 'utf8');
   assert.match(src, /const stop = shutdownReason\(\{ run, report \}\);/); assert.match(src, /if \(stop\) process\.exit\(1\);/);
   assert.match(src, /runAuto\(\{ plan, report, env/); assert.match(src, /cupo diario = /);
+});
+
+/* ---------------- ATH-DEV-130: bloqueo persistente de escritura ---------------- */
+
+test('ATH-DEV-130: pestillo de GitHub: un fallo bloquea; solo SYNC_DESBLOQUEO de gerencia lo quita; si no se puede leer, bloqueado', async () => {
+  const { readWriteLatch, ackFrom } = await import('../src/sync-latch.mjs');
+  const bot = { login: 'github-actions[bot]' };
+  const issues = (rows) => async () => ({ ok: true, json: async () => rows });
+  const call = (rows, ack) => readWriteLatch({ repo: 'o/r', token: 't', ack, fetchImpl: issues(rows) });
+  assert.deepEqual(await call([], undefined), { latched: false, reason: null, pending: [], ack: 0 });
+  const one = [{ number: 97, title: 'BLOQUEO-ESCRITURA-SYNC ejecucion 1', user: bot, state: 'open' }];
+  assert.equal((await call(one, undefined)).latched, true);
+  assert.equal((await call([{ ...one[0], state: 'closed' }], undefined)).latched, true, 'cerrar la incidencia no desbloquea');
+  assert.equal((await call(one, 'DESBLOQUEO-97')).latched, false);
+  assert.equal((await call([...one, { ...one[0], number: 120 }], 'DESBLOQUEO-97')).latched, true, 'un fallo nuevo vuelve a bloquear');
+  for (const bad of ['si', 'DESBLOQUEO-', 'desbloqueo-97', 'DESBLOQUEO-97 x', '1', 'true']) assert.equal(ackFrom(bad), 0, bad);
+  // solo cuentan las incidencias del bot con el titulo exacto; las pull requests no cuentan
+  assert.equal((await call([{ ...one[0], user: { login: 'otra-persona' } }, { ...one[0], pull_request: {} }, { ...one[0], title: 'otra cosa' }], undefined)).latched, false);
+  // falla cerrado
+  for (const r of [
+    await readWriteLatch({ repo: 'o/r', token: '', fetchImpl: issues([]) }),
+    await readWriteLatch({ repo: '', token: 't', fetchImpl: issues([]) }),
+    await readWriteLatch({ repo: 'o/r', token: 't', fetchImpl: async () => ({ ok: false, status: 403 }) }),
+    await readWriteLatch({ repo: 'o/r', token: 't', fetchImpl: async () => { throw new TypeError('fetch failed'); } }),
+    await readWriteLatch({ repo: 'o/r', token: 't', fetchImpl: issues({ message: 'raro' }) }),
+    await readWriteLatch({ repo: 'o/r', token: 't', fetchImpl: issues(Array.from({ length: 100 }, (_, i) => ({ number: i, title: 'x', user: bot }))) }),
+  ]) assert.deepEqual([r.latched, r.reason], [true, 'BLOQUEO_NO_VERIFICABLE']);
+});
+
+test('ATH-DEV-130: el script solo escribe si esta armado Y sin bloqueo; ninguna otra variable lo reactiva', () => {
+  const src = readFileSync(new URL('../scripts/sync-auto.mjs', import.meta.url), 'utf8').replace(/\/\/.*$/gm, '');
+  assert.match(src, /const real = armed && !latch\.latched;/);
+  assert.match(src, /readWriteLatch\(\{ repo: process\.env\.SYNC_LATCH_REPO, token: process\.env\.GH_TOKEN, ack: process\.env\.SYNC_DESBLOQUEO \}\)/);
+  assert.equal((src.match(/new AutoWriteClient/g) ?? []).length, 1); assert.match(src, /const writer = real \? new AutoWriteClient/);
+  assert.ok(!/SYNC_DESBLOQUEO|latch/.test(readFileSync(new URL('../src/sync-auto-client.mjs', import.meta.url), 'utf8').replace(/\/\/.*$/gm, '')), 'el cliente no tiene otra puerta');
+});
+
+test('ATH-DEV-130: cerrojo en Odoo: contacto sin pedido o pedido duplicado de la sincronizacion bloquea; lectura truncada bloquea', async () => {
+  const { auditSyncWrites, AUDIT_LIMIT } = await import('../src/sync-latch.mjs');
+  const rd = (seed) => { const odoo = new FakeOdoo(seed); return { odoo, reader: new OdooJson2Client({ baseUrl: 'https://odoo.invalid', database: 'p', apiKey: 'k', fetchImpl: odoo.fetch }) }; };
+  const msg = (res_id) => ({ id: res_id + 5000, model: 'sale.order', res_id, message_type: 'comment', body: `ATH-SYNC | clave k | SMOOBU-170900001 | CREATE_ORDER`, date: '2026-11-05 06:00:00' });
+  const ok = rd({ 'res.partner': [{ id: 1, ref: 'SMOOBU-170900001' }, { id: 2, ref: 'CLIENTE-9' }], 'sale.order': [{ id: 10, state: 'draft', x_pms_reference: 'SMOOBU-170900001 / Airbnb HMXSINTET' }], 'mail.message': [msg(10)] });
+  assert.deepEqual(await auditSyncWrites(ok.reader), { ok: true, problems: [] });
+  const orphan = rd({ 'res.partner': [{ id: 1, ref: 'SMOOBU-170900001' }, { id: 3, ref: 'SMOOBU-170900002' }], 'sale.order': [{ id: 10, state: 'draft', x_pms_reference: 'SMOOBU-170900001' }], 'mail.message': [msg(10)] });
+  assert.deepEqual((await auditSyncWrites(orphan.reader)).problems, [{ code: 'CONTACTO_SIN_PEDIDO', smoobuId: 170900002 }]);
+  const dup = rd({ 'sale.order': [{ id: 10, state: 'draft', x_pms_reference: 'SMOOBU-170900001' }, { id: 11, state: 'sale', x_pms_reference: 'SMOOBU-170900001' }, { id: 12, state: 'cancel', x_pms_reference: 'SMOOBU-170900001' }], 'mail.message': [msg(10)] });
+  assert.deepEqual((await auditSyncWrites(dup.reader)).problems, [{ code: 'PEDIDO_DUPLICADO', smoobuId: 170900001 }]);
+  const many = rd({ 'res.partner': Array.from({ length: AUDIT_LIMIT }, (_, i) => ({ id: i + 1, ref: `SMOOBU-${i}` })) });
+  assert.deepEqual((await auditSyncWrites(many.reader)).problems.map((p) => p.code), ['AUDITORIA_NO_VERIFICABLE']);
+  // con el cerrojo activo runAuto no escribe ni lee reservas
+  const e = env(); e.odoo.t['res.partner'].push({ id: 3, ref: 'SMOOBU-170900002' });
+  const r = await runAuto({ plan: { ops: [mk(0).op] }, env: ON, reader: e.reader, writer: fakeWriter(e.odoo, validateWrite), smoobu: { async getReservation() { throw new Error('no debe leer'); } }, journal: e.journal, lock: e.lock, today: '2026-11-05' });
+  assert.deepEqual([r.halted, r.writes, e.odoo.t['sale.order'].length], ['AUDITORIA_ESCRITURAS', 0, 0]);
 });
 
