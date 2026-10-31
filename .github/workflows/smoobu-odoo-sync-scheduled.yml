@@ -25,6 +25,14 @@ on:
     # cada 2 horas, minuto 23 (UTC)
     - cron: '23 */2 * * *'
   workflow_dispatch:
+    inputs:
+      prueba_bloqueo:
+        # ATH-DEV-132: prueba controlada del bloqueo persistente. La sincronizacion corre normal (en sombra); despues el job
+        # `apagado` abre una incidencia BLOQUEO-ESCRITURA-SYNC REAL sin provocar ningun fallo. Solo puede AÑADIR un bloqueo,
+        # nunca quitarlo; quitarlo sigue exigiendo SYNC_DESBLOQUEO de gerencia. Las ejecuciones programadas no la usan.
+        description: 'Prueba controlada: abrir un bloqueo de escritura real tras una sincronizacion correcta'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -89,7 +97,7 @@ jobs:
   # secretos, no hace checkout, no toca Odoo ni Smoobu y NO deshabilita el workflow (la vigilancia en sombra sigue).
   apagado:
     needs: sync
-    if: ${{ always() && vars.SYNC_ENABLED == 'true' && needs.sync.result != 'success' && needs.sync.result != 'skipped' }}
+    if: ${{ always() && vars.SYNC_ENABLED == 'true' && ((needs.sync.result != 'success' && needs.sync.result != 'skipped') || (github.event_name == 'workflow_dispatch' && inputs.prueba_bloqueo == true && needs.sync.result == 'success')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -102,14 +110,16 @@ jobs:
           RESULTADO: ${{ needs.sync.result }}
           RUN_ID: ${{ github.run_id }}
           SYNC_DESBLOQUEO: ${{ vars.SYNC_DESBLOQUEO }}
+          PRUEBA: ${{ github.event_name == 'workflow_dispatch' && inputs.prueba_bloqueo == true && needs.sync.result == 'success' }}
         run: |
+          if [ "$PRUEBA" = "true" ]; then MOTIVO="PRUEBA CONTROLADA (sin fallo real; sincronizacion correcta)"; else MOTIVO="FALLO (resultado: $RESULTADO)"; fi
           ACK=$(printf '%s' "$SYNC_DESBLOQUEO" | sed -n 's/^DESBLOQUEO-\([0-9]\{1,9\}\)$/\1/p'); ACK=${ACK:-0}
           # si no se puede leer, se abre uno nuevo (falla cerrado)
           MAX=$(gh api "repos/$GH_REPO/issues?state=all&creator=github-actions%5Bbot%5D&per_page=100" --jq '[.[] | select(.pull_request == null and (.title | startswith("BLOQUEO-ESCRITURA-SYNC"))) | .number] | max // 0') || MAX=-1
           if [ "$MAX" -gt "$ACK" ]; then
             echo "Ya hay un bloqueo pendiente (#$MAX > reconocido $ACK): la escritura sigue bloqueada."
           else
-            gh api -X POST "repos/$GH_REPO/issues" -f title="BLOQUEO-ESCRITURA-SYNC ejecucion $RUN_ID" -f body="La sincronizacion programada Smoobu -> Odoo fallo (resultado: $RESULTADO, ejecucion $RUN_ID). Desde ahora corre SOLO EN SOMBRA: no puede crear pedidos. Para desbloquear, gerencia revisa el fallo y fija la variable de Actions SYNC_DESBLOQUEO = DESBLOQUEO-<numero de esta incidencia>. Cerrar esta incidencia no desbloquea." --jq '"Bloqueo abierto: #" + (.number|tostring)'
+            gh api -X POST "repos/$GH_REPO/issues" -f title="BLOQUEO-ESCRITURA-SYNC ejecucion $RUN_ID" -f body="Motivo: $MOTIVO. Sincronizacion programada Smoobu -> Odoo, ejecucion $RUN_ID. Desde ahora corre SOLO EN SOMBRA: no puede crear pedidos. Para desbloquear, gerencia revisa el fallo y fija la variable de Actions SYNC_DESBLOQUEO = DESBLOQUEO-<numero de esta incidencia>. Cerrar esta incidencia no desbloquea." --jq '"Bloqueo abierto: #" + (.number|tostring)'
           fi
-          echo "::error::Escritura de la sincronizacion BLOQUEADA (resultado: $RESULTADO). La vigilancia en sombra sigue activa."
-          echo "### Escritura BLOQUEADA tras un fallo (resultado: $RESULTADO). Sigue en sombra hasta SYNC_DESBLOQUEO de gerencia." >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::Escritura de la sincronizacion BLOQUEADA. Motivo: $MOTIVO. La vigilancia en sombra sigue activa."
+          echo "### Escritura BLOQUEADA. Motivo: $MOTIVO. Sigue en sombra hasta SYNC_DESBLOQUEO de gerencia." >> "$GITHUB_STEP_SUMMARY"

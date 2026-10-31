@@ -121,6 +121,12 @@ Odoo (lectura)┘                                                       │
   una escritura parcial) o una reserva con mas de un pedido vigente entre los creados por la sincronizacion impiden escribir
   hasta que una persona lo corrija en Odoo. Lectura truncada = bloqueado.
 - El conciliador diario es otro workflow, solo lectura, y no depende de nada de esto.
+- **Alertas (ATH-DEV-132)**: los conflictos conocidos del plan (pedido facturado, sobreventa, ambigua, noches ocupadas...) salen
+  como avisos de GitHub (`::warning::`) y en la seccion "Alertas" del resumen. Solo avisan: no paran la vigilancia ni abren
+  bloqueo.
+- **Prueba controlada del bloqueo**: ejecucion manual con `prueba_bloqueo = true`. La sincronizacion corre normal en sombra y,
+  si termina bien, el mismo job `apagado` abre una incidencia de bloqueo REAL (sin provocar ningun fallo). Solo puede anadir un
+  bloqueo; quitarlo sigue exigiendo `SYNC_DESBLOQUEO`. Las ejecuciones programadas nunca la activan.
 - **Idempotencia entre ejecuciones**: no depende de la bitacora (que es temporal por ejecucion). El plan se recalcula
   cada vez desde Odoo; el pedido se identifica por `SMOOBU-<id>` en `x_pms_reference` (se revalida justo antes de crear)
   y el contacto por `ref = SMOOBU-<id>`. Un corte entre escrituras nunca duplica: deja el contacto sin pedido, lo que activa

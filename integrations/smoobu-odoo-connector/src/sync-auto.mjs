@@ -139,7 +139,20 @@ export function alertsFrom({ run, report }) {
     if (r.verdict === 'CONFLICT' || r.verdict === 'AMBIGUOUS') out.push({ level: 'warning', text: `${maskSmoobu(r.smoobuId)} ${r.unit} ${r.arrival}: ${r.verdict} ${r.reason}` });
     if ((r.overbookingWith ?? []).length || r.manualReview) out.push({ level: 'warning', text: `${maskSmoobu(r.smoobuId)} ${r.unit} ${r.arrival}: SOBREVENTA` });
   }
-  return out;
+  // ATH-DEV-132: conflictos conocidos del plan (pedido facturado, sobreventa, ambigua, noches ocupadas...). Solo AVISAN:
+  // no requieren escritura, no paran la vigilancia y no abren bloqueo (shutdownReason no los mira).
+  for (const o of run.plan?.ops ?? []) {
+    if (o.status !== STATUS.BLOQUEADO) continue;
+    out.push({ level: 'warning', text: `${maskSmoobu(o.smoobuId)} ${o.unit} ${o.arrival}: BLOQUEADO ${(o.guards ?? []).join(',') || 'SIN_MOTIVO'}` });
+  }
+  const seen = new Set();
+  return out.filter((a) => { const k = `${a.level}|${a.text}`; if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
+/** Seccion "Alertas" del resumen del job (mismas alertas que las anotaciones de GitHub). */
+export function renderAlerts(alerts) {
+  const icon = { error: 'ERROR', warning: 'AVISO', notice: 'NOTA' };
+  return ['### Alertas', '', ...(alerts.length ? alerts.map((a) => `- **${icon[a.level] ?? a.level}** ${a.text}`) : ['(ninguna)']), ''].join('\n');
 }
 
 /* ---------------- tablero de ocupacion (5 habitaciones fisicas) ---------------- */
