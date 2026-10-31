@@ -49,6 +49,14 @@ test('Booking con IVA ADICIONAL: pedido por el TOTAL 85.680, sin impuesto de Odo
   assert.deepEqual([e.odoo.t['planning.slot'].length, e.odoo.t['account.move'].length, e.odoo.t['account.payment'].length], [0, 0, 0]);
 });
 
+test('forma REAL de Smoobu (piloto): basePrice + commission + channelCustom IVA -> total 85.680, comision aparte', () => {
+  const real = [el(1, 'basePrice', 'Base price', 72000, { quantity: 1 }), el(2, 'commission', 'Commission', 10800, { quantity: 1 }), el(3, 'channelCustom', 'IVA', 13680)];
+  assert.deepEqual(assessBookingAmounts({ booking: bk({ 'commission-included': undefined }), elements: real }), { ok: true, base: 72000, tax: 13680, total: 85680, taxMode: TAX_MODES.ADICIONAL, commission: 10800, currency: 'COP' });
+  // una comision marcada como incluida en otro elemento, o un channelCustom que no es impuesto, se bloquean
+  assert.equal(assessBookingAmounts({ booking: bk(), elements: [real[0], { ...real[1], priceIncludedInId: 1 }, real[2]] }).block, AMOUNT_BLOCKS.ELEMENTO_NO_SOPORTADO);
+  assert.equal(assessBookingAmounts({ booking: bk(), elements: [real[0], el(4, 'channelCustom', 'Cleaning', 20000)] }).block, AMOUNT_BLOCKS.ELEMENTO_NO_SOPORTADO);
+});
+
 test('Booking con IVA INCLUIDO en la tarifa y reserva SIN impuestos: el total es la tarifa; nunca se suma el impuesto otra vez', () => {
   const inc = assessBookingAmounts({ booking: bk(), elements: INCLUIDO });
   assert.deepEqual([inc.ok, inc.taxMode, inc.base, inc.tax, inc.total], [true, TAX_MODES.INCLUIDO, 72000, 11496, 72000]);

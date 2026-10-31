@@ -11,7 +11,7 @@ import { assessBookingAmounts } from '../src/booking-amounts.mjs';
 import { assertPublicSafe } from '../src/public-report.mjs';
 
 const out = (o, code = 0) => { console.log(JSON.stringify(o)); if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Simulacion correccion ${CORRECTION_TARGET.orderName}\n\n\`\`\`\n${JSON.stringify(o, null, 2)}\n\`\`\`\n`); process.exit(code); };
-const label = (e) => (/^\s*(iva|vat|impuesto|impuestos|tax|taxes)\b/i.test(String(e?.name ?? '')) ? 'IMPUESTO' : (e?.type === 'basePrice' ? 'TARIFA' : 'OTRO'));
+const label = (e) => (/^\s*(iva|vat|impuesto|impuestos|tax|taxes)\b/i.test(String(e?.name ?? '')) ? 'IMPUESTO' : (e?.type === 'basePrice' ? 'TARIFA' : (e?.type === 'commission' ? 'COMISION' : 'OTRO')));
 let sc; let oc;
 try { sc = loadSmoobuConfig(process.env); oc = loadOdooConfig(process.env); } catch (e) { out({ result: 'FALLO', code: e.code ?? 'CONFIG_ERROR', writes: 0 }, 2); }
 try {

@@ -11,8 +11,10 @@
  *
  * Fiable =
  *  - hay elementos de precio, todos en COP, con importes numericos >= 0 y como mucho 2 decimales;
- *  - solo tipos conocidos: `basePrice` (tarifa) y `addon` cuyo nombre es un impuesto (IVA / VAT / impuesto / tax);
- *    cualquier otro (limpieza, descuentos, cupones, otros extras) se bloquea en esta fase;
+ *  - solo tipos conocidos: `basePrice` (tarifa); `channelCustom` o `addon` cuyo nombre es un impuesto (IVA / VAT /
+ *    impuesto / tax); `commission` (comision de Booking: se guarda aparte y NUNCA suma al total). Forma REAL leida de
+ *    Smoobu en el piloto (diagnose #47): basePrice + commission + channelCustom "IVA". Cualquier otro tipo (limpieza,
+ *    descuentos, cupones, otros extras) se bloquea en esta fase;
  *  - cantidad vacia o 1;
  *  - la suma de las tarifas base coincide EXACTAMENTE con `price` de la reserva (dos fuentes de Smoobu de acuerdo);
  *  - los impuestos son o todos ADICIONALES (`priceIncludedInId` vacio) o todos INCLUIDOS en una tarifa base existente.
@@ -39,14 +41,15 @@ const block = (code) => ({ ok: false, block: code });
  */
 export function assessBookingAmounts({ booking, elements }) {
   if (!Array.isArray(elements) || elements.length === 0) return block(AMOUNT_BLOCKS.TOTAL_DESCONOCIDO);
-  const bases = []; const taxes = [];
+  const bases = []; const taxes = []; const commissions = [];
   for (const e of elements) {
     if (!e || typeof e !== 'object') return block(AMOUNT_BLOCKS.ELEMENTO_NO_SOPORTADO);
     if (e.currencyCode !== 'COP') return block(AMOUNT_BLOCKS.MONEDA_NO_COP);
     if (!isMoney(e.amount)) return block(AMOUNT_BLOCKS.IMPORTE_INVALIDO);
     if (!(e.quantity == null || e.quantity === 1)) return block(AMOUNT_BLOCKS.CANTIDAD_NO_SOPORTADA);
     if (e.type === 'basePrice') bases.push(e);
-    else if (e.type === 'addon' && TAX_NAME.test(String(e.name ?? ''))) taxes.push(e);
+    else if ((e.type === 'channelCustom' || e.type === 'addon') && TAX_NAME.test(String(e.name ?? ''))) taxes.push(e);
+    else if (e.type === 'commission') { if (e.priceIncludedInId != null && e.priceIncludedInId !== 0) return block(AMOUNT_BLOCKS.ELEMENTO_NO_SOPORTADO); commissions.push(e); }
     else return block(AMOUNT_BLOCKS.ELEMENTO_NO_SOPORTADO);
   }
   if (!bases.length) return block(AMOUNT_BLOCKS.TOTAL_DESCONOCIDO);
@@ -62,7 +65,8 @@ export function assessBookingAmounts({ booking, elements }) {
   const total = taxMode === TAX_MODES.ADICIONAL ? money(base + tax) : base;
   if (!(total > 0)) return block(AMOUNT_BLOCKS.IMPORTE_INVALIDO);
   if (taxMode === TAX_MODES.INCLUIDO && !(tax < base)) return block(AMOUNT_BLOCKS.IMPORTE_INVALIDO);
-  const c = num(booking?.['commission-included']);
+  // comision: elemento `commission` de Smoobu (o, si no viene, `commission-included`); nunca forma parte del total
+  const c = commissions.length ? money(commissions.reduce((acc, e) => acc + e.amount, 0)) : num(booking?.['commission-included']);
   return { ok: true, base, tax, total, taxMode, commission: c != null && c > 0 ? money(c) : null, currency: 'COP' };
 }
 
