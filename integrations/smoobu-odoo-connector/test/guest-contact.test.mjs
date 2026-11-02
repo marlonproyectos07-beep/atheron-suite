@@ -4,12 +4,12 @@ import { readFileSync } from 'node:fs';
 import { FakeOdoo, fakeWriter } from './helpers/fake-odoo.mjs';
 import { OdooJson2Client } from '../src/odoo-json2-client.mjs';
 import { validateWrite } from '../src/sync-write-guard.mjs';
-import { Journal, MemoryLock } from '../src/sync-journal.mjs';
+import { Journal, MemoryLock, PHASES } from '../src/sync-journal.mjs';
 import { applyPlan, RESULT } from '../src/sync-apply.mjs';
 import { buildCreatePayload, opKey, OPS, STATUS, GUARDS } from '../src/sync-intent.mjs';
 import {
   normalizePhoneE164, buildGuestMessage, buildWhatsappLink, fallbackContact, planGuestContact, assistNoteHtml,
-  safeCheckinLink, checkinLinkFromBooking, CHECKIN_LINK_FIELD, contactStates, physicalFromOdoo, PHONE_REASONS,
+  safeCheckinLink, checkinLinkFromBooking, strictEncode, CHECKIN_LINK_FIELD, contactStates, physicalFromOdoo, PHONE_REASONS,
 } from '../src/guest-contact.mjs';
 
 // ATH-ODOO-WA-004 — Todo SINTETICO (ids 17xxxxxxx, nombres y telefonos inventados). Ninguna llamada de red, ningun envio.
@@ -187,4 +187,50 @@ test('guard: body_is_html solo para anclas https a wa.me o Smoobu; scripts, otro
   assert.throws(() => validateWrite('sale.order', 'message_post', { ...base, body_is_html: 'true', body: good }), /SYNC_WRITE_NOTE_HTML_INVALID/);
   assert.throws(() => validateWrite('sale.order', 'message_post', { ...base, body: `Hola ${A('https://wa.me/573001234567?text=a')}` }), /SYNC_WRITE_NOTE_FORMAT/);
   assert.throws(() => validateWrite('sale.order', 'message_post', { ...base, subtype_xmlid: 'mail.mt_comment', body: good }), /SYNC_WRITE_ONLY_INTERNAL_NOTES/);
+});
+
+test("apostrofo y signos !'()*: la codificacion es estricta, el href solo trae [A-Za-z0-9%._~-] y sobrevive al guard", () => {
+  assert.ok(encodeURIComponent("O'Connor (VIP)! *").includes("'"), 'encodeURIComponent por si solo deja pasar el apostrofo (origen del defecto)');
+  assert.equal(strictEncode("O'Connor (VIP)! *"), 'O%27Connor%20%28VIP%29%21%20%2A');
+  const msg = buildGuestMessage({ guestName: "O'Connor Sintetico", arrival: '2026-11-22', departure: '2026-11-23' });
+  const url = buildWhatsappLink('+573001234567', `${msg} !'()*`);
+  assert.match(url, /^https:\/\/wa\.me\/573001234567\?text=[A-Za-z0-9%._~-]+$/);
+  assert.equal(decodeURIComponent(new URL(url).searchParams.get('text')), `${msg} !'()*`); // ida y vuelta sin perder el texto
+  const body = assistNoteHtml('ATH-SYNC | clave k | SMOOBU-1 | CREATE_ORDER', { whatsapp: { available: true, url } });
+  assert.ok(validateWrite('sale.order', 'message_post', { ids: [1], body, body_is_html: true, message_type: 'comment', subtype_xmlid: 'mail.mt_note' }));
+});
+
+test("integrado: huesped O'Connor atraviesa applyPlan y validateWrite; la nota queda publicada con el apostrofo codificado", async () => {
+  const e = env(170500011, { 'guest-name': "O'Connor Sintetico" });
+  const r = await run(e, [createOp(170500011, { phone: '+57 300 123 4567', name: "O'Connor Sintetico" })]);
+  assert.equal(r.results[0].result, RESULT.APLICADA, JSON.stringify(r));
+  assert.equal(e.odoo.t['res.partner'].length, 1); assert.equal(e.odoo.t['sale.order'].length, 1); assert.equal(e.odoo.t.notes.length, 1);
+  const [a] = bodyAnchors(e.odoo.t.notes[0].body);
+  assert.match(a.href, /^https:\/\/wa\.me\/573001234567\?text=[A-Za-z0-9%._~-]+$/);
+  assert.ok(a.href.includes('%27'), 'apostrofo codificado como %27');
+  assert.ok(decodedText(a.href).startsWith("Hola O'connor, le escribimos"));
+  assert.ok(validateWrite('sale.order', 'message_post', { ids: [1], body: e.odoo.t.notes[0].body, body_is_html: true, message_type: 'comment', subtype_xmlid: 'mail.mt_note' }));
+});
+
+test('error de validacion de la nota: se detecta ANTES de escribir; no queda contacto, pedido, nota ni diario a medias', async () => {
+  const e = env(170500012, { 'guest-name': 'Ana Sintetica Ficticia' });
+  e.writer.validateWrite = () => { throw new Error('SYNC_WRITE_NOTE_HTML_INVALID'); }; // el guard rechazaria el cuerpo de la nota
+  const r = await run(e, [createOp(170500012, { phone: '+57 300 123 4567' })]);
+  assert.deepEqual([r.results[0].result, r.results[0].code], [RESULT.PRECONDICION_FALLIDA, 'NOTA_INTERNA_NO_VALIDA']);
+  assert.deepEqual([e.writer.writes, e.odoo.t['res.partner'].length, e.odoo.t['sale.order'].length, e.odoo.t.notes.length], [0, 0, 0, 0]);
+  assert.equal(e.journal.incomplete().length, 0, 'sin entrada INTENT pendiente');
+  assert.ok(e.odoo.calls.every((c) => /search_read|search_count|fields_get/.test(c)), `solo lecturas: ${e.odoo.calls.join(',')}`);
+});
+
+test('si falla la publicacion de la nota (ya creados contacto y pedido) no hay duplicados: queda INTENT y la recuperacion la cierra', async () => {
+  const e = env(170500013, { 'guest-name': 'Ana Sintetica Ficticia' });
+  const op = createOp(170500013, { phone: '+57 300 123 4567' });
+  e.odoo.fault({ model: 'sale.order', method: 'message_post', when: 'before', status: 400 });
+  const r1 = await run(e, [op]);
+  assert.equal(r1.halted, 'FALLO_PARCIAL');
+  assert.deepEqual([e.odoo.t['res.partner'].length, e.odoo.t['sale.order'].length], [1, 1]);
+  assert.equal(e.journal.incomplete().length, 1);
+  const r2 = await run(e, [op]);
+  assert.equal(r2.recovered[0].phase, PHASES.RECOVERED_DONE);
+  assert.deepEqual([e.odoo.t['res.partner'].length, e.odoo.t['sale.order'].length], [1, 1], 'sin duplicados');
 });

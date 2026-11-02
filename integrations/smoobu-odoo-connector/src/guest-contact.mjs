@@ -80,11 +80,14 @@ export function buildGuestMessage({ guestName, arrival, departure, checkinLink }
   return parts.join(' ');
 }
 
+/** encodeURIComponent NO codifica !'()* (p. ej. el apostrofo de O'Connor); se codifican tambien para que solo salgan [A-Za-z0-9%._~-]. */
+export const strictEncode = (t) => encodeURIComponent(t).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+
 /** Enlace que abre el chat con el mensaje escrito; NO envia nada (la persona pulsa enviar). */
 export function buildWhatsappLink(e164, message) {
   const digits = DIGITS_ONLY(e164);
   if (!/^\d{8,15}$/.test(digits)) return null;
-  return `https://wa.me/${digits}?text=${encodeURIComponent(String(message ?? '').slice(0, 1000))}`;
+  return `https://wa.me/${digits}?text=${strictEncode(String(message ?? '').slice(0, 1000))}`;
 }
 
 const SMOOBU_BOOKING_URL = 'https://login.smoobu.com/en/booking/detail/';
