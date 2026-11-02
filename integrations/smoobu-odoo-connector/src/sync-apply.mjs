@@ -4,6 +4,7 @@ import { parseReferences } from './reference-parse.mjs';
 import { unitForName, unitForSmoobuApartment } from './unit-map.mjs';
 import { PHASES } from './sync-journal.mjs';
 import { resolveContact, contactQueries } from './sync-contact.mjs';
+import { planGuestContact, assistNoteFragment } from './guest-contact.mjs';
 import { assessBookingAmounts, sameAmounts, amountsNote, BOOKING_SOURCE } from './booking-amounts.mjs';
 
 /**
@@ -100,7 +101,7 @@ const HANDLERS = {
       if (!pid) { [pid] = await writer.execute('res.partner', 'create', { vals_list: [createVals] }); steps.push('partner.create'); }
       const vals = { partner_id: pid, ...op.payload.order, order_line: op.payload.lines.map((l) => [0, 0, { ...l, tax_ids: [[6, 0, []]] }]) };
       const [orderId] = await writer.execute('sale.order', 'create', { vals_list: [vals] }); steps.push('sale.order.create');
-      await writer.execute('sale.order', 'message_post', { ids: [orderId], body: note(op, op.payload.amounts ? amountsNote(op.payload.amounts) : ''), message_type: 'comment', subtype_xmlid: 'mail.mt_note' }); steps.push('note');
+      await writer.execute('sale.order', 'message_post', { ids: [orderId], body: note(op, (op.payload.amounts ? amountsNote(op.payload.amounts) : '') + assistNoteFragment(planGuestContact({ smoobuId: op.smoobuId, guest: op.payload.partner.guest, arrival: op.arrival, departure: op.departure }))), message_type: 'comment', subtype_xmlid: 'mail.mt_note' }); steps.push('note');
       return { orderId, partnerId: pid, steps };
     };
     const verify = async ({ orderId }) => {
