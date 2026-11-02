@@ -18,7 +18,8 @@ test('lista blanca: solo ids permitidos y con formato numerico', () => {
   assert.equal(parseAllowedId('160827596').code, 'RESERVATION_ID_NOT_ALLOWED');
   assert.equal(parseAllowedId('160829171; rm -rf /').code, 'RESERVATION_ID_INVALID');
   assert.equal(parseAllowedId('').code, 'RESERVATION_ID_INVALID');
-  assert.deepEqual([...ALLOWED_RESERVATION_IDS], [160829171]);
+  assert.deepEqual([...ALLOWED_RESERVATION_IDS], [160829171, 162332151]);
+  assert.deepEqual(parseAllowedId('162332151'), { ok: true, id: 162332151 });
 });
 
 test('resumen: campos tecnicos y de estado visibles; id y referencia OTA enmascarados', () => {
@@ -44,4 +45,13 @@ test('script y workflow: una sola lectura, id por entorno, barrera de privacidad
   const wf = readFileSync(new URL('../../../.github/workflows/smoobu-odoo-diagnose.yml', import.meta.url), 'utf8');
   assert.ok(wf.includes('RESERVATION_ID: ${{ inputs.reservation_id }}') && wf.includes('run: npm run --silent smoobu-reservation-once'));
   assert.ok(!/run:.*inputs\.reservation_id/.test(wf));
+});
+
+test('ATH-DEV-139: presencia de telefono, correo y check-in sin exponer valores', () => {
+  const s = summarizeReservation({ ...sample, phone: '', email: undefined, 'guest-app-url': 'https://privado.invalid/x', 'online-check-in-completed': false });
+  assert.deepEqual(s.contactPresence, { phone: 'vacio', email: 'ausente' });
+  assert.equal(s.checkinFields['guest-app-url'], 'presente_con_valor');
+  assert.equal(s.checkinFields['online-check-in-completed'], 'presente_con_valor');
+  const text = JSON.stringify(s);
+  for (const banned of ['privado.invalid', 'privado@', '+57']) assert.ok(!text.includes(banned), banned);
 });
