@@ -1,9 +1,11 @@
 import { ConnectorError } from './errors.mjs';
+import { validateWrite } from './sync-write-guard.mjs';
 import { OPS, STATUS, GUARDS, CASA_UNITS } from './sync-intent.mjs';
 import { parseReferences } from './reference-parse.mjs';
 import { unitForName, unitForSmoobuApartment } from './unit-map.mjs';
 import { PHASES } from './sync-journal.mjs';
 import { resolveContact, contactQueries } from './sync-contact.mjs';
+import { planGuestContact, assistNoteHtml, checkinLinkFromBooking } from './guest-contact.mjs';
 import { assessBookingAmounts, sameAmounts, amountsNote, BOOKING_SOURCE } from './booking-amounts.mjs';
 
 /**
@@ -26,6 +28,12 @@ class Precondition extends Error { constructor(code) { super(code); this.code = 
 const need = (cond, code) => { if (!cond) throw new Precondition(code); };
 const rolesFor = (unit) => (unit === 'CASA' ? [...CASA_UNITS, 'CASA'] : [unit]).map((u) => unitForName(u).odooRoleId);
 const note = (op, extra = '') => `ATH-SYNC | clave ${op.key} | SMOOBU-${op.smoobuId} | ${op.op}${extra}`;
+
+/** Parametros de la nota interna del pedido nuevo (enlace WhatsApp clicable). Se arman UNA vez y se validan ANTES de la primera escritura. */
+function createNoteParams(op, orderId, checkinLink) {
+  const plan = planGuestContact({ smoobuId: op.smoobuId, guest: op.payload.partner.guest, arrival: op.arrival, departure: op.departure, checkinLink });
+  return { ids: [orderId], body: assistNoteHtml(note(op, op.payload.amounts ? amountsNote(op.payload.amounts) : ''), plan), body_is_html: true, message_type: 'comment', subtype_xmlid: 'mail.mt_note' };
+}
 
 export async function ordersWithRef(reader, smoobuId) {
   const rows = await reader.searchRead('sale.order', [['x_pms_reference', 'ilike', `SMOOBU-${smoobuId}`]], ['id', 'state', 'x_pms_reference'], { limit: 20 });
@@ -93,14 +101,17 @@ const HANDLERS = {
       const candidates = { byRef: await read(q.byRef), byEmail: await read(q.byEmail), byPhone: await read(q.byPhone), byName: await read(q.byName) };
       const c = resolveContact({ smoobuId: op.smoobuId, guest: op.payload.partner.guest, candidates });
       need(!c.block, c.block);
-      return c.action === 'REUSE' ? { partnerId: c.partnerId } : { partnerId: null, createVals: c.vals };
+      const checkinLink = checkinLinkFromBooking(b); // solo si la API lo trae con la forma del check-in online; si no, null
+      // la nota se valida con el guard ANTES de crear contacto o pedido: si no pasa, no se escribe nada (sin ejecuciones parciales)
+      try { (writer.validateWrite ?? validateWrite)('sale.order', 'message_post', createNoteParams(op, 1, checkinLink)); } catch { need(false, 'NOTA_INTERNA_NO_VALIDA'); }
+      return c.action === 'REUSE' ? { partnerId: c.partnerId, checkinLink } : { partnerId: null, createVals: c.vals, checkinLink };
     };
-    const execute = async ({ partnerId, createVals }) => {
+    const execute = async ({ partnerId, createVals, checkinLink = null }) => {
       let pid = partnerId;
       if (!pid) { [pid] = await writer.execute('res.partner', 'create', { vals_list: [createVals] }); steps.push('partner.create'); }
       const vals = { partner_id: pid, ...op.payload.order, order_line: op.payload.lines.map((l) => [0, 0, { ...l, tax_ids: [[6, 0, []]] }]) };
       const [orderId] = await writer.execute('sale.order', 'create', { vals_list: [vals] }); steps.push('sale.order.create');
-      await writer.execute('sale.order', 'message_post', { ids: [orderId], body: note(op, op.payload.amounts ? amountsNote(op.payload.amounts) : ''), message_type: 'comment', subtype_xmlid: 'mail.mt_note' }); steps.push('note');
+      await writer.execute('sale.order', 'message_post', createNoteParams(op, orderId, checkinLink)); steps.push('note');
       return { orderId, partnerId: pid, steps };
     };
     const verify = async ({ orderId }) => {

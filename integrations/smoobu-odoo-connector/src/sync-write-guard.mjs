@@ -46,6 +46,14 @@ function validateLineCommand(cmd) {
 /** ATH-DEV-120: modelos PROHIBIDOS de forma explicita (ademas de no estar en la lista blanca): pagos, facturas, asientos y banca. */
 export const FORBIDDEN_MODELS = /^(account\.|payment\.|res\.partner\.bank$|res\.bank$|account_)/;
 
+/** HTML permitido en una nota: texto escapado y anclas <a href> https a wa.me (numero de 8-15 cifras) o a la reserva en Smoobu. Nada mas. */
+const HTML_ANCHOR = /<a href="(https:\/\/wa\.me\/\d{8,15}\?text=[A-Za-z0-9%._~-]*|https:\/\/login\.smoobu\.com\/en\/booking\/detail\/\d{1,12})" target="_blank" rel="noopener noreferrer">[^<>"]{1,60}<\/a>/g;
+function validateHtmlNote(params) {
+  if (params.body_is_html !== true) fail('SYNC_WRITE_NOTE_HTML_INVALID');
+  const rest = String(params.body).replace(HTML_ANCHOR, '');
+  if (/[<>]/.test(rest) || /&(?!(amp|lt|gt|quot);)/.test(rest) || (String(params.body).match(HTML_ANCHOR) ?? []).length > 1) fail('SYNC_WRITE_NOTE_HTML_INVALID');
+}
+
 export function validateWrite(model, method, params) {
   if (FORBIDDEN_MODELS.test(String(model))) fail('SYNC_WRITE_FINANCIAL_MODEL_FORBIDDEN');
   const methods = WRITE_ALLOWLIST[model];
@@ -76,9 +84,10 @@ export function validateWrite(model, method, params) {
   if (method === 'action_confirm' || method === 'action_cancel') { oneId(params?.ids); onlyKeys(params, new Set(['ids', 'context']), 'SYNC_WRITE_FIELD_FORBIDDEN'); return true; }
   if (method === 'message_post') {
     oneId(params?.ids);
-    onlyKeys(params, new Set(['ids', 'body', 'message_type', 'subtype_xmlid']), 'SYNC_WRITE_FIELD_FORBIDDEN');
+    onlyKeys(params, new Set(['ids', 'body', 'body_is_html', 'message_type', 'subtype_xmlid']), 'SYNC_WRITE_FIELD_FORBIDDEN');
     if (params.message_type !== 'comment' || params.subtype_xmlid !== 'mail.mt_note') fail('SYNC_WRITE_ONLY_INTERNAL_NOTES');
     if (!/^ATH-SYNC \| /.test(String(params.body ?? ''))) fail('SYNC_WRITE_NOTE_FORMAT');
+    if ('body_is_html' in params) validateHtmlNote(params); // ATH-ODOO-WA-004: HTML solo para anclas https a wa.me o a Smoobu
     return true;
   }
   return fail('SYNC_WRITE_NOT_ALLOWED');
