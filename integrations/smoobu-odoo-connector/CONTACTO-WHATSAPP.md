@@ -80,7 +80,7 @@ Para guardar el digital en Odoo hará falta un campo propio (por ejemplo `x_chec
    Business y plantillas aprobadas por Meta (a diferencia de `wa.me`). No existe ninguna plantilla aprobada para `sale.order`; la de
    «Confirmacion Reserva ATHERON SUITE» (`planning.slot`) está en borrador. No se creó ni modificó nada.
 
-## Pruebas (`test/guest-contact.test.mjs`, 14 pruebas; suite completa 371/371)
+## Pruebas (`test/guest-contact.test.mjs`, 18 pruebas; suite completa 375/375)
 
 - Funcionamiento: normalización, mensaje, enlace `wa.me`, plan con/sin teléfono, integración con el ejecutor (Odoo simulado).
 - Privacidad: el resultado del ejecutor y el diario no contienen teléfono, correo ni enlace; el módulo no imprime ni lee entorno; el
@@ -89,6 +89,10 @@ Para guardar el digital en Odoo hará falta un campo propio (por ejemplo `x_chec
 - Check-in conectado: con enlace válido en la respuesta de Smoobu el mensaje lo incluye; sin campo, vacío, otro host o ruta ajena, no.
 - Nota clicable: una sola ancla `https` a `wa.me`, ninguna otra etiqueta ni URL en texto plano; el guard rechaza scripts, otros hosts,
   atributos extra, varias anclas y `body_is_html` distinto de `true`.
+- Apóstrofo (`O'Connor`): `encodeURIComponent` no codifica `!'()*`; el enlace usa codificación estricta (`strictEncode`) y el `href` solo trae
+  `[A-Za-z0-9%._~-]`. Prueba integrada que atraviesa `applyPlan` y `validateWrite`.
+- Sin ejecuciones parciales: la nota se valida con el guard **antes** de crear contacto o pedido (`NOTA_INTERNA_NO_VALIDA`, 0 escrituras); si
+  la publicación falla después, queda INTENT y la recuperación lo cierra sin duplicados.
 - Sin envío: ninguna llamada a WhatsApp, SMS o correo; el guard sigue aceptando solo notas internas `ATH-SYNC`.
 
 ## Limitaciones conocidas
