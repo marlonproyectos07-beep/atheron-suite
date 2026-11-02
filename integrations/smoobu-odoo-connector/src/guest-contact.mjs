@@ -44,13 +44,23 @@ export function normalizePhoneE164(raw) {
 }
 
 const CHECKIN_HOSTS = new Set(['login.smoobu.com']);
-/** Solo se acepta un enlace https de check-in cuyo host sea de Smoobu; cualquier otra cosa se descarta en silencio. */
+// Patron observado del enlace individual de online check-in de Smoobu: /<idioma>/online-check-in/check-in/<token>
+const CHECKIN_PATH = /^\/[a-z]{2}(?:-[A-Za-z]{2})?\/online-check-in\/check-in\/[A-Za-z0-9_-]{6,}$/;
+/** Solo se acepta un enlace https de Smoobu con la forma del check-in online; cualquier otra cosa se descarta en silencio. */
 export function safeCheckinLink(raw) {
   try {
     const u = new URL(String(raw ?? '').trim());
-    return u.protocol === 'https:' && CHECKIN_HOSTS.has(u.hostname) && !u.username && !u.password ? u.toString() : null;
+    return u.protocol === 'https:' && CHECKIN_HOSTS.has(u.hostname) && !u.username && !u.password && !u.search && !u.hash && CHECKIN_PATH.test(u.pathname) ? u.toString() : null;
   } catch { return null; }
 }
+
+/**
+ * Unica fuente conectada: el campo `guest-app-url` de la respuesta de Smoobu (existe en la API; en la reserva 162332151 viene vacio).
+ * NO se asume que contenga el check-in: solo pasa si, ademas, tiene la forma del enlace de online check-in. Si la API no lo trae o
+ * trae otra cosa (p. ej. el enlace de la app del huesped), devuelve null y el mensaje sale sin enlace.
+ */
+export const CHECKIN_LINK_FIELD = 'guest-app-url';
+export const checkinLinkFromBooking = (booking) => safeCheckinLink(booking?.[CHECKIN_LINK_FIELD]);
 
 const fmtDate = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso ?? '')); return m ? `${m[3]}/${m[2]}/${m[1]}` : null; };
 const firstName = (name) => {
@@ -97,11 +107,20 @@ export function planGuestContact({ smoobuId, guest, arrival, departure, checkinL
   return { whatsapp: { available: true, url: buildWhatsappLink(phone.e164, message), reason: null }, fallback, message };
 }
 
-/** Fragmento para la nota interna ATH-SYNC del pedido nuevo (el guard solo exige que empiece por "ATH-SYNC | "). */
-export function assistNoteFragment(plan) {
-  if (plan?.whatsapp?.available && plan.whatsapp.url) return ` | WhatsApp (abre el chat, envio manual): ${plan.whatsapp.url}`;
-  const alt = plan?.fallback?.url ? ` | alternativa: ${plan.fallback.url}` : '';
-  return ` | WhatsApp no disponible (${plan?.whatsapp?.reason ?? 'SIN_DATOS'})${alt}`;
+const escapeHtml = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const anchor = (url, label) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+
+/**
+ * Cuerpo HTML de la nota interna ATH-SYNC del pedido nuevo, con el enlace CLICABLE.
+ * Odoo 19 escapa un `body` de tipo texto (mail.thread.message_post: "str content will be escaped"), por lo que una URL en texto plano
+ * saldria como texto sin enlace. Por eso la nota se publica con `body_is_html: true` y un ancla <a href>. Todo el texto se escapa; solo
+ * hay anclas a wa.me o a Smoobu, construidas aqui (el guard de escritura vuelve a comprobarlo).
+ */
+export function assistNoteHtml(prefixText, plan) {
+  const head = escapeHtml(prefixText);
+  if (plan?.whatsapp?.available && plan.whatsapp.url) return `${head}${escapeHtml(' | WhatsApp (abre el chat, envio manual): ')}${anchor(plan.whatsapp.url, 'Abrir chat de WhatsApp')}`;
+  const alt = plan?.fallback?.url ? `${escapeHtml(' | alternativa: ')}${anchor(plan.fallback.url, 'Abrir reserva en Smoobu')}` : '';
+  return `${head}${escapeHtml(` | WhatsApp no disponible (${plan?.whatsapp?.reason ?? 'SIN_DATOS'})`)}${alt}`;
 }
 
 /* ---------- estados independientes ---------- */

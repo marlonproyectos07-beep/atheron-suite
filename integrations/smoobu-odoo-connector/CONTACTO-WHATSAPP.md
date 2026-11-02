@@ -5,22 +5,29 @@ Estado: **listo para revisión de gerencia. No fusionado, no desplegado, sin esc
 ## Qué hace
 
 Reutiliza el conector Smoobu → Odoo existente (no hay otro conector). Cuando la sincronización cree un **pedido nuevo en borrador**,
-su nota interna `ATH-SYNC` (la única escritura de este tipo que el guard ya permitía) incluye:
+su nota interna `ATH-SYNC` (la misma nota que el guard ya permitía) incluye:
 
-- **Con teléfono válido:** un enlace `https://wa.me/<número>?text=<mensaje>`. Un clic abre WhatsApp con el chat y el mensaje
+- **Con teléfono válido:** un **ancla HTML clicable** a `https://wa.me/<número>?text=<mensaje>`. Un clic abre WhatsApp con el chat y el mensaje
   escritos; **recepción pulsa Enviar**. El código no llama a ninguna API de WhatsApp ni envía nada.
 - **Sin teléfono válido:** *no* hay acción de WhatsApp. La nota dice `WhatsApp no disponible (motivo)` y da la alternativa:
   abrir la reserva en Smoobu (`https://login.smoobu.com/en/booking/detail/<id>`) y escribir desde Mensajes.
 
-Código: `src/guest-contact.mjs` (puro, sin red). Integración: una línea en `src/sync-apply.mjs` (al crear el pedido).
-No se tocó la lista blanca de escritura (`sync-write-guard.mjs`), ni variables, ni secretos, ni el issue #101.
+Código: `src/guest-contact.mjs` (puro, sin red). Integración: `src/sync-apply.mjs` (al crear el pedido). Único ajuste al guard
+(`sync-write-guard.mjs`, revisión del PR): `message_post` admite `body_is_html: true`, y solo si el cuerpo es texto escapado más
+**una** ancla `https` a `wa.me` (8–15 cifras) o a la reserva en Smoobu. No se tocaron variables, secretos ni el issue #101.
+
+### Por qué un ancla HTML (nota clicable)
+
+En Odoo 19, `mail.thread.message_post` **escapa** un `body` de tipo texto (docstring: «str content will be escaped, Markup for html
+body»; el parámetro `body_is_html` existe «para llamadas RPC»). Una URL en texto plano saldría como texto, no como enlace. Por eso la
+nota se publica con `body_is_html: true` y un `<a href=… target="_blank" rel="noopener noreferrer">`. Todo el resto del texto se escapa.
 
 ## Datos usados (todos verificados)
 
 | Dato | Fuente | Verificación |
 |---|---|---|
 | Nombre, teléfono, fechas | Respuesta de Smoobu que el conector ya lee (`guest-name`, `phone`, `arrival`, `departure`) | Sonda `reservation-once`, 2026-11-02 |
-| Enlace de check-in | `guest-app-url` de Smoobu, **solo si trae valor** y es `https://login.smoobu.com/...` | En la reserva 162332151 viene **vacío**: hoy el mensaje sale sin enlace |
+| Enlace de check-in | `guest-app-url` de la respuesta fresca de Smoobu (única fuente conectada), **solo si** es `https://login.smoobu.com/<idioma>/online-check-in/check-in/<token>` (sin credenciales, parámetros ni fragmento) | En la reserva 162332151 viene **vacío**: hoy el mensaje sale sin enlace. No se sabe si Smoobu llena ese campo con el check-in; si trae otra cosa (p. ej. enlace de la app del huésped) se descarta |
 
 Nunca se inventa un dato: sin fechas o sin enlace, esa parte del mensaje se omite.
 
@@ -73,12 +80,15 @@ Para guardar el digital en Odoo hará falta un campo propio (por ejemplo `x_chec
    Business y plantillas aprobadas por Meta (a diferencia de `wa.me`). No existe ninguna plantilla aprobada para `sale.order`; la de
    «Confirmacion Reserva ATHERON SUITE» (`planning.slot`) está en borrador. No se creó ni modificó nada.
 
-## Pruebas (`test/guest-contact.test.mjs`, 12 pruebas; suite completa 369/369)
+## Pruebas (`test/guest-contact.test.mjs`, 14 pruebas; suite completa 371/371)
 
 - Funcionamiento: normalización, mensaje, enlace `wa.me`, plan con/sin teléfono, integración con el ejecutor (Odoo simulado).
 - Privacidad: el resultado del ejecutor y el diario no contienen teléfono, correo ni enlace; el módulo no imprime ni lee entorno; el
   enlace de check-in solo se acepta de `login.smoobu.com` por HTTPS.
 - Duplicados: repetir la sincronización (con o sin diario) no crea otro pedido ni otra nota ni otro enlace.
+- Check-in conectado: con enlace válido en la respuesta de Smoobu el mensaje lo incluye; sin campo, vacío, otro host o ruta ajena, no.
+- Nota clicable: una sola ancla `https` a `wa.me`, ninguna otra etiqueta ni URL en texto plano; el guard rechaza scripts, otros hosts,
+  atributos extra, varias anclas y `body_is_html` distinto de `true`.
 - Sin envío: ninguna llamada a WhatsApp, SMS o correo; el guard sigue aceptando solo notas internas `ATH-SYNC`.
 
 ## Limitaciones conocidas
@@ -87,6 +97,8 @@ Para guardar el digital en Odoo hará falta un campo propio (por ejemplo `x_chec
   reservas saldrán con «WhatsApp no disponible» y la alternativa por Smoobu/Booking.
 - **El enlace de check-in no llega por la API** en esa reserva (`guest-app-url` vacío, sin campo de estado). Hay que revisar en la
   interfaz de Smoobu si el enlace solo existe vía la plantilla de mensajes; mientras tanto el mensaje sale sin él.
+- **Clicable en Odoo: comprobado por código fuente y pruebas, no en pantalla.** Verlo en el chatter exige publicar una nota en Odoo
+  (una escritura), que no está autorizada. Primera comprobación visual: el piloto ATH-DEV-118 (una reserva, borrador).
 - La nota interna con `wa.me` contiene el teléfono (ya guardado en el contacto); es interna, nunca va a reportes públicos.
 - La URL de la alternativa (`login.smoobu.com/en/booking/detail/<id>`) sale de lo observado en la interfaz; confirmar con una reserva real.
 - Solo aplica a pedidos creados **después** de activar escrituras; no se retrocede sobre pedidos existentes.

@@ -8,8 +8,8 @@ import { Journal, MemoryLock } from '../src/sync-journal.mjs';
 import { applyPlan, RESULT } from '../src/sync-apply.mjs';
 import { buildCreatePayload, opKey, OPS, STATUS, GUARDS } from '../src/sync-intent.mjs';
 import {
-  normalizePhoneE164, buildGuestMessage, buildWhatsappLink, fallbackContact, planGuestContact, assistNoteFragment,
-  safeCheckinLink, contactStates, physicalFromOdoo, PHONE_REASONS,
+  normalizePhoneE164, buildGuestMessage, buildWhatsappLink, fallbackContact, planGuestContact, assistNoteHtml,
+  safeCheckinLink, checkinLinkFromBooking, CHECKIN_LINK_FIELD, contactStates, physicalFromOdoo, PHONE_REASONS,
 } from '../src/guest-contact.mjs';
 
 // ATH-ODOO-WA-004 — Todo SINTETICO (ids 17xxxxxxx, nombres y telefonos inventados). Ninguna llamada de red, ningun envio.
@@ -37,10 +37,16 @@ test('mensaje: usa solo datos presentes y no inventa nada', () => {
   assert.ok(!/check-in|http/.test(bare), 'sin enlace no se menciona el check-in');
 });
 
-test('enlace de check-in: solo https de Smoobu; otros hosts, http y credenciales se descartan', () => {
-  assert.ok(safeCheckinLink('https://login.smoobu.com/en/online-check-in/check-in/X'));
-  for (const bad of ['http://login.smoobu.com/x', 'https://evil.example/x', 'https://login.smoobu.com.evil.example/x', 'https://u:p@login.smoobu.com/x', 'javascript:alert(1)', '', null, 'no es url']) assert.equal(safeCheckinLink(bad), null, String(bad));
+test('enlace de check-in: solo https de Smoobu con la forma del check-in online; otros hosts, http, credenciales y rutas ajenas se descartan', () => {
+  assert.ok(safeCheckinLink('https://login.smoobu.com/en/online-check-in/check-in/TOKEN_SINTETICO'));
+  for (const bad of ['http://login.smoobu.com/en/online-check-in/check-in/TOKEN_SINTETICO', 'https://evil.example/en/online-check-in/check-in/TOKEN_SINTETICO', 'https://login.smoobu.com.evil.example/en/online-check-in/check-in/TOKEN_SINTETICO',
+    'https://u:p@login.smoobu.com/en/online-check-in/check-in/TOKEN_SINTETICO', 'https://login.smoobu.com/en/guest-app/TOKEN_SINTETICO', 'https://login.smoobu.com/en/online-check-in/check-in/TOKEN_SINTETICO?x=1',
+    'javascript:alert(1)', '', null, 'no es url']) assert.equal(safeCheckinLink(bad), null, String(bad));
   assert.ok(!buildGuestMessage({ checkinLink: 'https://evil.example/x' }).includes('evil'));
+  // fuente conectada: solo `guest-app-url` de la respuesta de Smoobu, y solo si tiene esa forma
+  assert.equal(CHECKIN_LINK_FIELD, 'guest-app-url');
+  assert.equal(checkinLinkFromBooking({ 'guest-app-url': 'https://login.smoobu.com/es/online-check-in/check-in/TOKEN_SINTETICO' }), 'https://login.smoobu.com/es/online-check-in/check-in/TOKEN_SINTETICO');
+  for (const b of [{ 'guest-app-url': '' }, { 'guest-app-url': null }, {}, undefined, { 'guest-app-url': 'https://login.smoobu.com/en/guest-app/ABC123456' }, { otroCampo: 'https://login.smoobu.com/en/online-check-in/check-in/TOKEN_SINTETICO' }]) assert.equal(checkinLinkFromBooking(b), null);
 });
 
 test('boton WhatsApp: wa.me con texto codificado; solo abre el chat (no envia)', () => {
@@ -61,7 +67,7 @@ test('plan: con telefono valido hay enlace; sin telefono no hay accion de WhatsA
   assert.deepEqual(none.fallback, fallbackContact({ smoobuId: 170500001 }));
   assert.equal(none.fallback.url, 'https://login.smoobu.com/en/booking/detail/170500001');
   assert.equal(fallbackContact({ smoobuId: 'x; rm' }), null);
-  assert.equal(assistNoteFragment(none), ' | WhatsApp no disponible (SIN_TELEFONO) | alternativa: https://login.smoobu.com/en/booking/detail/170500001');
+  assert.equal(assistNoteHtml('ATH-SYNC | x', none), 'ATH-SYNC | x | WhatsApp no disponible (SIN_TELEFONO) | alternativa: <a href="https://login.smoobu.com/en/booking/detail/170500001" target="_blank" rel="noopener noreferrer">Abrir reserva en Smoobu</a>');
 });
 
 test('estados: digital, fisico y pago son independientes y nunca se suponen', () => {
@@ -79,6 +85,8 @@ test('estados: digital, fisico y pago son independientes y nunca se suponen', ()
 
 /* ---------- integracion con el ejecutor existente (Odoo falso en memoria) ---------- */
 const TODAY = '2026-11-05';
+const CHECKIN = 'https://login.smoobu.com/es/online-check-in/check-in/TOKEN_SINTETICO';
+const bodyAnchors = (html) => [...html.matchAll(/<a href="([^"]+)"[^>]*>([^<]*)<\/a>/g)].map((m) => ({ href: m[1], label: m[2] }));
 const APT = { 302: 3557526 };
 const smoobuOf = (map) => ({ async getReservation(id) { return map[id]; } });
 const createOp = (id, { phone, name = 'Ana Sintetica Ficticia' } = {}) => {
@@ -97,7 +105,7 @@ test('ejecutor: la nota interna del pedido nuevo trae el enlace wa.me y el guard
   const r = await run(e, [createOp(170500001, { phone: '+57 300 123 4567' })]);
   assert.equal(r.results[0].result, RESULT.APLICADA, JSON.stringify(r));
   assert.equal(e.odoo.t.notes.length, 1);
-  assert.match(e.odoo.t.notes[0].body, /^ATH-SYNC \| clave [0-9a-f]{16} \| SMOOBU-170500001 \| CREATE_ORDER \| WhatsApp \(abre el chat, envio manual\): https:\/\/wa\.me\/573001234567\?text=/);
+  assert.match(e.odoo.t.notes[0].body, /^ATH-SYNC \| clave [0-9a-f]{16} \| SMOOBU-170500001 \| CREATE_ORDER \| WhatsApp \(abre el chat, envio manual\): <a href="https:\/\/wa\.me\/573001234567\?text=/);
   assert.ok(e.odoo.calls.length > 0 && e.odoo.calls.every((c) => !/whatsapp|sms|mail\.mail|_send|send_/i.test(c)), `ninguna llamada de envio: ${e.odoo.calls.join(',')}`);
   assert.ok(e.odoo.calls.some((c) => c === 'sale.order/message_post'), 'solo la nota interna');
 });
@@ -107,7 +115,7 @@ test('ejecutor: sin telefono la nota dice que no hay WhatsApp y da la alternativ
   const r = await run(e, [createOp(170500002, { phone: null })]);
   assert.equal(r.results[0].result, RESULT.APLICADA, JSON.stringify(r));
   const body = e.odoo.t.notes[0].body;
-  assert.match(body, /WhatsApp no disponible \(SIN_TELEFONO\) \| alternativa: https:\/\/login\.smoobu\.com\/en\/booking\/detail\/170500002/);
+  assert.match(body, /WhatsApp no disponible \(SIN_TELEFONO\) \| alternativa: <a href="https:\/\/login\.smoobu\.com\/en\/booking\/detail\/170500002"/);
   assert.ok(!body.includes('wa.me'));
 });
 
@@ -132,9 +140,51 @@ test('privacidad: el resultado del ejecutor no expone el telefono ni el enlace; 
   assert.ok(!/console\.|process\.env|appendFileSync/.test(src), 'el modulo no imprime ni lee entorno');
 });
 
-test('el enlace wa.me solo se agrega a la nota del pedido NUEVO; el guard sigue exigiendo nota interna ATH-SYNC', () => {
-  const base = { ids: [1], message_type: 'comment', subtype_xmlid: 'mail.mt_note' };
-  assert.ok(validateWrite('sale.order', 'message_post', { ...base, body: `ATH-SYNC | clave x | SMOOBU-1 | CREATE_ORDER${assistNoteFragment({ whatsapp: { available: true, url: 'https://wa.me/573001234567?text=Hola' } })}` }));
-  assert.throws(() => validateWrite('sale.order', 'message_post', { ...base, body: 'Hola https://wa.me/573001234567' }), /SYNC_WRITE_NOTE_FORMAT/);
-  assert.throws(() => validateWrite('sale.order', 'message_post', { ...base, subtype_xmlid: 'mail.mt_comment', body: 'ATH-SYNC | x' }), /SYNC_WRITE_ONLY_INTERNAL_NOTES/);
+const decodedText = (href) => decodeURIComponent(new URL(href).searchParams.get('text'));
+
+test('check-in conectado: con enlace valido en la respuesta de Smoobu el mensaje lo incluye; sin enlace, vacio o ajeno, no', async () => {
+  const withLink = env(170500005, { 'guest-name': 'Ana Sintetica Ficticia', 'guest-app-url': CHECKIN });
+  await run(withLink, [createOp(170500005, { phone: '+57 300 123 4567' })]);
+  const [a] = bodyAnchors(withLink.odoo.t.notes[0].body);
+  assert.ok(decodedText(a.href).includes(`completar el check-in en línea aquí: ${CHECKIN}`));
+  for (const [id, extra] of [[170500006, {}], [170500007, { 'guest-app-url': '' }], [170500008, { 'guest-app-url': 'https://evil.example/en/online-check-in/check-in/TOKEN_SINTETICO' }], [170500009, { 'guest-app-url': 'https://login.smoobu.com/en/guest-app/TOKEN_SINTETICO' }]]) {
+    const e = env(id, { 'guest-name': 'Ana Sintetica Ficticia', ...extra });
+    await run(e, [createOp(id, { phone: '+57 300 123 4567' })]);
+    const msg = decodedText(bodyAnchors(e.odoo.t.notes[0].body)[0].href);
+    assert.ok(!/check-in|http/.test(msg), `${id}: ${msg}`);
+    assert.ok(!e.odoo.t.notes[0].body.includes('TOKEN_SINTETICO'));
+  }
+});
+
+test('nota clicable: el cuerpo es HTML con UNA ancla https a wa.me, publicado con body_is_html (Odoo 19 escapa el texto plano)', async () => {
+  const e = env(170500010, { 'guest-name': 'Ana Sintetica Ficticia' });
+  const r = await run(e, [createOp(170500010, { phone: '+57 300 123 4567' })]);
+  assert.equal(r.results[0].result, RESULT.APLICADA, JSON.stringify(r));
+  const body = e.odoo.t.notes[0].body;
+  const anchors = bodyAnchors(body);
+  assert.equal(anchors.length, 1);
+  assert.match(anchors[0].href, /^https:\/\/wa\.me\/573001234567\?text=[A-Za-z0-9%._~-]+$/);
+  assert.match(body, /<a href="[^"]+" target="_blank" rel="noopener noreferrer">Abrir chat de WhatsApp<\/a>$/);
+  assert.ok(!/<(?!a |\/a>)/.test(body), 'ninguna otra etiqueta');
+  assert.ok(!/ [^<>]*https?:\/\/[^<>]*(?=<)/.test(body.replace(/<a [^>]*>.*?<\/a>/g, '')), 'ninguna URL fuera del ancla (texto plano no seria clicable)');
+  // el mensaje tiene "&", acentos y comillas: el href no se rompe
+  assert.equal(new URL(anchors[0].href).searchParams.get('text').startsWith('Hola Ana, le escribimos'), true);
+});
+
+test('guard: body_is_html solo para anclas https a wa.me o Smoobu; scripts, otros hosts, atributos extra y body_is_html distinto de true se rechazan', () => {
+  const base = { ids: [1], message_type: 'comment', subtype_xmlid: 'mail.mt_note', body_is_html: true };
+  const A = (href, label = 'Abrir') => `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+  const good = `ATH-SYNC | clave x | SMOOBU-1 | CREATE_ORDER | WhatsApp: ${A('https://wa.me/573001234567?text=Hola%20Ana')}`;
+  assert.ok(validateWrite('sale.order', 'message_post', { ...base, body: good }));
+  assert.ok(validateWrite('sale.order', 'message_post', { ...base, body: `ATH-SYNC | x | ${A('https://login.smoobu.com/en/booking/detail/170500001')}` }));
+  assert.ok(validateWrite('sale.order', 'message_post', { ids: [1], message_type: 'comment', subtype_xmlid: 'mail.mt_note', body: 'ATH-SYNC | texto plano sin HTML' }), 'las notas de texto siguen igual');
+  const bad = [
+    `ATH-SYNC | x | ${A('https://evil.example/x')}`, `ATH-SYNC | x | ${A('http://wa.me/573001234567?text=a')}`, `ATH-SYNC | x | ${A('javascript:alert(1)')}`,
+    'ATH-SYNC | x | <script>alert(1)</script>', 'ATH-SYNC | x | <img src="https://evil.example/p.png">', `ATH-SYNC | x | ${A('https://wa.me/573001234567?text=a')}${A('https://wa.me/573001234568?text=b')}`,
+    `ATH-SYNC | x | <a href="https://wa.me/573001234567?text=a" onclick="x()">Abrir</a>`, 'ATH-SYNC | x | a < b', 'ATH-SYNC | x | &nbsp;',
+  ];
+  for (const body of bad) assert.throws(() => validateWrite('sale.order', 'message_post', { ...base, body }), /SYNC_WRITE_NOTE_HTML_INVALID/, body);
+  assert.throws(() => validateWrite('sale.order', 'message_post', { ...base, body_is_html: 'true', body: good }), /SYNC_WRITE_NOTE_HTML_INVALID/);
+  assert.throws(() => validateWrite('sale.order', 'message_post', { ...base, body: `Hola ${A('https://wa.me/573001234567?text=a')}` }), /SYNC_WRITE_NOTE_FORMAT/);
+  assert.throws(() => validateWrite('sale.order', 'message_post', { ...base, subtype_xmlid: 'mail.mt_comment', body: good }), /SYNC_WRITE_ONLY_INTERNAL_NOTES/);
 });
