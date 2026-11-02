@@ -11,11 +11,27 @@ import { maskSmoobu, maskOta } from './public-report.mjs';
  *  - el id y la referencia OTA enmascarados (4 ultimos caracteres).
  * Nunca: nombre del huesped, correo, telefono, direccion, notas, mensajes, precios ni ningun otro valor fuera de la lista.
  */
-export const ALLOWED_RESERVATION_IDS = Object.freeze(new Set([160829171]));
+export const ALLOWED_RESERVATION_IDS = Object.freeze(new Set([160829171, 162332151]));
 
 const TECHNICAL = ['type', 'arrival', 'departure', 'created-at', 'createdAt', 'modifiedAt', 'modified-at', 'is-blocked-booking', 'adults', 'children'];
 const STATUS_NAME = /(status|state|overbook|conflict|valid|active|cancel|blocked|confirm)/i;
 const SAFE_SHORT = (v) => typeof v === 'boolean' || typeof v === 'number' || v === null || (typeof v === 'string' && v.length <= 40 && !v.includes('@') && !/\d{7,}/.test(v));
+
+// ATH-DEV-139: presencia (nunca valor) de telefono, correo y datos de online check-in.
+const CHECKIN_KEY = /(check-?in|guest-?app|online)/i;
+export function presence(v) {
+  if (v === undefined) return 'ausente';
+  if (v === null || (typeof v === 'string' && v.trim() === '') || (Array.isArray(v) && v.length === 0) || (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0)) return 'vacio';
+  return 'presente_con_valor';
+}
+function checkinKeys(r) {
+  const out = {};
+  for (const [k, v] of Object.entries(r ?? {})) {
+    if (CHECKIN_KEY.test(k)) out[k] = presence(v);
+    if (v && typeof v === 'object' && !Array.isArray(v)) for (const [k2, v2] of Object.entries(v)) if (CHECKIN_KEY.test(k2)) out[`${k}.${k2}`] = presence(v2);
+  }
+  return out;
+}
 
 export function parseAllowedId(raw, allowed = ALLOWED_RESERVATION_IDS) {
   const s = String(raw ?? '').trim();
@@ -41,6 +57,8 @@ export function summarizeReservation(r) {
     apartmentId: Number.isInteger(Number(r?.apartment?.id)) ? Number(r.apartment.id) : null,
     channelId: Number.isInteger(Number(r?.channel?.id)) ? Number(r.channel.id) : null,
     channelName: typeof r?.channel?.name === 'string' && SAFE_SHORT(r.channel.name) ? r.channel.name : null,
+    contactPresence: { phone: presence(r?.phone), email: presence(r?.email) },
+    checkinFields: checkinKeys(r),
     technical,
     statusLikeFields: statusLike,
     fieldNames: keys,
