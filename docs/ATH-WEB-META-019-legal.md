@@ -18,16 +18,22 @@ ATHERON S.A.S. · NIT 901.881.946-1 · Carrera 9 N.º 10-32, Zipaquirá · Whats
 ## RNT 235267
 Titular **persona natural**, categoria **Casa Turistica**, vence 31/03/2027. Se presenta aparte, nunca como
 registro de la sociedad, solo en paginas legales/pie (no en una ficha concreta: el certificado no nombra un
-establecimiento). Nombre del titular oculto por defecto (`mostrarNombreTitular`).
+establecimiento). Nombre del titular autorizado para mostrar en la pagina legal (`mostrarNombreTitular: true`), sin activar la publicacion.
 
-## Requiere aprobacion de direccion (datos que NO se inventaron)
-1. Correo oficial de contacto y para derechos del titular (`CORREO_CONTACTO`, hoy null → bloque oculto).
-2. Mostrar o no el nombre de la persona natural titular del RNT.
-3. Condiciones de reserva: anticipo, medios de pago, cancelacion/devolucion, cambios, entrada/salida,
-   menores y mascotas, normas (`CONDICIONES_RESERVA`, todo null → bloques ocultos).
-4. A que hospedaje(s) corresponde el RNT 235267 y vinculo entre el titular y ATHERON S.A.S. (por que opera la sociedad).
-5. Fecha de vigencia de los textos (`VIGENCIA_LEGAL`).
-6. Codigo postal 250251 cargado en Meta: confirmar contra el RUT.
+## Decisiones de gerencia — ATH-WEB-META-022 (incorporadas, aun sin publicar)
+- Correo de contacto y privacidad: `comercialgsc001@gmail.com`.
+- RNT 235267: mostrar nombre completo del titular persona natural solo en informacion legal, diferenciado de ATHERON S.A.S.
+- Anticipo en reservas directas: 30 % a 50 % segun condiciones informadas en cada cotizacion o confirmacion.
+- Cancelaciones y devoluciones: condiciones particulares comunicadas y aceptadas para la reserva; sin plazos o porcentajes generales no aprobados.
+- Check-in habitual 15:00; check-out habitual 11:00, excepciones previa confirmacion.
+- Reserva: solo confirmada tras validar disponibilidad y condiciones aplicables, incluido anticipo verificado cuando corresponda, y confirmacion expresa por escrito.
+
+## Aun pendiente de direccion
+1. Medios de pago aceptados, cambios de fecha, menores, mascotas y normas de convivencia.
+2. A que hospedaje(s) corresponde el RNT 235267 y vinculo entre su titular y ATHERON S.A.S.
+3. Fecha de entrada en vigencia de los textos (`VIGENCIA_LEGAL`, sigue null).
+4. Codigo postal 250251 cargado en Meta: confirmar contra el RUT.
+5. Revision juridica final antes de activar la publicacion.
 
 ## Requiere revision juridica
 1. Contenido minimo de la politica (Ley 1581/2012, Decreto 1377/2013 compilado en Decreto 1074/2015) y plazos de
