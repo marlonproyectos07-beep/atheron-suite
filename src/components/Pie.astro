@@ -29,6 +29,7 @@ const {
   textoVuelta = 'Ir al inicio',
   hrefVuelta = '/',
 } = Astro.props;
+import PieLegal from './PieLegal.astro';
 ---
 
 {variante === 'completo' ? (
@@ -70,6 +71,8 @@ const {
 
       </div>
 
+      <PieLegal />
+
       <div class="footer__base">
         <span>&copy; <span data-ano>2026</span> Atheron Suite. Todos los derechos reservados.</span>
       </div>
@@ -79,6 +82,7 @@ const {
 ) : (
   <footer class="footer">
     <div class="contenedor">
+      <PieLegal />
       <div class="footer__base" style="border-top: 0;">
         <span>&copy; <span data-ano>2026</span> Atheron Suite &middot; Zipaquirá, Cundinamarca</span>
         <span><a href={hrefVuelta}>{textoVuelta}</a></span>

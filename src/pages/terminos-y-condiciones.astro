@@ -1,0 +1,90 @@
+---
+/* ============================================================
+   TERMINOS DE USO DEL SITIO Y CONDICIONES DE RESERVA
+
+   Estado: BORRADOR, pendiente de revision juridica.
+
+   Solo se afirma lo que el sitio ya dice hoy (src/data/leads-grupo.ts:
+   enviar una solicitud no confirma disponibilidad ni tarifa; las
+   consultas se atienden por WhatsApp). Las condiciones comerciales
+   -anticipo, cancelacion, horarios, menores, mascotas, normas- viven
+   en CONDICIONES_RESERVA (src/data/legal.ts) y SOLO se muestran si
+   direccion las entrega. Nada de eso se inventa aqui.
+   ============================================================ */
+import PaginaLegal from '../components/PaginaLegal.astro';
+import {
+  EMPRESA,
+  RUTAS_LEGALES,
+  CONDICIONES_RESERVA as C,
+  CORREO_CONTACTO,
+  direccionCompleta,
+} from '../data/legal';
+
+const condiciones = [
+  ['Anticipo', C.anticipo],
+  ['Medios de pago', C.medioDePago],
+  ['Cancelaciones y devoluciones', C.cancelacion],
+  ['Cambios de fecha', C.cambiosDeFecha],
+  ['Entrada y salida', C.entradaYSalida],
+  ['Menores y mascotas', C.menoresYMascotas],
+  ['Normas de convivencia', C.normasDeConvivencia],
+].filter(([, valor]) => valor) as [string, string][];
+---
+
+<PaginaLegal
+  titulo="Términos y condiciones de uso y de reserva"
+  descripcion="Condiciones de uso del sitio hotelesatheron.com y de las reservas en Atheron Suite."
+  ruta={RUTAS_LEGALES.terminos}
+>
+  <h2>1. Quién ofrece el servicio</h2>
+  <p>
+    Este sitio es operado por {EMPRESA.razonSocial}, NIT {EMPRESA.nit}, domicilio en {direccionCompleta}.
+    Consulte la <a href={RUTAS_LEGALES.informacion}>información legal</a>, que incluye el Registro Nacional de Turismo
+    y a quién corresponde.
+  </p>
+
+  <h2>2. Uso del sitio</h2>
+  <p>
+    El sitio ofrece información sobre hospedajes en Zipaquirá y permite iniciar una consulta por WhatsApp.
+    Se prohíbe usarlo para fines ilícitos, suplantar a otras personas o afectar su funcionamiento.
+  </p>
+
+  <h2>3. Información, precios y disponibilidad</h2>
+  <p>
+    La información del sitio es de referencia. Enviar una consulta o solicitud <strong>no confirma disponibilidad
+    ni tarifa</strong>: se confirman al cotizar. Las tarifas especiales para grupos están sujetas a cotización.
+  </p>
+
+  <h2>4. Cómo se hace una reserva</h2>
+  <p>
+    Las consultas, cotizaciones y reservas se gestionan por WhatsApp al
+    <a href={`tel:${EMPRESA.whatsappTel}`}> {EMPRESA.whatsapp}</a>{CORREO_CONTACTO && <> o por correo a <a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a></>}.
+    Una reserva se entiende confirmada únicamente cuando se le confirma por escrito por ese canal.
+  </p>
+
+  {condiciones.length > 0 && (<>
+    <h2>5. Condiciones de la reserva</h2>
+    {condiciones.map(([titulo, texto]) => (
+      <>
+        <h3>{titulo}</h3>
+        <p>{texto}</p>
+      </>
+    ))}
+  </>)}
+
+  <h2>{condiciones.length > 0 ? '6' : '5'}. Propiedad intelectual</h2>
+  <p>
+    Los textos, imágenes y marcas del sitio pertenecen a sus titulares y no pueden usarse sin autorización.
+  </p>
+
+  <h2>{condiciones.length > 0 ? '7' : '6'}. Datos personales</h2>
+  <p>
+    El tratamiento de sus datos se rige por la <a href={RUTAS_LEGALES.privacidad}>política de privacidad</a>.
+  </p>
+
+  <h2>{condiciones.length > 0 ? '8' : '7'}. Ley aplicable y quejas</h2>
+  <p>
+    Estos términos se rigen por la ley colombiana. Para quejas puede escribirnos por los canales anteriores y,
+    además, acudir a la Superintendencia de Industria y Comercio.
+  </p>
+</PaginaLegal>

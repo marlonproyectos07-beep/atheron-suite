@@ -956,3 +956,9 @@
 @media (min-width: 700px) {
   .visor__video { max-height: 82vh; }
 }
+
+/* Identificacion legal en el pie (solo se pinta al aprobar los textos legales) */
+.pie-legal { font-size: .875rem; line-height: 1.6; padding-block: var(--esp-3); border-top: 1px solid rgba(255,255,255,.18); }
+.pie-legal p { margin: 0 0 .5rem; }
+.pie-legal a { text-decoration: underline; }
+.pie-legal__enlaces { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; }

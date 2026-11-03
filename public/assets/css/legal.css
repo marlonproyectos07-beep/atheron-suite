@@ -1,0 +1,10 @@
+/* Paginas legales: texto largo, legible, sin adornos. */
+.legal { max-width: 46rem; }
+.legal h1 { margin-bottom: var(--esp-2); }
+.legal h2 { margin-top: var(--esp-5); margin-bottom: var(--esp-2); font-size: 1.25rem; }
+.legal p, .legal li { line-height: 1.7; }
+.legal ul { padding-left: 1.25rem; margin-block: var(--esp-2); }
+.legal__meta { color: #4a4a4a; margin-bottom: var(--esp-4); }
+.legal__datos { margin-block: var(--esp-3); }
+.legal__datos dt { font-weight: 600; margin-top: var(--esp-2); }
+.legal__datos dd { margin: 0; }

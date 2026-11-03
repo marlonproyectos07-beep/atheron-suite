@@ -1,0 +1,60 @@
+---
+/* ============================================================
+   INFORMACION LEGAL — quien opera el sitio y quien es el titular
+   del Registro Nacional de Turismo.
+
+   Datos de src/data/legal.ts. Estado: BORRADOR (ver ese archivo).
+   ============================================================ */
+import PaginaLegal from '../components/PaginaLegal.astro';
+import {
+  EMPRESA,
+  RNT,
+  RUTAS_LEGALES,
+  CORREO_CONTACTO,
+  direccionCompleta,
+} from '../data/legal';
+---
+
+<PaginaLegal
+  titulo="Información legal"
+  descripcion="Quién opera el sitio hotelesatheron.com, datos de contacto y Registro Nacional de Turismo."
+  ruta={RUTAS_LEGALES.informacion}
+>
+  <h2>Quién opera este sitio</h2>
+  <dl class="legal__datos">
+    <dt>Razón social</dt>
+    <dd>{EMPRESA.razonSocial}</dd>
+    <dt>NIT</dt>
+    <dd>{EMPRESA.nit}</dd>
+    <dt>Nombre comercial</dt>
+    <dd>{EMPRESA.nombreComercial}</dd>
+    <dt>Domicilio</dt>
+    <dd>{direccionCompleta}</dd>
+    <dt>WhatsApp y teléfono</dt>
+    <dd><a href={`tel:${EMPRESA.whatsappTel}`}>{EMPRESA.whatsapp}</a></dd>
+    {CORREO_CONTACTO && (<>
+      <dt>Correo</dt>
+      <dd><a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a></dd>
+    </>)}
+    <dt>Sitio web</dt>
+    <dd>hotelesatheron.com</dd>
+  </dl>
+
+  <h2>Registro Nacional de Turismo (RNT)</h2>
+  <p>
+    El Registro Nacional de Turismo n.º {RNT.numero} está a nombre de una
+    <strong> {RNT.titular}</strong>{RNT.mostrarNombreTitular && <> ({RNT.nombreTitular})</>},
+    en la categoría <strong>{RNT.categoria}</strong>, vigente hasta el {RNT.vigenteHasta}.
+  </p>
+  <p>
+    Este registro <strong>no es de la sociedad {EMPRESA.razonSocial}</strong>, sino de su titular, y se cita aquí
+    para que el huésped sepa a quién corresponde.
+    Puede consultarse en el Registro Nacional de Turismo oficial.
+  </p>
+
+  <h2>Otros documentos</h2>
+  <ul>
+    <li><a href={RUTAS_LEGALES.privacidad}>Política de privacidad y tratamiento de datos personales</a></li>
+    <li><a href={RUTAS_LEGALES.terminos}>Términos y condiciones de uso y de reserva</a></li>
+  </ul>
+</PaginaLegal>

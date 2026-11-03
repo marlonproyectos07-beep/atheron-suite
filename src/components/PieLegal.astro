@@ -1,0 +1,45 @@
+---
+/* ============================================================
+   PIE LEGAL — identificacion de la empresa y enlaces legales
+
+   Se pinta dentro del pie, en las dos variantes. Mientras
+   BORRADOR_LEGAL sea true NO pinta nada: el pie queda exactamente
+   como esta publicado hoy. Ver src/data/legal.ts.
+
+   Presenta por separado:
+   - la sociedad que opera el sitio (ATHERON S.A.S., NIT), y
+   - el Registro Nacional de Turismo, que es de una persona natural.
+   Nunca se mezclan en una misma frase.
+   ============================================================ */
+import {
+  BORRADOR_LEGAL,
+  EMPRESA,
+  RNT,
+  RUTAS_LEGALES,
+  CORREO_CONTACTO,
+  direccionCompleta,
+} from '../data/legal';
+---
+
+{!BORRADOR_LEGAL && (
+  <div class="pie-legal">
+    <p>
+      Sitio operado por <strong>{EMPRESA.razonSocial}</strong> · NIT {EMPRESA.nit} ·
+      {' '}{direccionCompleta}.
+    </p>
+    <p>
+      Contacto: WhatsApp <a href={`tel:${EMPRESA.whatsappTel}`}>{EMPRESA.whatsapp}</a>
+      {CORREO_CONTACTO && <> · <a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a></>}
+    </p>
+    <p>
+      Registro Nacional de Turismo n.º {RNT.numero}: titular {RNT.titular}
+      {RNT.mostrarNombreTitular && <> ({RNT.nombreTitular})</>}, categoría {RNT.categoria},
+      vigente hasta el {RNT.vigenteHasta}. Este registro no corresponde a la sociedad que opera el sitio.
+    </p>
+    <p class="pie-legal__enlaces">
+      <a href={RUTAS_LEGALES.privacidad}>Política de privacidad y tratamiento de datos</a>
+      <a href={RUTAS_LEGALES.terminos}>Términos y condiciones de reserva</a>
+      <a href={RUTAS_LEGALES.informacion}>Información legal</a>
+    </p>
+  </div>
+)}

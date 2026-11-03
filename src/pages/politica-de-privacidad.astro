@@ -1,0 +1,114 @@
+---
+/* ============================================================
+   POLITICA DE PRIVACIDAD Y TRATAMIENTO DE DATOS PERSONALES
+
+   Estado: BORRADOR, pendiente de revision juridica (Ley 1581 de 2012
+   y Decreto 1377 de 2013, hoy compilado en el Decreto 1074 de 2015).
+   No es un texto definitivo. Los puntos que exigen decision estan en
+   docs/ATH-WEB-META-019-legal.md.
+
+   Se redacta SOLO con lo que el sitio hace hoy:
+   - el formulario de contacto esta apagado (ajustes.ts); las
+     solicitudes salen por WhatsApp cuando el visitante pulsa enviar;
+   - el sitio carga Google Analytics 4 (Base.astro).
+   Lo que no esta confirmado (correo, plazos de conservacion,
+   pasarelas de pago, anticipos) NO se afirma.
+   ============================================================ */
+import PaginaLegal from '../components/PaginaLegal.astro';
+import {
+  EMPRESA,
+  RUTAS_LEGALES,
+  CORREO_CONTACTO,
+  direccionCompleta,
+} from '../data/legal';
+---
+
+<PaginaLegal
+  titulo="Política de privacidad y tratamiento de datos personales"
+  descripcion="Cómo ATHERON S.A.S. trata los datos personales de quienes consultan o reservan en Atheron Suite."
+  ruta={RUTAS_LEGALES.privacidad}
+>
+  <h2>1. Responsable del tratamiento</h2>
+  <p>
+    {EMPRESA.razonSocial}, NIT {EMPRESA.nit}, con domicilio en {direccionCompleta}.
+    Atención de consultas y reclamos por WhatsApp al
+    <a href={`tel:${EMPRESA.whatsappTel}`}> {EMPRESA.whatsapp}</a>{CORREO_CONTACTO && <> o por correo a <a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a></>}.
+  </p>
+
+  <h2>2. Datos que tratamos</h2>
+  <ul>
+    <li>Datos de contacto que usted nos escribe: nombre, número de teléfono de WhatsApp y, si nos lo da, correo.</li>
+    <li>Datos de la reserva que usted nos informa: fechas, número de personas, preferencias.</li>
+    <li>El contenido de los mensajes que nos envía por WhatsApp.</li>
+    <li>Datos de navegación del sitio, de forma agregada, mediante Google Analytics (ver punto 7).</li>
+  </ul>
+  <p>No solicitamos datos sensibles. Si alguna vez fueran necesarios, entregarlos sería voluntario.</p>
+
+  <h2>3. Finalidades</h2>
+  <ul>
+    <li>Responder consultas, cotizar y gestionar reservas y su comunicación (confirmaciones, instrucciones de llegada).</li>
+    <li>Atender solicitudes, quejas y reclamos.</li>
+    <li>Cumplir obligaciones legales, contables y de registro que correspondan.</li>
+    <li>Medir y mejorar el funcionamiento del sitio.</li>
+  </ul>
+  <p>No enviamos mensajes promocionales sin su autorización previa y expresa.</p>
+
+  <h2>4. Cómo recogemos sus datos en el sitio</h2>
+  <p>
+    El sitio no guarda en sus propios servidores los datos que usted escribe en las solicitudes
+    de consulta o de grupo: se envían por WhatsApp cuando usted pulsa enviar, y desde ese momento
+    quedan en la conversación de WhatsApp con {EMPRESA.nombreComercial}.
+  </p>
+
+  <h2>5. Proveedores y terceros</h2>
+  <p>
+    Para atenderle usamos proveedores tecnológicos que pueden tratar datos por nuestra cuenta, entre ellos
+    WhatsApp (Meta Platforms) como canal de mensajería y Google (Analytics) para medición del sitio. Estos
+    proveedores pueden estar ubicados fuera de Colombia, por lo que sus datos pueden ser transmitidos o
+    transferidos internacionalmente. Usted puede pedir más información por los canales del punto 1.
+  </p>
+
+  <h2>6. Sus derechos</h2>
+  <p>Como titular de los datos usted puede:</p>
+  <ul>
+    <li>conocer, actualizar y rectificar sus datos;</li>
+    <li>solicitar prueba de la autorización que nos dio;</li>
+    <li>ser informado del uso que se ha dado a sus datos;</li>
+    <li>presentar quejas ante la Superintendencia de Industria y Comercio;</li>
+    <li>revocar la autorización y solicitar la supresión de sus datos cuando no exista un deber legal o contractual de conservarlos;</li>
+    <li>acceder de forma gratuita a sus datos.</li>
+  </ul>
+
+  <h2>7. Analítica del sitio</h2>
+  <p>
+    Este sitio usa Google Analytics 4 para conocer, de forma estadística, qué páginas se visitan y qué botones se
+    pulsan. No enviamos a la analítica su nombre, teléfono ni el contenido de sus mensajes. Google puede usar
+    identificadores técnicos del navegador. Usted puede limitar o bloquear estos identificadores desde la
+    configuración de su navegador.
+  </p>
+
+  <h2>8. Procedimiento para consultas, reclamos y supresión</h2>
+  <p>
+    Escríbanos por los canales del punto 1 indicando su nombre, un medio de contacto y la descripción de su solicitud
+    (por ejemplo: consulta, corrección o eliminación de sus datos). La ley colombiana fija los plazos de respuesta
+    (consultas: diez días hábiles, prorrogables cinco; reclamos: quince días hábiles, prorrogables ocho), que
+    nos obligamos a respetar.
+  </p>
+
+  <h2>9. Mensajes por WhatsApp</h2>
+  <p>
+    Si recibe mensajes de {EMPRESA.nombreComercial} que no sean necesarios para su reserva, puede pedirnos que
+    dejemos de enviarlos respondiendo «BAJA» o escribiéndonos por los canales del punto 1.
+  </p>
+
+  <h2>10. Conservación y seguridad</h2>
+  <p>
+    Conservamos sus datos mientras sea necesario para las finalidades descritas y durante el tiempo que exijan las normas
+    aplicables. Aplicamos medidas técnicas y administrativas razonables para protegerlos.
+  </p>
+
+  <h2>11. Cambios en esta política</h2>
+  <p>Publicaremos en esta página cualquier cambio sustancial, con su nueva fecha de vigencia.</p>
+
+  <p><a href={RUTAS_LEGALES.informacion}>Ver información legal de {EMPRESA.razonSocial}</a></p>
+</PaginaLegal>
