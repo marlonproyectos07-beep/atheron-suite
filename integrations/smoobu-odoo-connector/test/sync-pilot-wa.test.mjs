@@ -15,6 +15,8 @@ import {
 } from '../src/sync-pilot-wa.mjs';
 import { PilotWaWriteClient, pilotWaArmedBy, PILOT_WA_ARMED, PILOT_WA_NOT_BEFORE, PILOT_WA_NOT_AFTER, PILOT_WA_ARM_PHRASE } from '../src/sync-pilot-wa-client.mjs';
 import { PILOT_ARM_PHRASE } from '../src/sync-pilot-client.mjs';
+import { issuePilotWaAuth, verifyPilotWaAuth, parseStamp, stampOf } from '../src/sync-pilot-wa-auth.mjs';
+import { execFileSync } from 'node:child_process';
 
 // ATH-DEV-140 — Todo SINTETICO y en memoria (ids 1705xxxxx, nombres, telefonos y correos inventados). Ninguna llamada de red ni envio.
 const TODAY = '2026-11-03';
@@ -47,11 +49,18 @@ function env({ admin = false, seed = {}, res = reservation() } = {}) {
 }
 const histNow = (e) => JSON.stringify({ 'sale.order': e.odoo.t['sale.order'].filter((o) => o.id < 90000 && o.id >= 22192 && o.id <= 22193), 'sale.order.line': e.odoo.t['sale.order.line'].filter((l) => l.order_id === 22192 || l.order_id === 22193) });
 const histBefore = (e) => { const h = JSON.parse(e.snapshot); return JSON.stringify({ 'sale.order': h['sale.order'], 'sale.order.line': h['sale.order.line'] }); };
+// clave PRIVADA sintetica (solo pruebas) y reloj fijo: la autorizacion se emite con ellos, como lo haria gerencia en privado
+const KEY = 'clave-privada-sintetica-solo-pruebas-0123456789';
+const NOW = new Date('2026-11-03T15:00:00Z');
+const authFor = (op, fp, o = {}) => {
+  const base = { key: KEY, smoobuId: ID, opKey: op.key, fp, expires: new Date(NOW.getTime() + 30 * 60000) };
+  return { key: KEY, code: issuePilotWaAuth({ ...base, kind: 'E' }), adminCode: issuePilotWaAuth({ ...base, kind: 'A' }), ...o };
+};
 const go = (e, o, extra = {}) => {
   const op = o ?? opFor();
   const fp = stateFingerprint(extra.fresh ?? reservation());
   return runPilotWa({ plan: extra.plan ?? { ops: [op] }, smoobuId: extra.id ?? ID, approval: pilotWaApprovalToken(op, fp), adminApproval: pilotWaAdminToken(op, fp), reader: e.reader, writer: extra.writer ?? new ShadowWaWriter({ maxWrites: 3 }),
-    smoobu: e.smoobu, journal: e.journal, lock: e.lock, today: TODAY, ...extra.rest });
+    smoobu: e.smoobu, journal: e.journal, lock: e.lock, today: TODAY, now: NOW, auth: 'auth' in extra ? extra.auth : authFor(op, fp), ...extra.rest });
 };
 const failing = (r) => (r.checks ?? []).filter((c) => !c.ok).map((c) => `${c.name}:${c.code}`);
 const decoded = (html) => decodeURIComponent(new URL(/href="([^"]+)"/.exec(html)[1]).searchParams.get('text'));
@@ -311,4 +320,183 @@ test('privacidad: ni el script ni el modulo imprimen telefono, correo, nombre, e
   for (const banned of ['573001234567', '300 123 4567', 'wa.me/', 'sintetico@example.invalid', 'Ana Sintetica']) assert.ok(!facts.includes(banned), banned);
   assert.equal(daysUntil('2026-11-03', '2026-11-20'), 17);
   assert.equal(PILOT_WA_MIN_LEAD_DAYS, 7);
+});
+
+/* ---------- ATH-DEV-140 ajustes finales: autorizacion privada y margen fijo de 7 dias ---------- */
+
+const realAttempt = async (auth, { op = opFor(), res = reservation(), seed } = {}) => {
+  const e = env({ res, ...(seed ? { seed } : {}) });
+  const c = armedClient(e, op);
+  const r = await go(e, op, { writer: c, fresh: res, auth });
+  return { e, c, r, op };
+};
+
+test('los tokens visibles en Actions son desafios publicos: SIN autorizacion privada un escritor capaz de escribir no escribe (0 escrituras)', async () => {
+  const op = opFor(); const fp = stateFingerprint(reservation());
+  for (const [label, auth, code] of [['sin autorizacion', null, 'SIN_CLAVE_DE_AUTORIZACION'], ['sin codigo', { key: KEY }, 'AUTORIZACION_AUSENTE'], ['solo el desafio publico como codigo', { key: KEY, code: pilotWaApprovalToken(op, fp) }, 'AUTORIZACION_INVALIDA'], ['sin clave privada', { code: authFor(op, fp).code }, 'SIN_CLAVE_DE_AUTORIZACION']]) {
+    const { e, c, r } = await realAttempt(auth);
+    assert.equal(r.halted, 'PILOTO_AUTORIZACION_PRIVADA_INVALIDA', label);
+    assert.equal(r.authCode, code, label);
+    assert.deepEqual([c.writes, c.spent, e.odoo.t['sale.order'].length, e.odoo.t['res.partner'].length], [0, false, 2, 2], label);
+    assert.equal(e.odoo.calls.filter((x) => /create|write|message_post|unlink/.test(x)).length, 0, label);
+  }
+  // con la autorizacion privada correcta SI aplica (una vez)
+  const ok = await realAttempt(authFor(op, fp));
+  assert.equal(ok.r.halted, null, JSON.stringify(ok.r)); assert.equal(ok.c.writes, 3);
+});
+
+test('autorizacion privada: ligada a clave, reserva, operacion, huella, tipo y caducidad; un codigo filtrado no sirve para nada mas', async () => {
+  const op = opFor(); const res = reservation(); const fp = stateFingerprint(res);
+  const exp = (min) => new Date(NOW.getTime() + min * 60000);
+  const base = { key: KEY, smoobuId: ID, opKey: op.key, fp };
+  const bad = [
+    ['clave privada distinta', { ...authFor(op, fp), code: issuePilotWaAuth({ ...base, key: `${KEY}-otra`, kind: 'E', expires: exp(30) }) }, 'AUTORIZACION_INVALIDA'],
+    ['otra reserva', { ...authFor(op, fp), code: issuePilotWaAuth({ ...base, smoobuId: 170500999, kind: 'E', expires: exp(30) }) }, 'AUTORIZACION_INVALIDA'],
+    ['otra operacion', { ...authFor(op, fp), code: issuePilotWaAuth({ ...base, opKey: '0123456789abcdef', kind: 'E', expires: exp(30) }) }, 'AUTORIZACION_INVALIDA'],
+    ['otro estado (huella)', { ...authFor(op, fp), code: issuePilotWaAuth({ ...base, fp: stateFingerprint(reservation(ID, { price: 91000 })), kind: 'E', expires: exp(30) }) }, 'AUTORIZACION_INVALIDA'],
+    ['tipo cambiado (administrador usado como ejecutar)', { ...authFor(op, fp), code: issuePilotWaAuth({ ...base, kind: 'A', expires: exp(30) }) }, 'AUTORIZACION_INVALIDA'],
+    ['vencido', { ...authFor(op, fp), code: issuePilotWaAuth({ ...base, kind: 'E', expires: exp(-1) }) }, 'AUTORIZACION_VENCIDA'],
+    ['vigencia excesiva (> 60 min)', { ...authFor(op, fp), code: issuePilotWaAuth({ ...base, kind: 'E', expires: exp(61) }) }, 'AUTORIZACION_VIGENCIA_EXCESIVA'],
+    ['caducidad alterada a mano', { ...authFor(op, fp), code: authFor(op, fp).code.replace(/T\d{4}-/, 'T2359-') }, 'AUTORIZACION_INVALIDA'],
+    ['mac truncado', { ...authFor(op, fp), code: authFor(op, fp).code.slice(0, -2) }, 'AUTORIZACION_INVALIDA'],
+    ['formato ajeno', { ...authFor(op, fp), code: 'APROBADO-PILOTO-WA-x' }, 'AUTORIZACION_INVALIDA'],
+  ];
+  for (const [label, auth, code] of bad) {
+    const { c, r } = await realAttempt(auth);
+    assert.deepEqual([r.halted, r.authCode, c.writes], ['PILOTO_AUTORIZACION_PRIVADA_INVALIDA', code, 0], label);
+  }
+  // justo en el limite de 60 minutos y recien emitido: validos
+  for (const m of [0, 1, 60]) assert.equal(verifyPilotWaAuth({ ...base, kind: 'E', now: NOW, code: issuePilotWaAuth({ ...base, kind: 'E', expires: exp(m) }) }).ok, true, `${m} min`);
+  // la reserva cambia DESPUES de emitir el codigo: la huella nueva lo invalida (ademas del desafio publico)
+  const changed = reservation(ID, { price: 91000 });
+  const e = env({ res: changed }); const c = armedClient(e, op);
+  const r = await go(e, op, { writer: c, fresh: changed, auth: authFor(op, fp) });
+  assert.equal(r.halted, 'PILOTO_AUTORIZACION_PRIVADA_INVALIDA'); assert.equal(c.writes, 0);
+  // un codigo no contiene datos de la reserva ni de la persona, y es determinista
+  const code = authFor(op, fp).code;
+  for (const leak of [String(ID), '573001234567', 'Ana', 'wa.me', fp, op.key]) assert.ok(!code.includes(leak), leak);
+  assert.equal(code, authFor(op, fp).code);
+  assert.match(code, /^AUT-WA-E-\d{8}T\d{4}-[0-9a-f]{32}$/);
+  assert.equal(stampOf(parseStamp('20261103T1530')), '20261103T1530'); assert.equal(parseStamp('20261303T1530'), null);
+  assert.throws(() => issuePilotWaAuth({ ...base, key: 'corta', kind: 'E', expires: exp(5) }), /AUTH_KEY_INVALIDA/);
+});
+
+test('clave de administrador: en modo real exige ademas su propia autorizacion privada (A) y el desafio publico', async () => {
+  const op = opFor(); const fp = stateFingerprint(reservation());
+  const e = env({ admin: true }); const c = armedClient(e, op);
+  const noAdmin = await go(e, op, { writer: c, auth: { ...authFor(op, fp), adminCode: null } });
+  assert.deepEqual([noAdmin.halted, noAdmin.authCode, c.writes], ['PILOTO_AUTORIZACION_PRIVADA_INVALIDA', 'ADMIN_AUTORIZACION_AUSENTE', 0]);
+  const wrongKind = await go(e, op, { writer: c, auth: { ...authFor(op, fp), adminCode: authFor(op, fp).code } });
+  assert.equal(wrongKind.authCode, 'ADMIN_AUTORIZACION_INVALIDA');
+  const ok = await go(e, op, { writer: c, auth: authFor(op, fp) });
+  assert.equal(ok.halted, null, JSON.stringify(ok)); assert.equal(c.writes, 3);
+});
+
+test('desactivado primero: con codigos validos pero PILOT_WA_ARMED=false el cliente real no escribe ni consulta la red', async () => {
+  const e = env(); const op = opFor();
+  let fetched = 0;
+  const c = new PilotWaWriteClient({ ...e.cfg, fetchImpl: async () => { fetched += 1; return { ok: true, json: async () => [1] }; }, op, selectedId: ID, arm: PILOT_WA_ARM_PHRASE });
+  const r = await go(e, op, { writer: c });
+  assert.equal(r.halted, 'PILOTO_DESACTIVADO'); assert.equal(fetched, 0);
+});
+
+/* ---- margen de 7 dias ---- */
+
+const near = (days) => { const a = new Date(Date.parse(`${TODAY}T00:00:00Z`) + days * 86400000).toISOString().slice(0, 10); const d = new Date(Date.parse(`${a}T00:00:00Z`) + 86400000).toISOString().slice(0, 10); return { arrival: a, departure: d }; };
+const excFor = (op, fp, days, o = {}) => issuePilotWaAuth({ key: KEY, kind: 'EXC', smoobuId: ID, opKey: op.key, fp, expires: new Date(NOW.getTime() + 30 * 60000), days, ...o });
+
+test('margen: 7 dias fijos en simulacion y en modo real; 6 dias no pasa y no hay forma de bajarlo sin excepcion firmada', async () => {
+  for (const [days, ok] of [[6, false], [7, true], [8, true], [1, false], [0, false]]) {
+    const d = near(days); const res = reservation(ID, d); const op = opFor(ID, d); const fp = stateFingerprint(res);
+    for (const mode of ['shadow', 'real']) {
+      const e = env({ res });
+      const writer = mode === 'real' ? armedClient(e, op) : new ShadowWaWriter({ maxWrites: 3 });
+      const r = await go(e, op, { writer, fresh: res });
+      assert.equal(r.halted === null, ok, `${days} dias ${mode}`);
+      if (!ok) { assert.ok(failing(r).some((x) => x.startsWith('LLEGADA_FUTURA_CON_MARGEN:')), `${days} ${failing(r)}`); assert.equal(writer.writes, 0); }
+    }
+    void fp;
+  }
+});
+
+test('margen: la unica salida es una excepcion de gerencia firmada, vigente, de esa reserva, de 1 a 6 dias; invalida = se detiene', async () => {
+  const d = near(4); const res = reservation(ID, d); const op = opFor(ID, d); const fp = stateFingerprint(res);
+  // valida: 4 dias de anticipacion con excepcion de 4 (o menos) pasa en simulacion y en real
+  for (const days of [4, 3, 1]) {
+    const e = env({ res }); const c = armedClient(e, op);
+    const r = await go(e, op, { writer: c, fresh: res, auth: authFor(op, fp, { leadException: excFor(op, fp, days) }) });
+    assert.equal(r.halted, null, `exc ${days}: ${JSON.stringify(r)}`); assert.equal(r.leadExceptionDays, days); assert.equal(c.writes, 3);
+  }
+  // una excepcion de 5 o 6 dias NO cubre una llegada a 4 dias
+  for (const days of [5, 6]) {
+    const e = env({ res }); const c = armedClient(e, op);
+    const r = await go(e, op, { writer: c, fresh: res, auth: authFor(op, fp, { leadException: excFor(op, fp, days) }) });
+    assert.equal(r.halted, 'PILOTO_VERIFICACION_PREVIA_FALLIDA'); assert.equal(c.writes, 0);
+  }
+  // invalidas: otra reserva, otra huella, vencida, vigencia excesiva, sin clave, formato -> se detiene antes de escribir
+  const mk = (o) => excFor(op, fp, 4, o);
+  for (const [label, code, key] of [
+    ['otra reserva', mk({ smoobuId: 170500999 }), KEY], ['otro estado', mk({ fp: 'aaaaaaaaaaaa' }), KEY], ['vencida', mk({ expires: new Date(NOW.getTime() - 60000) }), KEY],
+    ['vigencia excesiva', mk({ expires: new Date(NOW.getTime() + 61 * 60000) }), KEY], ['sin clave privada', mk(), undefined], ['formato libre', 'EXCEPCION-GERENCIA', KEY], ['la de ejecucion usada como excepcion', authFor(op, fp).code, KEY],
+  ]) {
+    const e = env({ res }); const c = armedClient(e, op);
+    const r = await go(e, op, { writer: c, fresh: res, auth: { ...authFor(op, fp), key: key ?? KEY, leadException: code, ...(key === undefined ? { key: undefined } : {}) } });
+    assert.ok(['PILOTO_EXCEPCION_MARGEN_INVALIDA', 'PILOTO_AUTORIZACION_PRIVADA_INVALIDA'].includes(r.halted), `${label}: ${r.halted}`); assert.equal(c.writes, 0, label);
+  }
+  // en simulacion una excepcion invalida tambien detiene (no se ignora en silencio)
+  const sh = await go(env({ res }), op, { fresh: res, auth: { key: KEY, leadException: mk({ smoobuId: 170500999 }) } });
+  assert.equal(sh.halted, 'PILOTO_EXCEPCION_MARGEN_INVALIDA'); assert.equal(sh.authCode, 'AUTORIZACION_INVALIDA');
+  // limites: no se puede emitir una excepcion de 0, 7 ni mas; el margen efectivo nunca baja de 1 dia ni de la llegada futura
+  for (const days of [0, 7, 30, -1, 2.5]) assert.throws(() => excFor(op, fp, days), /AUTH_DIAS_FUERA_DE_RANGO/, String(days));
+  const today = near(0); const resT = reservation(ID, today); const opT = opFor(ID, today);
+  const eT = env({ res: resT });
+  const rT = await go(eT, opT, { fresh: resT, auth: authFor(opT, stateFingerprint(resT), { leadException: excFor(opT, stateFingerprint(resT), 1) }) });
+  assert.ok(failing(rT).includes('LLEGADA_FUTURA_CON_MARGEN:LLEGADA_NO_FUTURA'), 'llegar hoy nunca vale, ni con excepcion');
+  // pilotWaPreflight directo: un margen manipulado (0, 7+, negativo, texto) no baja el minimo de 7
+  for (const bad of [0, -3, 7, 30, '1', NaN, null]) {
+    const e = env({ res }); const pre = await pilotWaPreflight({ plan: { ops: [op] }, op, fresh: res, fp, approval: 'x', admin: false, reader: e.reader, smoobu: e.smoobu, selectedId: ID, today: TODAY, leadExceptionDays: bad });
+    assert.equal(pre.checks.find((x) => x.name === 'LLEGADA_FUTURA_CON_MARGEN').ok, false, `margen ${bad}`);
+  }
+});
+
+/* ---- herramienta de gerencia, workflow y publicacion ---- */
+
+test('herramienta local de gerencia: emite codigos verificables solo con la clave por entorno; no imprime la clave; rechaza datos invalidos', () => {
+  const op = opFor(); const fp = stateFingerprint(reservation());
+  const run = (args, key = KEY) => { try { return { out: execFileSync('node', ['scripts/sync-pilot-wa-autoriza.mjs', ...args], { env: { PATH: process.env.PATH, ...(key ? { PILOT_WA_AUTH_KEY: key } : {}) }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }), code: 0 }; } catch (e) { return { out: String(e.stdout) + String(e.stderr), code: e.status }; } };
+  const okRun = run(['--id', String(ID), '--clave', op.key, '--huella', fp, '--admin', '--margen', '3', '--minutos', '20']);
+  assert.equal(okRun.code, 0, okRun.out);
+  const j = JSON.parse(okRun.out);
+  assert.ok(!okRun.out.includes(KEY));
+  const now = new Date(); const common = { key: KEY, smoobuId: ID, opKey: op.key, fp, now };
+  assert.deepEqual(verifyPilotWaAuth({ ...common, kind: 'E', code: j.ejecutar }), { ok: true, code: null });
+  assert.equal(verifyPilotWaAuth({ ...common, kind: 'A', code: j.administrador }).ok, true);
+  assert.deepEqual(verifyPilotWaAuth({ ...common, kind: 'EXC', code: j.excepcionMargen }), { ok: true, code: null, days: 3 });
+  assert.equal(run(['--id', String(ID), '--clave', op.key, '--huella', fp], '').code, 2, 'sin clave');
+  assert.equal(run(['--id', String(ID), '--clave', op.key, '--huella', fp], 'corta').code, 2, 'clave corta');
+  assert.equal(run(['--id', String(ID), '--clave', op.key, '--huella', fp, '--minutos', '61']).code, 2, 'mas de 60 minutos');
+  assert.equal(run(['--id', 'abc', '--clave', op.key, '--huella', fp]).code, 2);
+  assert.equal(run(['--id', String(ID), '--clave', 'zz', '--huella', fp]).code, 2);
+  assert.equal(run(['--id', String(ID), '--clave', op.key, '--huella', fp, '--margen', '7']).code, 2, 'margen 7 no es excepcion');
+  const src = readFileSync(new URL('../scripts/sync-pilot-wa-autoriza.mjs', import.meta.url), 'utf8');
+  assert.ok(!/process\.argv[^\n]*(KEY|key)/.test(src) && !/console\.(log|error)\([^)]*\bkey\b/.test(src.replace(/\/\/.*$/gm, '')), 'la clave nunca va por argumento ni se imprime');
+  assert.ok(!/fetch|https?:\/\/|odoo/i.test(src.replace(/\/\/.*$/gm, '')), 'sin red ni Odoo');
+});
+
+test('workflow y publicacion: sin min_days, clave privada como secreto, codigos enmascarados, y la simulacion ya no presenta tokens como autorizacion', () => {
+  const wf = readFileSync(new URL('../../../.github/workflows/smoobu-odoo-pilot-wa.yml', import.meta.url), 'utf8');
+  const yml = wf.replace(/^\s*#.*$/gm, '');
+  assert.ok(!/min_days|MIN_DAYS/.test(yml), 'el margen no se puede cambiar desde el workflow');
+  for (const input of ['auth_code', 'admin_auth_code', 'lead_exception']) assert.ok(yml.includes(`      ${input}:`), input);
+  assert.ok(yml.includes('PILOT_WA_AUTH_KEY: ${{ secrets.PILOT_WA_AUTH_KEY }}'));
+  assert.ok(yml.includes('PILOT_WA_AUTH_CODE: ${{ inputs.auth_code }}') && yml.includes('PILOT_WA_LEAD_EXCEPTION: ${{ inputs.lead_exception }}'));
+  for (const v of ['PILOT_WA_AUTH_KEY', 'PILOT_WA_AUTH_CODE', 'PILOT_WA_ADMIN_AUTH_CODE', 'PILOT_WA_LEAD_EXCEPTION']) assert.ok(yml.includes(`"$${v}"`), `enmascara ${v}`);
+  assert.ok(!/PILOT_WA_AUTH_KEY: \$\{\{ (inputs|vars)\./.test(yml), 'la clave privada es secreto, nunca entrada ni variable');
+  const src = readFileSync(new URL('../scripts/sync-pilot-wa.mjs', import.meta.url), 'utf8');
+  assert.ok(!src.includes('tokensRequired') && !src.includes('PILOT_WA_MIN_DAYS') && !src.includes('Token de aprobacion'));
+  assert.ok(src.includes('IDENTIFICADORES_PUBLICOS_NO_SECRETOS') && src.includes('NO SECRETOS'));
+  assert.ok(src.includes('authCfg.key') && src.includes('authCfg.code') && src.includes('authCfg.adminCode') && src.includes('authCfg.leadException'), 'el guardia de privacidad cubre clave y codigos');
+  // el modulo de autorizacion es puro: sin entorno, red ni salida
+  const au = readFileSync(new URL('../src/sync-pilot-wa-auth.mjs', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.ok(!/process\.|console\.|fetch\(|import\(/.test(au));
 });

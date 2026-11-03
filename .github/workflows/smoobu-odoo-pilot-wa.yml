@@ -1,10 +1,12 @@
 # ============================================================
 # PILOTO AISLADO DE CONTACTO WHATSAPP SMOOBU -> ODOO, UNA SOLA RESERVA POR ID (ATH-DEV-140) — SOLO MANUAL
 #
-# modo "simulacion" (por defecto): lecturas reales, 0 escrituras. Publica la verificacion previa y los dos tokens de aprobacion.
+# modo "simulacion" (por defecto): lecturas reales, 0 escrituras. Publica la verificacion previa y los DESAFIOS PUBLICOS (no secretos).
 # modo "real": crea, como maximo, el contacto y el pedido en BORRADOR de la reserva elegida y UNA nota interna con el enlace wa.me.
 #   Hoy NO puede escribir: PilotWaWriteClient tiene PILOT_WA_ARMED=false y ventana null (src/sync-pilot-wa-client.mjs).
 # Independiente de la sincronizacion programada: NO usa SYNC_ARM, SYNC_DESBLOQUEO, SYNC_ENABLED ni el bloqueo #101, y no programa nada.
+# La escritura real exige AUTORIZACION PRIVADA: codigo HMAC con la clave secreta PILOT_WA_AUTH_KEY (la crea gerencia), ligado a
+#   ID/operacion/huella y con caducidad <= 60 min. Los tokens visibles en esta pantalla NO bastan. Margen de 7 dias fijo (excepcion firmada).
 # No es el piloto ATH-DEV-118 (ya ejecutado el 31/10/2026): tokens, frase de armado y ventana propios.
 # Procedimiento completo: integrations/smoobu-odoo-connector/PILOTO-WHATSAPP-AISLADO.md
 # ============================================================
@@ -23,18 +25,28 @@ on:
         default: simulacion
         type: choice
         options: [simulacion, real]
-      min_days:
-        description: 'Margen minimo de dias hasta la llegada (7 por defecto; minimo 1)'
-        required: false
-        default: '7'
-        type: string
       approval:
-        description: 'Token APROBADO-PILOTO-WA-... (solo modo real)'
+        description: 'Desafio publico APROBADO-PILOTO-WA-... (NO secreto; solo modo real)'
         required: false
         default: ''
         type: string
       admin_approval:
-        description: 'Token APROBADO-ADMIN-WA-... (solo modo real; obligatorio si la clave es de administrador)'
+        description: 'Desafio publico APROBADO-ADMIN-WA-... (NO secreto; solo modo real con clave de administrador)'
+        required: false
+        default: ''
+        type: string
+      auth_code:
+        description: 'Autorizacion privada AUT-WA-E-... emitida por gerencia (solo modo real; caduca en <= 60 min)'
+        required: false
+        default: ''
+        type: string
+      admin_auth_code:
+        description: 'Autorizacion privada AUT-WA-A-... (solo modo real con clave de administrador)'
+        required: false
+        default: ''
+        type: string
+      lead_exception:
+        description: 'Excepcion de gerencia al margen de 7 dias EXC-WA-... (opcional; vacio = 7 dias fijos)'
         required: false
         default: ''
         type: string
@@ -73,14 +85,17 @@ jobs:
           # los datos van por entorno (nunca interpolados en el script) y se validan en el codigo
           PILOT_WA_ID: ${{ inputs.reservation_id }}
           PILOT_WA_DRY: ${{ inputs.modo == 'real' && '0' || '1' }}
-          PILOT_WA_MIN_DAYS: ${{ inputs.min_days }}
           PILOT_WA_ARM: ${{ vars.PILOT_WA_ARM }}
           PILOT_WA_APPROVAL: ${{ inputs.approval }}
           PILOT_WA_ADMIN_APPROVAL: ${{ inputs.admin_approval }}
+          PILOT_WA_AUTH_KEY: ${{ secrets.PILOT_WA_AUTH_KEY }}
+          PILOT_WA_AUTH_CODE: ${{ inputs.auth_code }}
+          PILOT_WA_ADMIN_AUTH_CODE: ${{ inputs.admin_auth_code }}
+          PILOT_WA_LEAD_EXCEPTION: ${{ inputs.lead_exception }}
           SYNC_JOURNAL_PATH: ${{ runner.temp }}/piloto-wa-bitacora.jsonl
           SYNC_LOCK_PATH: ${{ runner.temp }}/piloto-wa.lock
         run: |
-          for v in "$PILOT_WA_APPROVAL" "$PILOT_WA_ADMIN_APPROVAL" "$PILOT_WA_ARM"; do if [ -n "$v" ]; then echo "::add-mask::$v"; fi; done
+          for v in "$PILOT_WA_APPROVAL" "$PILOT_WA_ADMIN_APPROVAL" "$PILOT_WA_ARM" "$PILOT_WA_AUTH_KEY" "$PILOT_WA_AUTH_CODE" "$PILOT_WA_ADMIN_AUTH_CODE" "$PILOT_WA_LEAD_EXCEPTION"; do if [ -n "$v" ]; then echo "::add-mask::$v"; fi; done
           npm run --silent sync-pilot-wa
       - name: Guardar la bitacora (sin datos personales)
         if: ${{ always() }}
