@@ -91,7 +91,11 @@ Odoo (lectura)┘                                                       │
 5. Confirmar y cancelar: siempre con aprobacion por clave de operacion; nunca automatico.
 6. Programacion diaria solo cuando 2-5 lleven al menos 2 semanas sin incidencias.
 
-## Piloto controlado (ATH-DEV-118, `src/sync-pilot.mjs`)
+## Piloto controlado (ATH-DEV-118, `src/sync-pilot.mjs`) — YA EJECUTADO el 2026-10-31
+
+Estado: **ejecutado y agotado**. Creo COT/2026/03847 (borrador, 3 escrituras). Su comprobacion previa `PILOTO_NO_EJECUTADO_ANTES`
+se niega a correr de nuevo mientras exista cualquier nota `ATH-SYNC | clave`. Una nueva prueba con reserva elegida por ID NO se
+hace con este modulo: usa el piloto aislado de WhatsApp (ATH-DEV-140, `PILOTO-WHATSAPP-AISLADO.md`).
 
 - Una sola reserva: exactamente una operacion `CREATE_ORDER` en estado LISTO, del ID de Smoobu indicado y con su clave aprobada.
 - Solo `res.partner.create`, `sale.order.create` y la nota interna, con un tope de 3 escrituras. Nunca confirma, cancela,

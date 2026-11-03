@@ -1,0 +1,92 @@
+# ============================================================
+# PILOTO AISLADO DE CONTACTO WHATSAPP SMOOBU -> ODOO, UNA SOLA RESERVA POR ID (ATH-DEV-140) — SOLO MANUAL
+#
+# modo "simulacion" (por defecto): lecturas reales, 0 escrituras. Publica la verificacion previa y los dos tokens de aprobacion.
+# modo "real": crea, como maximo, el contacto y el pedido en BORRADOR de la reserva elegida y UNA nota interna con el enlace wa.me.
+#   Hoy NO puede escribir: PilotWaWriteClient tiene PILOT_WA_ARMED=false y ventana null (src/sync-pilot-wa-client.mjs).
+# Independiente de la sincronizacion programada: NO usa SYNC_ARM, SYNC_DESBLOQUEO, SYNC_ENABLED ni el bloqueo #101, y no programa nada.
+# No es el piloto ATH-DEV-118 (ya ejecutado el 31/10/2026): tokens, frase de armado y ventana propios.
+# Procedimiento completo: integrations/smoobu-odoo-connector/PILOTO-WHATSAPP-AISLADO.md
+# ============================================================
+name: smoobu-odoo-pilot-wa
+
+on:
+  workflow_dispatch:
+    inputs:
+      reservation_id:
+        description: 'ID de la reserva de Smoobu (solo digitos, 6 a 12)'
+        required: true
+        type: string
+      modo:
+        description: 'simulacion (sin escrituras) o real (hoy desarmado)'
+        required: true
+        default: simulacion
+        type: choice
+        options: [simulacion, real]
+      min_days:
+        description: 'Margen minimo de dias hasta la llegada (7 por defecto; minimo 1)'
+        required: false
+        default: '7'
+        type: string
+      approval:
+        description: 'Token APROBADO-PILOTO-WA-... (solo modo real)'
+        required: false
+        default: ''
+        type: string
+      admin_approval:
+        description: 'Token APROBADO-ADMIN-WA-... (solo modo real; obligatorio si la clave es de administrador)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoobu-odoo-pilot-wa
+  cancel-in-progress: false
+
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # ATH-DEV-028: secretos de Smoobu guardados intercambiados; mismo cruce que diagnose y el piloto anterior (vigilado por test)
+    env:
+      SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_SECRET }}
+      SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_KEY }}
+    defaults:
+      run:
+        working-directory: integrations/smoobu-odoo-connector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pruebas unitarias (si fallan, no se toca nada)
+        run: npm test
+      - name: Piloto aislado de una reserva (WhatsApp asistido)
+        env:
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          # los datos van por entorno (nunca interpolados en el script) y se validan en el codigo
+          PILOT_WA_ID: ${{ inputs.reservation_id }}
+          PILOT_WA_DRY: ${{ inputs.modo == 'real' && '0' || '1' }}
+          PILOT_WA_MIN_DAYS: ${{ inputs.min_days }}
+          PILOT_WA_ARM: ${{ vars.PILOT_WA_ARM }}
+          PILOT_WA_APPROVAL: ${{ inputs.approval }}
+          PILOT_WA_ADMIN_APPROVAL: ${{ inputs.admin_approval }}
+          SYNC_JOURNAL_PATH: ${{ runner.temp }}/piloto-wa-bitacora.jsonl
+          SYNC_LOCK_PATH: ${{ runner.temp }}/piloto-wa.lock
+        run: |
+          for v in "$PILOT_WA_APPROVAL" "$PILOT_WA_ADMIN_APPROVAL" "$PILOT_WA_ARM"; do if [ -n "$v" ]; then echo "::add-mask::$v"; fi; done
+          npm run --silent sync-pilot-wa
+      - name: Guardar la bitacora (sin datos personales)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: piloto-wa-bitacora-${{ github.run_number }}
+          path: ${{ runner.temp }}/piloto-wa-bitacora.jsonl
+          if-no-files-found: ignore
+          retention-days: 30
