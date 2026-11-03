@@ -59,7 +59,7 @@ const condiciones = [
   <p>
     Las consultas, cotizaciones y reservas se gestionan por WhatsApp al
     <a href={`tel:${EMPRESA.whatsappTel}`}> {EMPRESA.whatsapp}</a>{CORREO_CONTACTO && <> o por correo a <a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a></>}.
-    Una reserva se entiende confirmada únicamente cuando se le confirma por escrito por ese canal.
+    Una reserva solo se entiende confirmada cuando se haya verificado la disponibilidad y se hayan cumplido las condiciones aplicables —incluida la validación del anticipo cuando corresponda—, y se haya comunicado expresamente su confirmación por escrito. Enviar una solicitud, un comprobante o informar un pago no confirma por sí solo la reserva.
   </p>
 
   {condiciones.length > 0 && (<>
