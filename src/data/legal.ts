@@ -28,10 +28,10 @@
    src/data/whatsapp.ts, la unica copia.
 
    LO QUE NO ESTA AQUI, A PROPOSITO (regla 4 del proyecto: no inventar)
-   Correo de contacto, politicas de anticipo, cancelacion, horarios de
-   entrada y salida, plazos de conservacion y cualquier otra condicion
-   comercial. Quedan en null: el bloque que dependa de ellos NO se
-   muestra hasta que direccion los entregue.
+   Plazos de conservacion, medios de pago, condiciones concretas de
+   cancelacion y otras condiciones no aprobadas permanecen pendientes.
+   Los datos comerciales autorizados en ATH-WEB-META-022 se mantienen
+   como borrador hasta la revision juridica y la orden de publicacion.
    ============================================================ */
 
 import { NUMERO, NUMERO_VISIBLE } from './whatsapp';
@@ -67,24 +67,23 @@ export const RNT = {
   titular: 'persona natural',
   categoria: 'Casa Turística',
   vigenteHasta: '31 de marzo de 2027',
-  /* Mostrar el nombre del titular en la pagina publica es una decision
-     de direccion (es un dato personal de una persona natural, aunque el
-     RNT oficial es consultable). Por defecto NO se muestra. */
-  mostrarNombreTitular: false,
+  /* Direccion autorizo mostrar el nombre del titular en la pagina legal
+     (ATH-WEB-META-022); sigue en borrador hasta revision juridica. */
+  mostrarNombreTitular: true,
   nombreTitular: 'Marlon Mauricio Parra Villarreal',
 } as const;
 
-/* ---- Datos que direccion todavia no ha entregado ---- */
-export const CORREO_CONTACTO: string | null = null;
+/* ---- Contacto autorizado por gerencia en ATH-WEB-META-022 ---- */
+export const CORREO_CONTACTO: string | null = 'comercialgsc001@gmail.com';
 
-/** Condiciones comerciales de la reserva. Todas null hasta que
-    direccion las defina; cada bloque solo se pinta si tiene valor. */
+/** Condiciones aprobadas en ATH-WEB-META-022. Los campos restantes
+    siguen pendientes; cada bloque se muestra solamente si tiene valor. */
 export const CONDICIONES_RESERVA = {
-  anticipo: null as string | null,
+  anticipo: 'Para reservas directas, el anticipo solicitado será entre el 30 % y el 50 % del valor de la reserva, según las condiciones informadas en la cotización o confirmación correspondiente.' as string | null,
   medioDePago: null as string | null,
-  cancelacion: null as string | null,
+  cancelacion: 'Las cancelaciones y eventuales devoluciones se rigen por las condiciones específicas comunicadas y aceptadas al confirmar cada reserva.' as string | null,
   cambiosDeFecha: null as string | null,
-  entradaYSalida: null as string | null,
+  entradaYSalida: 'Horario habitual de entrada (check-in): 3:00 p. m. Horario habitual de salida (check-out): 11:00 a. m. Cualquier excepción debe confirmarse previamente.' as string | null,
   menoresYMascotas: null as string | null,
   normasDeConvivencia: null as string | null,
 };
