@@ -31,8 +31,9 @@ import {
   <h2>1. Responsable del tratamiento</h2>
   <p>
     {EMPRESA.razonSocial}, NIT {EMPRESA.nit}, con domicilio en {direccionCompleta}.
-    Atención de consultas y reclamos por WhatsApp al
-    <a href={`tel:${EMPRESA.whatsappTel}`}> {EMPRESA.whatsapp}</a>{CORREO_CONTACTO && <> o por correo a <a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a></>}.
+    Contacto de privacidad, consultas y reclamos sobre datos personales:
+    {CORREO_CONTACTO && <><a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a> o </>}por WhatsApp al
+    <a href={`tel:${EMPRESA.whatsappTel}`}> {EMPRESA.whatsapp}</a>.
   </p>
 
   <h2>2. Datos que tratamos</h2>
@@ -40,7 +41,8 @@ import {
     <li>Datos de contacto que usted nos escribe: nombre, número de teléfono de WhatsApp y, si nos lo da, correo.</li>
     <li>Datos de la reserva que usted nos informa: fechas, número de personas, preferencias.</li>
     <li>El contenido de los mensajes que nos envía por WhatsApp.</li>
-    <li>Datos de navegación del sitio, de forma agregada, mediante Google Analytics (ver punto 7).</li>
+    <li>Si su reserva llega por Booking.com o Airbnb, los datos de la reserva que esa plataforma nos entrega (nombre y fechas y, cuando la plataforma los entrega, teléfono y correo).</li>
+    <li>Datos de navegación del sitio, de forma agregada, mediante Google Analytics, solo si usted lo acepta (ver punto 7).</li>
   </ul>
   <p>No solicitamos datos sensibles. Si alguna vez fueran necesarios, entregarlos sería voluntario.</p>
 
@@ -49,22 +51,30 @@ import {
     <li>Responder consultas, cotizar y gestionar reservas y su comunicación (confirmaciones, instrucciones de llegada).</li>
     <li>Atender solicitudes, quejas y reclamos.</li>
     <li>Cumplir obligaciones legales, contables y de registro que correspondan.</li>
-    <li>Medir y mejorar el funcionamiento del sitio.</li>
+    <li>Medir y mejorar el funcionamiento del sitio, solo si usted acepta la analítica (ver punto 7).</li>
   </ul>
   <p>No enviamos mensajes promocionales sin su autorización previa y expresa.</p>
 
-  <h2>4. Cómo recogemos sus datos en el sitio</h2>
+  <h2>4. Cómo recogemos sus datos y dónde quedan</h2>
   <p>
-    El sitio no guarda en sus propios servidores los datos que usted escribe en las solicitudes
-    de consulta o de grupo: se envían por WhatsApp cuando usted pulsa enviar, y desde ese momento
-    quedan en la conversación de WhatsApp con {EMPRESA.nombreComercial}.
+    <strong>En este sitio.</strong> El sitio no guarda en sus propios servidores los datos que usted escribe en las
+    solicitudes de consulta o de grupo: se preparan en WhatsApp y se envían solo cuando usted pulsa enviar. Desde
+    ese momento quedan en la conversación de WhatsApp con {EMPRESA.nombreComercial}.
+  </p>
+  <p>
+    <strong>En nuestra gestión de reservas.</strong> Los datos de las reservas se gestionan en dos sistemas de
+    {EMPRESA.razonSocial}: Smoobu, donde se administran las reservas y los canales de venta (incluidas las que llegan por
+    Booking.com y Airbnb), y Odoo, donde se registran clientes, cotizaciones y facturación. En esos sistemas pueden
+    constar su nombre, teléfono, correo, fechas de estadía, número de huéspedes y el valor de la reserva.
   </p>
 
   <h2>5. Proveedores y terceros</h2>
   <p>
-    Para atenderle usamos proveedores tecnológicos que pueden tratar datos por nuestra cuenta, entre ellos
-    WhatsApp (Meta Platforms) como canal de mensajería y Google (Analytics) para medición del sitio. Estos
-    proveedores pueden estar ubicados fuera de Colombia, por lo que sus datos pueden ser transmitidos o
+    Para atenderle usamos proveedores tecnológicos que pueden tratar datos por nuestra cuenta:
+    WhatsApp (Meta Platforms) como canal de mensajería, Smoobu como gestor de reservas, Odoo como sistema de gestión
+    y Google (Analytics) para medición del sitio, esta última solo con su aceptación. Cuando usted reserva por
+    Booking.com o Airbnb, esas plataformas tratan sus datos según sus propias políticas y nos entregan los de la reserva.
+    Estos proveedores pueden estar ubicados fuera de Colombia, por lo que sus datos pueden ser transmitidos o
     transferidos internacionalmente. Usted puede pedir más información por los canales del punto 1.
   </p>
 
@@ -81,10 +91,13 @@ import {
 
   <h2>7. Analítica del sitio</h2>
   <p>
-    Este sitio usa Google Analytics 4 para conocer, de forma estadística, qué páginas se visitan y qué botones se
-    pulsan. No enviamos a la analítica su nombre, teléfono ni el contenido de sus mensajes. Google puede usar
-    identificadores técnicos del navegador. Usted puede limitar o bloquear estos identificadores desde la
-    configuración de su navegador.
+    Este sitio puede usar Google Analytics 4 para conocer, de forma estadística, qué páginas se visitan y qué botones se
+    pulsan. <strong>La analítica está desactivada por defecto</strong>: no se carga ni se envía nada a Google hasta que
+    usted la acepte en el aviso que aparece en el sitio. Puede aceptarla o rechazarla con el mismo esfuerzo, y cambiar su
+    decisión cuando quiera desde «Preferencias de analítica», al final de la página. Su decisión se guarda en su navegador
+    por hasta doce meses; si rechaza o retira la autorización, se deja de medir y se eliminan las cookies de analítica
+    de este sitio. No enviamos a la analítica su nombre, teléfono ni el contenido de sus mensajes. Si la acepta, Google
+    puede usar identificadores técnicos del navegador.
   </p>
 
   <h2>8. Procedimiento para consultas, reclamos y supresión</h2>

@@ -1,5 +1,7 @@
 ---
 import fs from 'node:fs';
+import { BORRADOR_LEGAL } from '../data/legal';
+import AvisoAnalitica from '../components/AvisoAnalitica.astro';
 
 /* ============================================================
      ESTILOS INCRUSTADOS  (rendimiento)
@@ -112,7 +114,15 @@ const {
   hojasExtra = [],
 } = Astro.props;
 
-const estilos = leeHojas([...HOJAS_DE_TODAS, ...hojasExtra]);
+/* Analitica con consentimiento (ATH-WEB-META-025): el aviso y su hoja de estilos
+   solo existen cuando los textos legales dejan de ser borrador. Mientras
+   BORRADOR_LEGAL sea true no se pinta nada y la analitica queda APAGADA. */
+const analiticaConConsentimiento = !BORRADOR_LEGAL;
+const estilos = leeHojas([
+  ...HOJAS_DE_TODAS,
+  ...hojasExtra,
+  ...(analiticaConConsentimiento ? ['analitica'] : []),
+]);
 
 // new URL() une el dominio de astro.config.mjs con la ruta de la pagina.
 // De aqui salen la canonica y og:url, siempre iguales entre si.
@@ -138,11 +148,11 @@ const urlImagen = imagen ? new URL(imagen, Astro.site).href : null;
   {/* viewport: sin esta linea el sitio NO se ve bien en celular */}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  {/* Google Analytics 4. La libreria se declara directamente en el <head>
-       para que Google Tag Assistant pueda detectarla. main.js configura y
-       envia datos solo en hotelesatheron.com / www.hotelesatheron.com, de
-       modo que los previews de Vercel no contaminan Analytics. */}
-  <script is:inline async data-atheron-ga4 src="https://www.googletagmanager.com/gtag/js?id=G-KXXM0LJKK9"></script>
+  {/* Google Analytics 4: AQUI YA NO SE DECLARA LA LIBRERIA.
+       Antes, gtag.js se descargaba en cada visita antes de que el visitante
+       supiera nada. Ahora main.js la carga SOLO si el visitante acepta la
+       analitica (ver docs/ATH-WEB-META-025-privacidad.md). Sin aceptacion,
+       o con BORRADOR_LEGAL = true, no se hace ninguna peticion a Google. */}
 
   <title>{titulo}</title>
   <meta name="description" content={descripcion}>
@@ -295,7 +305,9 @@ const urlImagen = imagen ? new URL(imagen, Astro.site).href : null;
 
   {/* main.js se enlaza con is:inline para que Astro NO lo empaquete
        ni le cambie el nombre. */}
-  <script is:inline defer src="/assets/js/main.js"></script>
+  {analiticaConConsentimiento && <AvisoAnalitica />}
+
+  <script is:inline defer src="/assets/js/main.js" data-analitica={analiticaConConsentimiento ? 'consentimiento' : 'apagada'}></script>
 
 </body>
 </html>

@@ -44,7 +44,7 @@ establecimiento). Nombre del titular autorizado para mostrar en la pagina legal 
 5. Transmision/transferencia internacional (Meta, Google, Odoo, Smoobu): el texto los cita de forma generica
    (WhatsApp/Meta y Google Analytics); Odoo y Smoobu no se nombran.
 6. Plazo de conservacion (el texto no fija numero: "el que exijan las normas").
-7. Google Analytics 4 (G-KXXM0LJKK9) sin banner de consentimiento: evaluar.
+7. Google Analytics 4 (G-KXXM0LJKK9): desde ATH-WEB-META-025 solo se carga con consentimiento (aviso Aceptar/Rechazar, activo al publicar los textos). Validar el texto y la vigencia de la decision; ver `docs/ATH-WEB-META-025-privacidad.md`.
 8. Clausulas de ley aplicable/jurisdiccion y responsabilidad de los terminos.
 
 ## Para publicar (con orden expresa de Marlon)

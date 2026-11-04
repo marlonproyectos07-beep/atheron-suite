@@ -1,0 +1,30 @@
+---
+/* ============================================================
+   AVISO DE ANALITICA — ATH-WEB-META-025
+
+   Aviso breve para aceptar o rechazar Google Analytics 4. Se pinta
+   SOLO cuando BORRADOR_LEGAL es false (lo decide Base.astro). Nace
+   oculto (hidden): main.js lo muestra si el visitante no ha decidido.
+
+   - Aceptar y Rechazar tienen el mismo peso visual.
+   - Sin JavaScript no se muestra y la analitica no se activa.
+   - La decision se guarda en el navegador (localStorage) hasta 12 meses.
+   - El boton "Preferencias de analitica" del pie vuelve a abrirlo.
+
+   Es un BORRADOR tecnico: el texto debe validarlo el abogado.
+   ============================================================ */
+import { RUTAS_LEGALES } from '../data/legal';
+---
+
+<div class="aviso-analitica" role="region" aria-label="Preferencias de analítica" data-aviso-analitica hidden>
+  <p class="aviso-analitica__texto">
+    Usamos Google Analytics para medir, de forma estadística, qué páginas se visitan.
+    Solo se activa si usted lo acepta. Puede cambiar su decisión cuando quiera desde
+    «Preferencias de analítica», al final de la página.
+    <a href={RUTAS_LEGALES.privacidad}>Política de privacidad</a>.
+  </p>
+  <div class="aviso-analitica__botones">
+    <button type="button" class="aviso-analitica__boton" data-analitica-decision="no">Rechazar</button>
+    <button type="button" class="aviso-analitica__boton" data-analitica-decision="si">Aceptar</button>
+  </div>
+</div>
