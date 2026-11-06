@@ -61,6 +61,21 @@ prueba('Base.astro no habilita GA4 al desactivar BORRADOR_LEGAL',
   !/const analiticaConConsentimiento = !BORRADOR_LEGAL/.test(base));
 prueba('main.js recibe data-analitica desde Base.astro', /data-analitica=\{analiticaConConsentimiento/.test(base));
 
+const cssAviso = leer('public/assets/css/analitica.css');
+prueba('CSS eleva el flotante exactamente la altura del aviso mientras está abierto',
+  /body:has\(\.aviso-analitica:not\(\[hidden\]\)\) \.flotante/.test(cssAviso)
+  && cssAviso.includes('var(--alto-aviso-analitica, 0px)'));
+prueba('CSS considera el flotante en móvil sin alterar el resto del sitio',
+  cssAviso.includes('@media (max-width: 48rem)') && cssAviso.includes('body:not(:has(.proyecto-hero-aprobado)):has('));
+prueba('JS mide y actualiza el aviso al mostrar, cerrar y redimensionar',
+  main.includes('function ajustarAlturaAvisoAnalitica()')
+  && main.includes('Math.ceil(a.getBoundingClientRect().height)')
+  && main.includes('new ResizeObserver(ajustarAlturaAvisoAnalitica)')
+  && main.includes('window.addEventListener("resize",ajustarAlturaAvisoAnalitica)'));
+const privEspacios = leer('src/pages/politica-de-privacidad.astro');
+prueba('privacidad separa visualmente ambos números mediante espacios explícitos',
+  (privEspacios.match(/\{' '\}/g) || []).length >= 2);
+
 const aviso = leer('src/components/AvisoAnalitica.astro');
 prueba('el aviso nace oculto', /data-aviso-analitica hidden/.test(aviso));
 prueba('el aviso ofrece Aceptar y Rechazar con el mismo estilo',

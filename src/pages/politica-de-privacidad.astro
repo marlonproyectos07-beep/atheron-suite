@@ -37,7 +37,7 @@ import {
   <p>
     {EMPRESA.razonSocial}, NIT {EMPRESA.nit}, con domicilio en {direccionCompleta}, nombre comercial {EMPRESA.nombreComercial}.
     Contacto de privacidad, consultas y reclamos sobre datos personales:
-    {CORREO_CONTACTO && <><a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a> o </>}por WhatsApp al
+    {CORREO_CONTACTO && <><a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a> o </>}por WhatsApp al{' '}
     <a href={`tel:${EMPRESA.whatsappTel}`}>{EMPRESA.whatsapp}</a>.
   </p>
   <h2>2. Datos que tratamos</h2>
@@ -86,7 +86,7 @@ import {
   <h2>5. WhatsApp Business Platform (Cloud API) y línea {LINEA_CLOUD_API.numero}</h2>
   <p>
     Además del WhatsApp Business de recepción actual (<a href={`tel:${EMPRESA.whatsappTel}`}>{EMPRESA.whatsapp}</a>),
-    {EMPRESA.razonSocial} está habilitando la línea
+    {EMPRESA.razonSocial} está habilitando la línea{' '}
     <a href={`tel:${LINEA_CLOUD_API.numeroTel}`}>{LINEA_CLOUD_API.numero}</a> con la WhatsApp Business Platform
     (Cloud API) de Meta, para atender solicitudes de disponibilidad y reservas. La integración está en preparación:
     cuando entre en operación, los mensajes se recibirán en Odoo y los gestionará nuestro equipo.
