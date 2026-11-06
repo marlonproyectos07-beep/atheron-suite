@@ -96,8 +96,8 @@ prueba('el aviso ofrece Aceptar y Rechazar con el mismo estilo',
 
 const legal = leer('src/data/legal.ts');
 prueba('BORRADOR_LEGAL sigue en true', /export const BORRADOR_LEGAL = true;/.test(legal));
-prueba('PUBLICAR_PRIVACIDAD sigue apagado', /export const PUBLICAR_PRIVACIDAD = false;/.test(legal));
-prueba('PUBLICAR_ELIMINACION sigue apagado', /export const PUBLICAR_ELIMINACION = false;/.test(legal));
+prueba('PUBLICAR_PRIVACIDAD esta activado (intencional, WA-051)', /export const PUBLICAR_PRIVACIDAD = true;/.test(legal));
+prueba('PUBLICAR_ELIMINACION esta activado (intencional, WA-051)', /export const PUBLICAR_ELIMINACION = true;/.test(legal));
 prueba('el correo de privacidad esta en legal.ts', legal.includes("'comercialgsc001@gmail.com'"));
 
 const priv = leer('src/pages/politica-de-privacidad.astro');
