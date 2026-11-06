@@ -1,0 +1,102 @@
+---
+/* ============================================================
+   ELIMINACION DE DATOS PERSONALES — ATH-WEB-META-039
+
+   Instrucciones para solicitar la supresión de datos personales.
+   Pensada para que Meta use su URL pública como «instrucciones para
+   la eliminación de datos» cuando se publique (PUBLICAR_ELIMINACION = true).
+
+   Estado: BORRADOR, pendiente de revisión jurídica. Coherente con
+   la política de privacidad (punto 9 y 11). Los plazos son los de los
+   artículos 14 y 15 de la Ley 1581 de 2012 y deben validarse con el
+   abogado. No se prometen supresiones en plataformas de terceros.
+   ============================================================ */
+import PaginaLegal from '../components/PaginaLegal.astro';
+import {
+  EMPRESA,
+  RUTAS_LEGALES,
+  CORREO_CONTACTO,
+} from '../data/legal';
+---
+
+<PaginaLegal
+  titulo="Eliminación de datos personales"
+  descripcion="Cómo pedir a ATHERON S.A.S. la eliminación de sus datos personales y qué ocurre con su solicitud."
+  ruta={RUTAS_LEGALES.eliminacion}
+>
+  <p>
+    Esta página explica cómo solicitar a {EMPRESA.razonSocial} la eliminación (supresión) de sus datos personales o la
+    revocación de su autorización, conforme a la <a href={RUTAS_LEGALES.privacidad}>política de privacidad</a>.
+  </p>
+
+  <h2>1. Cómo solicitarla</h2>
+  <p>
+    Escríbanos con el asunto «Eliminación de datos» por cualquiera de estos canales:
+  </p>
+  <ul>
+    {CORREO_CONTACTO && <li>Correo electrónico: <a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a></li>}
+    <li>WhatsApp de recepción: <a href={`tel:${EMPRESA.whatsappTel}`}>{EMPRESA.whatsapp}</a></li>
+  </ul>
+
+  <h2>2. Qué datos indicar</h2>
+  <p>Solo lo necesario para ubicar su información:</p>
+  <ul>
+    <li>Su nombre.</li>
+    <li>El número de teléfono de WhatsApp o el correo que usó al contactarnos o al reservar.</li>
+    <li>Si lo recuerda, las fechas aproximadas de la consulta o la estadía y el canal por el que reservó (WhatsApp, Booking.com, Airbnb u otro).</li>
+    <li>Qué quiere eliminar: toda su información o una parte concreta.</li>
+  </ul>
+
+  <h2>3. Cómo verificamos su identidad</h2>
+  <p>
+    Respondemos <strong>por el mismo medio de contacto</strong> que usted usó con nosotros (el mismo número de WhatsApp
+    o correo). Por regla general no le pediremos copia de documentos de identidad. Si hay dudas razonables sobre quién
+    solicita, le pediremos únicamente un dato que ya conste en la reserva o en la conversación (por ejemplo, las
+    fechas de la estadía). Mientras no podamos verificar razonablemente que usted es el titular de los datos, no los
+    eliminaremos ni los entregaremos a nadie.
+  </p>
+
+  <h2>4. Qué podemos eliminar</h2>
+  <ul>
+    <li>Conversaciones y datos de contacto de WhatsApp registrados en nuestros sistemas (Odoo) que no estén sujetos a una obligación legal de conservación.</li>
+    <li>Datos de consultas y cotizaciones que no se convirtieron en una reserva.</li>
+    <li>Su autorización para recibir mensajes que no sean necesarios para una reserva.</li>
+    <li>La decisión de analítica guardada en su navegador, que usted mismo puede retirar en «Preferencias de analítica», al final de las páginas del sitio.</li>
+  </ul>
+
+  <h2>5. Qué podríamos tener que conservar</h2>
+  <p>
+    Si usted hizo una reserva, algunos datos pueden tener que conservarse por obligaciones legales o contractuales:
+    registros de facturación, contables y tributarios, y los registros que la ley exija al titular del alojamiento. Esa información se mantiene
+    solo durante el tiempo que exijan las normas aplicables, no se usa para otros fines y se eliminará cuando deje de
+    ser obligatoria su conservación. Si algo de su solicitud no puede atenderse por esa razón, se lo explicaremos.
+  </p>
+
+  <h2>6. Información en plataformas de terceros</h2>
+  <p>
+    No controlamos directamente los datos que están en plataformas ajenas, y no podemos prometer su eliminación:
+  </p>
+  <ul>
+    <li>Su copia de la conversación en su propio teléfono y los datos que WhatsApp/Meta conserve según sus propias políticas.</li>
+    <li>Los datos que usted entregó a Booking.com o Airbnb: para esos debe dirigirse a cada plataforma. Podemos eliminar o corregir la copia de la reserva que tengamos en nuestros sistemas, salvo lo indicado en el punto 5.</li>
+    <li>Los datos de analítica que ya hayan llegado a Google, si usted aceptó la analítica.</li>
+    <li>Los datos que pueda tratar otro responsable, como el titular de un alojamiento aliado (por ejemplo, para el registro de huéspedes): le orientaremos sobre cómo presentar su solicitud ante ese responsable y evaluaremos, según corresponda, si podemos remitirla de manera adecuada. No podemos garantizar la eliminación de datos cuya supresión no decidimos directamente.</li>
+  </ul>
+  <p>
+    Smoobu y Odoo son sistemas que {EMPRESA.razonSocial} utiliza para gestionar reservas y clientes; atenderemos su
+    solicitud sobre los datos que consten en ellos.
+  </p>
+
+  <h2>7. Cómo recibe la respuesta y en qué plazo</h2>
+  <p>
+    Le responderemos por el mismo medio por el que escribió, indicando qué se eliminó y, si corresponde, qué se conserva
+    y por qué. La ley colombiana (Ley 1581 de 2012, artículos 14 y 15) fija estos plazos: las consultas se responden
+    en diez días hábiles, prorrogables cinco; los reclamos, entre ellos la solicitud de supresión, en quince días
+    hábiles, prorrogables ocho. Si no está de acuerdo con la respuesta, puede presentar una queja ante la
+    Superintendencia de Industria y Comercio.
+  </p>
+
+  <p>
+    Ver también: <a href={RUTAS_LEGALES.privacidad}>Política de privacidad</a>
+  </p>
+</PaginaLegal>

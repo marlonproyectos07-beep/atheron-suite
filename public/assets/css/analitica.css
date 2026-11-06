@@ -1,0 +1,25 @@
+/* Aviso de analitica (ATH-PMS-WA-044). Solo se incrusta con PUBLICAR_PRIVACIDAD=true. */
+.aviso-analitica { position: fixed; left: 0; right: 0; bottom: 0; z-index: 120; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem; padding: .85rem max(1rem, env(safe-area-inset-right)) max(.85rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left)); background: #fff; color: #1f1f1f; border-top: 1px solid #c9c9c9; box-shadow: 0 -4px 18px rgba(0,0,0,.14); font-size: .9375rem; line-height: 1.5; }
+.aviso-analitica[hidden] { display: none; }
+/* Durante el consentimiento el acceso comercial permanece visible.
+   Su posición se calcula con la altura REAL del aviso, incluso en móvil,
+   orientación horizontal o texto ampliado. No afecta el botón cerrado. */
+body:has(.aviso-analitica:not([hidden])) .flotante {
+  bottom: calc(var(--alto-aviso-analitica, 0px) + max(1rem, env(safe-area-inset-bottom)));
+  z-index: 121;
+}
+@media (max-width: 48rem) {
+  body:not(:has(.proyecto-hero-aprobado)):has(.aviso-analitica:not([hidden])) .flotante {
+    bottom: calc(var(--alto-aviso-analitica, 0px) + max(.7rem, env(safe-area-inset-bottom)));
+  }
+}
+.aviso-analitica__texto { margin: 0; flex: 1 1 22rem; max-width: 60rem; }
+/* Con texto ampliado, evitar recortes horizontales del aviso en móviles. */
+.aviso-analitica__texto { min-width: 0; overflow-wrap: break-word; }
+.aviso-analitica__texto a { text-decoration: underline; color: inherit; }
+.aviso-analitica__botones { display: flex; gap: .75rem; flex-wrap: wrap; }
+.aviso-analitica__boton { min-height: 44px; min-width: 7rem; padding: .5rem 1.25rem; font: inherit; font-weight: 600; color: #1f1f1f; background: #fff; border: 2px solid #1f1f1f; border-radius: .5rem; cursor: pointer; }
+.aviso-analitica__boton:hover { background: #f1f1f1; }
+.aviso-analitica__boton:focus-visible { outline: 3px solid #0a58ca; outline-offset: 2px; }
+.pie-legal__prefs { padding: 0; font: inherit; color: inherit; background: none; border: 0; text-decoration: underline; cursor: pointer; }
+.pie-legal__prefs:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
