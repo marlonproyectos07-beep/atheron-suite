@@ -98,6 +98,11 @@ prueba('normas de convivencia siguen sin definir (null)', /normasDeConvivencia: 
 prueba('anticipo 30-50 % conservado', /entre el 30 % y el 50 %/.test(legal));
 prueba('check-in 3:00 p. m. y check-out 11:00 a. m. conservados', /3:00 p\. m\./.test(legal) && /11:00 a\. m\./.test(legal));
 
+// ATH-PMS-WA-048B: responsabilidades sobre alojamientos de terceros
+prueba('privacidad no afirma acuerdos con titulares ni atribuye sus obligaciones', /no describe ni modifica los acuerdos/.test(priv) && /no responde por tratamientos/.test(priv));
+prueba('privacidad no publica porcentajes, contratos ni numero RNT', !/\d+\s?%|contrato de administraci|235267|70\/30/i.test(priv + elim));
+prueba('eliminacion mantiene verificacion de identidad y conservacion legal', /no podamos verificar razonablemente/.test(elim) && /obligaciones legales/.test(elim));
+prueba('eliminacion traslada solicitudes a titulares sin prometer su eliminacion', /no controlamos directamente su eliminaci/.test(elim));
 const textos = [priv, elim, term, info].join('\n');
 prueba('sin marcadores provisionales (lorem, TODO, XXX)', !/lorem ipsum|TODO|XXX/i.test(textos));
 

@@ -94,7 +94,7 @@ export const CONDICIONES_RESERVA = {
   normasDeConvivencia: null as string | null,
 };
 
-export const VERSION_LEGAL = '1.1 (borrador)';
+export const VERSION_LEGAL = '1.2 (borrador)';
 /* ---- Línea WhatsApp Cloud API (ATH-WEB-META-039/042) ----
    Línea registrada en Meta, con webhook configurado, pero aún SIN
    prueba real de recepción en Odoo. No afirmar que ya funciona.

@@ -40,6 +40,17 @@ import {
     {CORREO_CONTACTO && <><a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a> o </>}por WhatsApp al{' '}
     <a href={`tel:${EMPRESA.whatsappTel}`}>{EMPRESA.whatsapp}</a>.
   </p>
+  <p>
+    {EMPRESA.razonSocial} es responsable de los datos personales que recoge a través de este sitio y de sus canales
+    de atención (WhatsApp y correo), para cotizar y gestionar consultas y reservas.
+  </p>
+  <p>
+    {EMPRESA.razonSocial} puede gestionar la comercialización y las reservas de alojamientos cuyo titular y Registro
+    Nacional de Turismo (RNT) pertenecen a terceros. Esta política no describe ni modifica los acuerdos entre
+    {EMPRESA.razonSocial} y cada titular, ni las obligaciones legales propias de cada titular de alojamiento. Al
+    cotizar o confirmar una reserva se le indica a qué alojamiento corresponde.
+  </p>
+
   <h2>2. Datos que tratamos</h2>
   <ul>
     <li>Identificación y contacto que usted nos da: nombre, número de teléfono de WhatsApp y, si nos lo da, correo electrónico.</li>
@@ -51,8 +62,8 @@ import {
   </ul>
   <p>
     No solicitamos datos sensibles. Si para una reserva fuera necesario pedirle datos de identificación de los
-    huéspedes por exigencia de la normativa aplicable al alojamiento, se le informará al momento de pedirlos y
-    para qué se usan.
+    huéspedes por exigencia de la normativa aplicable al alojamiento (obligación que puede corresponder al titular
+    del establecimiento), se le informará al momento de pedirlos y para qué se usan.
   </p>
 
   <h2>3. Finalidades</h2>
@@ -107,6 +118,13 @@ import {
     Estos proveedores pueden estar ubicados fuera de Colombia, por lo que sus datos pueden ser transmitidos o
     transferidos internacionalmente. Usted puede pedir más información por los canales del punto 1.
   </p>
+  <p>
+    <strong>Titulares de alojamientos.</strong> Si su reserva es en un alojamiento cuyo titular es un tercero,
+    podemos comunicarle los datos necesarios para atender la reserva y cumplir las obligaciones que la ley le impone
+    como titular del establecimiento (por ejemplo, el registro de huéspedes). Cada titular trata los datos que
+    reciba conforme a la ley y a sus propias obligaciones; {EMPRESA.razonSocial} no responde por tratamientos que
+    ese titular haga para sus propias finalidades.
+  </p>
 
   <h2>7. Sus derechos</h2>
   <p>Como titular de los datos usted puede:</p>
@@ -135,7 +153,9 @@ import {
     Escríbanos por los canales del punto 1 indicando su nombre, un medio de contacto y la descripción de su solicitud
     (por ejemplo: consulta, corrección o eliminación de sus datos). La ley colombiana fija los plazos de respuesta
     (consultas: diez días hábiles, prorrogables cinco; reclamos: quince días hábiles, prorrogables ocho), que
-    nos obligamos a respetar.
+    nos obligamos a respetar. Para proteger sus datos, antes de eliminar, corregir o entregar información podemos
+    verificar razonablemente que la solicitud proviene de su titular. Si su solicitud corresponde a quien no es
+    {EMPRESA.razonSocial}, la trasladaremos a quien corresponda y se lo informaremos.
   </p>
   <p>
     Para pedir la eliminación de sus datos, siga las instrucciones de la página
