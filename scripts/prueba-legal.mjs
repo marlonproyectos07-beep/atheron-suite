@@ -99,10 +99,21 @@ prueba('anticipo 30-50 % conservado', /entre el 30 % y el 50 %/.test(legal));
 prueba('check-in 3:00 p. m. y check-out 11:00 a. m. conservados', /3:00 p\. m\./.test(legal) && /11:00 a\. m\./.test(legal));
 
 // ATH-PMS-WA-048B: responsabilidades sobre alojamientos de terceros
-prueba('privacidad no afirma acuerdos con titulares ni atribuye sus obligaciones', /no describe ni modifica los acuerdos/.test(priv) && /no responde por tratamientos/.test(priv));
+prueba('privacidad no excluye categóricamente responsabilidad por datos compartidos',
+  /no describe ni modifica los acuerdos/.test(priv)
+  && /La responsabilidad de cada/.test(priv)
+  && !/no responde por tratamientos/.test(priv));
 prueba('privacidad no publica porcentajes, contratos ni numero RNT', !/\d+\s?%|contrato de administraci|235267|70\/30/i.test(priv + elim));
 prueba('eliminacion mantiene verificacion de identidad y conservacion legal', /no podamos verificar razonablemente/.test(elim) && /obligaciones legales/.test(elim));
-prueba('eliminacion traslada solicitudes a titulares sin prometer su eliminacion', /no controlamos directamente su eliminaci/.test(elim));
+prueba('eliminacion orienta solicitudes de otros responsables sin prometer traslado ni supresión',
+  /le orientaremos sobre cómo presentar su solicitud/.test(elim)
+  && /No podemos garantizar la eliminación/.test(elim)
+  && !/trasladaremos su solicitud/.test(elim));
+prueba('privacidad no promete traslado automático a otro responsable',
+  /evaluaremos,[\s\S]*?si procede remitirle la solicitud/.test(priv)
+  && !/la trasladaremos a quien corresponda/.test(priv));
+prueba('ambos textos mantienen la verificación razonable de identidad',
+  /verificar razonablemente/.test(priv) && /verificar razonablemente/.test(elim));
 const textos = [priv, elim, term, info].join('\n');
 prueba('sin marcadores provisionales (lorem, TODO, XXX)', !/lorem ipsum|TODO|XXX/i.test(textos));
 
