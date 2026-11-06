@@ -38,6 +38,12 @@ import { NUMERO, NUMERO_VISIBLE } from './whatsapp';
 
 export const BORRADOR_LEGAL = true;
 
+/* ATH-PMS-WA-042: preparacion para publicación independiente.
+   Ambos permanecen APAGADOS hasta nueva autorización de gerencia.
+   BORRADOR_LEGAL sigue protegiendo terminos e informacion legal. */
+export const PUBLICAR_PRIVACIDAD = false;
+export const PUBLICAR_ELIMINACION = false;
+
 /* ---- La sociedad que opera el sitio ---- */
 export const EMPRESA = {
   razonSocial: 'ATHERON S.A.S.',
@@ -89,12 +95,12 @@ export const CONDICIONES_RESERVA = {
 };
 
 export const VERSION_LEGAL = '1.1 (borrador)';
-/* ---- Línea WhatsApp Cloud API (ATH-WEB-META-039) ----
-   Línea nueva, registrada y conectada en Meta. Hoy NO hay respuestas
-   automáticas, asistente de IA ni reservas automáticas: la atención es
-   humana, desde Odoo. Si se activan, hay que actualizar la política
-   ANTES de activarlas. El canal actual de recepción sigue siendo
-   EMPRESA.whatsapp y no se modifica. */
+/* ---- Línea WhatsApp Cloud API (ATH-WEB-META-039/042) ----
+   Línea registrada en Meta, con webhook configurado, pero aún SIN
+   prueba real de recepción en Odoo. No afirmar que ya funciona.
+   No hay automatización de respuestas ni reservas por ese canal.
+   Antes de activarla, revisar y actualizar la política de privacidad.
+   El canal de recepción actual sigue siendo EMPRESA.whatsapp. */
 export const LINEA_CLOUD_API = {
   numero: '+57 301 803 5593',
   numeroTel: '+573018035593',

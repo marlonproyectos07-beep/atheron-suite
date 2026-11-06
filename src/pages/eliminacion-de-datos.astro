@@ -16,7 +16,6 @@ import {
   EMPRESA,
   RUTAS_LEGALES,
   CORREO_CONTACTO,
-  LINEA_CLOUD_API,
 } from '../data/legal';
 ---
 
@@ -36,7 +35,7 @@ import {
   </p>
   <ul>
     {CORREO_CONTACTO && <li>Correo electrónico: <a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a></li>}
-    <li>WhatsApp: <a href={`tel:${EMPRESA.whatsappTel}`}>{EMPRESA.whatsapp}</a> o <a href={`tel:${LINEA_CLOUD_API.numeroTel}`}>{LINEA_CLOUD_API.numero}</a></li>
+    <li>WhatsApp de recepción: <a href={`tel:${EMPRESA.whatsappTel}`}>{EMPRESA.whatsapp}</a></li>
   </ul>
 
   <h2>2. Qué datos indicar</h2>
@@ -96,7 +95,6 @@ import {
   </p>
 
   <p>
-    Ver también: <a href={RUTAS_LEGALES.privacidad}>Política de privacidad</a> ·
-    <a href={RUTAS_LEGALES.informacion}>Información legal</a>
+    Ver también: <a href={RUTAS_LEGALES.privacidad}>Política de privacidad</a>
   </p>
 </PaginaLegal>

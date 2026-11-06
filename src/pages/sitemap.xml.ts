@@ -26,7 +26,7 @@ import {
 import { articulosPublicados } from '../data/blog';
 import { experienciasDe } from '../data/experiencias-locales';
 import { extraDe, HUB_RESTAURANTES } from '../data/fichas-lugares';
-import { BORRADOR_LEGAL, RUTAS_LEGALES } from '../data/legal';
+import { BORRADOR_LEGAL, PUBLICAR_PRIVACIDAD, PUBLICAR_ELIMINACION, RUTAS_LEGALES } from '../data/legal';
 import { RUTA_GALLINA, MODIFICADO as GALLINA_MODIFICADO } from '../data/gallina-al-vapor';
 
 const DOMINIO = 'https://hotelesatheron.com';
@@ -148,14 +148,14 @@ export const GET: APIRoute = async () => {
 
   /* Paginas legales: solo al aprobar los textos (BORRADOR_LEGAL = false).
      Mientras sean borrador llevan noindex y no deben estar aqui. */
-  const legales: Entrada[] = BORRADOR_LEGAL
-    ? []
-    : [
-        { ruta: RUTAS_LEGALES.informacion, prioridad: '0.3' },
-        { ruta: RUTAS_LEGALES.privacidad, prioridad: '0.3' },
-        { ruta: RUTAS_LEGALES.terminos, prioridad: '0.3' },
-        { ruta: RUTAS_LEGALES.eliminacion, prioridad: '0.3' },
-      ];
+  const legales: Entrada[] = [
+    ...(PUBLICAR_PRIVACIDAD ? [{ ruta: RUTAS_LEGALES.privacidad, prioridad: '0.3' }] : []),
+    ...(PUBLICAR_ELIMINACION ? [{ ruta: RUTAS_LEGALES.eliminacion, prioridad: '0.3' }] : []),
+    ...(!BORRADOR_LEGAL ? [
+      { ruta: RUTAS_LEGALES.informacion, prioridad: '0.3' },
+      { ruta: RUTAS_LEGALES.terminos, prioridad: '0.3' },
+    ] : []),
+  ];
 
   const entradas = [...paginasFijas, ...articulosDelSitemap, ...proyectos, ...redGastronomica, ...fichas, ...legales];
 

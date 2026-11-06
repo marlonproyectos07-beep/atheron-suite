@@ -21,7 +21,6 @@
 import PaginaLegal from '../components/PaginaLegal.astro';
 import {
   EMPRESA,
-  RNT,
   RUTAS_LEGALES,
   CORREO_CONTACTO,
   LINEA_CLOUD_API,
@@ -41,12 +40,6 @@ import {
     {CORREO_CONTACTO && <><a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a> o </>}por WhatsApp al
     <a href={`tel:${EMPRESA.whatsappTel}`}>{EMPRESA.whatsapp}</a>.
   </p>
-  <p>
-    El Registro Nacional de Turismo n.º {RNT.numero} está a nombre de una {RNT.titular}, distinta de la sociedad
-    responsable. Esta política no atribuye ese registro a {EMPRESA.razonSocial}; vea la
-    <a href={RUTAS_LEGALES.informacion}>información legal</a>.
-  </p>
-
   <h2>2. Datos que tratamos</h2>
   <ul>
     <li>Identificación y contacto que usted nos da: nombre, número de teléfono de WhatsApp y, si nos lo da, correo electrónico.</li>
@@ -95,12 +88,12 @@ import {
     Además del WhatsApp Business de recepción actual (<a href={`tel:${EMPRESA.whatsappTel}`}>{EMPRESA.whatsapp}</a>),
     {EMPRESA.razonSocial} está habilitando la línea
     <a href={`tel:${LINEA_CLOUD_API.numeroTel}`}>{LINEA_CLOUD_API.numero}</a> con la WhatsApp Business Platform
-    (Cloud API) de Meta, para atender solicitudes de disponibilidad y reservas. Los mensajes de esa línea llegan a
-    Odoo, donde nuestro equipo los lee y los gestiona.
+    (Cloud API) de Meta, para atender solicitudes de disponibilidad y reservas. La integración está en preparación:
+    cuando entre en operación, los mensajes se recibirán en Odoo y los gestionará nuestro equipo.
   </p>
   <ul>
     <li>Sus mensajes, su número de teléfono y el nombre de perfil que tenga en WhatsApp pueden quedar almacenados en Odoo y en WhatsApp/Meta.</li>
-    <li>Hoy la atención por esa línea es <strong>humana</strong>. No hay respuestas automáticas, asistentes de inteligencia artificial ni reservas automáticas activas.</li>
+    <li>La recepción de mensajes de esta línea aún no ha sido validada mediante una prueba real. No hay respuestas automáticas, asistentes de inteligencia artificial ni reservas automáticas activas.</li>
     <li>Si más adelante se incorporan respuestas automáticas, plantillas o un asistente automatizado, se lo informaremos y actualizaremos esta política antes de usarlos con sus datos.</li>
     <li>WhatsApp/Meta trata los datos de la conversación según sus propias condiciones y políticas; nosotros no controlamos ese tratamiento.</li>
   </ul>
@@ -152,7 +145,7 @@ import {
   <h2>10. Mensajes por WhatsApp</h2>
   <p>
     Si recibe mensajes de {EMPRESA.nombreComercial} que no sean necesarios para su reserva, puede pedirnos que
-    dejemos de enviarlos respondiendo «BAJA» o escribiéndonos por los canales del punto 1.
+    dejemos de enviarlos escribiéndonos por los canales del punto 1.
   </p>
 
   <h2>11. Conservación y seguridad</h2>
@@ -167,5 +160,4 @@ import {
   <h2>12. Cambios en esta política</h2>
   <p>Publicaremos en esta página cualquier cambio sustancial, con su nueva fecha de vigencia.</p>
 
-  <p><a href={RUTAS_LEGALES.informacion}>Ver información legal de {EMPRESA.razonSocial}</a></p>
 </PaginaLegal>

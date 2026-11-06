@@ -1,6 +1,6 @@
 ---
 import fs from 'node:fs';
-import { BORRADOR_LEGAL } from '../data/legal';
+import { PUBLICAR_PRIVACIDAD } from '../data/legal';
 import AvisoAnalitica from '../components/AvisoAnalitica.astro';
 
 /* ============================================================
@@ -114,10 +114,9 @@ const {
   hojasExtra = [],
 } = Astro.props;
 
-/* Analitica con consentimiento (ATH-WEB-META-025): el aviso y su hoja de estilos
-   solo existen cuando los textos legales dejan de ser borrador. Mientras
-   BORRADOR_LEGAL sea true no se pinta nada y la analitica queda APAGADA. */
-const analiticaConConsentimiento = !BORRADOR_LEGAL;
+/* ATH-PMS-WA-042: GA4 y el aviso solo se habilitan con la política
+   de privacidad autorizada. Nunca se activa analítica sin consentimiento. */
+const analiticaConConsentimiento = PUBLICAR_PRIVACIDAD;
 const estilos = leeHojas([
   ...HOJAS_DE_TODAS,
   ...hojasExtra,
@@ -152,7 +151,7 @@ const urlImagen = imagen ? new URL(imagen, Astro.site).href : null;
        Antes, gtag.js se descargaba en cada visita antes de que el visitante
        supiera nada. Ahora main.js la carga SOLO si el visitante acepta la
        analitica (ver docs/ATH-WEB-META-025-privacidad.md). Sin aceptacion,
-       o con BORRADOR_LEGAL = true, no se hace ninguna peticion a Google. */}
+       o con PUBLICAR_PRIVACIDAD = false, no se hace ninguna peticion a Google. */}
 
   <title>{titulo}</title>
   <meta name="description" content={descripcion}>

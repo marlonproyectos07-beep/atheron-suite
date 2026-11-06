@@ -9,7 +9,7 @@
      solo se llama tras una decision "si" del visitante;
    - sin decision, la unica accion es mostrar el aviso;
    - el aviso nace oculto y ofrece Aceptar y Rechazar;
-   - con BORRADOR_LEGAL = true nada de esto se pinta y la analitica queda apagada;
+   - con PUBLICAR_PRIVACIDAD = false la analitica y el aviso siguen apagados;
    - el correo de privacidad esta en la politica.
 
    Sin dependencias: node y ya.
@@ -55,7 +55,10 @@ prueba('los eventos de GA siguen protegidos con typeof gtag === "function"',
 
 const base = leer('src/layouts/Base.astro');
 prueba('Base.astro solo pinta el aviso si la analitica es con consentimiento', /analiticaConConsentimiento && <AvisoAnalitica/.test(base));
-prueba('Base.astro deriva el modo de BORRADOR_LEGAL', /const analiticaConConsentimiento = !BORRADOR_LEGAL/.test(base));
+prueba('Base.astro protege la analitica con PUBLICAR_PRIVACIDAD',
+  /const analiticaConConsentimiento = PUBLICAR_PRIVACIDAD;/.test(base));
+prueba('Base.astro no habilita GA4 al desactivar BORRADOR_LEGAL',
+  !/const analiticaConConsentimiento = !BORRADOR_LEGAL/.test(base));
 prueba('main.js recibe data-analitica desde Base.astro', /data-analitica=\{analiticaConConsentimiento/.test(base));
 
 const aviso = leer('src/components/AvisoAnalitica.astro');
@@ -66,6 +69,8 @@ prueba('el aviso ofrece Aceptar y Rechazar con el mismo estilo',
 
 const legal = leer('src/data/legal.ts');
 prueba('BORRADOR_LEGAL sigue en true', /export const BORRADOR_LEGAL = true;/.test(legal));
+prueba('PUBLICAR_PRIVACIDAD sigue apagado', /export const PUBLICAR_PRIVACIDAD = false;/.test(legal));
+prueba('PUBLICAR_ELIMINACION sigue apagado', /export const PUBLICAR_ELIMINACION = false;/.test(legal));
 prueba('el correo de privacidad esta en legal.ts', legal.includes("'comercialgsc001@gmail.com'"));
 
 const priv = leer('src/pages/politica-de-privacidad.astro');

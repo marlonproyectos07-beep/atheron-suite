@@ -13,6 +13,8 @@
    ============================================================ */
 import {
   BORRADOR_LEGAL,
+  PUBLICAR_PRIVACIDAD,
+  PUBLICAR_ELIMINACION,
   EMPRESA,
   RNT,
   RUTAS_LEGALES,
@@ -21,7 +23,7 @@ import {
 } from '../data/legal';
 ---
 
-{!BORRADOR_LEGAL && (
+{(!BORRADOR_LEGAL || PUBLICAR_PRIVACIDAD || PUBLICAR_ELIMINACION) && (
   <div class="pie-legal">
     <p>
       Sitio operado por <strong>{EMPRESA.razonSocial}</strong> · NIT {EMPRESA.nit} ·
@@ -31,17 +33,19 @@ import {
       Contacto: WhatsApp <a href={`tel:${EMPRESA.whatsappTel}`}>{EMPRESA.whatsapp}</a>
       {CORREO_CONTACTO && <> · <a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a></>}
     </p>
-    <p>
-      Registro Nacional de Turismo n.º {RNT.numero}: titular {RNT.titular}
-      {RNT.mostrarNombreTitular && <> ({RNT.nombreTitular})</>}, categoría {RNT.categoria},
-      vigente hasta el {RNT.vigenteHasta}. Este registro no corresponde a la sociedad que opera el sitio.
-    </p>
+    {!BORRADOR_LEGAL && (
+      <p>
+        Registro Nacional de Turismo n.º {RNT.numero}: titular {RNT.titular}
+        {RNT.mostrarNombreTitular && <> ({RNT.nombreTitular})</>}, categoría {RNT.categoria},
+        vigente hasta el {RNT.vigenteHasta}. Este registro no corresponde a la sociedad que opera el sitio.
+      </p>
+    )}
     <p class="pie-legal__enlaces">
-      <a href={RUTAS_LEGALES.privacidad}>Política de privacidad y tratamiento de datos</a>
-      <a href={RUTAS_LEGALES.terminos}>Términos y condiciones de reserva</a>
-      <a href={RUTAS_LEGALES.eliminacion}>Eliminación de datos</a>
-      <a href={RUTAS_LEGALES.informacion}>Información legal</a>
-      <button type="button" class="pie-legal__prefs" data-analitica-preferencias>Preferencias de analítica</button>
+      {PUBLICAR_PRIVACIDAD && <a href={RUTAS_LEGALES.privacidad}>Política de privacidad y tratamiento de datos</a>}
+      {!BORRADOR_LEGAL && <a href={RUTAS_LEGALES.terminos}>Términos y condiciones de reserva</a>}
+      {PUBLICAR_ELIMINACION && <a href={RUTAS_LEGALES.eliminacion}>Eliminación de datos</a>}
+      {!BORRADOR_LEGAL && <a href={RUTAS_LEGALES.informacion}>Información legal</a>}
+      {PUBLICAR_PRIVACIDAD && <button type="button" class="pie-legal__prefs" data-analitica-preferencias>Preferencias de analítica</button>}
     </p>
   </div>
 )}

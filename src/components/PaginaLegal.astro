@@ -9,7 +9,10 @@ import Base from '../layouts/Base.astro';
 import Cabecera from './Cabecera.astro';
 import Pie from './Pie.astro';
 import { menuBlog, ctaDisponibilidad } from '../data/navegacion';
-import { BORRADOR_LEGAL, AVISO_BORRADOR_LEGAL, VERSION_LEGAL, VIGENCIA_LEGAL } from '../data/legal';
+import {
+  BORRADOR_LEGAL, PUBLICAR_PRIVACIDAD, PUBLICAR_ELIMINACION,
+  RUTAS_LEGALES, AVISO_BORRADOR_LEGAL, VERSION_LEGAL, VIGENCIA_LEGAL,
+} from '../data/legal';
 
 interface Props {
   titulo: string;
@@ -17,15 +20,21 @@ interface Props {
   ruta: string;
 }
 const { titulo, descripcion, ruta } = Astro.props;
+const publicada = ruta === RUTAS_LEGALES.privacidad
+  ? PUBLICAR_PRIVACIDAD
+  : ruta === RUTAS_LEGALES.eliminacion
+    ? PUBLICAR_ELIMINACION
+    : !BORRADOR_LEGAL;
+const borrador = !publicada;
 ---
 
 <Base
   titulo={`${titulo} | Atheron Suite`}
   descripcion={descripcion}
   ruta={ruta}
-  indexable={!BORRADOR_LEGAL}
-  seguirEnlaces={!BORRADOR_LEGAL ? true : false}
-  avisoBorrador={BORRADOR_LEGAL ? AVISO_BORRADOR_LEGAL : null}
+  indexable={publicada}
+  seguirEnlaces={publicada}
+  avisoBorrador={borrador ? AVISO_BORRADOR_LEGAL : null}
   hojasExtra={['legal']}
 >
   <Cabecera enlaces={menuBlog} cta={{ ...ctaDisponibilidad, origen: 'legal' }} />
@@ -35,7 +44,7 @@ const { titulo, descripcion, ruta } = Astro.props;
       <div class="contenedor legal">
         <h1>{titulo}</h1>
         <p class="legal__meta">
-          Versión {VERSION_LEGAL}{VIGENCIA_LEGAL && <> · Vigente desde {VIGENCIA_LEGAL}</>}
+          Versión {publicada ? VERSION_LEGAL.replace(' (borrador)', '') : VERSION_LEGAL}{publicada && VIGENCIA_LEGAL && <> · Vigente desde {VIGENCIA_LEGAL}</>}
         </p>
         <slot />
       </div>
