@@ -2,23 +2,29 @@
 /* ============================================================
    POLITICA DE PRIVACIDAD Y TRATAMIENTO DE DATOS PERSONALES
 
-   Estado: BORRADOR, pendiente de revision juridica (Ley 1581 de 2012
+   Estado: BORRADOR, pendiente de revisión jurídica (Ley 1581 de 2012
    y Decreto 1377 de 2013, hoy compilado en el Decreto 1074 de 2015).
-   No es un texto definitivo. Los puntos que exigen decision estan en
-   docs/ATH-WEB-META-019-legal.md.
+   No es un texto definitivo. Los puntos que exigen decisión están en
+   docs/ATH-WEB-META-019-legal.md y docs/ATH-WEB-META-039-legal.md.
 
-   Se redacta SOLO con lo que el sitio hace hoy:
-   - el formulario de contacto esta apagado (ajustes.ts); las
+   Se redacta SOLO con lo que está comprobado o con lo que se dice
+   expresamente como previsto:
+   - el formulario de contacto está apagado (ajustes.ts): las
      solicitudes salen por WhatsApp cuando el visitante pulsa enviar;
-   - el sitio carga Google Analytics 4 (Base.astro).
-   Lo que no esta confirmado (correo, plazos de conservacion,
-   pasarelas de pago, anticipos) NO se afirma.
+   - el sitio carga Google Analytics 4 solo con consentimiento;
+   - Smoobu (reservas) y Odoo (clientes, cotizaciones, facturación);
+   - la línea WhatsApp Cloud API +57 301 803 5593 está registrada y
+     conectada, pero NO hay automatizaciones activas (ATH-WEB-META-039).
+   Lo no confirmado (plazos de conservación, medios de pago, menores,
+   documentos de huéspedes) NO se afirma.
    ============================================================ */
 import PaginaLegal from '../components/PaginaLegal.astro';
 import {
   EMPRESA,
+  RNT,
   RUTAS_LEGALES,
   CORREO_CONTACTO,
+  LINEA_CLOUD_API,
   direccionCompleta,
 } from '../data/legal';
 ---
@@ -30,28 +36,39 @@ import {
 >
   <h2>1. Responsable del tratamiento</h2>
   <p>
-    {EMPRESA.razonSocial}, NIT {EMPRESA.nit}, con domicilio en {direccionCompleta}.
+    {EMPRESA.razonSocial}, NIT {EMPRESA.nit}, con domicilio en {direccionCompleta}, nombre comercial {EMPRESA.nombreComercial}.
     Contacto de privacidad, consultas y reclamos sobre datos personales:
     {CORREO_CONTACTO && <><a href={`mailto:${CORREO_CONTACTO}`}>{CORREO_CONTACTO}</a> o </>}por WhatsApp al
-    <a href={`tel:${EMPRESA.whatsappTel}`}> {EMPRESA.whatsapp}</a>.
+    <a href={`tel:${EMPRESA.whatsappTel}`}>{EMPRESA.whatsapp}</a>.
+  </p>
+  <p>
+    El Registro Nacional de Turismo n.º {RNT.numero} está a nombre de una {RNT.titular}, distinta de la sociedad
+    responsable. Esta política no atribuye ese registro a {EMPRESA.razonSocial}; vea la
+    <a href={RUTAS_LEGALES.informacion}>información legal</a>.
   </p>
 
   <h2>2. Datos que tratamos</h2>
   <ul>
-    <li>Datos de contacto que usted nos escribe: nombre, número de teléfono de WhatsApp y, si nos lo da, correo.</li>
-    <li>Datos de la reserva que usted nos informa: fechas, número de personas, preferencias.</li>
-    <li>El contenido de los mensajes que nos envía por WhatsApp.</li>
+    <li>Identificación y contacto que usted nos da: nombre, número de teléfono de WhatsApp y, si nos lo da, correo electrónico.</li>
+    <li>Datos de la consulta o reserva: fechas, número de personas, preferencias y condiciones acordadas.</li>
+    <li>El contenido de las conversaciones y solicitudes que nos envía por WhatsApp.</li>
+    <li>Datos necesarios para cotizar, facturar y validar el anticipo de una reserva (por ejemplo, datos de facturación y comprobantes que usted nos envíe).</li>
     <li>Si su reserva llega por Booking.com o Airbnb, los datos de la reserva que esa plataforma nos entrega (nombre y fechas y, cuando la plataforma los entrega, teléfono y correo).</li>
-    <li>Datos de navegación del sitio, de forma agregada, mediante Google Analytics, solo si usted lo acepta (ver punto 7).</li>
+    <li>Datos técnicos de navegación del sitio, de forma agregada, mediante Google Analytics y sus cookies, solo si usted lo acepta (ver punto 8).</li>
   </ul>
-  <p>No solicitamos datos sensibles. Si alguna vez fueran necesarios, entregarlos sería voluntario.</p>
+  <p>
+    No solicitamos datos sensibles. Si para una reserva fuera necesario pedirle datos de identificación de los
+    huéspedes por exigencia de la normativa aplicable al alojamiento, se le informará al momento de pedirlos y
+    para qué se usan.
+  </p>
 
   <h2>3. Finalidades</h2>
   <ul>
-    <li>Responder consultas, cotizar y gestionar reservas y su comunicación (confirmaciones, instrucciones de llegada).</li>
+    <li>Responder consultas, cotizar, gestionar reservas y su comunicación (confirmaciones, instrucciones de llegada).</li>
+    <li>Facturar y llevar los registros comerciales y contables de la reserva.</li>
     <li>Atender solicitudes, quejas y reclamos.</li>
     <li>Cumplir obligaciones legales, contables y de registro que correspondan.</li>
-    <li>Medir y mejorar el funcionamiento del sitio, solo si usted acepta la analítica (ver punto 7).</li>
+    <li>Medir y mejorar el funcionamiento del sitio, solo si usted acepta la analítica (ver punto 8).</li>
   </ul>
   <p>No enviamos mensajes promocionales sin su autorización previa y expresa.</p>
 
@@ -62,23 +79,43 @@ import {
     ese momento quedan en la conversación de WhatsApp con {EMPRESA.nombreComercial}.
   </p>
   <p>
-    <strong>En nuestra gestión de reservas.</strong> Los datos de las reservas se gestionan en dos sistemas de
-    {EMPRESA.razonSocial}: Smoobu, donde se administran las reservas y los canales de venta (incluidas las que llegan por
-    Booking.com y Airbnb), y Odoo, donde se registran clientes, cotizaciones y facturación. En esos sistemas pueden
-    constar su nombre, teléfono, correo, fechas de estadía, número de huéspedes y el valor de la reserva.
+    <strong>En nuestra gestión de reservas y clientes.</strong> Los datos se gestionan en dos sistemas de
+    {EMPRESA.razonSocial}: <strong>Smoobu</strong>, donde se administran las reservas, la disponibilidad y los canales de
+    venta (incluidas las que llegan por Booking.com y Airbnb), y <strong>Odoo</strong>, donde se registran clientes,
+    cotizaciones, facturación y comunicaciones comerciales. En esos sistemas pueden constar su nombre, teléfono,
+    correo, fechas de estadía, número de huéspedes y el valor de la reserva.
+  </p>
+  <p>
+    La conexión entre Smoobu y Odoo está en desarrollo. Hasta que esté activa, la copia de datos entre ambos
+    sistemas no se hace de forma automática. Cuando se active, esta política se actualizará.
   </p>
 
-  <h2>5. Proveedores y terceros</h2>
+  <h2>5. WhatsApp Business Platform (Cloud API) y línea {LINEA_CLOUD_API.numero}</h2>
   <p>
-    Para atenderle usamos proveedores tecnológicos que pueden tratar datos por nuestra cuenta:
-    WhatsApp (Meta Platforms) como canal de mensajería, Smoobu como gestor de reservas, Odoo como sistema de gestión
-    y Google (Analytics) para medición del sitio, esta última solo con su aceptación. Cuando usted reserva por
+    Además del WhatsApp Business de recepción actual (<a href={`tel:${EMPRESA.whatsappTel}`}>{EMPRESA.whatsapp}</a>),
+    {EMPRESA.razonSocial} está habilitando la línea
+    <a href={`tel:${LINEA_CLOUD_API.numeroTel}`}>{LINEA_CLOUD_API.numero}</a> con la WhatsApp Business Platform
+    (Cloud API) de Meta, para atender solicitudes de disponibilidad y reservas. Los mensajes de esa línea llegan a
+    Odoo, donde nuestro equipo los lee y los gestiona.
+  </p>
+  <ul>
+    <li>Sus mensajes, su número de teléfono y el nombre de perfil que tenga en WhatsApp pueden quedar almacenados en Odoo y en WhatsApp/Meta.</li>
+    <li>Hoy la atención por esa línea es <strong>humana</strong>. No hay respuestas automáticas, asistentes de inteligencia artificial ni reservas automáticas activas.</li>
+    <li>Si más adelante se incorporan respuestas automáticas, plantillas o un asistente automatizado, se lo informaremos y actualizaremos esta política antes de usarlos con sus datos.</li>
+    <li>WhatsApp/Meta trata los datos de la conversación según sus propias condiciones y políticas; nosotros no controlamos ese tratamiento.</li>
+  </ul>
+
+  <h2>6. Proveedores y terceros</h2>
+  <p>
+    Para atenderle nos apoyamos en proveedores tecnológicos que pueden tratar datos por nuestra cuenta:
+    WhatsApp (Meta Platforms) como canal de mensajería, Smoobu como gestor de reservas, Odoo como sistema de gestión,
+    y Google (Analytics) para medir el sitio, esta última solo con su aceptación. Cuando usted reserva por
     Booking.com o Airbnb, esas plataformas tratan sus datos según sus propias políticas y nos entregan los de la reserva.
     Estos proveedores pueden estar ubicados fuera de Colombia, por lo que sus datos pueden ser transmitidos o
     transferidos internacionalmente. Usted puede pedir más información por los canales del punto 1.
   </p>
 
-  <h2>6. Sus derechos</h2>
+  <h2>7. Sus derechos</h2>
   <p>Como titular de los datos usted puede:</p>
   <ul>
     <li>conocer, actualizar y rectificar sus datos;</li>
@@ -89,38 +126,45 @@ import {
     <li>acceder de forma gratuita a sus datos.</li>
   </ul>
 
-  <h2>7. Analítica del sitio</h2>
+  <h2>8. Cookies y analítica del sitio</h2>
   <p>
     Este sitio puede usar Google Analytics 4 para conocer, de forma estadística, qué páginas se visitan y qué botones se
     pulsan. <strong>La analítica está desactivada por defecto</strong>: no se carga ni se envía nada a Google hasta que
-    usted la acepte en el aviso que aparece en el sitio. Puede aceptarla o rechazarla con el mismo esfuerzo, y cambiar su
+    usted la acepta en el aviso que aparece en el sitio. Puede aceptarla o rechazarla con el mismo esfuerzo, y cambiar su
     decisión cuando quiera desde «Preferencias de analítica», al final de la página. Su decisión se guarda en su navegador
     por hasta doce meses; si rechaza o retira la autorización, se deja de medir y se eliminan las cookies de analítica
     de este sitio. No enviamos a la analítica su nombre, teléfono ni el contenido de sus mensajes. Si la acepta, Google
     puede usar identificadores técnicos del navegador.
   </p>
 
-  <h2>8. Procedimiento para consultas, reclamos y supresión</h2>
+  <h2>9. Procedimiento para consultas, reclamos y supresión</h2>
   <p>
     Escríbanos por los canales del punto 1 indicando su nombre, un medio de contacto y la descripción de su solicitud
     (por ejemplo: consulta, corrección o eliminación de sus datos). La ley colombiana fija los plazos de respuesta
     (consultas: diez días hábiles, prorrogables cinco; reclamos: quince días hábiles, prorrogables ocho), que
     nos obligamos a respetar.
   </p>
+  <p>
+    Para pedir la eliminación de sus datos, siga las instrucciones de la página
+    <a href={RUTAS_LEGALES.eliminacion}>Eliminación de datos personales</a>.
+  </p>
 
-  <h2>9. Mensajes por WhatsApp</h2>
+  <h2>10. Mensajes por WhatsApp</h2>
   <p>
     Si recibe mensajes de {EMPRESA.nombreComercial} que no sean necesarios para su reserva, puede pedirnos que
     dejemos de enviarlos respondiendo «BAJA» o escribiéndonos por los canales del punto 1.
   </p>
 
-  <h2>10. Conservación y seguridad</h2>
+  <h2>11. Conservación y seguridad</h2>
   <p>
-    Conservamos sus datos mientras sea necesario para las finalidades descritas y durante el tiempo que exijan las normas
-    aplicables. Aplicamos medidas técnicas y administrativas razonables para protegerlos.
+    Conservamos sus datos mientras sean necesarios para las finalidades descritas. Los registros comerciales,
+    contables, tributarios y de alojamiento que la ley nos obliga a guardar se conservan durante el tiempo que exijan
+    las normas aplicables. Las conversaciones y los datos de contacto que no estén sujetos a una obligación legal de
+    conservación pueden suprimirse a solicitud suya o cuando dejen de ser necesarios. Aplicamos medidas técnicas y
+    administrativas razonables para proteger los datos.
   </p>
 
-  <h2>11. Cambios en esta política</h2>
+  <h2>12. Cambios en esta política</h2>
   <p>Publicaremos en esta página cualquier cambio sustancial, con su nueva fecha de vigencia.</p>
 
   <p><a href={RUTAS_LEGALES.informacion}>Ver información legal de {EMPRESA.razonSocial}</a></p>

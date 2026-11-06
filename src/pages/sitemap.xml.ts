@@ -154,6 +154,7 @@ export const GET: APIRoute = async () => {
         { ruta: RUTAS_LEGALES.informacion, prioridad: '0.3' },
         { ruta: RUTAS_LEGALES.privacidad, prioridad: '0.3' },
         { ruta: RUTAS_LEGALES.terminos, prioridad: '0.3' },
+        { ruta: RUTAS_LEGALES.eliminacion, prioridad: '0.3' },
       ];
 
   const entradas = [...paginasFijas, ...articulosDelSitemap, ...proyectos, ...redGastronomica, ...fichas, ...legales];

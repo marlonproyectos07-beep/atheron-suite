@@ -88,7 +88,18 @@ export const CONDICIONES_RESERVA = {
   normasDeConvivencia: null as string | null,
 };
 
-export const VERSION_LEGAL = '1.0 (borrador)';
+export const VERSION_LEGAL = '1.1 (borrador)';
+/* ---- Línea WhatsApp Cloud API (ATH-WEB-META-039) ----
+   Línea nueva, registrada y conectada en Meta. Hoy NO hay respuestas
+   automáticas, asistente de IA ni reservas automáticas: la atención es
+   humana, desde Odoo. Si se activan, hay que actualizar la política
+   ANTES de activarlas. El canal actual de recepción sigue siendo
+   EMPRESA.whatsapp y no se modifica. */
+export const LINEA_CLOUD_API = {
+  numero: '+57 301 803 5593',
+  numeroTel: '+573018035593',
+} as const;
+
 /* Fecha de entrada en vigencia: se completa al aprobar. null = no se muestra. */
 export const VIGENCIA_LEGAL: string | null = null;
 
@@ -96,6 +107,7 @@ export const RUTAS_LEGALES = {
   informacion: '/informacion-legal',
   privacidad: '/politica-de-privacidad',
   terminos: '/terminos-y-condiciones',
+  eliminacion: '/eliminacion-de-datos',
 } as const;
 
 export const AVISO_BORRADOR_LEGAL =
