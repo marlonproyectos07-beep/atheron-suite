@@ -73,7 +73,8 @@ Para guardar el digital en Odoo hará falta un campo propio (por ejemplo `x_chec
 
 1. **No hay nada que instalar en Odoo.** Este cambio vive en el conector.
 2. Aparecerá en los pedidos **nuevos** que cree la sincronización, **solo cuando gerencia active escrituras** (pendiente: levantar el
-   bloqueo #101, `SYNC_ARM`, usuario técnico y piloto ATH-DEV-118). Hoy no se escribe nada y los pedidos existentes no cambian.
+   bloqueo #101, `SYNC_ARM` y usuario técnico). El piloto ATH-DEV-118 ya se ejecutó el 2026-10-31 (COT/2026/03847) y está agotado; la
+   prueba de esta nota usa el piloto aislado ATH-DEV-140 (`PILOTO-WHATSAPP-AISLADO.md`). Hoy no se escribe nada y los pedidos existentes no cambian.
 3. Recepción abre el pedido, ve la nota interna del chatter y pulsa el enlace `wa.me`; revisa el mensaje y envía.
 4. Para **contactos o pedidos existentes**, Odoo ya tiene la app WhatsApp instalada (verificado, solo lectura):
    módulos `whatsapp`, `whatsapp_account`, etc., 4 cuentas activas y 10 plantillas aprobadas. Es otro camino: usa la API de WhatsApp
@@ -102,7 +103,7 @@ Para guardar el digital en Odoo hará falta un campo propio (por ejemplo `x_chec
 - **El enlace de check-in no llega por la API** en esa reserva (`guest-app-url` vacío, sin campo de estado). Hay que revisar en la
   interfaz de Smoobu si el enlace solo existe vía la plantilla de mensajes; mientras tanto el mensaje sale sin él.
 - **Clicable en Odoo: comprobado por código fuente y pruebas, no en pantalla.** Verlo en el chatter exige publicar una nota en Odoo
-  (una escritura), que no está autorizada. Primera comprobación visual: el piloto ATH-DEV-118 (una reserva, borrador).
+  (una escritura), que no está autorizada. Primera comprobación visual: el piloto aislado ATH-DEV-140 (una reserva elegida por ID, borrador). El piloto ATH-DEV-118 ya no sirve para esto: se ejecutó el 2026-10-31 sin esta nota.
 - La nota interna con `wa.me` contiene el teléfono (ya guardado en el contacto); es interna, nunca va a reportes públicos.
 - La URL de la alternativa (`login.smoobu.com/en/booking/detail/<id>`) sale de lo observado en la interfaz; confirmar con una reserva real.
 - Solo aplica a pedidos creados **después** de activar escrituras; no se retrocede sobre pedidos existentes.
