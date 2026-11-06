@@ -6,7 +6,8 @@
    Comprueba sobre el codigo fuente (sin construir):
    - existen las cuatro paginas legales y estan enlazadas entre si;
    - la ruta de eliminacion esta en legal.ts, el sitemap y el pie;
-   - los tres controles siguen apagados y no hay fecha de vigencia inventada;
+   - terminos/RNT siguen en borrador y solo privacidad/eliminacion se preparan;
+   - la fecha se marca como provisional hasta publicar de verdad;
    - los datos legales vienen de legal.ts (sin NIT duplicado en paginas);
    - el RNT no se atribuye a la sociedad;
    - no se afirman automatizaciones que no existen;
@@ -30,9 +31,12 @@ for (const [k, f] of Object.entries(paginas)) prueba(`existe la pagina ${k}`, ex
 
 const legal = leer('src/data/legal.ts');
 prueba('BORRADOR_LEGAL sigue en true', /export const BORRADOR_LEGAL = true;/.test(legal));
-prueba('PUBLICAR_PRIVACIDAD apagado', /export const PUBLICAR_PRIVACIDAD = false;/.test(legal));
-prueba('PUBLICAR_ELIMINACION apagado', /export const PUBLICAR_ELIMINACION = false;/.test(legal));
-prueba('VIGENCIA_LEGAL sigue en null (sin fecha ficticia)', /export const VIGENCIA_LEGAL: string \| null = null;/.test(legal));
+prueba('PUBLICAR_PRIVACIDAD preparada solo en rama Draft', /export const PUBLICAR_PRIVACIDAD = true;/.test(legal));
+prueba('PUBLICAR_ELIMINACION preparada solo en rama Draft', /export const PUBLICAR_ELIMINACION = true;/.test(legal));
+prueba('version 1.2 preparada sin etiqueta borrador', /export const VERSION_LEGAL = '1.2';/.test(legal));
+prueba('fecha de vigencia provisional documentada para confirmar al publicar',
+  /FECHA PROVISIONAL/.test(legal) && /Confirmar o actualizar a la fecha REAL/.test(legal)
+  && /export const VIGENCIA_LEGAL: string \| null = '6 de noviembre de 2026';/.test(legal));
 prueba("ruta de eliminacion = '/eliminacion-de-datos'", /eliminacion: '\/eliminacion-de-datos'/.test(legal));
 
 const priv = leer(paginas.privacidad);

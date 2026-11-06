@@ -6,19 +6,15 @@
    politica de privacidad y los terminos leen de aqui, de modo que no
    puedan contradecirse.
 
-   INTERRUPTOR DE PUBLICACION
-   BORRADOR_LEGAL = true  (estado actual)
-     - Las tres paginas existen pero salen con noindex, nofollow y una
-       banda de "borrador".
-     - NO se enlazan desde el pie ni desde ningun menu.
-     - NO entran en el sitemap.
-     Es decir: fusionar esta rama por descuido no cambia lo que ve el
-     visitante, y nada de esto llega a buscadores.
-
-   BORRADOR_LEGAL = false (solo con aprobacion de direccion y revision
-   juridica, ver docs/ATH-WEB-META-019-legal.md)
-     - Las paginas pasan a indexables, entran al sitemap y el pie
-       muestra la identificacion y los enlaces legales.
+   INTERRUPTORES DE PUBLICACION (ATH-PMS-WA-051)
+   BORRADOR_LEGAL = true mantiene Terminos e Informacion Legal como
+   borradores no indexables, sin enlaces de pie ni entradas en sitemap.
+   PUBLICAR_PRIVACIDAD y PUBLICAR_ELIMINACION controlan las otras
+   dos paginas independientemente. Se habilitan AQUI solo en la rama
+   Draft para preparar y probar la publicacion, sin merge ni despliegue.
+   IMPORTANTE: un merge podria publicar estas dos paginas. Antes del
+   merge se requiere revision juridica y autorizacion expresa.
+   Ver docs/ATH-PMS-WA-051-preparacion-publicacion.md.
 
    QUE ES CONFIRMADO Y DE DONDE SALE
    Razon social, NIT, direccion y telefono: RUT y Certificado de
@@ -38,11 +34,11 @@ import { NUMERO, NUMERO_VISIBLE } from './whatsapp';
 
 export const BORRADOR_LEGAL = true;
 
-/* ATH-PMS-WA-042: preparacion para publicación independiente.
-   Ambos permanecen APAGADOS hasta nueva autorización de gerencia.
-   BORRADOR_LEGAL sigue protegiendo terminos e informacion legal. */
-export const PUBLICAR_PRIVACIDAD = false;
-export const PUBLICAR_ELIMINACION = false;
+/* ATH-PMS-WA-051: habilitadas SOLO en PR Draft, con autorizacion
+   para preparar. No fusionar ni desplegar sin aprobacion separada.
+   BORRADOR_LEGAL protege terminos, informacion legal y RNT. */
+export const PUBLICAR_PRIVACIDAD = true;
+export const PUBLICAR_ELIMINACION = true;
 
 /* ---- La sociedad que opera el sitio ---- */
 export const EMPRESA = {
@@ -94,7 +90,7 @@ export const CONDICIONES_RESERVA = {
   normasDeConvivencia: null as string | null,
 };
 
-export const VERSION_LEGAL = '1.2 (borrador)';
+export const VERSION_LEGAL = '1.2';
 /* ---- Línea WhatsApp Cloud API (ATH-WEB-META-039/042) ----
    Línea registrada en Meta, con webhook configurado, pero aún SIN
    prueba real de recepción en Odoo. No afirmar que ya funciona.
@@ -106,8 +102,10 @@ export const LINEA_CLOUD_API = {
   numeroTel: '+573018035593',
 } as const;
 
-/* Fecha de entrada en vigencia: se completa al aprobar. null = no se muestra. */
-export const VIGENCIA_LEGAL: string | null = null;
+/* FECHA PROVISIONAL (ATH-PMS-WA-051): solo para validar el PR Draft.
+   Confirmar o actualizar a la fecha REAL de publicacion en produccion
+   ANTES de autorizar el merge. No afirmar vigencia antes de desplegar. */
+export const VIGENCIA_LEGAL: string | null = '6 de noviembre de 2026';
 
 export const RUTAS_LEGALES = {
   informacion: '/informacion-legal',
