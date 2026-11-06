@@ -1,0 +1,46 @@
+# ATH-AI-004: SOLO LOCAL/STAGING, puerto ligado a loopback.
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      POSTGRES_DB: ${POSTGRES_DB:?required}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [private]
+  n8n:
+    image: ${N8N_IMAGE:?pin_stable_version}
+    restart: unless-stopped
+    init: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: "5432"
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:?required}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER:?required}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?required}
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      GENERIC_TIMEZONE: America/Bogota
+      TZ: America/Bogota
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks: [private]
+networks:
+  private: {}
+volumes:
+  pg_data: {}
+  n8n_data: {}
