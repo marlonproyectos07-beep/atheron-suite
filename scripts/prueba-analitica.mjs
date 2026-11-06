@@ -77,6 +77,18 @@ prueba('privacidad separa visualmente ambos números mediante espacios explícit
   (privEspacios.match(/\{' '\}/g) || []).length >= 2);
 
 const aviso = leer('src/components/AvisoAnalitica.astro');
+prueba('aviso mantiene consentimiento voluntario y enlace, con texto compacto',
+  aviso.includes('solo si usted acepta') && aviso.includes('Puede rechazarlo')
+  && aviso.includes('RUTAS_LEGALES.privacidad')
+  && !aviso.includes('Solo se activa si usted lo acepta.'));
+prueba('aviso conserva separación antes de Política de privacidad',
+  aviso.includes("{' '}") && aviso.includes('<a href={RUTAS_LEGALES.privacidad}>'));
+prueba('CSS del aviso protege texto ampliado sin ocultar Aceptar/Rechazar',
+  cssAviso.includes('overflow-wrap: break-word') && cssAviso.includes('flex-wrap: wrap'));
+prueba('CSS legal permite romper correos largos sin desbordar en móviles',
+  leer('public/assets/css/legal.css').includes('.legal a[href^="mailto:"] { overflow-wrap: anywhere; }'));
+prueba('privacidad separa recepción actual de razón social',
+  privEspacios.includes("),{' '}") && privEspacios.includes('{EMPRESA.razonSocial} está habilitando'));
 prueba('el aviso nace oculto', /data-aviso-analitica hidden/.test(aviso));
 prueba('el aviso ofrece Aceptar y Rechazar con el mismo estilo',
   /data-analitica-decision="si"/.test(aviso) && /data-analitica-decision="no"/.test(aviso)

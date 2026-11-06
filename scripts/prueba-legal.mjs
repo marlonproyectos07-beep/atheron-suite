@@ -36,6 +36,14 @@ prueba('VIGENCIA_LEGAL sigue en null (sin fecha ficticia)', /export const VIGENC
 prueba("ruta de eliminacion = '/eliminacion-de-datos'", /eliminacion: '\/eliminacion-de-datos'/.test(legal));
 
 const priv = leer(paginas.privacidad);
+const estiloLegal = leer('public/assets/css/legal.css');
+prueba('correo de privacidad tiene salto de línea seguro a 320px',
+  estiloLegal.includes('.legal a[href^="mailto:"] { overflow-wrap: anywhere; }'));
+prueba('aviso no junta el punto con Política de privacidad',
+  leer('src/components/AvisoAnalitica.astro').includes("página.{' '}"));
+prueba('párrafo de recepción tiene espacio antes de ATHERON',
+  priv.includes("),{' '}"));
+
 const elim = leer(paginas.eliminacion);
 const term = leer(paginas.terminos);
 const info = leer(paginas.informacion);

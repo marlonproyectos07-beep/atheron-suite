@@ -14,8 +14,10 @@ body:has(.aviso-analitica:not([hidden])) .flotante {
   }
 }
 .aviso-analitica__texto { margin: 0; flex: 1 1 22rem; max-width: 60rem; }
+/* Con texto ampliado, evitar recortes horizontales del aviso en móviles. */
+.aviso-analitica__texto { min-width: 0; overflow-wrap: break-word; }
 .aviso-analitica__texto a { text-decoration: underline; color: inherit; }
-.aviso-analitica__botones { display: flex; gap: .75rem; }
+.aviso-analitica__botones { display: flex; gap: .75rem; flex-wrap: wrap; }
 .aviso-analitica__boton { min-height: 44px; min-width: 7rem; padding: .5rem 1.25rem; font: inherit; font-weight: 600; color: #1f1f1f; background: #fff; border: 2px solid #1f1f1f; border-radius: .5rem; cursor: pointer; }
 .aviso-analitica__boton:hover { background: #f1f1f1; }
 .aviso-analitica__boton:focus-visible { outline: 3px solid #0a58ca; outline-offset: 2px; }
