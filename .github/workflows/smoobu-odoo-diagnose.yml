@@ -29,7 +29,7 @@ on:
         required: false
         default: 'full'
         type: choice
-        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reconcile-daily, sync-dryrun, sync-shadow, sync-semiauto, sync-pilot-dry, sync-auto-shadow, booking-correction-dry, reservation-once, odoo-auth-readonly, credential-shape, credential-swap]
+        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reconcile-daily, sync-dryrun, sync-shadow, sync-semiauto, sync-pilot-dry, sync-auto-shadow, booking-correction-dry, reservation-once, availability-once, odoo-auth-readonly, credential-shape, credential-swap]
       from:
         description: 'reconcile-window / reconcile-ids: primera noche YYYY-MM-DD (vacio = ventana historica 26..27 oct)'
         required: false
@@ -44,6 +44,11 @@ on:
         description: 'reservation-once: id de Smoobu (solo ids de la lista blanca de src/reservation-probe.mjs)'
         required: false
         default: ''
+        type: string
+      guests:
+        description: 'availability-once: cantidad de huespedes (1-10)'
+        required: false
+        default: '1'
         type: string
 
 permissions:
@@ -80,6 +85,15 @@ jobs:
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
         run: npm run --silent smoobu-once
+      - name: Disponibilidad oficial Smoobu (solo consulta, no reserva) — ATH-PMS-WA-061
+        if: ${{ inputs.mode == 'availability-once' }}
+        env:
+          AVAILABILITY_READONLY_ARM: ATH-PMS-WA-061-READ-ONLY
+          AVAILABILITY_FROM: ${{ inputs.from }}
+          AVAILABILITY_TO: ${{ inputs.to }}
+          AVAILABILITY_GUESTS: ${{ inputs.guests }}
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+        run: npm run --silent availability-once
       - name: Primera lectura acotada de reservas (ATH-DEV-028)
         if: ${{ inputs.mode == 'reservations-window' }}
         env:
