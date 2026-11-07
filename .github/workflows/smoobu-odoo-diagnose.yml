@@ -91,6 +91,15 @@ jobs:
           RATES_TO: '2027-03-17'
           SMOOBU_BASE_URL: https://login.smoobu.com
         run: npm run --silent rates-once
+      - name: ATH-PMS-WA-061 — Disponibilidad oficial (GET /me + POST de consulta sin reservas)
+        if: ${{ github.event_name == 'push' && github.event.head_commit.message == 'ATH-PMS-WA-061-AVAILABILITY-READ-ONLY' }}
+        env:
+          AVAILABILITY_READONLY_ARM: ATH-PMS-WA-061-READ-ONLY
+          AVAILABILITY_FROM: '2027-03-16'
+          AVAILABILITY_TO: '2027-03-17'
+          AVAILABILITY_GUESTS: '2'
+          SMOOBU_BASE_URL: https://login.smoobu.com
+        run: npm run --silent availability-once
       - name: Primera lectura acotada de reservas (ATH-DEV-028)
         if: ${{ inputs.mode == 'reservations-window' }}
         env:
