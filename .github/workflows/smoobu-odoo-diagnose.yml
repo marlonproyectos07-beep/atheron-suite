@@ -19,7 +19,7 @@
 # ============================================================
 name: smoobu-odoo-diagnose
 
-# ATH-PMS-WA-061: disparo experimental de una sola consulta, bloqueado por mensaje exacto.
+# ATH-PMS-WA-061: prueba de capacidad para un huésped, solo lectura y bloqueada por mensaje exacto.
 # Solo manual mientras Smoobu siga respondiendo 401: un push al conector
 # ya no lanza llamadas a Smoobu (ATH-DEV-011).
 on:
@@ -98,7 +98,7 @@ jobs:
           AVAILABILITY_READONLY_ARM: ATH-PMS-WA-061-READ-ONLY
           AVAILABILITY_FROM: '2027-03-16'
           AVAILABILITY_TO: '2027-03-17'
-          AVAILABILITY_GUESTS: '2'
+          AVAILABILITY_GUESTS: '1'
           SMOOBU_BASE_URL: https://login.smoobu.com
         run: npm run --silent availability-once
       - name: Primera lectura acotada de reservas (ATH-DEV-028)

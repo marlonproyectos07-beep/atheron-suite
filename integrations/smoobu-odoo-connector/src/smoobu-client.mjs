@@ -65,6 +65,15 @@ export class SmoobuClient {
     return { id: Number(data.id) };
   }
 
+  /** Detalle de apartamento: solo GET /api/apartments/{id}; se usa para verificar capacidad y moneda. */
+  async getApartmentDetails(id) {
+    const n = Number(id);
+    if (!Number.isSafeInteger(n) || n <= 0) throw new ConnectorError('SMOOBU_INVALID_ID');
+    const data = await this.get('/apartments/' + n);
+    if (!data || typeof data !== 'object' || Array.isArray(data)) throw new ConnectorError('SMOOBU_RESPONSE_INVALID');
+    return data;
+  }
+
   /** Consulta oficial POST de solo lectura: disponibilidad, precio y restricciones. */
   async checkApartmentAvailability({ arrivalDate, departureDate, apartmentIds, customerId, guests }) {
     const { validateAvailabilityInput } = await import('./availability-readonly.mjs');
