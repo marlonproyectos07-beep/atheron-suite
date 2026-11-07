@@ -37,6 +37,8 @@
     "sync-semiauto": "node scripts/sync-semiauto.mjs",
     "sync-pilot": "node scripts/sync-pilot.mjs",
     "sync-auto": "node scripts/sync-auto.mjs",
-    "booking-correction-dry": "node scripts/booking-correction-dry.mjs"
+    "booking-correction-dry": "node scripts/booking-correction-dry.mjs",
+    "whatsapp-agent-shadow-demo": "node scripts/whatsapp-agent-shadow-demo.mjs",
+    "whatsapp-agent-run": "node scripts/whatsapp-agent-run.mjs"
   }
 }
