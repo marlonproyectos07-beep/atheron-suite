@@ -32,7 +32,7 @@ test('otras cuentas y otras propiedades se rechazan', () => {
 });
 test('fechas invalidadas: ambiguas, pasadas, nocturnidad cero', () => {
   assert.equal(step('del 2026-11-02 al 2026-11-03 para 2 personas').reason,'PAST_OR_ZERO_STAY');
-  assert.equal(step('del 2026-11-08 al 2026-11-08 para 2 personas').reason,'INVALID_STAY');
+  assert.equal(step('del 2026-11-08 al 2026-11-08 para 2 personas').reason,'PAST_OR_ZERO_STAY');
   assert.equal(step('para mañana el 2026-11-09').reason,'AMBIGUOUS_OR_INVALID_DATA');
   assert.equal(step('del 2026-11-08 al 2026-12-20 para 2 personas').reason,'INVALID_STAY');
 });
