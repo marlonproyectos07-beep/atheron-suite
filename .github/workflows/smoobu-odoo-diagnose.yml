@@ -22,10 +22,6 @@ name: smoobu-odoo-diagnose
 # Solo manual mientras Smoobu siga respondiendo 401: un push al conector
 # ya no lanza llamadas a Smoobu (ATH-DEV-011).
 on:
-  # Lectura excepcional en rama experimental; nunca sobre main.
-  push:
-    branches: [ath-pms-wa-060/rates-live-readonly]
-    paths: [.github/workflows/smoobu-odoo-diagnose.yml]
   workflow_dispatch:
     inputs:
       mode:
@@ -84,14 +80,6 @@ jobs:
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
         run: npm run --silent smoobu-once
-      - name: ATH-PMS-WA-060 — Una lectura GET de tarifas (cinco habitaciones)
-        if: ${{ github.event_name == 'push' && github.event.head_commit.message == 'ATH-PMS-WA-060-RATES-READ-ONCE-APPROVED' }}
-        env:
-          RATES_READONLY_ARM: ATH-PMS-WA-058C-LECTURA
-          RATES_FROM: '2026-11-09'
-          RATES_TO: '2026-11-10'
-          SMOOBU_BASE_URL: https://login.smoobu.com
-        run: npm run --silent rates-once
       - name: Primera lectura acotada de reservas (ATH-DEV-028)
         if: ${{ inputs.mode == 'reservations-window' }}
         env:
@@ -218,13 +206,13 @@ jobs:
         if: ${{ inputs.mode == 'credential-swap' }}
         run: npm run --silent credential-swap
       - name: Conectividad (sin credenciales)
-        if: ${{ github.event_name == 'workflow_dispatch' && (inputs.mode == 'full' || inputs.mode == '') }}
+        if: ${{ inputs.mode == 'full' || inputs.mode == '' }}
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
           ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
         run: node scripts/connectivity.mjs
       - name: Diagnostico de solo lectura
-        if: ${{ github.event_name == 'workflow_dispatch' && (inputs.mode == 'full' || inputs.mode == '') }}
+        if: ${{ inputs.mode == 'full' || inputs.mode == '' }}
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
           ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
