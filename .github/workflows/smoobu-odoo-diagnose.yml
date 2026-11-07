@@ -19,6 +19,7 @@
 # ============================================================
 name: smoobu-odoo-diagnose
 
+# ATH-PMS-WA-061: disparo experimental de una sola consulta, bloqueado por mensaje exacto.
 # Solo manual mientras Smoobu siga respondiendo 401: un push al conector
 # ya no lanza llamadas a Smoobu (ATH-DEV-011).
 on:
