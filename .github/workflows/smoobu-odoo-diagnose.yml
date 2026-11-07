@@ -19,13 +19,9 @@
 # ============================================================
 name: smoobu-odoo-diagnose
 
-# ATH-PMS-WA-061: segunda lectura para separar disponibilidad de tarifa; solo lectura y bloqueada por mensaje exacto.
 # Solo manual mientras Smoobu siga respondiendo 401: un push al conector
 # ya no lanza llamadas a Smoobu (ATH-DEV-011).
 on:
-  push:
-    branches: [ath-pms-wa-060/rates-live-readonly, ath-pms-wa-061/availability-readonly]
-    paths: [.github/workflows/smoobu-odoo-diagnose.yml]
   workflow_dispatch:
     inputs:
       mode:
@@ -33,7 +29,7 @@ on:
         required: false
         default: 'full'
         type: choice
-        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reconcile-daily, sync-dryrun, sync-shadow, sync-semiauto, sync-pilot-dry, sync-auto-shadow, booking-correction-dry, reservation-once, odoo-auth-readonly, credential-shape, credential-swap]
+        options: [full, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reconcile-daily, sync-dryrun, sync-shadow, sync-semiauto, sync-pilot-dry, sync-auto-shadow, booking-correction-dry, reservation-once, availability-once, odoo-auth-readonly, credential-shape, credential-swap]
       from:
         description: 'reconcile-window / reconcile-ids: primera noche YYYY-MM-DD (vacio = ventana historica 26..27 oct)'
         required: false
@@ -48,6 +44,11 @@ on:
         description: 'reservation-once: id de Smoobu (solo ids de la lista blanca de src/reservation-probe.mjs)'
         required: false
         default: ''
+        type: string
+      guests:
+        description: 'availability-once: cantidad de huespedes (1-10)'
+        required: false
+        default: '1'
         type: string
 
 permissions:
@@ -84,22 +85,14 @@ jobs:
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
         run: npm run --silent smoobu-once
-      - name: ATH-PMS-WA-061 — Consulta real de disponibilidad para fecha de prueba (solo GET)
-        if: ${{ github.event_name == 'push' && github.event.head_commit.message == 'ATH-PMS-WA-061-RATES-READ-ONLY' }}
-        env:
-          RATES_READONLY_ARM: ATH-PMS-WA-058C-LECTURA
-          RATES_FROM: '2027-03-16'
-          RATES_TO: '2027-03-17'
-          SMOOBU_BASE_URL: https://login.smoobu.com
-        run: npm run --silent rates-once
-      - name: ATH-PMS-WA-061 — Disponibilidad oficial (GET /me + POST de consulta sin reservas)
-        if: ${{ github.event_name == 'push' && github.event.head_commit.message == 'ATH-PMS-WA-061-AVAILABILITY-READ-ONLY' }}
+      - name: Disponibilidad oficial Smoobu (solo consulta, no reserva) — ATH-PMS-WA-061
+        if: ${{ inputs.mode == 'availability-once' }}
         env:
           AVAILABILITY_READONLY_ARM: ATH-PMS-WA-061-READ-ONLY
-          AVAILABILITY_FROM: '2027-03-16'
-          AVAILABILITY_TO: '2027-03-17'
-          AVAILABILITY_GUESTS: '1'
-          SMOOBU_BASE_URL: https://login.smoobu.com
+          AVAILABILITY_FROM: ${{ inputs.from }}
+          AVAILABILITY_TO: ${{ inputs.to }}
+          AVAILABILITY_GUESTS: ${{ inputs.guests }}
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
         run: npm run --silent availability-once
       - name: Primera lectura acotada de reservas (ATH-DEV-028)
         if: ${{ inputs.mode == 'reservations-window' }}
