@@ -19,7 +19,7 @@
 # ============================================================
 name: smoobu-odoo-diagnose
 
-# ATH-PMS-WA-061: prueba de capacidad para un huésped, solo lectura y bloqueada por mensaje exacto.
+# ATH-PMS-WA-061: segunda lectura para separar disponibilidad de tarifa; solo lectura y bloqueada por mensaje exacto.
 # Solo manual mientras Smoobu siga respondiendo 401: un push al conector
 # ya no lanza llamadas a Smoobu (ATH-DEV-011).
 on:
