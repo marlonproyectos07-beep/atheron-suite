@@ -26,7 +26,7 @@ export async function runAgent({ odoo, writer = null, smoobu, today, sinceHours 
     [['wa_account_id', '=', HOTELS_ACCOUNT_ID], ['message_type', '=', 'inbound'], ['create_date', '>=', since]],
     ['id', 'body', 'create_date', 'message_type', 'mobile_number', 'mobile_number_formatted', 'msg_uid', 'state', 'wa_account_id', 'mail_message_id'],
     { order: 'id asc', limit });
-  const report = { considered: rows.length, excludedOtherAccount: 0, alreadyProcessed: 0, drafts: [], smoobuRequests: 0, posted: 0, sendEnabled: false, bookingEnabled: false, odooWritesOnWhatsapp: 0 };
+  const report = { considered: rows.length, excludedOtherAccount: 0, alreadyProcessed: 0, drafts: [], blocked: [], smoobuRequests: 0, posted: 0, sendEnabled: false, bookingEnabled: false, odooWritesOnWhatsapp: 0 };
   const events = [];
   for (const r of rows) { const e = parseInbound(r); if (e) events.push(e); else report.excludedOtherAccount += 1; }
   // deduplicacion persistente: etiquetas ya publicadas en el canal de borradores
@@ -34,7 +34,7 @@ export async function runAgent({ odoo, writer = null, smoobu, today, sinceHours 
   if (writer) {
     await writer.assertInternal();
     const prev = await odoo.searchRead('mail.message', [['model', '=', 'discuss.channel'], ['res_id', '=', writer.channelId], ['body', 'ilike', TAG]], ['id', 'body'], { limit: 500 });
-    for (const m of prev) for (const x of String(m.body).matchAll(/ATH-AGENT msg=([A-Za-z0-9_.:=-]+)/g)) done.add(x[1]);
+    for (const m of prev) for (const x of String(m.body).matchAll(/ATH-AGENT msg=([A-Za-z0-9_.:=+\/-]+)/g)) done.add(x[1]);
   }
   const bySender = new Map();
   for (const e of events) { if (!bySender.has(e.from)) bySender.set(e.from, []); bySender.get(e.from).push(e); }
@@ -52,7 +52,8 @@ export async function runAgent({ odoo, writer = null, smoobu, today, sinceHours 
       report.smoobuRequests += 1;
       outcome = composeDraft({ state: last.state, response: resp });
     }
-    if (outcome.kind === 'duplicate' || outcome.kind === 'blocked' || !outcome.draft) continue;
+    if (outcome.kind === 'blocked') { report.blocked.push({ sender: maskPhone(from), code: outcome.code }); continue; }
+    if (outcome.kind === 'duplicate' || !outcome.draft) continue;
     const lastMsg = list[list.length - 1];
     const html = `<p><b>BORRADOR DEL AGENTE — NO ENVIADO</b></p><p>Cliente: ${esc(maskPhone(from))} · Cuenta: Atheron Hotels (ID 7)</p>` +
       `<p>Mensaje recibido: «${esc(lastMsg.text.slice(0, 300))}»</p><p>Resultado: ${esc(outcome.kind)}${outcome.reason ? ' · ' + esc(outcome.reason) : ''}${outcome.needsHuman ? ' · requiere revisión humana' : ''}</p>` +

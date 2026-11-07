@@ -40,7 +40,7 @@ export function advanceInquiry({ message, messageId, accountId, today, previous 
   if (accountId !== 7) return { kind: 'blocked', code: 'NOT_HOTELS_ACCOUNT' };
   if (!dateOk(today)) return { kind: 'blocked', code: 'INVALID_TODAY' };
   if (typeof message !== 'string' || !message.trim() || message.length > 1000) return { kind: 'blocked', code: 'INVALID_MESSAGE' };
-  if (typeof messageId !== 'string' || !/^[a-zA-Z0-9_.:-]{4,120}$/.test(messageId)) return { kind: 'blocked', code: 'INVALID_MESSAGE_ID' };
+  if (typeof messageId !== 'string' || !/^[a-zA-Z0-9_.:=+\/-]{4,120}$/.test(messageId)) return { kind: 'blocked', code: 'INVALID_MESSAGE_ID' };
   if (previous?.messageIds?.includes(messageId)) return { kind: 'duplicate', state: previous };
   const m = clean(message);
   if (/\b(?:casa completa|carrera 19|otra propiedad|hotel colonial|casa neusa)\b/.test(m)) {
