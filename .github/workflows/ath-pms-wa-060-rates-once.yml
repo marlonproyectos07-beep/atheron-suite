@@ -1,0 +1,39 @@
+# ATH-PMS-WA-060: una lectura real de tarifas y disponibilidad, nunca escrituras.
+# Se activa una sola vez al crear este archivo con el mensaje exacto de commit.
+name: ATH-PMS-WA-060 — Smoobu rates one-time read-only
+on:
+  push:
+    branches:
+      - ath-pms-wa-060/rates-live-readonly
+    paths:
+      - .github/workflows/ath-pms-wa-060-rates-once.yml
+permissions:
+  contents: read
+concurrency:
+  group: ath-pms-wa-060-rates-once
+  cancel-in-progress: false
+jobs:
+  rates:
+    if: ${{ github.event.head_commit.message == 'ATH-PMS-WA-060-RATES-READ-ONCE' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: integrations/smoobu-odoo-connector
+    env:
+      # Referencias invertidas UNA sola vez por credenciales historicas.
+      SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_SECRET }}
+      SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_KEY }}
+      SMOOBU_BASE_URL: https://login.smoobu.com
+      RATES_READONLY_ARM: ATH-PMS-WA-058C-LECTURA
+      RATES_FROM: '2026-11-09'
+      RATES_TO: '2026-11-10'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar suite offline
+        run: npm test
+      - name: Una consulta GET /api/rates para 5 habitaciones
+        run: npm run --silent rates-once
