@@ -31,7 +31,7 @@ export const isoTimestamp = (now = Date.now()) => new Date(now).toISOString().re
 export function canonicalQuery(params = {}) {
   return Object.entries(params)
     .filter(([, v]) => v !== undefined && v !== null)
-    .map(([k, v]) => [String(k), String(v)])
+    .flatMap(([k, v]) => (Array.isArray(v) ? v : [v]).map((item) => [String(k), String(item)]))
     .sort(([a, av], [b, bv]) => (a === b ? (av < bv ? -1 : av > bv ? 1 : 0) : a < b ? -1 : 1))
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
     .join('&');
