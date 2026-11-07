@@ -121,3 +121,19 @@ test('el cliente de solo lectura sigue rechazando escrituras y el escritor limit
   assert.throws(() => new OdooDraftWriter(cfg, 0), { code: 'DRAFT_CHANNEL_INVALID' });
   assert.equal(maskPhone('+573202859866'), '***9866');
 });
+
+test('wamid real (base64, termina en «=»): se acepta, se deduplica y no queda bloqueado en silencio', async () => {
+  const uid = 'wamid.HBgMNTczMjAyODU5ODY2FQIAEhgUM0E2NjQ5RjA1MjlCMzIyQTg2MEUA=';   // forma real (66 car.) observada en Odoo
+  const f = fakes({ rows: [msg(1, uid, 'PRUEBA ATH-056. Mensaje de verificación. No responder todavía.')], smoobuResp: okResp });
+  const r = await runAgent({ odoo: f.odoo, writer: f.writer, smoobu: f.smoobu, today });
+  assert.equal(r.drafts.length, 1); assert.deepEqual(r.blocked, []);
+  assert.match(f.posted[0], /ATH-AGENT msg=wamid\.HBgM[A-Za-z0-9=]+/);
+  const r2 = await runAgent({ odoo: f.odoo, writer: f.writer, smoobu: f.smoobu, today });
+  assert.equal(r2.posted, 0); assert.equal(r2.alreadyProcessed, 1);
+});
+
+test('un id invalido se informa en report.blocked en lugar de ignorarse', async () => {
+  const f = fakes({ rows: [msg(1, 'a b', 'hola')], smoobuResp: okResp });
+  const r = await runAgent({ odoo: f.odoo, writer: null, smoobu: f.smoobu, today });
+  assert.equal(r.drafts.length, 0); assert.equal(r.blocked[0].code, 'INVALID_MESSAGE_ID');
+});
