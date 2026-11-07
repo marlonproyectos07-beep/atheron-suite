@@ -22,9 +22,6 @@ name: smoobu-odoo-diagnose
 # Solo manual mientras Smoobu siga respondiendo 401: un push al conector
 # ya no lanza llamadas a Smoobu (ATH-DEV-011).
 on:
-  push:
-    branches: [ath-pms-wa-060/rates-live-readonly]
-    paths: [.github/workflows/smoobu-odoo-diagnose.yml]
   workflow_dispatch:
     inputs:
       mode:
@@ -83,14 +80,6 @@ jobs:
         env:
           SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
         run: npm run --silent smoobu-once
-      - name: ATH-PMS-WA-061 — Consulta real de disponibilidad para fecha de prueba (solo GET)
-        if: ${{ github.event_name == 'push' && github.event.head_commit.message == 'ATH-PMS-WA-061-RATES-READ-ONLY' }}
-        env:
-          RATES_READONLY_ARM: ATH-PMS-WA-058C-LECTURA
-          RATES_FROM: '2027-03-16'
-          RATES_TO: '2027-03-17'
-          SMOOBU_BASE_URL: https://login.smoobu.com
-        run: npm run --silent rates-once
       - name: Primera lectura acotada de reservas (ATH-DEV-028)
         if: ${{ inputs.mode == 'reservations-window' }}
         env:
