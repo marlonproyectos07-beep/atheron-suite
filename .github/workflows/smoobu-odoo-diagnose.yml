@@ -23,7 +23,7 @@ name: smoobu-odoo-diagnose
 # ya no lanza llamadas a Smoobu (ATH-DEV-011).
 on:
   push:
-    branches: [ath-pms-wa-060/rates-live-readonly]
+    branches: [ath-pms-wa-060/rates-live-readonly, ath-pms-wa-061/availability-readonly]
     paths: [.github/workflows/smoobu-odoo-diagnose.yml]
   workflow_dispatch:
     inputs:
