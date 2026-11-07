@@ -3,7 +3,7 @@ import { UNITS } from './unit-map.mjs';
 
 /** Validacion estricta: fechas UTC, ventana acotada y IDs explicitos. */
 function dayNumber(s) {
-  if (typeof s !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(s)) throw new ConnectorError('RATES_INVALID_DATE');
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) throw new ConnectorError('RATES_INVALID_DATE');
   const ms = Date.parse(s + 'T00:00:00Z');
   if (!Number.isFinite(ms) || new Date(ms).toISOString().slice(0, 10) !== s) throw new ConnectorError('RATES_INVALID_DATE');
   return Math.floor(ms / 86400000);
