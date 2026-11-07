@@ -1,0 +1,21 @@
+name: ATH-PMS-WA-058B — Pruebas unitarias disponibilidad (sin credenciales)
+on:
+  pull_request:
+    paths:
+      - 'integrations/smoobu-odoo-connector/**'
+      - '.github/workflows/smoobu-rates-unit-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Unit tests (network-free, no secrets)
+        working-directory: integrations/smoobu-odoo-connector
+        run: npm test

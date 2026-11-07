@@ -47,6 +47,17 @@ export class SmoobuClient {
     return data.apartments; // [{id, name}]
   }
 
+  /** Tarifas y disponibilidad DIARIAS: solo GET. No confirma reserva ni precio final de venta. */
+  async getRates({ startDate, endDate, apartmentIds }) {
+    const { validateRatesInput } = await import('./rates-readonly.mjs');
+    const { from, to, ids } = validateRatesInput({ startDate, endDate, apartmentIds });
+    const data = await this.get('/rates', { 'apartments[]': ids, start_date: from, end_date: to });
+    if (!data || typeof data.data !== 'object' || !data.data || Array.isArray(data.data)) {
+      throw new ConnectorError('SMOOBU_RESPONSE_INVALID');
+    }
+    return data.data;
+  }
+
   /** Una pagina. Smoobu pagina con page/pageSize y devuelve page_count. */
   async listReservationsPage({ from, to, apartmentId, page = 1, pageSize = 100, includeCancelled = true } = {}) {
     const data = await this.get('/reservations', {
