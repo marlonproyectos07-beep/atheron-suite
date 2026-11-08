@@ -7,6 +7,7 @@ import { OdooJson2Client } from './odoo-json2-client.mjs';
 import { ConnectorError } from './errors.mjs';
 import { HOTELS_ACCOUNT_ID, handleInbound, composeDraft, POLICY } from './whatsapp-agent-shadow.mjs';
 import { parseInbound, maskPhone } from './whatsapp-agent-runner.mjs';
+import { ConnectorError } from './errors.mjs';
 
 export const SEND_AUTH_PHRASE = 'AUTORIZO ENVIO UNICO ATH-PMS-WA-068 AL TELEFONO TERMINADO EN 9866';
 export const SEND_TAG = 'ATH-SEND once=';
@@ -44,15 +45,17 @@ export function composeCommercialMessage({ state, rooms }) {
 
 export class OdooWhatsAppSendOnce extends OdooJson2Client {
   /** @param {{authorization?:string, approvedTextSha256?:string}} gate  — sin ambos, sendOnce() se niega. */
-  constructor(cfg, { channelId = SEND_ONCE_DEFAULTS.channelId, draftChannelId = SEND_ONCE_DEFAULTS.draftChannelId, inboundMsgUid = SEND_ONCE_DEFAULTS.inboundMsgUid, authorization, approvedTextSha256 } = {}) {
+  constructor(cfg, { channelId = SEND_ONCE_DEFAULTS.channelId, draftChannelId = SEND_ONCE_DEFAULTS.draftChannelId, inboundMsgUid = SEND_ONCE_DEFAULTS.inboundMsgUid, authorization, approvedTextSha256, controlGate = null } = {}) {
     super(cfg);
-    Object.assign(this, { channelId: Number(channelId), draftChannelId: Number(draftChannelId), inboundMsgUid, authorization, approvedTextSha256 });
+    Object.assign(this, { channelId: Number(channelId), draftChannelId: Number(draftChannelId), inboundMsgUid, authorization, approvedTextSha256, controlGate });
     if (!Number.isSafeInteger(this.channelId) || this.channelId <= 0 || !Number.isSafeInteger(this.draftChannelId) || this.draftChannelId <= 0) throw new ConnectorError('SEND_ONCE_CHANNEL_INVALID');
   }
 
   /** SOLO LECTURA. Devuelve el plan, las verificaciones y el texto exacto; jamas envia. */
   async planSend({ smoobu, today, now = new Date() }) {
+    const gate = this.controlGate ? await this.controlGate.check({ requireReply: true, requireBooking: false }) : { allowed: true, epoch: null };
     const checks = []; const ck = (name, ok, detail) => checks.push({ name, ok: !!ok, ...(detail ? { detail } : {}) });
+    ck('centro_control_ath', gate.allowed, gate.code || (gate.epoch != null ? 'epoch ' + gate.epoch : 'legacy test'));
     const [ch] = await this.searchRead('discuss.channel', [['id', '=', this.channelId]], ['id', 'channel_type', 'wa_account_id', 'whatsapp_number', 'whatsapp_channel_valid_until']);
     ck('canal_whatsapp_cuenta_7', ch && ch.channel_type === 'whatsapp' && (Array.isArray(ch.wa_account_id) ? ch.wa_account_id[0] : ch.wa_account_id) === HOTELS_ACCOUNT_ID);
     ck('destinatario_unico_autorizado', ch && digits(ch.whatsapp_number) === AUTHORIZED_PHONE, ch ? maskPhone(ch.whatsapp_number) : undefined);
@@ -101,9 +104,12 @@ export class OdooWhatsAppSendOnce extends OdooJson2Client {
     const plan = await this.planSend({ smoobu, today, now });
     if (!plan.ok) throw new ConnectorError('SEND_ONCE_CHECKS_FAILED');
     if (plan.textSha256 !== this.approvedTextSha256) throw new ConnectorError('SEND_ONCE_TEXT_CHANGED_SINCE_APPROVAL');
+    // CP-04: comprobar nuevamente inmediatamente antes de cualquier escritura.
+    if (this.controlGate) await this.controlGate.assertAllowed({ requireReply: true, requireBooking: false });
     // 1) reservar el marcador (idempotencia): si el envio falla, queda constancia y NO se reintenta solo
     await this._request('discuss.channel', 'message_post', { ids: [this.draftChannelId], body: `<p><b>ENVIO UNICO RESERVADO</b> · destinatario ${esc(plan.recipient)}</p><p style="font-size:11px">${SEND_TAG}${esc(this.inboundMsgUid)}</p>`, message_type: 'comment', subtype_xmlid: 'mail.mt_comment' });
     // 2) enviar por la cuenta WhatsApp 7 (canal de la conversacion con el telefono autorizado)
+    if (this.controlGate) await this.controlGate.assertAllowed({ requireReply: true, requireBooking: false });
     const res = await this._request('discuss.channel', 'message_post', { ids: [this.channelId], body: plan.wouldCall.bodyHtml, message_type: 'whatsapp_message' });
     return { sent: true, result: res, recipient: plan.recipient, textSha256: plan.textSha256 };
   }
