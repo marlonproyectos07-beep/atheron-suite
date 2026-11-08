@@ -10,7 +10,7 @@ Menu **Registro SIRE/TRA** en Odoo.
 3. El huesped principal llena sus datos y los de sus acompanantes (hasta 21). Al terminar, los datos aparecen en **Huespedes** como *Recibido* y las respuestas del formulario se borran (solo quedan en Odoo, en la ficha de cada huesped).
 
 ## A la llegada
-4. Hacer la entrada (recogida) de la reserva en Odoo como siempre.
+4. La reserva debe estar confirmada y hoy dentro de sus fechas (no se usa el estado de alquiler: en este Odoo pasa a "devuelto" al confirmar).
 5. **Huespedes** > filtro *Por validar* > abrir cada huesped:
    - asignar la **habitacion fisica** (Casa Completa no sirve: es un producto derivado);
    - corregir nacionalidad, ciudades o documento si hace falta;

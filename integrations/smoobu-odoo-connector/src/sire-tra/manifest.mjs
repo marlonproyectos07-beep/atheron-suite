@@ -114,7 +114,9 @@ export const ACLS = [
 ];
 
 // ---------------------------------------------------------------- acciones de servidor (Python, safe_eval)
-const PY_INVITE = String.raw`survey = env.ref('__ath_sire_tra__.survey_registro')
+const PY_INVITE = String.raw`if not records:
+    raise UserError('Seleccione al menos un registro.')
+survey = env.ref('__ath_sire_tra__.survey_registro')
 base = env['ir.config_parameter'].sudo().get_param('web.base.url')
 ids = []
 for order in records:
@@ -126,11 +128,13 @@ for order in records:
     end = order.x_checkout or (order.rental_return_date and order.rental_return_date.date())
     deadline = datetime.datetime.combine(end + datetime.timedelta(days=1), datetime.time(4, 59)) if end else datetime.datetime.now() + datetime.timedelta(days=3)
     ui = env['survey.user_input'].create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': deadline, 'x_ath_state': 'invitado'})
-    ui.write({'x_ath_url': base + survey.get_start_url() + '?answer_token=' + ui.access_token})
+    ui.write({'x_ath_url': '%s/survey/%s/%s' % (base, survey.access_token, ui.access_token)})
     ids.append(ui.id)
 action = {'type': 'ir.actions.act_window', 'name': 'Enlace de registro', 'res_model': 'survey.user_input', 'domain': [('id', 'in', ids)], 'views': [[env.ref('__ath_sire_tra__.view_invite_list').id, 'list'], [env.ref('__ath_sire_tra__.view_invite_form').id, 'form']]}`;
 
-const PY_REVOKE = String.raw`for ui in records:
+const PY_REVOKE = String.raw`if not records:
+    raise UserError('Seleccione al menos un registro.')
+for ui in records:
     if ui.x_ath_state != 'invitado':
         raise UserError('Solo se revocan enlaces vigentes.')
     ui.write({'access_token': env['survey.user_input'].default_get(['access_token'])['access_token'], 'deadline': datetime.datetime.now(), 'x_ath_state': 'revocado', 'x_ath_url': False})`;
@@ -184,6 +188,11 @@ def parse(ui):
         vals = dict(common)
         vals.update({'x_is_main': i == 0, 'x_doc_type_id': dt.id or False, 'x_identity_number': num or False, 'x_given_names': v.get(p + 'given') or False, 'x_surname_1': v.get(p + 'surname1') or False, 'x_surname_2': v.get(p + 'surname2') or False, 'x_nationality': country(v.get(p + 'nationality')), 'x_birth_date': v.get(p + 'birth') or False, 'x_guest_type': gtype(v.get(p + 'birth'))})
         vals['x_name'] = clean('%s %s %s' % (vals['x_given_names'] or '', vals['x_surname_1'] or '', vals['x_surname_2'] or ''))
+        notes = []
+        for key, field, label in ((p + 'nationality', 'x_nationality', 'nacionalidad'), ('p_res_country', 'x_residence_country_id', 'pais de residencia'), ('p_origin_country', 'x_origin_country_id', 'pais de procedencia'), ('p_dest_country', 'x_destination_country_id', 'pais de destino')):
+            if v.get(key) and not vals[field]:
+                notes.append('%s no reconocido (%s)' % (label, clean(v.get(key))[:40]))
+        vals['x_last_error'] = ('Revisar: ' + '; '.join(notes)) if notes else False
         out.append(vals)
     return out
 
@@ -218,7 +227,9 @@ for ui in records:
     if guests is not None:
         apply(ui, guests)`;
 
-const PY_VALIDATE = String.raw`DIGITS = ('national_citizen_id', 'id_card', 'civil_registration', 'foreign_resident_card')
+const PY_VALIDATE = String.raw`if not records:
+    raise UserError('Seleccione al menos un registro.')
+DIGITS = ('national_citizen_id', 'id_card', 'civil_registration', 'foreign_resident_card')
 COLOMBIAN = ('national_citizen_id', 'id_card', 'civil_registration')
 now = datetime.datetime.now()
 errors = []
@@ -260,12 +271,16 @@ if errors:
 for r in records:
     r.write({'x_data_state': 'validado', 'x_validated_at': now, 'x_last_error': False, 'x_establishment_id': r.x_room_resource_id.x_establishment_id.id})`;
 
-const PY_REJECT = String.raw`for r in records:
+const PY_REJECT = String.raw`if not records:
+    raise UserError('Seleccione al menos un registro.')
+for r in records:
     if r.x_arrived_at:
         raise UserError('No se puede invalidar: la llegada ya fue registrada (linea %s).' % r.id)
 records.write({'x_data_state': 'rechazado'})`;
 
-const PY_ARRIVE = String.raw`now = datetime.datetime.now()
+const PY_ARRIVE = String.raw`if not records:
+    raise UserError('Seleccione al menos un registro.')
+now = datetime.datetime.now()
 errors = []
 for r in records:
     o = r.x_sale_order_id
@@ -273,17 +288,19 @@ for r in records:
         errors.append('linea %s: datos no validados' % r.id)
     elif r.x_arrived_at:
         errors.append('linea %s: llegada ya registrada' % r.id)
-    elif o.state == 'cancel' or o.x_reservation_status in ('cancelled', 'no_show'):
-        errors.append('linea %s: reserva cancelada o no-show' % r.id)
-    elif o.rental_status not in ('return', 'returned'):
-        errors.append('linea %s: la reserva %s no tiene la entrada (recogida) registrada en Odoo' % (r.id, o.name))
+    elif o.state != 'sale' or o.x_reservation_status in ('cancelled', 'no_show'):
+        errors.append('linea %s: reserva no confirmada, cancelada o no-show' % r.id)
+    elif not (o.x_checkin and o.x_checkout and o.x_checkin - datetime.timedelta(days=1) <= now.date() <= o.x_checkout):
+        errors.append('linea %s: hoy esta fuera de las fechas de la reserva %s' % (r.id, o.name))
 if errors:
     raise UserError('No se registro ninguna llegada.\n' + '\n'.join(errors))
 for r in records:
     tra = 'pendiente' if r.x_establishment_id.x_tra_mode in ('manual', 'api') else 'no_aplica'
     r.write({'x_arrived_at': now, 'x_sire_in_state': 'pendiente' if r.x_is_foreign else 'no_aplica', 'x_sire_out_state': 'no_aplica', 'x_tra_state': tra})`;
 
-const PY_DEPART = String.raw`now = datetime.datetime.now()
+const PY_DEPART = String.raw`if not records:
+    raise UserError('Seleccione al menos un registro.')
+now = datetime.datetime.now()
 bad = [str(r.id) for r in records if not r.x_arrived_at or r.x_departed_at]
 if bad:
     raise UserError('Salida no registrada (sin llegada o ya con salida): lineas %s' % ', '.join(bad))
@@ -375,7 +392,9 @@ data = ('\r\n'.join(rows) + '\r\n').encode(est.x_sire_encoding or 'utf-8', 'repl
 att = env['ir.attachment'].create({'name': 'SIRE_%s_%s.txt' % (est.x_code, datetime.datetime.now().strftime('%Y%m%d_%H%M%S')), 'datas': b64encode(data), 'res_model': 'x_establishment', 'res_id': est.id, 'mimetype': 'text/plain'})
 action = {'type': 'ir.actions.act_url', 'url': '/web/content/%s?download=true' % att.id, 'target': 'self'}`;
 
-const PY_SIRE_MARK = String.raw`n = 0
+const PY_SIRE_MARK = String.raw`if not records:
+    raise UserError('Seleccione al menos un registro.')
+n = 0
 for r in records:
     for system, f in (('sire_entrada', 'x_sire_in_state'), ('sire_salida', 'x_sire_out_state')):
         if r[f] in ('pendiente', 'en_envio'):
