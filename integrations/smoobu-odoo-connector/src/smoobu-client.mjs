@@ -58,6 +58,39 @@ export class SmoobuClient {
     return data.data;
   }
 
+  /** Identidad de la cuenta autenticada. Solo GET /api/me. */
+  async getCurrentUser() {
+    const data = await this.get('/me');
+    if (!data || !Number.isSafeInteger(Number(data.id)) || Number(data.id) <= 0) throw new ConnectorError('SMOOBU_RESPONSE_INVALID');
+    return { id: Number(data.id) };
+  }
+
+  /** Detalle de apartamento: solo GET /api/apartments/{id}; se usa para verificar capacidad y moneda. */
+  async getApartmentDetails(id) {
+    const n = Number(id);
+    if (!Number.isSafeInteger(n) || n <= 0) throw new ConnectorError('SMOOBU_INVALID_ID');
+    const data = await this.get('/apartments/' + n);
+    if (!data || typeof data !== 'object' || Array.isArray(data)) throw new ConnectorError('SMOOBU_RESPONSE_INVALID');
+    return data;
+  }
+
+  /** Consulta oficial POST de solo lectura: disponibilidad, precio y restricciones. */
+  async checkApartmentAvailability({ arrivalDate, departureDate, apartmentIds, customerId, guests }) {
+    const { validateAvailabilityInput } = await import('./availability-readonly.mjs');
+    const input = validateAvailabilityInput({ arrivalDate, departureDate, apartmentIds, customerId, guests });
+    const path = '/booking/checkApartmentAvailability';
+    const body = JSON.stringify({ arrivalDate: input.arrivalDate, departureDate: input.departureDate,
+      apartments: input.apartmentIds, customerId: input.customerId, guests: input.guests });
+    const headers = { accept: 'application/json', 'content-type': 'application/json',
+      ...hmacHeaders({ apiKey: this.apiKey, apiSecret: this.apiSecret, method: 'POST', path, body, now: this.now() }) };
+    let res;
+    try { res = await this.fetch(this.baseUrl + path, { method: 'POST', headers, body, signal: AbortSignal.timeout(this.timeoutMs) }); }
+    catch (e) { throw new ConnectorError(e?.name === 'TimeoutError' || e?.name === 'AbortError' ? 'SMOOBU_TIMEOUT' : 'SMOOBU_NETWORK_ERROR', { retryable: true }); }
+    if (!res.ok) { const err = httpError('SMOOBU', res.status); err.serverDate = res.headers?.get?.('date') ?? null; throw err; }
+    try { const data = await res.json(); if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error(); return data; }
+    catch { throw new ConnectorError('SMOOBU_RESPONSE_INVALID'); }
+  }
+
   /** Una pagina. Smoobu pagina con page/pageSize y devuelve page_count. */
   async listReservationsPage({ from, to, apartmentId, page = 1, pageSize = 100, includeCancelled = true } = {}) {
     const data = await this.get('/reservations', {

@@ -22,6 +22,7 @@
     "recompute-run": "node scripts/recompute-run.mjs",
     "smoobu-once": "node scripts/smoobu-once.mjs",
     "rates-once": "node scripts/rates-once.mjs",
+    "availability-once": "node scripts/availability-once.mjs",
     "credential-shape": "node scripts/credential-shape.mjs",
     "credential-swap": "node scripts/credential-swap.mjs",
     "smoobu-reservations": "node scripts/smoobu-reservations.mjs",
@@ -36,6 +37,10 @@
     "sync-semiauto": "node scripts/sync-semiauto.mjs",
     "sync-pilot": "node scripts/sync-pilot.mjs",
     "sync-auto": "node scripts/sync-auto.mjs",
-    "booking-correction-dry": "node scripts/booking-correction-dry.mjs"
+    "booking-correction-dry": "node scripts/booking-correction-dry.mjs",
+    "whatsapp-agent-shadow-demo": "node scripts/whatsapp-agent-shadow-demo.mjs",
+    "whatsapp-agent-run": "node scripts/whatsapp-agent-run.mjs",
+    "whatsapp-agent-send-sim": "node scripts/whatsapp-agent-send-sim.mjs",
+    "whatsapp-agent-send-once": "node scripts/whatsapp-agent-send-once.mjs"
   }
 }
