@@ -4,7 +4,6 @@
 // del marcador de idempotencia en el canal interno. No crea reservas, pedidos, pagos ni facturas.
 import { createHash } from 'node:crypto';
 import { OdooJson2Client } from './odoo-json2-client.mjs';
-import { ConnectorError } from './errors.mjs';
 import { HOTELS_ACCOUNT_ID, handleInbound, composeDraft, POLICY } from './whatsapp-agent-shadow.mjs';
 import { parseInbound, maskPhone } from './whatsapp-agent-runner.mjs';
 import { ConnectorError } from './errors.mjs';
