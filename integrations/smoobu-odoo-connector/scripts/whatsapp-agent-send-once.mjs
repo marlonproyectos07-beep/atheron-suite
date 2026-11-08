@@ -4,10 +4,14 @@
 import { loadOdooConfig, loadSmoobuConfig } from '../src/config.mjs';
 import { SmoobuClient } from '../src/smoobu-client.mjs';
 import { OdooWhatsAppSendOnce, SEND_AUTH_PHRASE } from '../src/whatsapp-agent-sender.mjs';
+import { ControlGate } from '../src/control-gate.mjs';
+import { OdooJson2Client } from '../src/odoo-json2-client.mjs';
 import { bogotaToday } from '../src/whatsapp-agent-runner.mjs';
 if (process.env.WHATSAPP_AGENT_ARM !== 'ATH-PMS-WA-068-SEND-ONCE' || process.env.WHATSAPP_SEND_AUTH !== SEND_AUTH_PHRASE) { console.log(JSON.stringify({ result: 'NOT_AUTHORIZED', sent: false })); process.exit(2); }
 try {
-  const s = new OdooWhatsAppSendOnce(loadOdooConfig(), { authorization: process.env.WHATSAPP_SEND_AUTH, approvedTextSha256: process.env.WHATSAPP_SEND_TEXT_SHA256 });
+  const odooCfg = loadOdooConfig(); const odoo = new OdooJson2Client(odooCfg);
+  const controlGate = new ControlGate(odoo);
+  const s = new OdooWhatsAppSendOnce(odooCfg, { authorization: process.env.WHATSAPP_SEND_AUTH, approvedTextSha256: process.env.WHATSAPP_SEND_TEXT_SHA256, controlGate });
   const smoobu = new SmoobuClient({ ...loadSmoobuConfig(process.env) });
   const out = await s.sendOnce({ smoobu, today: bogotaToday() });
   console.log(JSON.stringify({ result: 'SENT_ONCE', sent: true, recipient: out.recipient, textSha256: out.textSha256, odooResult: out.result }));
