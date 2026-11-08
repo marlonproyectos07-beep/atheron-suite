@@ -23,7 +23,7 @@ Se confía en los campos efectivos calculados por Odoo para incorporar los nivel
 
 ## Pruebas agregadas
 
-- GitHub Actions ejecutó el workflow de pruebas de la PR: **429 tests aprobados, 0 fallidos**. El log confirma las pruebas CP-04 del runner, sender y ControlGate. Esta ejecución corresponde a la revisión inicial; el último ajuste añadió una prueba adicional de valores efectivos malformados y requiere nueva ejecución.
+- GitHub Actions ejecutó el workflow de pruebas de la PR: **430 tests aprobados, 0 fallidos** en la última ejecución del PR. El log confirma las pruebas CP-04 del runner, sender y ControlGate, incluida la validación de valores efectivos malformados.
 - Pruebas unitarias de estado activo, apagado, emergencia, reservas deshabilitadas, estado ausente/ambiguo/malformado, desconexión y lentitud.
 - Prueba del runner: el bloqueo detiene el agente antes de leer mensajes o consultar Smoobu.
 - Prueba del sender: el bloqueo detiene el plan antes de consultar Smoobu y sin escrituras.
