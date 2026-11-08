@@ -22,9 +22,15 @@ Se confía en los campos efectivos calculados por Odoo para incorporar los nivel
 - La reserva automática no existe en este agente; cualquier futuro ejecutor de reservas debe invocar ControlGate con `requireBooking: true` antes de consultar/crear la reserva y justo antes de la escritura.
 
 ## Pruebas agregadas
+
+- GitHub Actions ejecutó el workflow de pruebas de la PR: **429 tests aprobados, 0 fallidos**. El log confirma las pruebas CP-04 del runner, sender y ControlGate. Esta ejecución corresponde a la revisión inicial; el último ajuste añadió una prueba adicional de valores efectivos malformados y requiere nueva ejecución.
 - Pruebas unitarias de estado activo, apagado, emergencia, reservas deshabilitadas, estado ausente/ambiguo/malformado, desconexión y lentitud.
 - Prueba del runner: el bloqueo detiene el agente antes de leer mensajes o consultar Smoobu.
 - Prueba del sender: el bloqueo detiene el plan antes de consultar Smoobu y sin escrituras.
+
+## Validación manual de Odoo
+
+Se añadió `.github/workflows/ath-pms-wa-070-control-gate-readonly.yml` con disparador manual (`workflow_dispatch`) y el script `scripts/control-gate-readonly.mjs`. Lee el estado global y el nodo de cuenta con las variables ODOO existentes; no escribe en Odoo y reporta únicamente epoch, ID de nodo, interruptores efectivos y resultado. Debe ejecutarse desde GitHub Actions para validar la credencial y el esquema real.
 
 ## Limitaciones y validaciones pendientes
 - No se ejecutó GitHub Actions en esta entrega; por tanto no se declara que las pruebas del repositorio estén aprobadas.
