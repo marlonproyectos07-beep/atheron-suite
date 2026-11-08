@@ -86,3 +86,11 @@ test('envio autorizado (simulado): reserva marcador en 257 y luego un unico envi
   assert.match(r.posts[0].body, /ATH-SEND once=wamid/);
   assert.equal(r.posts.filter((p) => p.ids[0] === 256).length, 1);
 });
+
+test('script de envio real: sin armado y frase exactos no hace nada (cero solicitudes)', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const run = (env) => spawnSync(process.execPath, [new URL('../scripts/whatsapp-agent-send-once.mjs', import.meta.url).pathname], { env: { PATH: process.env.PATH, ...env }, encoding: 'utf8' });
+  for (const env of [{}, { WHATSAPP_AGENT_ARM: 'ATH-PMS-WA-068-SEND-ONCE' }, { WHATSAPP_AGENT_ARM: 'ATH-PMS-WA-068-SEND-ONCE', WHATSAPP_SEND_AUTH: 'si' }]) {
+    const r = run(env); assert.equal(r.status, 2); assert.match(r.stdout, /NOT_AUTHORIZED/); assert.match(r.stdout, /"sent":false/);
+  }
+});
