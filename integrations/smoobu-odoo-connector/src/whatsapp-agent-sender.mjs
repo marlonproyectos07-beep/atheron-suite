@@ -53,6 +53,7 @@ export class OdooWhatsAppSendOnce extends OdooJson2Client {
   /** SOLO LECTURA. Devuelve el plan, las verificaciones y el texto exacto; jamas envia. */
   async planSend({ smoobu, today, now = new Date() }) {
     const gate = this.controlGate ? await this.controlGate.check({ requireReply: true, requireBooking: false }) : { allowed: true, epoch: null };
+    if (!gate.allowed) return { ok: false, checks: [{ name: 'centro_control_ath', ok: false, detail: gate.code }], text: null, textSha256: null, facts: null, smoobuRequests: 0, recipient: maskPhone(AUTHORIZED_PHONE), channelId: this.channelId, wouldCall: null, sent: false, controlGate: gate };
     const checks = []; const ck = (name, ok, detail) => checks.push({ name, ok: !!ok, ...(detail ? { detail } : {}) });
     ck('centro_control_ath', gate.allowed, gate.code || (gate.epoch != null ? 'epoch ' + gate.epoch : 'legacy test'));
     const [ch] = await this.searchRead('discuss.channel', [['id', '=', this.channelId]], ['id', 'channel_type', 'wa_account_id', 'whatsapp_number', 'whatsapp_channel_valid_until']);
