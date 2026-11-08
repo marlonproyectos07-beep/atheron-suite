@@ -29,7 +29,7 @@ on:
         required: false
         default: 'full'
         type: choice
-        options: [full, whatsapp-agent-draft, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reconcile-daily, sync-dryrun, sync-shadow, sync-semiauto, sync-pilot-dry, sync-auto-shadow, booking-correction-dry, reservation-once, availability-once, odoo-auth-readonly, credential-shape, credential-swap]
+        options: [full, whatsapp-agent-draft, whatsapp-agent-send-sim, apartments-once, reservations-window, semantics-probe, reconcile-window, reconcile-ids, reconcile-daily, sync-dryrun, sync-shadow, sync-semiauto, sync-pilot-dry, sync-auto-shadow, booking-correction-dry, reservation-once, availability-once, odoo-auth-readonly, credential-shape, credential-swap]
       from:
         description: 'reconcile-window / reconcile-ids: primera noche YYYY-MM-DD (vacio = ventana historica 26..27 oct)'
         required: false
@@ -110,6 +110,15 @@ jobs:
           ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
           ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
         run: npm run --silent whatsapp-agent-run
+      - name: Simulacion del envio unico por WhatsApp, SOLO LECTURA, nunca envia (ATH-PMS-WA-068)
+        if: ${{ inputs.mode == 'whatsapp-agent-send-sim' }}
+        env:
+          WHATSAPP_AGENT_ARM: ATH-PMS-WA-068-SEND-SIMULATION
+          SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+        run: npm run --silent whatsapp-agent-send-sim
       - name: Primera lectura acotada de reservas (ATH-DEV-028)
         if: ${{ inputs.mode == 'reservations-window' }}
         env:
