@@ -43,8 +43,21 @@ Portales oficiales: solo simulador. Ningun envio real a SIRE ni a TRA.
 5. Regla existente de choque: Casa Completa no se confirma si hay habitaciones ocupadas (correcto).
 6. La copia "Activacion pendiente: caduca en 3 horas" tras crearla (aviso en pantalla).
 
+## Segunda ronda (2026-11-08 21:50-22:20 UTC) — cierre de defectos
+Copia conservada (activada; vence 2026-11-24), aislamiento verificado de nuevo. Codigo de la copia = rama (huellas de las 11 acciones, preguntas, respuestas y 85 campos).
+| Caso | Resultado |
+|---|---|
+| Tildes y concordancia | encuesta y notas con tildes ("Revisar: no se reconocio nacionalidad (...)") |
+| Nacionalidad por catalogo | "EEUU" -> Estados Unidos (alias documentado); "Mexico" -> Mexico; **"Congo" y "Guinea" ambiguos: sin pais + nota** (defecto encontrado en esta ronda y corregido) |
+| Dos formularios simultaneos de la misma reserva | ambos procesados; principal sin duplicar; 4 acompanantes conservados (0 respuestas perdidas) |
+| Tercer formulario de la misma reserva | principal sigue sin duplicarse; nuevos acompanantes agregados |
+| Regreso del mismo huesped en otra estancia | linea nueva en la reserva nueva; la estancia anterior no cambia |
+| Casa Completa confirmada, grupo de 22 | llegada 22, TRA pendiente 22, SIRE entrada 7/7 extranjeros, habitaciones fisicas 201-302, hoja guiada -> enviado, salida 22, SIRE salida 7 |
+| Reserva sin confirmar o con choque | confirmacion rechazada por la regla existente de choque (incluye cotizaciones); llegada y salida rechazadas |
+| Privacidad tras enviar (pagina e impresion, 2 formularios) | sin datos personales |
+| Evidencia conservada | version del formulario y del aviso, fecha de envio y copia de lo recibido con el texto del consentimiento en campo restringido a Administradores; respuestas de la encuesta borradas |
+
 ## Pendiente o limitado
-- Textos de la encuesta sin tildes (decision de robustez); conviene corregirlos antes del piloto.
-- Pais escrito en texto: si no coincide con el nombre en espanol queda nota para Recepcion (falta selector de pais).
-- Gramatica de la nota ("no reconocido" para nacionalidad).
-- Concurrencia de dos formularios simultaneos de la misma reserva: protegida por bloqueo de filas, no probada en vivo.
+- Tildes, gramatica y concurrencia de formularios: resueltos en la segunda ronda.
+- El pais sigue siendo texto libre normalizado por catalogo (no hay selector de pais en Encuestas); lo no reconocido o ambiguo queda para Recepcion.
+- Codigos SIRE (paquete de guia) y catalogos TRA: pendientes de fuente oficial; exportador y emisor apagados.

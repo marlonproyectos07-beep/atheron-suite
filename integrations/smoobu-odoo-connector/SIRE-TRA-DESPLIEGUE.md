@@ -20,9 +20,11 @@
 4. Configurar en Odoo: establecimiento Atheron Suite (RNT, titular, operador, reportante SIRE, codigos SIRE vacios hasta verificarlos), unidades 201-302 *fisica* con el establecimiento, Casa Completa *derivada* con sus 5 componentes.
 5. Repetir el recorrido corto con una reserva real del piloto (ver checklist).
 
-## Reversion
-`node scripts/sire-tra-apply.mjs --production --rollback` simula; con `--apply` borra solo lo de `__ath_sire_tra__` en orden inverso.
-**Borra los datos guardados en los campos nuevos**: exportar antes los huespedes e intentos si ya hay datos reales.
+## Respaldo, validacion y reversion (todas simulan sin `--apply`)
+- Antes: `--snapshot` guarda la configuracion actual (campos x_, automatizaciones activas, inventario) sin datos personales.
+- Despues: `--verify` exige 0 creaciones pendientes y todo lo propio activo.
+- Reversion suave (recomendada): `--disable --apply` apaga automatizaciones y menus y quita las acciones del menu *Accion*. **No borra nada** (historicos intactos).
+- Reversion dura: `--rollback --apply` borra solo lo de `__ath_sire_tra__`; si hay datos en campos o modelos propios **se detiene** salvo `--export <carpeta local>`, que exporta antes de borrar (contiene datos personales: no subir al repositorio).
 
 ## Checklist del piloto real (DONE operativo)
 - [ ] Paquete de guia SIRE descargado en el portal: codigos de documento, pais, ciudad, movimiento, formato de fecha, codificacion.
