@@ -15,17 +15,18 @@ export class ControlGate {
     try {
       const [states, nodes] = await Promise.all([
         this.odoo.searchRead('x_ath_state', [['id', '=', this.stateId]], ['id','x_epoch','x_emergency']),
-        this.odoo.searchRead('x_ath_node', [['x_level','=','cuenta'],['x_wa_account_id','=',this.waAccountId]], ['id','x_eff_auto_reply','x_eff_auto_booking','x_eff_status'])
+        this.odoo.searchRead('x_ath_node', [['x_level','=','cuenta'],['x_wa_account_id','=',this.waAccountId]], ['id','x_eff_auto_reply','x_eff_auto_booking'])
       ]);
       const elapsed = this.now() - started;
       if (elapsed > this.maxReadMs) return this.block('CONTROL_READ_TOO_SLOW', { elapsedMs: elapsed });
       if (!Array.isArray(states) || states.length !== 1 || !Array.isArray(nodes) || nodes.length !== 1) return this.block('CONTROL_STATE_MISSING_OR_AMBIGUOUS');
       const state = states[0], node = nodes[0];
       if (!Number.isSafeInteger(Number(state.x_epoch)) || Number(state.x_epoch) < 1 || typeof state.x_emergency !== 'boolean') return this.block('CONTROL_STATE_INVALID');
+      if (typeof node.x_eff_auto_reply !== 'boolean' || typeof node.x_eff_auto_booking !== 'boolean') return this.block('CONTROL_NODE_INVALID', { epoch: state.x_epoch });
       if (state.x_emergency) return this.block('EMERGENCY_ACTIVE', { epoch: state.x_epoch });
       if (requireReply && node.x_eff_auto_reply !== true) return this.block('AUTO_REPLY_DISABLED', { epoch: state.x_epoch });
       if (requireBooking && node.x_eff_auto_booking !== true) return this.block('AUTO_BOOKING_DISABLED', { epoch: state.x_epoch });
-      return { allowed: true, epoch: Number(state.x_epoch), accountNodeId: node.id, checkedAt: new Date(this.now()).toISOString() };
+      return { allowed: true, epoch: Number(state.x_epoch), accountNodeId: node.id, autoReplyEnabled: node.x_eff_auto_reply, autoBookingEnabled: node.x_eff_auto_booking, checkedAt: new Date(this.now()).toISOString() };
     } catch (e) {
       if (e instanceof ConnectorError) return this.block(e.code || 'CONTROL_READ_FAILED');
       return this.block('CONTROL_READ_FAILED');
