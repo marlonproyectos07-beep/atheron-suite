@@ -94,3 +94,12 @@ test('script de envio real: sin armado y frase exactos no hace nada (cero solici
     const r = run(env); assert.equal(r.status, 2); assert.match(r.stdout, /NOT_AUTHORIZED/); assert.match(r.stdout, /"sent":false/);
   }
 });
+
+
+test('CP-04: ControlGate bloqueado detiene plan de envío antes de Smoobu y sin escrituras', async () => {
+  const r = rig();
+  const sender = r.mk({ controlGate: { check: async () => ({ allowed: false, code: 'EMERGENCY_ACTIVE' }) } });
+  const plan = await sender.planSend({ smoobu: r.smoobu, today, now: NOW });
+  assert.equal(plan.ok, false); assert.equal(plan.sent, false); assert.equal(plan.controlGate.code, 'EMERGENCY_ACTIVE');
+  assert.deepEqual(r.smoobuCalls, []); assert.equal(r.posts.length, 0);
+});
