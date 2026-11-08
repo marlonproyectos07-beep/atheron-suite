@@ -1,0 +1,39 @@
+# ATH-HOTELS-SIRE-TRA-001 · Emisor TRA (API PMS MinCIT). APAGADO por defecto.
+# Solo manual (workflow_dispatch) y solo si la variable del repositorio TRA_EMITTER_ENABLED == 'yes'.
+# Sin la entrada "send" solo lista reservas pendientes (no reclama ni contacta al MinCIT).
+# Los registros publicos del repositorio solo muestran ids y codigos: nunca datos de huespedes.
+name: TRA emisor (manual, apagado)
+on:
+  workflow_dispatch:
+    inputs:
+      send:
+        description: 'Enviar de verdad (exige TRA_ENABLED=yes-real, token y catalogo verificado)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: tra-emitter
+  cancel-in-progress: false
+jobs:
+  emitir:
+    if: vars.TRA_EMITTER_ENABLED == 'yes'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: integrations/smoobu-odoo-connector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm test
+      - name: Emisor
+        env:
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          TRA_ENABLED: ${{ vars.TRA_ENABLED }}
+          TRA_TOKEN: ${{ secrets.TRA_TOKEN }}
+        run: node scripts/tra-emit.mjs ${{ inputs.send && '--send' || '' }}

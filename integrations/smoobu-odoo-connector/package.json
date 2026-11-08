@@ -34,7 +34,6 @@
     "sync-semiauto": "node scripts/sync-semiauto.mjs",
     "sync-pilot": "node scripts/sync-pilot.mjs",
     "sync-auto": "node scripts/sync-auto.mjs",
-    "booking-correction-dry": "node scripts/booking-correction-dry.mjs",
-    "inc1-estructura": "node scripts/inc1-estructura.mjs"
+    "booking-correction-dry": "node scripts/booking-correction-dry.mjs"
   }
 }
