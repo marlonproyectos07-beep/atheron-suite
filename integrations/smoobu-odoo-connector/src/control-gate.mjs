@@ -23,7 +23,6 @@ export class ControlGate {
       const state = states[0], node = nodes[0];
       if (!Number.isSafeInteger(Number(state.x_epoch)) || Number(state.x_epoch) < 1 || typeof state.x_emergency !== 'boolean') return this.block('CONTROL_STATE_INVALID');
       if (state.x_emergency) return this.block('EMERGENCY_ACTIVE', { epoch: state.x_epoch });
-      if (node.x_eff_status !== 'ACTIVO' && node.x_eff_status !== 'ACTIVE') return this.block('ACCOUNT_NOT_ACTIVE', { epoch: state.x_epoch, status: node.x_eff_status ?? null });
       if (requireReply && node.x_eff_auto_reply !== true) return this.block('AUTO_REPLY_DISABLED', { epoch: state.x_epoch });
       if (requireBooking && node.x_eff_auto_booking !== true) return this.block('AUTO_BOOKING_DISABLED', { epoch: state.x_epoch });
       return { allowed: true, epoch: Number(state.x_epoch), accountNodeId: node.id, checkedAt: new Date(this.now()).toISOString() };
