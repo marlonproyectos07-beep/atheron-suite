@@ -29,3 +29,9 @@ test('bloquea desconexión y lecturas lentas',async()=>{
  const f=client({fail:true}); assert.equal((await new ControlGate(f.odoo,{now:f.now}).check()).code,'CONTROL_READ_FAILED');
  const slow=client({delay:4000}); assert.equal((await new ControlGate(slow.odoo,{now:slow.now}).check()).code,'CONTROL_READ_TOO_SLOW');
 });
+
+test('bloquea nodo con interruptores efectivos ausentes o no booleanos',async()=>{
+ const f=client({nodes:[{id:4,x_eff_auto_reply:'false',x_eff_auto_booking:false}]});
+ const r=await new ControlGate(f.odoo,{now:f.now}).check({requireReply:false,requireBooking:false});
+ assert.equal(r.code,'CONTROL_NODE_INVALID');
+});
