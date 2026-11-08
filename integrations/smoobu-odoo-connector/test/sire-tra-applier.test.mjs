@@ -30,10 +30,11 @@ function fakeOdoo({ extraModels = [], existingFields = [], failOnCreate = null, 
     async create(model, vals) {
       creates += 1;
       if (failOnCreate && creates === failOnCreate) throw new Error('caida simulada');
+      if (model === 'ir.model.fields' && table(model).some((f) => f.name === vals.name && f.model_id === vals.model_id && vals.model_id)) throw new Error('Los nombres de campo deben ser unicos por modelo');
       const id = seq++;
       const rec = { id, ...vals };
       if (model === 'ir.model.fields') { rec.model = vals.model || [...table('ir.model')].find((m) => m.id === vals.model_id)?.model; rec.selection_ids = []; if (vals.selection_ids) for (const [, , s] of vals.selection_ids) { const sid = seq++; table('ir.model.fields.selection').push({ id: sid, field_id: [id, ''], value: s.value }); rec.selection_ids.push(sid); } }
-      if (model === 'ir.model') table('ir.model.fields');
+      if (model === 'ir.model') table('ir.model.fields').push({ id: seq++, model_id: id, model: vals.model, name: 'x_name', ttype: 'char', state: 'manual', related: false, relation: false, selection_ids: [] }); // como Odoo
       if (model === 'survey.question' && vals.suggested_answer_ids) for (const [, , a] of vals.suggested_answer_ids) table('survey.question.answer').push({ id: seq++, question_id: id, value: a.value });
       table(model).push(rec);
       writes.push(['create', model]);
@@ -155,7 +156,11 @@ test('todo el Python del manifiesto compila (sintaxis), si hay python3', (t) => 
   let py = 'python3';
   try { execFileSync(py, ['--version']); } catch { t.skip('sin python3'); return; }
   const snippets = [...SERVER_ACTIONS.map((s) => [s.xmlid, s.code]), ...FIELDS.filter((f) => f[4].compute).map((f) => [f[1], f[4].compute])];
-  for (const [id, code] of snippets) execFileSync(py, ['-c', 'import sys; compile(sys.stdin.read(), "x", "exec")'], { input: code });
+  // Ademas de la sintaxis: los opcodes que safe_eval de Odoo prohibe (cierres e importaciones), en todo codigo anidado.
+  const checker = 'import sys, dis\nbad = {"LOAD_CLOSURE", "LOAD_DEREF", "STORE_DEREF", "MAKE_CELL", "IMPORT_NAME", "IMPORT_FROM", "COPY_FREE_VARS"}\ndef walk(c):\n    for i in dis.get_instructions(c):\n        if i.opname in bad: sys.exit("FORBIDDEN " + i.opname + " in " + c.co_name)\n    for k in c.co_consts:\n        if hasattr(k, "co_code"): walk(k)\nwalk(compile(sys.stdin.read(), "x", "exec"))';
+  for (const [id, code] of snippets) {
+    try { execFileSync(py, ['-c', checker], { input: code, stdio: ['pipe', 'pipe', 'pipe'] }); } catch (e) { assert.fail(`${id}: ${String(e.stderr || e.message).trim().split('\n').pop()}`); }
+  }
   assert.ok(snippets.length >= SERVER_ACTIONS.length);
 });
 

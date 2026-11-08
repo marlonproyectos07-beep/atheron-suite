@@ -192,11 +192,15 @@ def apply(ui, guests):
     siblings = env['survey.user_input'].search([('x_sale_order_id', '=', order.id)])
     siblings.write({'x_ath_lock': (ui.x_ath_lock or 0) + 1})
     for vals in guests:
-        same = order.x_guest_line_ids.filtered(lambda r: r.x_doc_type_id.id == vals['x_doc_type_id'] and (r.x_identity_number or '').upper() == (vals['x_identity_number'] or ''))
-        if same and (same[0].x_data_state == 'validado' or same[0].x_arrived_at):
-            same[0].write({'x_last_error': 'Formulario repetido: datos validados no reemplazados'})
+        same = None
+        for r in order.x_guest_line_ids:
+            if r.x_doc_type_id.id == vals['x_doc_type_id'] and (r.x_identity_number or '').upper() == (vals['x_identity_number'] or ''):
+                same = r
+                break
+        if same and (same.x_data_state == 'validado' or same.x_arrived_at):
+            same.write({'x_last_error': 'Formulario repetido: datos validados no reemplazados'})
         elif same:
-            same[0].write(vals)
+            same.write(vals)
         else:
             vals['x_sale_order_id'] = order.id
             env['x_guests_line'].create(vals)

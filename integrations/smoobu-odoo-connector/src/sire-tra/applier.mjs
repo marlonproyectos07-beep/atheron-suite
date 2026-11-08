@@ -135,16 +135,28 @@ export async function applyManifest(odoo, { apply = false, log = () => {} } = {}
   };
 
   // modelos
+  const createdModels = [];
   for (const m of MODELS) {
     const xid = `model_${m.model}`;
-    if (!ids.has(xid)) { const id = await create('ir.model', { name: m.name, model: m.model, state: 'manual' }, xid); modelIds.set(m.model, id); }
+    if (!ids.has(xid)) { const id = await create('ir.model', { name: m.name, model: m.model, state: 'manual' }, xid); modelIds.set(m.model, id); createdModels.push(m.model); }
+  }
+  // Odoo crea x_name automaticamente en cada modelo nuevo: se adopta (si es compatible) en lugar de duplicarlo
+  if (apply && createdModels.length) {
+    const auto = await odoo.searchRead('ir.model.fields', [['model', 'in', createdModels]], ['id', 'model', 'name', 'ttype', 'relation', 'related', 'state']);
+    for (const f of fieldPlan) {
+      const ex = f.action === 'create' && auto.find((a) => a.model === f.spec.model && a.name === f.spec.name);
+      if (!ex) continue;
+      const comp = fieldCompatibility(f.spec, ex);
+      if (!comp.ok) throw new ApplyError('AUTO_FIELD_INCOMPATIBLE', `${f.spec.model}.${f.spec.name} ${comp.reason}`);
+      Object.assign(f, { action: 'adopt', id: ex.id });
+    }
   }
   // campos
   for (const f of fieldPlan) {
     const xid = xmlidOfField(f.spec.model, f.spec.name);
     if (f.action === 'reuse') { plan.reuse.push(`${f.spec.model}.${f.spec.name}`); continue; }
     if (f.action === 'ok') continue;
-    if (f.action === 'adopt') { await adopt('ir.model.fields', f.id, xid); continue; }
+    if (f.action === 'adopt') { await adopt('ir.model.fields', f.id, xid); await write('ir.model.fields', f.id, { field_description: f.spec.label, required: !!f.spec.required }, xid); continue; }
     const s = f.spec;
     const vals = { model_id: modelIds.get(s.model), name: s.name, ttype: s.ttype, field_description: s.label, state: 'manual' };
     for (const k of ['relation', 'relation_field', 'relation_table', 'column1', 'column2', 'related', 'compute', 'depends', 'on_delete']) if (s[k]) vals[k] = s[k];

@@ -1,35 +1,39 @@
 # Copia de pruebas neutralizada de atheron1 (ATH-HOTELS-SIRE-TRA-001)
 
-**Estado: PROCEDIMIENTO. No se duplico ninguna base.** Verificado en pantalla el 2026-11-08 (odoo.com y atheron1 > Mi suscripcion).
+**Estado: EJECUTADO el 2026-11-08** sobre `atheron1-pruebas-20261108` (copia creada por Claude con autorizacion de gerencia).
 
-## 1. Lo verificado en pantalla
-| Dato | Evidencia |
-|---|---|
-| atheron1 es `19.0+e` y `Pagado` | menu de la base en odoo.com/my/databases |
-| Plan personalizado, 1 usuario, suscripcion mensual, **vence el 24/11/2026** | atheron1 > Mi suscripcion (el repo decia 2026-12-02: corregir) |
-| Boton **Duplicar** ("para fines de pruebas o produccion") existe | Mi suscripcion > Base de datos |
-| Dialogo Duplicar: campo "Nombre nuevo" (vacio) y casilla **"Propositos de prueba"** MARCADA por defecto: "deshabilitar integraciones externas, correo..., acciones programadas" (texto cortado por el panel; el resto no se leyo) | dialogo abierto y cancelado, sin duplicar |
-| El dialogo **no muestra costo ni vigencia** de la copia | idem |
-| Registros de actividad de la administracion disponibles (Mi suscripcion) | util para trazabilidad (sigue siendo un solo usuario) |
-| Bases en la cuenta: `atheron1` (Pagado), `atheron1-hotel-staging-20261009` (19.0+e **Prueba**; su URL respondia "no existe"), `masivos-tests-2026` | lista de bases |
-No verificado: vigencia y cupo de la copia (la documentacion de versiones previas decia 15 dias y 5 copias), costo (la pantalla no lo muestra), si la copia hereda claves de API.
-
-## 2. Crear la copia (lo hace Marlon, en pantalla)
+## 1. Crear (odoo.com, sin costo mostrado)
 1. atheron1 > Mi suscripcion > Base de datos > **Duplicar**.
-2. Nombre: `atheron1-pruebas-AAAAMMDD` (el script solo acepta ese patron).
-3. Dejar **marcada** "Propositos de prueba". Si se desmarca: STOP y cancelar.
-4. Confirmar. **No** abrir la copia con usuarios ni ejecutar nada mas hasta el paso 3.
+2. Nombre `atheron1-pruebas-AAAAMMDD` (unico patron que aceptan los scripts).
+3. Dejar marcada **"Propositos de prueba: deshabilitar integraciones externas, correos salientes y acciones programadas"**.
+4. Entrar con odoo.com > Mis bases de datos > **Conectar** (inicio de sesion unico; no hace falta contrasena).
 
-## 3. Verificar el aislamiento (antes de cualquier escritura)
-Automatico de Odoo (neutralizacion; la lista oficial no es exhaustiva): bandera `database.is_neutralized`, franja roja, crons y correo saliente desactivados, proveedores de pago, IAP.
-Controles ADICIONALES nuestros (`checkTestEnvironment`, solo lecturas): crons activos = 0; servidores de correo saliente activos = 0; automatizaciones activas con accion webhook o WhatsApp = 0; proveedores de pago habilitados = 0. Cualquier fallo o dato ilegible = STOP.
-Si falla un adicional: en la copia (nunca en produccion) desactivar la automatizacion o accion afectada y repetir.
-Revision humana (no automatizable): sin cuenta de WhatsApp Business activa, sin iCal/OTA/Smoobu apuntando a la copia, sitio web despublicado, datos personales anonimizados (N04, N10-N13 de STAGING-PLAN.md).
-Claves de API: **no se sabe** si se copian. Comprobarlo en la copia (Ajustes > usuarios > claves) sin revocar nada en produccion; el script exige una clave distinta de la de produccion.
+## 2. Lo que Odoo hizo solo (verificado en la copia)
+| Control | Resultado |
+|---|---|
+| `database.is_neutralized` | `true`; franja "SE NEUTRALIZO" |
+| Correo saliente | unico servidor activo: "neutralization - disable emails" con host `invalid` |
+| Crons | 117 de 120 inactivos; quedan internos (auto-vacuum, certificados, aviso a odoo.com) |
+| Pagos | 0 proveedores habilitados |
+| **Vencimiento** | `database.expiration_date` = **dia siguiente** (motivo `trial`), no 15 dias |
 
-## 4. Ejecutar el incremento 1
-`npm run inc1-estructura` simula (por defecto). `--apply` exige ademas `ODOO_TEST_WRITES=yes-test-copy`.
-Variables: `ODOO_TEST_BASE_URL`, `ODOO_TEST_DATABASE`, `ODOO_TEST_API_KEY` (secreto propio de la copia). Rechaza atheron1.odoo.com por URL, nombre y credencial.
+## 3. Lo que Odoo NO neutralizo (y aplicamos solo en la copia)
+| Salida | Hallazgo | Accion en la copia |
+|---|---|---|
+| WhatsApp | 5 cuentas activas con sus credenciales copiadas | desactivadas (`whatsapp.account` 1,2,5,6,7) |
+| Webhooks entrantes | automatizaciones 51, 52, 63 activas | desactivadas |
+| Cron 48 "Automation Rules: check and execute" | **se reactiva solo** cada vez que se escribe una automatizacion (Odoo recalcula el cron) | desactivar despues de cada cambio de automatizaciones y volver a comprobar |
+| Claves de API | **7 claves copiadas** (solo se contaron filas) | no se tocaron; el conector productivo apunta por URL a atheron1, no a la copia |
 
-## 5. Reversion
-Descartar la copia y duplicar de nuevo, o eliminar solo la copia desde su propia pagina. Nunca eliminar en produccion.
+## 4. Comprobar el aislamiento (antes de cualquier dato sintetico)
+`checkIsolation` (src/sire-tra/applier.mjs), solo lecturas. Automatico de Odoo: E1 base neutralizada.
+Adicionales nuestros: A1 sin crons no internos activos, A2 correo solo `invalid`, A3 sin webhooks entrantes,
+A4 sin automatizaciones con salida webhook/WhatsApp/SMS, A5 sin cuentas WhatsApp activas, A6 sin pagos, A7 sin correo entrante.
+Cualquier fallo o dato ilegible = STOP. Resultado el 2026-11-08: 8/8 en verde (tras apagar el cron 48).
+
+## 5. Aplicar
+- Node (JSON-2): `node scripts/sire-tra-apply.mjs` simula; `--apply` escribe. Variables `ODOO_TEST_BASE_URL`, `ODOO_TEST_DATABASE`, `ODOO_TEST_API_KEY` (clave propia de la copia).
+- Navegador (sesion de la copia, sin credenciales): `node scripts/sire-tra-bundle.mjs` y ejecutar el paquete en la consola de la copia. Solo arranca en hosts `atheron1-pruebas-AAAAMMDD.odoo.com`.
+
+## 6. Reversion
+Descartar la copia (vence sola) o `rollbackManifest` (borra solo registros con xmlid `__ath_sire_tra__`). Nunca en produccion sin decision expresa.
