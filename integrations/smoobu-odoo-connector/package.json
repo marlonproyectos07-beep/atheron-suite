@@ -39,6 +39,7 @@
     "sync-auto": "node scripts/sync-auto.mjs",
     "booking-correction-dry": "node scripts/booking-correction-dry.mjs",
     "whatsapp-agent-shadow-demo": "node scripts/whatsapp-agent-shadow-demo.mjs",
-    "whatsapp-agent-run": "node scripts/whatsapp-agent-run.mjs"
+    "whatsapp-agent-run": "node scripts/whatsapp-agent-run.mjs",
+    "whatsapp-agent-send-sim": "node scripts/whatsapp-agent-send-sim.mjs"
   }
 }
