@@ -145,3 +145,12 @@ test('ATH-PMS-WA-067: solo se procesa el telefono autorizado; otros remitentes s
   assert.equal(r.excludedUnauthorizedSender, 1); assert.equal(r.drafts.length, 0);
   assert.equal(r.smoobuRequests, 0); assert.equal(r.posted, 0); assert.equal(f.posted.length, 0);
 });
+
+
+test('CP-04: ControlGate bloqueado detiene el agente antes de leer mensajes o consultar Smoobu', async () => {
+  const f = fakes({ rows: [msg(1, 'wamid.CP04=', 'para 1 persona del 15 al 17 de noviembre')], smoobuResp: okResp });
+  const controlGate = { check: async () => ({ allowed: false, code: 'EMERGENCY_ACTIVE' }) };
+  const r = await runAgent({ odoo: f.odoo, writer: f.writer, smoobu: f.smoobu, controlGate, today });
+  assert.equal(r.blocked[0].code, 'EMERGENCY_ACTIVE'); assert.equal(r.posted, 0); assert.equal(r.smoobuRequests, 0);
+  assert.deepEqual(f.calls.odoo, []); assert.deepEqual(f.calls.smoobu, []); assert.equal(f.posted.length, 0);
+});
