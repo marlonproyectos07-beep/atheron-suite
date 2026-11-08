@@ -5,6 +5,7 @@
 // deduplicacion se apoya en etiquetas «ATH-AGENT msg=<wamid>» dentro de los propios borradores.
 export { OdooDraftWriter } from './odoo-draft-writer.mjs';
 import { handleInbound, composeDraft, HOTELS_ACCOUNT_ID } from './whatsapp-agent-shadow.mjs';
+import { ControlGate } from './control-gate.mjs';
 
 export const TAG = 'ATH-AGENT msg=';
 // ATH-PMS-WA-067: durante la prueba real solo se procesa el telefono autorizado por gerencia (+57 320 285 9866).
@@ -23,7 +24,12 @@ export function parseInbound(row) {
 
 export const bogotaToday = (now = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(now);
 
-export async function runAgent({ odoo, writer = null, smoobu, today, sinceHours = 48, limit = 100, now = new Date() }) {
+export async function runAgent({ odoo, writer = null, smoobu, controlGate = null, today, sinceHours = 48, limit = 100, now = new Date() }) {
+  // CP-04: producción debe inyectar ControlGate; si se proporciona, bloquea antes de leer/procesar mensajes.
+  if (controlGate) {
+    const gate = await controlGate.check({ requireReply: true, requireBooking: false });
+    if (!gate.allowed) return { considered: 0, excludedOtherAccount: 0, excludedUnauthorizedSender: 0, alreadyProcessed: 0, drafts: [], blocked: [{ code: gate.code }], smoobuRequests: 0, posted: 0, sendEnabled: false, bookingEnabled: false, odooWritesOnWhatsapp: 0, controlGate: gate };
+  }
   const since = new Date(now.getTime() - sinceHours * 3600e3).toISOString().slice(0, 19).replace('T', ' ');
   const rows = await odoo.searchRead('whatsapp.message',
     [['wa_account_id', '=', HOTELS_ACCOUNT_ID], ['message_type', '=', 'inbound'], ['create_date', '>=', since]],
@@ -68,7 +74,10 @@ export async function runAgent({ odoo, writer = null, smoobu, today, sinceHours 
       `<blockquote>${esc(outcome.draft)}</blockquote><p><i>Para responder, copie el texto en la conversación de WhatsApp del cliente y envíelo usted.</i></p>` +
       `<p style="font-size:11px">${pending.map((e) => TAG + e.messageId).join(' ')}</p>`;
     report.drafts.push({ sender: maskPhone(from), kind: outcome.kind, reason: outcome.reason ?? null, covers: pending.map((e) => e.messageId), draft: outcome.draft });
-    if (writer) { await writer.postDraft(html); report.posted += 1; }
+    if (writer) {
+      if (controlGate) await controlGate.assertAllowed({ requireReply: true, requireBooking: false });
+      await writer.postDraft(html); report.posted += 1;
+    }
   }
   return report;
 }
