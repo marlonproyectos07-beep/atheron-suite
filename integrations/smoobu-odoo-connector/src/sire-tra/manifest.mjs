@@ -157,6 +157,8 @@ def norm(text):
     return ' '.join(t.split())
 
 # Catalogo res.country (ISO): nombre en espanol o ingles, o codigo ISO de 2 letras. Alias explicitos y documentados.
+# Nombres que corresponden a mas de un pais: nunca se infieren (Recepcion elige con el huesped).
+AMBIGUOUS = {'congo', 'guinea', 'corea', 'korea', 'sudan', 'samoa', 'islas virgenes', 'virgin islands', 'macedonia'}
 ALIAS = {'eeuu': 'US', 'ee uu': 'US', 'usa': 'US', 'estados unidos de america': 'US', 'united states of america': 'US', 'reino unido': 'GB', 'uk': 'GB'}
 INDEX = {}
 for lang in ('es_419', 'en_US'):
@@ -168,6 +170,8 @@ for lang in ('es_419', 'en_US'):
 def country(text):
     k = norm(text)
     if not k:
+        return False
+    if k in AMBIGUOUS:
         return False
     if k in ALIAS:
         return env['res.country'].search([('code', '=', ALIAS[k])], limit=1).id or False
