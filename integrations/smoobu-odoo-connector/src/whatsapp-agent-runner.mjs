@@ -7,6 +7,9 @@ export { OdooDraftWriter } from './odoo-draft-writer.mjs';
 import { handleInbound, composeDraft, HOTELS_ACCOUNT_ID } from './whatsapp-agent-shadow.mjs';
 
 export const TAG = 'ATH-AGENT msg=';
+// ATH-PMS-WA-067: durante la prueba real solo se procesa el telefono autorizado por gerencia (+57 320 285 9866).
+export const AUTHORIZED_TEST_PHONES = Object.freeze(['573202859866']);
+const digits = (p) => String(p ?? '').replace(/\D/g, '');
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const stripHtml = (h) => String(h ?? '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
 export const maskPhone = (p) => '***' + String(p ?? '').replace(/\D/g, '').slice(-4);
@@ -26,9 +29,14 @@ export async function runAgent({ odoo, writer = null, smoobu, today, sinceHours 
     [['wa_account_id', '=', HOTELS_ACCOUNT_ID], ['message_type', '=', 'inbound'], ['create_date', '>=', since]],
     ['id', 'body', 'create_date', 'message_type', 'mobile_number', 'mobile_number_formatted', 'msg_uid', 'state', 'wa_account_id', 'mail_message_id'],
     { order: 'id asc', limit });
-  const report = { considered: rows.length, excludedOtherAccount: 0, alreadyProcessed: 0, drafts: [], blocked: [], smoobuRequests: 0, posted: 0, sendEnabled: false, bookingEnabled: false, odooWritesOnWhatsapp: 0 };
+  const report = { considered: rows.length, excludedOtherAccount: 0, excludedUnauthorizedSender: 0, alreadyProcessed: 0, drafts: [], blocked: [], smoobuRequests: 0, posted: 0, sendEnabled: false, bookingEnabled: false, odooWritesOnWhatsapp: 0 };
   const events = [];
-  for (const r of rows) { const e = parseInbound(r); if (e) events.push(e); else report.excludedOtherAccount += 1; }
+  for (const r of rows) {
+    const e = parseInbound(r);
+    if (!e) { report.excludedOtherAccount += 1; continue; }
+    if (!AUTHORIZED_TEST_PHONES.includes(digits(e.from))) { report.excludedUnauthorizedSender += 1; continue; }
+    events.push(e);
+  }
   // deduplicacion persistente: etiquetas ya publicadas en el canal de borradores
   const done = new Set();
   if (writer) {
