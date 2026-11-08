@@ -164,6 +164,7 @@ export async function applyManifest(odoo, { apply = false, log = () => {} } = {}
     if (s.readonly) vals.readonly = true;
     if (s.store !== undefined) vals.store = s.store;
     if (s.selection) vals.selection_ids = s.selection.map((x) => [0, 0, x]);
+    if (s.groups) vals.groups = [[6, 0, await Promise.all(s.groups.map(extRef))]];
     await create('ir.model.fields', vals, xid);
   }
   // permisos
@@ -181,7 +182,17 @@ export async function applyManifest(odoo, { apply = false, log = () => {} } = {}
     const base = { title: q.title, sequence: seq };
     if (q.page) Object.assign(base, { is_page: true });
     else Object.assign(base, { question_type: q.type, constr_mandatory: !!q.mandatory });
-    if (ids.has(xid)) { await write('survey.question', ids.get(xid), base, xid); qIds.set(q.key, ids.get(xid)); continue; }
+    if (ids.has(xid)) {
+      const qid = ids.get(xid);
+      const vals = { ...base };
+      if (q.answers && apply) {
+        const cur = await odoo.searchRead('survey.question.answer', [['question_id', '=', qid]], ['id', 'value', 'sequence'], { order: 'sequence, id' });
+        if (cur.length !== q.answers.length) throw new ApplyError('ANSWERS_DRIFT', q.key);
+        const cmds = cur.map((c, i) => (c.value !== q.answers[i] ? [1, c.id, { value: q.answers[i], sequence: i + 1 }] : null)).filter(Boolean);
+        if (cmds.length) vals.suggested_answer_ids = cmds;
+      }
+      await write('survey.question', qid, vals, xid); qIds.set(q.key, qid); continue;
+    }
     const vals = { ...base, survey_id: surveyId };
     if (q.answers) vals.suggested_answer_ids = q.answers.map((v, i) => [0, 0, { value: v, sequence: i + 1 }]);
     qIds.set(q.key, await upsert('survey.question', xid, vals, apply && surveyId > 0 ? [['survey_id', '=', surveyId], ['title', '=', q.title]] : null));
@@ -236,10 +247,42 @@ export async function applyManifest(odoo, { apply = false, log = () => {} } = {}
   return plan;
 }
 
-/** Reversion: borra SOLO registros con xmlid NS, en orden inverso de dependencias. Pierde los datos de los campos creados. */
-export async function rollbackManifest(odoo, { apply = false, log = () => {} } = {}) {
+/** Datos guardados en lo que se instalo (campos propios en modelos existentes y registros de modelos propios). */
+export async function dataPresence(odoo) {
+  const data = await odoo.searchRead('ir.model.data', [['module', '=', NS], ['model', 'in', ['ir.model.fields', 'ir.model']]], ['model', 'res_id']);
+  const fields = await odoo.searchRead('ir.model.fields', [['id', 'in', data.filter((d) => d.model === 'ir.model.fields').map((d) => d.res_id)]], ['model', 'name', 'ttype', 'store']);
+  const ownModels = MODELS.map((m) => m.model);
+  const out = [];
+  for (const m of ownModels) { const n = await odoo.count(m, []).catch(() => 0); if (n) out.push({ model: m, field: '*', records: n }); }
+  for (const f of fields) {
+    if (ownModels.includes(f.model) || f.store === false || f.ttype === 'one2many') continue;
+    const n = await odoo.count(f.model, [[f.name, '!=', false]]).catch(() => 0);
+    if (n) out.push({ model: f.model, field: f.name, records: n });
+  }
+  return out;
+}
+
+/** Reversion suave (recomendada): apaga automatizaciones y menus y quita acciones del menu Accion. No borra nada. */
+export async function disableManifest(odoo, { apply = false } = {}) {
+  const data = await odoo.searchRead('ir.model.data', [['module', '=', NS], ['model', 'in', ['base.automation', 'ir.ui.menu', 'ir.actions.server']]], ['model', 'res_id']);
+  const by = (m) => data.filter((d) => d.model === m).map((d) => d.res_id);
+  const ops = [['base.automation', by('base.automation'), { active: false }], ['ir.ui.menu', by('ir.ui.menu'), { active: false }], ['ir.actions.server', by('ir.actions.server'), { binding_model_id: false }]];
+  if (apply) for (const [m, ids, v] of ops) if (ids.length) await odoo.write(m, ids, v);
+  return { mode: apply ? 'disable' : 'disable-dry-run', changes: ops.map(([m, ids]) => ({ model: m, count: ids.length })) };
+}
+
+/**
+ * Reversion dura: borra SOLO registros con xmlid NS, en orden inverso. Si hay datos, exige `preserve`
+ * (exportacion previa) y la llama ANTES de borrar; sin ella se detiene (no borra historicos sin respaldo).
+ */
+export async function rollbackManifest(odoo, { apply = false, log = () => {}, preserve = null } = {}) {
   const order = ['ir.ui.menu', 'ir.actions.act_window', 'ir.ui.view', 'base.automation', 'ir.actions.server', 'survey.question', 'survey.survey', 'ir.model.access', 'ir.model.fields', 'ir.model'];
   const data = await odoo.searchRead('ir.model.data', [['module', '=', NS]], ['id', 'name', 'model', 'res_id']);
+  const present = await dataPresence(odoo);
+  if (apply && present.length) {
+    if (!preserve) throw new ApplyError('ROLLBACK_DATA_PRESENT', present.map((p) => `${p.model}.${p.field}:${p.records}`).join(','));
+    await preserve(present);
+  }
   const out = [];
   for (const model of order) {
     const rows = data.filter((d) => d.model === model);
@@ -249,5 +292,25 @@ export async function rollbackManifest(odoo, { apply = false, log = () => {} } =
     if (apply && live.length) { await odoo.unlink(model, live); log({ event: 'unlinked', model, count: live.length }); }
   }
   if (apply && data.length) await odoo.unlink('ir.model.data', data.map((d) => d.id));
-  return { mode: apply ? 'rollback' : 'rollback-dry-run', remove: out };
+  return { mode: apply ? 'rollback' : 'rollback-dry-run', remove: out, dataPresent: present };
+}
+
+/** Respaldo de configuracion antes de desplegar (sin datos personales). */
+export async function snapshotConfig(odoo) {
+  const models = [...new Set(FIELDS.map((f) => f[0]))];
+  const fields = await odoo.searchRead('ir.model.fields', [['model', 'in', models], ['name', '=like', 'x_%']], ['model', 'name', 'ttype', 'relation', 'state']);
+  const autos = await odoo.searchRead('base.automation', [['active', '=', true], ['model_name', 'in', models]], ['id', 'name', 'model_name', 'trigger']);
+  const ns = await odoo.searchRead('ir.model.data', [['module', '=', NS]], ['name', 'model', 'res_id']);
+  return { takenAt: new Date().toISOString(), customFields: fields, activeAutomations: autos, inventory: ns };
+}
+
+/** Validacion posterior: la simulacion no debe crear nada y todo lo propio debe estar activo. */
+export async function verifyDeployment(odoo) {
+  const plan = await applyManifest(odoo);
+  const autos = await odoo.searchRead('base.automation', [['active', 'in', [true, false]], ['name', 'in', AUTOMATIONS.map((a) => a.name)]], ['name', 'active']);
+  const checks = [
+    { id: 'V1_sin_creaciones_pendientes', ok: plan.create.length === 0 && plan.blocked.length === 0, detail: `${plan.create.length}/${plan.blocked.length}` },
+    { id: 'V2_automatizaciones_activas', ok: autos.length === AUTOMATIONS.length && autos.every((a) => a.active), detail: autos.length },
+  ];
+  return { ok: checks.every((c) => c.ok), checks };
 }

@@ -2,12 +2,12 @@
  * ATH-HOTELS-SIRE-TRA-001 · Manifiesto declarativo de lo que se crea en Odoo (y NADA mas).
  * Reutiliza sale.order, resource.resource, survey y x_guests_line; crea solo x_establishment y x_report_attempt.
  * Todo registro lleva xmlid en el modulo NS (inventario, repeticion y reversion).
- * Sin valores por defecto de negocio: codigos SIRE, catalogos TRA y costo quedan vacios hasta verificarse.
+ * Sin valores por defecto de negocio: códigos SIRE, catalogos TRA y costo quedan vacios hasta verificarse.
  */
 export const NS = '__ath_sire_tra__';
 
 const sel = (...pairs) => pairs.map(([value, name], i) => ({ value, name, sequence: i + 1 }));
-const STATES = sel(['no_aplica', 'No aplica'], ['pendiente', 'Pendiente'], ['en_envio', 'En envio'], ['enviado', 'Enviado'], ['aceptado', 'Aceptado'], ['rechazado', 'Rechazado'], ['incierto', 'Incierto']);
+const STATES = sel(['no_aplica', 'No aplica'], ['pendiente', 'Pendiente'], ['en_envio', 'En envío'], ['enviado', 'Enviado'], ['aceptado', 'Aceptado'], ['rechazado', 'Rechazado'], ['incierto', 'Incierto']);
 
 export const MODELS = [
   { model: 'x_establishment', name: 'Establecimiento SIRE/TRA' },
@@ -18,60 +18,64 @@ export const MODELS = [
 export const FIELDS = [
   // --- x_establishment: PROPERTY_ID independiente del PMS; titular RNT, operador y reportante SIRE separados ---
   ['x_establishment', 'x_name', 'char', 'Nombre', { required: true }],
-  ['x_establishment', 'x_code', 'char', 'Codigo de propiedad (PROPERTY_ID)', { required: true }],
+  ['x_establishment', 'x_code', 'char', 'Código de propiedad (PROPERTY_ID)', { required: true }],
   ['x_establishment', 'x_active', 'boolean', 'Activo', {}],
-  ['x_establishment', 'x_address_partner_id', 'many2one', 'Direccion (contacto)', { relation: 'res.partner' }],
-  ['x_establishment', 'x_rnt_number', 'char', 'Numero RNT', {}],
+  ['x_establishment', 'x_address_partner_id', 'many2one', 'Dirección (contacto)', { relation: 'res.partner' }],
+  ['x_establishment', 'x_rnt_number', 'char', 'Número RNT', {}],
   ['x_establishment', 'x_rnt_holder_id', 'many2one', 'Titular del RNT', { relation: 'res.partner' }],
   ['x_establishment', 'x_rnt_expiry', 'date', 'Vencimiento RNT', {}],
-  ['x_establishment', 'x_operator_company_id', 'many2one', 'Operador (compania)', { relation: 'res.company' }],
+  ['x_establishment', 'x_operator_company_id', 'many2one', 'Operador (compañía)', { relation: 'res.company' }],
   ['x_establishment', 'x_sire_reporter_id', 'many2one', 'Quien reporta a SIRE', { relation: 'res.partner' }],
-  ['x_establishment', 'x_sire_company_code', 'char', 'SIRE: codigo del hotel', {}],
-  ['x_establishment', 'x_sire_city_code', 'char', 'SIRE: codigo de ciudad', {}],
-  ['x_establishment', 'x_sire_move_in_code', 'char', 'SIRE: codigo movimiento entrada', {}],
-  ['x_establishment', 'x_sire_move_out_code', 'char', 'SIRE: codigo movimiento salida', {}],
+  ['x_establishment', 'x_sire_company_code', 'char', 'SIRE: código del hotel', {}],
+  ['x_establishment', 'x_sire_city_code', 'char', 'SIRE: código de ciudad', {}],
+  ['x_establishment', 'x_sire_move_in_code', 'char', 'SIRE: código movimiento entrada', {}],
+  ['x_establishment', 'x_sire_move_out_code', 'char', 'SIRE: código movimiento salida', {}],
   ['x_establishment', 'x_sire_date_format', 'char', 'SIRE: formato de fecha (strftime)', {}],
-  ['x_establishment', 'x_sire_encoding', 'selection', 'SIRE: codificacion', { selection: sel(['utf-8', 'UTF-8'], ['latin-1', 'Latin-1']) }],
-  ['x_establishment', 'x_sire_codes_verified', 'boolean', 'SIRE: codigos verificados con el paquete de guia', {}],
+  ['x_establishment', 'x_sire_encoding', 'selection', 'SIRE: codificación', { selection: sel(['utf-8', 'UTF-8'], ['latin-1', 'Latin-1']) }],
+  ['x_establishment', 'x_sire_codes_verified', 'boolean', 'SIRE: códigos verificados con el paquete de guía', {}],
   ['x_establishment', 'x_sire_export_enabled', 'boolean', 'SIRE: exportador habilitado', {}],
   ['x_establishment', 'x_tra_mode', 'selection', 'TRA: modo', { selection: sel(['manual', 'Manual (portal)'], ['api', 'API PMS'], ['no_aplica', 'No aplica']) }],
-  ['x_establishment', 'x_tra_accommodation_type', 'char', 'TRA: tipo de acomodacion (valor oficial)', {}],
+  ['x_establishment', 'x_tra_accommodation_type', 'char', 'TRA: tipo de acomodación (valor oficial)', {}],
   ['x_establishment', 'x_tra_cost_basis', 'selection', 'TRA: base del costo', { selection: sel(['total_estancia', 'Total de la estancia'], ['por_noche', 'Por noche']) }],
-  ['x_establishment', 'x_tra_config_verified', 'boolean', 'TRA: configuracion verificada con MinCIT', {}],
+  ['x_establishment', 'x_tra_config_verified', 'boolean', 'TRA: configuración verificada con MinCIT', {}],
   ['x_establishment', 'x_analytic_account_id', 'many2one', 'Cuenta analitica', { relation: 'account.analytic.account' }],
-  // --- unidades: Casa Completa es derivada, nunca sexta habitacion ---
+  // --- unidades: Casa Completa es derivada, nunca sexta habitación ---
   ['resource.resource', 'x_establishment_id', 'many2one', 'Establecimiento', { relation: 'x_establishment' }],
-  ['resource.resource', 'x_unit_kind', 'selection', 'Tipo de unidad', { selection: sel(['fisica', 'Fisica'], ['derivada', 'Derivada']) }],
+  ['resource.resource', 'x_unit_kind', 'selection', 'Tipo de unidad', { selection: sel(['fisica', 'Física'], ['derivada', 'Derivada']) }],
   ['resource.resource', 'x_component_ids', 'many2many', 'Unidades que la componen', { relation: 'resource.resource', relation_table: 'x_ath_resource_component_rel', column1: 'x_parent_id', column2: 'x_component_id' }],
-  // --- catalogos oficiales: vacios hasta tener el paquete de guia SIRE ---
-  ['l10n_latam.identification.type', 'x_sire_code', 'char', 'Codigo SIRE', {}],
-  ['res.country', 'x_sire_code', 'char', 'Codigo SIRE', {}],
+  // --- catalogos oficiales: vacios hasta tener el paquete de guía SIRE ---
+  ['l10n_latam.identification.type', 'x_sire_code', 'char', 'Código SIRE', {}],
+  ['res.country', 'x_sire_code', 'char', 'Código SIRE', {}],
   // --- invitacion por reserva (reutiliza survey.user_input) ---
   ['survey.user_input', 'x_sale_order_id', 'many2one', 'Reserva', { relation: 'sale.order' }],
   ['survey.user_input', 'x_ath_state', 'selection', 'Estado del registro', { selection: sel(['invitado', 'Invitado'], ['procesado', 'Procesado'], ['error', 'Error'], ['revocado', 'Revocado']) }],
   ['survey.user_input', 'x_ath_error', 'char', 'Error de procesamiento', {}],
   ['survey.user_input', 'x_ath_processed_at', 'datetime', 'Procesado el', {}],
-  ['survey.user_input', 'x_ath_url', 'char', 'Enlace para el huesped', {}],
-  ['survey.user_input', 'x_ath_lock', 'integer', 'Bloqueo (tecnico)', {}],
-  // --- x_guests_line (existente, de booking_engine): participacion de cada huesped ---
+  ['survey.user_input', 'x_ath_url', 'char', 'Enlace para el huésped', {}],
+  ['survey.user_input', 'x_ath_lock', 'integer', 'Bloqueo (técnico)', {}],
+  // evidencia: version del formulario/aviso, fecha y respuestas tal como llegaron (solo administradores)
+  ['survey.user_input', 'x_ath_form_version', 'char', 'Versión del formulario y aviso', {}],
+  ['survey.user_input', 'x_ath_submitted_at', 'datetime', 'Recibido el', {}],
+  ['survey.user_input', 'x_ath_snapshot', 'text', 'Respuestas recibidas (evidencia)', { groups: ['base.group_system'] }],
+  // --- x_guests_line (existente, de booking_engine): participacion de cada huésped ---
   ['x_guests_line', 'x_doc_type_id', 'many2one', 'Tipo de documento', { relation: 'l10n_latam.identification.type' }],
   ['x_guests_line', 'x_given_names', 'char', 'Nombres', {}],
   ['x_guests_line', 'x_surname_1', 'char', 'Primer apellido', {}],
   ['x_guests_line', 'x_surname_2', 'char', 'Segundo apellido', {}],
   ['x_guests_line', 'x_residence_city_id', 'many2one', 'Ciudad de residencia', { relation: 'res.city' }],
   ['x_guests_line', 'x_residence_text', 'char', 'Residencia (texto)', {}],
-  ['x_guests_line', 'x_residence_country_id', 'many2one', 'Pais de residencia', { relation: 'res.country' }],
+  ['x_guests_line', 'x_residence_country_id', 'many2one', 'País de residencia', { relation: 'res.country' }],
   ['x_guests_line', 'x_origin_city_id', 'many2one', 'Ciudad de procedencia', { relation: 'res.city' }],
   ['x_guests_line', 'x_origin_text', 'char', 'Procedencia (texto)', {}],
-  ['x_guests_line', 'x_origin_country_id', 'many2one', 'Pais de procedencia', { relation: 'res.country' }],
-  ['x_guests_line', 'x_destination_text', 'char', 'Proximo destino (texto)', {}],
-  ['x_guests_line', 'x_destination_country_id', 'many2one', 'Pais proximo destino', { relation: 'res.country' }],
+  ['x_guests_line', 'x_origin_country_id', 'many2one', 'País de procedencia', { relation: 'res.country' }],
+  ['x_guests_line', 'x_destination_text', 'char', 'Próximo destino (texto)', {}],
+  ['x_guests_line', 'x_destination_country_id', 'many2one', 'País proximo destino', { relation: 'res.country' }],
   ['x_guests_line', 'x_travel_reason', 'char', 'Motivo de viaje (declarado)', {}],
-  ['x_guests_line', 'x_is_main', 'boolean', 'Huesped principal', {}],
+  ['x_guests_line', 'x_is_main', 'boolean', 'Huésped principal', {}],
   ['x_guests_line', 'x_consent', 'boolean', 'Consentimiento de datos', {}],
   ['x_guests_line', 'x_consent_at', 'datetime', 'Consentimiento el', {}],
   ['x_guests_line', 'x_data_state', 'selection', 'Estado de los datos', { selection: sel(['borrador', 'Borrador'], ['recibido', 'Recibido'], ['validado', 'Validado'], ['rechazado', 'Rechazado']) }],
-  ['x_guests_line', 'x_data_source', 'selection', 'Origen de los datos', { selection: sel(['formulario', 'Formulario'], ['recepcion', 'Recepcion'], ['contingencia_smoobu', 'Contingencia Smoobu']) }],
+  ['x_guests_line', 'x_data_source', 'selection', 'Origen de los datos', { selection: sel(['formulario', 'Formulario'], ['recepcion', 'Recepción'], ['contingencia_smoobu', 'Contingencia Smoobu']) }],
   ['x_guests_line', 'x_validated_at', 'datetime', 'Validado el', {}],
   ['x_guests_line', 'x_user_input_id', 'many2one', 'Formulario de origen', { relation: 'survey.user_input' }],
   ['x_guests_line', 'x_establishment_id', 'many2one', 'Establecimiento', { relation: 'x_establishment' }],
@@ -82,23 +86,23 @@ export const FIELDS = [
   ['x_guests_line', 'x_sire_out_state', 'selection', 'SIRE salida', { selection: STATES }],
   ['x_guests_line', 'x_tra_state', 'selection', 'TRA', { selection: STATES }],
   ['x_guests_line', 'x_tra_external_id', 'char', 'TRA: identificador devuelto', {}],
-  ['x_guests_line', 'x_claim_ref', 'char', 'Reclamo (tecnico)', {}],
-  ['x_guests_line', 'x_lock_rev', 'integer', 'Bloqueo (tecnico)', {}],
-  ['x_guests_line', 'x_last_error', 'char', 'Ultimo error u observacion', {}],
-  ['x_guests_line', 'x_tra_room', 'char', 'TRA: habitacion', { store: false, readonly: true, depends: 'x_room_resource_id', compute: "for r in self:\n    n = (r.x_room_resource_id.name or '').split(' ')[0]\n    r['x_tra_room'] = n if n.isdigit() else ''" }],
+  ['x_guests_line', 'x_claim_ref', 'char', 'Reclamo (técnico)', {}],
+  ['x_guests_line', 'x_lock_rev', 'integer', 'Bloqueo (técnico)', {}],
+  ['x_guests_line', 'x_last_error', 'char', 'Último error u observación', {}],
+  ['x_guests_line', 'x_tra_room', 'char', 'TRA: habitación', { store: false, readonly: true, depends: 'x_room_resource_id', compute: "for r in self:\n    n = (r.x_room_resource_id.name or '').split(' ')[0]\n    r['x_tra_room'] = n if n.isdigit() else ''" }],
   ['x_guests_line', 'x_order_checkin', 'date', 'Check-in previsto', { related: 'x_sale_order_id.x_checkin', readonly: true }],
   ['x_guests_line', 'x_order_checkout', 'date', 'Check-out previsto', { related: 'x_sale_order_id.x_checkout', readonly: true }],
   // --- intentos: solo crear y leer (ACL); la evidencia se adjunta al crear ---
-  ['x_report_attempt', 'x_name', 'char', 'Descripcion', {}],
-  ['x_report_attempt', 'x_guest_line_id', 'many2one', 'Huesped', { relation: 'x_guests_line', required: true, on_delete: 'restrict' }],
+  ['x_report_attempt', 'x_name', 'char', 'Descripción', {}],
+  ['x_report_attempt', 'x_guest_line_id', 'many2one', 'Huésped', { relation: 'x_guests_line', required: true, on_delete: 'restrict' }],
   ['x_report_attempt', 'x_sale_order_id', 'many2one', 'Reserva', { relation: 'sale.order', related: 'x_guest_line_id.x_sale_order_id', store: true, readonly: true }],
   ['x_report_attempt', 'x_system', 'selection', 'Sistema', { required: true, selection: sel(['sire_entrada', 'SIRE entrada'], ['sire_salida', 'SIRE salida'], ['tra', 'TRA']) }],
   ['x_report_attempt', 'x_channel', 'selection', 'Canal', { required: true, selection: sel(['portal_manual', 'Portal (manual)'], ['archivo_sire', 'Archivo SIRE'], ['api_tra', 'API TRA'], ['simulador', 'Simulador (pruebas)']) }],
   ['x_report_attempt', 'x_result', 'selection', 'Resultado', { required: true, selection: sel(['enviado', 'Enviado'], ['aceptado', 'Aceptado'], ['rechazado', 'Rechazado'], ['incierto', 'Incierto'], ['error_previo', 'Error antes de enviar'], ['no_recibido', 'Comprobado: no recibido']) }],
   ['x_report_attempt', 'x_external_id', 'char', 'Identificador oficial', {}],
   ['x_report_attempt', 'x_http_status', 'integer', 'Estado HTTP', {}],
-  ['x_report_attempt', 'x_error_code', 'char', 'Codigo de error', {}],
-  ['x_report_attempt', 'x_run_ref', 'char', 'Ejecucion', {}],
+  ['x_report_attempt', 'x_error_code', 'char', 'Código de error', {}],
+  ['x_report_attempt', 'x_run_ref', 'char', 'Ejecución', {}],
   ['x_report_attempt', 'x_actor', 'char', 'Actor declarado (no autenticado)', {}],
   ['x_report_attempt', 'x_evidence', 'binary', 'Evidencia', {}],
   ['x_report_attempt', 'x_evidence_name', 'char', 'Nombre de la evidencia', {}],
@@ -139,17 +143,36 @@ for ui in records:
         raise UserError('Solo se revocan enlaces vigentes.')
     ui.write({'access_token': env['survey.user_input'].default_get(['access_token'])['access_token'], 'deadline': datetime.datetime.now(), 'x_ath_state': 'revocado', 'x_ath_url': False})`;
 
-const PY_MAP = String.raw`DOC = {'Cedula de ciudadania (Colombia)': 'national_citizen_id', 'Tarjeta de identidad (Colombia)': 'id_card', 'Registro civil (Colombia)': 'civil_registration', 'Cedula de extranjeria (Colombia)': 'foreign_resident_card', 'Pasaporte': 'passport', 'PEP': 'PEP', 'PPT': 'PPT'}
+const PY_MAP = String.raw`DOC = {'Cédula de ciudadanía (Colombia)': 'national_citizen_id', 'Tarjeta de identidad (Colombia)': 'id_card', 'Registro civil (Colombia)': 'civil_registration', 'Cédula de extranjería (Colombia)': 'foreign_resident_card', 'Pasaporte': 'passport', 'PEP': 'PEP', 'PPT': 'PPT'}
 now = datetime.datetime.now()
+FORM_VERSION = 'registro-huespedes v2 (2026-11-08) / aviso de tratamiento de datos v1'
 
 def clean(v):
     return ' '.join(('%s' % (v or '')).replace('\t', ' ').split()).strip()
 
-def country(name):
-    name = clean(name)
-    if not name:
+def norm(text):
+    t = clean(text).lower()
+    for a, b in (('á', 'a'), ('é', 'e'), ('í', 'i'), ('ó', 'o'), ('ú', 'u'), ('ü', 'u'), ('ñ', 'n'), ('.', ''), (',', ' ')):
+        t = t.replace(a, b)
+    return ' '.join(t.split())
+
+# Catalogo res.country (ISO): nombre en espanol o ingles, o codigo ISO de 2 letras. Alias explicitos y documentados.
+ALIAS = {'eeuu': 'US', 'ee uu': 'US', 'usa': 'US', 'estados unidos de america': 'US', 'united states of america': 'US', 'reino unido': 'GB', 'uk': 'GB'}
+INDEX = {}
+for lang in ('es_419', 'en_US'):
+    for c in env['res.country'].with_context(lang=lang).search([]):
+        for k in (norm(c.name), (c.code or '').lower()):
+            if k:
+                INDEX.setdefault(k, set()).add(c.id)
+
+def country(text):
+    k = norm(text)
+    if not k:
         return False
-    return env['res.country'].search(['|', ('name', '=ilike', name), ('code', '=ilike', name)], limit=1).id or False
+    if k in ALIAS:
+        return env['res.country'].search([('code', '=', ALIAS[k])], limit=1).id or False
+    found = INDEX.get(k) or set()
+    return list(found)[0] if len(found) == 1 else False
 
 def city(name):
     name = clean(name)
@@ -177,7 +200,7 @@ def parse(ui):
         else:
             v[k] = clean(l.value_char_box)
     n = int(v.get('p_companions') or 0)
-    consent = v.get('p_consent') == 'Si, autorizo'
+    consent = v.get('p_consent') == 'Sí, autorizo'
     common = {'x_residence_city_id': city(v.get('p_res_city')), 'x_residence_text': v.get('p_res_city') or False, 'x_residence_country_id': country(v.get('p_res_country')), 'x_origin_city_id': city(v.get('p_origin_city')), 'x_origin_text': v.get('p_origin_city') or False, 'x_origin_country_id': country(v.get('p_origin_country')), 'x_destination_text': v.get('p_dest') or False, 'x_destination_country_id': country(v.get('p_dest_country')), 'x_travel_reason': v.get('p_reason') or False, 'x_consent': consent, 'x_consent_at': now if consent else False, 'x_data_state': 'recibido', 'x_data_source': 'formulario', 'x_user_input_id': ui.id}
     out = []
     for i in range(0, n + 1):
@@ -189,14 +212,14 @@ def parse(ui):
         vals.update({'x_is_main': i == 0, 'x_doc_type_id': dt.id or False, 'x_identity_number': num or False, 'x_given_names': v.get(p + 'given') or False, 'x_surname_1': v.get(p + 'surname1') or False, 'x_surname_2': v.get(p + 'surname2') or False, 'x_nationality': country(v.get(p + 'nationality')), 'x_birth_date': v.get(p + 'birth') or False, 'x_guest_type': gtype(v.get(p + 'birth'))})
         vals['x_name'] = clean('%s %s %s' % (vals['x_given_names'] or '', vals['x_surname_1'] or '', vals['x_surname_2'] or ''))
         notes = []
-        for key, field, label in ((p + 'nationality', 'x_nationality', 'nacionalidad'), ('p_res_country', 'x_residence_country_id', 'pais de residencia'), ('p_origin_country', 'x_origin_country_id', 'pais de procedencia'), ('p_dest_country', 'x_destination_country_id', 'pais de destino')):
+        for key, field, label in ((p + 'nationality', 'x_nationality', 'nacionalidad'), ('p_res_country', 'x_residence_country_id', 'país de residencia'), ('p_origin_country', 'x_origin_country_id', 'país de procedencia'), ('p_dest_country', 'x_destination_country_id', 'país de destino')):
             if v.get(key) and not vals[field]:
-                notes.append('%s no reconocido (%s)' % (label, clean(v.get(key))[:40]))
+                notes.append('no se reconoció %s (%s)' % (label, clean(v.get(key))[:40]))
         vals['x_last_error'] = ('Revisar: ' + '; '.join(notes)) if notes else False
         out.append(vals)
-    return out
+    return out, v
 
-def apply(ui, guests):
+def apply(ui, guests, answers):
     order = ui.x_sale_order_id
     siblings = env['survey.user_input'].search([('x_sale_order_id', '=', order.id)])
     siblings.write({'x_ath_lock': (ui.x_ath_lock or 0) + 1})
@@ -207,12 +230,17 @@ def apply(ui, guests):
                 same = r
                 break
         if same and (same.x_data_state == 'validado' or same.x_arrived_at):
-            same.write({'x_last_error': 'Formulario repetido: datos validados no reemplazados'})
+            same.write({'x_last_error': 'Formulario repetido: no se reemplazaron datos ya validados'})
         elif same:
             same.write(vals)
         else:
             vals['x_sale_order_id'] = order.id
             env['x_guests_line'].create(vals)
+    lines = []
+    for k in sorted(answers):
+        lines.append('%s=%s' % (k, answers[k]))
+    snapshot = '\n'.join(lines)
+    ui.write({'x_ath_snapshot': snapshot, 'x_ath_form_version': FORM_VERSION, 'x_ath_submitted_at': now})
     ui.user_input_line_ids.unlink()
     ui.write({'x_ath_state': 'procesado', 'x_ath_processed_at': now, 'x_ath_error': False})
 
@@ -220,12 +248,12 @@ for ui in records:
     if ui.x_ath_state != 'invitado' or not ui.x_sale_order_id:
         continue
     try:
-        guests = parse(ui)
+        guests, answers = parse(ui)
     except Exception:
         ui.write({'x_ath_state': 'error', 'x_ath_error': 'No se pudo interpretar el formulario; respuestas conservadas para revision manual'})
         guests = None
     if guests is not None:
-        apply(ui, guests)`;
+        apply(ui, guests, answers)`;
 
 const PY_VALIDATE = String.raw`if not records:
     raise UserError('Seleccione al menos un registro.')
@@ -238,28 +266,28 @@ for r in records:
     miss = []
     if r.x_data_state not in ('recibido', 'rechazado', 'borrador') and r.x_data_state:
         miss.append('estado %s' % r.x_data_state)
-    for f, lbl in (('x_doc_type_id', 'tipo de documento'), ('x_identity_number', 'numero'), ('x_given_names', 'nombres'), ('x_surname_1', 'primer apellido'), ('x_nationality', 'nacionalidad'), ('x_birth_date', 'fecha de nacimiento'), ('x_room_resource_id', 'habitacion')):
+    for f, lbl in (('x_doc_type_id', 'tipo de documento'), ('x_identity_number', 'número'), ('x_given_names', 'nombres'), ('x_surname_1', 'primer apellido'), ('x_nationality', 'nacionalidad'), ('x_birth_date', 'fecha de nacimiento'), ('x_room_resource_id', 'habitación')):
         if not r[f]:
             miss.append(lbl)
     code = r.x_doc_type_id.l10n_co_document_code
     num = r.x_identity_number or ''
     if code in DIGITS and num and not num.isdigit():
-        miss.append('numero solo con digitos')
+        miss.append('número solo con dígitos')
     if num and not num.replace('-', '').isalnum():
-        miss.append('numero con caracteres no validos')
+        miss.append('número con caracteres no válidos')
     if r.x_birth_date and r.x_birth_date > now.date():
         miss.append('fecha de nacimiento futura')
     if r.x_is_foreign and code in COLOMBIAN:
         miss.append('extranjero con documento colombiano')
     room = r.x_room_resource_id
     if room and room.x_unit_kind != 'fisica':
-        miss.append('asignar habitacion fisica (Casa Completa es derivada)')
+        miss.append('asignar habitación fisica (Casa Completa es derivada)')
     if room and not room.x_establishment_id:
-        miss.append('habitacion sin establecimiento')
+        miss.append('habitación sin establecimiento')
     if not o.x_guest_line_ids.filtered(lambda x: x.x_is_main):
-        miss.append('la reserva no tiene huesped principal')
+        miss.append('la reserva no tiene huésped principal')
     if len(o.x_guest_line_ids.filtered(lambda x: x.x_is_main)) > 1:
-        miss.append('mas de un huesped principal')
+        miss.append('más de un huésped principal')
     if o.x_guest_line_ids.filtered(lambda x: x.id != r.id and x.x_doc_type_id == r.x_doc_type_id and (x.x_identity_number or '').upper() == num.upper()):
         miss.append('documento repetido en la reserva')
     if not r.x_consent:
@@ -267,7 +295,7 @@ for r in records:
     if miss:
         errors.append('%s (linea %s): %s' % (o.name or '-', r.id, ', '.join(miss)))
 if errors:
-    raise UserError('No se valido ningun huesped.\n' + '\n'.join(errors))
+    raise UserError('No se validó ningún huésped.\n' + '\n'.join(errors))
 for r in records:
     r.write({'x_data_state': 'validado', 'x_validated_at': now, 'x_last_error': False, 'x_establishment_id': r.x_room_resource_id.x_establishment_id.id})`;
 
@@ -291,9 +319,9 @@ for r in records:
     elif o.state != 'sale' or o.x_reservation_status in ('cancelled', 'no_show'):
         errors.append('linea %s: reserva no confirmada, cancelada o no-show' % r.id)
     elif not (o.x_checkin and o.x_checkout and o.x_checkin - datetime.timedelta(days=1) <= now.date() <= o.x_checkout):
-        errors.append('linea %s: hoy esta fuera de las fechas de la reserva %s' % (r.id, o.name))
+        errors.append('linea %s: hoy está fuera de las fechas de la reserva %s' % (r.id, o.name))
 if errors:
-    raise UserError('No se registro ninguna llegada.\n' + '\n'.join(errors))
+    raise UserError('No se registró ninguna llegada.\n' + '\n'.join(errors))
 for r in records:
     tra = 'pendiente' if r.x_establishment_id.x_tra_mode in ('manual', 'api') else 'no_aplica'
     r.write({'x_arrived_at': now, 'x_sire_in_state': 'pendiente' if r.x_is_foreign else 'no_aplica', 'x_sire_out_state': 'no_aplica', 'x_tra_state': tra})`;
@@ -311,7 +339,7 @@ const PY_CLAIM = String.raw`F = {'sire_entrada': 'x_sire_in_state', 'sire_salida
 system = env.context.get('ath_system')
 ref = env.context.get('ath_run_ref') or ''
 if system not in F or not ref:
-    raise UserError('Parametros de reclamo invalidos')
+    raise UserError('Parametros de reclamo inválidos')
 f = F[system]
 claimed = []
 for r in records:
@@ -333,11 +361,11 @@ for a in records:
     f = F[a.x_system]
     cur = line[f]
     if cur not in ALLOWED[a.x_result]:
-        raise UserError('Transicion no permitida (%s): %s -> %s' % (a.x_system, cur, a.x_result))
+        raise UserError('Transición no permitida (%s): %s -> %s' % (a.x_system, cur, a.x_result))
     if a.x_result == 'aceptado' and a.x_channel in ('portal_manual', 'archivo_sire') and not a.x_evidence:
         raise UserError('Para marcar aceptado adjunte la evidencia de la consulta oficial.')
     if a.x_system == 'tra' and a.x_result == 'aceptado' and line.x_is_main and not a.x_external_id and a.x_channel in ('api_tra', 'simulador'):
-        raise UserError('Falta el identificador devuelto por TRA para el huesped principal.')
+        raise UserError('Falta el identificador devuelto por TRA para el huésped principal.')
     vals = {f: TARGET[a.x_result], 'x_last_error': a.x_error_code or False}
     if a.x_system == 'tra' and a.x_external_id and line.x_is_main:
         vals['x_tra_external_id'] = a.x_external_id
@@ -345,15 +373,15 @@ for a in records:
 
 const PY_SIRE_EXPORT = String.raw`lines = records
 if not lines:
-    raise UserError('Seleccione huespedes.')
+    raise UserError('Seleccione huéspedes.')
 est = lines.mapped('x_establishment_id')
 if len(est) != 1:
-    raise UserError('Seleccione huespedes de un solo establecimiento.')
+    raise UserError('Seleccione huéspedes de un solo establecimiento.')
 if not (est.x_sire_export_enabled and est.x_sire_codes_verified):
-    raise UserError('Exportador SIRE deshabilitado: faltan los codigos oficiales del paquete de guia del portal SIRE. Use la Hoja guiada SIRE.')
+    raise UserError('Exportador SIRE deshabilitado: faltan los códigos oficiales del paquete de guía del portal SIRE. Use la Hoja guíada SIRE.')
 fmt = est.x_sire_date_format
 if not (fmt and est.x_sire_company_code and est.x_sire_city_code and est.x_sire_move_in_code and est.x_sire_move_out_code):
-    raise UserError('Faltan en el establecimiento: codigo de hotel, codigo de ciudad, codigos de movimiento o formato de fecha.')
+    raise UserError('Faltan en el establecimiento: código de hotel, código de ciudad, códigos de movimiento o formato de fecha.')
 tz = timezone('America/Bogota')
 
 def local(dt):
@@ -386,7 +414,7 @@ if errs:
 for r in lines:
     r.write({'x_lock_rev': (r.x_lock_rev or 0) + 1})
     if r[claim[r.id]] != 'pendiente':
-        raise UserError('Otro proceso tomo la linea %s; vuelva a intentarlo.' % r.id)
+        raise UserError('Otro proceso tomó la linea %s; vuelva a intentarlo.' % r.id)
     r.write({claim[r.id]: 'en_envio', 'x_claim_ref': 'archivo-sire'})
 data = ('\r\n'.join(rows) + '\r\n').encode(est.x_sire_encoding or 'utf-8', 'replace')
 att = env['ir.attachment'].create({'name': 'SIRE_%s_%s.txt' % (est.x_code, datetime.datetime.now().strftime('%Y%m%d_%H%M%S')), 'datas': b64encode(data), 'res_model': 'x_establishment', 'res_id': est.id, 'mimetype': 'text/plain'})
@@ -398,21 +426,21 @@ n = 0
 for r in records:
     for system, f in (('sire_entrada', 'x_sire_in_state'), ('sire_salida', 'x_sire_out_state')):
         if r[f] in ('pendiente', 'en_envio'):
-            env['x_report_attempt'].create({'x_name': 'Carga en portal SIRE', 'x_guest_line_id': r.id, 'x_system': system, 'x_channel': 'archivo_sire' if r[f] == 'en_envio' else 'portal_manual', 'x_result': 'enviado', 'x_actor': 'Recepcion (usuario compartido)'})
+            env['x_report_attempt'].create({'x_name': 'Carga en portal SIRE', 'x_guest_line_id': r.id, 'x_system': system, 'x_channel': 'archivo_sire' if r[f] == 'en_envio' else 'portal_manual', 'x_result': 'enviado', 'x_actor': 'Recepción (usuario compartido)'})
             n += 1
             break
 if not n:
-    raise UserError('Ningun huesped de la seleccion tiene SIRE pendiente.')`;
+    raise UserError('Ningún huésped de la seleccion tiene SIRE pendiente.')`;
 
 export const SERVER_ACTIONS = [
   { xmlid: 'sa_invite', name: '[SIRE/TRA] Generar enlace de registro', model: 'sale.order', bind: true, code: PY_INVITE },
   { xmlid: 'sa_revoke', name: '[SIRE/TRA] Revocar enlace', model: 'survey.user_input', bind: true, code: PY_REVOKE },
   { xmlid: 'sa_map', name: '[SIRE/TRA] Procesar formulario recibido', model: 'survey.user_input', code: PY_MAP },
   { xmlid: 'sa_validate', name: '[SIRE/TRA] Validar datos', model: 'x_guests_line', bind: true, code: PY_VALIDATE },
-  { xmlid: 'sa_reject', name: '[SIRE/TRA] Marcar datos no validos', model: 'x_guests_line', bind: true, code: PY_REJECT },
+  { xmlid: 'sa_reject', name: '[SIRE/TRA] Marcar datos no válidos', model: 'x_guests_line', bind: true, code: PY_REJECT },
   { xmlid: 'sa_arrive', name: '[SIRE/TRA] Registrar llegada real', model: 'x_guests_line', bind: true, code: PY_ARRIVE },
   { xmlid: 'sa_depart', name: '[SIRE/TRA] Registrar salida real', model: 'x_guests_line', bind: true, code: PY_DEPART },
-  { xmlid: 'sa_claim', name: '[SIRE/TRA] Reclamar obligacion (emisor)', model: 'x_guests_line', code: PY_CLAIM },
+  { xmlid: 'sa_claim', name: '[SIRE/TRA] Reclamar obligación (emisor)', model: 'x_guests_line', code: PY_CLAIM },
   { xmlid: 'sa_apply_attempt', name: '[SIRE/TRA] Aplicar intento', model: 'x_report_attempt', code: PY_APPLY_ATTEMPT },
   { xmlid: 'sa_sire_export', name: '[SIRE/TRA] Generar archivo SIRE', model: 'x_guests_line', bind: true, code: PY_SIRE_EXPORT },
   { xmlid: 'sa_sire_mark', name: '[SIRE/TRA] Marcar cargado en portal SIRE', model: 'x_guests_line', bind: true, code: PY_SIRE_MARK },
@@ -425,40 +453,40 @@ export const AUTOMATIONS = [
 
 // ---------------------------------------------------------------- encuesta (captura unica, por invitacion)
 export const MAX_COMPANIONS = 21; // grupo de hasta 22 personas
-const DOC_CHOICES = ['Cedula de ciudadania (Colombia)', 'Tarjeta de identidad (Colombia)', 'Registro civil (Colombia)', 'Cedula de extranjeria (Colombia)', 'Pasaporte', 'PEP', 'PPT'];
+const DOC_CHOICES = ['Cédula de ciudadanía (Colombia)', 'Tarjeta de identidad (Colombia)', 'Registro civil (Colombia)', 'Cédula de extranjería (Colombia)', 'Pasaporte', 'PEP', 'PPT'];
 // Lista PROPIA de captura; su equivalencia con el catalogo TRA esta pendiente (el emisor no envia sin catalogo verificado).
-const REASONS = ['Vacaciones, recreacion u ocio', 'Visita a familiares o amigos', 'Negocios o motivos profesionales', 'Salud', 'Educacion', 'Religion', 'Otro'];
+const REASONS = ['Vacaciones, recreación u ocio', 'Visita a familiares o amigos', 'Negocios o motivos profesionales', 'Salud', 'Educación', 'Religión', 'Otro'];
 
 function guestQuestions(prefix, label, trigger) {
   const t = trigger ? { triggerKey: 'p_companions', triggerMin: trigger } : {};
   return [
     { key: `${prefix}doc_type`, title: `${label}: tipo de documento`, type: 'simple_choice', mandatory: true, answers: DOC_CHOICES, ...t },
-    { key: `${prefix}doc_num`, title: `${label}: numero de documento (sin puntos ni espacios)`, type: 'char_box', mandatory: true, ...t },
+    { key: `${prefix}doc_num`, title: `${label}: número de documento (sin puntos ni espacios)`, type: 'char_box', mandatory: true, ...t },
     { key: `${prefix}given`, title: `${label}: nombres`, type: 'char_box', mandatory: true, ...t },
     { key: `${prefix}surname1`, title: `${label}: primer apellido`, type: 'char_box', mandatory: true, ...t },
     { key: `${prefix}surname2`, title: `${label}: segundo apellido (si tiene)`, type: 'char_box', mandatory: false, ...t },
-    { key: `${prefix}nationality`, title: `${label}: pais de nacionalidad`, type: 'char_box', mandatory: true, ...t },
+    { key: `${prefix}nationality`, title: `${label}: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)`, type: 'char_box', mandatory: true, ...t },
     { key: `${prefix}birth`, title: `${label}: fecha de nacimiento`, type: 'date', mandatory: true, ...t },
   ];
 }
 
 export function surveyQuestions() {
-  const q = [{ key: 'pg_main', title: 'Huesped principal', page: true }];
-  q.push(...guestQuestions('p_', 'Huesped principal'));
+  const q = [{ key: 'pg_main', title: 'Huésped principal', page: true }];
+  q.push(...guestQuestions('p_', 'Huésped principal'));
   q.push(
     { key: 'p_res_city', title: 'Ciudad de residencia', type: 'char_box', mandatory: true },
-    { key: 'p_res_country', title: 'Pais de residencia', type: 'char_box', mandatory: true },
-    { key: 'p_origin_city', title: 'Ciudad de procedencia (ultima ciudad antes de llegar)', type: 'char_box', mandatory: true },
-    { key: 'p_origin_country', title: 'Pais de procedencia', type: 'char_box', mandatory: true },
-    { key: 'p_dest', title: 'Proximo destino (ciudad)', type: 'char_box', mandatory: false },
-    { key: 'p_dest_country', title: 'Pais del proximo destino', type: 'char_box', mandatory: true },
+    { key: 'p_res_country', title: 'País de residencia (nombre o código: CO, US...)', type: 'char_box', mandatory: true },
+    { key: 'p_origin_city', title: 'Ciudad de procedencia (última ciudad antes de llegar)', type: 'char_box', mandatory: true },
+    { key: 'p_origin_country', title: 'País de procedencia', type: 'char_box', mandatory: true },
+    { key: 'p_dest', title: 'Próximo destino (ciudad)', type: 'char_box', mandatory: false },
+    { key: 'p_dest_country', title: 'País del proximo destino', type: 'char_box', mandatory: true },
     { key: 'p_reason', title: 'Motivo principal del viaje', type: 'simple_choice', mandatory: true, answers: REASONS },
-    { key: 'p_companions', title: 'Numero de acompanantes', type: 'simple_choice', mandatory: true, answers: Array.from({ length: MAX_COMPANIONS + 1 }, (_, i) => String(i)) },
-    { key: 'p_consent', title: 'Autorizo el tratamiento de mis datos y los de mis acompanantes para el registro obligatorio de huespedes (Migracion Colombia y Tarjeta de Registro de Alojamiento del MinCIT).', type: 'simple_choice', mandatory: true, answers: ['Si, autorizo'] },
+    { key: 'p_companions', title: 'Número de acompañantes', type: 'simple_choice', mandatory: true, answers: Array.from({ length: MAX_COMPANIONS + 1 }, (_, i) => String(i)) },
+    { key: 'p_consent', title: 'Autorizo el tratamiento de mis datos y los de mis acompañantes para el registro obligatorio de huéspedes (Migración Colombia y Tarjeta de Registro de Alojamiento del MinCIT).', type: 'simple_choice', mandatory: true, answers: ['Sí, autorizo'] },
   );
   for (let k = 1; k <= MAX_COMPANIONS; k += 1) {
-    q.push({ key: `pg_c${k}`, title: `Acompanante ${k}`, page: true });
-    q.push(...guestQuestions(`c${k}_`, `Acompanante ${k}`, k));
+    q.push({ key: `pg_c${k}`, title: `Acompañante ${k}`, page: true });
+    q.push(...guestQuestions(`c${k}_`, `Acompañante ${k}`, k));
   }
   return q;
 }
@@ -466,7 +494,7 @@ export function surveyQuestions() {
 export const SURVEY = {
   xmlid: 'survey_registro',
   vals: {
-    title: 'Registro de huespedes - Atheron',
+    title: 'Registro de huéspedes - Atheron',
     access_mode: 'token',
     questions_layout: 'page_per_section',
     questions_selection: 'all',
@@ -475,8 +503,8 @@ export const SURVEY = {
     attempts_limit: 1,
     certification: false,
     scoring_type: 'no_scoring',
-    description: '<p>Registro obligatorio de huespedes. El huesped principal registra sus datos y los de sus acompanantes. Los datos se usan solo para los reportes legales (Migracion Colombia para extranjeros y Tarjeta de Registro de Alojamiento del MinCIT).</p>',
-    description_done: '<p>Gracias. Recepcion revisara los datos a su llegada.</p>',
+    description: '<p>Registro obligatorio de huéspedes. El huésped principal registra sus datos y los de sus acompañantes. Los datos se usan solo para los reportes legales (Migración Colombia para extranjeros y Tarjeta de Registro de Alojamiento del MinCIT).</p>',
+    description_done: '<p>Gracias. Recepción revisará los datos a su llegada.</p>',
   },
 };
 
@@ -485,7 +513,7 @@ const R = (x) => `{{ref:${x}}}`;
 const LOCKED = "readonly=\"x_data_state == 'validado'\"";
 
 export const VIEWS = [
-  { xmlid: 'view_guest_form', name: 'ath.sire.tra.guest.form', model: 'x_guests_line', type: 'form', priority: 90, arch: `<form string="Huesped SIRE/TRA">
+  { xmlid: 'view_guest_form', name: 'ath.sire.tra.guest.form', model: 'x_guests_line', type: 'form', priority: 90, arch: `<form string="Huésped SIRE/TRA">
 <header>
 <button name="${R('sa_validate')}" type="action" string="Validar datos" class="btn-primary" invisible="x_data_state not in ('recibido', 'rechazado', 'borrador', False)"/>
 <button name="${R('sa_reject')}" type="action" string="Marcar no valido" invisible="x_data_state != 'recibido'"/>
@@ -496,7 +524,7 @@ export const VIEWS = [
 </header>
 <sheet>
 <group>
-<group string="Identificacion">
+<group string="Identificación">
 <field name="x_sale_order_id" readonly="1"/>
 <field name="x_is_main" ${LOCKED}/>
 <field name="x_doc_type_id" options="{'no_create': True}" ${LOCKED}/>
@@ -508,7 +536,7 @@ export const VIEWS = [
 <field name="x_birth_date" ${LOCKED}/>
 <field name="x_is_foreign"/>
 </group>
-<group string="Viaje y habitacion">
+<group string="Viaje y habitación">
 <field name="x_room_resource_id" options="{'no_create': True}" ${LOCKED}/>
 <field name="x_establishment_id" readonly="1"/>
 <field name="x_residence_city_id" options="{'no_create': True}"/>
@@ -538,7 +566,7 @@ export const VIEWS = [
 <field name="x_attempt_ids" readonly="1"><list><field name="create_date"/><field name="x_system"/><field name="x_channel"/><field name="x_result"/><field name="x_external_id"/><field name="x_error_code"/><field name="x_evidence_name"/></list></field>
 </sheet>
 </form>` },
-  { xmlid: 'view_guest_list', name: 'ath.sire.tra.guest.list', model: 'x_guests_line', type: 'list', priority: 90, arch: `<list string="Huespedes SIRE/TRA" create="0" decoration-danger="x_tra_state in ('incierto', 'rechazado') or x_sire_in_state in ('incierto', 'rechazado') or x_sire_out_state in ('incierto', 'rechazado')" decoration-muted="x_data_state == 'rechazado'">
+  { xmlid: 'view_guest_list', name: 'ath.sire.tra.guest.list', model: 'x_guests_line', type: 'list', priority: 90, arch: `<list string="Huéspedes SIRE/TRA" create="0" decoration-danger="x_tra_state in ('incierto', 'rechazado') or x_sire_in_state in ('incierto', 'rechazado') or x_sire_out_state in ('incierto', 'rechazado')" decoration-muted="x_data_state == 'rechazado'">
 <field name="x_sale_order_id"/><field name="x_is_main"/><field name="x_given_names"/><field name="x_surname_1"/><field name="x_doc_type_id"/><field name="x_identity_number"/><field name="x_nationality"/><field name="x_room_resource_id"/><field name="x_data_state"/><field name="x_arrived_at"/><field name="x_departed_at"/><field name="x_sire_in_state"/><field name="x_sire_out_state"/><field name="x_tra_state"/><field name="x_last_error" optional="hide"/>
 </list>` },
   { xmlid: 'view_guest_search', name: 'ath.sire.tra.guest.search', model: 'x_guests_line', type: 'search', priority: 90, arch: `<search>
@@ -553,11 +581,11 @@ export const VIEWS = [
 <filter name="f_alerta" string="Incierto o rechazado" domain="['|', '|', ('x_sire_in_state', 'in', ('incierto', 'rechazado')), ('x_sire_out_state', 'in', ('incierto', 'rechazado')), ('x_tra_state', 'in', ('incierto', 'rechazado'))]"/>
 <group><filter name="g_order" string="Reserva" context="{'group_by': 'x_sale_order_id'}"/></group>
 </search>` },
-  { xmlid: 'view_sire_sheet', name: 'ath.sire.tra.sire.sheet', model: 'x_guests_line', type: 'list', priority: 91, arch: `<list string="Hoja guiada SIRE (orden del formulario del portal)" create="0">
+  { xmlid: 'view_sire_sheet', name: 'ath.sire.tra.sire.sheet', model: 'x_guests_line', type: 'list', priority: 91, arch: `<list string="Hoja guíada SIRE (orden del formulario del portal)" create="0">
 <field name="x_sire_in_state" string="Entrada"/><field name="x_arrived_at" string="Fecha entrada"/><field name="x_sire_out_state" string="Salida"/><field name="x_departed_at" string="Fecha salida"/>
-<field name="x_doc_type_id"/><field name="x_identity_number"/><field name="x_birth_date"/><field name="x_surname_1"/><field name="x_surname_2"/><field name="x_given_names"/><field name="x_nationality"/><field name="x_origin_country_id" string="Pais de procedencia"/><field name="x_destination_country_id" string="Pais proximo destino"/>
+<field name="x_doc_type_id"/><field name="x_identity_number"/><field name="x_birth_date"/><field name="x_surname_1"/><field name="x_surname_2"/><field name="x_given_names"/><field name="x_nationality"/><field name="x_origin_country_id" string="País de procedencia"/><field name="x_destination_country_id" string="País proximo destino"/>
 </list>` },
-  { xmlid: 'view_tra_sheet', name: 'ath.sire.tra.tra.sheet', model: 'x_guests_line', type: 'list', priority: 92, arch: `<list string="Hoja guiada TRA" create="0">
+  { xmlid: 'view_tra_sheet', name: 'ath.sire.tra.tra.sheet', model: 'x_guests_line', type: 'list', priority: 92, arch: `<list string="Hoja guíada TRA" create="0">
 <field name="x_sale_order_id"/><field name="x_is_main"/><field name="x_doc_type_id"/><field name="x_identity_number"/><field name="x_given_names"/><field name="x_surname_1"/><field name="x_surname_2"/><field name="x_residence_city_id"/><field name="x_residence_text"/><field name="x_origin_city_id"/><field name="x_origin_text"/><field name="x_tra_room"/><field name="x_travel_reason"/><field name="x_order_checkin"/><field name="x_order_checkout"/><field name="x_tra_state"/><field name="x_tra_external_id"/>
 </list>` },
   { xmlid: 'view_attempt_form', name: 'ath.sire.tra.attempt.form', model: 'x_report_attempt', type: 'form', priority: 90, arch: `<form string="Resultado de reporte" edit="0">
@@ -573,7 +601,7 @@ export const VIEWS = [
   { xmlid: 'view_attempt_list', name: 'ath.sire.tra.attempt.list', model: 'x_report_attempt', type: 'list', priority: 90, arch: `<list string="Intentos y evidencia" create="0"><field name="create_date"/><field name="x_sale_order_id"/><field name="x_guest_line_id"/><field name="x_system"/><field name="x_channel"/><field name="x_result"/><field name="x_external_id"/><field name="x_http_status"/><field name="x_error_code"/><field name="x_run_ref"/><field name="x_actor"/><field name="x_evidence_name"/></list>` },
   { xmlid: 'view_est_form', name: 'ath.sire.tra.establishment.form', model: 'x_establishment', type: 'form', priority: 90, arch: `<form string="Establecimiento">
 <sheet><group>
-<group string="Identificacion"><field name="x_name"/><field name="x_code"/><field name="x_active"/><field name="x_address_partner_id"/><field name="x_analytic_account_id"/></group>
+<group string="Identificación"><field name="x_name"/><field name="x_code"/><field name="x_active"/><field name="x_address_partner_id"/><field name="x_analytic_account_id"/></group>
 <group string="RNT y operador"><field name="x_rnt_number"/><field name="x_rnt_holder_id"/><field name="x_rnt_expiry"/><field name="x_operator_company_id"/></group>
 <group string="SIRE"><field name="x_sire_reporter_id"/><field name="x_sire_company_code"/><field name="x_sire_city_code"/><field name="x_sire_move_in_code"/><field name="x_sire_move_out_code"/><field name="x_sire_date_format"/><field name="x_sire_encoding"/><field name="x_sire_codes_verified"/><field name="x_sire_export_enabled"/></group>
 <group string="TRA"><field name="x_tra_mode"/><field name="x_tra_accommodation_type"/><field name="x_tra_cost_basis"/><field name="x_tra_config_verified"/></group>
@@ -583,15 +611,15 @@ export const VIEWS = [
   { xmlid: 'view_invite_list', name: 'ath.sire.tra.invite.list', model: 'survey.user_input', type: 'list', priority: 90, arch: '<list string="Enlaces de registro" create="0"><field name="create_date"/><field name="x_sale_order_id"/><field name="x_ath_state"/><field name="deadline"/><field name="x_ath_url" widget="CopyClipboardChar"/><field name="x_ath_error" optional="show"/></list>' },
   { xmlid: 'view_invite_form', name: 'ath.sire.tra.invite.form', model: 'survey.user_input', type: 'form', priority: 90, arch: `<form string="Enlace de registro" create="0" edit="0">
 <header><button name="${R('sa_revoke')}" type="action" string="Revocar enlace" invisible="x_ath_state != 'invitado'"/></header>
-<sheet><group><field name="x_sale_order_id"/><field name="x_ath_state"/><field name="deadline"/><field name="x_ath_url" widget="CopyClipboardChar"/><field name="x_ath_processed_at"/><field name="x_ath_error"/></group></sheet>
+<sheet><group><field name="x_sale_order_id"/><field name="x_ath_state"/><field name="deadline"/><field name="x_ath_url" widget="CopyClipboardChar"/><field name="x_ath_processed_at"/><field name="x_ath_error"/><field name="x_ath_form_version"/><field name="x_ath_submitted_at"/><field name="x_ath_snapshot" groups="base.group_system"/></group></sheet>
 </form>` },
 ];
 
 const W = (model, name, views, extra = {}) => ({ model, name, views, ...extra });
 export const WINDOW_ACTIONS = [
-  { xmlid: 'act_guests', ...W('x_guests_line', 'Huespedes', ['view_guest_list', 'view_guest_form'], { search: 'view_guest_search', domain: "[('x_data_state', '!=', False)]" }) },
-  { xmlid: 'act_sire_sheet', ...W('x_guests_line', 'Hoja guiada SIRE', ['view_sire_sheet', 'view_guest_form'], { search: 'view_guest_search', domain: "[('x_is_foreign', '=', True), '|', ('x_sire_in_state', 'in', ('pendiente', 'en_envio', 'enviado', 'incierto')), ('x_sire_out_state', 'in', ('pendiente', 'en_envio', 'enviado', 'incierto'))]" }) },
-  { xmlid: 'act_tra_sheet', ...W('x_guests_line', 'Hoja guiada TRA', ['view_tra_sheet', 'view_guest_form'], { search: 'view_guest_search', domain: "[('x_tra_state', 'in', ('pendiente', 'en_envio', 'enviado', 'incierto', 'rechazado'))]" }) },
+  { xmlid: 'act_guests', ...W('x_guests_line', 'Huéspedes', ['view_guest_list', 'view_guest_form'], { search: 'view_guest_search', domain: "[('x_data_state', '!=', False)]" }) },
+  { xmlid: 'act_sire_sheet', ...W('x_guests_line', 'Hoja guíada SIRE', ['view_sire_sheet', 'view_guest_form'], { search: 'view_guest_search', domain: "[('x_is_foreign', '=', True), '|', ('x_sire_in_state', 'in', ('pendiente', 'en_envio', 'enviado', 'incierto')), ('x_sire_out_state', 'in', ('pendiente', 'en_envio', 'enviado', 'incierto'))]" }) },
+  { xmlid: 'act_tra_sheet', ...W('x_guests_line', 'Hoja guíada TRA', ['view_tra_sheet', 'view_guest_form'], { search: 'view_guest_search', domain: "[('x_tra_state', 'in', ('pendiente', 'en_envio', 'enviado', 'incierto', 'rechazado'))]" }) },
   { xmlid: 'act_attempts', ...W('x_report_attempt', 'Intentos y evidencia', ['view_attempt_list', 'view_attempt_form']) },
   { xmlid: 'act_attempt_new', ...W('x_report_attempt', 'Registrar resultado de reporte', ['view_attempt_form'], { target: 'new', view_mode: 'form' }) },
   { xmlid: 'act_invites', ...W('survey.user_input', 'Enlaces de registro', ['view_invite_list', 'view_invite_form'], { domain: "[('x_sale_order_id', '!=', False)]" }) },
@@ -603,14 +631,14 @@ export const MENUS = [
   { xmlid: 'menu_root', name: 'Registro SIRE/TRA', sequence: 95 },
   { xmlid: 'menu_orders', name: 'Reservas', parent: 'menu_root', action: 'act_orders', sequence: 1 },
   { xmlid: 'menu_invites', name: 'Enlaces de registro', parent: 'menu_root', action: 'act_invites', sequence: 2 },
-  { xmlid: 'menu_guests', name: 'Huespedes', parent: 'menu_root', action: 'act_guests', sequence: 3 },
-  { xmlid: 'menu_sire', name: 'Hoja guiada SIRE', parent: 'menu_root', action: 'act_sire_sheet', sequence: 4 },
-  { xmlid: 'menu_tra', name: 'Hoja guiada TRA', parent: 'menu_root', action: 'act_tra_sheet', sequence: 5 },
+  { xmlid: 'menu_guests', name: 'Huéspedes', parent: 'menu_root', action: 'act_guests', sequence: 3 },
+  { xmlid: 'menu_sire', name: 'Hoja guíada SIRE', parent: 'menu_root', action: 'act_sire_sheet', sequence: 4 },
+  { xmlid: 'menu_tra', name: 'Hoja guíada TRA', parent: 'menu_root', action: 'act_tra_sheet', sequence: 5 },
   { xmlid: 'menu_attempts', name: 'Intentos y evidencia', parent: 'menu_root', action: 'act_attempts', sequence: 6 },
   { xmlid: 'menu_est', name: 'Establecimientos', parent: 'menu_root', action: 'act_establishments', sequence: 7 },
 ];
 
-/** Modelos tecnicos que el aplicador puede tocar. Nada de datos de negocio. */
+/** Modelos técnicos que el aplicador puede tocar. Nada de datos de negocio. */
 export const WRITABLE_MODELS = Object.freeze(['ir.model', 'ir.model.fields', 'ir.model.access', 'ir.model.data', 'ir.actions.server', 'base.automation', 'ir.ui.view', 'ir.actions.act_window', 'ir.actions.act_window.view', 'ir.ui.menu', 'survey.survey', 'survey.question']);
 /** Modelos existentes de los que depende (deben existir antes). */
 export const REQUIRED_MODELS = Object.freeze(['sale.order', 'resource.resource', 'x_guests_line', 'survey.survey', 'survey.question', 'survey.user_input', 'l10n_latam.identification.type', 'res.country', 'res.city', 'res.partner', 'res.company', 'account.analytic.account', 'ir.attachment']);

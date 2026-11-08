@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { ApplyError, applyManifest, checkIsolation, fieldCompatibility, rollbackManifest } from '../src/sire-tra/applier.mjs';
+import { ApplyError, applyManifest, checkIsolation, disableManifest, fieldCompatibility, rollbackManifest, verifyDeployment } from '../src/sire-tra/applier.mjs';
 import { AUTOMATIONS, FIELDS, MAX_COMPANIONS, MODELS, NS, REQUIRED_MODELS, SERVER_ACTIONS, surveyQuestions } from '../src/sire-tra/manifest.mjs';
 
 /** Odoo en memoria: dominios con '=', '!=', 'in', '=like' (suficiente para el aplicador). */
@@ -17,7 +17,7 @@ function fakeOdoo({ extraModels = [], existingFields = [], failOnCreate = null, 
   const match = (r, [f, op, v]) => {
     const x = r[f];
     if (op === '=') return x === v || (v === false && (x === undefined || x === false || x === null));
-    if (op === '!=') return x !== v;
+    if (op === '!=') return v === false ? x !== undefined && x !== false && x !== null : x !== v;
     if (op === 'in') return v.includes(x);
     if (op === '=like') return typeof x === 'string' && new RegExp(`^${v.replace(/%/g, '.*')}$`).test(x);
     throw new Error(`op ${op}`);
@@ -26,7 +26,7 @@ function fakeOdoo({ extraModels = [], existingFields = [], failOnCreate = null, 
   return {
     t, writes,
     async searchRead(model, domain, fields) { return table(model).filter((r) => domain.every((leaf) => match(r, leaf))).map((r) => ({ ...r })); },
-    async count(model) { return isolation[model] ?? 0; },
+    async count(model, domain = []) { return model in isolation ? isolation[model] : table(model).filter((r) => domain.every((leaf) => match(r, leaf))).length; },
     async create(model, vals) {
       creates += 1;
       if (failOnCreate && creates === failOnCreate) throw new Error('caida simulada');
@@ -165,3 +165,48 @@ test('todo el Python del manifiesto compila (sintaxis), si hay python3', (t) => 
 });
 
 test('ApplyError lleva solo codigos', () => { const e = new ApplyError('X', 'y'); assert.equal(e.code, 'X'); });
+
+test('reversion dura: con datos se detiene sin respaldo y exporta antes de borrar', async () => {
+  const o = fakeOdoo();
+  await applyManifest(o, { apply: true });
+  o.t.set('x_guests_line', [{ id: 1, x_identity_number: '1', x_data_state: 'validado' }]);
+  o.t.set('x_report_attempt', [{ id: 2 }]);
+  await assert.rejects(rollbackManifest(o, { apply: true }), (e) => e.code === 'ROLLBACK_DATA_PRESENT');
+  assert.ok(ours(o).length > 0, 'nada borrado sin respaldo');
+  const order = [];
+  const out = await rollbackManifest(o, { apply: true, preserve: async (p) => { order.push(['preserve', p.length]); }, log: (e) => order.push([e.event]) });
+  assert.equal(order[0][0], 'preserve');
+  assert.ok(out.dataPresent.some((p) => p.model === 'x_report_attempt'));
+});
+
+test('reversion suave: solo apaga automatizaciones, menus y enlaces de acciones propias', async () => {
+  const o = fakeOdoo();
+  await applyManifest(o, { apply: true });
+  const before = o.writes.length;
+  await disableManifest(o, { apply: true });
+  const w = o.writes.slice(before);
+  assert.deepEqual(w.map(([op, m]) => `${op}:${m}`).sort(), ['write:base.automation', 'write:ir.actions.server', 'write:ir.ui.menu']);
+  assert.ok(o.t.get('base.automation').every((a) => a.active === false));
+});
+
+test('respuestas de preguntas propias se sincronizan (tildes) sin crear ni borrar', async () => {
+  const o = fakeOdoo();
+  await applyManifest(o, { apply: true });
+  const qid = ours(o).find((d) => d.name === 'q_p_doc_type').res_id;
+  const ans = o.t.get('survey.question.answer').filter((a) => a.question_id === qid);
+  ans[0].value = 'Cedula de ciudadania (Colombia)';
+  const before = o.t.get('survey.question.answer').length;
+  await applyManifest(o, { apply: true });
+  const q = o.t.get('survey.question').find((r) => r.id === qid);
+  assert.ok(Array.isArray(q.suggested_answer_ids) && q.suggested_answer_ids[0][0] === 1);
+  assert.equal(o.t.get('survey.question.answer').length, before);
+});
+
+test('evidencia restringida a administradores y validacion posterior', async () => {
+  const o = fakeOdoo();
+  await applyManifest(o, { apply: true });
+  const f = o.t.get('ir.model.fields').find((x) => x.name === 'x_ath_snapshot');
+  assert.deepEqual(f.groups, [[6, 0, [2]]]);
+  const v = await verifyDeployment(o);
+  assert.equal(v.checks[0].ok, true);
+});
