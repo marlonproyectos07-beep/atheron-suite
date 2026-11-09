@@ -1,0 +1,30 @@
+name: ATH-MOBILE — consulta API bajo demanda, SOLO LECTURA
+on:
+  push:
+    branches: [ath-mobile-001-readonly]
+    paths:
+      - 'integrations/atheron-mobile-api/requests/consulta.json'
+permissions:
+  contents: read
+concurrency:
+  group: ath-mobile-readonly-live
+  cancel-in-progress: true
+jobs:
+  consulta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      # Mapeo temporal heredado de smoobu-odoo-diagnose.yml.
+      SMOOBU_API_KEY: ${{ secrets.SMOOBU_API_SECRET }}
+      SMOOBU_API_SECRET: ${{ secrets.SMOOBU_API_KEY }}
+      SMOOBU_BASE_URL: ${{ vars.SMOOBU_BASE_URL }}
+      ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+      ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+      ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Consulta de ocupacion y Odoo, sin escrituras
+        run: node integrations/smoobu-odoo-connector/scripts/mobile-availability-live.mjs
