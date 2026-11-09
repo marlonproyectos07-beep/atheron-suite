@@ -4,14 +4,16 @@
 
 ## Que se instala (inventario: `src/sire-tra/manifest.mjs`, todo con xmlid `__ath_sire_tra__.*`)
 - Modelos nuevos: `x_establishment`, `x_report_attempt` (+ 3 permisos).
-- Campos nuevos en modelos existentes: `x_guests_line` (35), `survey.user_input` (6), `resource.resource` (3), `l10n_latam.identification.type` (1), `res.country` (1).
-- 1 encuesta (185 preguntas/secciones), 11 acciones de servidor (7 en el menu *Accion*), 2 automatizaciones, 11 vistas propias (prioridad 90; no reemplazan vistas existentes), 8 acciones de ventana, 8 menus.
+- Campos nuevos en modelos existentes: `x_guests_line` (38), `survey.user_input` (9), `resource.resource` (3), `l10n_latam.identification.type` (1), `res.country` (1); en `x_report_attempt`, 16.
+- 1 encuesta (185 preguntas/secciones), 11 acciones de servidor (7 en el menu *Accion*), 2 automatizaciones, 11 vistas propias (prioridad 90; no reemplazan vistas existentes), 9 acciones de ventana, 9 menus.
 - **No toca**: vistas, automatizaciones ni acciones existentes; limpieza (17/18); Booking Engine; conector Smoobu; sale.order (solo lee).
 
 ## Efectos conocidos al desplegar
 - Crear automatizaciones hace que Odoo recalcule el cron 48 (en produccion ya esta activo: sin cambio).
 - Escribir `x_establishment_id` en recursos dispara la automatizacion 26 (marca disponibilidad para recalcular; interno).
 - Las 7 acciones enlazadas aparecen en el menu *Accion* de reservas, huespedes y enlaces.
+
+- `x_date_gap` es un campo calculado y almacenado en `x_guests_line`: Odoo lo recalcula al cambiar el check-out de la reserva, el estado TRA o la salida real. Solo lee `sale.order`; no escribe en reservas, no llama a TRA y no cambia estados. Las lineas aceptadas antes del despliegue no tienen fechas guardadas y no generan alerta.
 
 ## Pasos (cuando se apruebe)
 1. Punto de restauracion: confirmar respaldo diario de Odoo y `git tag` del commit desplegado.
@@ -33,6 +35,7 @@
 - [ ] Token TRA vigente cargado como secreto `TRA_TOKEN` (sin renovar a ciegas: comprobar que no invalida otra integracion).
 - [ ] Conectividad GitHub Actions -> pms.mincit.gov.co.
 - [ ] `tra-catalog.json` con `"verified": true` y `x_tra_config_verified` en el establecimiento.
-- [ ] Primer envio TRA real de una estancia y confirmacion en *Consulta de huespedes*.
+- [ ] Primer envio TRA real de una estancia y confirmacion en *Consulta de huespedes* (la consulta no muestra codigo, estado ni constancia: definir con MinCIT como se confirma).
+- [ ] MinCIT confirma como se corrige un cambio de fechas posterior a la aceptacion (prorroga o salida anticipada); hasta entonces la alerta solo avisa.
 - [ ] Recepcion hace el recorrido completo una vez con acompanamiento.
 - [ ] Decision sobre quien esta obligado (RNT a nombre de persona natural; cuenta SIRE de ATHERON SAS).

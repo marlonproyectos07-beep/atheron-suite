@@ -4,15 +4,23 @@ Frente TRA del proyecto ATH-HOTELS-SIRE-TRA-001. Solo lectura de fuentes públic
 
 ## 1. Consulta de huéspedes del portal PMS (RNT 235267)
 
-| Punto | Estado |
+**Actualizado el 2026-11-08 (noche, hora de Bogotá), solo lectura, sin datos personales en este informe.** La pestaña compartida ya tenía la sesión abierta (no se pidió ni se tocó contraseña, reCAPTCHA ni token; no hubo avisos de certificado).
+
+| Punto | Observado |
 |---|---|
-| Portal | `https://pms.mincit.gov.co/login/` ("CONSULTA PMS"). Formulario: RNT, contraseña y reCAPTCHA. Enlace "Solicitar contraseña" (`/solicitud`): no se tocó. |
-| Sesión | **BLOQUEADO.** La pestaña compartida mostraba el formulario de ingreso, sin sesión abierta. Se pidió a Marlon que ingresara (requiere contraseña y reCAPTCHA, que Claude no diligencia). No se ingresó durante esta tarea. |
-| Qué confirma la aceptación | **Pendiente de ver en el portal.** Lo único documentado oficialmente es la respuesta de la API: `POST /one/` devuelve `{"code": N}` y ese `code` se usa como `padre` de los acompañantes en `POST /two/`; el `code` de `/two/` es "solo informativo" según el manual. No se pudo comprobar si la consulta muestra ese `code`, un estado o un comprobante descargable. |
+| Ruta exacta | `https://pms.mincit.gov.co/home/` → botón **Mis Huéspedes** → `https://pms.mincit.gov.co/blo` (título "MIS HUESPEDES", botón *Volver*, etiqueta "-Huésped Principal"). En `/home/` hay además *Generar token* (`/token`): no se abrió. |
+| Filtros | Dos fechas, **INICIO** y **FIN**, y el botón **Generar reporte**: formulario `GET` hacia `/export/` con `inicio`, `fin` y un token CSRF. |
+| Columnas de la tabla | DOCUMENTO, NOMBRES, APELLIDOS, CHECK_IN, CHECK_OUT, PAGO TOTAL, ACOMPAÑANTES. Cero filas hasta generar el reporte. |
+| Lo que **no** aparece | Código devuelto por la API, estado de aceptación, constancia descargable u origen del registro (API, formulario o carga manual). No hay columnas ni filtros para eso. |
+| No ejecutado | *Generar reporte*: la ruta `/export/` sugiere una exportación, y descargar un archivo con huéspedes reales exige autorización expresa y trae datos personales. Por eso no se vio ninguna fila. |
 
-Cómo lo trata hoy el sistema (sin cambios): un intento es `aceptado` solo con HTTP 2xx y `code` entero. El `code` del principal queda en `x_tra_external_id` de la línea y en `x_external_id` del intento; el de cada acompañante, en su intento. 2xx sin `code` = `incierto` (no se reenvía a ciegas). Mientras no se vea la consulta, "aceptado" significa "la API respondió con código", no "el MinCIT lo muestra en su consulta".
+**Lo que el portal muestra** (estructura): la consulta se organiza por huésped principal, con fechas de entrada y salida, valor pagado y cantidad de acompañantes, filtrada por rango de fechas.
+**Lo que permite inferir, sin certeza:** (1) las fechas reportadas son visibles para el MinCIT y para el prestador, así que un cambio posterior de la estancia se vería como una diferencia entre el portal y el sistema propio; (2) los acompañantes aparecen como un conteo, tal vez con detalle; (3) el `code` de la API no se expone en esta pantalla.
+**Lo que no se puede inferir:** si el contenido de las filas coincide con lo enviado por API, si hay constancia al exportar, ni si el portal permite corregir.
 
-Para cerrar este punto, con Marlon dentro del portal: anotar columnas y filtros de la consulta, si aparece el `code` devuelto por la API, si distingue principal y acompañantes, y si ofrece constancia. Sin registrar, editar ni borrar nada.
+Para cerrar el punto falta que Marlon, con el reporte de un rango corto, anote solo los **encabezados y el formato del archivo** (no los datos) y diga si trae código, estado o constancia.
+
+Cómo lo trata hoy el sistema (sin cambios): un intento es `aceptado` solo con HTTP 2xx y `code` entero. El `code` del principal queda en `x_tra_external_id` de la línea y en `x_external_id` del intento; el de cada acompañante, en su intento. 2xx sin `code` = `incierto` (no se reenvía a ciegas). Como la consulta no muestra el `code`, "aceptado" sigue significando "la API respondió con código", no "el MinCIT lo muestra con ese código".
 
 ## 2. Fuentes revisadas
 
@@ -61,13 +69,13 @@ Intentos creados: 1 `error_previo` y 22 `aceptado`, todos con canal `simulador`.
 
 ## 6. Pendiente sin respaldo oficial
 
-1. Qué muestra la consulta de huéspedes y qué constancia ofrece: requiere el ingreso de Marlon.
+1. Constancia y confirmación oficial: la consulta no muestra código, estado ni constancia (sección 1); falta saber si el archivo de *Generar reporte* las trae.
 2. Valores exactos de la API para `tipo_identificacion`, `motivo` y `tipo_acomodacion`, y si los valida.
 3. PEP, PPT y D.N.I: si existen en la API y con qué texto.
 4. T.I como huésped principal.
 5. `costo`: la norma lo pide por unidad ocupada, pero la API manda un solo `costo` por principal. Falta saber si es por reserva o por habitación y si lleva impuestos.
 6. `tipo_acomodacion` para habitaciones de hotel (Atheron no es vivienda turística completa, salvo Casa Completa).
 7. Ciudades: si son texto libre o un catálogo.
-8. Corrección o anulación de un registro enviado.
+8. Corrección o anulación de un registro enviado, incluido un cambio de fechas posterior a la aceptación (prórroga o salida anticipada): vía, costo y plazo.
 
 Las preguntas quedan en `CONSULTA-MINCIT-BORRADOR.md`, sin enviar.

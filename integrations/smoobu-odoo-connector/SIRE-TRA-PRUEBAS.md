@@ -57,6 +57,22 @@ Copia conservada (activada; vence 2026-11-24), aislamiento verificado de nuevo. 
 | Privacidad tras enviar (pagina e impresion, 2 formularios) | sin datos personales |
 | Evidencia conservada | version del formulario y del aviso, fecha de envio y copia de lo recibido con el texto del consentimiento en campo restringido a Administradores; respuestas de la encuesta borradas |
 
+## Tercera ronda (2026-11-08 noche, hora de Bogotá) — discrepancia de fechas tras la aceptacion de TRA
+Rama `feat/ath-sire-tra-inc1-estructura`, commit `5529796`. Copia `atheron1-pruebas-20261108` aislada 8/8 antes y despues (cron 48 reactivado por la escritura de automatizaciones: apagado de nuevo). Codigo ejecutado = commit (paquete de 90 505 bytes, sha256 `20dba1a1…c0351`, igual al construido localmente). Simulador de TRA; ninguna llamada de red.
+Aplicacion en la copia: 7 elementos nuevos (5 campos, 1 accion de ventana, 1 menu), 0 bloqueos; segunda simulacion: 0 creaciones. (Una primera ejecucion cortada por el navegador siguio corriendo y se cruzo con la segunda: choque por clave duplicada, sin registros duplicados; se repitio una sola y termino bien.)
+| Caso (reservas sinteticas "PRUEBA", 301/302/203, 9→12 nov) | Resultado observado en Odoo |
+|---|---|
+| Intento aceptado por simulador | guarda check-in 8 nov y check-out 12 nov tal como se enviaron; la linea copia las fechas; sin alerta |
+| E: estancia sin cambios (solo cambia una nota de la reserva) | **sin alerta** (sin falso positivo) |
+| P: prorroga (check-out de la reserva 12→14 nov) | alerta **Prorroga** en la lista y en la ficha |
+| S: salida anticipada (salida real registrada antes del 12 nov) | alerta **Salida anticipada** |
+| Reemision de las tres con el mismo simulador | 0 envios; llamadas al simulador 3→3 |
+| Evidencia original | intentos y lineas identicos antes y despues (incluida `write_date`); estado TRA sigue `aceptado` |
+| Pantalla | menu "Discrepancia de fechas" lista solo P y S; la ficha muestra el aviso sin indicar como corregir en el portal |
+| Efectos externos | correos en cola 0, WhatsApp 0, SMS 0; crons activos: solo los 2 internos |
+Unitarias: `npm test` 410/410 (9 nuevas, incluido el Python real del manifiesto ejecutado con python3; mutacion deliberada del calculo detectada).
+Limites: la alerta compara solo el check-out (el check-in sale de la llegada real y no cambia); cubre lineas aceptadas despues de este cambio (las anteriores no tienen fechas guardadas); no corrige nada en el portal.
+
 ## Pendiente o limitado
 - Tildes, gramatica y concurrencia de formularios: resueltos en la segunda ronda.
 - El pais sigue siendo texto libre normalizado por catalogo (no hay selector de pais en Encuestas); lo no reconocido o ambiguo queda para Recepcion.
