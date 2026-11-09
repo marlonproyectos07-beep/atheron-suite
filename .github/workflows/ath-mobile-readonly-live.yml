@@ -26,5 +26,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Consulta de ocupacion y Odoo, sin escrituras
-        run: node integrations/smoobu-odoo-connector/scripts/mobile-availability-live.mjs
+      - name: Consulta de ocupacion y tarifas, sin escrituras
+        run: |
+          if grep -q '"VERIFICAR_DISPONIBILIDAD"' integrations/atheron-mobile-api/requests/consulta.json; then
+            node integrations/smoobu-odoo-connector/scripts/mobile-check-rates.mjs
+          else
+            node integrations/smoobu-odoo-connector/scripts/mobile-availability-live.mjs
+          fi
