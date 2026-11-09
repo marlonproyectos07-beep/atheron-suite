@@ -5,13 +5,13 @@
 ## Que trae
 - `src/sire-tra/manifest.mjs`: lo unico que se crea en Odoo (2 modelos, 82 campos, 3 permisos, encuesta de 185 preguntas, 11 acciones, 2 automatizaciones, 11 vistas, 8 acciones de ventana, 8 menus), todo con xmlid `__ath_sire_tra__`.
 - `src/sire-tra/applier.mjs`: aplicador repetible (simula por defecto, compatibilidad real de campos, adopcion tras ejecucion parcial, reversion por xmlid).
-- `src/sire-tra/tra-emitter.mjs` + `tra-http.mjs`: emisor TRA segun manual oficial (Res. 409, 02-02-2023), apagado por puertas; simulador.
+- `src/sire-tra/tra-emitter.mjs` + `tra-http.mjs`: emisor TRA segun manual oficial de la API (Res. 409 de 2022, version 02-02-2023), apagado por puertas; simulador. Catalogo contrastado con fuentes oficiales en `TRA-CATALOGOS-FUENTES.md` (sigue sin verificar).
 - `src/sire-tra/guard.mjs`: produccion bloqueada sin aprobacion escrita; solo copias `atheron1-pruebas-AAAAMMDD`.
 - `.github/workflows/tra-emitter.yml`: manual y apagado (`vars.TRA_EMITTER_ENABLED`).
 - `test/p0.test.mjs`: la politica de escrituras ahora recorre subcarpetas y evalua capacidad real (red + mutacion).
 
 ## Pruebas
-- `npm test`: 396/396.
+- `npm test`: 401/401.
 - Recorrido completo en `atheron1-pruebas-20261108`: ver `SIRE-TRA-PRUEBAS.md`.
 
 ## Riesgos y limites

@@ -60,4 +60,5 @@ Copia conservada (activada; vence 2026-11-24), aislamiento verificado de nuevo. 
 ## Pendiente o limitado
 - Tildes, gramatica y concurrencia de formularios: resueltos en la segunda ronda.
 - El pais sigue siendo texto libre normalizado por catalogo (no hay selector de pais en Encuestas); lo no reconocido o ambiguo queda para Recepcion.
-- Codigos SIRE (paquete de guia) y catalogos TRA: pendientes de fuente oficial; exportador y emisor apagados.
+- Codigos SIRE (paquete de guia): pendientes de fuente oficial; exportador apagado.
+- Catalogos TRA: contrastados con fuentes oficiales el 2026-11-08 (rotulos de documento coinciden; motivos y tipo de acomodacion sin lista oficial). Principal con Registro Civil bloqueado antes de enviar; probado en la copia con simulador. Detalle en `TRA-CATALOGOS-FUENTES.md`. Emisor apagado.

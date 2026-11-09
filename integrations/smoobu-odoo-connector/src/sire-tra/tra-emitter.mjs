@@ -11,6 +11,9 @@ export const TRA_CATALOG_UNVERIFIED = Object.freeze({
   // Valores vistos en el manual oficial (ejemplos "C.C" y "Pasaporte") y en la capacitacion publica del formulario;
   // la lista completa de la API no esta publicada: verificar con MinCIT antes de habilitar.
   docTypes: { national_citizen_id: 'C.C', passport: 'Pasaporte', id_card: 'T.I', foreign_resident_card: 'C.E', civil_registration: 'Registro Civil' },
+  // Manual oficial Grupo 2 (formulario web), 4.1 y 5.1: el huesped principal admite Pasaporte, T.I, C.C y C.E;
+  // "Registro Civil" solo aparece para acompanantes. Un principal con otro tipo no se envia.
+  mainDocTypes: ['national_citizen_id', 'passport', 'id_card', 'foreign_resident_card'],
   reasons: {},
 });
 
@@ -66,7 +69,9 @@ export function buildPayload({ line, main, order, est, catalog, companions, padr
     };
   } else payload = { ...common, padre: Number(padre) };
   const missing = Object.entries(payload).filter(([, v]) => v === '' || (typeof v === 'number' && !Number.isFinite(v))).map(([k]) => k);
-  return { payload, missing };
+  const invalid = [];
+  if (main && payload.tipo_identificacion && Array.isArray(catalog.mainDocTypes) && !catalog.mainDocTypes.includes(line.doc_code)) invalid.push('tipo_identificacion');
+  return { payload, missing, invalid };
 }
 
 export function classify(res) {
@@ -113,9 +118,9 @@ export async function emitStay({ odoo, tra, orderId, est, catalog, mode, runRef,
   const sendOne = async (line, isMain, padre) => {
     const claimed = await odoo.claim([line.id], 'tra', runRef);
     if (!claimed.includes(line.id)) return { lineId: line.id, result: 'no_reclamado' };
-    const { payload, missing } = buildPayload({ line, main: isMain, order, est, catalog, companions: companions.length, padre });
-    if (missing.length) {
-      const cls = { result: 'error_previo', code: `DATOS_INCOMPLETOS:${missing.join(',')}` };
+    const { payload, missing, invalid } = buildPayload({ line, main: isMain, order, est, catalog, companions: companions.length, padre });
+    if (missing.length || invalid.length) {
+      const cls = { result: 'error_previo', code: missing.length ? `DATOS_INCOMPLETOS:${missing.join(',')}` : `DATO_NO_ADMITIDO:${invalid.join(',')}` };
       await record(line, cls, 0);
       return { lineId: line.id, ...cls };
     }

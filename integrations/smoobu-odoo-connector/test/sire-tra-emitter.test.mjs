@@ -17,7 +17,7 @@ function fakeOdoo(lines) {
     lines, attempts,
     async searchRead(model, domain) {
       if (model === 'x_guests_line') return lines.filter((l) => l.x_arrived_at && l.x_data_state === 'validado').map((l) => ({ ...l }));
-      if (model === 'l10n_latam.identification.type') return [{ id: 5, l10n_co_document_code: 'national_citizen_id' }, { id: 2, l10n_co_document_code: 'passport' }, { id: 10, l10n_co_document_code: 'PEP' }];
+      if (model === 'l10n_latam.identification.type') return [{ id: 5, l10n_co_document_code: 'national_citizen_id' }, { id: 2, l10n_co_document_code: 'passport' }, { id: 10, l10n_co_document_code: 'PEP' }, { id: 7, l10n_co_document_code: 'civil_registration' }];
       if (model === 'sale.order') return [{ id: 1, x_checkout: '2026-11-12', amount_total: 450000.4 }];
       throw new Error(model + domain);
     },
@@ -91,6 +91,25 @@ test('datos incompletos o tipo de documento sin equivalente TRA: error previo, s
   assert.match(r.main.code, /tipo_identificacion/);
   assert.equal(sim.calls.length, 0);
   assert.equal(o.lines[0].x_tra_state, 'pendiente');
+});
+
+test('Registro Civil: admitido para acompanante, no para principal (manual oficial Grupo 2, 4.1 y 5.1)', async () => {
+  const cat = { ...CAT, mainDocTypes: TRA_CATALOG_UNVERIFIED.mainDocTypes };
+  const o1 = fakeOdoo([line(1, true, { x_doc_type_id: [7, 'RC'] })]);
+  const s1 = createTraSimulator();
+  const r1 = await run(o1, s1, 'real', EST, cat);
+  assert.equal(r1.main.result, 'error_previo');
+  assert.equal(r1.main.code, 'DATO_NO_ADMITIDO:tipo_identificacion');
+  assert.equal(s1.calls.length, 0);
+  assert.equal(o1.lines[0].x_tra_state, 'pendiente');
+  const o2 = fakeOdoo([line(1, true), line(2, false, { x_doc_type_id: [7, 'RC'] })]);
+  const s2 = createTraSimulator();
+  const r2 = await run(o2, s2, 'real', EST, cat);
+  assert.equal(r2.main.result, 'aceptado');
+  assert.equal(r2.companions[0].result, 'aceptado');
+  const { payload, invalid } = buildPayload({ line: { ...line(2, false), doc_code: 'civil_registration' }, main: false, order: { x_checkout: '2026-11-12' }, est: EST, catalog: cat, padre: 101 });
+  assert.equal(payload.tipo_identificacion, 'Registro Civil');
+  assert.deepEqual(invalid, []);
 });
 
 test('concurrencia: dos emisores a la vez envian el principal una sola vez', async () => {
