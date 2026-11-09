@@ -31,3 +31,20 @@ Además, desde `../smoobu-odoo-connector`: `node --test test/mobile-readonly.tes
 6. Crear después un PR independiente para escrituras, solo tras pruebas y autorización de gerencia.
 
 **No fusionar a main, no activar escrituras, no importar movimientos bancarios automáticamente.**
+
+## Piloto intermedio real desde ChatGPT y Claude (GitHub Actions)
+
+Mientras se configuran las credenciales de Vercel, existe una vía **sin navegador remoto ni portátil** de lectura bajo demanda mediante GitHub Actions:
+
+- Workflow: `.github/workflows/ath-mobile-readonly-live.yml` (solo push de `requests/consulta.json` en esta rama).
+- Archivo de petición: `requests/consulta.json` con `operacion=CONSULTAR_OCUPACION`, una fecha ISO `YYYY-MM-DD` y un `idSolicitud` técnico. **Nunca** nombres, documentos, correos ni montos.
+- GitHub Actions utiliza los secretos ya configurados para efectuar GET de Smoobu y `search_read` de Odoo. La salida `ATHERON_MOBILE_READONLY_RESULT` solo incluye las cinco habitaciones, estado de reservas activas listadas, alertas agregadas y hora de consulta.
+- **No** afirma disponibilidad para vender; un cuarto sin reserva listada puede estar bloqueado o tener una discrepancia de canal. Debe consultarse disponibilidad oficial antes de nuevas ventas.
+- El flujo no tiene métodos de escritura y no altera reservas, pagos, cotizaciones ni contabilidad. Los logs del repositorio son públicos y solo deben contener códigos de habitación, fechas y estados genéricos.
+
+Pruebas en vivo efectuadas desde ChatGPT el 09/11/2026:
+- [Consulta del 10/11 — success](https://github.com/marlonproyectos07-beep/atheron-suite/actions/runs/42661918780)
+- [Consulta del 11/11 — success](https://github.com/marlonproyectos07-beep/atheron-suite/actions/runs/42662312716)
+
+**Limitación:** es una ruta provisional basada en GitHub Actions, no el conector MCP final de ChatGPT ni el endpoint seguro configurado de Vercel. Claude podrá consultar los mismos resultados y reutilizar el workflow de solo lectura existente, pero su capacidad de activar nuevas peticiones desde su sesión depende de su acceso GitHub. No almacenar claves o respuestas con PII en issues/commits/logs.
+
