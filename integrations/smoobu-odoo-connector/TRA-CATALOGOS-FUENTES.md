@@ -12,13 +12,15 @@ Frente TRA del proyecto ATH-HOTELS-SIRE-TRA-001. Solo lectura de fuentes públic
 | Filtros | Dos fechas, **INICIO** y **FIN**, y el botón **Generar reporte**: formulario `GET` hacia `/export/` con `inicio`, `fin` y un token CSRF. |
 | Columnas de la tabla | DOCUMENTO, NOMBRES, APELLIDOS, CHECK_IN, CHECK_OUT, PAGO TOTAL, ACOMPAÑANTES. Cero filas hasta generar el reporte. |
 | Lo que **no** aparece | Código devuelto por la API, estado de aceptación, constancia descargable u origen del registro (API, formulario o carga manual). No hay columnas ni filtros para eso. |
-| No ejecutado | *Generar reporte*: la ruta `/export/` sugiere una exportación, y descargar un archivo con huéspedes reales exige autorización expresa y trae datos personales. Por eso no se vio ninguna fila. |
+| Reporte (autorizado por Marlon) | Un único reporte de un día (2026-11-08), pedido desde el formulario de *Mis Huéspedes* (más una segunda lectura, también autorizada, para ver los encabezados que habían quedado sin leer). Respuesta HTTP 200, archivo Excel (`.xlsx`, 5 210 bytes), hoja "Usuarios PMS", fila 1 con el título y fila 3 con los encabezados. **Sin filas de huéspedes** para ese día. Solo se leyeron los encabezados, en memoria del navegador; no se guardó el archivo ni se copiaron datos. |
+| Encabezados del archivo (13) | Tipo de identificación · Documento · Nombres · Apellidos · Cuidad de residencia · Cuidad de procedencia · Número de la habitación, cama o plaza · Principal motivo de viaje · Número de acompañantes · Check IN · Check OUT · Tipo de acomodación · Valor total pagado por el servicio de alojamiento. Coinciden con los campos que envía la API (incluida la errata "cuidad"). |
+| Código, estado, constancia, origen | **No incluye ninguno.** Ni el `code` de la API, ni un estado de aceptación, ni constancia, ni el origen (API, formulario o manual). |
 
 **Lo que el portal muestra** (estructura): la consulta se organiza por huésped principal, con fechas de entrada y salida, valor pagado y cantidad de acompañantes, filtrada por rango de fechas.
-**Lo que permite inferir, sin certeza:** (1) las fechas reportadas son visibles para el MinCIT y para el prestador, así que un cambio posterior de la estancia se vería como una diferencia entre el portal y el sistema propio; (2) los acompañantes aparecen como un conteo, tal vez con detalle; (3) el `code` de la API no se expone en esta pantalla.
-**Lo que no se puede inferir:** si el contenido de las filas coincide con lo enviado por API, si hay constancia al exportar, ni si el portal permite corregir.
+**Lo que permite inferir, sin certeza:** (1) las fechas reportadas son visibles para el MinCIT y para el prestador, así que un cambio posterior de la estancia se vería como una diferencia entre el portal y el sistema propio; (2) los acompañantes aparecen como un conteo, tal vez con detalle; (3) el `code` de la API no se expone ni en la pantalla ni en el archivo.
+**Lo que no se puede inferir:** si las filas de un día con registros coinciden con lo enviado por API, cómo aparecen los acompañantes, ni si el portal permite corregir.
 
-Para cerrar el punto falta que Marlon, con el reporte de un rango corto, anote solo los **encabezados y el formato del archivo** (no los datos) y diga si trae código, estado o constancia.
+Sin filas ese día no se pudo ver cómo aparecen los acompañantes ni los registros enviados por API. Eso solo lo aclara MinCIT o un primer envío real.
 
 Cómo lo trata hoy el sistema (sin cambios): un intento es `aceptado` solo con HTTP 2xx y `code` entero. El `code` del principal queda en `x_tra_external_id` de la línea y en `x_external_id` del intento; el de cada acompañante, en su intento. 2xx sin `code` = `incierto` (no se reenvía a ciegas). Como la consulta no muestra el `code`, "aceptado" sigue significando "la API respondió con código", no "el MinCIT lo muestra con ese código".
 
@@ -69,7 +71,7 @@ Intentos creados: 1 `error_previo` y 22 `aceptado`, todos con canal `simulador`.
 
 ## 6. Pendiente sin respaldo oficial
 
-1. Constancia y confirmación oficial: la consulta no muestra código, estado ni constancia (sección 1); falta saber si el archivo de *Generar reporte* las trae.
+1. Constancia y confirmación oficial: ni la consulta ni el archivo de *Generar reporte* traen código, estado, constancia u origen (sección 1).
 2. Valores exactos de la API para `tipo_identificacion`, `motivo` y `tipo_acomodacion`, y si los valida.
 3. PEP, PPT y D.N.I: si existen en la API y con qué texto.
 4. T.I como huésped principal.
