@@ -28,6 +28,19 @@ export function bogotaDate(utc) {
   return new Date(d.getTime() - 5 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
+/**
+ * Espejo en JS del campo calculado x_date_gap (manifest.mjs). Solo lee: compara las fechas que TRA acepto con la
+ * estancia actual (salida real en hora de Bogota si ya salio; si no, el check-out de la reserva). Nunca modifica ni reenvia.
+ */
+export function dateGap({ traState, reportedCheckout, departedAt, orderCheckout }) {
+  if (traState !== 'aceptado' || !reportedCheckout) return false;
+  const current = departedAt ? bogotaDate(departedAt) : orderCheckout;
+  if (!current) return false;
+  if (current > reportedCheckout) return 'prorroga';
+  if (current < reportedCheckout) return 'anticipada';
+  return false;
+}
+
 export function emissionGates({ mode, env = {}, catalog, est }) {
   const reasons = [];
   if (!est) reasons.push('SIN_ESTABLECIMIENTO');
@@ -106,9 +119,10 @@ export async function emitStay({ odoo, tra, orderId, est, catalog, mode, runRef,
   const companions = lines.filter((l) => !l.x_is_main);
   const channel = mode === 'real' ? 'api_tra' : 'simulador';
 
-  const record = async (line, cls, status) => {
+  const record = async (line, cls, status, sent) => {
     try {
-      await odoo.create('x_report_attempt', { x_name: line.x_is_main ? 'TRA principal' : 'TRA acompanante', x_guest_line_id: line.id, x_system: 'tra', x_channel: channel, x_result: cls.result, x_external_id: cls.externalId || false, x_http_status: status || 0, x_error_code: cls.code || false, x_run_ref: runRef, x_actor: 'emisor-tra' });
+      // las fechas se guardan tal como se enviaron: son la referencia para detectar cambios posteriores de la estancia
+      await odoo.create('x_report_attempt', { x_name: line.x_is_main ? 'TRA principal' : 'TRA acompanante', x_guest_line_id: line.id, x_system: 'tra', x_channel: channel, x_result: cls.result, x_external_id: cls.externalId || false, x_http_status: status || 0, x_error_code: cls.code || false, x_reported_checkin: sent?.check_in || false, x_reported_checkout: sent?.check_out || false, x_run_ref: runRef, x_actor: 'emisor-tra' });
     } catch (e) {
       // El envio pudo haber ocurrido: la linea queda "en envio" (no se reenvia). Se deja rastro sin datos personales.
       log({ event: 'record_failed', lineId: line.id, result: cls.result, externalId: cls.externalId || null });
@@ -121,13 +135,13 @@ export async function emitStay({ odoo, tra, orderId, est, catalog, mode, runRef,
     const { payload, missing, invalid } = buildPayload({ line, main: isMain, order, est, catalog, companions: companions.length, padre });
     if (missing.length || invalid.length) {
       const cls = { result: 'error_previo', code: missing.length ? `DATOS_INCOMPLETOS:${missing.join(',')}` : `DATO_NO_ADMITIDO:${invalid.join(',')}` };
-      await record(line, cls, 0);
+      await record(line, cls, 0, null);
       return { lineId: line.id, ...cls };
     }
     const res = await tra.post(isMain ? 'one' : 'two', payload);
     out.sent += 1;
     const cls = classify(res);
-    await record(line, cls, res?.status);
+    await record(line, cls, res?.status, payload);
     log({ event: 'sent', lineId: line.id, main: isMain, result: cls.result, code: cls.code || null, externalId: cls.externalId || null });
     return { lineId: line.id, ...cls };
   };

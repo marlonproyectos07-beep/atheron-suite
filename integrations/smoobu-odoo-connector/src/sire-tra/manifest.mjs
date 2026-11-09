@@ -90,6 +90,10 @@ export const FIELDS = [
   ['x_guests_line', 'x_lock_rev', 'integer', 'Bloqueo (técnico)', {}],
   ['x_guests_line', 'x_last_error', 'char', 'Último error u observación', {}],
   ['x_guests_line', 'x_tra_room', 'char', 'TRA: habitación', { store: false, readonly: true, depends: 'x_room_resource_id', compute: "for r in self:\n    n = (r.x_room_resource_id.name or '').split(' ')[0]\n    r['x_tra_room'] = n if n.isdigit() else ''" }],
+  // fechas que TRA acepto (copia al momento de la aceptacion; solo lectura) y discrepancia con la estancia posterior
+  ['x_guests_line', 'x_tra_rep_checkin', 'date', 'TRA: check-in aceptado', { readonly: true }],
+  ['x_guests_line', 'x_tra_rep_checkout', 'date', 'TRA: check-out aceptado', { readonly: true }],
+  ['x_guests_line', 'x_date_gap', 'selection', 'Discrepancia de fechas', { selection: sel(['prorroga', 'Prórroga'], ['anticipada', 'Salida anticipada']), store: true, readonly: true, depends: 'x_tra_state,x_tra_rep_checkout,x_departed_at,x_sale_order_id.x_checkout', compute: "for r in self:\n    gap = False\n    rep = r.x_tra_rep_checkout\n    if r.x_tra_state == 'aceptado' and rep:\n        d = r.x_departed_at\n        if d:\n            day = d.date()\n            cur = day if d.hour >= 5 else day.fromordinal(day.toordinal() - 1)\n        else:\n            cur = r.x_sale_order_id.x_checkout\n        if cur and cur > rep:\n            gap = 'prorroga'\n        elif cur and cur < rep:\n            gap = 'anticipada'\n    r['x_date_gap'] = gap" }],
   ['x_guests_line', 'x_order_checkin', 'date', 'Check-in previsto', { related: 'x_sale_order_id.x_checkin', readonly: true }],
   ['x_guests_line', 'x_order_checkout', 'date', 'Check-out previsto', { related: 'x_sale_order_id.x_checkout', readonly: true }],
   // --- intentos: solo crear y leer (ACL); la evidencia se adjunta al crear ---
@@ -102,6 +106,8 @@ export const FIELDS = [
   ['x_report_attempt', 'x_external_id', 'char', 'Identificador oficial', {}],
   ['x_report_attempt', 'x_http_status', 'integer', 'Estado HTTP', {}],
   ['x_report_attempt', 'x_error_code', 'char', 'Código de error', {}],
+  ['x_report_attempt', 'x_reported_checkin', 'date', 'Check-in reportado', {}],
+  ['x_report_attempt', 'x_reported_checkout', 'date', 'Check-out reportado', {}],
   ['x_report_attempt', 'x_run_ref', 'char', 'Ejecución', {}],
   ['x_report_attempt', 'x_actor', 'char', 'Actor declarado (no autenticado)', {}],
   ['x_report_attempt', 'x_evidence', 'binary', 'Evidencia', {}],
@@ -370,7 +376,12 @@ for a in records:
         raise UserError('Para marcar aceptado adjunte la evidencia de la consulta oficial.')
     if a.x_system == 'tra' and a.x_result == 'aceptado' and line.x_is_main and not a.x_external_id and a.x_channel in ('api_tra', 'simulador'):
         raise UserError('Falta el identificador devuelto por TRA para el huésped principal.')
+    if a.x_system == 'tra' and a.x_result == 'aceptado' and not (a.x_reported_checkin and a.x_reported_checkout):
+        raise UserError('Falta registrar las fechas de check-in y check-out reportadas a TRA.')
     vals = {f: TARGET[a.x_result], 'x_last_error': a.x_error_code or False}
+    if a.x_system == 'tra' and a.x_result == 'aceptado':
+        vals['x_tra_rep_checkin'] = a.x_reported_checkin
+        vals['x_tra_rep_checkout'] = a.x_reported_checkout
     if a.x_system == 'tra' and a.x_external_id and line.x_is_main:
         vals['x_tra_external_id'] = a.x_external_id
     line.write(vals)`;
@@ -527,6 +538,7 @@ export const VIEWS = [
 <field name="x_data_state" widget="statusbar" statusbar_visible="recibido,validado"/>
 </header>
 <sheet>
+<div class="alert alert-warning" role="alert" invisible="not x_date_gap"><strong>Discrepancia de fechas.</strong> Las fechas que TRA aceptó (entrada <field name="x_tra_rep_checkin" readonly="1" nolabel="1" class="oe_inline"/>, salida <field name="x_tra_rep_checkout" readonly="1" nolabel="1" class="oe_inline"/>) ya no coinciden con la estancia. La aceptación y su comprobante se conservan sin cambios y no se reenvía nada. El procedimiento lo define gerencia.</div>
 <group>
 <group string="Identificación">
 <field name="x_sale_order_id" readonly="1"/>
@@ -564,14 +576,18 @@ export const VIEWS = [
 <field name="x_sire_out_state" readonly="1"/>
 <field name="x_tra_state" readonly="1"/>
 <field name="x_tra_external_id" readonly="1"/>
+<field name="x_tra_rep_checkin" readonly="1"/>
+<field name="x_tra_rep_checkout" readonly="1"/>
+<field name="x_order_checkout" readonly="1"/>
+<field name="x_date_gap" readonly="1"/>
 <field name="x_last_error" readonly="1"/>
 </group>
 </group>
 <field name="x_attempt_ids" readonly="1"><list><field name="create_date"/><field name="x_system"/><field name="x_channel"/><field name="x_result"/><field name="x_external_id"/><field name="x_error_code"/><field name="x_evidence_name"/></list></field>
 </sheet>
 </form>` },
-  { xmlid: 'view_guest_list', name: 'ath.sire.tra.guest.list', model: 'x_guests_line', type: 'list', priority: 90, arch: `<list string="Huéspedes SIRE/TRA" create="0" decoration-danger="x_tra_state in ('incierto', 'rechazado') or x_sire_in_state in ('incierto', 'rechazado') or x_sire_out_state in ('incierto', 'rechazado')" decoration-muted="x_data_state == 'rechazado'">
-<field name="x_sale_order_id"/><field name="x_is_main"/><field name="x_given_names"/><field name="x_surname_1"/><field name="x_doc_type_id"/><field name="x_identity_number"/><field name="x_nationality"/><field name="x_room_resource_id"/><field name="x_data_state"/><field name="x_arrived_at"/><field name="x_departed_at"/><field name="x_sire_in_state"/><field name="x_sire_out_state"/><field name="x_tra_state"/><field name="x_last_error" optional="hide"/>
+  { xmlid: 'view_guest_list', name: 'ath.sire.tra.guest.list', model: 'x_guests_line', type: 'list', priority: 90, arch: `<list string="Huéspedes SIRE/TRA" create="0" decoration-danger="x_tra_state in ('incierto', 'rechazado') or x_sire_in_state in ('incierto', 'rechazado') or x_sire_out_state in ('incierto', 'rechazado')" decoration-warning="x_date_gap != False" decoration-muted="x_data_state == 'rechazado'">
+<field name="x_sale_order_id"/><field name="x_is_main"/><field name="x_given_names"/><field name="x_surname_1"/><field name="x_doc_type_id"/><field name="x_identity_number"/><field name="x_nationality"/><field name="x_room_resource_id"/><field name="x_data_state"/><field name="x_arrived_at"/><field name="x_departed_at"/><field name="x_sire_in_state"/><field name="x_sire_out_state"/><field name="x_tra_state"/><field name="x_date_gap"/><field name="x_last_error" optional="hide"/>
 </list>` },
   { xmlid: 'view_guest_search', name: 'ath.sire.tra.guest.search', model: 'x_guests_line', type: 'search', priority: 90, arch: `<search>
 <field name="x_sale_order_id"/><field name="x_identity_number"/><field name="x_surname_1"/>
@@ -582,6 +598,7 @@ export const VIEWS = [
 <filter name="f_sire_in" string="SIRE entrada por reportar" domain="[('x_sire_in_state', 'in', ('pendiente', 'en_envio', 'enviado'))]"/>
 <filter name="f_sire_out" string="SIRE salida por reportar" domain="[('x_sire_out_state', 'in', ('pendiente', 'en_envio', 'enviado'))]"/>
 <filter name="f_tra" string="TRA por reportar" domain="[('x_tra_state', 'in', ('pendiente', 'en_envio', 'enviado'))]"/>
+<filter name="f_date_gap" string="Discrepancia de fechas" domain="[('x_date_gap', '!=', False)]"/>
 <filter name="f_alerta" string="Incierto o rechazado" domain="['|', '|', ('x_sire_in_state', 'in', ('incierto', 'rechazado')), ('x_sire_out_state', 'in', ('incierto', 'rechazado')), ('x_tra_state', 'in', ('incierto', 'rechazado'))]"/>
 <group><filter name="g_order" string="Reserva" context="{'group_by': 'x_sale_order_id'}"/></group>
 </search>` },
@@ -597,12 +614,13 @@ export const VIEWS = [
 <field name="x_guest_line_id" options="{'no_create': True, 'no_open': True}"/>
 <field name="x_system"/><field name="x_channel"/><field name="x_result"/>
 <field name="x_external_id"/><field name="x_error_code"/>
+<field name="x_reported_checkin"/><field name="x_reported_checkout"/>
 <field name="x_evidence" filename="x_evidence_name"/><field name="x_evidence_name" invisible="1"/>
 <field name="x_actor" placeholder="Quien registra (declarado)"/><field name="x_note"/>
 <field name="x_sale_order_id" readonly="1"/><field name="x_http_status" readonly="1"/><field name="x_run_ref" readonly="1"/>
 </group></sheet>
 </form>` },
-  { xmlid: 'view_attempt_list', name: 'ath.sire.tra.attempt.list', model: 'x_report_attempt', type: 'list', priority: 90, arch: `<list string="Intentos y evidencia" create="0"><field name="create_date"/><field name="x_sale_order_id"/><field name="x_guest_line_id"/><field name="x_system"/><field name="x_channel"/><field name="x_result"/><field name="x_external_id"/><field name="x_http_status"/><field name="x_error_code"/><field name="x_run_ref"/><field name="x_actor"/><field name="x_evidence_name"/></list>` },
+  { xmlid: 'view_attempt_list', name: 'ath.sire.tra.attempt.list', model: 'x_report_attempt', type: 'list', priority: 90, arch: `<list string="Intentos y evidencia" create="0"><field name="create_date"/><field name="x_sale_order_id"/><field name="x_guest_line_id"/><field name="x_system"/><field name="x_channel"/><field name="x_result"/><field name="x_external_id"/><field name="x_http_status"/><field name="x_error_code"/><field name="x_reported_checkin" optional="show"/><field name="x_reported_checkout" optional="show"/><field name="x_run_ref"/><field name="x_actor"/><field name="x_evidence_name"/></list>` },
   { xmlid: 'view_est_form', name: 'ath.sire.tra.establishment.form', model: 'x_establishment', type: 'form', priority: 90, arch: `<form string="Establecimiento">
 <sheet><group>
 <group string="Identificación"><field name="x_name"/><field name="x_code"/><field name="x_active"/><field name="x_address_partner_id"/><field name="x_analytic_account_id"/></group>
@@ -624,6 +642,7 @@ export const WINDOW_ACTIONS = [
   { xmlid: 'act_guests', ...W('x_guests_line', 'Huéspedes', ['view_guest_list', 'view_guest_form'], { search: 'view_guest_search', domain: "[('x_data_state', '!=', False)]" }) },
   { xmlid: 'act_sire_sheet', ...W('x_guests_line', 'Hoja guíada SIRE', ['view_sire_sheet', 'view_guest_form'], { search: 'view_guest_search', domain: "[('x_is_foreign', '=', True), '|', ('x_sire_in_state', 'in', ('pendiente', 'en_envio', 'enviado', 'incierto')), ('x_sire_out_state', 'in', ('pendiente', 'en_envio', 'enviado', 'incierto'))]" }) },
   { xmlid: 'act_tra_sheet', ...W('x_guests_line', 'Hoja guíada TRA', ['view_tra_sheet', 'view_guest_form'], { search: 'view_guest_search', domain: "[('x_tra_state', 'in', ('pendiente', 'en_envio', 'enviado', 'incierto', 'rechazado'))]" }) },
+  { xmlid: 'act_date_gap', ...W('x_guests_line', 'Discrepancia de fechas', ['view_guest_list', 'view_guest_form'], { search: 'view_guest_search', domain: "[('x_date_gap', '!=', False)]" }) },
   { xmlid: 'act_attempts', ...W('x_report_attempt', 'Intentos y evidencia', ['view_attempt_list', 'view_attempt_form']) },
   { xmlid: 'act_attempt_new', ...W('x_report_attempt', 'Registrar resultado de reporte', ['view_attempt_form'], { target: 'new', view_mode: 'form' }) },
   { xmlid: 'act_invites', ...W('survey.user_input', 'Enlaces de registro', ['view_invite_list', 'view_invite_form'], { domain: "[('x_sale_order_id', '!=', False)]" }) },
@@ -638,8 +657,9 @@ export const MENUS = [
   { xmlid: 'menu_guests', name: 'Huéspedes', parent: 'menu_root', action: 'act_guests', sequence: 3 },
   { xmlid: 'menu_sire', name: 'Hoja guíada SIRE', parent: 'menu_root', action: 'act_sire_sheet', sequence: 4 },
   { xmlid: 'menu_tra', name: 'Hoja guíada TRA', parent: 'menu_root', action: 'act_tra_sheet', sequence: 5 },
-  { xmlid: 'menu_attempts', name: 'Intentos y evidencia', parent: 'menu_root', action: 'act_attempts', sequence: 6 },
-  { xmlid: 'menu_est', name: 'Establecimientos', parent: 'menu_root', action: 'act_establishments', sequence: 7 },
+  { xmlid: 'menu_date_gap', name: 'Discrepancia de fechas', parent: 'menu_root', action: 'act_date_gap', sequence: 6 },
+  { xmlid: 'menu_attempts', name: 'Intentos y evidencia', parent: 'menu_root', action: 'act_attempts', sequence: 7 },
+  { xmlid: 'menu_est', name: 'Establecimientos', parent: 'menu_root', action: 'act_establishments', sequence: 8 },
 ];
 
 /** Modelos técnicos que el aplicador puede tocar. Nada de datos de negocio. */
