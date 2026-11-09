@@ -1,0 +1,26 @@
+name: ATH-MOBILE — pruebas sin credenciales
+on:
+  pull_request:
+    paths:
+      - 'integrations/atheron-mobile-api/**'
+      - 'integrations/smoobu-odoo-connector/src/mobile-*.mjs'
+      - 'integrations/smoobu-odoo-connector/test/mobile-*.test.mjs'
+      - '.github/workflows/ath-mobile-pr-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Tests del conector móvil, sin secretos y sin escrituras
+        run: node --test integrations/smoobu-odoo-connector/test/mobile-readonly.test.mjs integrations/smoobu-odoo-connector/test/mobile-intent.test.mjs integrations/atheron-mobile-api/test/status.test.mjs
+      - name: Comprobación de sintaxis pasarela
+        run: |
+          node --check integrations/atheron-mobile-api/api/status.mjs
+          node --check integrations/atheron-mobile-api/api/health.mjs
