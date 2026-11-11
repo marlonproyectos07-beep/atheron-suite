@@ -1,14 +1,5 @@
 {
-  "operacion": "VERIFICAR_DISPONIBILIDAD",
-  "consultas": [
-    {
-      "fecha": "2026-11-10",
-      "habitacion": "301"
-    },
-    {
-      "fecha": "2026-11-11",
-      "habitacion": "201"
-    }
-  ],
-  "idSolicitud": "pilot-availability-nov10-nov11-v1"
+  "operacion": "CONSULTAR_OCUPACION",
+  "fecha": "2026-11-11",
+  "idSolicitud": "ath-mobile-consulta-20261111-segura"
 }
