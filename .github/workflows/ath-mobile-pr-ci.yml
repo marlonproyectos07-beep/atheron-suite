@@ -1,5 +1,13 @@
 name: ATH-MOBILE — pruebas sin credenciales
 on:
+  push:
+    branches:
+      - ath-mobile-002-mcp-readonly
+    paths:
+      - 'integrations/atheron-mobile-api/**'
+      - 'integrations/smoobu-odoo-connector/src/mobile-*.mjs'
+      - 'integrations/smoobu-odoo-connector/test/mobile-*.test.mjs'
+      - '.github/workflows/ath-mobile-pr-ci.yml'
   pull_request:
     paths:
       - 'integrations/atheron-mobile-api/**'
