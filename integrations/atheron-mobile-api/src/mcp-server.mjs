@@ -17,7 +17,6 @@ import { OdooJson2Client } from '../../smoobu-odoo-connector/src/odoo-json2-clie
 import { runDaily } from '../../smoobu-odoo-connector/src/daily-run.mjs';
 
 const READ_SCOPE = 'atheron.read';
-const MCP_KEY_HEADER = 'x-vercel-protection-bypass';
 const DATA_ENV = [
   'SMOOBU_API_KEY',
   'SMOOBU_API_SECRET',
@@ -131,7 +130,8 @@ function safeCode(error) {
 
 /**
  * Create a stateless, read-only MCP endpoint.
- * The Vercel deployment-protection bypass header doubles as the per-user API key.
+ * A dedicated bearer API key protects the MCP resource. Vercel preview bypass, if used,
+ * is a separate deployment URL query parameter and is not trusted as application auth.
  * It is verified again by this resource server after Vercel's protection layer.
  */
 export function createAtheronMcpService({
@@ -139,7 +139,7 @@ export function createAtheronMcpService({
   getSummary,
   getOccupancy,
 } = {}) {
-  const expectedToken = env.VERCEL_AUTOMATION_BYPASS_SECRET ?? env.ATHERON_MOBILE_MCP_TOKEN;
+  const expectedToken = env.ATHERON_MOBILE_MCP_TOKEN;
   const liveReaders = createLiveReaders(env);
   const readSummary = getSummary ?? liveReaders.getSummary;
   const readOccupancy = getOccupancy ?? liveReaders.getOccupancy;
@@ -209,19 +209,10 @@ export function createAtheronMcpService({
       if (!expectedToken || expectedToken.length < 32) return jsonError(503, 'MCP_NO_CONFIGURADO');
       if (request.method !== 'POST') return jsonError(405, 'METODO_NO_PERMITIDO');
 
-      const supplied = request.headers.get(MCP_KEY_HEADER);
-      if (!supplied) return jsonError(401, 'NO_AUTORIZADO');
-
-      // Vercel consumes this header first to bypass deployment protection. The MCP
-      // resource server independently verifies the same secret as a read-only API key.
-      const headers = new Headers(request.headers);
-      headers.set('Authorization', `Bearer ${supplied}`);
-      const rawBody = await request.clone().text();
-      const authenticatedRequest = new Request(request.url, { method: request.method, headers, body: rawBody });
-      const authInfo = await gate(authenticatedRequest);
+      const authInfo = await gate(request);
       if (authInfo instanceof Response) return authInfo;
 
-      return mcpHandler.fetch(authenticatedRequest, { authInfo });
+      return mcpHandler.fetch(request, { authInfo });
     },
   };
 }
