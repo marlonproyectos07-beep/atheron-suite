@@ -1,5 +1,13 @@
 name: ATH-MOBILE — pruebas sin credenciales
 on:
+  push:
+    branches:
+      - ath-mobile-002-mcp-readonly
+    paths:
+      - 'integrations/atheron-mobile-api/**'
+      - 'integrations/smoobu-odoo-connector/src/mobile-*.mjs'
+      - 'integrations/smoobu-odoo-connector/test/mobile-*.test.mjs'
+      - '.github/workflows/ath-mobile-pr-ci.yml'
   pull_request:
     paths:
       - 'integrations/atheron-mobile-api/**'
@@ -20,10 +28,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Instalar SDK MCP fijado (sin secretos)
+        run: npm install --ignore-scripts --no-audit --no-fund
+        working-directory: integrations/atheron-mobile-api
+      - name: Pruebas MCP y API móvil, sin secretos ni escrituras
+        run: npm test
+        working-directory: integrations/atheron-mobile-api
       - name: Tests del conector móvil, sin secretos y sin escrituras
-        run: node --test integrations/smoobu-odoo-connector/test/mobile-readonly.test.mjs integrations/smoobu-odoo-connector/test/mobile-intent.test.mjs integrations/smoobu-odoo-connector/test/mobile-availability.test.mjs integrations/atheron-mobile-api/test/status.test.mjs
+        run: node --test integrations/smoobu-odoo-connector/test/mobile-readonly.test.mjs integrations/smoobu-odoo-connector/test/mobile-intent.test.mjs integrations/smoobu-odoo-connector/test/mobile-availability.test.mjs
       - name: Comprobación de sintaxis pasarela
         run: |
           node --check integrations/atheron-mobile-api/api/status.mjs
           node --check integrations/atheron-mobile-api/api/health.mjs
+          node --check integrations/atheron-mobile-api/api/mcp.mjs
+          node --check integrations/atheron-mobile-api/api/pair.mjs
+          node --check integrations/atheron-mobile-api/src/mcp-server.mjs
           node --check integrations/smoobu-odoo-connector/scripts/mobile-availability-live.mjs

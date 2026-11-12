@@ -8,5 +8,9 @@
   },
   "scripts": {
     "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "zod": "4.2.0"
   }
 }
