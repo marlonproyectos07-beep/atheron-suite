@@ -216,7 +216,8 @@ export function createAtheronMcpService({
       // resource server independently verifies the same secret as a read-only API key.
       const headers = new Headers(request.headers);
       headers.set('Authorization', `Bearer ${supplied}`);
-      const authenticatedRequest = new Request(request, { headers });
+      const rawBody = await request.clone().text();
+      const authenticatedRequest = new Request(request.url, { method: request.method, headers, body: rawBody });
       const authInfo = await gate(authenticatedRequest);
       if (authInfo instanceof Response) return authInfo;
 
