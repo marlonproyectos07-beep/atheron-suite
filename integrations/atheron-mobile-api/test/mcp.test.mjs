@@ -43,7 +43,7 @@ function makeService(overrides = {}) {
 function request(body, token = TOKEN) {
   const headers = {
     'content-type': 'application/json',
-    accept: 'application/json',
+    accept: 'application/json, text/event-stream',
   };
   if (token !== null) headers['x-vercel-protection-bypass'] = token;
   return new Request('https://example.vercel.app/api/mcp', {
