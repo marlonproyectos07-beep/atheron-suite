@@ -60,7 +60,7 @@ async function rpc(service, body, token = TOKEN) {
 async function readMcpPayload(response) {
   const raw = await response.text();
   if (response.headers.get('content-type')?.includes('text/event-stream')) {
-    const dataLine = raw.split(/\\r?\\n/).find((line) => line.startsWith('data:'));
+    const dataLine = raw.split(/\r?\n/).find((line) => line.startsWith('data:'));
     assert.ok(dataLine, 'MCP SSE response must include a data event');
     return JSON.parse(dataLine.slice(5).trim());
   }
