@@ -10,7 +10,7 @@ export default function handler(req, res) {
   if (process.env.VERCEL_ENV !== 'preview') return res.status(404).json({ error: 'NO_DISPONIBLE' });
   if (req.method !== 'GET') return res.status(405).json({ error: 'METODO_NO_PERMITIDO' });
 
-  const token = process.env.VERCEL_AUTOMATION_BYPASS_SECRET ?? process.env.ATHERON_MOBILE_MCP_TOKEN;
+  const token = process.env.ATHERON_MOBILE_MCP_TOKEN;
   if (typeof token !== 'string' || token.length < 32) {
     return res.status(503).json({ error: 'EMPAREJAMIENTO_NO_CONFIGURADO' });
   }
@@ -20,7 +20,8 @@ export default function handler(req, res) {
   return res.status(200).json({
     servicio: 'ATHERON_MOBILE_MCP',
     modo: 'SOLO_LECTURA',
-    header: 'x-vercel-protection-bypass',
+    scheme: 'Bearer',
+    header: 'Authorization',
     token,
     advertencia: 'Clave privada. Guardarla en el gestor de contraseñas y no compartirla.',
   });
