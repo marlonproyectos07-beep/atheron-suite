@@ -1,0 +1,45 @@
+name: ATH-AI-004 staging validation
+
+on:
+  push:
+    branches:
+      - feature/ath-ai-004-n8n-staging
+    paths:
+      - infra/n8n/**
+      - .github/workflows/ath-ai-004-validate.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Validate isolated n8n compose and offline workflow
+        env:
+          N8N_IMAGE: docker.n8n.io/n8nio/n8n:2.44.7
+          POSTGRES_USER: pilot
+          POSTGRES_DB: pilot
+          POSTGRES_PASSWORD: placeholder-for-static-check-only
+          N8N_ENCRYPTION_KEY: placeholder-for-static-check-only
+        run: |
+          docker compose -f infra/n8n/compose.yaml config --quiet
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("infra/n8n/ATH-AI-004-smoke.json")
+          obj = json.loads(p.read_text(encoding="utf-8"))
+          assert obj.get("active") is False
+          nodes = obj.get("nodes", [])
+          assert len(nodes) == 2
+          assert [n["type"] for n in nodes] == ["n8n-nodes-base.manualTrigger", "n8n-nodes-base.code"]
+          assert "http" not in json.dumps(nodes).lower()
+          cfg = Path("infra/n8n/compose.yaml").read_text(encoding="utf-8")
+          assert '"127.0.0.1:5678:5678"' in cfg
+          assert "/home/node/.n8n" in cfg
+          assert "5432:5432" not in cfg
+          print("ATH-AI-004: OK_STAGING_CONFIG — validacion estatica; no deploy")
+          PY
