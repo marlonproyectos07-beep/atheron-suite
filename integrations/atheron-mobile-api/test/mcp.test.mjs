@@ -33,7 +33,7 @@ const OCCUPANCY = {
 
 function makeService(overrides = {}) {
   return createAtheronMcpService({
-    env: { VERCEL_AUTOMATION_BYPASS_SECRET: TOKEN, VERCEL_ENV: 'preview' },
+    env: { ATHERON_MOBILE_MCP_TOKEN: TOKEN, VERCEL_ENV: 'preview' },
     getSummary: async () => SUMMARY,
     getOccupancy: async () => OCCUPANCY,
     ...overrides,
@@ -45,7 +45,7 @@ function request(body, token = TOKEN) {
     'content-type': 'application/json',
     accept: 'application/json, text/event-stream',
   };
-  if (token !== null) headers['x-vercel-protection-bypass'] = token;
+  if (token !== null) headers.authorization = `Bearer ${token}`;
   return new Request('https://example.vercel.app/api/mcp', {
     method: 'POST',
     headers,
@@ -78,7 +78,7 @@ const initialize = {
   },
 };
 
-test('MCP exige clave antes de procesar cualquier llamada', async () => {
+test('MCP exige bearer key antes de procesar cualquier llamada', async () => {
   let calls = 0;
   const service = makeService({ getSummary: async () => { calls += 1; return SUMMARY; } });
   const missing = await rpc(service, initialize, null);
