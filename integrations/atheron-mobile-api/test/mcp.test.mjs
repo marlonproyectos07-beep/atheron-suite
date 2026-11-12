@@ -57,6 +57,16 @@ async function rpc(service, body, token = TOKEN) {
   return service.fetch(request(body, token));
 }
 
+async function readMcpPayload(response) {
+  const raw = await response.text();
+  if (response.headers.get('content-type')?.includes('text/event-stream')) {
+    const dataLine = raw.split(/\\r?\\n/).find((line) => line.startsWith('data:'));
+    assert.ok(dataLine, 'MCP SSE response must include a data event');
+    return JSON.parse(dataLine.slice(5).trim());
+  }
+  return JSON.parse(raw);
+}
+
 const initialize = {
   jsonrpc: '2.0',
   id: 1,
@@ -92,7 +102,7 @@ test('Inicialización y listado anuncian exclusivamente herramientas de solo lec
 
   const list = await rpc(service, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
   assert.equal(list.status, 200);
-  const payload = await list.json();
+  const payload = await readMcpPayload(list);
   const tools = payload.result?.tools ?? payload.tools;
   assert.deepEqual(tools.map((tool) => tool.name).sort(), ['get_atheron_status', 'get_room_occupancy']);
   for (const tool of tools) {
@@ -112,7 +122,7 @@ test('Consulta de estado devuelve solo el resumen anonimizado', async () => {
     params: { name: 'get_atheron_status', arguments: {} },
   });
   assert.equal(response.status, 200);
-  const payload = await response.json();
+  const payload = await readMcpPayload(response);
   const text = payload.result?.content?.[0]?.text ?? payload.content?.[0]?.text;
   assert.equal(JSON.parse(text).fuente, 'conciliacion-smoobu-odoo');
   assert.equal(text.includes('Huesped'), false);
@@ -128,7 +138,7 @@ test('Consulta por fecha valida y conserva la advertencia de no disponibilidad c
     params: { name: 'get_room_occupancy', arguments: { date: '2026-11-12' } },
   });
   assert.equal(response.status, 200);
-  const payload = await response.json();
+  const payload = await readMcpPayload(response);
   const text = payload.result?.content?.[0]?.text ?? payload.content?.[0]?.text;
   const result = JSON.parse(text);
   assert.equal(result.escrituras, 0);
@@ -146,7 +156,7 @@ test('Fecha inválida no consulta fuentes y devuelve error seguro', async () => 
     params: { name: 'get_room_occupancy', arguments: { date: '12/11/2026' } },
   });
   assert.equal(response.status, 200);
-  const payload = await response.json();
+  const payload = await readMcpPayload(response);
   assert.equal(payload.result?.isError, true);
   assert.equal(calls, 0);
 });
