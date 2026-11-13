@@ -44,6 +44,5 @@ jobs:
           ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
           ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
           ATH_FIN016_MANIFEST_JSON: ${{ secrets.ATH_FIN016_MANIFEST_JSON }}
-          ATH_FIN016_REPORT_PATH: ${{ runner.temp }}/ath-fin-016-preflight.enc
         run: node scripts/preflight.mjs
 
