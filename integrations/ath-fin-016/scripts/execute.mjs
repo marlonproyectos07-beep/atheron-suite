@@ -1,3 +1,4 @@
+
 import { readFile } from 'node:fs/promises';
 import { collectPreflight } from '../src/preflight.mjs';
 import { validateManifest, EXPECTED_SCOPE } from '../src/manifest.mjs';
@@ -6,11 +7,15 @@ import { APPROVED_PLANNER_MAPPING, APPROVED_ODOO_MAPPING } from '../src/accounti
 import { buildMoveDraft, movementReference } from '../src/planner.mjs';
 import { GuardedFinancialWriter, RELEASE_TOKEN, assertFinancialWriteGate } from '../src/write-guard.mjs';
 
-const RELEASE_MARKER = 'ATH-FIN-016-EXECUTE\nbatch_id=' + EXPECTED_SCOPE.batchId +
-  '\nmanifest_sha256=' + EXPECTED_SCOPE.sha256 + '\n';
+const RELEASE_MARKER_BASE = 'ATH-FIN-016-EXECUTE\\nbatch_id=' + EXPECTED_SCOPE.batchId +
+  '\\nmanifest_sha256=' + EXPECTED_SCOPE.sha256 + '\\n';
 
 function requireCheck(condition, code) {
   if (!condition) throw new Error(code);
+}
+
+function idOf(value) {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 function assertPreflight(report, manifest) {
@@ -26,10 +31,18 @@ function assertPreflight(report, manifest) {
   ), 'PREFLIGHT_DUPLICATE_CONFLICT');
   requireCheck(report.existing_bank_data?.status === 'COMPLETE_READ_ONLY', 'PREFLIGHT_BANK_READ_FAILED');
   requireCheck(report.existing_bank_data.statementLineCount === 0, 'PREFLIGHT_STATEMENT_LINES_PRESENT');
-  requireCheck(report.user?.allowed_company_ids?.includes(APPROVED_ODOO_MAPPING.companyId), 'PREFLIGHT_COMPANY_NOT_ALLOWED');
-  requireCheck(report.user?.company_profile?.company_id &&
-    Number(report.user.company_profile.company_id[0] ?? report.user.company_profile.company_id) === APPROVED_ODOO_MAPPING.companyId,
-    'PREFLIGHT_USER_COMPANY_MISMATCH');
+
+  const profile = report.user?.company_profile ?? {};
+  const allowedContextIds = Array.isArray(report.user?.allowed_company_ids) ? report.user.allowed_company_ids : [];
+  const userCompanyIds = Array.isArray(profile.company_ids) ? profile.company_ids : [];
+  const currentCompanyId = idOf(profile.company_id);
+  requireCheck(
+    allowedContextIds.includes(APPROVED_ODOO_MAPPING.companyId) ||
+    userCompanyIds.includes(APPROVED_ODOO_MAPPING.companyId),
+    'PREFLIGHT_COMPANY_NOT_ALLOWED'
+  );
+  requireCheck(currentCompanyId === APPROVED_ODOO_MAPPING.companyId, 'PREFLIGHT_USER_COMPANY_MISMATCH');
+
   const acl = report.acl ?? {};
   requireCheck(acl['account.move']?.read === true &&
     acl['account.move']?.create === true &&
@@ -48,7 +61,9 @@ function assertPreflight(report, manifest) {
 async function main() {
   requireCheck(process.env.GITHUB_REF === 'refs/heads/ath-fin-016-financial-executor', 'EXECUTION_BRANCH_BLOCKED');
   const marker = await readFile(new URL('../release/EXECUTE-LOTE-A', import.meta.url), 'utf8');
-  requireCheck(marker === RELEASE_MARKER, 'EXECUTION_RELEASE_MARKER_INVALID');
+  const validMarker = marker === RELEASE_MARKER_BASE ||
+    (marker.startsWith(RELEASE_MARKER_BASE) && /^attempt=[1-9][0-9]*\\n$/.test(marker.slice(RELEASE_MARKER_BASE.length)));
+  requireCheck(validMarker, 'EXECUTION_RELEASE_MARKER_INVALID');
 
   const manifest = validateManifest(process.env.ATH_FIN016_MANIFEST_JSON);
   assertFinancialWriteGate({
