@@ -5,7 +5,7 @@ const ALLOWED_MODELS = new Set([
   'account.account', 'account.journal', 'ir.model.access', 'ir.model', 'ir.model.data'
 ]);
 const READ_METHODS = new Set([
-  'search_read', 'search_count', 'fields_get', 'read', 'context_get', 'check_access_rights'
+  'search_read', 'search_count', 'fields_get', 'read', 'context_get', 'check_access_rights', 'default_get'
 ]);
 
 export class OdooReadonlyClient {
