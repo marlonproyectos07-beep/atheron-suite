@@ -47,6 +47,7 @@ test('guarded writer rejects before network even with complete-looking request',
     apiKey: 'synthetic-test-key',
     fetchImpl: async () => { calls += 1; throw new Error('must not be called'); }
   });
+  assert.equal(typeof writer.request, 'undefined');
   const draft = {
     model: 'account.move',
     method: 'create',
