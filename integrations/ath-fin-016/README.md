@@ -41,8 +41,8 @@ No imprime datos detallados de Odoo en los logs. Solo muestra estados y conteos.
 
 - Variables: ODOO_BASE_URL, ODOO_DATABASE.
 - Secretos existentes: ODOO_API_KEY.
-- Secretos pendientes: ATH_FIN016_MANIFEST_JSON (JSON privado del Lote A) y ATH_FIN016_MANIFEST_SHA256 (SHA-256 calculado independientemente sobre el manifiesto canónico).
-- El digest productivo permanece deliberadamente sin configurar hasta recuperar las 21 filas fuente completas; no se permite usar un hash provisional.
+- Secreto pendiente: ATH_FIN016_MANIFEST_JSON (JSON privado del Lote A).
+- El SHA-256 se fija en el código desde el archivo fuente verificado; no requiere un segundo secreto.
 - No se necesita secreto de cifrado porque los datos detallados no salen del runner.
 - No configurar ninguna variable de activación de escrituras en esta fase.
 
