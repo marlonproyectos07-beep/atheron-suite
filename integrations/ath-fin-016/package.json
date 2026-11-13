@@ -5,6 +5,7 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "test": "node --test",
-    "preflight": "node scripts/preflight.mjs"
+    "preflight": "node scripts/preflight.mjs",
+    "execute": "node scripts/execute.mjs"
   }
 }

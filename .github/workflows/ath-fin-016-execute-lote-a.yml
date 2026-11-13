@@ -1,0 +1,45 @@
+name: ATH-FIN-016 execute exact Lote A
+
+on:
+  push:
+    branches:
+      - ath-fin-016-financial-executor
+    paths:
+      - integrations/ath-fin-016/release/EXECUTE-LOTE-A
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ath-fin-016-execute-lote-a
+  cancel-in-progress: false
+
+jobs:
+  execute:
+    name: Test, revalidate and post only Lote A
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: integrations/ath-fin-016
+    env:
+      ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+      ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+      ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+      ATH_FIN016_MANIFEST_JSON: ${{ secrets.ATH_FIN016_MANIFEST_JSON }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Unit tests (synthetic data only)
+        run: npm test
+
+      - name: Revalidate and execute authorized Lote A
+        run: node scripts/execute.mjs
