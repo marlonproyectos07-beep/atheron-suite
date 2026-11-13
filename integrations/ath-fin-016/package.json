@@ -1,0 +1,10 @@
+{
+  "name": "@atheron/ath-fin-016-financial-executor",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test",
+    "preflight": "node scripts/preflight.mjs"
+  }
+}
