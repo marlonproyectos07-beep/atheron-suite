@@ -1,0 +1,1 @@
+Trigger the read-only preflight and unit tests for the idempotent Lote A executor. No financial data.
