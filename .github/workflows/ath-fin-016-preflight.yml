@@ -47,11 +47,3 @@ jobs:
           ATH_FIN016_REPORT_PATH: ${{ runner.temp }}/ath-fin-016-preflight.enc
         run: node scripts/preflight.mjs
 
-      - name: Upload encrypted report only
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ath-fin-016-preflight-${{ github.run_number }}
-          path: ${{ runner.temp }}/ath-fin-016-preflight.enc
-          if-no-files-found: ignore
-          retention-days: 2
