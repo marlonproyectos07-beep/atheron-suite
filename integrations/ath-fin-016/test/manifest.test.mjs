@@ -15,7 +15,7 @@ function fixture() {
   };
   const directions = { GMF: 'debit', BANK_FEE: 'debit', INTEREST: 'credit' };
   const movements = categories.map((category, index) => ({
-    id: 'B1-NOV-' + String(index + 1).padStart(3, '0'),
+    id: EXPECTED_SCOPE.movementIds[index],
     date: '2026-11-' + String((index % 12) + 1).padStart(2, '0'),
     description: descriptions[category],
     category,
@@ -73,4 +73,10 @@ test('manifest rejects direction/category mismatch and out-of-period dates', () 
   const second = fixture();
   second.movements[0].date = '2026-10-31';
   assert.throws(() => validateManifest(second, { expectedDigest: manifestDigest(second.movements) }), /MOVEMENT_DATE_OUT_OF_SCOPE/);
+});
+
+test('manifest rejects a replacement ID even if count remains 21', () => {
+  const manifest = fixture();
+  manifest.movements[0].id = 'B1-NOV-999';
+  assert.throws(() => validateManifest(manifest, { expectedDigest: manifestDigest(manifest.movements) }), /MOVEMENT_ID_INVALID|SCOPE_ID_SET_MISMATCH/);
 });
