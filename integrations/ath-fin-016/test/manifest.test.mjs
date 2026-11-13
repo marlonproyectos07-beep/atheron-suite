@@ -49,7 +49,7 @@ test('production digest remains unconfigured until exact source manifest is reco
 test('manifest rejects extra movement', () => {
   const manifest = fixture();
   manifest.movements.push({ ...manifest.movements[0], id: 'B1-NOV-999' });
-  assert.throws(() => validateManifest(manifest, { expectedDigest: 'x' }), /SCOPE_MOVEMENT_COUNT_MISMATCH/);
+  assert.throws(() => validateManifest(manifest, { expectedDigest: manifestDigest(manifest.movements) }), /SCOPE_MOVEMENT_COUNT_MISMATCH/);
 });
 
 test('manifest rejects a changed batch or bank account', () => {
