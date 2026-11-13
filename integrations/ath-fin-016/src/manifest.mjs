@@ -8,7 +8,7 @@ export const EXPECTED_SCOPE = Object.freeze({
   movementCount: 21,
   movementIds: Object.freeze(['B1-NOV-001', 'B1-NOV-009', 'B1-NOV-010', 'B1-NOV-023', 'B1-NOV-027', 'B1-NOV-033', 'B1-NOV-037', 'B1-NOV-042', 'B1-NOV-046', 'B1-NOV-051', 'B1-NOV-054', 'B1-NOV-074', 'B1-NOV-076', 'B1-NOV-085', 'B1-NOV-090', 'B1-NOV-094', 'B1-NOV-104', 'B1-NOV-107', 'B1-NOV-108', 'B1-NOV-116', 'B1-NOV-117']),
   categoryCounts: Object.freeze({ GMF: 10, BANK_FEE: 1, INTEREST: 10 }),
-  sha256: null
+  sha256: 'd81a4126958d2f50e1c6b7784cddec94f54cd63fe20cb27c9cc4bcd978332297'
 });
 
 const CATEGORY_RULES = Object.freeze({
