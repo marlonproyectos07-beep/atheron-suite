@@ -1,0 +1,1 @@
+Manual trigger for the authorized ATH-FIN-016 read-only preflight. No financial data. No Odoo writes.
