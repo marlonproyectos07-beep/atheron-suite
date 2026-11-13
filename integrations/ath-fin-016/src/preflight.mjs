@@ -2,6 +2,7 @@ import { randomBytes, createCipheriv, publicEncrypt, constants } from 'node:cryp
 import { OdooReadonlyClient } from './odoo-client.mjs';
 import { validateManifest, EXPECTED_SCOPE } from './manifest.mjs';
 import { movementReference } from './planner.mjs';
+import { checkApprovedMapping, APPROVED_ODOO_MAPPING } from './accounting-map.mjs';
 
 const REPORT_PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAmjnl+0TEdhv9z3GGOEA4\nHVyEO/woCemqmBR3purKC9+byYrYOTAvTI6hK1hVP1e4EFBzJ6jgmS1WgA0kjdwj\nTO1UGFKxPxL94R/mMcUNHc9KRFPhGH4vuuDnEa5oonj4rxRN9yrmNzn8vVojWd3E\noeYEVvC03U6UM6W92wNgBXVRbJ9M8t5ofmaimp9XZ2QMdnCSrQhSB4QQgm/CYt6m\nmF97alYRKI6DEjCXnLT7JeteQCGbmObGUFrtV41N2SeQn+XLNMv/+ImOHNPqcdyt\nCluD4XxRqzCGPIoLPiCha+uGQmcn+zIO2Ld4YuEYrzoEH7N/YTWS6keZyaL/ytRl\ntuFP3qit8cLiP8+P7fHPWxqQu1p0GMDYGBF5b44/p2XdmQ8N2hcpa/t7i7q14p3i\n7z582cx2EaNh2Kd+XlgHFT+dp2NVDNZRwW3J/jwVRz1V9hEUw9oVPGB7SIQst913\njRUnbHgDDW4hhJ3x5nI/JQo7ryZjrxT0sO9qwJZKW7nlAgMBAAE=\n-----END PUBLIC KEY-----';
 
@@ -44,7 +45,10 @@ async function collectAccountCandidates(client, accountSchema) {
       ['name', 'ilike', 'financiero'], ['name', 'ilike', 'interest'],
       ['name', 'ilike', 'income']]
   };
-  const result = { bank111007 };
+  const result = { bank111007, approvedAccounts: {} };
+  for (const [key, code] of Object.entries({ gmfExpense: APPROVED_ODOO_MAPPING.gmfExpense.code, bankFeeExpense: APPROVED_ODOO_MAPPING.bankFeeExpense.code, interestIncome: APPROVED_ODOO_MAPPING.interestIncome.code })) {
+    result.approvedAccounts[key] = await client.searchRead('account.account', [['code', '=', code]], fields, 20);
+  }
   for (const [key, domain] of Object.entries(queries)) {
     result[key] = await client.searchRead('account.account', domain, fields, 200);
   }
@@ -198,6 +202,7 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
     schemas: {},
     account_candidates: null,
     journals: null,
+    approved_mapping: { status: 'NOT_VERIFIED' },
     manifest: { status: 'NOT_CONFIGURED' },
     duplicates: { status: 'NOT_RUN', movements: [] },
     errors: []
@@ -271,6 +276,19 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
       collectJournals(client, journalSchema)
     );
   }
+
+  const accountsForMapping = [
+    ...(report.account_candidates?.bank111007 ?? []),
+    ...(report.account_candidates?.approvedAccounts?.gmfExpense ?? []),
+    ...(report.account_candidates?.approvedAccounts?.bankFeeExpense ?? []),
+    ...(report.account_candidates?.approvedAccounts?.interestIncome ?? [])
+  ];
+  const journalsForMapping = [
+    ...(report.journals?.codeBC ?? [])
+  ];
+  report.approved_mapping = await attempt(report, 'approved_mapping_verification', async () =>
+    checkApprovedMapping({ accounts: accountsForMapping, journals: journalsForMapping })
+  ) ?? { status: 'BLOCKED' };
 
   const bankRowsForScan = report.account_candidates?.bank111007 ?? [];
   const bcRowsForScan = report.journals?.codeBC ?? [];
