@@ -1,13 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildMoveDraft, movementReference, classifyDuplicate } from '../src/planner.mjs';
+import { APPROVED_PLANNER_MAPPING } from '../src/accounting-map.mjs';
 
 const mapping = {
-  bankAccountId: 101,
-  journalId: 22,
-  gmfExpenseAccountId: 201,
-  bankFeeExpenseAccountId: 202,
-  interestIncomeAccountId: 203
+  ...APPROVED_PLANNER_MAPPING
 };
 
 test('GMF builds balanced bank credit and expense debit in memory', () => {
@@ -39,7 +36,7 @@ test('fee uses separate bank-fee expense account', () => {
     id: 'B1-NOV-001', date: '2026-11-12', description: 'CUOTA MANEJO TRJ DEB',
     category: 'BANK_FEE', direction: 'debit', amount_cents: 1805000
   }, mapping);
-  assert.equal(draft.params.vals_list[0].line_ids[0][2].account_id, 202);
+  assert.equal(draft.params.vals_list[0].line_ids[0][2].account_id, 31397);
 });
 
 test('references are stable and duplicate classifications fail closed', () => {
