@@ -7,8 +7,8 @@ import { APPROVED_PLANNER_MAPPING, APPROVED_ODOO_MAPPING } from '../src/accounti
 import { buildMoveDraft, movementReference } from '../src/planner.mjs';
 import { GuardedFinancialWriter, RELEASE_TOKEN, assertFinancialWriteGate } from '../src/write-guard.mjs';
 
-const RELEASE_MARKER_BASE = 'ATH-FIN-016-EXECUTE\\nbatch_id=' + EXPECTED_SCOPE.batchId +
-  '\\nmanifest_sha256=' + EXPECTED_SCOPE.sha256 + '\\n';
+const RELEASE_MARKER_BASE = 'ATH-FIN-016-EXECUTE\nbatch_id=' + EXPECTED_SCOPE.batchId +
+  '\nmanifest_sha256=' + EXPECTED_SCOPE.sha256 + '\n';
 
 function requireCheck(condition, code) {
   if (!condition) throw new Error(code);
@@ -62,7 +62,7 @@ async function main() {
   requireCheck(process.env.GITHUB_REF === 'refs/heads/ath-fin-016-financial-executor', 'EXECUTION_BRANCH_BLOCKED');
   const marker = await readFile(new URL('../release/EXECUTE-LOTE-A', import.meta.url), 'utf8');
   const validMarker = marker === RELEASE_MARKER_BASE ||
-    (marker.startsWith(RELEASE_MARKER_BASE) && /^attempt=[1-9][0-9]*\\n$/.test(marker.slice(RELEASE_MARKER_BASE.length)));
+    (marker.startsWith(RELEASE_MARKER_BASE) && /^attempt=[1-9][0-9]*\n$/.test(marker.slice(RELEASE_MARKER_BASE.length)));
   requireCheck(validMarker, 'EXECUTION_RELEASE_MARKER_INVALID');
 
   const manifest = validateManifest(process.env.ATH_FIN016_MANIFEST_JSON);
