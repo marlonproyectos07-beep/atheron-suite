@@ -117,7 +117,7 @@ test('borrador o cotizacion enviada: sin enlace, sin notas y sin escrituras en l
   assert.deepEqual(r[0].notes, { 1: [], 2: [] });
 });
 
-test('confirmada y elegible: UN enlace vigente (vence salida+1 23:59 Bogota), una nota, la reserva intacta y nada enviado', (t) => {
+test('confirmada y elegible: UN enlace vigente (vence el dia de la salida a las 23:59 de Bogota), una nota, la reserva intacta y nada enviado', (t) => {
   const r = py({ orders: [order(1)], steps: [run(1)] }, t);
   if (!r) return;
   assert.equal(r[0].err, null);

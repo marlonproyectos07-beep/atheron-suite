@@ -73,6 +73,31 @@ Aplicacion en la copia: 7 elementos nuevos (5 campos, 1 accion de ventana, 1 men
 Unitarias: `npm test` 410/410 (9 nuevas, incluido el Python real del manifiesto ejecutado con python3; mutacion deliberada del calculo detectada).
 Limites: la alerta compara solo el check-out (el check-in sale de la llegada real y no cambia); cubre lineas aceptadas despues de este cambio (las anteriores no tienen fechas guardadas); no corrige nada en el portal.
 
+## Cuarta ronda (2026-11-13) — puente Smoobu → Odoo → enlace de registro
+Rama `feat/ath-sire-tra-inc1-estructura`. Copia `atheron1-pruebas-20261108` (vence 2026-11-24). Aislamiento 8/8 antes, tras instalar y al final (el cron 48 se reactivo al crear la automatizacion y se apago de nuevo, solo en la copia). Instalado solo lo nuevo: accion `sa_invite_auto` y automatizacion `au_invite`; el codigo guardado en la copia tiene la misma huella (sha256 `2b5ca7a0d443acb0`) que el del repositorio. Simulador de TRA; ninguna llamada a Smoobu, a SIRE ni a MinCIT.
+Reservas sinteticas con formato Smoobu (ids 170400911-13, correos `example.invalid`), pasadas por `buildCreatePayload` + `applyPlan` + lista blanca `validateWrite` del conector; las 9 escrituras resultantes se reprodujeron en la copia desde la sesion del navegador.
+| Caso | Resultado observado |
+|---|---|
+| Borrador (3 reservas creadas por el conector) | estado borrador; **0 enlaces** |
+| Confirmada (COT/2026/03887) | **1 enlace vigente** + nota interna "preparado (no enviado)"; la reserva no se modifica; vence el dia de la salida 23:59 Bogota |
+| Repeticion: accion corrida 2 veces mas, escritura del mismo valor, reconfirmar, reprocesar el conector | sigue 1 enlace, mismo token y URL, 1 nota; el conector: 0 escrituras, `PEDIDO_YA_EXISTE` en las 3 |
+| Sin fecha de entrada (COT/2026/03888, confirmada) | la confirmacion NO se bloquea; registro en estado *error* con la causa + nota; repetir no duplica; al completar la fecha, el MISMO registro pasa a enlace vigente (token nuevo) y repetir ya no cambia nada |
+| Sin check-out pero con fecha de devolucion del alquiler (COT/2026/03889) | el enlace se prepara con esa fecha (igual que la accion manual); al restaurar el check-out no se regenera |
+| Cancelacion (COT/2026/03888) | llegada rechazada ("reserva no confirmada, cancelada o no-show"); 0 intentos; 0 llamadas nuevas al simulador |
+| Titular + 1 acompanante (COT/2026/03887) | formulario procesado (2 huespedes *Recibido*, respuestas borradas, enlace *procesado*) → validacion de Recepcion (sin habitacion: rechazada; con habitacion 201: validados) |
+| Antes de la llegada real | emisor: `SIN_PRINCIPAL`, 0 llamadas, 0 intentos; los huespedes no tienen estado TRA |
+| Llegada real → TRA | ambos *pendiente*; simulador: principal aceptado y acompanante aceptado (2 llamadas, 2 intentos, fechas guardadas); repetir 2 veces: 0 envios |
+| Efectos externos (frente a la linea base) | correos 0, WhatsApp 0, SMS 0, actividades 0; +3 registros de enlace y +7 notas internas (esperados) |
+Unitarias: `npm test` 420/420 (10 nuevas: Python real de la accion, recorrido con el conector, mutaciones deliberadas detectadas).
+Limites de esta ronda:
+- El cliente de escritura del conector (`SyncWriteClient`) sigue **desarmado y limitado a produccion**; no se toco. Las escrituras del conector se generaron con su codigo y se reprodujeron en la copia; la lectura de la repeticion uso el estado real de la copia.
+- Las respuestas del formulario se cargaron como lineas de encuesta (la automatizacion y el mapeo son los reales); la pantalla del formulario no se recorrio en esta ronda (la pagina de bienvenida abre en modo anonimo; el recorrido de pantalla se probo en la ronda 1).
+- El conector rechaza nombres genericos como "prueba": los huespedes sinteticos de esta ronda usan otro nombre ficticio.
+- Un enlace vigente **no se revoca** al cancelar la reserva (decision pendiente).
+- Si la estancia se prorroga, el enlace conserva su vencimiento original.
+- La automatizacion corre dentro de la confirmacion de la reserva: nunca lanza error ni escribe en la reserva, pero es la unica automatizacion sobre reservas de este paquete.
+- Datos sinteticos y 3 reservas de prueba se dejan en la copia (vence sola).
+
 ## Pendiente o limitado
 - Tildes, gramatica y concurrencia de formularios: resueltos en la segunda ronda.
 - El pais sigue siendo texto libre normalizado por catalogo (no hay selector de pais en Encuestas); lo no reconocido o ambiguo queda para Recepcion.
