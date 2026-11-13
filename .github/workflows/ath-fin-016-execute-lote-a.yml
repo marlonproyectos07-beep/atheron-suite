@@ -43,3 +43,6 @@ jobs:
 
       - name: Revalidate and execute authorized Lote A
         run: node scripts/execute.mjs
+
+      - name: Independently verify all posted moves and ledger balance
+        run: node scripts/verify-posted.mjs
