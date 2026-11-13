@@ -144,8 +144,8 @@ action = {'type': 'ir.actions.act_window', 'name': 'Enlace de registro', 'res_mo
 
 // Puente Smoobu -> Odoo -> enlace de registro. Lo dispara la automatizacion au_invite (reserva Smoobu confirmada, o cancelada
 // despues de haber tenido enlace). Es UNA sola regla sobre reservas; solo escribe en los registros de enlace, nunca en la reserva.
-// Reglas: NUNCA confirma, escribe ni cancela el pedido; NUNCA envia el enlace; NUNCA deja escapar un error (try/except por reserva:
-// no puede bloquear la confirmacion ni la cancelacion del pedido); idempotente.
+// Reglas: NUNCA confirma, escribe ni cancela el pedido; NUNCA envia el enlace; NUNCA deja escapar un error (SAVEPOINT de PostgreSQL + try/except por
+// reserva: un fallo de Python o de base de datos se deshace solo en esa reserva y no bloquea la confirmacion ni la cancelacion del pedido); idempotente.
 // Confirmada: si la reserva ya tiene enlace (vigente, usado o retirado) no hace nada, asi que una prorroga NO mueve el vencimiento
 // original. Si faltan datos deja UN registro "error" con la causa y una nota interna; al completarse pasa a enlace vigente.
 // Cancelada (state cancel, o estado de reserva cancelled / no_show): revoca los enlaces vigentes rotando su token (la URL anterior
@@ -200,20 +200,28 @@ def revoke(order, UI):
     if n:
         order.message_post(body='Registro SIRE/TRA: la reserva se canceló; el enlace de registro quedó revocado (la URL anterior ya no recibe datos). Los formularios ya recibidos se conservan.', message_type='comment', subtype_xmlid='mail.mt_note')
 
+def process(order, survey, UI, base, today):
+    if 'SMOOBU-' not in (order.x_pms_reference or ''):
+        return
+    if order.state == 'cancel' or order.x_reservation_status in ('cancelled', 'no_show'):
+        revoke(order, UI)
+    elif order.state == 'sale':
+        prepare(order, survey, UI, base, today)
+
 survey = env.ref('__ath_sire_tra__.survey_registro', raise_if_not_found=False)
 if survey:
     UI = env['survey.user_input']
     base = env['ir.config_parameter'].sudo().get_param('web.base.url')
     today = (datetime.datetime.now() - datetime.timedelta(hours=5)).date()
     for order in records:
+        env.flush_all()
+        env.cr.execute('SAVEPOINT ath_invite_sp')
         try:
-            if 'SMOOBU-' not in (order.x_pms_reference or ''):
-                continue
-            if order.state == 'cancel' or order.x_reservation_status in ('cancelled', 'no_show'):
-                revoke(order, UI)
-            elif order.state == 'sale':
-                prepare(order, survey, UI, base, today)
+            process(order, survey, UI, base, today)
+            env.cr.execute('RELEASE SAVEPOINT ath_invite_sp')
         except Exception as e:
+            env.invalidate_all()
+            env.cr.execute('ROLLBACK TO SAVEPOINT ath_invite_sp')
             log('SIRE/TRA puente: reserva %s sin procesar: %s' % (order.id, e), level='warning')`;
 
 const PY_REVOKE = String.raw`if not records:
