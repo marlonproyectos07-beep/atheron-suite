@@ -22,7 +22,7 @@ function validateDraft(draft) {
   const values = draft.params?.vals_list;
   if (!Array.isArray(values) || values.length !== 1) throw new Error('ATH_FIN016_ONE_MOVE_ONLY');
   const move = values[0];
-  if (typeof move.ref !== 'string' || !/^ATH-FIN-015\\|LOTE-A\\|B1-NOV-\\d{3}$/.test(move.ref)) {
+  if (typeof move.ref !== 'string' || !/^ATH-FIN-015\|LOTE-A\|B1-NOV-\d{3}$/.test(move.ref)) {
     throw new Error('ATH_FIN016_REFERENCE_OUT_OF_SCOPE');
   }
   if (!Array.isArray(move.line_ids) || move.line_ids.length !== 2) throw new Error('ATH_FIN016_TWO_LINES_REQUIRED');
@@ -44,7 +44,7 @@ function validateDraft(draft) {
 
 export class GuardedFinancialWriter {
   constructor({ baseUrl, database, apiKey, fetchImpl = globalThis.fetch }) {
-    this.baseUrl = String(baseUrl ?? '').replace(/\\/$/, '');
+    this.baseUrl = String(baseUrl ?? '').replace(/\/$/, '');
     this.database = database;
     this.apiKey = apiKey;
     this.fetch = fetchImpl;
