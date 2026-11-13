@@ -196,7 +196,6 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
     user: null,
     acl: {},
     schemas: {},
-    accounting_defaults: null,
     account_candidates: null,
     journals: null,
     manifest: { status: 'NOT_CONFIGURED' },
@@ -236,6 +235,12 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
       uid: Number.isInteger(uid) ? uid : null,
       allowed_company_ids: Array.isArray(context.allowed_company_ids) ? context.allowed_company_ids : []
     };
+    if (Number.isInteger(uid) && uid > 0) {
+      const profile = await attempt(report, 'current_user_company', () =>
+        client.call('res.users', 'read', { ids: [uid], fields: ['id', 'company_id', 'company_ids'] })
+      );
+      if (Array.isArray(profile) && profile.length === 1) report.user.company_profile = profile[0];
+    }
   }
 
   for (const model of ['account.move', 'account.move.line', 'account.account', 'account.journal']) {
@@ -243,11 +248,6 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
       client.fieldsGet(model)
     );
     if (schema) report.schemas[model] = schema;
-    if (model === 'account.move') {
-      report.accounting_defaults = await attempt(report, 'account_move_default_get', () =>
-        client.call('account.move', 'default_get', { fields_list: ['move_type', 'date', 'journal_id'] })
-      );
-    }
     const operations = model === 'account.move' || model === 'account.move.line'
       ? ['read', 'create', 'write'] : ['read'];
     for (const operation of operations) {
