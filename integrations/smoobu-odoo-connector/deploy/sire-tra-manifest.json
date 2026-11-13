@@ -1,0 +1,3112 @@
+{
+ "fingerprint": "8a50923f98f78171",
+ "NS": "__ath_sire_tra__",
+ "MODELS": [
+  {
+   "model": "x_establishment",
+   "name": "Establecimiento SIRE/TRA"
+  },
+  {
+   "model": "x_report_attempt",
+   "name": "Intento de reporte SIRE/TRA"
+  }
+ ],
+ "FIELDS": [
+  [
+   "x_establishment",
+   "x_name",
+   "char",
+   "Nombre",
+   {
+    "required": true
+   }
+  ],
+  [
+   "x_establishment",
+   "x_code",
+   "char",
+   "Código de propiedad (PROPERTY_ID)",
+   {
+    "required": true
+   }
+  ],
+  [
+   "x_establishment",
+   "x_active",
+   "boolean",
+   "Activo",
+   {}
+  ],
+  [
+   "x_establishment",
+   "x_address_partner_id",
+   "many2one",
+   "Dirección (contacto)",
+   {
+    "relation": "res.partner"
+   }
+  ],
+  [
+   "x_establishment",
+   "x_rnt_number",
+   "char",
+   "Número RNT",
+   {}
+  ],
+  [
+   "x_establishment",
+   "x_rnt_holder_id",
+   "many2one",
+   "Titular del RNT",
+   {
+    "relation": "res.partner"
+   }
+  ],
+  [
+   "x_establishment",
+   "x_rnt_expiry",
+   "date",
+   "Vencimiento RNT",
+   {}
+  ],
+  [
+   "x_establishment",
+   "x_operator_company_id",
+   "many2one",
+   "Operador (compañía)",
+   {
+    "relation": "res.company"
+   }
+  ],
+  [
+   "x_establishment",
+   "x_sire_reporter_id",
+   "many2one",
+   "Quien reporta a SIRE",
+   {
+    "relation": "res.partner"
+   }
+  ],
+  [
+   "x_establishment",
+   "x_sire_company_code",
+   "char",
+   "SIRE: código del hotel",
+   {}
+  ],
+  [
+   "x_establishment",
+   "x_sire_city_code",
+   "char",
+   "SIRE: código de ciudad",
+   {}
+  ],
+  [
+   "x_establishment",
+   "x_sire_move_in_code",
+   "char",
+   "SIRE: código movimiento entrada",
+   {}
+  ],
+  [
+   "x_establishment",
+   "x_sire_move_out_code",
+   "char",
+   "SIRE: código movimiento salida",
+   {}
+  ],
+  [
+   "x_establishment",
+   "x_sire_date_format",
+   "char",
+   "SIRE: formato de fecha (strftime)",
+   {}
+  ],
+  [
+   "x_establishment",
+   "x_sire_encoding",
+   "selection",
+   "SIRE: codificación",
+   {
+    "selection": [
+     {
+      "value": "utf-8",
+      "name": "UTF-8",
+      "sequence": 1
+     },
+     {
+      "value": "latin-1",
+      "name": "Latin-1",
+      "sequence": 2
+     }
+    ]
+   }
+  ],
+  [
+   "x_establishment",
+   "x_sire_codes_verified",
+   "boolean",
+   "SIRE: códigos verificados con el paquete de guía",
+   {}
+  ],
+  [
+   "x_establishment",
+   "x_sire_export_enabled",
+   "boolean",
+   "SIRE: exportador habilitado",
+   {}
+  ],
+  [
+   "x_establishment",
+   "x_tra_mode",
+   "selection",
+   "TRA: modo",
+   {
+    "selection": [
+     {
+      "value": "manual",
+      "name": "Manual (portal)",
+      "sequence": 1
+     },
+     {
+      "value": "api",
+      "name": "API PMS",
+      "sequence": 2
+     },
+     {
+      "value": "no_aplica",
+      "name": "No aplica",
+      "sequence": 3
+     }
+    ]
+   }
+  ],
+  [
+   "x_establishment",
+   "x_tra_accommodation_type",
+   "char",
+   "TRA: tipo de acomodación (valor oficial)",
+   {}
+  ],
+  [
+   "x_establishment",
+   "x_tra_cost_basis",
+   "selection",
+   "TRA: base del costo",
+   {
+    "selection": [
+     {
+      "value": "total_estancia",
+      "name": "Total de la estancia",
+      "sequence": 1
+     },
+     {
+      "value": "por_noche",
+      "name": "Por noche",
+      "sequence": 2
+     }
+    ]
+   }
+  ],
+  [
+   "x_establishment",
+   "x_tra_config_verified",
+   "boolean",
+   "TRA: configuración verificada con MinCIT",
+   {}
+  ],
+  [
+   "x_establishment",
+   "x_analytic_account_id",
+   "many2one",
+   "Cuenta analitica",
+   {
+    "relation": "account.analytic.account"
+   }
+  ],
+  [
+   "resource.resource",
+   "x_establishment_id",
+   "many2one",
+   "Establecimiento",
+   {
+    "relation": "x_establishment"
+   }
+  ],
+  [
+   "resource.resource",
+   "x_unit_kind",
+   "selection",
+   "Tipo de unidad",
+   {
+    "selection": [
+     {
+      "value": "fisica",
+      "name": "Física",
+      "sequence": 1
+     },
+     {
+      "value": "derivada",
+      "name": "Derivada",
+      "sequence": 2
+     }
+    ]
+   }
+  ],
+  [
+   "resource.resource",
+   "x_component_ids",
+   "many2many",
+   "Unidades que la componen",
+   {
+    "relation": "resource.resource",
+    "relation_table": "x_ath_resource_component_rel",
+    "column1": "x_parent_id",
+    "column2": "x_component_id"
+   }
+  ],
+  [
+   "l10n_latam.identification.type",
+   "x_sire_code",
+   "char",
+   "Código SIRE",
+   {}
+  ],
+  [
+   "res.country",
+   "x_sire_code",
+   "char",
+   "Código SIRE",
+   {}
+  ],
+  [
+   "survey.user_input",
+   "x_sale_order_id",
+   "many2one",
+   "Reserva",
+   {
+    "relation": "sale.order"
+   }
+  ],
+  [
+   "survey.user_input",
+   "x_ath_state",
+   "selection",
+   "Estado del registro",
+   {
+    "selection": [
+     {
+      "value": "invitado",
+      "name": "Invitado",
+      "sequence": 1
+     },
+     {
+      "value": "procesado",
+      "name": "Procesado",
+      "sequence": 2
+     },
+     {
+      "value": "error",
+      "name": "Error",
+      "sequence": 3
+     },
+     {
+      "value": "revocado",
+      "name": "Revocado",
+      "sequence": 4
+     }
+    ]
+   }
+  ],
+  [
+   "survey.user_input",
+   "x_ath_error",
+   "char",
+   "Error de procesamiento",
+   {}
+  ],
+  [
+   "survey.user_input",
+   "x_ath_processed_at",
+   "datetime",
+   "Procesado el",
+   {}
+  ],
+  [
+   "survey.user_input",
+   "x_ath_url",
+   "char",
+   "Enlace para el huésped",
+   {}
+  ],
+  [
+   "survey.user_input",
+   "x_ath_lock",
+   "integer",
+   "Bloqueo (técnico)",
+   {}
+  ],
+  [
+   "survey.user_input",
+   "x_ath_form_version",
+   "char",
+   "Versión del formulario y aviso",
+   {}
+  ],
+  [
+   "survey.user_input",
+   "x_ath_submitted_at",
+   "datetime",
+   "Recibido el",
+   {}
+  ],
+  [
+   "survey.user_input",
+   "x_ath_snapshot",
+   "text",
+   "Respuestas recibidas (evidencia)",
+   {
+    "groups": [
+     "base.group_system"
+    ]
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_doc_type_id",
+   "many2one",
+   "Tipo de documento",
+   {
+    "relation": "l10n_latam.identification.type"
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_given_names",
+   "char",
+   "Nombres",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_surname_1",
+   "char",
+   "Primer apellido",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_surname_2",
+   "char",
+   "Segundo apellido",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_residence_city_id",
+   "many2one",
+   "Ciudad de residencia",
+   {
+    "relation": "res.city"
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_residence_text",
+   "char",
+   "Residencia (texto)",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_residence_country_id",
+   "many2one",
+   "País de residencia",
+   {
+    "relation": "res.country"
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_origin_city_id",
+   "many2one",
+   "Ciudad de procedencia",
+   {
+    "relation": "res.city"
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_origin_text",
+   "char",
+   "Procedencia (texto)",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_origin_country_id",
+   "many2one",
+   "País de procedencia",
+   {
+    "relation": "res.country"
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_destination_text",
+   "char",
+   "Próximo destino (texto)",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_destination_country_id",
+   "many2one",
+   "País proximo destino",
+   {
+    "relation": "res.country"
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_travel_reason",
+   "char",
+   "Motivo de viaje (declarado)",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_is_main",
+   "boolean",
+   "Huésped principal",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_consent",
+   "boolean",
+   "Consentimiento de datos",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_consent_at",
+   "datetime",
+   "Consentimiento el",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_data_state",
+   "selection",
+   "Estado de los datos",
+   {
+    "selection": [
+     {
+      "value": "borrador",
+      "name": "Borrador",
+      "sequence": 1
+     },
+     {
+      "value": "recibido",
+      "name": "Recibido",
+      "sequence": 2
+     },
+     {
+      "value": "validado",
+      "name": "Validado",
+      "sequence": 3
+     },
+     {
+      "value": "rechazado",
+      "name": "Rechazado",
+      "sequence": 4
+     }
+    ]
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_data_source",
+   "selection",
+   "Origen de los datos",
+   {
+    "selection": [
+     {
+      "value": "formulario",
+      "name": "Formulario",
+      "sequence": 1
+     },
+     {
+      "value": "recepcion",
+      "name": "Recepción",
+      "sequence": 2
+     },
+     {
+      "value": "contingencia_smoobu",
+      "name": "Contingencia Smoobu",
+      "sequence": 3
+     }
+    ]
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_validated_at",
+   "datetime",
+   "Validado el",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_user_input_id",
+   "many2one",
+   "Formulario de origen",
+   {
+    "relation": "survey.user_input"
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_establishment_id",
+   "many2one",
+   "Establecimiento",
+   {
+    "relation": "x_establishment"
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_arrived_at",
+   "datetime",
+   "Llegada real",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_departed_at",
+   "datetime",
+   "Salida real",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_is_foreign",
+   "boolean",
+   "Extranjero",
+   {
+    "store": true,
+    "readonly": true,
+    "depends": "x_nationality",
+    "compute": "for r in self:\n    r['x_is_foreign'] = bool(r.x_nationality) and r.x_nationality.code != 'CO'"
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_sire_in_state",
+   "selection",
+   "SIRE entrada",
+   {
+    "selection": [
+     {
+      "value": "no_aplica",
+      "name": "No aplica",
+      "sequence": 1
+     },
+     {
+      "value": "pendiente",
+      "name": "Pendiente",
+      "sequence": 2
+     },
+     {
+      "value": "en_envio",
+      "name": "En envío",
+      "sequence": 3
+     },
+     {
+      "value": "enviado",
+      "name": "Enviado",
+      "sequence": 4
+     },
+     {
+      "value": "aceptado",
+      "name": "Aceptado",
+      "sequence": 5
+     },
+     {
+      "value": "rechazado",
+      "name": "Rechazado",
+      "sequence": 6
+     },
+     {
+      "value": "incierto",
+      "name": "Incierto",
+      "sequence": 7
+     }
+    ]
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_sire_out_state",
+   "selection",
+   "SIRE salida",
+   {
+    "selection": [
+     {
+      "value": "no_aplica",
+      "name": "No aplica",
+      "sequence": 1
+     },
+     {
+      "value": "pendiente",
+      "name": "Pendiente",
+      "sequence": 2
+     },
+     {
+      "value": "en_envio",
+      "name": "En envío",
+      "sequence": 3
+     },
+     {
+      "value": "enviado",
+      "name": "Enviado",
+      "sequence": 4
+     },
+     {
+      "value": "aceptado",
+      "name": "Aceptado",
+      "sequence": 5
+     },
+     {
+      "value": "rechazado",
+      "name": "Rechazado",
+      "sequence": 6
+     },
+     {
+      "value": "incierto",
+      "name": "Incierto",
+      "sequence": 7
+     }
+    ]
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_tra_state",
+   "selection",
+   "TRA",
+   {
+    "selection": [
+     {
+      "value": "no_aplica",
+      "name": "No aplica",
+      "sequence": 1
+     },
+     {
+      "value": "pendiente",
+      "name": "Pendiente",
+      "sequence": 2
+     },
+     {
+      "value": "en_envio",
+      "name": "En envío",
+      "sequence": 3
+     },
+     {
+      "value": "enviado",
+      "name": "Enviado",
+      "sequence": 4
+     },
+     {
+      "value": "aceptado",
+      "name": "Aceptado",
+      "sequence": 5
+     },
+     {
+      "value": "rechazado",
+      "name": "Rechazado",
+      "sequence": 6
+     },
+     {
+      "value": "incierto",
+      "name": "Incierto",
+      "sequence": 7
+     }
+    ]
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_tra_external_id",
+   "char",
+   "TRA: identificador devuelto",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_claim_ref",
+   "char",
+   "Reclamo (técnico)",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_lock_rev",
+   "integer",
+   "Bloqueo (técnico)",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_last_error",
+   "char",
+   "Último error u observación",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_tra_room",
+   "char",
+   "TRA: habitación",
+   {
+    "store": false,
+    "readonly": true,
+    "depends": "x_room_resource_id",
+    "compute": "for r in self:\n    n = (r.x_room_resource_id.name or '').split(' ')[0]\n    r['x_tra_room'] = n if n.isdigit() else ''"
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_tra_rep_checkin",
+   "date",
+   "TRA: check-in aceptado",
+   {
+    "readonly": true
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_tra_rep_checkout",
+   "date",
+   "TRA: check-out aceptado",
+   {
+    "readonly": true
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_date_gap",
+   "selection",
+   "Discrepancia de fechas",
+   {
+    "selection": [
+     {
+      "value": "prorroga",
+      "name": "Prórroga",
+      "sequence": 1
+     },
+     {
+      "value": "anticipada",
+      "name": "Salida anticipada",
+      "sequence": 2
+     }
+    ],
+    "store": true,
+    "readonly": true,
+    "depends": "x_tra_state,x_tra_rep_checkout,x_departed_at,x_sale_order_id.x_checkout",
+    "compute": "for r in self:\n    gap = False\n    rep = r.x_tra_rep_checkout\n    if r.x_tra_state == 'aceptado' and rep:\n        d = r.x_departed_at\n        if d:\n            day = d.date()\n            cur = day if d.hour >= 5 else day.fromordinal(day.toordinal() - 1)\n        else:\n            cur = r.x_sale_order_id.x_checkout\n        if cur and cur > rep:\n            gap = 'prorroga'\n        elif cur and cur < rep:\n            gap = 'anticipada'\n    r['x_date_gap'] = gap"
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_order_checkin",
+   "date",
+   "Check-in previsto",
+   {
+    "related": "x_sale_order_id.x_checkin",
+    "readonly": true
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_order_checkout",
+   "date",
+   "Check-out previsto",
+   {
+    "related": "x_sale_order_id.x_checkout",
+    "readonly": true
+   }
+  ],
+  [
+   "x_report_attempt",
+   "x_name",
+   "char",
+   "Descripción",
+   {}
+  ],
+  [
+   "x_report_attempt",
+   "x_guest_line_id",
+   "many2one",
+   "Huésped",
+   {
+    "relation": "x_guests_line",
+    "required": true,
+    "on_delete": "restrict"
+   }
+  ],
+  [
+   "x_report_attempt",
+   "x_sale_order_id",
+   "many2one",
+   "Reserva",
+   {
+    "relation": "sale.order",
+    "related": "x_guest_line_id.x_sale_order_id",
+    "store": true,
+    "readonly": true
+   }
+  ],
+  [
+   "x_report_attempt",
+   "x_system",
+   "selection",
+   "Sistema",
+   {
+    "required": true,
+    "selection": [
+     {
+      "value": "sire_entrada",
+      "name": "SIRE entrada",
+      "sequence": 1
+     },
+     {
+      "value": "sire_salida",
+      "name": "SIRE salida",
+      "sequence": 2
+     },
+     {
+      "value": "tra",
+      "name": "TRA",
+      "sequence": 3
+     }
+    ]
+   }
+  ],
+  [
+   "x_report_attempt",
+   "x_channel",
+   "selection",
+   "Canal",
+   {
+    "required": true,
+    "selection": [
+     {
+      "value": "portal_manual",
+      "name": "Portal (manual)",
+      "sequence": 1
+     },
+     {
+      "value": "archivo_sire",
+      "name": "Archivo SIRE",
+      "sequence": 2
+     },
+     {
+      "value": "api_tra",
+      "name": "API TRA",
+      "sequence": 3
+     },
+     {
+      "value": "simulador",
+      "name": "Simulador (pruebas)",
+      "sequence": 4
+     }
+    ]
+   }
+  ],
+  [
+   "x_report_attempt",
+   "x_result",
+   "selection",
+   "Resultado",
+   {
+    "required": true,
+    "selection": [
+     {
+      "value": "enviado",
+      "name": "Enviado",
+      "sequence": 1
+     },
+     {
+      "value": "aceptado",
+      "name": "Aceptado",
+      "sequence": 2
+     },
+     {
+      "value": "rechazado",
+      "name": "Rechazado",
+      "sequence": 3
+     },
+     {
+      "value": "incierto",
+      "name": "Incierto",
+      "sequence": 4
+     },
+     {
+      "value": "error_previo",
+      "name": "Error antes de enviar",
+      "sequence": 5
+     },
+     {
+      "value": "no_recibido",
+      "name": "Comprobado: no recibido",
+      "sequence": 6
+     }
+    ]
+   }
+  ],
+  [
+   "x_report_attempt",
+   "x_external_id",
+   "char",
+   "Identificador oficial",
+   {}
+  ],
+  [
+   "x_report_attempt",
+   "x_http_status",
+   "integer",
+   "Estado HTTP",
+   {}
+  ],
+  [
+   "x_report_attempt",
+   "x_error_code",
+   "char",
+   "Código de error",
+   {}
+  ],
+  [
+   "x_report_attempt",
+   "x_reported_checkin",
+   "date",
+   "Check-in reportado",
+   {}
+  ],
+  [
+   "x_report_attempt",
+   "x_reported_checkout",
+   "date",
+   "Check-out reportado",
+   {}
+  ],
+  [
+   "x_report_attempt",
+   "x_run_ref",
+   "char",
+   "Ejecución",
+   {}
+  ],
+  [
+   "x_report_attempt",
+   "x_actor",
+   "char",
+   "Actor declarado (no autenticado)",
+   {}
+  ],
+  [
+   "x_report_attempt",
+   "x_evidence",
+   "binary",
+   "Evidencia",
+   {}
+  ],
+  [
+   "x_report_attempt",
+   "x_evidence_name",
+   "char",
+   "Nombre de la evidencia",
+   {}
+  ],
+  [
+   "x_report_attempt",
+   "x_note",
+   "text",
+   "Nota",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_attempt_ids",
+   "one2many",
+   "Intentos",
+   {
+    "relation": "x_report_attempt",
+    "relation_field": "x_guest_line_id",
+    "readonly": true
+   }
+  ]
+ ],
+ "ACLS": [
+  {
+   "xmlid": "acl_establishment_user",
+   "model": "x_establishment",
+   "group": "base.group_user",
+   "perms": [
+    1,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "xmlid": "acl_establishment_admin",
+   "model": "x_establishment",
+   "group": "base.group_system",
+   "perms": [
+    1,
+    1,
+    1,
+    0
+   ]
+  },
+  {
+   "xmlid": "acl_attempt_user",
+   "model": "x_report_attempt",
+   "group": "base.group_user",
+   "perms": [
+    1,
+    0,
+    1,
+    0
+   ]
+  }
+ ],
+ "SERVER_ACTIONS": [
+  {
+   "xmlid": "sa_invite",
+   "name": "[SIRE/TRA] Generar enlace de registro",
+   "model": "sale.order",
+   "bind": true,
+   "code": "if not records:\n    raise UserError('Seleccione al menos un registro.')\nsurvey = env.ref('__ath_sire_tra__.survey_registro')\nbase = env['ir.config_parameter'].sudo().get_param('web.base.url')\nids = []\nfor order in records:\n    if order.state == 'cancel' or order.x_reservation_status in ('cancelled', 'no_show'):\n        raise UserError('Reserva %s cancelada o no-show: no se genera enlace.' % order.name)\n    old = env['survey.user_input'].search([('x_sale_order_id', '=', order.id), ('x_ath_state', '=', 'invitado')])\n    for o in old:\n        o.write({'access_token': env['survey.user_input'].default_get(['access_token'])['access_token'], 'deadline': datetime.datetime.now(), 'x_ath_state': 'revocado', 'x_ath_url': False})\n    end = order.x_checkout or (order.rental_return_date and order.rental_return_date.date())\n    deadline = datetime.datetime.combine(end + datetime.timedelta(days=1), datetime.time(4, 59)) if end else datetime.datetime.now() + datetime.timedelta(days=3)\n    ui = env['survey.user_input'].create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': deadline, 'x_ath_state': 'invitado'})\n    ui.write({'x_ath_url': '%s/survey/%s/%s' % (base, survey.access_token, ui.access_token)})\n    ids.append(ui.id)\naction = {'type': 'ir.actions.act_window', 'name': 'Enlace de registro', 'res_model': 'survey.user_input', 'domain': [('id', 'in', ids)], 'views': [[env.ref('__ath_sire_tra__.view_invite_list').id, 'list'], [env.ref('__ath_sire_tra__.view_invite_form').id, 'form']]}"
+  },
+  {
+   "xmlid": "sa_invite_auto",
+   "name": "[SIRE/TRA] Preparar enlace de registro (automático)",
+   "model": "sale.order",
+   "code": "def prepare(order, survey, UI, base, today):\n    slots = UI.search([('x_sale_order_id', '=', order.id)])\n    done = False\n    pending = None\n    for s in slots:\n        if s.x_ath_state in ('invitado', 'procesado', 'revocado'):\n            done = True\n        elif s.x_ath_state == 'error' and not pending:\n            pending = s\n    if done:\n        return\n    end = order.x_checkout or (order.rental_return_date and order.rental_return_date.date())\n    cause = False\n    if not order.x_checkin and not end:\n        cause = 'Faltan las fechas de entrada y salida de la reserva. Complételas en la reserva y el enlace se preparará solo.'\n    elif not order.x_checkin:\n        cause = 'Falta la fecha de entrada de la reserva. Complétela en la reserva y el enlace se preparará solo.'\n    elif not end:\n        cause = 'Falta la fecha de salida de la reserva. Complétela en la reserva y el enlace se preparará solo.'\n    elif end < today:\n        cause = 'La estancia ya terminó (salida %s): no se preparó enlace. Si hace falta, use «Generar enlace de registro».' % end\n    if cause:\n        if pending and pending.x_ath_error == cause:\n            return\n        if pending:\n            pending.write({'x_ath_error': cause})\n        else:\n            UI.create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': datetime.datetime.now(), 'x_ath_state': 'error', 'x_ath_error': cause})\n        order.message_post(body='Registro SIRE/TRA: no se preparó el enlace de registro. %s' % cause, message_type='comment', subtype_xmlid='mail.mt_note')\n        return\n    deadline = datetime.datetime.combine(end + datetime.timedelta(days=1), datetime.time(4, 59))\n    token = UI.default_get(['access_token'])['access_token']\n    if pending:\n        ui = pending\n        ui.write({'access_token': token, 'deadline': deadline, 'x_ath_state': 'invitado', 'x_ath_error': False})\n    else:\n        ui = UI.create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': deadline, 'x_ath_state': 'invitado'})\n    ui.write({'x_ath_url': '%s/survey/%s/%s' % (base, survey.access_token, ui.access_token)})\n    order.message_post(body='Registro SIRE/TRA: enlace de registro preparado (no enviado). Está en Registro SIRE/TRA > Enlaces de registro; envíelo al huésped principal por el canal habitual.', message_type='comment', subtype_xmlid='mail.mt_note')\n\ndef revoke(order, UI):\n    n = 0\n    for s in UI.search([('x_sale_order_id', '=', order.id), ('x_ath_state', '=', 'invitado')]):\n        if s.state == 'done':\n            continue\n        s.write({'access_token': UI.default_get(['access_token'])['access_token'], 'x_ath_state': 'revocado', 'x_ath_url': False})\n        n += 1\n    if n:\n        order.message_post(body='Registro SIRE/TRA: la reserva se canceló; el enlace de registro quedó revocado (la URL anterior ya no recibe datos). Los formularios ya recibidos se conservan.', message_type='comment', subtype_xmlid='mail.mt_note')\n\ndef process(order, survey, UI, base, today):\n    if 'SMOOBU-' not in (order.x_pms_reference or ''):\n        return\n    if order.state == 'cancel' or order.x_reservation_status in ('cancelled', 'no_show'):\n        revoke(order, UI)\n    elif order.state == 'sale':\n        prepare(order, survey, UI, base, today)\n\nsurvey = env.ref('__ath_sire_tra__.survey_registro', raise_if_not_found=False)\nif survey:\n    UI = env['survey.user_input']\n    base = env['ir.config_parameter'].sudo().get_param('web.base.url')\n    today = (datetime.datetime.now() - datetime.timedelta(hours=5)).date()\n    for order in records:\n        env.flush_all()\n        env.cr.execute('SAVEPOINT ath_invite_sp')\n        try:\n            process(order, survey, UI, base, today)\n            env.cr.execute('RELEASE SAVEPOINT ath_invite_sp')\n        except Exception as e:\n            env.invalidate_all()\n            env.cr.execute('ROLLBACK TO SAVEPOINT ath_invite_sp')\n            log('SIRE/TRA puente: reserva %s sin procesar: %s' % (order.id, e), level='warning')"
+  },
+  {
+   "xmlid": "sa_revoke",
+   "name": "[SIRE/TRA] Revocar enlace",
+   "model": "survey.user_input",
+   "bind": true,
+   "code": "if not records:\n    raise UserError('Seleccione al menos un registro.')\nfor ui in records:\n    if ui.x_ath_state != 'invitado':\n        raise UserError('Solo se revocan enlaces vigentes.')\n    ui.write({'access_token': env['survey.user_input'].default_get(['access_token'])['access_token'], 'deadline': datetime.datetime.now(), 'x_ath_state': 'revocado', 'x_ath_url': False})"
+  },
+  {
+   "xmlid": "sa_map",
+   "name": "[SIRE/TRA] Procesar formulario recibido",
+   "model": "survey.user_input",
+   "code": "DOC = {'Cédula de ciudadanía (Colombia)': 'national_citizen_id', 'Tarjeta de identidad (Colombia)': 'id_card', 'Registro civil (Colombia)': 'civil_registration', 'Cédula de extranjería (Colombia)': 'foreign_resident_card', 'Pasaporte': 'passport', 'PEP': 'PEP', 'PPT': 'PPT'}\nnow = datetime.datetime.now()\nFORM_VERSION = 'registro-huespedes v2 (2026-11-08) / aviso de tratamiento de datos v1'\n\ndef clean(v):\n    return ' '.join(('%s' % (v or '')).replace('\\t', ' ').split()).strip()\n\ndef norm(text):\n    t = clean(text).lower()\n    for a, b in (('á', 'a'), ('é', 'e'), ('í', 'i'), ('ó', 'o'), ('ú', 'u'), ('ü', 'u'), ('ñ', 'n'), ('.', ''), (',', ' ')):\n        t = t.replace(a, b)\n    return ' '.join(t.split())\n\n# Catalogo res.country (ISO): nombre en espanol o ingles, o codigo ISO de 2 letras. Alias explicitos y documentados.\n# Nombres que corresponden a mas de un pais: nunca se infieren (Recepcion elige con el huesped).\nAMBIGUOUS = {'congo', 'guinea', 'corea', 'korea', 'sudan', 'samoa', 'islas virgenes', 'virgin islands', 'macedonia'}\nALIAS = {'eeuu': 'US', 'ee uu': 'US', 'usa': 'US', 'estados unidos de america': 'US', 'united states of america': 'US', 'reino unido': 'GB', 'uk': 'GB'}\nINDEX = {}\nfor lang in ('es_419', 'en_US'):\n    for c in env['res.country'].with_context(lang=lang).search([]):\n        for k in (norm(c.name), (c.code or '').lower()):\n            if k:\n                INDEX.setdefault(k, set()).add(c.id)\n\ndef country(text):\n    k = norm(text)\n    if not k:\n        return False\n    if k in AMBIGUOUS:\n        return False\n    if k in ALIAS:\n        return env['res.country'].search([('code', '=', ALIAS[k])], limit=1).id or False\n    found = INDEX.get(k) or set()\n    return list(found)[0] if len(found) == 1 else False\n\ndef city(name):\n    name = clean(name)\n    if not name:\n        return False\n    return env['res.city'].search([('name', '=ilike', name)], limit=1).id or False\n\ndef gtype(b):\n    if not b:\n        return 'adult'\n    age = (now.date() - b).days / 365.25\n    return 'infant' if age < 2 else ('child' if age < 12 else 'adult')\n\ndef parse(ui):\n    keys = dict((d.res_id, d.name[2:]) for d in env['ir.model.data'].sudo().search([('module', '=', '__ath_sire_tra__'), ('model', '=', 'survey.question'), ('name', '=like', 'q_%')]))\n    v = {}\n    for l in ui.user_input_line_ids:\n        k = keys.get(l.question_id.id)\n        if not k or l.skipped:\n            continue\n        if l.answer_type == 'suggestion':\n            v[k] = l.suggested_answer_id.value\n        elif l.answer_type == 'date':\n            v[k] = l.value_date\n        else:\n            v[k] = clean(l.value_char_box)\n    n = int(v.get('p_companions') or 0)\n    consent = v.get('p_consent') == 'Sí, autorizo'\n    common = {'x_residence_city_id': city(v.get('p_res_city')), 'x_residence_text': v.get('p_res_city') or False, 'x_residence_country_id': country(v.get('p_res_country')), 'x_origin_city_id': city(v.get('p_origin_city')), 'x_origin_text': v.get('p_origin_city') or False, 'x_origin_country_id': country(v.get('p_origin_country')), 'x_destination_text': v.get('p_dest') or False, 'x_destination_country_id': country(v.get('p_dest_country')), 'x_travel_reason': v.get('p_reason') or False, 'x_consent': consent, 'x_consent_at': now if consent else False, 'x_data_state': 'recibido', 'x_data_source': 'formulario', 'x_user_input_id': ui.id}\n    out = []\n    for i in range(0, n + 1):\n        p = 'p_' if i == 0 else 'c%s_' % i\n        code = DOC.get(v.get(p + 'doc_type') or '', '-')\n        dt = env['l10n_latam.identification.type'].search([('l10n_co_document_code', '=', code)], limit=1)\n        num = clean(v.get(p + 'doc_num')).upper()\n        vals = dict(common)\n        vals.update({'x_is_main': i == 0, 'x_doc_type_id': dt.id or False, 'x_identity_number': num or False, 'x_given_names': v.get(p + 'given') or False, 'x_surname_1': v.get(p + 'surname1') or False, 'x_surname_2': v.get(p + 'surname2') or False, 'x_nationality': country(v.get(p + 'nationality')), 'x_birth_date': v.get(p + 'birth') or False, 'x_guest_type': gtype(v.get(p + 'birth'))})\n        vals['x_name'] = clean('%s %s %s' % (vals['x_given_names'] or '', vals['x_surname_1'] or '', vals['x_surname_2'] or ''))\n        notes = []\n        for key, field, label in ((p + 'nationality', 'x_nationality', 'nacionalidad'), ('p_res_country', 'x_residence_country_id', 'país de residencia'), ('p_origin_country', 'x_origin_country_id', 'país de procedencia'), ('p_dest_country', 'x_destination_country_id', 'país de destino')):\n            if v.get(key) and not vals[field]:\n                notes.append('no se reconoció %s (%s)' % (label, clean(v.get(key))[:40]))\n        vals['x_last_error'] = ('Revisar: ' + '; '.join(notes)) if notes else False\n        out.append(vals)\n    return out, v\n\ndef apply(ui, guests, answers):\n    order = ui.x_sale_order_id\n    siblings = env['survey.user_input'].search([('x_sale_order_id', '=', order.id)])\n    siblings.write({'x_ath_lock': (ui.x_ath_lock or 0) + 1})\n    for vals in guests:\n        same = None\n        for r in order.x_guest_line_ids:\n            if r.x_doc_type_id.id == vals['x_doc_type_id'] and (r.x_identity_number or '').upper() == (vals['x_identity_number'] or ''):\n                same = r\n                break\n        if same and (same.x_data_state == 'validado' or same.x_arrived_at):\n            same.write({'x_last_error': 'Formulario repetido: no se reemplazaron datos ya validados'})\n        elif same:\n            same.write(vals)\n        else:\n            vals['x_sale_order_id'] = order.id\n            env['x_guests_line'].create(vals)\n    lines = []\n    for k in sorted(answers):\n        lines.append('%s=%s' % (k, answers[k]))\n    snapshot = '\\n'.join(lines)\n    ui.write({'x_ath_snapshot': snapshot, 'x_ath_form_version': FORM_VERSION, 'x_ath_submitted_at': now})\n    ui.user_input_line_ids.unlink()\n    ui.write({'x_ath_state': 'procesado', 'x_ath_processed_at': now, 'x_ath_error': False})\n\nfor ui in records:\n    if ui.x_ath_state != 'invitado' or not ui.x_sale_order_id:\n        continue\n    try:\n        guests, answers = parse(ui)\n    except Exception:\n        ui.write({'x_ath_state': 'error', 'x_ath_error': 'No se pudo interpretar el formulario; respuestas conservadas para revision manual'})\n        guests = None\n    if guests is not None:\n        apply(ui, guests, answers)"
+  },
+  {
+   "xmlid": "sa_validate",
+   "name": "[SIRE/TRA] Validar datos",
+   "model": "x_guests_line",
+   "bind": true,
+   "code": "if not records:\n    raise UserError('Seleccione al menos un registro.')\nDIGITS = ('national_citizen_id', 'id_card', 'civil_registration', 'foreign_resident_card')\nCOLOMBIAN = ('national_citizen_id', 'id_card', 'civil_registration')\nnow = datetime.datetime.now()\nerrors = []\nfor r in records:\n    o = r.x_sale_order_id\n    miss = []\n    if r.x_data_state not in ('recibido', 'rechazado', 'borrador') and r.x_data_state:\n        miss.append('estado %s' % r.x_data_state)\n    for f, lbl in (('x_doc_type_id', 'tipo de documento'), ('x_identity_number', 'número'), ('x_given_names', 'nombres'), ('x_surname_1', 'primer apellido'), ('x_nationality', 'nacionalidad'), ('x_birth_date', 'fecha de nacimiento'), ('x_room_resource_id', 'habitación')):\n        if not r[f]:\n            miss.append(lbl)\n    code = r.x_doc_type_id.l10n_co_document_code\n    num = r.x_identity_number or ''\n    if code in DIGITS and num and not num.isdigit():\n        miss.append('número solo con dígitos')\n    if num and not num.replace('-', '').isalnum():\n        miss.append('número con caracteres no válidos')\n    if r.x_birth_date and r.x_birth_date > now.date():\n        miss.append('fecha de nacimiento futura')\n    if r.x_is_foreign and code in COLOMBIAN:\n        miss.append('extranjero con documento colombiano')\n    room = r.x_room_resource_id\n    if room and room.x_unit_kind != 'fisica':\n        miss.append('asignar habitación fisica (Casa Completa es derivada)')\n    if room and not room.x_establishment_id:\n        miss.append('habitación sin establecimiento')\n    if not o.x_guest_line_ids.filtered(lambda x: x.x_is_main):\n        miss.append('la reserva no tiene huésped principal')\n    if len(o.x_guest_line_ids.filtered(lambda x: x.x_is_main)) > 1:\n        miss.append('más de un huésped principal')\n    if o.x_guest_line_ids.filtered(lambda x: x.id != r.id and x.x_doc_type_id == r.x_doc_type_id and (x.x_identity_number or '').upper() == num.upper()):\n        miss.append('documento repetido en la reserva')\n    if not r.x_consent:\n        miss.append('sin consentimiento')\n    if miss:\n        errors.append('%s (linea %s): %s' % (o.name or '-', r.id, ', '.join(miss)))\nif errors:\n    raise UserError('No se validó ningún huésped.\\n' + '\\n'.join(errors))\nfor r in records:\n    r.write({'x_data_state': 'validado', 'x_validated_at': now, 'x_last_error': False, 'x_establishment_id': r.x_room_resource_id.x_establishment_id.id})"
+  },
+  {
+   "xmlid": "sa_reject",
+   "name": "[SIRE/TRA] Marcar datos no válidos",
+   "model": "x_guests_line",
+   "bind": true,
+   "code": "if not records:\n    raise UserError('Seleccione al menos un registro.')\nfor r in records:\n    if r.x_arrived_at:\n        raise UserError('No se puede invalidar: la llegada ya fue registrada (linea %s).' % r.id)\nrecords.write({'x_data_state': 'rechazado'})"
+  },
+  {
+   "xmlid": "sa_arrive",
+   "name": "[SIRE/TRA] Registrar llegada real",
+   "model": "x_guests_line",
+   "bind": true,
+   "code": "if not records:\n    raise UserError('Seleccione al menos un registro.')\nnow = datetime.datetime.now()\nerrors = []\nfor r in records:\n    o = r.x_sale_order_id\n    if r.x_data_state != 'validado':\n        errors.append('linea %s: datos no validados' % r.id)\n    elif r.x_arrived_at:\n        errors.append('linea %s: llegada ya registrada' % r.id)\n    elif o.state != 'sale' or o.x_reservation_status in ('cancelled', 'no_show'):\n        errors.append('linea %s: reserva no confirmada, cancelada o no-show' % r.id)\n    elif not (o.x_checkin and o.x_checkout and o.x_checkin - datetime.timedelta(days=1) <= now.date() <= o.x_checkout):\n        errors.append('linea %s: hoy está fuera de las fechas de la reserva %s' % (r.id, o.name))\nif errors:\n    raise UserError('No se registró ninguna llegada.\\n' + '\\n'.join(errors))\nfor r in records:\n    tra = 'pendiente' if r.x_establishment_id.x_tra_mode in ('manual', 'api') else 'no_aplica'\n    r.write({'x_arrived_at': now, 'x_sire_in_state': 'pendiente' if r.x_is_foreign else 'no_aplica', 'x_sire_out_state': 'no_aplica', 'x_tra_state': tra})"
+  },
+  {
+   "xmlid": "sa_depart",
+   "name": "[SIRE/TRA] Registrar salida real",
+   "model": "x_guests_line",
+   "bind": true,
+   "code": "if not records:\n    raise UserError('Seleccione al menos un registro.')\nnow = datetime.datetime.now()\nbad = [str(r.id) for r in records if not r.x_arrived_at or r.x_departed_at]\nif bad:\n    raise UserError('Salida no registrada (sin llegada o ya con salida): lineas %s' % ', '.join(bad))\nfor r in records:\n    r.write({'x_departed_at': now, 'x_sire_out_state': 'pendiente' if r.x_is_foreign else 'no_aplica'})"
+  },
+  {
+   "xmlid": "sa_claim",
+   "name": "[SIRE/TRA] Reclamar obligación (emisor)",
+   "model": "x_guests_line",
+   "code": "F = {'sire_entrada': 'x_sire_in_state', 'sire_salida': 'x_sire_out_state', 'tra': 'x_tra_state'}\nsystem = env.context.get('ath_system')\nref = env.context.get('ath_run_ref') or ''\nif system not in F or not ref:\n    raise UserError('Parametros de reclamo inválidos')\nf = F[system]\nclaimed = []\nfor r in records:\n    r.write({'x_lock_rev': (r.x_lock_rev or 0) + 1})\n    ok = r[f] == 'pendiente' and bool(r.x_arrived_at)\n    if ok and system == 'tra' and not r.x_is_main:\n        main = r.x_sale_order_id.x_guest_line_ids.filtered(lambda x: x.x_is_main)\n        ok = bool(main) and main[0].x_tra_state == 'aceptado' and bool(main[0].x_tra_external_id)\n    if ok:\n        r.write({f: 'en_envio', 'x_claim_ref': ref})\n        claimed.append(r.id)\naction = {'claimed': claimed}"
+  },
+  {
+   "xmlid": "sa_apply_attempt",
+   "name": "[SIRE/TRA] Aplicar intento",
+   "model": "x_report_attempt",
+   "code": "F = {'sire_entrada': 'x_sire_in_state', 'sire_salida': 'x_sire_out_state', 'tra': 'x_tra_state'}\nALLOWED = {'enviado': ('pendiente', 'en_envio'), 'aceptado': ('en_envio', 'enviado', 'incierto'), 'rechazado': ('en_envio', 'enviado', 'incierto'), 'incierto': ('en_envio', 'enviado'), 'error_previo': ('en_envio',), 'no_recibido': ('incierto', 'rechazado')}\nTARGET = {'enviado': 'enviado', 'aceptado': 'aceptado', 'rechazado': 'rechazado', 'incierto': 'incierto', 'error_previo': 'pendiente', 'no_recibido': 'pendiente'}\nfor a in records:\n    line = a.x_guest_line_id\n    f = F[a.x_system]\n    cur = line[f]\n    if cur not in ALLOWED[a.x_result]:\n        raise UserError('Transición no permitida (%s): %s -> %s' % (a.x_system, cur, a.x_result))\n    if a.x_result == 'aceptado' and a.x_channel in ('portal_manual', 'archivo_sire') and not a.x_evidence:\n        raise UserError('Para marcar aceptado adjunte la evidencia de la consulta oficial.')\n    if a.x_system == 'tra' and a.x_result == 'aceptado' and line.x_is_main and not a.x_external_id and a.x_channel in ('api_tra', 'simulador'):\n        raise UserError('Falta el identificador devuelto por TRA para el huésped principal.')\n    if a.x_system == 'tra' and a.x_result == 'aceptado' and not (a.x_reported_checkin and a.x_reported_checkout):\n        raise UserError('Falta registrar las fechas de check-in y check-out reportadas a TRA.')\n    vals = {f: TARGET[a.x_result], 'x_last_error': a.x_error_code or False}\n    if a.x_system == 'tra' and a.x_result == 'aceptado':\n        vals['x_tra_rep_checkin'] = a.x_reported_checkin\n        vals['x_tra_rep_checkout'] = a.x_reported_checkout\n    if a.x_system == 'tra' and a.x_external_id and line.x_is_main:\n        vals['x_tra_external_id'] = a.x_external_id\n    line.write(vals)"
+  },
+  {
+   "xmlid": "sa_sire_export",
+   "name": "[SIRE/TRA] Generar archivo SIRE",
+   "model": "x_guests_line",
+   "bind": true,
+   "code": "lines = records\nif not lines:\n    raise UserError('Seleccione huéspedes.')\nest = lines.mapped('x_establishment_id')\nif len(est) != 1:\n    raise UserError('Seleccione huéspedes de un solo establecimiento.')\nif not (est.x_sire_export_enabled and est.x_sire_codes_verified):\n    raise UserError('Exportador SIRE deshabilitado: faltan los códigos oficiales del paquete de guía del portal SIRE. Use la Hoja guíada SIRE.')\nfmt = est.x_sire_date_format\nif not (fmt and est.x_sire_company_code and est.x_sire_city_code and est.x_sire_move_in_code and est.x_sire_move_out_code):\n    raise UserError('Faltan en el establecimiento: código de hotel, código de ciudad, códigos de movimiento o formato de fecha.')\ntz = timezone('America/Bogota')\n\ndef local(dt):\n    return timezone('UTC').localize(dt).astimezone(tz)\n\ndef clean(v):\n    return ' '.join(('%s' % (v or '')).replace('\\t', ' ').split()).strip()\n\nrows, errs, claim = [], [], {}\nfor r in lines:\n    if not r.x_is_foreign:\n        errs.append('linea %s: no es extranjero' % r.id)\n        continue\n    if r.x_sire_in_state == 'pendiente':\n        mov, when, f = est.x_sire_move_in_code, r.x_arrived_at, 'x_sire_in_state'\n    elif r.x_sire_out_state == 'pendiente':\n        mov, when, f = est.x_sire_move_out_code, r.x_departed_at, 'x_sire_out_state'\n    else:\n        errs.append('linea %s: sin movimiento SIRE pendiente' % r.id)\n        continue\n    cols = [est.x_sire_company_code, est.x_sire_city_code, r.x_doc_type_id.x_sire_code, r.x_identity_number, r.x_nationality.x_sire_code, r.x_surname_1, r.x_surname_2 or '', r.x_given_names, mov, when and local(when).strftime(fmt), r.x_origin_country_id.x_sire_code, r.x_destination_country_id.x_sire_code, r.x_birth_date and r.x_birth_date.strftime(fmt)]\n    missing = [str(i + 1) for i in (0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12) if not cols[i]]\n    if missing:\n        errs.append('linea %s: faltan columnas %s' % (r.id, ','.join(missing)))\n        continue\n    rows.append('\\t'.join(clean(c) for c in cols))\n    claim[r.id] = f\nif errs:\n    raise UserError('Archivo no generado.\\n' + '\\n'.join(errs))\nfor r in lines:\n    r.write({'x_lock_rev': (r.x_lock_rev or 0) + 1})\n    if r[claim[r.id]] != 'pendiente':\n        raise UserError('Otro proceso tomó la linea %s; vuelva a intentarlo.' % r.id)\n    r.write({claim[r.id]: 'en_envio', 'x_claim_ref': 'archivo-sire'})\ndata = ('\\r\\n'.join(rows) + '\\r\\n').encode(est.x_sire_encoding or 'utf-8', 'replace')\natt = env['ir.attachment'].create({'name': 'SIRE_%s_%s.txt' % (est.x_code, datetime.datetime.now().strftime('%Y%m%d_%H%M%S')), 'datas': b64encode(data), 'res_model': 'x_establishment', 'res_id': est.id, 'mimetype': 'text/plain'})\naction = {'type': 'ir.actions.act_url', 'url': '/web/content/%s?download=true' % att.id, 'target': 'self'}"
+  },
+  {
+   "xmlid": "sa_sire_mark",
+   "name": "[SIRE/TRA] Marcar cargado en portal SIRE",
+   "model": "x_guests_line",
+   "bind": true,
+   "code": "if not records:\n    raise UserError('Seleccione al menos un registro.')\nn = 0\nfor r in records:\n    for system, f in (('sire_entrada', 'x_sire_in_state'), ('sire_salida', 'x_sire_out_state')):\n        if r[f] in ('pendiente', 'en_envio'):\n            env['x_report_attempt'].create({'x_name': 'Carga en portal SIRE', 'x_guest_line_id': r.id, 'x_system': system, 'x_channel': 'archivo_sire' if r[f] == 'en_envio' else 'portal_manual', 'x_result': 'enviado', 'x_actor': 'Recepción (usuario compartido)'})\n            n += 1\n            break\nif not n:\n    raise UserError('Ningún huésped de la seleccion tiene SIRE pendiente.')"
+  }
+ ],
+ "AUTOMATIONS": [
+  {
+   "xmlid": "au_map",
+   "name": "[SIRE/TRA] Formulario terminado",
+   "model": "survey.user_input",
+   "trigger": "on_create_or_write",
+   "triggerFields": [
+    "state"
+   ],
+   "domain": "[('state', '=', 'done'), ('x_sale_order_id', '!=', False), ('x_ath_state', '=', 'invitado')]",
+   "action": "sa_map"
+  },
+  {
+   "xmlid": "au_invite",
+   "name": "[SIRE/TRA] Preparar enlace al confirmar reserva y revocarlo al cancelar",
+   "model": "sale.order",
+   "trigger": "on_create_or_write",
+   "triggerFields": [
+    "state",
+    "x_reservation_status",
+    "x_checkin",
+    "x_checkout"
+   ],
+   "domain": "['&', ('x_pms_reference', 'ilike', 'SMOOBU-'), '|', ('state', 'in', ['sale', 'cancel']), ('x_reservation_status', 'in', ['cancelled', 'no_show'])]",
+   "action": "sa_invite_auto"
+  },
+  {
+   "xmlid": "au_attempt",
+   "name": "[SIRE/TRA] Aplicar intento registrado",
+   "model": "x_report_attempt",
+   "trigger": "on_create",
+   "triggerFields": [],
+   "domain": "",
+   "action": "sa_apply_attempt"
+  }
+ ],
+ "MAX_COMPANIONS": 21,
+ "SURVEY": {
+  "xmlid": "survey_registro",
+  "vals": {
+   "title": "Registro de huéspedes - Atheron",
+   "access_mode": "token",
+   "questions_layout": "page_per_section",
+   "questions_selection": "all",
+   "users_login_required": false,
+   "is_attempts_limited": true,
+   "attempts_limit": 1,
+   "certification": false,
+   "scoring_type": "no_scoring",
+   "description": "<p>Registro obligatorio de huéspedes. El huésped principal registra sus datos y los de sus acompañantes. Los datos se usan solo para los reportes legales (Migración Colombia para extranjeros y Tarjeta de Registro de Alojamiento del MinCIT).</p>",
+   "description_done": "<p>Gracias. Recepción revisará los datos a su llegada.</p>"
+  }
+ },
+ "QUESTIONS": [
+  {
+   "key": "pg_main",
+   "title": "Huésped principal",
+   "page": true
+  },
+  {
+   "key": "p_doc_type",
+   "title": "Huésped principal: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ]
+  },
+  {
+   "key": "p_doc_num",
+   "title": "Huésped principal: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true
+  },
+  {
+   "key": "p_given",
+   "title": "Huésped principal: nombres",
+   "type": "char_box",
+   "mandatory": true
+  },
+  {
+   "key": "p_surname1",
+   "title": "Huésped principal: primer apellido",
+   "type": "char_box",
+   "mandatory": true
+  },
+  {
+   "key": "p_surname2",
+   "title": "Huésped principal: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false
+  },
+  {
+   "key": "p_nationality",
+   "title": "Huésped principal: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true
+  },
+  {
+   "key": "p_birth",
+   "title": "Huésped principal: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true
+  },
+  {
+   "key": "p_res_city",
+   "title": "Ciudad de residencia",
+   "type": "char_box",
+   "mandatory": true
+  },
+  {
+   "key": "p_res_country",
+   "title": "País de residencia (nombre o código: CO, US...)",
+   "type": "char_box",
+   "mandatory": true
+  },
+  {
+   "key": "p_origin_city",
+   "title": "Ciudad de procedencia (última ciudad antes de llegar)",
+   "type": "char_box",
+   "mandatory": true
+  },
+  {
+   "key": "p_origin_country",
+   "title": "País de procedencia",
+   "type": "char_box",
+   "mandatory": true
+  },
+  {
+   "key": "p_dest",
+   "title": "Próximo destino (ciudad)",
+   "type": "char_box",
+   "mandatory": false
+  },
+  {
+   "key": "p_dest_country",
+   "title": "País del proximo destino",
+   "type": "char_box",
+   "mandatory": true
+  },
+  {
+   "key": "p_reason",
+   "title": "Motivo principal del viaje",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Vacaciones, recreación u ocio",
+    "Visita a familiares o amigos",
+    "Negocios o motivos profesionales",
+    "Salud",
+    "Educación",
+    "Religión",
+    "Otro"
+   ]
+  },
+  {
+   "key": "p_companions",
+   "title": "Número de acompañantes",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20",
+    "21"
+   ]
+  },
+  {
+   "key": "p_consent",
+   "title": "Autorizo el tratamiento de mis datos y los de mis acompañantes para el registro obligatorio de huéspedes (Migración Colombia y Tarjeta de Registro de Alojamiento del MinCIT).",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Sí, autorizo"
+   ]
+  },
+  {
+   "key": "pg_c1",
+   "title": "Acompañante 1",
+   "page": true
+  },
+  {
+   "key": "c1_doc_type",
+   "title": "Acompañante 1: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 1
+  },
+  {
+   "key": "c1_doc_num",
+   "title": "Acompañante 1: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 1
+  },
+  {
+   "key": "c1_given",
+   "title": "Acompañante 1: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 1
+  },
+  {
+   "key": "c1_surname1",
+   "title": "Acompañante 1: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 1
+  },
+  {
+   "key": "c1_surname2",
+   "title": "Acompañante 1: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 1
+  },
+  {
+   "key": "c1_nationality",
+   "title": "Acompañante 1: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 1
+  },
+  {
+   "key": "c1_birth",
+   "title": "Acompañante 1: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 1
+  },
+  {
+   "key": "pg_c2",
+   "title": "Acompañante 2",
+   "page": true
+  },
+  {
+   "key": "c2_doc_type",
+   "title": "Acompañante 2: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 2
+  },
+  {
+   "key": "c2_doc_num",
+   "title": "Acompañante 2: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 2
+  },
+  {
+   "key": "c2_given",
+   "title": "Acompañante 2: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 2
+  },
+  {
+   "key": "c2_surname1",
+   "title": "Acompañante 2: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 2
+  },
+  {
+   "key": "c2_surname2",
+   "title": "Acompañante 2: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 2
+  },
+  {
+   "key": "c2_nationality",
+   "title": "Acompañante 2: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 2
+  },
+  {
+   "key": "c2_birth",
+   "title": "Acompañante 2: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 2
+  },
+  {
+   "key": "pg_c3",
+   "title": "Acompañante 3",
+   "page": true
+  },
+  {
+   "key": "c3_doc_type",
+   "title": "Acompañante 3: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 3
+  },
+  {
+   "key": "c3_doc_num",
+   "title": "Acompañante 3: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 3
+  },
+  {
+   "key": "c3_given",
+   "title": "Acompañante 3: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 3
+  },
+  {
+   "key": "c3_surname1",
+   "title": "Acompañante 3: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 3
+  },
+  {
+   "key": "c3_surname2",
+   "title": "Acompañante 3: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 3
+  },
+  {
+   "key": "c3_nationality",
+   "title": "Acompañante 3: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 3
+  },
+  {
+   "key": "c3_birth",
+   "title": "Acompañante 3: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 3
+  },
+  {
+   "key": "pg_c4",
+   "title": "Acompañante 4",
+   "page": true
+  },
+  {
+   "key": "c4_doc_type",
+   "title": "Acompañante 4: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 4
+  },
+  {
+   "key": "c4_doc_num",
+   "title": "Acompañante 4: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 4
+  },
+  {
+   "key": "c4_given",
+   "title": "Acompañante 4: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 4
+  },
+  {
+   "key": "c4_surname1",
+   "title": "Acompañante 4: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 4
+  },
+  {
+   "key": "c4_surname2",
+   "title": "Acompañante 4: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 4
+  },
+  {
+   "key": "c4_nationality",
+   "title": "Acompañante 4: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 4
+  },
+  {
+   "key": "c4_birth",
+   "title": "Acompañante 4: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 4
+  },
+  {
+   "key": "pg_c5",
+   "title": "Acompañante 5",
+   "page": true
+  },
+  {
+   "key": "c5_doc_type",
+   "title": "Acompañante 5: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 5
+  },
+  {
+   "key": "c5_doc_num",
+   "title": "Acompañante 5: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 5
+  },
+  {
+   "key": "c5_given",
+   "title": "Acompañante 5: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 5
+  },
+  {
+   "key": "c5_surname1",
+   "title": "Acompañante 5: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 5
+  },
+  {
+   "key": "c5_surname2",
+   "title": "Acompañante 5: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 5
+  },
+  {
+   "key": "c5_nationality",
+   "title": "Acompañante 5: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 5
+  },
+  {
+   "key": "c5_birth",
+   "title": "Acompañante 5: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 5
+  },
+  {
+   "key": "pg_c6",
+   "title": "Acompañante 6",
+   "page": true
+  },
+  {
+   "key": "c6_doc_type",
+   "title": "Acompañante 6: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 6
+  },
+  {
+   "key": "c6_doc_num",
+   "title": "Acompañante 6: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 6
+  },
+  {
+   "key": "c6_given",
+   "title": "Acompañante 6: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 6
+  },
+  {
+   "key": "c6_surname1",
+   "title": "Acompañante 6: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 6
+  },
+  {
+   "key": "c6_surname2",
+   "title": "Acompañante 6: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 6
+  },
+  {
+   "key": "c6_nationality",
+   "title": "Acompañante 6: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 6
+  },
+  {
+   "key": "c6_birth",
+   "title": "Acompañante 6: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 6
+  },
+  {
+   "key": "pg_c7",
+   "title": "Acompañante 7",
+   "page": true
+  },
+  {
+   "key": "c7_doc_type",
+   "title": "Acompañante 7: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 7
+  },
+  {
+   "key": "c7_doc_num",
+   "title": "Acompañante 7: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 7
+  },
+  {
+   "key": "c7_given",
+   "title": "Acompañante 7: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 7
+  },
+  {
+   "key": "c7_surname1",
+   "title": "Acompañante 7: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 7
+  },
+  {
+   "key": "c7_surname2",
+   "title": "Acompañante 7: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 7
+  },
+  {
+   "key": "c7_nationality",
+   "title": "Acompañante 7: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 7
+  },
+  {
+   "key": "c7_birth",
+   "title": "Acompañante 7: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 7
+  },
+  {
+   "key": "pg_c8",
+   "title": "Acompañante 8",
+   "page": true
+  },
+  {
+   "key": "c8_doc_type",
+   "title": "Acompañante 8: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 8
+  },
+  {
+   "key": "c8_doc_num",
+   "title": "Acompañante 8: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 8
+  },
+  {
+   "key": "c8_given",
+   "title": "Acompañante 8: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 8
+  },
+  {
+   "key": "c8_surname1",
+   "title": "Acompañante 8: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 8
+  },
+  {
+   "key": "c8_surname2",
+   "title": "Acompañante 8: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 8
+  },
+  {
+   "key": "c8_nationality",
+   "title": "Acompañante 8: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 8
+  },
+  {
+   "key": "c8_birth",
+   "title": "Acompañante 8: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 8
+  },
+  {
+   "key": "pg_c9",
+   "title": "Acompañante 9",
+   "page": true
+  },
+  {
+   "key": "c9_doc_type",
+   "title": "Acompañante 9: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 9
+  },
+  {
+   "key": "c9_doc_num",
+   "title": "Acompañante 9: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 9
+  },
+  {
+   "key": "c9_given",
+   "title": "Acompañante 9: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 9
+  },
+  {
+   "key": "c9_surname1",
+   "title": "Acompañante 9: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 9
+  },
+  {
+   "key": "c9_surname2",
+   "title": "Acompañante 9: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 9
+  },
+  {
+   "key": "c9_nationality",
+   "title": "Acompañante 9: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 9
+  },
+  {
+   "key": "c9_birth",
+   "title": "Acompañante 9: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 9
+  },
+  {
+   "key": "pg_c10",
+   "title": "Acompañante 10",
+   "page": true
+  },
+  {
+   "key": "c10_doc_type",
+   "title": "Acompañante 10: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 10
+  },
+  {
+   "key": "c10_doc_num",
+   "title": "Acompañante 10: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 10
+  },
+  {
+   "key": "c10_given",
+   "title": "Acompañante 10: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 10
+  },
+  {
+   "key": "c10_surname1",
+   "title": "Acompañante 10: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 10
+  },
+  {
+   "key": "c10_surname2",
+   "title": "Acompañante 10: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 10
+  },
+  {
+   "key": "c10_nationality",
+   "title": "Acompañante 10: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 10
+  },
+  {
+   "key": "c10_birth",
+   "title": "Acompañante 10: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 10
+  },
+  {
+   "key": "pg_c11",
+   "title": "Acompañante 11",
+   "page": true
+  },
+  {
+   "key": "c11_doc_type",
+   "title": "Acompañante 11: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 11
+  },
+  {
+   "key": "c11_doc_num",
+   "title": "Acompañante 11: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 11
+  },
+  {
+   "key": "c11_given",
+   "title": "Acompañante 11: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 11
+  },
+  {
+   "key": "c11_surname1",
+   "title": "Acompañante 11: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 11
+  },
+  {
+   "key": "c11_surname2",
+   "title": "Acompañante 11: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 11
+  },
+  {
+   "key": "c11_nationality",
+   "title": "Acompañante 11: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 11
+  },
+  {
+   "key": "c11_birth",
+   "title": "Acompañante 11: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 11
+  },
+  {
+   "key": "pg_c12",
+   "title": "Acompañante 12",
+   "page": true
+  },
+  {
+   "key": "c12_doc_type",
+   "title": "Acompañante 12: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 12
+  },
+  {
+   "key": "c12_doc_num",
+   "title": "Acompañante 12: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 12
+  },
+  {
+   "key": "c12_given",
+   "title": "Acompañante 12: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 12
+  },
+  {
+   "key": "c12_surname1",
+   "title": "Acompañante 12: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 12
+  },
+  {
+   "key": "c12_surname2",
+   "title": "Acompañante 12: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 12
+  },
+  {
+   "key": "c12_nationality",
+   "title": "Acompañante 12: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 12
+  },
+  {
+   "key": "c12_birth",
+   "title": "Acompañante 12: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 12
+  },
+  {
+   "key": "pg_c13",
+   "title": "Acompañante 13",
+   "page": true
+  },
+  {
+   "key": "c13_doc_type",
+   "title": "Acompañante 13: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 13
+  },
+  {
+   "key": "c13_doc_num",
+   "title": "Acompañante 13: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 13
+  },
+  {
+   "key": "c13_given",
+   "title": "Acompañante 13: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 13
+  },
+  {
+   "key": "c13_surname1",
+   "title": "Acompañante 13: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 13
+  },
+  {
+   "key": "c13_surname2",
+   "title": "Acompañante 13: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 13
+  },
+  {
+   "key": "c13_nationality",
+   "title": "Acompañante 13: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 13
+  },
+  {
+   "key": "c13_birth",
+   "title": "Acompañante 13: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 13
+  },
+  {
+   "key": "pg_c14",
+   "title": "Acompañante 14",
+   "page": true
+  },
+  {
+   "key": "c14_doc_type",
+   "title": "Acompañante 14: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 14
+  },
+  {
+   "key": "c14_doc_num",
+   "title": "Acompañante 14: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 14
+  },
+  {
+   "key": "c14_given",
+   "title": "Acompañante 14: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 14
+  },
+  {
+   "key": "c14_surname1",
+   "title": "Acompañante 14: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 14
+  },
+  {
+   "key": "c14_surname2",
+   "title": "Acompañante 14: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 14
+  },
+  {
+   "key": "c14_nationality",
+   "title": "Acompañante 14: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 14
+  },
+  {
+   "key": "c14_birth",
+   "title": "Acompañante 14: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 14
+  },
+  {
+   "key": "pg_c15",
+   "title": "Acompañante 15",
+   "page": true
+  },
+  {
+   "key": "c15_doc_type",
+   "title": "Acompañante 15: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 15
+  },
+  {
+   "key": "c15_doc_num",
+   "title": "Acompañante 15: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 15
+  },
+  {
+   "key": "c15_given",
+   "title": "Acompañante 15: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 15
+  },
+  {
+   "key": "c15_surname1",
+   "title": "Acompañante 15: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 15
+  },
+  {
+   "key": "c15_surname2",
+   "title": "Acompañante 15: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 15
+  },
+  {
+   "key": "c15_nationality",
+   "title": "Acompañante 15: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 15
+  },
+  {
+   "key": "c15_birth",
+   "title": "Acompañante 15: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 15
+  },
+  {
+   "key": "pg_c16",
+   "title": "Acompañante 16",
+   "page": true
+  },
+  {
+   "key": "c16_doc_type",
+   "title": "Acompañante 16: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 16
+  },
+  {
+   "key": "c16_doc_num",
+   "title": "Acompañante 16: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 16
+  },
+  {
+   "key": "c16_given",
+   "title": "Acompañante 16: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 16
+  },
+  {
+   "key": "c16_surname1",
+   "title": "Acompañante 16: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 16
+  },
+  {
+   "key": "c16_surname2",
+   "title": "Acompañante 16: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 16
+  },
+  {
+   "key": "c16_nationality",
+   "title": "Acompañante 16: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 16
+  },
+  {
+   "key": "c16_birth",
+   "title": "Acompañante 16: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 16
+  },
+  {
+   "key": "pg_c17",
+   "title": "Acompañante 17",
+   "page": true
+  },
+  {
+   "key": "c17_doc_type",
+   "title": "Acompañante 17: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 17
+  },
+  {
+   "key": "c17_doc_num",
+   "title": "Acompañante 17: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 17
+  },
+  {
+   "key": "c17_given",
+   "title": "Acompañante 17: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 17
+  },
+  {
+   "key": "c17_surname1",
+   "title": "Acompañante 17: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 17
+  },
+  {
+   "key": "c17_surname2",
+   "title": "Acompañante 17: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 17
+  },
+  {
+   "key": "c17_nationality",
+   "title": "Acompañante 17: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 17
+  },
+  {
+   "key": "c17_birth",
+   "title": "Acompañante 17: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 17
+  },
+  {
+   "key": "pg_c18",
+   "title": "Acompañante 18",
+   "page": true
+  },
+  {
+   "key": "c18_doc_type",
+   "title": "Acompañante 18: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 18
+  },
+  {
+   "key": "c18_doc_num",
+   "title": "Acompañante 18: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 18
+  },
+  {
+   "key": "c18_given",
+   "title": "Acompañante 18: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 18
+  },
+  {
+   "key": "c18_surname1",
+   "title": "Acompañante 18: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 18
+  },
+  {
+   "key": "c18_surname2",
+   "title": "Acompañante 18: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 18
+  },
+  {
+   "key": "c18_nationality",
+   "title": "Acompañante 18: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 18
+  },
+  {
+   "key": "c18_birth",
+   "title": "Acompañante 18: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 18
+  },
+  {
+   "key": "pg_c19",
+   "title": "Acompañante 19",
+   "page": true
+  },
+  {
+   "key": "c19_doc_type",
+   "title": "Acompañante 19: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 19
+  },
+  {
+   "key": "c19_doc_num",
+   "title": "Acompañante 19: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 19
+  },
+  {
+   "key": "c19_given",
+   "title": "Acompañante 19: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 19
+  },
+  {
+   "key": "c19_surname1",
+   "title": "Acompañante 19: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 19
+  },
+  {
+   "key": "c19_surname2",
+   "title": "Acompañante 19: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 19
+  },
+  {
+   "key": "c19_nationality",
+   "title": "Acompañante 19: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 19
+  },
+  {
+   "key": "c19_birth",
+   "title": "Acompañante 19: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 19
+  },
+  {
+   "key": "pg_c20",
+   "title": "Acompañante 20",
+   "page": true
+  },
+  {
+   "key": "c20_doc_type",
+   "title": "Acompañante 20: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 20
+  },
+  {
+   "key": "c20_doc_num",
+   "title": "Acompañante 20: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 20
+  },
+  {
+   "key": "c20_given",
+   "title": "Acompañante 20: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 20
+  },
+  {
+   "key": "c20_surname1",
+   "title": "Acompañante 20: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 20
+  },
+  {
+   "key": "c20_surname2",
+   "title": "Acompañante 20: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 20
+  },
+  {
+   "key": "c20_nationality",
+   "title": "Acompañante 20: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 20
+  },
+  {
+   "key": "c20_birth",
+   "title": "Acompañante 20: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 20
+  },
+  {
+   "key": "pg_c21",
+   "title": "Acompañante 21",
+   "page": true
+  },
+  {
+   "key": "c21_doc_type",
+   "title": "Acompañante 21: tipo de documento",
+   "type": "simple_choice",
+   "mandatory": true,
+   "answers": [
+    "Cédula de ciudadanía (Colombia)",
+    "Tarjeta de identidad (Colombia)",
+    "Registro civil (Colombia)",
+    "Cédula de extranjería (Colombia)",
+    "Pasaporte",
+    "PEP",
+    "PPT"
+   ],
+   "triggerKey": "p_companions",
+   "triggerMin": 21
+  },
+  {
+   "key": "c21_doc_num",
+   "title": "Acompañante 21: número de documento (sin puntos ni espacios)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 21
+  },
+  {
+   "key": "c21_given",
+   "title": "Acompañante 21: nombres",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 21
+  },
+  {
+   "key": "c21_surname1",
+   "title": "Acompañante 21: primer apellido",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 21
+  },
+  {
+   "key": "c21_surname2",
+   "title": "Acompañante 21: segundo apellido (si tiene)",
+   "type": "char_box",
+   "mandatory": false,
+   "triggerKey": "p_companions",
+   "triggerMin": 21
+  },
+  {
+   "key": "c21_nationality",
+   "title": "Acompañante 21: país de nacionalidad (ej.: Colombia, España, Estados Unidos o su código: CO, ES, US)",
+   "type": "char_box",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 21
+  },
+  {
+   "key": "c21_birth",
+   "title": "Acompañante 21: fecha de nacimiento",
+   "type": "date",
+   "mandatory": true,
+   "triggerKey": "p_companions",
+   "triggerMin": 21
+  }
+ ],
+ "VIEWS": [
+  {
+   "xmlid": "view_guest_form",
+   "name": "ath.sire.tra.guest.form",
+   "model": "x_guests_line",
+   "type": "form",
+   "priority": 90,
+   "arch": "<form string=\"Huésped SIRE/TRA\">\n<header>\n<button name=\"{{ref:sa_validate}}\" type=\"action\" string=\"Validar datos\" class=\"btn-primary\" invisible=\"x_data_state not in ('recibido', 'rechazado', 'borrador', False)\"/>\n<button name=\"{{ref:sa_reject}}\" type=\"action\" string=\"Marcar no valido\" invisible=\"x_data_state != 'recibido'\"/>\n<button name=\"{{ref:sa_arrive}}\" type=\"action\" string=\"Registrar llegada real\" class=\"btn-primary\" invisible=\"x_data_state != 'validado' or x_arrived_at\"/>\n<button name=\"{{ref:sa_depart}}\" type=\"action\" string=\"Registrar salida real\" invisible=\"not x_arrived_at or x_departed_at\"/>\n<button name=\"{{ref:act_attempt_new}}\" type=\"action\" string=\"Registrar resultado de reporte\" context=\"{'default_x_guest_line_id': id}\" invisible=\"not x_arrived_at\"/>\n<field name=\"x_data_state\" widget=\"statusbar\" statusbar_visible=\"recibido,validado\"/>\n</header>\n<sheet>\n<div class=\"alert alert-warning\" role=\"alert\" invisible=\"not x_date_gap\"><strong>Discrepancia de fechas.</strong> Las fechas que TRA aceptó (entrada <field name=\"x_tra_rep_checkin\" readonly=\"1\" nolabel=\"1\" class=\"oe_inline\"/>, salida <field name=\"x_tra_rep_checkout\" readonly=\"1\" nolabel=\"1\" class=\"oe_inline\"/>) ya no coinciden con la estancia. La aceptación y su comprobante se conservan sin cambios y no se reenvía nada. El procedimiento lo define gerencia.</div>\n<group>\n<group string=\"Identificación\">\n<field name=\"x_sale_order_id\" readonly=\"1\"/>\n<field name=\"x_is_main\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_doc_type_id\" options=\"{'no_create': True}\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_identity_number\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_given_names\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_surname_1\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_surname_2\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_nationality\" options=\"{'no_create': True}\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_birth_date\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_is_foreign\"/>\n</group>\n<group string=\"Viaje y habitación\">\n<field name=\"x_room_resource_id\" options=\"{'no_create': True}\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_establishment_id\" readonly=\"1\"/>\n<field name=\"x_residence_city_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_residence_text\"/>\n<field name=\"x_residence_country_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_origin_city_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_origin_text\"/>\n<field name=\"x_origin_country_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_destination_text\"/>\n<field name=\"x_destination_country_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_travel_reason\"/>\n<field name=\"x_consent\" readonly=\"1\"/>\n<field name=\"x_consent_at\" readonly=\"1\"/>\n</group>\n<group string=\"Estancia real\">\n<field name=\"x_arrived_at\" readonly=\"1\"/>\n<field name=\"x_departed_at\" readonly=\"1\"/>\n</group>\n<group string=\"Reportes\">\n<field name=\"x_sire_in_state\" readonly=\"1\"/>\n<field name=\"x_sire_out_state\" readonly=\"1\"/>\n<field name=\"x_tra_state\" readonly=\"1\"/>\n<field name=\"x_tra_external_id\" readonly=\"1\"/>\n<field name=\"x_tra_rep_checkin\" readonly=\"1\"/>\n<field name=\"x_tra_rep_checkout\" readonly=\"1\"/>\n<field name=\"x_order_checkout\" readonly=\"1\"/>\n<field name=\"x_date_gap\" readonly=\"1\"/>\n<field name=\"x_last_error\" readonly=\"1\"/>\n</group>\n</group>\n<field name=\"x_attempt_ids\" readonly=\"1\"><list><field name=\"create_date\"/><field name=\"x_system\"/><field name=\"x_channel\"/><field name=\"x_result\"/><field name=\"x_external_id\"/><field name=\"x_error_code\"/><field name=\"x_evidence_name\"/></list></field>\n</sheet>\n</form>"
+  },
+  {
+   "xmlid": "view_guest_list",
+   "name": "ath.sire.tra.guest.list",
+   "model": "x_guests_line",
+   "type": "list",
+   "priority": 90,
+   "arch": "<list string=\"Huéspedes SIRE/TRA\" create=\"0\" decoration-danger=\"x_tra_state in ('incierto', 'rechazado') or x_sire_in_state in ('incierto', 'rechazado') or x_sire_out_state in ('incierto', 'rechazado')\" decoration-warning=\"x_date_gap != False\" decoration-muted=\"x_data_state == 'rechazado'\">\n<field name=\"x_sale_order_id\"/><field name=\"x_is_main\"/><field name=\"x_given_names\"/><field name=\"x_surname_1\"/><field name=\"x_doc_type_id\"/><field name=\"x_identity_number\"/><field name=\"x_nationality\"/><field name=\"x_room_resource_id\"/><field name=\"x_data_state\"/><field name=\"x_arrived_at\"/><field name=\"x_departed_at\"/><field name=\"x_sire_in_state\"/><field name=\"x_sire_out_state\"/><field name=\"x_tra_state\"/><field name=\"x_date_gap\"/><field name=\"x_last_error\" optional=\"hide\"/>\n</list>"
+  },
+  {
+   "xmlid": "view_guest_search",
+   "name": "ath.sire.tra.guest.search",
+   "model": "x_guests_line",
+   "type": "search",
+   "priority": 90,
+   "arch": "<search>\n<field name=\"x_sale_order_id\"/><field name=\"x_identity_number\"/><field name=\"x_surname_1\"/>\n<filter name=\"f_recibidos\" string=\"Por validar\" domain=\"[('x_data_state', '=', 'recibido')]\"/>\n<filter name=\"f_validados\" string=\"Validados sin llegada\" domain=\"[('x_data_state', '=', 'validado'), ('x_arrived_at', '=', False)]\"/>\n<filter name=\"f_alojados\" string=\"Alojados\" domain=\"[('x_arrived_at', '!=', False), ('x_departed_at', '=', False)]\"/>\n<separator/>\n<filter name=\"f_sire_in\" string=\"SIRE entrada por reportar\" domain=\"[('x_sire_in_state', 'in', ('pendiente', 'en_envio', 'enviado'))]\"/>\n<filter name=\"f_sire_out\" string=\"SIRE salida por reportar\" domain=\"[('x_sire_out_state', 'in', ('pendiente', 'en_envio', 'enviado'))]\"/>\n<filter name=\"f_tra\" string=\"TRA por reportar\" domain=\"[('x_tra_state', 'in', ('pendiente', 'en_envio', 'enviado'))]\"/>\n<filter name=\"f_date_gap\" string=\"Discrepancia de fechas\" domain=\"[('x_date_gap', '!=', False)]\"/>\n<filter name=\"f_alerta\" string=\"Incierto o rechazado\" domain=\"['|', '|', ('x_sire_in_state', 'in', ('incierto', 'rechazado')), ('x_sire_out_state', 'in', ('incierto', 'rechazado')), ('x_tra_state', 'in', ('incierto', 'rechazado'))]\"/>\n<group><filter name=\"g_order\" string=\"Reserva\" context=\"{'group_by': 'x_sale_order_id'}\"/></group>\n</search>"
+  },
+  {
+   "xmlid": "view_sire_sheet",
+   "name": "ath.sire.tra.sire.sheet",
+   "model": "x_guests_line",
+   "type": "list",
+   "priority": 91,
+   "arch": "<list string=\"Hoja guíada SIRE (orden del formulario del portal)\" create=\"0\">\n<field name=\"x_sire_in_state\" string=\"Entrada\"/><field name=\"x_arrived_at\" string=\"Fecha entrada\"/><field name=\"x_sire_out_state\" string=\"Salida\"/><field name=\"x_departed_at\" string=\"Fecha salida\"/>\n<field name=\"x_doc_type_id\"/><field name=\"x_identity_number\"/><field name=\"x_birth_date\"/><field name=\"x_surname_1\"/><field name=\"x_surname_2\"/><field name=\"x_given_names\"/><field name=\"x_nationality\"/><field name=\"x_origin_country_id\" string=\"País de procedencia\"/><field name=\"x_destination_country_id\" string=\"País proximo destino\"/>\n</list>"
+  },
+  {
+   "xmlid": "view_tra_sheet",
+   "name": "ath.sire.tra.tra.sheet",
+   "model": "x_guests_line",
+   "type": "list",
+   "priority": 92,
+   "arch": "<list string=\"Hoja guíada TRA\" create=\"0\">\n<field name=\"x_sale_order_id\"/><field name=\"x_is_main\"/><field name=\"x_doc_type_id\"/><field name=\"x_identity_number\"/><field name=\"x_given_names\"/><field name=\"x_surname_1\"/><field name=\"x_surname_2\"/><field name=\"x_residence_city_id\"/><field name=\"x_residence_text\"/><field name=\"x_origin_city_id\"/><field name=\"x_origin_text\"/><field name=\"x_tra_room\"/><field name=\"x_travel_reason\"/><field name=\"x_order_checkin\"/><field name=\"x_order_checkout\"/><field name=\"x_tra_state\"/><field name=\"x_tra_external_id\"/>\n</list>"
+  },
+  {
+   "xmlid": "view_attempt_form",
+   "name": "ath.sire.tra.attempt.form",
+   "model": "x_report_attempt",
+   "type": "form",
+   "priority": 90,
+   "arch": "<form string=\"Resultado de reporte\" edit=\"0\">\n<sheet><group>\n<field name=\"x_guest_line_id\" options=\"{'no_create': True, 'no_open': True}\"/>\n<field name=\"x_system\"/><field name=\"x_channel\"/><field name=\"x_result\"/>\n<field name=\"x_external_id\"/><field name=\"x_error_code\"/>\n<field name=\"x_reported_checkin\"/><field name=\"x_reported_checkout\"/>\n<field name=\"x_evidence\" filename=\"x_evidence_name\"/><field name=\"x_evidence_name\" invisible=\"1\"/>\n<field name=\"x_actor\" placeholder=\"Quien registra (declarado)\"/><field name=\"x_note\"/>\n<field name=\"x_sale_order_id\" readonly=\"1\"/><field name=\"x_http_status\" readonly=\"1\"/><field name=\"x_run_ref\" readonly=\"1\"/>\n</group></sheet>\n</form>"
+  },
+  {
+   "xmlid": "view_attempt_list",
+   "name": "ath.sire.tra.attempt.list",
+   "model": "x_report_attempt",
+   "type": "list",
+   "priority": 90,
+   "arch": "<list string=\"Intentos y evidencia\" create=\"0\"><field name=\"create_date\"/><field name=\"x_sale_order_id\"/><field name=\"x_guest_line_id\"/><field name=\"x_system\"/><field name=\"x_channel\"/><field name=\"x_result\"/><field name=\"x_external_id\"/><field name=\"x_http_status\"/><field name=\"x_error_code\"/><field name=\"x_reported_checkin\" optional=\"show\"/><field name=\"x_reported_checkout\" optional=\"show\"/><field name=\"x_run_ref\"/><field name=\"x_actor\"/><field name=\"x_evidence_name\"/></list>"
+  },
+  {
+   "xmlid": "view_est_form",
+   "name": "ath.sire.tra.establishment.form",
+   "model": "x_establishment",
+   "type": "form",
+   "priority": 90,
+   "arch": "<form string=\"Establecimiento\">\n<sheet><group>\n<group string=\"Identificación\"><field name=\"x_name\"/><field name=\"x_code\"/><field name=\"x_active\"/><field name=\"x_address_partner_id\"/><field name=\"x_analytic_account_id\"/></group>\n<group string=\"RNT y operador\"><field name=\"x_rnt_number\"/><field name=\"x_rnt_holder_id\"/><field name=\"x_rnt_expiry\"/><field name=\"x_operator_company_id\"/></group>\n<group string=\"SIRE\"><field name=\"x_sire_reporter_id\"/><field name=\"x_sire_company_code\"/><field name=\"x_sire_city_code\"/><field name=\"x_sire_move_in_code\"/><field name=\"x_sire_move_out_code\"/><field name=\"x_sire_date_format\"/><field name=\"x_sire_encoding\"/><field name=\"x_sire_codes_verified\"/><field name=\"x_sire_export_enabled\"/></group>\n<group string=\"TRA\"><field name=\"x_tra_mode\"/><field name=\"x_tra_accommodation_type\"/><field name=\"x_tra_cost_basis\"/><field name=\"x_tra_config_verified\"/></group>\n</group></sheet>\n</form>"
+  },
+  {
+   "xmlid": "view_est_list",
+   "name": "ath.sire.tra.establishment.list",
+   "model": "x_establishment",
+   "type": "list",
+   "priority": 90,
+   "arch": "<list><field name=\"x_code\"/><field name=\"x_name\"/><field name=\"x_rnt_number\"/><field name=\"x_tra_mode\"/><field name=\"x_sire_export_enabled\"/><field name=\"x_active\"/></list>"
+  },
+  {
+   "xmlid": "view_invite_list",
+   "name": "ath.sire.tra.invite.list",
+   "model": "survey.user_input",
+   "type": "list",
+   "priority": 90,
+   "arch": "<list string=\"Enlaces de registro\" create=\"0\"><field name=\"create_date\"/><field name=\"x_sale_order_id\"/><field name=\"x_ath_state\"/><field name=\"deadline\"/><field name=\"x_ath_url\" widget=\"CopyClipboardChar\"/><field name=\"x_ath_error\" optional=\"show\"/></list>"
+  },
+  {
+   "xmlid": "view_invite_form",
+   "name": "ath.sire.tra.invite.form",
+   "model": "survey.user_input",
+   "type": "form",
+   "priority": 90,
+   "arch": "<form string=\"Enlace de registro\" create=\"0\" edit=\"0\">\n<header><button name=\"{{ref:sa_revoke}}\" type=\"action\" string=\"Revocar enlace\" invisible=\"x_ath_state != 'invitado'\"/></header>\n<sheet><group><field name=\"x_sale_order_id\"/><field name=\"x_ath_state\"/><field name=\"deadline\"/><field name=\"x_ath_url\" widget=\"CopyClipboardChar\"/><field name=\"x_ath_processed_at\"/><field name=\"x_ath_error\"/><field name=\"x_ath_form_version\"/><field name=\"x_ath_submitted_at\"/><field name=\"x_ath_snapshot\" groups=\"base.group_system\"/></group></sheet>\n</form>"
+  }
+ ],
+ "WINDOW_ACTIONS": [
+  {
+   "xmlid": "act_guests",
+   "model": "x_guests_line",
+   "name": "Huéspedes",
+   "views": [
+    "view_guest_list",
+    "view_guest_form"
+   ],
+   "search": "view_guest_search",
+   "domain": "[('x_data_state', '!=', False)]"
+  },
+  {
+   "xmlid": "act_sire_sheet",
+   "model": "x_guests_line",
+   "name": "Hoja guíada SIRE",
+   "views": [
+    "view_sire_sheet",
+    "view_guest_form"
+   ],
+   "search": "view_guest_search",
+   "domain": "[('x_is_foreign', '=', True), '|', ('x_sire_in_state', 'in', ('pendiente', 'en_envio', 'enviado', 'incierto')), ('x_sire_out_state', 'in', ('pendiente', 'en_envio', 'enviado', 'incierto'))]"
+  },
+  {
+   "xmlid": "act_tra_sheet",
+   "model": "x_guests_line",
+   "name": "Hoja guíada TRA",
+   "views": [
+    "view_tra_sheet",
+    "view_guest_form"
+   ],
+   "search": "view_guest_search",
+   "domain": "[('x_tra_state', 'in', ('pendiente', 'en_envio', 'enviado', 'incierto', 'rechazado'))]"
+  },
+  {
+   "xmlid": "act_date_gap",
+   "model": "x_guests_line",
+   "name": "Discrepancia de fechas",
+   "views": [
+    "view_guest_list",
+    "view_guest_form"
+   ],
+   "search": "view_guest_search",
+   "domain": "[('x_date_gap', '!=', False)]"
+  },
+  {
+   "xmlid": "act_attempts",
+   "model": "x_report_attempt",
+   "name": "Intentos y evidencia",
+   "views": [
+    "view_attempt_list",
+    "view_attempt_form"
+   ]
+  },
+  {
+   "xmlid": "act_attempt_new",
+   "model": "x_report_attempt",
+   "name": "Registrar resultado de reporte",
+   "views": [
+    "view_attempt_form"
+   ],
+   "target": "new",
+   "view_mode": "form"
+  },
+  {
+   "xmlid": "act_invites",
+   "model": "survey.user_input",
+   "name": "Enlaces de registro",
+   "views": [
+    "view_invite_list",
+    "view_invite_form"
+   ],
+   "domain": "[('x_sale_order_id', '!=', False)]"
+  },
+  {
+   "xmlid": "act_establishments",
+   "model": "x_establishment",
+   "name": "Establecimientos",
+   "views": [
+    "view_est_list",
+    "view_est_form"
+   ]
+  },
+  {
+   "xmlid": "act_orders",
+   "model": "sale.order",
+   "name": "Reservas",
+   "views": [],
+   "domain": "[('is_rental_order', '=', True)]"
+  }
+ ],
+ "MENUS": [
+  {
+   "xmlid": "menu_root",
+   "name": "Registro SIRE/TRA",
+   "sequence": 95
+  },
+  {
+   "xmlid": "menu_orders",
+   "name": "Reservas",
+   "parent": "menu_root",
+   "action": "act_orders",
+   "sequence": 1
+  },
+  {
+   "xmlid": "menu_invites",
+   "name": "Enlaces de registro",
+   "parent": "menu_root",
+   "action": "act_invites",
+   "sequence": 2
+  },
+  {
+   "xmlid": "menu_guests",
+   "name": "Huéspedes",
+   "parent": "menu_root",
+   "action": "act_guests",
+   "sequence": 3
+  },
+  {
+   "xmlid": "menu_sire",
+   "name": "Hoja guíada SIRE",
+   "parent": "menu_root",
+   "action": "act_sire_sheet",
+   "sequence": 4
+  },
+  {
+   "xmlid": "menu_tra",
+   "name": "Hoja guíada TRA",
+   "parent": "menu_root",
+   "action": "act_tra_sheet",
+   "sequence": 5
+  },
+  {
+   "xmlid": "menu_date_gap",
+   "name": "Discrepancia de fechas",
+   "parent": "menu_root",
+   "action": "act_date_gap",
+   "sequence": 6
+  },
+  {
+   "xmlid": "menu_attempts",
+   "name": "Intentos y evidencia",
+   "parent": "menu_root",
+   "action": "act_attempts",
+   "sequence": 7
+  },
+  {
+   "xmlid": "menu_est",
+   "name": "Establecimientos",
+   "parent": "menu_root",
+   "action": "act_establishments",
+   "sequence": 8
+  }
+ ],
+ "WRITABLE_MODELS": [
+  "ir.model",
+  "ir.model.fields",
+  "ir.model.access",
+  "ir.model.data",
+  "ir.actions.server",
+  "base.automation",
+  "ir.ui.view",
+  "ir.actions.act_window",
+  "ir.actions.act_window.view",
+  "ir.ui.menu",
+  "survey.survey",
+  "survey.question"
+ ],
+ "REQUIRED_MODELS": [
+  "sale.order",
+  "resource.resource",
+  "x_guests_line",
+  "survey.survey",
+  "survey.question",
+  "survey.user_input",
+  "l10n_latam.identification.type",
+  "res.country",
+  "res.city",
+  "res.partner",
+  "res.company",
+  "account.analytic.account",
+  "ir.attachment"
+ ]
+}

@@ -31,9 +31,13 @@
     "reconcile-daily": "node scripts/reconcile-daily.mjs",
     "sync-dryrun": "node scripts/sync-dryrun.mjs",
     "sync-shadow": "node scripts/sync-shadow.mjs",
+    "sync-copy": "node scripts/sync-copy.mjs",
     "sync-semiauto": "node scripts/sync-semiauto.mjs",
     "sync-pilot": "node scripts/sync-pilot.mjs",
     "sync-auto": "node scripts/sync-auto.mjs",
-    "booking-correction-dry": "node scripts/booking-correction-dry.mjs"
+    "booking-correction-dry": "node scripts/booking-correction-dry.mjs",
+    "sire-tra-apply": "node scripts/sire-tra-apply.mjs",
+    "sire-tra-bundle": "node scripts/sire-tra-bundle.mjs",
+    "tra-emit": "node scripts/tra-emit.mjs"
   }
 }

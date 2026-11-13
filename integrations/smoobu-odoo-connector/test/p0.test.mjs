@@ -136,14 +136,28 @@ test('cliente de escritura: guardias duras (autorizacion, objetivo, valores exac
 });
 
 test('el unico lugar con capacidad de escritura es odoo-json2-p0-client.mjs y el borrado exige el id propio', async () => {
-  const { readdirSync, readFileSync } = await import('node:fs');
-  const dir = new URL('../src/', import.meta.url);
-  for (const f of readdirSync(dir)) {
-    const src = readFileSync(new URL(f, dir), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  const { readdirSync, readFileSync, statSync } = await import('node:fs');
+  const { join, relative } = await import('node:path');
+  const root = new URL('../src/', import.meta.url).pathname;
+  // Recorre TODO src/ (incluidas subcarpetas): un cliente de escritura en una subcarpeta no puede escapar a la politica.
+  const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
+  // Clientes con capacidad de escritura (red + metodo de mutacion). Cada uno tiene su propia guardia y sus pruebas.
+  // ATH-DEV-116: sync-write-client.mjs esta DESARMADO por defecto (ver test/sync-apply.test.mjs)
+  // ATH-HOTELS-SIRE-TRA-001: sire-tra/odoo-rpc-node.mjs solo escribe modelos tecnicos o intentos tras la guardia de destino;
+  // sire-tra/browser-entry.mjs solo arranca en hosts de copia de pruebas (assertBrowserTarget). Ver test/sire-tra-*.test.mjs
+  // ATH-HOTELS-SIRE-TRA-001: sync-copy-client.mjs es el modo COPIA del cliente de sincronizacion: solo acepta atheron1-pruebas-AAAAMMDD,
+  // exige credencial distinta de la de produccion y su propia frase de armado, y repite la verificacion en cada escritura. Ver test/sync-copy-client.test.mjs
+  const WRITE_CAPABLE = ['odoo-json2-p0-client.mjs', 'sync-write-client.mjs', 'sync-copy-client.mjs', 'sync-pilot-client.mjs', 'sync-auto-client.mjs', 'sire-tra/odoo-rpc-node.mjs', 'sire-tra/browser-entry.mjs'];
+  const RAW_REQUEST = [...WRITE_CAPABLE, 'odoo-json2-client.mjs', 'odoo-json2-recompute-client.mjs'];
+  for (const path of walk(root)) {
+    const f = relative(root, path);
+    const src = readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
     const usesRequest = /\._request\(/.test(src);
-    // ATH-DEV-116: sync-write-client.mjs es el segundo cliente con _request; esta DESARMADO por defecto (ver test/sync-apply.test.mjs)
-    if (usesRequest) assert.ok(['odoo-json2-p0-client.mjs', 'odoo-json2-client.mjs', 'odoo-json2-recompute-client.mjs', 'sync-write-client.mjs', 'sync-pilot-client.mjs', 'sync-auto-client.mjs'].includes(f), `${f} usa _request`);
-    if (/['"](create|write|unlink)['"]/.test(src)) assert.ok(['odoo-json2-p0-client.mjs', 'odoo-json2-client.mjs', 'p0-run.mjs'].includes(f) || /READ_METHODS|rechaz|ODOO_READ_ONLY/.test(src) === false, `${f} nombra una mutacion`);
+    const doesNetwork = usesRequest || /\bfetch\(/.test(src);
+    const namesMutation = /['"](create|write|unlink)['"]/.test(src);
+    if (usesRequest) assert.ok(RAW_REQUEST.includes(f), `${f} usa _request`);
+    // Comportamiento, no palabras: nombrar una mutacion solo importa si el modulo puede emitirla por red.
+    if (doesNetwork && namesMutation) assert.ok(WRITE_CAPABLE.includes(f), `${f} puede emitir una mutacion por red`);
   }
   const run = readFileSync(new URL('../src/p0-run.mjs', import.meta.url), 'utf8');
   assert.ok(!/writer\.\w+\(/.test(run.replace(/writer\.(createExactlyOne|adoptCreatedId|unlinkOwn|createdIds)/g, '')), 'p0-run usa metodos del escritor no previstos');
