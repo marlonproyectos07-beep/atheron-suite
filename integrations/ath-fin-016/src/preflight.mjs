@@ -1,10 +1,7 @@
-import { randomBytes, createCipheriv, publicEncrypt, constants } from 'node:crypto';
 import { OdooReadonlyClient } from './odoo-client.mjs';
 import { validateManifest, EXPECTED_SCOPE } from './manifest.mjs';
 import { movementReference } from './planner.mjs';
 import { checkApprovedMapping, APPROVED_ODOO_MAPPING } from './accounting-map.mjs';
-
-const REPORT_PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAmjnl+0TEdhv9z3GGOEA4\nHVyEO/woCemqmBR3purKC9+byYrYOTAvTI6hK1hVP1e4EFBzJ6jgmS1WgA0kjdwj\nTO1UGFKxPxL94R/mMcUNHc9KRFPhGH4vuuDnEa5oonj4rxRN9yrmNzn8vVojWd3E\noeYEVvC03U6UM6W92wNgBXVRbJ9M8t5ofmaimp9XZ2QMdnCSrQhSB4QQgm/CYt6m\nmF97alYRKI6DEjCXnLT7JeteQCGbmObGUFrtV41N2SeQn+XLNMv/+ImOHNPqcdyt\nCluD4XxRqzCGPIoLPiCha+uGQmcn+zIO2Ld4YuEYrzoEH7N/YTWS6keZyaL/ytRl\ntuFP3qit8cLiP8+P7fHPWxqQu1p0GMDYGBF5b44/p2XdmQ8N2hcpa/t7i7q14p3i\n7z582cx2EaNh2Kd+XlgHFT+dp2NVDNZRwW3J/jwVRz1V9hEUw9oVPGB7SIQst913\njRUnbHgDDW4hhJ3x5nI/JQo7ryZjrxT0sO9qwJZKW7nlAgMBAAE=\n-----END PUBLIC KEY-----';
 
 function pickFields(schema, candidates) {
   return candidates.filter((field) => Object.hasOwn(schema ?? {}, field));
@@ -331,24 +328,3 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
   return report;
 }
 
-export function encryptReport(report) {
-  const plaintext = Buffer.from(JSON.stringify(report), 'utf8');
-  const aesKey = randomBytes(32);
-  const iv = randomBytes(12);
-  const cipher = createCipheriv('aes-256-gcm', aesKey, iv);
-  const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
-  const tag = cipher.getAuthTag();
-  const encryptedKey = publicEncrypt({
-    key: REPORT_PUBLIC_KEY,
-    padding: constants.RSA_PKCS1_OAEP_PADDING,
-    oaepHash: 'sha256'
-  }, aesKey);
-  return JSON.stringify({
-    version: 1,
-    algorithm: 'RSA-OAEP-SHA256 + AES-256-GCM',
-    encrypted_key: encryptedKey.toString('base64'),
-    iv: iv.toString('base64'),
-    tag: tag.toString('base64'),
-    ciphertext: ciphertext.toString('base64')
-  });
-}
