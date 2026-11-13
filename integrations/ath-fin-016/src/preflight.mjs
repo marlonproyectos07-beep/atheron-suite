@@ -68,9 +68,9 @@ async function collectJournals(client, journalSchema) {
   return { allBank, codeBC };
 }
 
-async function collectExistingBankData(client, bankAccount, journal) {
+async function collectExistingBankData(client, bankAccount, journal, allAccounts) {
   if (!Number.isInteger(bankAccount?.id) || !Number.isInteger(journal?.id)) {
-    return { status: 'BLOCKED_BANK_OR_JOURNAL_NOT_UNIQUE', statementLines: [], bankMoveLines: [] };
+    return { status: 'BLOCKED_BANK_OR_JOURNAL_NOT_UNIQUE', statementLines: [], bankMoveLines: [], allBankMoveLines: [] };
   }
   const statementSchema = await client.fieldsGet('account.bank.statement.line');
   const statementFields = pickFields(statementSchema, [
@@ -88,18 +88,52 @@ async function collectExistingBankData(client, bankAccount, journal) {
     'id', 'date', 'name', 'account_id', 'journal_id', 'move_id',
     'debit', 'credit', 'balance', 'ref', 'move_type', 'parent_state'
   ]);
-  const bankMoveLines = await client.searchRead('account.move.line', [
-    ['account_id', '=', bankAccount.id],
-    ['journal_id', '=', journal.id],
+  const dateDomain = [
     ['date', '>=', EXPECTED_SCOPE.periodStart],
     ['date', '<=', EXPECTED_SCOPE.periodEnd]
+  ];
+  const bankMoveLines = await client.searchRead('account.move.line', [
+    ['account_id', '=', bankAccount.id], ['journal_id', '=', journal.id], ...dateDomain
   ], moveFields, 2000);
+  const allBankMoveLines = await client.searchRead('account.move.line', [
+    ['account_id', '=', bankAccount.id], ...dateDomain
+  ], moveFields, 3000);
+
+  const descriptions = {
+    gmf: 'IMPTO GOBIERNO 4X1000',
+    bank_fee: 'CUOTA MANEJO TRJ DEB',
+    interest: 'ABONO INTERESES AHORROS'
+  };
+  const targetDescriptionLines = {};
+  for (const [key, description] of Object.entries(descriptions)) {
+    targetDescriptionLines[key] = await client.searchRead('account.move.line', [
+      ['name', 'ilike', description], ...dateDomain
+    ], moveFields, 100);
+  }
+
+  const candidateCodes = ['521000', '521025', '521500', '530500', '530505', '421000', '415000'];
+  const accountByCode = new Map((allAccounts ?? []).map((account) => [String(account.code), account]));
+  const historicalAccountUsage = {};
+  for (const code of candidateCodes) {
+    const account = accountByCode.get(code);
+    if (!account?.id) continue;
+    historicalAccountUsage[code] = await client.searchRead('account.move.line', [
+      ['account_id', '=', account.id],
+      ['date', '>=', '2026-01-01'],
+      ['date', '<=', EXPECTED_SCOPE.periodEnd]
+    ], moveFields, 40);
+  }
   return {
     status: 'COMPLETE_READ_ONLY',
     statementLineCount: statementLines.length,
     bankMoveLineCount: bankMoveLines.length,
+    allBankMoveLineCount: allBankMoveLines.length,
+    targetDescriptionCounts: Object.fromEntries(Object.entries(targetDescriptionLines).map(([k, v]) => [k, v.length])),
     statementLines,
-    bankMoveLines
+    bankMoveLines,
+    allBankMoveLines,
+    targetDescriptionLines,
+    historicalAccountUsage
   };
 }
 
@@ -162,6 +196,7 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
     user: null,
     acl: {},
     schemas: {},
+    accounting_defaults: null,
     account_candidates: null,
     journals: null,
     manifest: { status: 'NOT_CONFIGURED' },
@@ -208,6 +243,11 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
       client.fieldsGet(model)
     );
     if (schema) report.schemas[model] = schema;
+    if (model === 'account.move') {
+      report.accounting_defaults = await attempt(report, 'account_move_default_get', () =>
+        client.call('account.move', 'default_get', { fields_list: ['move_type', 'date', 'journal_id'] })
+      );
+    }
     const operations = model === 'account.move' || model === 'account.move.line'
       ? ['read', 'create', 'write'] : ['read'];
     for (const operation of operations) {
@@ -237,7 +277,7 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
   const bankForScan = bankRowsForScan.length === 1 && bankRowsForScan[0].active !== false ? bankRowsForScan[0] : null;
   const journalForScan = bcRowsForScan.length === 1 && bcRowsForScan[0].active !== false ? bcRowsForScan[0] : null;
   report.existing_bank_data = await attempt(report, 'existing_bank_window_read', () =>
-    collectExistingBankData(client, bankForScan, journalForScan)
+    collectExistingBankData(client, bankForScan, journalForScan, report.account_candidates?.allCompanyAccounts)
   );
 
   if (env.ATH_FIN016_MANIFEST_JSON) {
