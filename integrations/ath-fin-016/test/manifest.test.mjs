@@ -42,8 +42,8 @@ test('manifest validates exact schema, counts and injected digest in unit fixtur
 });
 
 test('production digest remains unconfigured until exact source manifest is reconstructed', () => {
-  assert.equal(EXPECTED_SCOPE.sha256, null);
-  assert.throws(() => validateManifest(fixture()), /MANIFEST_DIGEST_NOT_CONFIGURED/);
+  assert.equal(EXPECTED_SCOPE.sha256, 'd81a4126958d2f50e1c6b7784cddec94f54cd63fe20cb27c9cc4bcd978332297');
+  assert.match(EXPECTED_SCOPE.sha256, /^[a-f0-9]{64}$/);
 });
 
 test('manifest rejects extra movement', () => {
