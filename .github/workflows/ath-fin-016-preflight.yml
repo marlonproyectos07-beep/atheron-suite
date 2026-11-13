@@ -40,18 +40,18 @@ jobs:
 
       - name: Odoo read-only credential and accounting preflight
         env:
-          ODOO_BASE_URL: \${{ vars.ODOO_BASE_URL }}
-          ODOO_DATABASE: \${{ vars.ODOO_DATABASE }}
-          ODOO_API_KEY: \${{ secrets.ODOO_API_KEY }}
-          ATH_FIN016_MANIFEST_JSON: \${{ secrets.ATH_FIN016_MANIFEST_JSON }}
-          ATH_FIN016_REPORT_PATH: \${{ runner.temp }}/ath-fin-016-preflight.enc
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          ATH_FIN016_MANIFEST_JSON: ${{ secrets.ATH_FIN016_MANIFEST_JSON }}
+          ATH_FIN016_REPORT_PATH: ${{ runner.temp }}/ath-fin-016-preflight.enc
         run: node scripts/preflight.mjs
 
       - name: Upload encrypted report only
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ath-fin-016-preflight-\${{ github.run_number }}
-          path: \${{ runner.temp }}/ath-fin-016-preflight.enc
+          name: ath-fin-016-preflight-${{ github.run_number }}
+          path: ${{ runner.temp }}/ath-fin-016-preflight.enc
           if-no-files-found: ignore
           retention-days: 2
