@@ -297,7 +297,7 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
 
   if (env.ATH_FIN016_MANIFEST_JSON) {
     try {
-      const manifest = validateManifest(env.ATH_FIN016_MANIFEST_JSON);
+      const manifest = validateManifest(env.ATH_FIN016_MANIFEST_JSON, { expectedDigest: String(env.ATH_FIN016_MANIFEST_SHA256 ?? '').trim() });
       report.manifest = {
         status: 'VALIDATED_EXACT_SCOPE',
         count: manifest.movements.length,
