@@ -145,7 +145,9 @@ test('el unico lugar con capacidad de escritura es odoo-json2-p0-client.mjs y el
   // ATH-DEV-116: sync-write-client.mjs esta DESARMADO por defecto (ver test/sync-apply.test.mjs)
   // ATH-HOTELS-SIRE-TRA-001: sire-tra/odoo-rpc-node.mjs solo escribe modelos tecnicos o intentos tras la guardia de destino;
   // sire-tra/browser-entry.mjs solo arranca en hosts de copia de pruebas (assertBrowserTarget). Ver test/sire-tra-*.test.mjs
-  const WRITE_CAPABLE = ['odoo-json2-p0-client.mjs', 'sync-write-client.mjs', 'sync-pilot-client.mjs', 'sync-auto-client.mjs', 'sire-tra/odoo-rpc-node.mjs', 'sire-tra/browser-entry.mjs'];
+  // ATH-HOTELS-SIRE-TRA-001: sync-copy-client.mjs es el modo COPIA del cliente de sincronizacion: solo acepta atheron1-pruebas-AAAAMMDD,
+  // exige credencial distinta de la de produccion y su propia frase de armado, y repite la verificacion en cada escritura. Ver test/sync-copy-client.test.mjs
+  const WRITE_CAPABLE = ['odoo-json2-p0-client.mjs', 'sync-write-client.mjs', 'sync-copy-client.mjs', 'sync-pilot-client.mjs', 'sync-auto-client.mjs', 'sire-tra/odoo-rpc-node.mjs', 'sire-tra/browser-entry.mjs'];
   const RAW_REQUEST = [...WRITE_CAPABLE, 'odoo-json2-client.mjs', 'odoo-json2-recompute-client.mjs'];
   for (const path of walk(root)) {
     const f = relative(root, path);

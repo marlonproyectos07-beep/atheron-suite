@@ -37,12 +37,13 @@ class Rec:
     def write(self, vals):
         if self.store is not None and self.store.get('kind') == 'order': self.store['writes'].append(sorted(vals))
         self.d.update(vals)
-    def message_post(self, **kw): self.store['notes'].append(kw)
+    def message_post(self, **kw):
+        if self.d.get('_boom'): raise RuntimeError('fallo inyectado')
+        self.store['notes'].append(kw)
 class UIModel:
     def __init__(self, st): self.st = st
     def search(self, domain):
-        oid = domain[0][2]
-        return [r for r in self.st['slots'] if r.d.get('x_sale_order_id') == oid]
+        return [r for r in self.st['slots'] if all(r.d.get(f) == v for f, _op, v in domain)]
     def create(self, vals):
         self.st['n'] += 1
         r = Rec({'id': 100 + self.st['n'], 'access_token': 'T%d' % self.st['n'], **vals}, None)
@@ -66,6 +67,7 @@ for o in spec['orders']:
     s = {'kind': 'order', 'writes': [], 'notes': []}
     orders[o['id']] = (Rec(o, s), s)
 out = []
+LOGS = []
 for step in spec['steps']:
     if step['op'] == 'set':
         orders[step['id']][0].d.update({k: Rec.conv(k, v) for k, v in step['vals'].items()})
@@ -78,10 +80,10 @@ for step in spec['steps']:
     err = None
     try:
         st['notes'] = []
-        exec(spec['code'], {'env': Env(st), 'records': recs, 'datetime': DT, 'UserError': UserError})
+        exec(spec['code'], {'env': Env(st), 'records': recs, 'datetime': DT, 'UserError': UserError, 'log': lambda m, level='info': LOGS.append(m)})
     except Exception as e:
         err = '%s: %s' % (type(e).__name__, e)
-    out.append({'err': err, 'slots': [{k: (str(v) if isinstance(v, (datetime.datetime, datetime.date)) else v) for k, v in r.d.items()} for r in st['slots']],
+    out.append({'err': err, 'logs': list(LOGS), 'slots': [{k: (str(v) if isinstance(v, (datetime.datetime, datetime.date)) else v) for k, v in r.d.items()} for r in st['slots']],
                 'notes': {str(i): [n['body'] for n in orders[i][1]['notes']] for i in orders}, 'orderWrites': {str(i): orders[i][1]['writes'] for i in orders}})
 print(json.dumps(out))`;
 
@@ -99,9 +101,10 @@ test('la automatizacion solo dispara con reserva confirmada de Smoobu; la accion
   const a = AUTOMATIONS.find((x) => x.xmlid === 'au_invite');
   assert.equal(a.model, 'sale.order');
   assert.equal(a.action, 'sa_invite_auto');
-  assert.match(a.domain, /'state', '=', 'sale'/);
+  assert.match(a.domain, /'state', 'in', \['sale', 'cancel'\]/);
   assert.match(a.domain, /SMOOBU-/);
-  assert.deepEqual(a.triggerFields, ['state', 'x_checkin', 'x_checkout']);
+  assert.doesNotMatch(a.domain, /'draft'|'sent'/, 'nunca dispara por borradores');
+  assert.deepEqual(a.triggerFields, ['state', 'x_reservation_status', 'x_checkin', 'x_checkout']);
   const s = SERVER_ACTIONS.find((x) => x.xmlid === 'sa_invite_auto');
   assert.ok(!s.bind, 'no se enlaza al menu Accion: la unica puerta manual sigue siendo sa_invite');
   for (const forbidden of ['action_confirm', 'action_cancel', 'unlink', 'mail.mail', 'mail.template', 'send_mail', 'whatsapp', 'message_type=\'email\'', 'sudo().write']) assert.ok(!s.code.includes(forbidden), forbidden);
@@ -191,7 +194,7 @@ test('usa la fecha de devolucion de alquiler si no hay check-out; hoy (hora Bogo
   assert.equal(invitados(b[0]).length, 1);
 });
 
-test('cancelada, no-show o sin referencia de Smoobu: nada; lote mixto solo prepara la elegible; sin encuesta no falla', (t) => {
+test('cancelada, no-show o sin referencia de Smoobu: no se prepara enlace; lote mixto solo prepara la elegible; sin encuesta no falla', (t) => {
   const r = py({
     orders: [order(1, { state: 'cancel' }), order(2, { x_reservation_status: 'cancelled' }), order(3, { x_reservation_status: 'no_show' }), order(4, { x_pms_reference: false }), order(5, { x_pms_reference: 'RESERVA MANUAL 12' }), order(6), order(7, { state: 'draft' })],
     steps: [run(1, 2, 3, 4, 5, 6, 7)],
@@ -272,4 +275,72 @@ except UserError as ex:
   const out = JSON.parse(arrive);
   assert.match(out.err, /reserva no confirmada, cancelada o no-show/);
   assert.equal(out.wrote, null, 'sin llegada real no nacen obligaciones SIRE/TRA');
+});
+
+
+// ------------------------------------------------------------------ revocacion al cancelar y contencion de fallos
+const slot = (id, oid, state, extra = {}) => ({ id, x_sale_order_id: oid, x_ath_state: state, access_token: `TOK${id}`, deadline: '2026-11-23 04:59:00', x_ath_url: `https://odoo.test/survey/SURVEY/TOK${id}`, state: 'new', ...extra });
+
+test('al cancelar se revoca el enlace vigente: token rotado (la URL anterior y un formulario abierto dejan de valer), vencimiento y reserva intactos, una nota', (t) => {
+  for (const cancel of [{ state: 'cancel' }, { x_reservation_status: 'cancelled' }, { x_reservation_status: 'no_show' }]) {
+    const r = py({ orders: [order(1)], slots: [slot(50, 1, 'invitado', { state: 'in_progress' })], steps: [{ op: 'set', id: 1, vals: cancel }, run(1), run(1)] }, t);
+    if (!r) return;
+    const k = JSON.stringify(cancel);
+    assert.equal(r[0].err, null, k);
+    assert.equal(r[0].slots.length, 1, k);
+    const s = r[0].slots[0];
+    assert.equal(s.x_ath_state, 'revocado', k);
+    assert.notEqual(s.access_token, 'TOK50', `${k}: la URL anterior ya no corresponde a ningun registro`);
+    assert.equal(s.x_ath_url, false, k);
+    assert.equal(s.deadline, '2026-11-23 04:59:00', `${k}: no toca el vencimiento original`);
+    assert.equal(r[0].notes[1].length, 1, k);
+    assert.match(r[0].notes[1][0], /revocado/);
+    assert.deepEqual(r[0].orderWrites[1], [], 'no escribe en la reserva');
+    assert.deepEqual(r[1].slots, r[0].slots, `${k}: repetir no cambia nada`);
+    assert.equal(r[1].notes[1].length, 1, `${k}: sin notas repetidas`);
+  }
+});
+
+test('al cancelar se conservan el historial y los formularios recibidos: procesado, revocado previo, formulario terminado y errores no se tocan', (t) => {
+  const slots = [slot(50, 1, 'procesado', { state: 'done' }), slot(51, 1, 'revocado', { x_ath_url: false }), slot(52, 1, 'invitado', { state: 'done' }), slot(53, 1, 'error', { x_ath_error: 'causa' }), slot(60, 2, 'invitado')];
+  const r = py({ orders: [order(1, { state: 'cancel' }), order(2)], slots, steps: [run(1)] }, t);
+  if (!r) return;
+  const by = (id) => r[0].slots.find((x) => x.id === id);
+  assert.deepEqual(by(50), slots[0], 'procesado: intacto');
+  assert.deepEqual(by(51), slots[1], 'revocado previo: intacto');
+  assert.deepEqual(by(52), slots[2], 'formulario ya terminado: se conserva para que Recepcion lo procese');
+  assert.deepEqual(by(53), slots[3], 'error: intacto');
+  assert.deepEqual(by(60), slots[4], 'enlaces de OTRAS reservas: intactos');
+  assert.deepEqual(r[0].notes[1], [], 'sin nada que revocar no hay nota');
+});
+
+test('la cancelacion de una reserva sin referencia de Smoobu no revoca nada', (t) => {
+  const r = py({ orders: [order(1, { state: 'cancel', x_pms_reference: 'RESERVA MANUAL 3' })], slots: [slot(50, 1, 'invitado')], steps: [run(1)] }, t);
+  if (!r) return;
+  assert.equal(r[0].slots[0].x_ath_state, 'invitado');
+});
+
+test('una prorroga (cambia la salida) no mueve el vencimiento original ni genera otro enlace; reconfirmar tras cancelar no resucita el enlace', (t) => {
+  const r = py({ orders: [order(1)], steps: [run(1), { op: 'set', id: 1, vals: { x_checkout: '2026-11-29' } }, run(1), { op: 'set', id: 1, vals: { state: 'cancel' } }, run(1), { op: 'set', id: 1, vals: { state: 'sale' } }, run(1)] }, t);
+  if (!r) return;
+  assert.equal(r[0].slots[0].deadline, '2026-11-23 04:59:00');
+  assert.deepEqual(r[1].slots, r[0].slots, 'prorroga: mismo enlace, mismo vencimiento');
+  assert.equal(r[2].slots[0].x_ath_state, 'revocado');
+  assert.equal(r[2].slots[0].deadline, '2026-11-23 04:59:00', 'revocar tampoco reescribe el vencimiento');
+  assert.deepEqual(r[3].slots, r[2].slots, 'reconfirmada: sigue revocado; solo Recepcion genera uno nuevo');
+});
+
+test('contencion de fallos: un error en una reserva no se propaga, queda en el registro de Odoo y el resto del lote se procesa', (t) => {
+  const r = py({ orders: [order(1, { _boom: true }), order(2)], steps: [run(1, 2)] }, t);
+  if (!r) return;
+  assert.equal(r[0].err, null, 'no lanza: no puede bloquear la confirmacion');
+  assert.equal(r[0].logs.length, 1);
+  assert.match(r[0].logs[0], /reserva 1 sin procesar: fallo inyectado/);
+  assert.ok(r[0].slots.some((s) => s.x_sale_order_id === 2 && s.x_ath_state === 'invitado'), 'la otra reserva se prepara igual');
+  assert.deepEqual(r[0].orderWrites[1], []);
+});
+
+test('la accion no contiene raise ni escrituras en la reserva (el test de restriccion del repositorio sigue valiendo)', () => {
+  assert.ok(!/\border\.write\(|\border\[[^\]]+\]\s*=|raise /.test(CODE));
+  assert.deepEqual(AUTOMATIONS.filter((a) => a.model === 'sale.order').map((a) => a.xmlid), ['au_invite']);
 });

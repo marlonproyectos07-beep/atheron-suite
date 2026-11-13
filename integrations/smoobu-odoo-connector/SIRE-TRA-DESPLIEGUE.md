@@ -15,7 +15,7 @@
 
 - `x_date_gap` es un campo calculado y almacenado en `x_guests_line`: Odoo lo recalcula al cambiar el check-out de la reserva, el estado TRA o la salida real. Solo lee `sale.order`; no escribe en reservas, no llama a TRA y no cambia estados. Las lineas aceptadas antes del despliegue no tienen fechas guardadas y no generan alerta.
 
-- **Puente al confirmar (`au_invite`)**: al confirmar una reserva de Smoobu (o al completar sus fechas) Odoo deja preparado el enlace de registro. No lo envia, no confirma pedidos y nunca lanza error. Reversion suave: `--disable --apply` tambien lo apaga.
+- **Puente al confirmar (`au_invite`)**: al confirmar una reserva de Smoobu (o al completar sus fechas) Odoo deja preparado el enlace de registro. Si la reserva se cancela, revoca el enlace vigente (la URL anterior deja de recibir datos; se conservan el historial y los formularios recibidos). No lo envia, no confirma pedidos, no escribe en la reserva y nunca lanza error (try/except por reserva). Reversion suave: `--disable --apply` tambien lo apaga.
 
 ## Pasos (cuando se apruebe)
 1. Punto de restauracion: confirmar respaldo diario de Odoo y `git tag` del commit desplegado.

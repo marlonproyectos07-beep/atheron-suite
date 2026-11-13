@@ -93,10 +93,43 @@ Limites de esta ronda:
 - El cliente de escritura del conector (`SyncWriteClient`) sigue **desarmado y limitado a produccion**; no se toco. Las escrituras del conector se generaron con su codigo y se reprodujeron en la copia; la lectura de la repeticion uso el estado real de la copia.
 - Las respuestas del formulario se cargaron como lineas de encuesta (la automatizacion y el mapeo son los reales); la pantalla del formulario no se recorrio en esta ronda (la pagina de bienvenida abre en modo anonimo; el recorrido de pantalla se probo en la ronda 1).
 - El conector rechaza nombres genericos como "prueba": los huespedes sinteticos de esta ronda usan otro nombre ficticio.
-- Un enlace vigente **no se revoca** al cancelar la reserva (decision pendiente).
+- (Cuarta ronda; resuelto en la quinta) Un enlace vigente no se revocaba al cancelar la reserva.
 - Si la estancia se prorroga, el enlace conserva su vencimiento original.
 - La automatizacion corre dentro de la confirmacion de la reserva: nunca lanza error ni escribe en la reserva, pero es la unica automatizacion sobre reservas de este paquete.
 - Datos sinteticos y 3 reservas de prueba se dejan en la copia (vence sola).
+
+## Quinta ronda (2026-11-13) — revocacion al cancelar, modo copia del cliente y recorrido como huesped
+Rama `feat/ath-sire-tra-inc1-estructura`. Copia `atheron1-pruebas-20261108`. Aislamiento 8/8 antes de aplicar y despues (cron 48 inactivo; esta vez no se reactivo al actualizar la regla). Cambios aplicados en la copia: solo el codigo de `sa_invite_auto` (id 2029) y la regla `au_invite` (id 212: nombre, dominio y campos disparadores).
+
+**Decision sobre la restriccion del repositorio.** La revocacion no abre una regla nueva sobre reservas: se amplio la MISMA regla `au_invite` (sigue siendo la unica sobre `sale.order`). Dominio: reserva con referencia `SMOOBU-` y (`state` en `sale`/`cancel` o `x_reservation_status` en `cancelled`/`no_show`). Nunca dispara por borradores. Campo disparador nuevo: `x_reservation_status`. La rama de cancelacion solo escribe en registros de enlace (rota el token y marca *revocado*); no escribe en la reserva. Si Marlon no acepta ampliar la regla, la alternativa es dejar la cancelacion a la accion manual *Revocar enlace* (Recepcion), sin automatizacion.
+
+**Revocacion.** Un enlace *vigente* de una reserva cancelada rota su token: la URL anterior y cualquier formulario ya abierto dejan de aceptar datos. No se toca el vencimiento original, ni los enlaces *procesado*/*revocado*/*error*, ni un formulario ya terminado, ni los enlaces de otras reservas. Una prorroga no mueve el vencimiento (el enlace vigente nunca se regenera) y reconfirmar tras cancelar no resucita el enlace. **Contencion de fallos:** la accion corre dentro de `try/except` por reserva y registra el error en el log de Odoo en vez de lanzarlo; no hay `raise` ni escrituras en la reserva (lo vigila `sire-tra-date-gap.test`). Limite: `try/except` captura errores de Python, no un error de base de datos que aborte la transaccion; no se uso `savepoint` porque no se probo que el evaluador de Odoo lo permita.
+
+| Caso (copia, datos sinteticos, huesped en modo anonimo = sin cookies de sesion) | Resultado observado |
+|---|---|
+| Borrador (COT/2026/03890-92) | **0 enlaces** |
+| Confirmacion de 03890 y 03891 | **1 enlace vigente cada una**, vence el dia de la salida 23:59 Bogota; 1 nota interna cada una |
+| Reprocesar (escribir el mismo check-out, correr la accion 2 veces sobre ambas) | mismas filas, mismo token y URL; 0 notas nuevas |
+| Cancelar 03891 con el formulario YA abierto por el huesped | enlace *revocado*, URL guardada borrada, token distinto, vencimiento original intacto, 1 nota |
+| Abrir la URL anterior (sin sesion) | pagina "no tiene acceso a esta encuesta"; sin formulario |
+| Enviar el formulario que estaba abierto (token anterior) | respuesta `token_wrong`; **0 huespedes y 0 respuestas** creados |
+| Repetir la accion sobre la reserva ya cancelada | sin cambios y sin notas nuevas |
+| Prorroga de 03892 (check-out +2 dias) tras confirmar | mismo enlace, mismo token, **mismo vencimiento** |
+| 03892: el huesped envia el formulario y luego se cancela la reserva | enlace *procesado* y formulario *terminado* intactos; 1 huesped conservado; 0 notas de revocacion |
+| Huesped real de la ruta publica: titular + 1 acompanante en 03890 (reserva de hoy, hab. 202) | `begin` + `submit` anonimos por las mismas rutas del formulario: 0 errores de campo; encuesta *terminada*, enlace *procesado*, 2 huespedes *Recibido* |
+| Recepcion: validar sin habitacion | rechazado ("habitacion"); con habitacion 202: ambos *validado*; llegada registrada (2026-11-13 16:36 UTC), ambos *pendiente* |
+| TRA simulado antes de la llegada | `SIN_PRINCIPAL`, **0 llamadas**; validado sin llegada: **0 llamadas** |
+| TRA simulado tras la llegada | principal y acompanante *aceptados* (2 llamadas); repetir 2 veces: **0 reenvios** |
+| Efectos externos frente a la linea base | correos 0, correo saliente en cola 0, WhatsApp 0, SMS 0, actividades 0, invitaciones de encuesta 0 |
+
+**Cliente real del conector: alcance exacto.**
+- `src/sync-copy-client.mjs` (`CopyWriteClient`) es el modo copia: solo `atheron1-pruebas-AAAAMMDD` en su propio host, credencial distinta de la de produccion, frase de armado propia (`COPY_ARM_PHRASE`), misma lista blanca (`validateWrite`) y tope, y verificacion del destino repetida en CADA escritura. No usa `WRITES_ENABLED`/`RELEASE_UNLOCKED`. `SyncWriteClient` sigue fijado a produccion y desarmado: no se toco ni se redirigio.
+- `scripts/sync-copy.mjs` (`npm run sync-copy -- <sinteticas.json> [--apply]`) ejecuta `buildCreatePayload` + `applyPlan` con el cliente de lectura y `CopyWriteClient`; rechaza entrada que no sea sintetica (id 1704xxxxx, nombre "Sintetic…/Ficticio…", correo `@example.invalid`). Sin `--apply` usa `RecordingWriter` (no envia).
+- **Probado:** 11 pruebas unitarias del guarda y del cliente contra un Odoo simulado (destino, credencial, frase, lista blanca, tope, mutacion del cliente hacia produccion, script rechaza todo antes de cualquier red).
+- **NO ejecutado:** el cliente real contra la copia por HTTP. El entorno de esta sesion no alcanza `*.odoo.com` (el proxy responde 403 al tunel) y no hay credencial exclusiva de la copia. Las escrituras de esta ronda (9: 3 partners, 3 pedidos, 3 notas) se generaron con el codigo del conector y su lista blanca y se **reprodujeron** desde la sesion del navegador de la copia: eso es una **reproduccion**, no una ejecucion del cliente. Impedimento y orden pendiente: una credencial JSON-2 creada para la copia (nunca la de produccion) y una maquina con red hacia ella, y luego `ATH_COPY_ARM='ESCRIBIR SOLO EN LA COPIA DE PRUEBAS ATHERON1-PRUEBAS' npm run sync-copy -- <archivo> --apply`.
+
+Otros limites: el recorrido del huesped usa las rutas publicas con peticiones sin cookies; **no se vio la pantalla** del formulario como huesped porque la ventana del navegador tiene la sesion de administrador abierta (cerrarla exige la contrasena). El fallo de `try/except` se prueba en Python simulado, no en Odoo. Datos sinteticos y 3 reservas se dejan en la copia (vence el 2026-11-24). `test/p0.test.mjs` registra `sync-copy-client.mjs` en la lista de clientes con capacidad de escritura (cada uno con su guarda y sus pruebas): es un cambio de politica que Marlon debe conocer.
+Unitarias: `npm test` 431/431.
 
 ## Pendiente o limitado
 - Tildes, gramatica y concurrencia de formularios: resueltos en la segunda ronda.

@@ -7,7 +7,7 @@
 - `src/sire-tra/applier.mjs`: aplicador repetible (simula por defecto, compatibilidad real de campos, adopcion tras ejecucion parcial, reversion por xmlid).
 - `src/sire-tra/tra-emitter.mjs` + `tra-http.mjs`: emisor TRA segun manual oficial de la API (Res. 409 de 2022, version 02-02-2023), apagado por puertas; simulador. Catalogo contrastado con fuentes oficiales en `TRA-CATALOGOS-FUENTES.md` (sigue sin verificar).
 - `src/sire-tra/guard.mjs`: produccion bloqueada sin aprobacion escrita; solo copias `atheron1-pruebas-AAAAMMDD`.
-- **Puente Smoobu -> Odoo -> enlace** (`au_invite` + `sa_invite_auto`): la reserva confirmada de Smoobu deja el enlace de registro preparado (sin enviarlo); un borrador no; repetir no duplica ni regenera; si faltan fechas deja la causa visible. Detalle y pruebas en `SIRE-TRA-PRUEBAS.md` (cuarta ronda).
+- **Puente Smoobu -> Odoo -> enlace** (`au_invite` + `sa_invite_auto`): la reserva confirmada de Smoobu deja el enlace de registro preparado (sin enviarlo); un borrador no; repetir no duplica ni regenera; si faltan fechas deja la causa visible; al cancelar la reserva revoca el enlace vigente (misma regla, sin regla nueva). Modo copia del cliente: `src/sync-copy-client.mjs` + `scripts/sync-copy.mjs`. Detalle, pruebas y alcance exacto en `SIRE-TRA-PRUEBAS.md` (cuarta y quinta ronda).
 - Alerta **Discrepancia de fechas** (`x_date_gap`): compara las fechas que TRA acepto con la estancia posterior (prorroga o salida anticipada). Solo avisa: no borra la aceptacion, no habilita reenvio y no indica como corregir en el portal.
 - `.github/workflows/tra-emitter.yml`: manual y apagado (`vars.TRA_EMITTER_ENABLED`).
 - `test/p0.test.mjs`: la politica de escrituras ahora recorre subcarpetas y evalua capacidad real (red + mutacion).
