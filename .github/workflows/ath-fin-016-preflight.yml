@@ -1,0 +1,57 @@
+name: ATH-FIN-016 financial executor preflight (read-only)
+
+on:
+  push:
+    branches:
+      - ath-fin-016-financial-executor
+    paths:
+      - integrations/ath-fin-016/**
+      - .github/workflows/ath-fin-016-preflight.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ath-fin-016-readonly-preflight
+  cancel-in-progress: false
+
+jobs:
+  test_and_preflight:
+    name: Unit tests and encrypted Odoo preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: integrations/ath-fin-016
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Unit tests (synthetic data only)
+        run: npm test
+
+      - name: Odoo read-only credential and accounting preflight
+        env:
+          ODOO_BASE_URL: \${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: \${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: \${{ secrets.ODOO_API_KEY }}
+          ATH_FIN016_MANIFEST_JSON: \${{ secrets.ATH_FIN016_MANIFEST_JSON }}
+          ATH_FIN016_REPORT_PATH: \${{ runner.temp }}/ath-fin-016-preflight.enc
+        run: node scripts/preflight.mjs
+
+      - name: Upload encrypted report only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ath-fin-016-preflight-\${{ github.run_number }}
+          path: \${{ runner.temp }}/ath-fin-016-preflight.enc
+          if-no-files-found: ignore
+          retention-days: 2
