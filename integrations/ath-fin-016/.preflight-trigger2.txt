@@ -1,0 +1,1 @@
+Read-only diagnostic trigger for company membership and ACL validation. No financial data.
