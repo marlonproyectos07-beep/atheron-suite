@@ -274,12 +274,12 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
     );
   }
 
-  const accountsForMapping = [
+  const accountsForMapping = [...new Map([
     ...(report.account_candidates?.bank111007 ?? []),
     ...(report.account_candidates?.approvedAccounts?.gmfExpense ?? []),
     ...(report.account_candidates?.approvedAccounts?.bankFeeExpense ?? []),
     ...(report.account_candidates?.approvedAccounts?.interestIncome ?? [])
-  ];
+  ].map((account) => [account.id, account])).values()];
   const journalsForMapping = [
     ...(report.journals?.codeBC ?? [])
   ];
