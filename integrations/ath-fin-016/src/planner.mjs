@@ -33,7 +33,6 @@ export function buildMoveDraft(movement, mapping) {
 
   const name = movement.description + ' [' + movement.id + ']';
   const vals = {
-    move_type: 'entry',
     date: movement.date,
     journal_id: journalId,
     ref: movementReference(movement.id),
