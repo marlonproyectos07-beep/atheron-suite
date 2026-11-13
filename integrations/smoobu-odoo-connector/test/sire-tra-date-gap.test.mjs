@@ -203,7 +203,12 @@ test('el control no puede reabrir un reenvio: solo "Registrar llegada" escribe x
   const writers = SERVER_ACTIONS.filter((s) => s.code.includes("'x_tra_state':")).map((s) => s.xmlid);
   assert.deepEqual(writers, ['sa_arrive']);
   assert.match(SERVER_ACTIONS.find((s) => s.xmlid === 'sa_arrive').code, /r\.x_arrived_at:\n\s+errors\.append\('linea %s: llegada ya registrada'/);
-  assert.ok(!AUTOMATIONS.some((a) => a.model === 'sale.order'), 'sin automatizaciones nuevas sobre reservas');
+  // Unica automatizacion permitida sobre reservas: el puente al confirmar (`au_invite`). Corre dentro de la confirmacion:
+  // no escribe en la reserva (solo crea/actualiza el registro de enlace y publica notas internas) y nunca lanza error.
+  const onOrders = AUTOMATIONS.filter((a) => a.model === 'sale.order').map((a) => a.xmlid);
+  assert.deepEqual(onOrders, ['au_invite'], 'sin otras automatizaciones nuevas sobre reservas');
+  const bridge = SERVER_ACTIONS.find((s) => s.xmlid === 'sa_invite_auto').code;
+  assert.ok(!/\border\.write\(|\border\[[^\]]+\]\s*=|raise /.test(bridge), 'el puente no escribe en la reserva ni lanza errores');
 });
 
 test('Recepcion ve la alerta "Discrepancia de fechas" sin instrucciones de correccion en el portal', () => {

@@ -1,5 +1,5 @@
 {
- "fingerprint": "e8f583d2ce25f4e5",
+ "fingerprint": "e4ed5cae287a89bf",
  "NS": "__ath_sire_tra__",
  "MODELS": [
   {
@@ -1092,6 +1092,12 @@
    "code": "if not records:\n    raise UserError('Seleccione al menos un registro.')\nsurvey = env.ref('__ath_sire_tra__.survey_registro')\nbase = env['ir.config_parameter'].sudo().get_param('web.base.url')\nids = []\nfor order in records:\n    if order.state == 'cancel' or order.x_reservation_status in ('cancelled', 'no_show'):\n        raise UserError('Reserva %s cancelada o no-show: no se genera enlace.' % order.name)\n    old = env['survey.user_input'].search([('x_sale_order_id', '=', order.id), ('x_ath_state', '=', 'invitado')])\n    for o in old:\n        o.write({'access_token': env['survey.user_input'].default_get(['access_token'])['access_token'], 'deadline': datetime.datetime.now(), 'x_ath_state': 'revocado', 'x_ath_url': False})\n    end = order.x_checkout or (order.rental_return_date and order.rental_return_date.date())\n    deadline = datetime.datetime.combine(end + datetime.timedelta(days=1), datetime.time(4, 59)) if end else datetime.datetime.now() + datetime.timedelta(days=3)\n    ui = env['survey.user_input'].create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': deadline, 'x_ath_state': 'invitado'})\n    ui.write({'x_ath_url': '%s/survey/%s/%s' % (base, survey.access_token, ui.access_token)})\n    ids.append(ui.id)\naction = {'type': 'ir.actions.act_window', 'name': 'Enlace de registro', 'res_model': 'survey.user_input', 'domain': [('id', 'in', ids)], 'views': [[env.ref('__ath_sire_tra__.view_invite_list').id, 'list'], [env.ref('__ath_sire_tra__.view_invite_form').id, 'form']]}"
   },
   {
+   "xmlid": "sa_invite_auto",
+   "name": "[SIRE/TRA] Preparar enlace de registro (automático)",
+   "model": "sale.order",
+   "code": "survey = env.ref('__ath_sire_tra__.survey_registro', raise_if_not_found=False)\nif survey:\n    UI = env['survey.user_input']\n    base = env['ir.config_parameter'].sudo().get_param('web.base.url')\n    today = (datetime.datetime.now() - datetime.timedelta(hours=5)).date()\n    for order in records:\n        if order.state != 'sale' or order.x_reservation_status in ('cancelled', 'no_show') or 'SMOOBU-' not in (order.x_pms_reference or ''):\n            continue\n        slots = UI.search([('x_sale_order_id', '=', order.id)])\n        done = False\n        pending = None\n        for s in slots:\n            if s.x_ath_state in ('invitado', 'procesado', 'revocado'):\n                done = True\n            elif s.x_ath_state == 'error' and not pending:\n                pending = s\n        if done:\n            continue\n        end = order.x_checkout or (order.rental_return_date and order.rental_return_date.date())\n        cause = False\n        if not order.x_checkin and not end:\n            cause = 'Faltan las fechas de entrada y salida de la reserva. Complételas en la reserva y el enlace se preparará solo.'\n        elif not order.x_checkin:\n            cause = 'Falta la fecha de entrada de la reserva. Complétela en la reserva y el enlace se preparará solo.'\n        elif not end:\n            cause = 'Falta la fecha de salida de la reserva. Complétela en la reserva y el enlace se preparará solo.'\n        elif end < today:\n            cause = 'La estancia ya terminó (salida %s): no se preparó enlace. Si hace falta, use «Generar enlace de registro».' % end\n        if cause:\n            if pending and pending.x_ath_error == cause:\n                continue\n            if pending:\n                pending.write({'x_ath_error': cause})\n            else:\n                UI.create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': datetime.datetime.now(), 'x_ath_state': 'error', 'x_ath_error': cause})\n            order.message_post(body='Registro SIRE/TRA: no se preparó el enlace de registro. %s' % cause, message_type='comment', subtype_xmlid='mail.mt_note')\n            continue\n        deadline = datetime.datetime.combine(end + datetime.timedelta(days=1), datetime.time(4, 59))\n        token = UI.default_get(['access_token'])['access_token']\n        if pending:\n            ui = pending\n            ui.write({'access_token': token, 'deadline': deadline, 'x_ath_state': 'invitado', 'x_ath_error': False})\n        else:\n            ui = UI.create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': deadline, 'x_ath_state': 'invitado'})\n        ui.write({'x_ath_url': '%s/survey/%s/%s' % (base, survey.access_token, ui.access_token)})\n        order.message_post(body='Registro SIRE/TRA: enlace de registro preparado (no enviado). Está en Registro SIRE/TRA > Enlaces de registro; envíelo al huésped principal por el canal habitual.', message_type='comment', subtype_xmlid='mail.mt_note')"
+  },
+  {
    "xmlid": "sa_revoke",
    "name": "[SIRE/TRA] Revocar enlace",
    "model": "survey.user_input",
@@ -1170,6 +1176,19 @@
    ],
    "domain": "[('state', '=', 'done'), ('x_sale_order_id', '!=', False), ('x_ath_state', '=', 'invitado')]",
    "action": "sa_map"
+  },
+  {
+   "xmlid": "au_invite",
+   "name": "[SIRE/TRA] Preparar enlace al confirmar reserva",
+   "model": "sale.order",
+   "trigger": "on_create_or_write",
+   "triggerFields": [
+    "state",
+    "x_checkin",
+    "x_checkout"
+   ],
+   "domain": "[('state', '=', 'sale'), ('x_pms_reference', 'ilike', 'SMOOBU-')]",
+   "action": "sa_invite_auto"
   },
   {
    "xmlid": "au_attempt",

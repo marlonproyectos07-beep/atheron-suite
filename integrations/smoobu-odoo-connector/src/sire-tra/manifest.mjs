@@ -142,6 +142,58 @@ for order in records:
     ids.append(ui.id)
 action = {'type': 'ir.actions.act_window', 'name': 'Enlace de registro', 'res_model': 'survey.user_input', 'domain': [('id', 'in', ids)], 'views': [[env.ref('__ath_sire_tra__.view_invite_list').id, 'list'], [env.ref('__ath_sire_tra__.view_invite_form').id, 'form']]}`;
 
+// Puente Smoobu -> Odoo -> enlace de registro. Lo dispara la automatizacion au_invite (reserva confirmada de Smoobu).
+// Reglas: NUNCA confirma, escribe ni cancela el pedido; NUNCA envia el enlace; NUNCA lanza error (no puede bloquear la
+// confirmacion del pedido); idempotente: si la reserva ya tiene enlace (vigente, usado o retirado por Recepcion) no hace nada.
+// Si faltan datos, deja UN registro en estado "error" con la causa (menu Enlaces de registro) y una nota interna; cuando
+// Recepcion completa los datos, el mismo registro pasa a enlace vigente (no se crea otro).
+const PY_INVITE_AUTO = String.raw`survey = env.ref('__ath_sire_tra__.survey_registro', raise_if_not_found=False)
+if survey:
+    UI = env['survey.user_input']
+    base = env['ir.config_parameter'].sudo().get_param('web.base.url')
+    today = (datetime.datetime.now() - datetime.timedelta(hours=5)).date()
+    for order in records:
+        if order.state != 'sale' or order.x_reservation_status in ('cancelled', 'no_show') or 'SMOOBU-' not in (order.x_pms_reference or ''):
+            continue
+        slots = UI.search([('x_sale_order_id', '=', order.id)])
+        done = False
+        pending = None
+        for s in slots:
+            if s.x_ath_state in ('invitado', 'procesado', 'revocado'):
+                done = True
+            elif s.x_ath_state == 'error' and not pending:
+                pending = s
+        if done:
+            continue
+        end = order.x_checkout or (order.rental_return_date and order.rental_return_date.date())
+        cause = False
+        if not order.x_checkin and not end:
+            cause = 'Faltan las fechas de entrada y salida de la reserva. Complételas en la reserva y el enlace se preparará solo.'
+        elif not order.x_checkin:
+            cause = 'Falta la fecha de entrada de la reserva. Complétela en la reserva y el enlace se preparará solo.'
+        elif not end:
+            cause = 'Falta la fecha de salida de la reserva. Complétela en la reserva y el enlace se preparará solo.'
+        elif end < today:
+            cause = 'La estancia ya terminó (salida %s): no se preparó enlace. Si hace falta, use «Generar enlace de registro».' % end
+        if cause:
+            if pending and pending.x_ath_error == cause:
+                continue
+            if pending:
+                pending.write({'x_ath_error': cause})
+            else:
+                UI.create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': datetime.datetime.now(), 'x_ath_state': 'error', 'x_ath_error': cause})
+            order.message_post(body='Registro SIRE/TRA: no se preparó el enlace de registro. %s' % cause, message_type='comment', subtype_xmlid='mail.mt_note')
+            continue
+        deadline = datetime.datetime.combine(end + datetime.timedelta(days=1), datetime.time(4, 59))
+        token = UI.default_get(['access_token'])['access_token']
+        if pending:
+            ui = pending
+            ui.write({'access_token': token, 'deadline': deadline, 'x_ath_state': 'invitado', 'x_ath_error': False})
+        else:
+            ui = UI.create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': deadline, 'x_ath_state': 'invitado'})
+        ui.write({'x_ath_url': '%s/survey/%s/%s' % (base, survey.access_token, ui.access_token)})
+        order.message_post(body='Registro SIRE/TRA: enlace de registro preparado (no enviado). Está en Registro SIRE/TRA > Enlaces de registro; envíelo al huésped principal por el canal habitual.', message_type='comment', subtype_xmlid='mail.mt_note')`;
+
 const PY_REVOKE = String.raw`if not records:
     raise UserError('Seleccione al menos un registro.')
 for ui in records:
@@ -449,6 +501,7 @@ if not n:
 
 export const SERVER_ACTIONS = [
   { xmlid: 'sa_invite', name: '[SIRE/TRA] Generar enlace de registro', model: 'sale.order', bind: true, code: PY_INVITE },
+  { xmlid: 'sa_invite_auto', name: '[SIRE/TRA] Preparar enlace de registro (automático)', model: 'sale.order', code: PY_INVITE_AUTO },
   { xmlid: 'sa_revoke', name: '[SIRE/TRA] Revocar enlace', model: 'survey.user_input', bind: true, code: PY_REVOKE },
   { xmlid: 'sa_map', name: '[SIRE/TRA] Procesar formulario recibido', model: 'survey.user_input', code: PY_MAP },
   { xmlid: 'sa_validate', name: '[SIRE/TRA] Validar datos', model: 'x_guests_line', bind: true, code: PY_VALIDATE },
@@ -463,6 +516,8 @@ export const SERVER_ACTIONS = [
 
 export const AUTOMATIONS = [
   { xmlid: 'au_map', name: '[SIRE/TRA] Formulario terminado', model: 'survey.user_input', trigger: 'on_create_or_write', triggerFields: ['state'], domain: "[('state', '=', 'done'), ('x_sale_order_id', '!=', False), ('x_ath_state', '=', 'invitado')]", action: 'sa_map' },
+  // Reserva confirmada (state = sale) que viene de Smoobu. Dispara al confirmarse o al completar fechas; un borrador no la activa.
+  { xmlid: 'au_invite', name: '[SIRE/TRA] Preparar enlace al confirmar reserva', model: 'sale.order', trigger: 'on_create_or_write', triggerFields: ['state', 'x_checkin', 'x_checkout'], domain: "[('state', '=', 'sale'), ('x_pms_reference', 'ilike', 'SMOOBU-')]", action: 'sa_invite_auto' },
   { xmlid: 'au_attempt', name: '[SIRE/TRA] Aplicar intento registrado', model: 'x_report_attempt', trigger: 'on_create', triggerFields: [], domain: '', action: 'sa_apply_attempt' },
 ];
 

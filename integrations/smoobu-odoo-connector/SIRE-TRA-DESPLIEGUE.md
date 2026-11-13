@@ -5,8 +5,8 @@
 ## Que se instala (inventario: `src/sire-tra/manifest.mjs`, todo con xmlid `__ath_sire_tra__.*`)
 - Modelos nuevos: `x_establishment`, `x_report_attempt` (+ 3 permisos).
 - Campos nuevos en modelos existentes: `x_guests_line` (38), `survey.user_input` (9), `resource.resource` (3), `l10n_latam.identification.type` (1), `res.country` (1); en `x_report_attempt`, 16.
-- 1 encuesta (185 preguntas/secciones), 11 acciones de servidor (7 en el menu *Accion*), 2 automatizaciones, 11 vistas propias (prioridad 90; no reemplazan vistas existentes), 9 acciones de ventana, 9 menus.
-- **No toca**: vistas, automatizaciones ni acciones existentes; limpieza (17/18); Booking Engine; conector Smoobu; sale.order (solo lee).
+- 1 encuesta (185 preguntas/secciones), 12 acciones de servidor (7 en el menu *Accion*), 3 automatizaciones, 11 vistas propias (prioridad 90; no reemplazan vistas existentes), 9 acciones de ventana, 9 menus.
+- **No toca**: vistas, automatizaciones ni acciones existentes; limpieza (17/18); Booking Engine; conector Smoobu; sale.order (solo lo lee; el puente solo agrega notas internas en la reserva).
 
 ## Efectos conocidos al desplegar
 - Crear automatizaciones hace que Odoo recalcule el cron 48 (en produccion ya esta activo: sin cambio).
@@ -14,6 +14,8 @@
 - Las 7 acciones enlazadas aparecen en el menu *Accion* de reservas, huespedes y enlaces.
 
 - `x_date_gap` es un campo calculado y almacenado en `x_guests_line`: Odoo lo recalcula al cambiar el check-out de la reserva, el estado TRA o la salida real. Solo lee `sale.order`; no escribe en reservas, no llama a TRA y no cambia estados. Las lineas aceptadas antes del despliegue no tienen fechas guardadas y no generan alerta.
+
+- **Puente al confirmar (`au_invite`)**: al confirmar una reserva de Smoobu (o al completar sus fechas) Odoo deja preparado el enlace de registro. No lo envia, no confirma pedidos y nunca lanza error. Reversion suave: `--disable --apply` tambien lo apaga.
 
 ## Pasos (cuando se apruebe)
 1. Punto de restauracion: confirmar respaldo diario de Odoo y `git tag` del commit desplegado.

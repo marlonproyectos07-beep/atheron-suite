@@ -3,10 +3,12 @@
 Menu **Registro SIRE/TRA** en Odoo.
 
 ## Antes de la llegada
-1. **Reservas** > abrir la reserva > menu *Accion* > **[SIRE/TRA] Generar enlace de registro**.
+1. Al **confirmar** una reserva que viene de Smoobu, Odoo deja el enlace de registro **preparado** (no lo envia). Una reserva en borrador no lo tiene.
+   Se ve en **Registro SIRE/TRA > Enlaces de registro** y en una nota interna de la reserva. Si no hay enlace, ahi mismo aparece la **causa** (por ejemplo, falta la fecha de entrada o salida): completela en la reserva y el enlace se prepara solo.
+   Para generarlo a mano (reserva que no viene de Smoobu, o para reemplazarlo): **Reservas** > abrir la reserva > menu *Accion* > **[SIRE/TRA] Generar enlace de registro**.
 2. Copiar el enlace (boton de copiar) y enviarlo al huesped principal por el canal habitual.
    - Un enlace por reserva; vence al dia siguiente del check-out; sirve una sola vez.
-   - Generar otro enlace revoca el anterior. **Revocar enlace** lo anula sin generar otro.
+   - Generar otro enlace a mano revoca el anterior. **Revocar enlace** lo anula sin generar otro; Odoo no lo vuelve a crear solo.
 3. El huesped principal llena sus datos y los de sus acompanantes (hasta 21). Al terminar, los datos aparecen en **Huespedes** como *Recibido* y las respuestas del formulario se borran (solo quedan en Odoo, en la ficha de cada huesped).
 
 ## A la llegada
