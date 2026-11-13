@@ -41,8 +41,9 @@ test('manifest validates exact schema, counts and injected digest in unit fixtur
   assert.equal(validated.counts.INTEREST, 10);
 });
 
-test('production scope digest is fixed and not blank', () => {
-  assert.match(EXPECTED_SCOPE.sha256, /^[a-f0-9]{64}$/);
+test('production digest remains unconfigured until exact source manifest is reconstructed', () => {
+  assert.equal(EXPECTED_SCOPE.sha256, null);
+  assert.throws(() => validateManifest(fixture()), /MANIFEST_DIGEST_NOT_CONFIGURED/);
 });
 
 test('manifest rejects extra movement', () => {
