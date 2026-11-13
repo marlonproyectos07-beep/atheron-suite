@@ -12,6 +12,14 @@ export const APPROVED_ODOO_MAPPING = Object.freeze({
   interestIncome: Object.freeze({ code: '421000', id: 31346 })
 });
 
+export const APPROVED_PLANNER_MAPPING = Object.freeze({
+  bankAccountId: APPROVED_ODOO_MAPPING.bankAccount.id,
+  journalId: APPROVED_ODOO_MAPPING.bankJournal.id,
+  gmfExpenseAccountId: APPROVED_ODOO_MAPPING.gmfExpense.id,
+  bankFeeExpenseAccountId: APPROVED_ODOO_MAPPING.bankFeeExpense.id,
+  interestIncomeAccountId: APPROVED_ODOO_MAPPING.interestIncome.id
+});
+
 export function checkApprovedMapping({ accounts, journals }) {
   const findOne = (rows, code) => (rows ?? []).filter((row) => String(row.code) === code);
   const specs = [
