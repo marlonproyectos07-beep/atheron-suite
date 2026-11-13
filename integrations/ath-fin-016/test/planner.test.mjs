@@ -18,7 +18,7 @@ test('GMF builds balanced bank credit and expense debit in memory', () => {
   const move = draft.params.vals_list[0];
   assert.equal(draft.model, 'account.move');
   assert.equal(draft.method, 'create');
-  assert.equal(move.move_type, 'entry');
+  assert.equal(Object.hasOwn(move, 'move_type'), false);
   assert.equal(move.ref, 'ATH-FIN-015|LOTE-A|B1-NOV-010');
   assert.deepEqual(move.line_ids.map((line) => line[2].debit), [5916.10, 0]);
   assert.deepEqual(move.line_ids.map((line) => line[2].credit), [0, 5916.10]);
