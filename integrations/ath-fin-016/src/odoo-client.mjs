@@ -1,7 +1,7 @@
 import { ConnectorError } from '../../smoobu-odoo-connector/src/errors.mjs';
 
 const ALLOWED_MODELS = new Set([
-  'res.partner', 'res.users', 'account.move', 'account.move.line',
+  'res.partner', 'res.users', 'account.move', 'account.move.line', 'account.bank.statement.line',
   'account.account', 'account.journal', 'ir.model.access', 'ir.model', 'ir.model.data'
 ]);
 const READ_METHODS = new Set([
