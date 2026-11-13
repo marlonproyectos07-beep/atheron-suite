@@ -25,18 +25,35 @@ async function collectAccountCandidates(client, accountSchema) {
     'id', 'code', 'name', 'account_type', 'company_ids', 'deprecated', 'reconcile'
   ]);
   if (!fields.includes('id') || !fields.includes('code') || !fields.includes('name')) {
-    return { status: 'SCHEMA_INCOMPLETE', bank111007: [], gmf: [], bankFee: [], interest: [] };
+    return { status: 'SCHEMA_INCOMPLETE', bank111007: [], gmf: [], bankFee: [], interest: [], allCompanyAccounts: [] };
   }
+  const bank111007 = await client.searchRead(
+    'account.account', [['code', '=', EXPECTED_SCOPE.bankAccountCode]], fields, 20
+  );
   const queries = {
-    bank111007: [['code', '=', EXPECTED_SCOPE.bankAccountCode]],
-    gmf: ['|', '|', ['name', 'ilike', 'GMF'], ['name', 'ilike', '4x1000'], ['name', 'ilike', 'gravamen']],
-    bankFee: ['|', '|', ['name', 'ilike', 'comision'], ['name', 'ilike', 'cuota'], ['name', 'ilike', 'bancario']],
-    interest: ['|', '|', ['name', 'ilike', 'interes'], ['name', 'ilike', 'rendimiento'], ['name', 'ilike', 'financiero']]
+    gmf: ['|', '|', '|', '|',
+      ['name', 'ilike', 'GMF'], ['name', 'ilike', '4x1000'],
+      ['name', 'ilike', 'gravamen'], ['name', 'ilike', 'impuesto'],
+      ['name', 'ilike', 'tax']],
+    bankFee: ['|', '|', '|', '|', '|',
+      ['name', 'ilike', 'comision'], ['name', 'ilike', 'cuota'],
+      ['name', 'ilike', 'bancario'], ['name', 'ilike', 'bank'],
+      ['name', 'ilike', 'fee'], ['name', 'ilike', 'charge']],
+    interest: ['|', '|', '|', '|',
+      ['name', 'ilike', 'interes'], ['name', 'ilike', 'rendimiento'],
+      ['name', 'ilike', 'financiero'], ['name', 'ilike', 'interest'],
+      ['name', 'ilike', 'income']]
   };
-  const result = {};
+  const result = { bank111007 };
   for (const [key, domain] of Object.entries(queries)) {
-    result[key] = await client.searchRead('account.account', domain, fields, 100);
+    result[key] = await client.searchRead('account.account', domain, fields, 200);
   }
+  const companyId = bank111007.length === 1 && Array.isArray(bank111007[0].company_ids)
+    ? bank111007[0].company_ids[0] : null;
+  result.company_id = Number.isInteger(companyId) ? companyId : null;
+  result.allCompanyAccounts = Number.isInteger(companyId)
+    ? await client.searchRead('account.account', [['company_ids', 'in', [companyId]]], fields, 2000)
+    : [];
   return { status: 'OK', ...result };
 }
 
@@ -147,14 +164,14 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
     const uid = Number(context.uid ?? context.user_id ?? NaN);
     report.user = {
       uid: Number.isInteger(uid) ? uid : null,
-      allowed_company_ids: Array.isArray(context.allowed_company_ids) ? context.allowed_company_ids : []
+      allowed_company_ids: Array.isArray(context.allowed_company_ids) ? context.allowed_company_ids : [],
+      group_membership: {}
     };
-    if (Number.isInteger(uid) && uid > 0) {
-      const user = await attempt(report, 'current_user_profile', () =>
-        client.searchRead('res.users', [['id', '=', uid]],
-          ['id', 'login', 'name', 'company_id', 'company_ids', 'groups_id'].filter(Boolean), 2)
+    for (const group of ['base.group_system', 'account.group_account_manager', 'account.group_account_user']) {
+      const membership = await attempt(report, 'group_' + group.replaceAll('.', '_'), () =>
+        client.call('res.users', 'has_group', { group_ext_id: group })
       );
-      if (user) report.user.profile = user;
+      report.user.group_membership[group] = membership === null ? 'UNKNOWN' : Boolean(membership);
     }
   }
 
