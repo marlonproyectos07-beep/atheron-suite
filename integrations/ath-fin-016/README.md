@@ -7,6 +7,8 @@
 - Rama: ath-fin-016-financial-executor
 - Base: main (sin cambios)
 - Alcance futuro: exclusivamente ATH-FIN-015 / Lote A, 21 movimientos de Bancolombia 0136.
+- Mapa aprobado: compañía 5; cuenta bancaria 111007 (ID 31472); diario BC (ID 65); GMF y cuota bancaria 530500 (ID 31397); intereses 421000 (ID 31346).
+- El mapa se vuelve a validar en Odoo por código, ID, compañía y estado activo en cada preflight.
 - Este directorio no contiene movimientos bancarios, importes, titulares, comprobantes ni datos de clientes.
 - El manifiesto operativo se suministra solo mediante un GitHub Actions Secret. Nunca se guarda en el repositorio público ni se imprime en logs.
 - El preflight consulta Odoo JSON-2 en modo de solo lectura. Los datos detallados permanecen en memoria del runner; GitHub Actions solo imprime estados y conteos sanitizados. No se exportan artefactos financieros.
@@ -39,7 +41,8 @@ No imprime datos detallados de Odoo en los logs. Solo muestra estados y conteos.
 
 - Variables: ODOO_BASE_URL, ODOO_DATABASE.
 - Secretos existentes: ODOO_API_KEY.
-- Secreto pendiente: ATH_FIN016_MANIFEST_JSON (JSON privado del Lote A).
+- Secretos pendientes: ATH_FIN016_MANIFEST_JSON (JSON privado del Lote A) y ATH_FIN016_MANIFEST_SHA256 (SHA-256 calculado independientemente sobre el manifiesto canónico).
+- El digest productivo permanece deliberadamente sin configurar hasta recuperar las 21 filas fuente completas; no se permite usar un hash provisional.
 - No se necesita secreto de cifrado porque los datos detallados no salen del runner.
 - No configurar ninguna variable de activación de escrituras en esta fase.
 
