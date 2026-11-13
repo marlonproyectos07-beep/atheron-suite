@@ -8,8 +8,8 @@
 - Base: main (sin cambios)
 - Alcance futuro: exclusivamente ATH-FIN-015 / Lote A, 21 movimientos de Bancolombia 0136.
 - Este directorio no contiene movimientos bancarios, importes, titulares, comprobantes ni datos de clientes.
-- El manifiesto operativo se suministra solo mediante un GitHub Actions Secret. Nunca se guarda en el repositorio público, logs ni artefactos sin cifrar.
-- El preflight consulta Odoo JSON-2 en modo de solo lectura y cifra el informe con una clave pública dedicada. El artefacto cifrado no revela códigos de cuenta, nombres, identificadores, saldos ni datos del usuario.
+- El manifiesto operativo se suministra solo mediante un GitHub Actions Secret. Nunca se guarda en el repositorio público ni se imprime en logs.
+- El preflight consulta Odoo JSON-2 en modo de solo lectura. Los datos detallados permanecen en memoria del runner; GitHub Actions solo imprime estados y conteos sanitizados. No se exportan artefactos financieros.
 
 ## Controles
 
@@ -31,15 +31,16 @@ El workflow de esta rama ejecuta:
 - Comprobación de credenciales Odoo y permisos ACL mediante consultas de lectura.
 - Descubrimiento de esquema, diario bancario y cuentas candidatas.
 - Detección de referencias/posibles duplicados, solo si se configura el manifiesto secreto.
-- Artefacto cifrado de preflight con retención corta.
+- Resumen de estado sanitizado en logs; no se exportan datos financieros.
 
-No imprime datos de Odoo en los logs públicos. La ausencia de secretos deja el proceso bloqueado sin llamadas autenticadas.
+No imprime datos detallados de Odoo en los logs. Solo muestra estados y conteos. La ausencia de secretos deja el proceso bloqueado sin llamadas autenticadas.
 
 ## Secretos/variables previstos
 
 - Variables: ODOO_BASE_URL, ODOO_DATABASE.
 - Secretos existentes: ODOO_API_KEY.
-- Secreto opcional posterior: ATH_FIN016_MANIFEST_JSON (JSON privado del Lote A).
+- Secreto pendiente: ATH_FIN016_MANIFEST_JSON (JSON privado del Lote A).
+- No se necesita secreto de cifrado porque los datos detallados no salen del runner.
 - No configurar ninguna variable de activación de escrituras en esta fase.
 
 ## Prohibiciones vigentes
