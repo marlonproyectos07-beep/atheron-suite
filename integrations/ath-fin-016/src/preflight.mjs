@@ -22,7 +22,7 @@ async function attempt(report, label, fn) {
 
 async function collectAccountCandidates(client, accountSchema) {
   const fields = pickFields(accountSchema, [
-    'id', 'code', 'name', 'account_type', 'company_ids', 'deprecated', 'reconcile'
+    'id', 'code', 'name', 'account_type', 'company_ids', 'active', 'reconcile', 'group_id'
   ]);
   if (!fields.includes('id') || !fields.includes('code') || !fields.includes('name')) {
     return { status: 'SCHEMA_INCOMPLETE', bank111007: [], gmf: [], bankFee: [], interest: [], allCompanyAccounts: [] };
@@ -66,6 +66,41 @@ async function collectJournals(client, journalSchema) {
     ? await client.searchRead('account.journal', [['code', '=', 'BC']], fields, 20)
     : [];
   return { allBank, codeBC };
+}
+
+async function collectExistingBankData(client, bankAccount, journal) {
+  if (!Number.isInteger(bankAccount?.id) || !Number.isInteger(journal?.id)) {
+    return { status: 'BLOCKED_BANK_OR_JOURNAL_NOT_UNIQUE', statementLines: [], bankMoveLines: [] };
+  }
+  const statementSchema = await client.fieldsGet('account.bank.statement.line');
+  const statementFields = pickFields(statementSchema, [
+    'id', 'date', 'payment_ref', 'amount', 'journal_id', 'statement_id',
+    'move_id', 'ref', 'partner_id', 'transaction_details'
+  ]);
+  const statementLines = await client.searchRead('account.bank.statement.line', [
+    ['journal_id', '=', journal.id],
+    ['date', '>=', EXPECTED_SCOPE.periodStart],
+    ['date', '<=', EXPECTED_SCOPE.periodEnd]
+  ], statementFields, 2000);
+
+  const moveLineSchema = await client.fieldsGet('account.move.line');
+  const moveFields = pickFields(moveLineSchema, [
+    'id', 'date', 'name', 'account_id', 'journal_id', 'move_id',
+    'debit', 'credit', 'balance', 'ref', 'move_type', 'parent_state'
+  ]);
+  const bankMoveLines = await client.searchRead('account.move.line', [
+    ['account_id', '=', bankAccount.id],
+    ['journal_id', '=', journal.id],
+    ['date', '>=', EXPECTED_SCOPE.periodStart],
+    ['date', '<=', EXPECTED_SCOPE.periodEnd]
+  ], moveFields, 2000);
+  return {
+    status: 'COMPLETE_READ_ONLY',
+    statementLineCount: statementLines.length,
+    bankMoveLineCount: bankMoveLines.length,
+    statementLines,
+    bankMoveLines
+  };
 }
 
 async function duplicateScan(client, manifest, bankAccount, journal) {
@@ -164,15 +199,8 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
     const uid = Number(context.uid ?? context.user_id ?? NaN);
     report.user = {
       uid: Number.isInteger(uid) ? uid : null,
-      allowed_company_ids: Array.isArray(context.allowed_company_ids) ? context.allowed_company_ids : [],
-      group_membership: {}
+      allowed_company_ids: Array.isArray(context.allowed_company_ids) ? context.allowed_company_ids : []
     };
-    for (const group of ['base.group_system', 'account.group_account_manager', 'account.group_account_user']) {
-      const membership = await attempt(report, 'group_' + group.replaceAll('.', '_'), () =>
-        client.call('res.users', 'has_group', { group_ext_id: group })
-      );
-      report.user.group_membership[group] = membership === null ? 'UNKNOWN' : Boolean(membership);
-    }
   }
 
   for (const model of ['account.move', 'account.move.line', 'account.account', 'account.journal']) {
@@ -180,7 +208,9 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
       client.fieldsGet(model)
     );
     if (schema) report.schemas[model] = schema;
-    for (const operation of ['read', 'create', 'write']) {
+    const operations = model === 'account.move' || model === 'account.move.line'
+      ? ['read', 'create', 'write'] : ['read'];
+    for (const operation of operations) {
       const access = await attempt(report, 'acl_' + model.replaceAll('.', '_') + '_' + operation, () =>
         client.accessRight(model, operation)
       );
@@ -202,6 +232,14 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
     );
   }
 
+  const bankRowsForScan = report.account_candidates?.bank111007 ?? [];
+  const bcRowsForScan = report.journals?.codeBC ?? [];
+  const bankForScan = bankRowsForScan.length === 1 && bankRowsForScan[0].active !== false ? bankRowsForScan[0] : null;
+  const journalForScan = bcRowsForScan.length === 1 && bcRowsForScan[0].active !== false ? bcRowsForScan[0] : null;
+  report.existing_bank_data = await attempt(report, 'existing_bank_window_read', () =>
+    collectExistingBankData(client, bankForScan, journalForScan)
+  );
+
   if (env.ATH_FIN016_MANIFEST_JSON) {
     try {
       const manifest = validateManifest(env.ATH_FIN016_MANIFEST_JSON);
@@ -213,7 +251,7 @@ export async function collectPreflight(env = process.env, fetchImpl = globalThis
       };
       const bankRows = report.account_candidates?.bank111007 ?? [];
       const bcRows = report.journals?.codeBC ?? [];
-      const bank = bankRows.length === 1 && bankRows[0].deprecated !== true ? bankRows[0] : null;
+      const bank = bankRows.length === 1 && bankRows[0].active !== false ? bankRows[0] : null;
       const journal = bcRows.length === 1 ? bcRows[0] : null;
       report.duplicates = await attempt(report, 'duplicate_scan', () =>
         duplicateScan(client, manifest, bank, journal)
