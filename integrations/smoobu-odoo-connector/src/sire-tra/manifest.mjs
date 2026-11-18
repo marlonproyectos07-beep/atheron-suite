@@ -52,6 +52,8 @@ export const FIELDS = [
   ['survey.user_input', 'x_ath_error', 'char', 'Error de procesamiento', {}],
   ['survey.user_input', 'x_ath_processed_at', 'datetime', 'Procesado el', {}],
   ['survey.user_input', 'x_ath_url', 'char', 'Enlace para el huésped', {}],
+  ['survey.user_input', 'x_ath_contact_gap', 'char', 'Datos de contacto faltantes', {}],
+  ['survey.user_input', 'x_ath_message', 'text', 'Mensaje preparado para el huésped (no enviado)', {}],
   ['survey.user_input', 'x_ath_lock', 'integer', 'Bloqueo (técnico)', {}],
   // evidencia: version del formulario/aviso, fecha y respuestas tal como llegaron (solo administradores)
   ['survey.user_input', 'x_ath_form_version', 'char', 'Versión del formulario y aviso', {}],
@@ -159,11 +161,46 @@ action = {'type': 'ir.actions.act_window', 'name': 'Enlace de registro', 'res_mo
 // original. Si faltan datos deja UN registro "error" con la causa y una nota interna; al completarse pasa a enlace vigente.
 // Cancelada (state cancel, o estado de reserva cancelled / no_show): revoca los enlaces vigentes rotando su token (la URL anterior
 // y cualquier formulario ya abierto dejan de aceptar datos). No toca el vencimiento, los formularios recibidos ni el historial.
-const PY_INVITE_AUTO = String.raw`def prepare(order, survey, UI, base, today):
+// 2026-11-18: se prepara al INGRESAR la reserva de Smoobu (borrador, cotizacion enviada o confirmada), sin esperar la
+// confirmacion manual; nunca confirma ni cobra. Si faltan nombre, telefono o correo del huesped deja la excepcion visible
+// (x_ath_contact_gap) y sigue. El mensaje para el huesped queda redactado (x_ath_message) para que Recepcion lo envie por
+// el canal de la reserva; Odoo no lo envia.
+const PY_INVITE_AUTO = String.raw`def contact_gap(order):
+    p = order.partner_id
+    miss = []
+    name = ' '.join(('%s' % (p.name or '')).split())
+    if len(name.split()) < 2:
+        miss.append('nombre completo')
+    if not (p.phone or ''):
+        miss.append('teléfono')
+    if not (p.email or ''):
+        miss.append('correo')
+    return ('Falta: %s' % ', '.join(miss)) if miss else False
+
+def message_for(order, url):
+    name = ' '.join(('%s' % (order.partner_id.name or '')).split()) or 'huésped'
+    return ('Hola %s. Para su estadía en Atheron Suite (Zipaquirá) del %s al %s necesitamos el registro obligatorio de huéspedes '
+            '(Migración Colombia y Tarjeta de Registro de Alojamiento del MinCIT). Por favor diligéncielo antes de llegar, '
+            'para usted y sus acompañantes: %s . Gracias.') % (name, order.x_checkin or '-', order.x_checkout or '-', url)
+
+def refresh(order, s):
+    gap = contact_gap(order)
+    msg = message_for(order, s.x_ath_url) if s.x_ath_url else False
+    vals = {}
+    if (s.x_ath_contact_gap or False) != gap:
+        vals['x_ath_contact_gap'] = gap
+    if (s.x_ath_message or False) != msg:
+        vals['x_ath_message'] = msg
+    if vals:
+        s.write(vals)
+
+def prepare(order, survey, UI, base, today):
     slots = UI.search([('x_sale_order_id', '=', order.id)])
     done = False
     pending = None
     for s in slots:
+        if s.x_ath_state == 'invitado':
+            refresh(order, s)
         if s.x_ath_state in ('invitado', 'procesado', 'revocado'):
             done = True
         elif s.x_ath_state == 'error' and not pending:
@@ -196,15 +233,17 @@ const PY_INVITE_AUTO = String.raw`def prepare(order, survey, UI, base, today):
         ui.write({'access_token': token, 'deadline': deadline, 'x_ath_state': 'invitado', 'x_ath_error': False})
     else:
         ui = UI.create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': deadline, 'x_ath_state': 'invitado'})
-    ui.write({'x_ath_url': '%s/survey/%s/%s' % (base, survey.access_token, ui.access_token)})
-    order.message_post(body='Registro SIRE/TRA: enlace de registro preparado (no enviado). Está en Registro SIRE/TRA > Enlaces de registro; envíelo al huésped principal por el canal habitual.', message_type='comment', subtype_xmlid='mail.mt_note')
+    url = '%s/survey/%s/%s' % (base, survey.access_token, ui.access_token)
+    gap = contact_gap(order)
+    ui.write({'x_ath_url': url, 'x_ath_contact_gap': gap, 'x_ath_message': message_for(order, url)})
+    order.message_post(body='Registro SIRE/TRA: enlace de registro y mensaje preparados (no enviados). Están en Registro SIRE/TRA > Enlaces de registro; envíelos al huésped principal por el canal de la reserva.%s' % ((' Excepción: %s.' % gap) if gap else ''), message_type='comment', subtype_xmlid='mail.mt_note')
 
 def revoke(order, UI):
     n = 0
     for s in UI.search([('x_sale_order_id', '=', order.id), ('x_ath_state', '=', 'invitado')]):
         if s.state == 'done':
             continue
-        s.write({'access_token': UI.default_get(['access_token'])['access_token'], 'x_ath_state': 'revocado', 'x_ath_url': False})
+        s.write({'access_token': UI.default_get(['access_token'])['access_token'], 'x_ath_state': 'revocado', 'x_ath_url': False, 'x_ath_message': False})
         n += 1
     if n:
         order.message_post(body='Registro SIRE/TRA: la reserva se canceló; el enlace de registro quedó revocado (la URL anterior ya no recibe datos). Los formularios ya recibidos se conservan.', message_type='comment', subtype_xmlid='mail.mt_note')
@@ -214,7 +253,7 @@ def process(order, survey, UI, base, today):
         return
     if order.state == 'cancel' or order.x_reservation_status in ('cancelled', 'no_show'):
         revoke(order, UI)
-    elif order.state == 'sale':
+    elif order.state in ('draft', 'sent', 'sale'):
         prepare(order, survey, UI, base, today)
 
 survey = env.ref('__ath_sire_tra__.survey_registro', raise_if_not_found=False)
@@ -650,7 +689,7 @@ export const SERVER_ACTIONS = [
 export const AUTOMATIONS = [
   { xmlid: 'au_map', name: '[SIRE/TRA] Formulario terminado', model: 'survey.user_input', trigger: 'on_create_or_write', triggerFields: ['state'], domain: "[('state', '=', 'done'), ('x_sale_order_id', '!=', False), ('x_ath_state', '=', 'invitado')]", action: 'sa_map' },
   // Reserva confirmada (state = sale) que viene de Smoobu. Dispara al confirmarse o al completar fechas; un borrador no la activa.
-  { xmlid: 'au_invite', name: '[SIRE/TRA] Preparar enlace al confirmar reserva y revocarlo al cancelar', model: 'sale.order', trigger: 'on_create_or_write', triggerFields: ['state', 'x_reservation_status', 'x_checkin', 'x_checkout'], domain: "['&', ('x_pms_reference', 'ilike', 'SMOOBU-'), '|', ('state', 'in', ['sale', 'cancel']), ('x_reservation_status', 'in', ['cancelled', 'no_show'])]", action: 'sa_invite_auto' },
+  { xmlid: 'au_invite', name: '[SIRE/TRA] Preparar enlace al ingresar la reserva Smoobu y revocarlo al cancelar', model: 'sale.order', trigger: 'on_create_or_write', triggerFields: ['state', 'x_reservation_status', 'x_checkin', 'x_checkout', 'partner_id'], domain: "['&', ('x_pms_reference', 'ilike', 'SMOOBU-'), '|', ('state', 'in', ['draft', 'sent', 'sale', 'cancel']), ('x_reservation_status', 'in', ['cancelled', 'no_show'])]", action: 'sa_invite_auto' },
   { xmlid: 'au_attempt', name: '[SIRE/TRA] Aplicar intento registrado', model: 'x_report_attempt', trigger: 'on_create', triggerFields: [], domain: '', action: 'sa_apply_attempt' },
 ];
 
@@ -827,10 +866,10 @@ export const VIEWS = [
 </group></sheet>
 </form>` },
   { xmlid: 'view_est_list', name: 'ath.sire.tra.establishment.list', model: 'x_establishment', type: 'list', priority: 90, arch: '<list><field name="x_code"/><field name="x_name"/><field name="x_rnt_number"/><field name="x_tra_mode"/><field name="x_sire_export_enabled"/><field name="x_active"/></list>' },
-  { xmlid: 'view_invite_list', name: 'ath.sire.tra.invite.list', model: 'survey.user_input', type: 'list', priority: 90, arch: '<list string="Enlaces de registro" create="0"><field name="create_date"/><field name="x_sale_order_id"/><field name="x_ath_state"/><field name="deadline"/><field name="x_ath_url" widget="CopyClipboardChar"/><field name="x_ath_error" optional="show"/></list>' },
+  { xmlid: 'view_invite_list', name: 'ath.sire.tra.invite.list', model: 'survey.user_input', type: 'list', priority: 90, arch: '<list string="Enlaces de registro" create="0"><field name="create_date"/><field name="x_sale_order_id"/><field name="x_ath_state"/><field name="deadline"/><field name="x_ath_url" widget="CopyClipboardChar"/><field name="x_ath_contact_gap" optional="show" decoration-warning="x_ath_contact_gap"/><field name="x_ath_message" widget="CopyClipboardText" optional="hide"/><field name="x_ath_error" optional="show"/></list>' },
   { xmlid: 'view_invite_form', name: 'ath.sire.tra.invite.form', model: 'survey.user_input', type: 'form', priority: 90, arch: `<form string="Enlace de registro" create="0" edit="0">
 <header><button name="${R('sa_revoke')}" type="action" string="Revocar enlace" invisible="x_ath_state != 'invitado'"/></header>
-<sheet><group><field name="x_sale_order_id"/><field name="x_ath_state"/><field name="deadline"/><field name="x_ath_url" widget="CopyClipboardChar"/><field name="x_ath_processed_at"/><field name="x_ath_error"/><field name="x_ath_form_version"/><field name="x_ath_submitted_at"/><field name="x_ath_snapshot" groups="base.group_system"/></group></sheet>
+<sheet><group><field name="x_sale_order_id"/><field name="x_ath_state"/><field name="deadline"/><field name="x_ath_url" widget="CopyClipboardChar"/><field name="x_ath_contact_gap" invisible="not x_ath_contact_gap"/><field name="x_ath_message" widget="CopyClipboardText" invisible="not x_ath_message"/><field name="x_ath_processed_at"/><field name="x_ath_error"/><field name="x_ath_form_version"/><field name="x_ath_submitted_at"/><field name="x_ath_snapshot" groups="base.group_system"/></group></sheet>
 </form>` },
 ];
 

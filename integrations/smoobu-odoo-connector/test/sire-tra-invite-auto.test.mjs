@@ -29,6 +29,8 @@ class Rec:
         object.__setattr__(self, 'store', store)
     @staticmethod
     def conv(k, v):
+        if k == 'partner_id' and isinstance(v, dict): return Rec(v)
+        if k == 'partner_id' and isinstance(v, (int, list)): return Rec({'id': v if isinstance(v, int) else v[0]})
         if isinstance(v, str) and k in DATES: return datetime.date.fromisoformat(v)
         if isinstance(v, str) and k in ('rental_return_date',): return datetime.datetime.strptime(v, '%Y-%m-%d %H:%M:%S')
         return v
@@ -67,7 +69,7 @@ class Env:
         if m == 'survey.user_input': return UIModel(self.st)
         if m == 'ir.config_parameter': return types.SimpleNamespace(sudo=lambda: types.SimpleNamespace(get_param=lambda k: 'https://odoo.test'))
         raise KeyError(m)
-spec = json.load(sys.stdin)
+spec = json.loads(sys.stdin.buffer.read().decode('utf-8'))
 st = {'sql': [], 'slots': [Rec(s) for s in spec.get('slots', [])], 'n': 0, 'survey_missing': spec.get('survey_missing')}
 orders = {}
 for o in spec['orders']:
@@ -92,26 +94,25 @@ for step in spec['steps']:
         err = '%s: %s' % (type(e).__name__, e)
     out.append({'err': err, 'logs': list(LOGS), 'sql': list(st['sql']), 'slots': [{k: (str(v) if isinstance(v, (datetime.datetime, datetime.date)) else v) for k, v in r.d.items()} for r in st['slots']],
                 'notes': {str(i): [n['body'] for n in orders[i][1]['notes']] for i in orders}, 'orderWrites': {str(i): orders[i][1]['writes'] for i in orders}})
-print(json.dumps(out))`;
+sys.stdout.buffer.write(json.dumps(out).encode('utf-8'))`;
 
 function py(spec, t) {
   try { execFileSync('python3', ['--version']); } catch { t.skip('sin python3'); return null; }
   return JSON.parse(execFileSync('python3', ['-I', '-c', PY], { input: JSON.stringify({ code: CODE, ...spec }), encoding: 'utf8' }));
 }
 
-const order = (id, extra = {}) => ({ id, name: `S0000${id}`, state: 'sale', x_reservation_status: false, x_pms_reference: `SMOOBU-1704000${id}`, x_checkin: '2026-11-20', x_checkout: '2026-11-22', rental_return_date: false, ...extra });
+const order = (id, extra = {}) => ({ id, name: `S0000${id}`, state: 'sale', x_reservation_status: false, x_pms_reference: `SMOOBU-1704000${id}`, x_checkin: '2026-11-20', x_checkout: '2026-11-22', rental_return_date: false, partner_id: { id: 900 + id, name: 'Ana Sintetica', phone: '+570000000', email: 'ana@example.invalid' }, ...extra });
 const run = (...ids) => ({ op: 'run', ids });
 const invitados = (r) => r.slots.filter((s) => s.x_ath_state === 'invitado');
 
 // ------------------------------------------------------------------ definicion
-test('la automatizacion solo dispara con reserva confirmada de Smoobu; la accion no queda en el menu y es de solo preparacion', () => {
+test('la automatizacion dispara al ingresar la reserva de Smoobu (borrador, enviada, confirmada o cancelada); la accion no queda en el menu y es de solo preparacion', () => {
   const a = AUTOMATIONS.find((x) => x.xmlid === 'au_invite');
   assert.equal(a.model, 'sale.order');
   assert.equal(a.action, 'sa_invite_auto');
-  assert.match(a.domain, /'state', 'in', \['sale', 'cancel'\]/);
+  assert.match(a.domain, /'state', 'in', \['draft', 'sent', 'sale', 'cancel'\]/);
   assert.match(a.domain, /SMOOBU-/);
-  assert.doesNotMatch(a.domain, /'draft'|'sent'/, 'nunca dispara por borradores');
-  assert.deepEqual(a.triggerFields, ['state', 'x_reservation_status', 'x_checkin', 'x_checkout']);
+  assert.deepEqual(a.triggerFields, ['state', 'x_reservation_status', 'x_checkin', 'x_checkout', 'partner_id']);
   const s = SERVER_ACTIONS.find((x) => x.xmlid === 'sa_invite_auto');
   assert.ok(!s.bind, 'no se enlaza al menu Accion: la unica puerta manual sigue siendo sa_invite');
   for (const forbidden of ['action_confirm', 'action_cancel', 'unlink', 'mail.mail', 'mail.template', 'send_mail', 'whatsapp', 'message_type=\'email\'', 'sudo().write']) assert.ok(!s.code.includes(forbidden), forbidden);
@@ -119,12 +120,35 @@ test('la automatizacion solo dispara con reserva confirmada de Smoobu; la accion
 });
 
 // ------------------------------------------------------------------ casos del Python real
-test('borrador o cotizacion enviada: sin enlace, sin notas y sin escrituras en la reserva', (t) => {
-  const r = py({ orders: [order(1, { state: 'draft' }), order(2, { state: 'sent' })], steps: [run(1, 2)] }, t);
+test('borrador o cotizacion enviada de Smoobu: UN enlace por reserva al ingresar, sin confirmar ni escribir en la reserva', (t) => {
+  const r = py({ orders: [order(1, { state: 'draft' }), order(2, { state: 'sent' })], steps: [run(1, 2), run(1, 2)] }, t);
   if (!r) return;
   assert.equal(r[0].err, null);
-  assert.deepEqual(r[0].slots, []);
-  assert.deepEqual(r[0].notes, { 1: [], 2: [] });
+  assert.equal(invitados(r[0]).length, 2);
+  assert.equal(r[1].slots.length, 2, 'reprocesar no duplica');
+  assert.deepEqual(r[0].orderWrites, { 1: [], 2: [] }, 'no confirma ni cambia la reserva');
+});
+
+test('mensaje preparado para Recepcion (no enviado) y excepcion visible si faltan telefono, correo o nombre', (t) => {
+  const r = py({ orders: [order(1), order(2, { partner_id: { id: 7, name: 'Ana', phone: false, email: false } })], steps: [run(1, 2)] }, t);
+  if (!r) return;
+  const by = (id) => r[0].slots.find((s) => s.x_sale_order_id === id);
+  assert.equal(by(1).x_ath_contact_gap, false);
+  assert.match(by(1).x_ath_message, /^Hola Ana Sintetica\. .*del 2026-11-20 al 2026-11-22 .*https:\/\/odoo\.test\/survey\/SURVEY\//);
+  assert.equal(by(2).x_ath_contact_gap, 'Falta: nombre completo, teléfono, correo');
+  assert.equal(by(2).x_ath_state, 'invitado', 'la excepcion no impide preparar el enlace');
+  assert.match(r[0].notes[2][0], /Excepción: Falta/);
+  assert.ok(!CODE.includes('send_mail') && !CODE.includes("message_type='email'"), 'nunca envia');
+});
+
+test('si el contacto se completa, la excepcion se actualiza sobre el MISMO enlace (sin token nuevo); al cancelar se retira el mensaje', (t) => {
+  const r = py({ orders: [order(1, { partner_id: { id: 7, name: 'Ana', phone: false, email: false } })], steps: [run(1), { op: 'set', id: 1, vals: { partner_id: { id: 7, name: 'Ana Sintetica', phone: '+57', email: 'a@example.invalid' } } }, run(1), { op: 'set', id: 1, vals: { state: 'cancel' } }, run(1)] }, t);
+  if (!r) return;
+  assert.equal(r[1].slots.length, 1);
+  assert.equal(r[1].slots[0].access_token, r[0].slots[0].access_token);
+  assert.equal(r[1].slots[0].x_ath_contact_gap, false);
+  assert.equal(r[2].slots[0].x_ath_state, 'revocado');
+  assert.equal(r[2].slots[0].x_ath_message, false);
 });
 
 test('confirmada y elegible: UN enlace vigente (vence el dia de la salida a las 23:59 de Bogota), una nota, la reserva intacta y nada enviado', (t) => {
@@ -208,8 +232,7 @@ test('cancelada, no-show o sin referencia de Smoobu: no se prepara enlace; lote 
   }, t);
   if (!r) return;
   assert.equal(r[0].err, null);
-  assert.equal(r[0].slots.length, 1);
-  assert.equal(r[0].slots[0].x_sale_order_id, 6);
+  assert.deepEqual(r[0].slots.map((x) => x.x_sale_order_id), [6, 7], 'confirmada y borrador de Smoobu: si; canceladas, no-show y sin Smoobu: no');
   const s = py({ survey_missing: true, orders: [order(1)], steps: [run(1)] }, t);
   assert.equal(s[0].err, null, 'nunca lanza: no puede bloquear la confirmacion');
   assert.deepEqual(s[0].slots, []);
@@ -239,14 +262,18 @@ test('recorrido: reserva sintetica de Smoobu -> conector existente -> borrador (
   const id = odoo.t['sale.order'][0].id;
   let r = bridge([run(id)]);
   if (!r) return;
-  assert.deepEqual(r[0].slots, [], 'borrador: sin enlace');
+  // 2026-11-18: el enlace se prepara al INGRESAR la reserva (borrador), sin confirmar nada
+  assert.equal(r[0].slots.length, 1, 'borrador de Smoobu: UN enlace preparado');
+  assert.equal(r[0].slots[0].x_ath_state, 'invitado');
+  assert.deepEqual(r[0].orderWrites[String(id)], [], 'el puente no confirma ni escribe en la reserva');
+  carry = r[0].slots.map((s) => ({ ...s }));
 
-  // 2. Recepcion confirma (aqui, la accion de Odoo de la copia): el puente prepara UN enlace
+  // 2. Recepcion confirma (aqui, la accion de Odoo de la copia): el MISMO enlace, ninguno nuevo
   await odoo.handle('https://odoo.invalid/json/2/sale.order/action_confirm', { body: JSON.stringify({ ids: [id] }) });
   assert.equal(odoo.t['sale.order'][0].state, 'sale');
   r = bridge([run(id)]);
   assert.equal(r[0].slots.length, 1);
-  assert.equal(r[0].slots[0].x_ath_state, 'invitado');
+  assert.equal(r[0].slots[0].x_ath_url, carry[0].x_ath_url, 'confirmar no regenera el enlace');
   carry = r[0].slots.map((s) => ({ ...s }));
 
   // 3. repeticion de la sincronizacion: sin pedido nuevo; el puente no regenera
@@ -331,7 +358,9 @@ test('una prorroga (cambia la salida) no mueve el vencimiento original ni genera
   const r = py({ orders: [order(1)], steps: [run(1), { op: 'set', id: 1, vals: { x_checkout: '2026-11-29' } }, run(1), { op: 'set', id: 1, vals: { state: 'cancel' } }, run(1), { op: 'set', id: 1, vals: { state: 'sale' } }, run(1)] }, t);
   if (!r) return;
   assert.equal(r[0].slots[0].deadline, '2026-11-23 04:59:00');
-  assert.deepEqual(r[1].slots, r[0].slots, 'prorroga: mismo enlace, mismo vencimiento');
+  const keep = (x) => x.map(({ id, access_token, deadline, x_ath_url, x_ath_state }) => ({ id, access_token, deadline, x_ath_url, x_ath_state }));
+  assert.deepEqual(keep(r[1].slots), keep(r[0].slots), 'prorroga: mismo enlace, mismo vencimiento');
+  assert.match(r[1].slots[0].x_ath_message, /al 2026-11-29/, 'el mensaje preparado refleja las fechas nuevas');
   assert.equal(r[2].slots[0].x_ath_state, 'revocado');
   assert.equal(r[2].slots[0].deadline, '2026-11-23 04:59:00', 'revocar tampoco reescribe el vencimiento');
   assert.deepEqual(r[3].slots, r[2].slots, 'reconfirmada: sigue revocado; solo Recepcion genera uno nuevo');

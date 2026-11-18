@@ -1,8 +1,12 @@
 # ATH-HOTELS-SIRE-TRA-001 · Emisor TRA (API PMS MinCIT). APAGADO por defecto.
-# Solo manual (workflow_dispatch) y solo si la variable del repositorio TRA_EMITTER_ENABLED == 'yes'.
-# Sin la entrada "send" solo lista reservas pendientes (no reclama ni contacta al MinCIT).
+# Corre solo si la variable del repositorio TRA_EMITTER_ENABLED == 'yes'.
+# - Manual (workflow_dispatch): sin la entrada "send" solo lista reservas pendientes (no reclama ni contacta al MinCIT).
+# - Programado (cada hora, preparado 2026-11-18): envia SOLO si ademas TRA_AUTO_SEND == 'yes'; si no, solo lista.
+# En ambos casos el emisor exige TRA_ENABLED=yes-real, TRA_TOKEN, catalogo verificado y establecimiento en modo API con
+# configuracion verificada, y solo toma huespedes VALIDADOS con LLEGADA REAL (nunca por el solo hecho de reservar).
+# Cada linea se reclama antes de enviar (sin duplicados) y un resultado incierto no se reenvia a ciegas.
 # Los registros publicos del repositorio solo muestran ids y codigos: nunca datos de huespedes.
-name: TRA emisor (manual, apagado)
+name: TRA emisor (apagado por variables)
 on:
   workflow_dispatch:
     inputs:
@@ -10,6 +14,8 @@ on:
         description: 'Enviar de verdad (exige TRA_ENABLED=yes-real, token y catalogo verificado)'
         type: boolean
         default: false
+  schedule:
+    - cron: '41 * * * *'
 permissions:
   contents: read
 concurrency:
@@ -36,4 +42,6 @@ jobs:
           ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
           TRA_ENABLED: ${{ vars.TRA_ENABLED }}
           TRA_TOKEN: ${{ secrets.TRA_TOKEN }}
-        run: node scripts/tra-emit.mjs ${{ inputs.send && '--send' || '' }}
+          SEND: ${{ (github.event_name == 'workflow_dispatch' && inputs.send) || (github.event_name == 'schedule' && vars.TRA_AUTO_SEND == 'yes') }}
+        run: |
+          if [ "$SEND" = "true" ]; then node scripts/tra-emit.mjs --send; else node scripts/tra-emit.mjs; fi
