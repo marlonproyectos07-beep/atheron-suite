@@ -13,7 +13,12 @@ Menu **Registro SIRE/TRA** en Odoo.
 > (numero de huespedes en 0, correo/telefono) y el siguiente paso. Envie cada enlace por la mensajeria del canal.
 > **Prioridad hoy: 03838 (huesped alojado en la 201, sale el 18/11).** Opcion A: enviar el enlace por Airbnb.
 > Opcion B: capturar en recepcion con el documento a la vista (*Huespedes* > *Nuevo*, origen *Recepcion*), y *Validar*.
-> **Ojo:** *Registrar llegada real* guarda la hora en que se pulsa; si se registra tarde, anote en la reserva la hora real.
+> Ya hay una ficha **borrador** del huesped principal (nombre de la reserva Airbnb); complete con el documento a la vista
+> lo que falta: tipo y numero de documento, nombres y apellidos segun documento, nacionalidad, fecha de nacimiento,
+> residencia, procedencia, destino, motivo y acompanantes. El **consentimiento** solo se registra por el formulario.
+> **Ojo:** *Registrar llegada real* (version instalada hoy) guarda la hora en que se pulsa; si se registra tarde, anote en
+> la reserva la hora real. La version corregida (hora real + hora de captura + motivo) esta en la rama, pendiente de
+> probar en la copia antes de instalarla.
 > **Siguiente caso: 03839.** Registre llegada y salida solo cuando ocurran. TRA/SIRE oficiales siguen apagados.
 
 ## Antes de la llegada

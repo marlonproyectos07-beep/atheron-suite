@@ -22,6 +22,14 @@ legales (operador y reportante SIRE) que la orden trataba como no acreditados; e
 3. Reportante SIRE, cuando se decida el obligado y se confirme el usuario activo.
 Reversion: escribir `false` en el campo. Ninguno dispara automatizaciones ni afecta disponibilidad.
 
+## Resultado (2026-11-18, aprobado por Marlon)
+- Aplicado por el mecanismo normal de aprobacion: `x_rnt_holder_id = 1934`, `x_address_partner_id = 2402`. Verificado.
+- Operador y reportante SIRE: **siguen vacios**.
+- Contrato "CONTRATO DE ARRENDAMIENTO SIN CODEUDOR.pdf" (leido en el visor de Drive): contrato No. 113 sobre el inmueble
+  **Calle 4 # 7-33, Centro Historico**, uso comercial, 01/05/2025 - 30/04/2032; arrendatario y co-arrendatario son
+  personas naturales (el co-arrendatario es el titular del RNT); arrendador: una inmobiliaria. **No es el inmueble de
+  Atheron Suite (Carrera 9 # 10-32)** y no menciona a ATHERON SAS: no acredita el operador.
+
 ## Contacto 958
 Conserva un NIT que no es suyo (es el del titular del RNT). Advertencia interna publicada; excluido de la identidad
 hotelera (0 referencias desde establecimiento, fichas de huesped o reservas). No se borra ni se reasignan historicos.
