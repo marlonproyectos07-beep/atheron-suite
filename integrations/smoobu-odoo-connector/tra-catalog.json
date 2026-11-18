@@ -1,0 +1,18 @@
+{
+  "verified": false,
+  "_nota": "Contrastado 2026-11-08 con fuentes oficiales (ver TRA-CATALOGOS-FUENTES.md). Los rotulos de documento coinciden con el manual oficial del formulario web (Grupo 2) y el ejemplo 'C.C' del manual PMS (Res. 409 de 2022, version 02-02-2023), pero ese manual declara todos los campos como 'texto' y no publica lista de valores de la API. Motivos y tipo de acomodacion: sin lista oficial publicada. Cambiar verified a true solo con confirmacion escrita del MinCIT.",
+  "docTypes": { "national_citizen_id": "C.C", "passport": "Pasaporte", "id_card": "T.I", "foreign_resident_card": "C.E", "civil_registration": "Registro Civil" },
+  "mainDocTypes": ["national_citizen_id", "passport", "id_card", "foreign_resident_card"],
+  "reasons": {},
+  "_fuentes": {
+    "C.C": "oficial: manual PMS Res. 409 (ejemplo de la API) y manual Grupo 2, 4.1",
+    "Pasaporte": "oficial: manual Grupo 2, 4.1 y 5.1",
+    "T.I": "oficial: manual Grupo 2, 4.1 y 5.1 (una guia no oficial de 2023-2024 ya no lo muestra para el principal)",
+    "C.E": "oficial: manual Grupo 2, 4.1 y 5.1",
+    "Registro Civil": "oficial: manual Grupo 2, 5.1, solo acompanantes; el manual de no conectados (Excel) lo abrevia R.C",
+    "mainDocTypes": "oficial: manual Grupo 2, 4.1 (principal: Pasaporte, T.I, C.C, C.E)",
+    "PEP_PPT_DNI": "sin respaldo oficial: P.E.P y D.N.I solo aparecen en una guia no oficial; PPT no aparece en ninguna fuente. No se mapean: el emisor los deja en error previo.",
+    "reasons": "sin lista oficial: el manual Grupo 2, 4.7 remite a una lista desplegable sin enumerarla; ejemplo de la API: 'Trabajo'.",
+    "tipo_acomodacion": "sin lista oficial: ejemplo de la API 'Casa'; manual Grupo 2, 4.11 cita apartamento, casa o finca para vivienda turistica completa."
+  }
+}

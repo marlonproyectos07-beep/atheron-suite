@@ -53,7 +53,7 @@ export async function readTotalCreates(reader) { return reader.searchCount('mail
  * fallo: la reserva queda pendiente de una persona, se avisa y no consume el cupo de la ejecucion.
  */
 export const DUPLICATE_PRECONDITIONS = Object.freeze(new Set(['PEDIDO_YA_EXISTE', 'CONTACTOS_DUPLICADOS']));
-export const HUMAN_REVIEW_PRECONDITIONS = Object.freeze(new Set(['NOMBRE_NO_IDENTIFICABLE', 'IDENTIDAD_AMBIGUA', 'COINCIDENCIA_SOLO_POR_NOMBRE', 'SIN_ID_SMOOBU']));
+export const HUMAN_REVIEW_PRECONDITIONS = Object.freeze(new Set(['NOMBRE_NO_IDENTIFICABLE', 'IDENTIDAD_AMBIGUA', 'COINCIDENCIA_SOLO_POR_NOMBRE', 'SIN_ID_SMOOBU', 'CONTACTO_DUPLICADO_EN_ODOO']));
 export function haltOnPrecondition(code) {
   if (DUPLICATE_PRECONDITIONS.has(code)) return 'DUPLICADO_DETECTADO';
   if (HUMAN_REVIEW_PRECONDITIONS.has(code)) return null;

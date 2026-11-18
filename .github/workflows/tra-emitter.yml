@@ -1,0 +1,47 @@
+# ATH-HOTELS-SIRE-TRA-001 · Emisor TRA (API PMS MinCIT). APAGADO por defecto.
+# Corre solo si la variable del repositorio TRA_EMITTER_ENABLED == 'yes'.
+# - Manual (workflow_dispatch): sin la entrada "send" solo lista reservas pendientes (no reclama ni contacta al MinCIT).
+# - Programado (cada hora, preparado 2026-11-18): envia SOLO si ademas TRA_AUTO_SEND == 'yes'; si no, solo lista.
+# En ambos casos el emisor exige TRA_ENABLED=yes-real, TRA_TOKEN, catalogo verificado y establecimiento en modo API con
+# configuracion verificada, y solo toma huespedes VALIDADOS con LLEGADA REAL (nunca por el solo hecho de reservar).
+# Cada linea se reclama antes de enviar (sin duplicados) y un resultado incierto no se reenvia a ciegas.
+# Los registros publicos del repositorio solo muestran ids y codigos: nunca datos de huespedes.
+name: TRA emisor (apagado por variables)
+on:
+  workflow_dispatch:
+    inputs:
+      send:
+        description: 'Enviar de verdad (exige TRA_ENABLED=yes-real, token y catalogo verificado)'
+        type: boolean
+        default: false
+  schedule:
+    - cron: '41 * * * *'
+permissions:
+  contents: read
+concurrency:
+  group: tra-emitter
+  cancel-in-progress: false
+jobs:
+  emitir:
+    if: vars.TRA_EMITTER_ENABLED == 'yes'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: integrations/smoobu-odoo-connector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm test
+      - name: Emisor
+        env:
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          TRA_ENABLED: ${{ vars.TRA_ENABLED }}
+          TRA_TOKEN: ${{ secrets.TRA_TOKEN }}
+          SEND: ${{ (github.event_name == 'workflow_dispatch' && inputs.send) || (github.event_name == 'schedule' && vars.TRA_AUTO_SEND == 'yes') }}
+        run: |
+          if [ "$SEND" = "true" ]; then node scripts/tra-emit.mjs --send; else node scripts/tra-emit.mjs; fi

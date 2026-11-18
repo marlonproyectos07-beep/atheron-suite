@@ -13,6 +13,9 @@
  */
 export const CONTACT_BLOCKS = Object.freeze({
   SIN_ID_SMOOBU: 'SIN_ID_SMOOBU', NOMBRE_NO_IDENTIFICABLE: 'NOMBRE_NO_IDENTIFICABLE', CONTACTOS_DUPLICADOS: 'CONTACTOS_DUPLICADOS',
+  // 2026-11-18: contactos PREVIOS de Odoo que comparten correo o telefono (p. ej. correo de relevo de una OTA). No es un
+  // duplicado creado por la sincronizacion: la reserva queda para revision humana y el resto del lote sigue.
+  CONTACTO_DUPLICADO_EN_ODOO: 'CONTACTO_DUPLICADO_EN_ODOO',
   IDENTIDAD_AMBIGUA: 'IDENTIDAD_AMBIGUA', COINCIDENCIA_SOLO_POR_NOMBRE: 'COINCIDENCIA_SOLO_POR_NOMBRE',
 });
 const GENERIC = new Set(['airbnb', 'booking', 'guest', 'huesped', 'cliente', 'reserva', 'reservation', 'blocked', 'bloqueo', 'bloqueado', 'ocupada', 'ocupado', 'na', 'n/a', 'test', 'prueba', 'sin', 'nombre', 'grupo', 'habitacion', 'hab', 'suite', 'casa', 'adicional', 'dayuse']);
@@ -54,7 +57,7 @@ export function resolveContact({ smoobuId, guest, candidates }) {
   // 2) llaves fuertes: correo exacto y telefono normalizado
   const byEmail = email ? (candidates.byEmail ?? []).filter((c) => normalizeEmail(c.email) === email) : [];
   const byPhone = phone ? (candidates.byPhone ?? []).filter((c) => normalizePhone(c.phone) === phone) : [];
-  if (byEmail.length > 1 || byPhone.length > 1) return { block: CONTACT_BLOCKS.CONTACTOS_DUPLICADOS };
+  if (byEmail.length > 1 || byPhone.length > 1) return { block: CONTACT_BLOCKS.CONTACTO_DUPLICADO_EN_ODOO };
   const strong = [...new Map([...byEmail, ...byPhone].map((c) => [c.id, c])).values()];
   if (strong.length > 1) return { block: CONTACT_BLOCKS.IDENTIDAD_AMBIGUA }; // correo y telefono apuntan a personas distintas
   if (strong.length === 1) {

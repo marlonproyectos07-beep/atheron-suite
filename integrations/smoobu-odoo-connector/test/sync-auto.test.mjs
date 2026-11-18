@@ -243,6 +243,8 @@ test('ATH-DEV-129: apagado automatico ante cambios inesperados, duplicados, escr
   assert.equal(shutdownReason({ run: r, report: {} }), 'CAMBIO_INESPERADO');
   for (const c of ['PRECIO_CAMBIO_EN_SMOOBU', 'FECHAS_CAMBIARON_EN_SMOOBU', 'NOCHES_OCUPADAS_EN_ODOO', 'CONTACTO_BUSQUEDA_INCOMPLETA', 'RESERVA_CANCELADA_EN_SMOOBU']) assert.equal(haltOnPrecondition(c), 'CAMBIO_INESPERADO', c);
   for (const c of ['PEDIDO_YA_EXISTE', 'CONTACTOS_DUPLICADOS']) assert.equal(haltOnPrecondition(c), 'DUPLICADO_DETECTADO', c);
+  // 2026-11-18 (causa del bloqueo #111): contactos PREVIOS de Odoo con el mismo correo/telefono = revision humana, no parada global
+  assert.equal(haltOnPrecondition('CONTACTO_DUPLICADO_EN_ODOO'), null, 'queda para una persona: no detiene el lote ni abre bloqueo');
   // identidad dudosa: queda para una persona, NO apaga y NO consume el cupo de la ejecucion (la siguiente reserva sigue)
   const e2 = env(); e2.odoo.t['res.partner'].push({ id: 5, name: NAMES[0], ref: false, email: false, phone: false });
   const r2 = await runAuto({ plan: { ops: [a.op, b.op] }, env: ON, reader: e2.reader, writer: fakeWriter(e2.odoo, validateWrite), smoobu: sm([a.bk, b.bk]), journal: e2.journal, lock: e2.lock, today: '2026-11-05' });
