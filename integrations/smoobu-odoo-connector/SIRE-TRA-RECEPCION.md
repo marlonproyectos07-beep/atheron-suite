@@ -4,9 +4,13 @@ Menu **Registro SIRE/TRA** en Odoo.
 
 > **Desde el 17/11/2026:** el enlace se prepara solo al confirmar y el formulario recibido se convierte solo en fichas
 > de *Huespedes* (verificado con un huesped ficticio). Ya se pueden enviar enlaces. Pendientes del dia: *Enlaces de
-> registro* (vigentes / error) y *Huespedes* > *Por validar*. **Validar y registrar llegada aun no funcionan**: falta
-> configurar el establecimiento y marcar las habitaciones (gerencia). Ignore las reservas `PRUEBA-SINTETICA` (canceladas) y sus
-> fichas *Zz ... Ficticio*.
+> registro* (vigentes / error) y *Huespedes* > *Por validar*. Desde el 18/11 el establecimiento **Atheron Suite** esta
+> configurado y las habitaciones 201, 202, 203, 301 y 302 son *fisicas*: **Validar datos funciona** (asigne siempre una
+> de esas cinco; Casa Completa no sirve). Ignore las reservas `PRUEBA-SINTETICA` (canceladas) y sus fichas *Zz ... Ficticio*.
+>
+> **Caso real para revisar:** COT/2026/03839 (Smoobu, 21-22 nov) ya tiene su enlace en *Enlaces de registro*. Revise el
+> enlace y, si esta de acuerdo, envielo al huesped principal por el canal habitual. Las reservas confirmadas antes del
+> 17/11 (03838, 03840, 03841) no tienen enlace: generelo con *Accion* > **[SIRE/TRA] Generar enlace de registro**.
 
 ## Antes de la llegada
 1. Al **confirmar** una reserva que viene de Smoobu, Odoo deja el enlace de registro **preparado** (no lo envia). Una reserva en borrador no lo tiene.

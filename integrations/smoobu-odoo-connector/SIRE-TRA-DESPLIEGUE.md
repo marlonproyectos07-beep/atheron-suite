@@ -25,6 +25,9 @@
   (no se borran). La automatizacion 1 existente pudo crear una tarea interna por la confirmacion.
 - No probado en produccion: fallo de base de datos dentro de la confirmacion (prohibido instalar restricciones);
   cubierto por prueba unitaria con Python real tras la correccion `invalidate_all(flush=False)` y por la sexta ronda en la copia (variante anterior).
+- **Establecimiento configurado (2026-11-18):** Atheron Suite (id 1, codigo RNT-235267), 201-302 fisicas y Casa Completa
+  (recurso 79) derivada; disponibilidad, ocupacion y calendario identicos a la linea base; *Validar datos* operativo.
+  Datos, fuentes, pendientes y evidencia: `deploy/prod-establecimiento-2026-11-17.md`.
 
 ## Historico
 
