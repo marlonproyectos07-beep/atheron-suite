@@ -151,9 +151,10 @@ export const ACLS = [
   { xmlid: 'acl_establishment_admin', model: 'x_establishment', group: 'base.group_system', perms: [1, 1, 1, 0] },
   // solo leer y crear: el historial no se edita ni se borra desde la interfaz (el administrador puede cambiar esta regla)
   { xmlid: 'acl_attempt_user', model: 'x_report_attempt', group: 'base.group_user', perms: [1, 0, 1, 0] },
-  // importes: leer y crear; confirmar o anular solo por sus acciones (dejan quien y cuando). Sin borrar.
+  // importes: leer y crear; confirmar o anular solo por sus acciones (dejan quien y cuando). Nadie edita ni borra,
+  // tampoco el administrador (defecto D2 demostrado en la copia el 18/11/2026: el admin podia cambiar un confirmado).
   { xmlid: 'acl_amount_user', model: 'x_tra_amount', group: 'base.group_user', perms: [1, 0, 1, 0] },
-  { xmlid: 'acl_amount_admin', model: 'x_tra_amount', group: 'base.group_system', perms: [1, 1, 1, 0] },
+  { xmlid: 'acl_amount_admin', model: 'x_tra_amount', group: 'base.group_system', perms: [1, 0, 1, 0] },
 ];
 
 // ---------------------------------------------------------------- acciones de servidor (Python, safe_eval)
@@ -731,6 +732,10 @@ if r.x_state == 'anulado':
 note = ((r.x_note or '') + '\nAnulado por %s el %s (UTC)' % (env.user.name, datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))).strip()
 r.sudo().write({'x_state': 'anulado', 'x_note': note})`;
 
+// Defecto D1 (demostrado en la copia el 18/11/2026): por el ORM se podia CREAR un importe ya confirmado, sin evidencia y con
+// confirmador falso. Esta accion, disparada al crear (au_amount_guard), rechaza cualquier estado o confirmacion de origen.
+const PY_AMOUNT_GUARD = String.raw`raise UserError('Los importes se registran sin estado ni confirmación. Solo la acción "Confirmar con evidencia" confirma y deja quién y cuándo.')`;
+
 export const SERVER_ACTIONS = [
   { xmlid: 'sa_invite', name: '[SIRE/TRA] Generar enlace de registro', model: 'sale.order', bind: true, code: PY_INVITE },
   { xmlid: 'sa_invite_auto', name: '[SIRE/TRA] Preparar enlace de registro (automático)', model: 'sale.order', code: PY_INVITE_AUTO },
@@ -745,8 +750,11 @@ export const SERVER_ACTIONS = [
   { xmlid: 'sa_apply_attempt', name: '[SIRE/TRA] Aplicar intento', model: 'x_report_attempt', code: PY_APPLY_ATTEMPT },
   { xmlid: 'sa_sire_export', name: '[SIRE/TRA] Generar archivo SIRE', model: 'x_guests_line', bind: true, code: PY_SIRE_EXPORT },
   { xmlid: 'sa_sire_mark', name: '[SIRE/TRA] Marcar cargado en portal SIRE', model: 'x_guests_line', bind: true, code: PY_SIRE_MARK },
-  { xmlid: 'sa_amount_confirm', name: '[SIRE/TRA] Confirmar importe pagado (con evidencia)', model: 'x_tra_amount', bind: true, code: PY_AMOUNT_CONFIRM },
-  { xmlid: 'sa_amount_void', name: '[SIRE/TRA] Anular importe', model: 'x_tra_amount', bind: true, code: PY_AMOUNT_VOID },
+  // groups: sin grupo, Odoo exige permiso de escritura sobre el modelo para ejecutar la accion, y nadie lo tiene
+  // (defecto D3 demostrado en la copia: el usuario no podia confirmar ni anular). Con grupo, la escritura va por sudo.
+  { xmlid: 'sa_amount_confirm', name: '[SIRE/TRA] Confirmar importe pagado (con evidencia)', model: 'x_tra_amount', bind: true, groups: ['base.group_user'], code: PY_AMOUNT_CONFIRM },
+  { xmlid: 'sa_amount_void', name: '[SIRE/TRA] Anular importe', model: 'x_tra_amount', bind: true, groups: ['base.group_user'], code: PY_AMOUNT_VOID },
+  { xmlid: 'sa_amount_guard', name: '[SIRE/TRA] Rechazar importe creado con estado o confirmación', model: 'x_tra_amount', groups: ['base.group_user'], code: PY_AMOUNT_GUARD },
 ];
 
 export const AUTOMATIONS = [
@@ -754,6 +762,7 @@ export const AUTOMATIONS = [
   // Reserva confirmada (state = sale) que viene de Smoobu. Dispara al confirmarse o al completar fechas; un borrador no la activa.
   { xmlid: 'au_invite', name: '[SIRE/TRA] Preparar enlace al ingresar la reserva Smoobu y revocarlo al cancelar', model: 'sale.order', trigger: 'on_create_or_write', triggerFields: ['state', 'x_reservation_status', 'x_checkin', 'x_checkout', 'partner_id'], domain: "['&', ('x_pms_reference', 'ilike', 'SMOOBU-'), '|', ('state', 'in', ['draft', 'sent', 'sale', 'cancel']), ('x_reservation_status', 'in', ['cancelled', 'no_show'])]", action: 'sa_invite_auto' },
   { xmlid: 'au_attempt', name: '[SIRE/TRA] Aplicar intento registrado', model: 'x_report_attempt', trigger: 'on_create', triggerFields: [], domain: '', action: 'sa_apply_attempt' },
+  { xmlid: 'au_amount_guard', name: '[SIRE/TRA] Importe: rechazar estado o confirmación al crear', model: 'x_tra_amount', trigger: 'on_create', triggerFields: [], domain: "['|', '|', ('x_state', '!=', False), ('x_confirmed_by', '!=', False), ('x_confirmed_at', '!=', False)]", action: 'sa_amount_guard' },
 ];
 
 // ---------------------------------------------------------------- encuesta (captura unica, por invitacion)

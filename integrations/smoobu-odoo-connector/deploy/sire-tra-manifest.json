@@ -1,5 +1,5 @@
 {
- "fingerprint": "c7d58b162bc540a2",
+ "fingerprint": "6ead35ac6e33321f",
  "NS": "__ath_sire_tra__",
  "MODELS": [
   {
@@ -1342,7 +1342,7 @@
    "group": "base.group_system",
    "perms": [
     1,
-    1,
+    0,
     1,
     0
    ]
@@ -1441,6 +1441,9 @@
    "name": "[SIRE/TRA] Confirmar importe pagado (con evidencia)",
    "model": "x_tra_amount",
    "bind": true,
+   "groups": [
+    "base.group_user"
+   ],
    "code": "if not records:\n    raise UserError('Seleccione un importe.')\nif len(records) != 1:\n    raise UserError('Confirme un importe a la vez.')\nr = records\ntoday = (datetime.datetime.utcnow() - datetime.timedelta(hours=5)).date()\nerr = False\nif r.x_state == 'confirmado':\n    err = 'ya está confirmado'\nelif r.x_state == 'anulado':\n    err = 'está anulado; registre uno nuevo'\nelif not r.x_amount or r.x_amount <= 0:\n    err = 'falta el importe efectivamente pagado'\nelif not r.x_currency_id:\n    err = 'falta la moneda'\nelif r.x_currency_id.name != 'COP':\n    err = 'TRA exige el valor en pesos colombianos (COP)'\nelif not r.x_cutoff_date:\n    err = 'falta la fecha de corte'\nelif r.x_cutoff_date > today:\n    err = 'la fecha de corte no puede ser futura'\nelif not r.x_evidence_kind or not (r.x_evidence_ref or '').strip() or not r.x_evidence or not (r.x_evidence_name or '').strip():\n    err = 'falta la evidencia: tipo, referencia y archivo'\nelif env['x_tra_amount'].search_count([('x_sale_order_id', '=', r.x_sale_order_id.id), ('x_state', '=', 'confirmado'), ('id', '!=', r.id)]):\n    err = 'la reserva ya tiene un importe confirmado; anúlelo antes'\nif err:\n    raise UserError('No se confirmó el importe: %s.' % err)\nr.sudo().write({'x_state': 'confirmado', 'x_confirmed_by': env.user.id, 'x_confirmed_at': datetime.datetime.now()})"
   },
   {
@@ -1448,7 +1451,19 @@
    "name": "[SIRE/TRA] Anular importe",
    "model": "x_tra_amount",
    "bind": true,
+   "groups": [
+    "base.group_user"
+   ],
    "code": "if not records:\n    raise UserError('Seleccione un importe.')\nif len(records) != 1:\n    raise UserError('Anule un importe a la vez.')\nr = records\nif r.x_state == 'anulado':\n    raise UserError('El importe ya está anulado.')\nnote = ((r.x_note or '') + '\\nAnulado por %s el %s (UTC)' % (env.user.name, datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))).strip()\nr.sudo().write({'x_state': 'anulado', 'x_note': note})"
+  },
+  {
+   "xmlid": "sa_amount_guard",
+   "name": "[SIRE/TRA] Rechazar importe creado con estado o confirmación",
+   "model": "x_tra_amount",
+   "groups": [
+    "base.group_user"
+   ],
+   "code": "raise UserError('Los importes se registran sin estado ni confirmación. Solo la acción \"Confirmar con evidencia\" confirma y deja quién y cuándo.')"
   }
  ],
  "AUTOMATIONS": [
@@ -1486,6 +1501,15 @@
    "triggerFields": [],
    "domain": "",
    "action": "sa_apply_attempt"
+  },
+  {
+   "xmlid": "au_amount_guard",
+   "name": "[SIRE/TRA] Importe: rechazar estado o confirmación al crear",
+   "model": "x_tra_amount",
+   "trigger": "on_create",
+   "triggerFields": [],
+   "domain": "['|', '|', ('x_state', '!=', False), ('x_confirmed_by', '!=', False), ('x_confirmed_at', '!=', False)]",
+   "action": "sa_amount_guard"
   }
  ],
  "MAX_COMPANIONS": 21,

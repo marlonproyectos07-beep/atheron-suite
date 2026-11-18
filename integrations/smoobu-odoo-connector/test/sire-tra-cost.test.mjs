@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { TRA_CATALOG_UNVERIFIED, buildPayload, confirmedCost, reasonStatus } from '../src/sire-tra/tra-emitter.mjs';
-import { ACLS, FIELDS, MODELS, SERVER_ACTIONS } from '../src/sire-tra/manifest.mjs';
+import { ACLS, AUTOMATIONS, FIELDS, MODELS, SERVER_ACTIONS } from '../src/sire-tra/manifest.mjs';
 
 // ATH-HOTELS-SIRE-TRA-001 · importe pagado confirmado, nombre TRA y motivo. Datos sinteticos.
 const EST = { x_name: 'Nombre interno', x_tra_establishment_name: 'Nombre RNT', x_rnt_number: '999999', x_tra_accommodation_type: 'Casa', x_tra_cost_basis: 'total_estancia' };
@@ -101,4 +101,16 @@ test('manifiesto: x_tra_amount con evidencia, moneda y corte; confirmar exige to
   const code = SERVER_ACTIONS.find((s) => s.xmlid === 'sa_amount_confirm').code;
   for (const needle of ["x_currency_id.name != 'COP'", 'x_cutoff_date > today', 'r.x_evidence', "('x_state', '=', 'confirmado')", 'x_confirmed_by', 'x_confirmed_at']) assert.ok(code.includes(needle), needle);
   for (const s of SERVER_ACTIONS.filter((x) => x.model === 'x_tra_amount')) assert.ok(!/account\.(move|payment)|sale\.order'\]\.(write|create)/.test(s.code), `${s.xmlid} no toca contabilidad ni pedidos`);
+});
+
+test('defectos demostrados en la copia (18/11/2026): D1 crear confirmado, D2 admin edita, D3 usuario no puede confirmar', async () => {
+  // D2: nadie (tampoco el administrador) tiene escritura ni borrado sobre x_tra_amount
+  for (const a of ACLS.filter((x) => x.model === 'x_tra_amount')) assert.deepEqual([a.perms[1], a.perms[3]], [0, 0], a.xmlid);
+  // D3: las acciones del importe llevan grupo (si no, Odoo exige escritura sobre el modelo para ejecutarlas)
+  for (const x of ['sa_amount_confirm', 'sa_amount_void', 'sa_amount_guard']) assert.deepEqual(SERVER_ACTIONS.find((s) => s.xmlid === x).groups, ['base.group_user'], x);
+  // D1: al crear, cualquier estado o confirmacion dispara el rechazo
+  const g = AUTOMATIONS.find((a) => a.xmlid === 'au_amount_guard');
+  assert.equal(g.model, 'x_tra_amount'); assert.equal(g.trigger, 'on_create'); assert.equal(g.action, 'sa_amount_guard');
+  for (const f of ['x_state', 'x_confirmed_by', 'x_confirmed_at']) assert.ok(g.domain.includes(`('${f}', '!=', False)`), f);
+  assert.match(SERVER_ACTIONS.find((s) => s.xmlid === 'sa_amount_guard').code, /^raise UserError\(/);
 });
