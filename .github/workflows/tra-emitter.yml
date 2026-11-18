@@ -1,7 +1,10 @@
 # ATH-HOTELS-SIRE-TRA-001 · Emisor TRA (API PMS MinCIT). APAGADO por defecto.
 # Corre solo si la variable del repositorio TRA_EMITTER_ENABLED == 'yes'.
-# - Manual (workflow_dispatch): sin la entrada "send" solo lista reservas pendientes (no reclama ni contacta al MinCIT).
-# - Programado (cada hora, preparado 2026-11-18): envia SOLO si ademas TRA_AUTO_SEND == 'yes'; si no, solo lista.
+# - Manual (workflow_dispatch): EXIGE "order_id" (id del pedido) tanto en simulacion como con "send"; solo procesa ese
+#   pedido. Vacio, mal escrito, fuera de rango o sin TRA pendiente: error sin tocar Odoo ni el MinCIT. Sin "send" solo
+#   comprueba el pedido (no reclama ni contacta al MinCIT).
+# - Programado (cada hora, preparado 2026-11-18): autorizacion independiente; envia SOLO si ademas TRA_AUTO_SEND == 'yes'
+#   (el script lo vuelve a comprobar); si no, solo lista ids. No admite pedido.
 # En ambos casos el emisor exige TRA_ENABLED=yes-real, TRA_TOKEN, catalogo verificado y establecimiento en modo API con
 # configuracion verificada, y solo toma huespedes VALIDADOS con LLEGADA REAL (nunca por el solo hecho de reservar).
 # Cada linea se reclama antes de enviar (sin duplicados) y un resultado incierto no se reenvia a ciegas.
@@ -14,6 +17,11 @@ on:
         description: 'Enviar de verdad (exige TRA_ENABLED=yes-real, token y catalogo verificado)'
         type: boolean
         default: false
+      order_id:
+        description: 'Id del pedido (sale.order). Obligatorio: la ejecucion manual procesa solo ese pedido'
+        required: true
+        type: string
+        default: ''
   schedule:
     - cron: '41 * * * *'
 permissions:
@@ -42,6 +50,9 @@ jobs:
           ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
           TRA_ENABLED: ${{ vars.TRA_ENABLED }}
           TRA_TOKEN: ${{ secrets.TRA_TOKEN }}
+          TRA_TRIGGER: ${{ github.event_name }}
+          TRA_AUTO_SEND: ${{ vars.TRA_AUTO_SEND }}
+          TRA_ONLY_ORDER: ${{ github.event_name == 'workflow_dispatch' && inputs.order_id || '' }}
           SEND: ${{ (github.event_name == 'workflow_dispatch' && inputs.send) || (github.event_name == 'schedule' && vars.TRA_AUTO_SEND == 'yes') }}
         run: |
           if [ "$SEND" = "true" ]; then node scripts/tra-emit.mjs --send; else node scripts/tra-emit.mjs; fi
