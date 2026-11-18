@@ -1,5 +1,5 @@
 {
- "fingerprint": "8a50923f98f78171",
+ "fingerprint": "c7d58b162bc540a2",
  "NS": "__ath_sire_tra__",
  "MODELS": [
   {
@@ -9,6 +9,10 @@
   {
    "model": "x_report_attempt",
    "name": "Intento de reporte SIRE/TRA"
+  },
+  {
+   "model": "x_tra_amount",
+   "name": "Importe pagado confirmado (TRA)"
   }
  ],
  "FIELDS": [
@@ -217,6 +221,20 @@
   ],
   [
    "x_establishment",
+   "x_tra_establishment_name",
+   "char",
+   "TRA: nombre del establecimiento (registro oficial RNT)",
+   {}
+  ],
+  [
+   "x_establishment",
+   "x_tra_establishment_name_source",
+   "char",
+   "TRA: fuente del nombre (documento y fecha)",
+   {}
+  ],
+  [
+   "x_establishment",
    "x_analytic_account_id",
    "many2one",
    "Cuenta analitica",
@@ -337,6 +355,20 @@
    "x_ath_url",
    "char",
    "Enlace para el huésped",
+   {}
+  ],
+  [
+   "survey.user_input",
+   "x_ath_contact_gap",
+   "char",
+   "Datos de contacto faltantes",
+   {}
+  ],
+  [
+   "survey.user_input",
+   "x_ath_message",
+   "text",
+   "Mensaje preparado para el huésped (no enviado)",
    {}
   ],
   [
@@ -588,6 +620,74 @@
    "datetime",
    "Salida real",
    {}
+  ],
+  [
+   "x_guests_line",
+   "x_arrival_input",
+   "datetime",
+   "Hora real de llegada (a registrar)",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_departure_input",
+   "datetime",
+   "Hora real de salida (a registrar)",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_movement_reason",
+   "char",
+   "Motivo (registro tardío o corrección)",
+   {}
+  ],
+  [
+   "x_guests_line",
+   "x_arrival_captured_at",
+   "datetime",
+   "Llegada capturada el",
+   {
+    "readonly": true
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_arrival_captured_by",
+   "many2one",
+   "Llegada capturada por",
+   {
+    "relation": "res.users",
+    "readonly": true
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_departure_captured_at",
+   "datetime",
+   "Salida capturada el",
+   {
+    "readonly": true
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_departure_captured_by",
+   "many2one",
+   "Salida capturada por",
+   {
+    "relation": "res.users",
+    "readonly": true
+   }
+  ],
+  [
+   "x_guests_line",
+   "x_movement_log",
+   "text",
+   "Bitácora de llegada y salida",
+   {
+    "readonly": true
+   }
   ],
   [
    "x_guests_line",
@@ -1046,6 +1146,149 @@
     "relation_field": "x_guest_line_id",
     "readonly": true
    }
+  ],
+  [
+   "x_tra_amount",
+   "x_name",
+   "char",
+   "Descripción",
+   {}
+  ],
+  [
+   "x_tra_amount",
+   "x_sale_order_id",
+   "many2one",
+   "Reserva",
+   {
+    "relation": "sale.order",
+    "required": true,
+    "on_delete": "restrict"
+   }
+  ],
+  [
+   "x_tra_amount",
+   "x_amount",
+   "float",
+   "Importe pagado confirmado",
+   {}
+  ],
+  [
+   "x_tra_amount",
+   "x_currency_id",
+   "many2one",
+   "Moneda",
+   {
+    "relation": "res.currency"
+   }
+  ],
+  [
+   "x_tra_amount",
+   "x_cutoff_date",
+   "date",
+   "Fecha de corte (pagos recibidos hasta)",
+   {}
+  ],
+  [
+   "x_tra_amount",
+   "x_evidence_kind",
+   "selection",
+   "Tipo de evidencia",
+   {
+    "selection": [
+     {
+      "value": "comprobante_pago",
+      "name": "Comprobante de pago (transferencia, datáfono, recibo de caja)",
+      "sequence": 1
+     },
+     {
+      "value": "liquidacion_canal",
+      "name": "Liquidación o extracto del canal de venta",
+      "sequence": 2
+     },
+     {
+      "value": "factura_pagada",
+      "name": "Factura con pago registrado",
+      "sequence": 3
+     },
+     {
+      "value": "extracto_bancario",
+      "name": "Extracto bancario",
+      "sequence": 4
+     }
+    ]
+   }
+  ],
+  [
+   "x_tra_amount",
+   "x_evidence_ref",
+   "char",
+   "Referencia de la evidencia",
+   {}
+  ],
+  [
+   "x_tra_amount",
+   "x_evidence",
+   "binary",
+   "Evidencia (archivo)",
+   {}
+  ],
+  [
+   "x_tra_amount",
+   "x_evidence_name",
+   "char",
+   "Nombre del archivo de evidencia",
+   {}
+  ],
+  [
+   "x_tra_amount",
+   "x_state",
+   "selection",
+   "Estado",
+   {
+    "selection": [
+     {
+      "value": "borrador",
+      "name": "Reportado, sin confirmar",
+      "sequence": 1
+     },
+     {
+      "value": "confirmado",
+      "name": "Confirmado con evidencia",
+      "sequence": 2
+     },
+     {
+      "value": "anulado",
+      "name": "Anulado",
+      "sequence": 3
+     }
+    ]
+   }
+  ],
+  [
+   "x_tra_amount",
+   "x_confirmed_by",
+   "many2one",
+   "Confirmado por",
+   {
+    "relation": "res.users",
+    "readonly": true
+   }
+  ],
+  [
+   "x_tra_amount",
+   "x_confirmed_at",
+   "datetime",
+   "Confirmado el",
+   {
+    "readonly": true
+   }
+  ],
+  [
+   "x_tra_amount",
+   "x_note",
+   "text",
+   "Nota",
+   {}
   ]
  ],
  "ACLS": [
@@ -1081,6 +1324,28 @@
     1,
     0
    ]
+  },
+  {
+   "xmlid": "acl_amount_user",
+   "model": "x_tra_amount",
+   "group": "base.group_user",
+   "perms": [
+    1,
+    0,
+    1,
+    0
+   ]
+  },
+  {
+   "xmlid": "acl_amount_admin",
+   "model": "x_tra_amount",
+   "group": "base.group_system",
+   "perms": [
+    1,
+    1,
+    1,
+    0
+   ]
   }
  ],
  "SERVER_ACTIONS": [
@@ -1095,7 +1360,7 @@
    "xmlid": "sa_invite_auto",
    "name": "[SIRE/TRA] Preparar enlace de registro (automático)",
    "model": "sale.order",
-   "code": "def prepare(order, survey, UI, base, today):\n    slots = UI.search([('x_sale_order_id', '=', order.id)])\n    done = False\n    pending = None\n    for s in slots:\n        if s.x_ath_state in ('invitado', 'procesado', 'revocado'):\n            done = True\n        elif s.x_ath_state == 'error' and not pending:\n            pending = s\n    if done:\n        return\n    end = order.x_checkout or (order.rental_return_date and order.rental_return_date.date())\n    cause = False\n    if not order.x_checkin and not end:\n        cause = 'Faltan las fechas de entrada y salida de la reserva. Complételas en la reserva y el enlace se preparará solo.'\n    elif not order.x_checkin:\n        cause = 'Falta la fecha de entrada de la reserva. Complétela en la reserva y el enlace se preparará solo.'\n    elif not end:\n        cause = 'Falta la fecha de salida de la reserva. Complétela en la reserva y el enlace se preparará solo.'\n    elif end < today:\n        cause = 'La estancia ya terminó (salida %s): no se preparó enlace. Si hace falta, use «Generar enlace de registro».' % end\n    if cause:\n        if pending and pending.x_ath_error == cause:\n            return\n        if pending:\n            pending.write({'x_ath_error': cause})\n        else:\n            UI.create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': datetime.datetime.now(), 'x_ath_state': 'error', 'x_ath_error': cause})\n        order.message_post(body='Registro SIRE/TRA: no se preparó el enlace de registro. %s' % cause, message_type='comment', subtype_xmlid='mail.mt_note')\n        return\n    deadline = datetime.datetime.combine(end + datetime.timedelta(days=1), datetime.time(4, 59))\n    token = UI.default_get(['access_token'])['access_token']\n    if pending:\n        ui = pending\n        ui.write({'access_token': token, 'deadline': deadline, 'x_ath_state': 'invitado', 'x_ath_error': False})\n    else:\n        ui = UI.create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': deadline, 'x_ath_state': 'invitado'})\n    ui.write({'x_ath_url': '%s/survey/%s/%s' % (base, survey.access_token, ui.access_token)})\n    order.message_post(body='Registro SIRE/TRA: enlace de registro preparado (no enviado). Está en Registro SIRE/TRA > Enlaces de registro; envíelo al huésped principal por el canal habitual.', message_type='comment', subtype_xmlid='mail.mt_note')\n\ndef revoke(order, UI):\n    n = 0\n    for s in UI.search([('x_sale_order_id', '=', order.id), ('x_ath_state', '=', 'invitado')]):\n        if s.state == 'done':\n            continue\n        s.write({'access_token': UI.default_get(['access_token'])['access_token'], 'x_ath_state': 'revocado', 'x_ath_url': False})\n        n += 1\n    if n:\n        order.message_post(body='Registro SIRE/TRA: la reserva se canceló; el enlace de registro quedó revocado (la URL anterior ya no recibe datos). Los formularios ya recibidos se conservan.', message_type='comment', subtype_xmlid='mail.mt_note')\n\ndef process(order, survey, UI, base, today):\n    if 'SMOOBU-' not in (order.x_pms_reference or ''):\n        return\n    if order.state == 'cancel' or order.x_reservation_status in ('cancelled', 'no_show'):\n        revoke(order, UI)\n    elif order.state == 'sale':\n        prepare(order, survey, UI, base, today)\n\nsurvey = env.ref('__ath_sire_tra__.survey_registro', raise_if_not_found=False)\nif survey:\n    UI = env['survey.user_input']\n    base = env['ir.config_parameter'].sudo().get_param('web.base.url')\n    today = (datetime.datetime.now() - datetime.timedelta(hours=5)).date()\n    for order in records:\n        env.flush_all()\n        env.cr.execute('SAVEPOINT ath_invite_sp')\n        try:\n            process(order, survey, UI, base, today)\n            env.cr.execute('RELEASE SAVEPOINT ath_invite_sp')\n        except Exception as e:\n            env.invalidate_all()\n            env.cr.execute('ROLLBACK TO SAVEPOINT ath_invite_sp')\n            log('SIRE/TRA puente: reserva %s sin procesar: %s' % (order.id, e), level='warning')"
+   "code": "def contact_gap(order):\n    p = order.partner_id\n    miss = []\n    name = ' '.join(('%s' % (p.name or '')).split())\n    if len(name.split()) < 2:\n        miss.append('nombre completo')\n    if not (p.phone or ''):\n        miss.append('teléfono')\n    if not (p.email or ''):\n        miss.append('correo')\n    return ('Falta: %s' % ', '.join(miss)) if miss else False\n\ndef message_for(order, url):\n    name = ' '.join(('%s' % (order.partner_id.name or '')).split()) or 'huésped'\n    return ('Hola %s. Para su estadía en Atheron Suite (Zipaquirá) del %s al %s necesitamos el registro obligatorio de huéspedes '\n            '(Migración Colombia y Tarjeta de Registro de Alojamiento del MinCIT). Por favor diligéncielo antes de llegar, '\n            'para usted y sus acompañantes: %s . Gracias.') % (name, order.x_checkin or '-', order.x_checkout or '-', url)\n\ndef refresh(order, s):\n    gap = contact_gap(order)\n    msg = message_for(order, s.x_ath_url) if s.x_ath_url else False\n    vals = {}\n    if (s.x_ath_contact_gap or False) != gap:\n        vals['x_ath_contact_gap'] = gap\n    if (s.x_ath_message or False) != msg:\n        vals['x_ath_message'] = msg\n    if vals:\n        s.write(vals)\n\ndef prepare(order, survey, UI, base, today):\n    slots = UI.search([('x_sale_order_id', '=', order.id)])\n    done = False\n    pending = None\n    for s in slots:\n        if s.x_ath_state == 'invitado':\n            refresh(order, s)\n        if s.x_ath_state in ('invitado', 'procesado', 'revocado'):\n            done = True\n        elif s.x_ath_state == 'error' and not pending:\n            pending = s\n    if done:\n        return\n    end = order.x_checkout or (order.rental_return_date and order.rental_return_date.date())\n    cause = False\n    if not order.x_checkin and not end:\n        cause = 'Faltan las fechas de entrada y salida de la reserva. Complételas en la reserva y el enlace se preparará solo.'\n    elif not order.x_checkin:\n        cause = 'Falta la fecha de entrada de la reserva. Complétela en la reserva y el enlace se preparará solo.'\n    elif not end:\n        cause = 'Falta la fecha de salida de la reserva. Complétela en la reserva y el enlace se preparará solo.'\n    elif end < today:\n        cause = 'La estancia ya terminó (salida %s): no se preparó enlace. Si hace falta, use «Generar enlace de registro».' % end\n    if cause:\n        if pending and pending.x_ath_error == cause:\n            return\n        if pending:\n            pending.write({'x_ath_error': cause})\n        else:\n            UI.create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': datetime.datetime.now(), 'x_ath_state': 'error', 'x_ath_error': cause})\n        order.message_post(body='Registro SIRE/TRA: no se preparó el enlace de registro. %s' % cause, message_type='comment', subtype_xmlid='mail.mt_note')\n        return\n    deadline = datetime.datetime.combine(end + datetime.timedelta(days=1), datetime.time(4, 59))\n    token = UI.default_get(['access_token'])['access_token']\n    if pending:\n        ui = pending\n        ui.write({'access_token': token, 'deadline': deadline, 'x_ath_state': 'invitado', 'x_ath_error': False})\n    else:\n        ui = UI.create({'survey_id': survey.id, 'x_sale_order_id': order.id, 'deadline': deadline, 'x_ath_state': 'invitado'})\n    url = '%s/survey/%s/%s' % (base, survey.access_token, ui.access_token)\n    gap = contact_gap(order)\n    ui.write({'x_ath_url': url, 'x_ath_contact_gap': gap, 'x_ath_message': message_for(order, url)})\n    order.message_post(body='Registro SIRE/TRA: enlace de registro y mensaje preparados (no enviados). Están en Registro SIRE/TRA > Enlaces de registro; envíelos al huésped principal por el canal de la reserva.%s' % ((' Excepción: %s.' % gap) if gap else ''), message_type='comment', subtype_xmlid='mail.mt_note')\n\ndef revoke(order, UI):\n    n = 0\n    for s in UI.search([('x_sale_order_id', '=', order.id), ('x_ath_state', '=', 'invitado')]):\n        if s.state == 'done':\n            continue\n        s.write({'access_token': UI.default_get(['access_token'])['access_token'], 'x_ath_state': 'revocado', 'x_ath_url': False, 'x_ath_message': False})\n        n += 1\n    if n:\n        order.message_post(body='Registro SIRE/TRA: la reserva se canceló; el enlace de registro quedó revocado (la URL anterior ya no recibe datos). Los formularios ya recibidos se conservan.', message_type='comment', subtype_xmlid='mail.mt_note')\n\ndef process(order, survey, UI, base, today):\n    if 'SMOOBU-' not in (order.x_pms_reference or ''):\n        return\n    if order.state == 'cancel' or order.x_reservation_status in ('cancelled', 'no_show'):\n        revoke(order, UI)\n    elif order.state in ('draft', 'sent', 'sale'):\n        prepare(order, survey, UI, base, today)\n\nsurvey = env.ref('__ath_sire_tra__.survey_registro', raise_if_not_found=False)\nif survey:\n    UI = env['survey.user_input']\n    base = env['ir.config_parameter'].sudo().get_param('web.base.url')\n    today = (datetime.datetime.now() - datetime.timedelta(hours=5)).date()\n    for order in records:\n        env.flush_all()\n        env.cr.execute('SAVEPOINT ath_invite_sp')\n        try:\n            process(order, survey, UI, base, today)\n            env.cr.execute('RELEASE SAVEPOINT ath_invite_sp')\n        except Exception as e:\n            env.cr.execute('ROLLBACK TO SAVEPOINT ath_invite_sp')\n            env.invalidate_all(flush=False)\n            log('SIRE/TRA puente: reserva %s sin procesar: %s' % (order.id, e), level='warning')"
   },
   {
    "xmlid": "sa_revoke",
@@ -1129,14 +1394,21 @@
    "name": "[SIRE/TRA] Registrar llegada real",
    "model": "x_guests_line",
    "bind": true,
-   "code": "if not records:\n    raise UserError('Seleccione al menos un registro.')\nnow = datetime.datetime.now()\nerrors = []\nfor r in records:\n    o = r.x_sale_order_id\n    if r.x_data_state != 'validado':\n        errors.append('linea %s: datos no validados' % r.id)\n    elif r.x_arrived_at:\n        errors.append('linea %s: llegada ya registrada' % r.id)\n    elif o.state != 'sale' or o.x_reservation_status in ('cancelled', 'no_show'):\n        errors.append('linea %s: reserva no confirmada, cancelada o no-show' % r.id)\n    elif not (o.x_checkin and o.x_checkout and o.x_checkin - datetime.timedelta(days=1) <= now.date() <= o.x_checkout):\n        errors.append('linea %s: hoy está fuera de las fechas de la reserva %s' % (r.id, o.name))\nif errors:\n    raise UserError('No se registró ninguna llegada.\\n' + '\\n'.join(errors))\nfor r in records:\n    tra = 'pendiente' if r.x_establishment_id.x_tra_mode in ('manual', 'api') else 'no_aplica'\n    r.write({'x_arrived_at': now, 'x_sire_in_state': 'pendiente' if r.x_is_foreign else 'no_aplica', 'x_sire_out_state': 'no_aplica', 'x_tra_state': tra})"
+   "code": "now = datetime.datetime.now()\nLATE = datetime.timedelta(hours=1)\nSLACK = datetime.timedelta(minutes=5)\n\ndef bog(dt):\n    return (dt - datetime.timedelta(hours=5)).strftime('%Y-%m-%d %H:%M') if dt else '-'\n\ndef reason_of(r):\n    return ' '.join(('%s' % (r.x_movement_reason or '')).split())\n\ndef log_line(r, text):\n    entry = '%s | %s | %s' % (bog(now), env.user.name, text)\n    return ((r.x_movement_log + '\\n') if r.x_movement_log else '') + entry\n\ndef note(r, text):\n    r.x_sale_order_id.message_post(body='Registro SIRE/TRA (linea %s): %s' % (r.id, text), message_type='comment', subtype_xmlid='mail.mt_note')\nif not records:\n    raise UserError('Seleccione al menos un registro.')\nerrors = []\nfor r in records:\n    o = r.x_sale_order_id\n    when = r.x_arrival_input\n    if r.x_data_state != 'validado':\n        errors.append('linea %s: datos no validados' % r.id)\n    elif r.x_arrived_at:\n        errors.append('linea %s: llegada ya registrada (para cambiarla use «Corregir hora de llegada/salida»)' % r.id)\n    elif o.state != 'sale' or o.x_reservation_status in ('cancelled', 'no_show'):\n        errors.append('linea %s: reserva no confirmada, cancelada o no-show' % r.id)\n    elif not when:\n        errors.append('linea %s: escriba la hora REAL de llegada (campo «Hora real de llegada»); no se usa la hora actual por defecto' % r.id)\n    elif when > now + SLACK:\n        errors.append('linea %s: la hora real de llegada (%s) es futura' % (r.id, bog(when)))\n    elif not (o.x_checkin and o.x_checkout and o.x_checkin - datetime.timedelta(days=1) <= (when - datetime.timedelta(hours=5)).date() <= o.x_checkout):\n        errors.append('linea %s: la llegada real (%s) está fuera de las fechas de la reserva %s' % (r.id, bog(when), o.name))\n    elif now - when > LATE and not reason_of(r):\n        errors.append('linea %s: registro tardío (llegada %s, captura %s): escriba el motivo' % (r.id, bog(when), bog(now)))\nif errors:\n    raise UserError('No se registró ninguna llegada.\\n' + '\\n'.join(errors))\nfor r in records:\n    when = r.x_arrival_input\n    late = now - when > LATE\n    text = 'llegada real %s (hora Bogotá), capturada %s por %s%s' % (bog(when), bog(now), env.user.name, (' - registro tardío: %s' % reason_of(r)) if late else '')\n    tra = 'pendiente' if r.x_establishment_id.x_tra_mode in ('manual', 'api') else 'no_aplica'\n    r.write({'x_arrived_at': when, 'x_arrival_captured_at': now, 'x_arrival_captured_by': env.user.id, 'x_arrival_input': False, 'x_movement_reason': False, 'x_movement_log': log_line(r, text), 'x_sire_in_state': 'pendiente' if r.x_is_foreign else 'no_aplica', 'x_sire_out_state': 'no_aplica', 'x_tra_state': tra})\n    note(r, text)"
   },
   {
    "xmlid": "sa_depart",
    "name": "[SIRE/TRA] Registrar salida real",
    "model": "x_guests_line",
    "bind": true,
-   "code": "if not records:\n    raise UserError('Seleccione al menos un registro.')\nnow = datetime.datetime.now()\nbad = [str(r.id) for r in records if not r.x_arrived_at or r.x_departed_at]\nif bad:\n    raise UserError('Salida no registrada (sin llegada o ya con salida): lineas %s' % ', '.join(bad))\nfor r in records:\n    r.write({'x_departed_at': now, 'x_sire_out_state': 'pendiente' if r.x_is_foreign else 'no_aplica'})"
+   "code": "now = datetime.datetime.now()\nLATE = datetime.timedelta(hours=1)\nSLACK = datetime.timedelta(minutes=5)\n\ndef bog(dt):\n    return (dt - datetime.timedelta(hours=5)).strftime('%Y-%m-%d %H:%M') if dt else '-'\n\ndef reason_of(r):\n    return ' '.join(('%s' % (r.x_movement_reason or '')).split())\n\ndef log_line(r, text):\n    entry = '%s | %s | %s' % (bog(now), env.user.name, text)\n    return ((r.x_movement_log + '\\n') if r.x_movement_log else '') + entry\n\ndef note(r, text):\n    r.x_sale_order_id.message_post(body='Registro SIRE/TRA (linea %s): %s' % (r.id, text), message_type='comment', subtype_xmlid='mail.mt_note')\nif not records:\n    raise UserError('Seleccione al menos un registro.')\nerrors = []\nfor r in records:\n    when = r.x_departure_input\n    if not r.x_arrived_at or r.x_departed_at:\n        errors.append('linea %s: sin llegada o ya con salida' % r.id)\n    elif not when:\n        errors.append('linea %s: escriba la hora REAL de salida (campo «Hora real de salida»); no se usa la hora actual por defecto' % r.id)\n    elif when > now + SLACK:\n        errors.append('linea %s: la hora real de salida (%s) es futura' % (r.id, bog(when)))\n    elif when < r.x_arrived_at:\n        errors.append('linea %s: la salida (%s) es anterior a la llegada (%s)' % (r.id, bog(when), bog(r.x_arrived_at)))\n    elif now - when > LATE and not reason_of(r):\n        errors.append('linea %s: registro tardío (salida %s, captura %s): escriba el motivo' % (r.id, bog(when), bog(now)))\nif errors:\n    raise UserError('Salida no registrada.\\n' + '\\n'.join(errors))\nfor r in records:\n    when = r.x_departure_input\n    late = now - when > LATE\n    text = 'salida real %s (hora Bogotá), capturada %s por %s%s' % (bog(when), bog(now), env.user.name, (' - registro tardío: %s' % reason_of(r)) if late else '')\n    r.write({'x_departed_at': when, 'x_departure_captured_at': now, 'x_departure_captured_by': env.user.id, 'x_departure_input': False, 'x_movement_reason': False, 'x_movement_log': log_line(r, text), 'x_sire_out_state': 'pendiente' if r.x_is_foreign else 'no_aplica'})\n    note(r, text)"
+  },
+  {
+   "xmlid": "sa_fix_move",
+   "name": "[SIRE/TRA] Corregir hora de llegada/salida",
+   "model": "x_guests_line",
+   "bind": true,
+   "code": "now = datetime.datetime.now()\nLATE = datetime.timedelta(hours=1)\nSLACK = datetime.timedelta(minutes=5)\n\ndef bog(dt):\n    return (dt - datetime.timedelta(hours=5)).strftime('%Y-%m-%d %H:%M') if dt else '-'\n\ndef reason_of(r):\n    return ' '.join(('%s' % (r.x_movement_reason or '')).split())\n\ndef log_line(r, text):\n    entry = '%s | %s | %s' % (bog(now), env.user.name, text)\n    return ((r.x_movement_log + '\\n') if r.x_movement_log else '') + entry\n\ndef note(r, text):\n    r.x_sale_order_id.message_post(body='Registro SIRE/TRA (linea %s): %s' % (r.id, text), message_type='comment', subtype_xmlid='mail.mt_note')\nif not records:\n    raise UserError('Seleccione al menos un registro.')\nSENT = ('en_envio', 'enviado', 'aceptado', 'incierto')\nerrors = []\nplan = []\nfor r in records:\n    a, d = r.x_arrival_input, r.x_departure_input\n    if not a and not d:\n        errors.append('linea %s: escriba la hora corregida en «Hora real de llegada» o «Hora real de salida»' % r.id)\n        continue\n    if not reason_of(r):\n        errors.append('linea %s: escriba el motivo de la corrección' % r.id)\n        continue\n    if a:\n        if not r.x_arrived_at:\n            errors.append('linea %s: no hay llegada que corregir (use «Registrar llegada real»)' % r.id)\n        elif r.x_tra_state in SENT or r.x_sire_in_state in SENT:\n            errors.append('linea %s: la llegada ya está en reporte (TRA %s / SIRE %s): no se corrige aquí' % (r.id, r.x_tra_state, r.x_sire_in_state))\n        elif a > now + SLACK or (r.x_departed_at and a > r.x_departed_at):\n            errors.append('linea %s: hora de llegada corregida no válida (%s)' % (r.id, bog(a)))\n    if d:\n        if not r.x_departed_at:\n            errors.append('linea %s: no hay salida que corregir (use «Registrar salida real»)' % r.id)\n        elif r.x_sire_out_state in SENT:\n            errors.append('linea %s: la salida ya está en reporte SIRE (%s): no se corrige aquí' % (r.id, r.x_sire_out_state))\n        elif d > now + SLACK or d < (a or r.x_arrived_at):\n            errors.append('linea %s: hora de salida corregida no válida (%s)' % (r.id, bog(d)))\nif errors:\n    raise UserError('No se corrigió ninguna hora.\\n' + '\\n'.join(errors))\nfor r in records:\n    a, d = r.x_arrival_input, r.x_departure_input\n    vals = {'x_arrival_input': False, 'x_departure_input': False, 'x_movement_reason': False}\n    parts = []\n    if a:\n        parts.append('llegada %s -> %s' % (bog(r.x_arrived_at), bog(a)))\n        vals['x_arrived_at'] = a\n    if d:\n        parts.append('salida %s -> %s' % (bog(r.x_departed_at), bog(d)))\n        vals['x_departed_at'] = d\n    text = 'CORRECCIÓN %s por %s - motivo: %s' % ('; '.join(parts), env.user.name, reason_of(r))\n    vals['x_movement_log'] = log_line(r, text)\n    r.write(vals)\n    note(r, text)"
   },
   {
    "xmlid": "sa_claim",
@@ -1163,6 +1435,20 @@
    "model": "x_guests_line",
    "bind": true,
    "code": "if not records:\n    raise UserError('Seleccione al menos un registro.')\nn = 0\nfor r in records:\n    for system, f in (('sire_entrada', 'x_sire_in_state'), ('sire_salida', 'x_sire_out_state')):\n        if r[f] in ('pendiente', 'en_envio'):\n            env['x_report_attempt'].create({'x_name': 'Carga en portal SIRE', 'x_guest_line_id': r.id, 'x_system': system, 'x_channel': 'archivo_sire' if r[f] == 'en_envio' else 'portal_manual', 'x_result': 'enviado', 'x_actor': 'Recepción (usuario compartido)'})\n            n += 1\n            break\nif not n:\n    raise UserError('Ningún huésped de la seleccion tiene SIRE pendiente.')"
+  },
+  {
+   "xmlid": "sa_amount_confirm",
+   "name": "[SIRE/TRA] Confirmar importe pagado (con evidencia)",
+   "model": "x_tra_amount",
+   "bind": true,
+   "code": "if not records:\n    raise UserError('Seleccione un importe.')\nif len(records) != 1:\n    raise UserError('Confirme un importe a la vez.')\nr = records\ntoday = (datetime.datetime.utcnow() - datetime.timedelta(hours=5)).date()\nerr = False\nif r.x_state == 'confirmado':\n    err = 'ya está confirmado'\nelif r.x_state == 'anulado':\n    err = 'está anulado; registre uno nuevo'\nelif not r.x_amount or r.x_amount <= 0:\n    err = 'falta el importe efectivamente pagado'\nelif not r.x_currency_id:\n    err = 'falta la moneda'\nelif r.x_currency_id.name != 'COP':\n    err = 'TRA exige el valor en pesos colombianos (COP)'\nelif not r.x_cutoff_date:\n    err = 'falta la fecha de corte'\nelif r.x_cutoff_date > today:\n    err = 'la fecha de corte no puede ser futura'\nelif not r.x_evidence_kind or not (r.x_evidence_ref or '').strip() or not r.x_evidence or not (r.x_evidence_name or '').strip():\n    err = 'falta la evidencia: tipo, referencia y archivo'\nelif env['x_tra_amount'].search_count([('x_sale_order_id', '=', r.x_sale_order_id.id), ('x_state', '=', 'confirmado'), ('id', '!=', r.id)]):\n    err = 'la reserva ya tiene un importe confirmado; anúlelo antes'\nif err:\n    raise UserError('No se confirmó el importe: %s.' % err)\nr.sudo().write({'x_state': 'confirmado', 'x_confirmed_by': env.user.id, 'x_confirmed_at': datetime.datetime.now()})"
+  },
+  {
+   "xmlid": "sa_amount_void",
+   "name": "[SIRE/TRA] Anular importe",
+   "model": "x_tra_amount",
+   "bind": true,
+   "code": "if not records:\n    raise UserError('Seleccione un importe.')\nif len(records) != 1:\n    raise UserError('Anule un importe a la vez.')\nr = records\nif r.x_state == 'anulado':\n    raise UserError('El importe ya está anulado.')\nnote = ((r.x_note or '') + '\\nAnulado por %s el %s (UTC)' % (env.user.name, datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))).strip()\nr.sudo().write({'x_state': 'anulado', 'x_note': note})"
   }
  ],
  "AUTOMATIONS": [
@@ -1179,16 +1465,17 @@
   },
   {
    "xmlid": "au_invite",
-   "name": "[SIRE/TRA] Preparar enlace al confirmar reserva y revocarlo al cancelar",
+   "name": "[SIRE/TRA] Preparar enlace al ingresar la reserva Smoobu y revocarlo al cancelar",
    "model": "sale.order",
    "trigger": "on_create_or_write",
    "triggerFields": [
     "state",
     "x_reservation_status",
     "x_checkin",
-    "x_checkout"
+    "x_checkout",
+    "partner_id"
    ],
-   "domain": "['&', ('x_pms_reference', 'ilike', 'SMOOBU-'), '|', ('state', 'in', ['sale', 'cancel']), ('x_reservation_status', 'in', ['cancelled', 'no_show'])]",
+   "domain": "['&', ('x_pms_reference', 'ilike', 'SMOOBU-'), '|', ('state', 'in', ['draft', 'sent', 'sale', 'cancel']), ('x_reservation_status', 'in', ['cancelled', 'no_show'])]",
    "action": "sa_invite_auto"
   },
   {
@@ -2843,7 +3130,7 @@
    "model": "x_guests_line",
    "type": "form",
    "priority": 90,
-   "arch": "<form string=\"Huésped SIRE/TRA\">\n<header>\n<button name=\"{{ref:sa_validate}}\" type=\"action\" string=\"Validar datos\" class=\"btn-primary\" invisible=\"x_data_state not in ('recibido', 'rechazado', 'borrador', False)\"/>\n<button name=\"{{ref:sa_reject}}\" type=\"action\" string=\"Marcar no valido\" invisible=\"x_data_state != 'recibido'\"/>\n<button name=\"{{ref:sa_arrive}}\" type=\"action\" string=\"Registrar llegada real\" class=\"btn-primary\" invisible=\"x_data_state != 'validado' or x_arrived_at\"/>\n<button name=\"{{ref:sa_depart}}\" type=\"action\" string=\"Registrar salida real\" invisible=\"not x_arrived_at or x_departed_at\"/>\n<button name=\"{{ref:act_attempt_new}}\" type=\"action\" string=\"Registrar resultado de reporte\" context=\"{'default_x_guest_line_id': id}\" invisible=\"not x_arrived_at\"/>\n<field name=\"x_data_state\" widget=\"statusbar\" statusbar_visible=\"recibido,validado\"/>\n</header>\n<sheet>\n<div class=\"alert alert-warning\" role=\"alert\" invisible=\"not x_date_gap\"><strong>Discrepancia de fechas.</strong> Las fechas que TRA aceptó (entrada <field name=\"x_tra_rep_checkin\" readonly=\"1\" nolabel=\"1\" class=\"oe_inline\"/>, salida <field name=\"x_tra_rep_checkout\" readonly=\"1\" nolabel=\"1\" class=\"oe_inline\"/>) ya no coinciden con la estancia. La aceptación y su comprobante se conservan sin cambios y no se reenvía nada. El procedimiento lo define gerencia.</div>\n<group>\n<group string=\"Identificación\">\n<field name=\"x_sale_order_id\" readonly=\"1\"/>\n<field name=\"x_is_main\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_doc_type_id\" options=\"{'no_create': True}\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_identity_number\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_given_names\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_surname_1\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_surname_2\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_nationality\" options=\"{'no_create': True}\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_birth_date\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_is_foreign\"/>\n</group>\n<group string=\"Viaje y habitación\">\n<field name=\"x_room_resource_id\" options=\"{'no_create': True}\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_establishment_id\" readonly=\"1\"/>\n<field name=\"x_residence_city_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_residence_text\"/>\n<field name=\"x_residence_country_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_origin_city_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_origin_text\"/>\n<field name=\"x_origin_country_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_destination_text\"/>\n<field name=\"x_destination_country_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_travel_reason\"/>\n<field name=\"x_consent\" readonly=\"1\"/>\n<field name=\"x_consent_at\" readonly=\"1\"/>\n</group>\n<group string=\"Estancia real\">\n<field name=\"x_arrived_at\" readonly=\"1\"/>\n<field name=\"x_departed_at\" readonly=\"1\"/>\n</group>\n<group string=\"Reportes\">\n<field name=\"x_sire_in_state\" readonly=\"1\"/>\n<field name=\"x_sire_out_state\" readonly=\"1\"/>\n<field name=\"x_tra_state\" readonly=\"1\"/>\n<field name=\"x_tra_external_id\" readonly=\"1\"/>\n<field name=\"x_tra_rep_checkin\" readonly=\"1\"/>\n<field name=\"x_tra_rep_checkout\" readonly=\"1\"/>\n<field name=\"x_order_checkout\" readonly=\"1\"/>\n<field name=\"x_date_gap\" readonly=\"1\"/>\n<field name=\"x_last_error\" readonly=\"1\"/>\n</group>\n</group>\n<field name=\"x_attempt_ids\" readonly=\"1\"><list><field name=\"create_date\"/><field name=\"x_system\"/><field name=\"x_channel\"/><field name=\"x_result\"/><field name=\"x_external_id\"/><field name=\"x_error_code\"/><field name=\"x_evidence_name\"/></list></field>\n</sheet>\n</form>"
+   "arch": "<form string=\"Huésped SIRE/TRA\">\n<header>\n<button name=\"{{ref:sa_validate}}\" type=\"action\" string=\"Validar datos\" class=\"btn-primary\" invisible=\"x_data_state not in ('recibido', 'rechazado', 'borrador', False)\"/>\n<button name=\"{{ref:sa_reject}}\" type=\"action\" string=\"Marcar no valido\" invisible=\"x_data_state != 'recibido'\"/>\n<button name=\"{{ref:sa_arrive}}\" type=\"action\" string=\"Registrar llegada real\" class=\"btn-primary\" invisible=\"x_data_state != 'validado' or x_arrived_at\"/>\n<button name=\"{{ref:sa_depart}}\" type=\"action\" string=\"Registrar salida real\" invisible=\"not x_arrived_at or x_departed_at\"/>\n<button name=\"{{ref:sa_fix_move}}\" type=\"action\" string=\"Corregir hora de llegada/salida\" invisible=\"not x_arrived_at\"/>\n<button name=\"{{ref:act_attempt_new}}\" type=\"action\" string=\"Registrar resultado de reporte\" context=\"{'default_x_guest_line_id': id}\" invisible=\"not x_arrived_at\"/>\n<field name=\"x_data_state\" widget=\"statusbar\" statusbar_visible=\"recibido,validado\"/>\n</header>\n<sheet>\n<div class=\"alert alert-warning\" role=\"alert\" invisible=\"not x_date_gap\"><strong>Discrepancia de fechas.</strong> Las fechas que TRA aceptó (entrada <field name=\"x_tra_rep_checkin\" readonly=\"1\" nolabel=\"1\" class=\"oe_inline\"/>, salida <field name=\"x_tra_rep_checkout\" readonly=\"1\" nolabel=\"1\" class=\"oe_inline\"/>) ya no coinciden con la estancia. La aceptación y su comprobante se conservan sin cambios y no se reenvía nada. El procedimiento lo define gerencia.</div>\n<group>\n<group string=\"Identificación\">\n<field name=\"x_sale_order_id\" readonly=\"1\"/>\n<field name=\"x_is_main\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_doc_type_id\" options=\"{'no_create': True}\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_identity_number\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_given_names\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_surname_1\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_surname_2\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_nationality\" options=\"{'no_create': True}\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_birth_date\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_is_foreign\"/>\n</group>\n<group string=\"Viaje y habitación\">\n<field name=\"x_room_resource_id\" options=\"{'no_create': True}\" readonly=\"x_data_state == 'validado'\"/>\n<field name=\"x_establishment_id\" readonly=\"1\"/>\n<field name=\"x_residence_city_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_residence_text\"/>\n<field name=\"x_residence_country_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_origin_city_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_origin_text\"/>\n<field name=\"x_origin_country_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_destination_text\"/>\n<field name=\"x_destination_country_id\" options=\"{'no_create': True}\"/>\n<field name=\"x_travel_reason\"/>\n<field name=\"x_consent\" readonly=\"1\"/>\n<field name=\"x_consent_at\" readonly=\"1\"/>\n</group>\n<group string=\"Estancia real\">\n<field name=\"x_arrival_input\" invisible=\"x_data_state != 'validado'\" help=\"Fecha y hora en que el huésped llegó de verdad. Se escribe antes de pulsar «Registrar llegada real» (o para corregirla).\"/>\n<field name=\"x_departure_input\" invisible=\"not x_arrived_at\" help=\"Fecha y hora en que el huésped salió de verdad. Se escribe antes de pulsar «Registrar salida real» (o para corregirla).\"/>\n<field name=\"x_movement_reason\" invisible=\"x_data_state != 'validado'\" help=\"Obligatorio si se registra más de 1 hora después del movimiento, y en toda corrección.\"/>\n<field name=\"x_arrived_at\" readonly=\"1\"/>\n<field name=\"x_arrival_captured_at\" readonly=\"1\" invisible=\"not x_arrived_at\"/>\n<field name=\"x_arrival_captured_by\" readonly=\"1\" invisible=\"not x_arrived_at\"/>\n<field name=\"x_departed_at\" readonly=\"1\"/>\n<field name=\"x_departure_captured_at\" readonly=\"1\" invisible=\"not x_departed_at\"/>\n<field name=\"x_departure_captured_by\" readonly=\"1\" invisible=\"not x_departed_at\"/>\n<field name=\"x_movement_log\" readonly=\"1\" invisible=\"not x_movement_log\"/>\n</group>\n<group string=\"Reportes\">\n<field name=\"x_sire_in_state\" readonly=\"1\"/>\n<field name=\"x_sire_out_state\" readonly=\"1\"/>\n<field name=\"x_tra_state\" readonly=\"1\"/>\n<field name=\"x_tra_external_id\" readonly=\"1\"/>\n<field name=\"x_tra_rep_checkin\" readonly=\"1\"/>\n<field name=\"x_tra_rep_checkout\" readonly=\"1\"/>\n<field name=\"x_order_checkout\" readonly=\"1\"/>\n<field name=\"x_date_gap\" readonly=\"1\"/>\n<field name=\"x_last_error\" readonly=\"1\"/>\n</group>\n</group>\n<field name=\"x_attempt_ids\" readonly=\"1\"><list><field name=\"create_date\"/><field name=\"x_system\"/><field name=\"x_channel\"/><field name=\"x_result\"/><field name=\"x_external_id\"/><field name=\"x_error_code\"/><field name=\"x_evidence_name\"/></list></field>\n</sheet>\n</form>"
   },
   {
    "xmlid": "view_guest_list",
@@ -2899,7 +3186,23 @@
    "model": "x_establishment",
    "type": "form",
    "priority": 90,
-   "arch": "<form string=\"Establecimiento\">\n<sheet><group>\n<group string=\"Identificación\"><field name=\"x_name\"/><field name=\"x_code\"/><field name=\"x_active\"/><field name=\"x_address_partner_id\"/><field name=\"x_analytic_account_id\"/></group>\n<group string=\"RNT y operador\"><field name=\"x_rnt_number\"/><field name=\"x_rnt_holder_id\"/><field name=\"x_rnt_expiry\"/><field name=\"x_operator_company_id\"/></group>\n<group string=\"SIRE\"><field name=\"x_sire_reporter_id\"/><field name=\"x_sire_company_code\"/><field name=\"x_sire_city_code\"/><field name=\"x_sire_move_in_code\"/><field name=\"x_sire_move_out_code\"/><field name=\"x_sire_date_format\"/><field name=\"x_sire_encoding\"/><field name=\"x_sire_codes_verified\"/><field name=\"x_sire_export_enabled\"/></group>\n<group string=\"TRA\"><field name=\"x_tra_mode\"/><field name=\"x_tra_accommodation_type\"/><field name=\"x_tra_cost_basis\"/><field name=\"x_tra_config_verified\"/></group>\n</group></sheet>\n</form>"
+   "arch": "<form string=\"Establecimiento\">\n<sheet><group>\n<group string=\"Identificación\"><field name=\"x_name\"/><field name=\"x_code\"/><field name=\"x_active\"/><field name=\"x_address_partner_id\"/><field name=\"x_analytic_account_id\"/></group>\n<group string=\"RNT y operador\"><field name=\"x_rnt_number\"/><field name=\"x_rnt_holder_id\"/><field name=\"x_rnt_expiry\"/><field name=\"x_operator_company_id\"/></group>\n<group string=\"SIRE\"><field name=\"x_sire_reporter_id\"/><field name=\"x_sire_company_code\"/><field name=\"x_sire_city_code\"/><field name=\"x_sire_move_in_code\"/><field name=\"x_sire_move_out_code\"/><field name=\"x_sire_date_format\"/><field name=\"x_sire_encoding\"/><field name=\"x_sire_codes_verified\"/><field name=\"x_sire_export_enabled\"/></group>\n<group string=\"TRA\"><field name=\"x_tra_mode\"/><field name=\"x_tra_establishment_name\"/><field name=\"x_tra_establishment_name_source\"/><field name=\"x_tra_accommodation_type\"/><field name=\"x_tra_cost_basis\"/><field name=\"x_tra_config_verified\"/></group>\n</group></sheet>\n</form>"
+  },
+  {
+   "xmlid": "view_amount_form",
+   "name": "ath.sire.tra.amount.form",
+   "model": "x_tra_amount",
+   "type": "form",
+   "priority": 90,
+   "arch": "<form string=\"Importe pagado (TRA)\">\n<header><button name=\"{{ref:sa_amount_confirm}}\" type=\"action\" string=\"Confirmar con evidencia\" class=\"btn-primary\" invisible=\"x_state in ('confirmado', 'anulado')\"/><button name=\"{{ref:sa_amount_void}}\" type=\"action\" string=\"Anular\" invisible=\"x_state == 'anulado'\"/><field name=\"x_state\" widget=\"statusbar\" readonly=\"1\"/></header>\n<sheet><group>\n<group string=\"Importe\"><field name=\"x_sale_order_id\" options=\"{'no_create': True}\"/><field name=\"x_amount\"/><field name=\"x_currency_id\" options=\"{'no_create': True}\"/><field name=\"x_cutoff_date\"/></group>\n<group string=\"Evidencia\"><field name=\"x_evidence_kind\"/><field name=\"x_evidence_ref\"/><field name=\"x_evidence\" filename=\"x_evidence_name\"/><field name=\"x_evidence_name\" invisible=\"1\"/></group>\n<group string=\"Confirmación\"><field name=\"x_confirmed_by\" readonly=\"1\"/><field name=\"x_confirmed_at\" readonly=\"1\"/><field name=\"x_name\"/><field name=\"x_note\"/></group>\n</group></sheet>\n</form>"
+  },
+  {
+   "xmlid": "view_amount_list",
+   "name": "ath.sire.tra.amount.list",
+   "model": "x_tra_amount",
+   "type": "list",
+   "priority": 90,
+   "arch": "<list string=\"Importes pagados (TRA)\"><field name=\"x_sale_order_id\"/><field name=\"x_amount\"/><field name=\"x_currency_id\"/><field name=\"x_cutoff_date\"/><field name=\"x_evidence_kind\"/><field name=\"x_evidence_ref\"/><field name=\"x_state\"/><field name=\"x_confirmed_by\"/><field name=\"x_confirmed_at\"/></list>"
   },
   {
    "xmlid": "view_est_list",
@@ -2915,7 +3218,7 @@
    "model": "survey.user_input",
    "type": "list",
    "priority": 90,
-   "arch": "<list string=\"Enlaces de registro\" create=\"0\"><field name=\"create_date\"/><field name=\"x_sale_order_id\"/><field name=\"x_ath_state\"/><field name=\"deadline\"/><field name=\"x_ath_url\" widget=\"CopyClipboardChar\"/><field name=\"x_ath_error\" optional=\"show\"/></list>"
+   "arch": "<list string=\"Enlaces de registro\" create=\"0\"><field name=\"create_date\"/><field name=\"x_sale_order_id\"/><field name=\"x_ath_state\"/><field name=\"deadline\"/><field name=\"x_ath_url\" widget=\"CopyClipboardChar\"/><field name=\"x_ath_contact_gap\" optional=\"show\" decoration-warning=\"x_ath_contact_gap\"/><field name=\"x_ath_message\" widget=\"CopyClipboardText\" optional=\"hide\"/><field name=\"x_ath_error\" optional=\"show\"/></list>"
   },
   {
    "xmlid": "view_invite_form",
@@ -2923,7 +3226,7 @@
    "model": "survey.user_input",
    "type": "form",
    "priority": 90,
-   "arch": "<form string=\"Enlace de registro\" create=\"0\" edit=\"0\">\n<header><button name=\"{{ref:sa_revoke}}\" type=\"action\" string=\"Revocar enlace\" invisible=\"x_ath_state != 'invitado'\"/></header>\n<sheet><group><field name=\"x_sale_order_id\"/><field name=\"x_ath_state\"/><field name=\"deadline\"/><field name=\"x_ath_url\" widget=\"CopyClipboardChar\"/><field name=\"x_ath_processed_at\"/><field name=\"x_ath_error\"/><field name=\"x_ath_form_version\"/><field name=\"x_ath_submitted_at\"/><field name=\"x_ath_snapshot\" groups=\"base.group_system\"/></group></sheet>\n</form>"
+   "arch": "<form string=\"Enlace de registro\" create=\"0\" edit=\"0\">\n<header><button name=\"{{ref:sa_revoke}}\" type=\"action\" string=\"Revocar enlace\" invisible=\"x_ath_state != 'invitado'\"/></header>\n<sheet><group><field name=\"x_sale_order_id\"/><field name=\"x_ath_state\"/><field name=\"deadline\"/><field name=\"x_ath_url\" widget=\"CopyClipboardChar\"/><field name=\"x_ath_contact_gap\" invisible=\"not x_ath_contact_gap\"/><field name=\"x_ath_message\" widget=\"CopyClipboardText\" invisible=\"not x_ath_message\"/><field name=\"x_ath_processed_at\"/><field name=\"x_ath_error\"/><field name=\"x_ath_form_version\"/><field name=\"x_ath_submitted_at\"/><field name=\"x_ath_snapshot\" groups=\"base.group_system\"/></group></sheet>\n</form>"
   }
  ],
  "WINDOW_ACTIONS": [
@@ -3010,6 +3313,15 @@
    ]
   },
   {
+   "xmlid": "act_amounts",
+   "model": "x_tra_amount",
+   "name": "Importes pagados (TRA)",
+   "views": [
+    "view_amount_list",
+    "view_amount_form"
+   ]
+  },
+  {
    "xmlid": "act_orders",
    "model": "sale.order",
    "name": "Reservas",
@@ -3078,6 +3390,13 @@
    "parent": "menu_root",
    "action": "act_establishments",
    "sequence": 8
+  },
+  {
+   "xmlid": "menu_amounts",
+   "name": "Importes pagados (TRA)",
+   "parent": "menu_root",
+   "action": "act_amounts",
+   "sequence": 9
   }
  ],
  "WRITABLE_MODELS": [
@@ -3107,6 +3426,8 @@
   "res.partner",
   "res.company",
   "account.analytic.account",
-  "ir.attachment"
+  "ir.attachment",
+  "res.currency",
+  "res.users"
  ]
 }

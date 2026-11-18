@@ -1,68 +1,69 @@
 # TRA: primer envio oficial, preparado y NO transmitido (2026-11-18)
 
-Repositorio publico: aqui solo hay ids, codigos y fuentes. Ningun dato de huespedes, documentos ni NIT.
+Repositorio publico: aqui solo hay ids, codigos y fuentes. Ningun dato de huespedes, documentos, NIT ni importes reales.
 Variables al cierre: `TRA_EMITTER_ENABLED=no`, `TRA_AUTO_SEND=no`, `TRA_ENABLED=no`. SIRE apagado y separado.
+Los cambios de Odoo de esta PR (modelo `x_tra_amount`, campos de nombre TRA, acciones y vistas) **no estan aplicados en
+produccion**: requieren el aplicador con su frase, respaldo y aprobacion de Marlon.
 
-## 1. Alcance del emisor (esta PR)
-- **Manual** (`workflow_dispatch` o ejecucion local): `order_id` es **obligatorio** en simulacion y en envio real.
-  Solo se leen y procesan los huespedes de ese pedido. Termina en **error** (codigo de salida 1), sin escribir en Odoo
-  y sin llamar a la API TRA, si el valor esta vacio (`PEDIDO_VACIO`), mal escrito (`PEDIDO_INVALIDO`), fuera del rango
-  de ids de Odoo, 1..2147483647 (`PEDIDO_FUERA_DE_RANGO`), o si el pedido no tiene huespedes con TRA pendiente y
-  llegada real (`PEDIDO_SIN_TRA_PENDIENTE`). Un envio manual con puertas cerradas tambien termina en error
-  (`PUERTAS_CERRADAS`). En los cuatro primeros casos no hay ninguna peticion de red.
-- **Programado** (`schedule`): autorizacion independiente. Envia solo con `TRA_AUTO_SEND=yes` (lo comprueba el workflow
-  y otra vez el script: `ENVIO_PROGRAMADO_NO_AUTORIZADO`); sin ella solo lista ids. No admite pedido. Sigue apagado.
-- Sin cambios en las puertas del envio real: `TRA_ENABLED=yes-real`, secreto `TRA_TOKEN`, `tra-catalog.json` con
-  `"verified": true` y establecimiento en modo API con configuracion verificada. Esta PR no marca nada como verificado.
+## 1. Alcance del emisor
+- **Manual** (`workflow_dispatch` o local): `order_id` obligatorio en la comprobacion y en el envio real. Solo se leen y
+  procesan las fichas de ese pedido. Error (salida 1) sin tocar Odoo ni MinCIT si el valor esta vacio
+  (`PEDIDO_VACIO`), mal escrito (`PEDIDO_INVALIDO`) o fuera de 1..2147483647 (`PEDIDO_FUERA_DE_RANGO`).
+- **Comprobacion sin envio** (manual sin `send`): arma el payload de cada ficha del pedido y devuelve, campo por campo,
+  `ok` / `falta` / `no_admitido` y todos los bloqueos: pedido no confirmado, sin fichas, ficha no validada, sin llegada
+  real, importe, nombre TRA, motivo, estado TRA a revisar y puertas. Solo lectura. La salida lleva codigos, nunca valores.
+  Error si el pedido no tiene TRA pendiente (`PEDIDO_SIN_TRA_PENDIENTE`) o si algun dato bloquea (`DATOS_NO_LISTOS`).
+- **Envio real manual**: repite la comprobacion; si algo bloquea, no reclama, no escribe y no llama a MinCIT. Con datos
+  completos y puertas cerradas: `PUERTAS_CERRADAS`.
+- **Programado**: autorizacion independiente (`TRA_AUTO_SEND=yes`, en el workflow y en el script); no admite pedido;
+  omite las estancias con datos incompletos. Sigue apagado.
 
-## 2. Importe: fuente oficial y separacion tarifa / pagado
-- **Lo que exige TRA**: "valor total pagado por el servicio de alojamiento" (Res. 409 de 2022 del MinCIT, art. 2, que
-  sustituye el art. 7 de la Res. 700 de 2021). Manual Grupo 2, 4.12: en pesos colombianos. Manual de integracion PMS:
-  campo `costo`, texto. El portal TRA (Mis Huespedes) lo muestra como "PAGO TOTAL".
-- **Tarifa contratada** = total del pedido (`amount_total`). **Suma efectivamente pagada** = pagos con soporte.
-  No son lo mismo y no se sustituyen entre si.
-- **Brecha conocida del emisor**: hoy calcula `costo` con `amount_total` (tarifa contratada) cuando la base es
-  `total_estancia`. No comprueba pagos. Mientras no se decida la regla y la fuente del pago respaldado, ningun envio
-  real debe aprobarse con una tarifa en lugar de lo pagado.
+## 2. Importe (campo `costo`)
+- **Fuente oficial**: "valor total pagado por el servicio de alojamiento" (Res. 409 de 2022 del MinCIT, art. 2, que
+  sustituye el art. 7 de la Res. 700 de 2021); manual Grupo 2, 4.12: en pesos colombianos; manual PMS: `costo`, texto.
+- **Tarifa contratada** (`amount_total` del pedido) y **suma efectivamente pagada** son datos distintos. La tarifa
+  nunca se envia; solo se informa si difiere de lo pagado.
+- **Fuente del importe confirmado**: registro `x_tra_amount` del pedido (menu Registro SIRE/TRA > Importes pagados).
+  No es un pago contable y no crea ni modifica pagos, facturas ni pedidos. Campos: importe, moneda, fecha de corte
+  (pagos recibidos hasta), tipo de evidencia (comprobante de pago, liquidacion del canal, factura con pago registrado,
+  extracto bancario), referencia y archivo. La accion "Confirmar con evidencia" exige todo, COP y corte no futuro, un
+  solo confirmado por reserva, y deja quien y cuando. El usuario no puede editarlo ni borrarlo; se anula y se registra
+  otro.
+- **Bloqueos**: `IMPORTE_AUSENTE`; `IMPORTE_SIN_CONFIRMAR` (registro sin confirmar, p. ej. el "Paid" de Smoobu anotado
+  sin contrastar: es un reporte, no evidencia); `IMPORTE_SIN_EVIDENCIA`; `IMPORTE_MONEDA_NO_COP`;
+  `IMPORTE_SIN_FECHA_CORTE`; `IMPORTE_FECHA_CORTE_FUTURA`; `IMPORTE_INVALIDO`; `IMPORTE_AMBIGUO`;
+  `IMPORTE_MODIFICADO_TRAS_CONFIRMAR`; `IMPORTE_SIN_CONFIRMACION_REGISTRADA`; `COSTO_BASE_NO_ADMITIDA` (solo
+  `total_estancia`).
+- Pendiente de MinCIT (no lo decide el codigo): si al registrar la llegada se reporta lo pagado hasta ese momento o el
+  total de la estancia. Mientras tanto se envia el importe confirmado a su fecha de corte, o nada.
 
-## 3. Nombre del establecimiento y nombre del titular
-- Certificado RNT 235267 (Camara de Comercio de Bogota, expedido 18/03/2026): certifica "el inmueble" bajo el nombre del
-  **titular persona natural**, con direccion comercial y categoria Viviendas turisticas / Casa turistica. **No registra
-  un nombre de establecimiento distinto del titular.**
-- Portal TRA del RNT (grupo PMS): "Nombre Comercial" = nombre del titular.
-- "Atheron Suite" (`x_name` del establecimiento en Odoo) proviene de orden de gerencia, no del RNT.
-- El emisor envia `nombre_establecimiento = x_name`. Pendiente decidir: registrar "Atheron Suite" como nombre comercial
-  en el RNT, o enviar el nombre comercial que hoy figura en el RNT. No se cambia el titular ni `x_name`.
+## 3. Nombre del establecimiento
+- Certificado RNT 235267 (Camara de Comercio de Bogota, 18/03/2026): certifica "el inmueble" bajo el nombre del titular
+  persona natural, con direccion y categoria Viviendas turisticas / Casa turistica. No registra otro nombre.
+- Portal TRA del RNT: "Nombre Comercial" = nombre del titular.
+- Nuevo campo `x_tra_establishment_name` (+ fuente) en el establecimiento: es lo unico que se envia como
+  `nombre_establecimiento`. `x_name` ("Atheron Suite", orden de gerencia) queda como nombre interno y nunca se envia.
+  Vacio: `NOMBRE_TRA_SIN_REGISTRAR`. No se cambia el titular ni se renombra nada.
 
 ## 4. Motivo de viaje
-- Proviene **solo** del formulario del huesped (`x_travel_reason`). El emisor no lo completa por defecto: sin
-  equivalencia en `tra-catalog.json` -> `DATOS_INCOMPLETOS:motivo` y no se envia.
-- El MinCIT no publica lista de valores (manual Grupo 2, 4.7: lista desplegable sin enumerar; ejemplo de la API
-  "Trabajo"). La equivalencia sigue vacia hasta decision de gerencia o respuesta del MinCIT.
+- Se conserva el texto que declara el huesped (`x_travel_reason`); el emisor no lo modifica ni lo completa.
+- Se envia solo una equivalencia de `tra-catalog.json` > `reasons`, que sigue vacia y `verified: false`.
+- `reasonsProposed` documenta tres equivalencias con fuente (rotulos observados en el formulario web TRA en una guia no
+  oficial); nunca se envian. Salud, Educacion, Religion y Otro: sin propuesta.
+- Bloqueos: `MOTIVO_NO_DECLARADO`, `MOTIVO_EQUIVALENCIA_NO_VERIFICADA`, `MOTIVO_SIN_EQUIVALENCIA`.
 
-## 5. Caso candidato: pedido 22253 (COT/2026/03905), estado al 18/11/2026
-| Requisito | Estado | Fuente |
-|---|---|---|
-| Reserva | directa, habitacion 203, 18 al 19/11, 1 adulto | Smoobu y Odoo |
-| Tarifa contratada | 65.000 COP (linea sin impuestos) | Odoo y Smoobu |
-| Pago respaldado | **Falta.** Smoobu registra un anticipo marcado "Paid" el 17/11 por 58.500 COP (registro del anfitrion); Odoo: pagado 0, sin facturas ni transacciones | Smoobu, Odoo |
-| Formulario del huesped | **Falta** (enlace 12 "invitado", sin abrir; sin telefono ni correo: entrega en persona) | Odoo |
-| Validacion de Recepcion (habitacion 203) | **Falta** (no hay ficha) | Odoo |
-| Pedido confirmado | **Falta** (borrador; "Registrar llegada" exige pedido confirmado) | Odoo |
-| Llegada real con hora | **Falta** | Odoo |
-| Motivo | **Falta** (del formulario) | - |
-
-Datos ya acreditados para la carga: RNT 235267, habitacion 203 (por validar), salida 2026-11-19, 0 acompanantes,
-tipo de acomodacion "Casa" (certificado RNT + manual Grupo 2 4.11 + ejemplo de la API), destino `POST /one/`.
+## 5. Caso candidato: pedido 22253 (COT/2026/03905)
+Reserva directa, habitacion 203, 18 al 19/11, 1 adulto. Faltan (ninguno se marca como cumplido):
+formulario del huesped, validacion con habitacion 203, confirmacion del pedido, llegada real con hora, importe pagado
+confirmado con evidencia, nombre TRA registrado y equivalencia verificada del motivo que declare el huesped.
+Smoobu reporta un anticipo "Paid"; es un reporte sin contrastar y no basta.
 
 ## 6. Secuencia propuesta (cada paso con aprobacion)
-1. Marlon guarda el token existente (correo "Solicitud de Token PMS" del 25/02/2026) como secreto `TRA_TOKEN`.
-   No se genera ni renueva otro token.
-2. Completar el caso: formulario, validacion, confirmacion del pedido, llegada real y pago respaldado.
-3. Decisiones: motivo (equivalencia), nombre del establecimiento, regla del importe pagado.
-4. Revisar y fusionar esta PR.
-5. Solo entonces: catalogo y configuracion verificados, `TRA_ENABLED=yes-real`, `TRA_EMITTER_ENABLED=yes`
-   (`TRA_AUTO_SEND` sigue en `no`); simulacion con `order_id=22253`; envio con `order_id=22253`.
-6. Aceptado = HTTP 2xx con `code` entero, guardado en la linea; comprobar la fila en Mis Huespedes y guardar captura
-   como adjunto en Odoo (MinCIT, respuesta 2-2026-018244: TRA no expide constancia).
-7. Volver `TRA_ENABLED` y `TRA_EMITTER_ENABLED` a `no`.
+1. Secreto `TRA_TOKEN` con el token existente (correo del 25/02/2026). No se genera otro.
+2. Aplicar en produccion el manifiesto de esta PR (aplicador, frase y respaldo) y registrar el nombre TRA con su fuente.
+3. Completar el caso: formulario, validacion, confirmacion del pedido, llegada real e importe confirmado con evidencia.
+4. Equivalencia del motivo declarado: confirmacion escrita del MinCIT o decision documentada; solo entonces `reasons`.
+5. Fusionar; comprobacion sin envio con `order_id=22253` hasta `ready_data: true`.
+6. Catalogo y configuracion verificados, `TRA_ENABLED=yes-real`, `TRA_EMITTER_ENABLED=yes` (`TRA_AUTO_SEND=no`);
+   envio con `order_id=22253`; aceptado = HTTP 2xx con `code` entero; fila en Mis Huespedes y captura adjunta en Odoo
+   (MinCIT, respuesta 2-2026-018244: TRA no expide constancia). Volver las variables a `no`.

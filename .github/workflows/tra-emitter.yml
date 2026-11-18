@@ -1,8 +1,9 @@
 # ATH-HOTELS-SIRE-TRA-001 · Emisor TRA (API PMS MinCIT). APAGADO por defecto.
 # Corre solo si la variable del repositorio TRA_EMITTER_ENABLED == 'yes'.
 # - Manual (workflow_dispatch): EXIGE "order_id" (id del pedido) tanto en simulacion como con "send"; solo procesa ese
-#   pedido. Vacio, mal escrito, fuera de rango o sin TRA pendiente: error sin tocar Odoo ni el MinCIT. Sin "send" solo
-#   comprueba el pedido (no reclama ni contacta al MinCIT).
+#   pedido. Vacio, mal escrito o fuera de rango: error sin tocar Odoo ni el MinCIT. Sin "send" hace la comprobacion
+#   completa (todos los campos y bloqueos, solo lectura; error si no hay TRA pendiente o si algun dato bloquea).
+#   Con "send" repite la comprobacion y no envia nada si algo bloquea.
 # - Programado (cada hora, preparado 2026-11-18): autorizacion independiente; envia SOLO si ademas TRA_AUTO_SEND == 'yes'
 #   (el script lo vuelve a comprobar); si no, solo lista ids. No admite pedido.
 # En ambos casos el emisor exige TRA_ENABLED=yes-real, TRA_TOKEN, catalogo verificado y establecimiento en modo API con

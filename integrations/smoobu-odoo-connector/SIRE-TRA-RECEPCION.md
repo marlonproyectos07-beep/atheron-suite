@@ -45,7 +45,12 @@ Menu **Registro SIRE/TRA** en Odoo.
   huesped > **Registrar resultado de reporte** > resultado *Aceptado* + **adjuntar el PDF/captura** (sin evidencia no se acepta).
   El archivo TXT automatico esta **deshabilitado** hasta tener los codigos oficiales del paquete de guia SIRE.
 - **TRA**: mientras el emisor por API este apagado, usar *Hoja guiada TRA* en el portal TRA y registrar el resultado
-  con evidencia (captura de "Huespedes registrados").
+  con evidencia (captura de "Huespedes registrados"). Nota 18/11/2026: el portal del RNT 235267 (grupo PMS) solo
+  muestra "Mis Huespedes" y "Generar token"; no se encontro formulario de registro manual.
+- **Importe pagado (TRA)**: en *Importes pagados (TRA)* registrar lo efectivamente pagado, en COP, con fecha de corte y
+  evidencia (comprobante, liquidacion del canal, factura pagada o extracto) y pulsar *Confirmar con evidencia*. La
+  tarifa de la reserva no sirve. Un "Paid" de Smoobu u otro reporte sin soporte se puede anotar, pero sin confirmar
+  no habilita el envio. No se crean ni modifican pagos contables.
 - **Incierto** (no se sabe si llego): revisar el portal. Si aparece: *Aceptado* con evidencia. Si no aparece: *Comprobado: no recibido* (vuelve a pendiente). Nunca reenviar sin revisar.
 
 ## A la salida
