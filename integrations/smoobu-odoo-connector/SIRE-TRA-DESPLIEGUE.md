@@ -5,8 +5,16 @@
   paquete `scripts/sire-tra-prod-bundle.mjs`, commit `6b0159a`, sha256 `9218cf44...`). 325 registros `__ath_sire_tra__`;
   verificacion: 0 creaciones pendientes; las 110 automatizaciones previas identicas; sin cambios en reservas, huespedes,
   asientos ni pagos. Respaldo: `deploy/prod-respaldo-2026-11-17.md`. Menu raiz *Registro SIRE/TRA*: https://atheron1.odoo.com/odoo?menu_id=1014.
-- Automatizaciones: **au_invite ACTIVA** (preparar enlace al confirmar / revocar al cancelar); **au_map APAGADA**
-  (formulario no recorrido en pantalla en produccion); **au_attempt APAGADA**. Emisor TRA y exportador SIRE apagados.
+- Automatizaciones: **au_invite ACTIVA** (preparar enlace al confirmar / revocar al cancelar); **au_map ACTIVA**
+  desde el recorrido del formulario (ver abajo); **au_attempt APAGADA**. Emisor TRA y exportador SIRE apagados.
+- Recorrido del formulario como huesped anonimo (navegador sin sesion, reserva sintetica COT/2026/03901
+  `...-C`, ya cancelada): principal extranjero (pasaporte, ES) + 1 acompanante (tarjeta de identidad, CO) -> pagina
+  de gracias; Odoo creo 2 fichas *Recibido* con documento y paises del catalogo, consentimiento y version del aviso;
+  respuestas brutas borradas; enlace *procesado*. Guardias: *Registrar llegada* sin validar y *Validar* sin habitacion
+  se rechazan con mensaje claro. **No ejecutado en produccion** (lo bloqueo el control de seguridad de la sesion):
+  validar con habitacion, llegada y salida reales sobre las fichas sinteticas; probado en la copia.
+- Observacion: la pagina de gracias ofrece *Volver a responder*; esa nueva respuesta no queda ligada a la reserva y
+  `au_map` la ignora (no crea fichas), pero queda como respuesta suelta en la encuesta.
 - Prueba sintetica (reservas COT/2026/03899 y 03900, sin lineas, `SMOOBU-PRUEBA-SINTETICA-20261117[-B]`, contacto
   `ZZ PRUEBA SINTETICA`, correo `example.invalid`): confirmar -> 1 enlace vigente (vence 23:59 Bogota del check-out) + nota
   interna; repetir -> sin duplicado; cancelar -> revocado + nota; URL revocada = misma pagina que un token inventado;

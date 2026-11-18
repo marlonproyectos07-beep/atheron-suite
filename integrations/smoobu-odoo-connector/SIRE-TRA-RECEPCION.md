@@ -2,9 +2,10 @@
 
 Menu **Registro SIRE/TRA** en Odoo.
 
-> **Hoy (17/11/2026):** el enlace se prepara solo al confirmar, pero **todavia no lo envie a huespedes**: el paso que
-> convierte el formulario recibido en fichas de *Huespedes* (automatizacion «Formulario terminado») sigue apagado hasta
-> verificar el formulario en pantalla. Pendientes del dia: *Enlaces de registro* (vigentes / error) y *Huespedes* > *Por validar*.
+> **Desde el 17/11/2026:** el enlace se prepara solo al confirmar y el formulario recibido se convierte solo en fichas
+> de *Huespedes* (verificado con un huesped ficticio). Ya se pueden enviar enlaces. Pendientes del dia: *Enlaces de
+> registro* (vigentes / error) y *Huespedes* > *Por validar*. Ignore las reservas `PRUEBA-SINTETICA` (canceladas) y sus
+> fichas *Zz ... Ficticio*.
 
 ## Antes de la llegada
 1. Al **confirmar** una reserva que viene de Smoobu, Odoo deja el enlace de registro **preparado** (no lo envia). Una reserva en borrador no lo tiene.
