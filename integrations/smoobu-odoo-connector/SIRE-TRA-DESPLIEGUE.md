@@ -1,6 +1,21 @@
 # Despliegue, reversion y piloto real (ATH-HOTELS-SIRE-TRA-001)
 
-**No desplegado.** Esta mision solo probo en `atheron1-pruebas-20261108`. Desplegar exige aprobacion de Marlon sobre el resultado probado.
+## Estado en produccion (2026-11-17, autorizado por Marlon en el GOAL)
+- **Instalado en atheron1** con el procedimiento propio de produccion (`src/sire-tra/prod-browser-entry.mjs`,
+  paquete `scripts/sire-tra-prod-bundle.mjs`, commit `6b0159a`, sha256 `9218cf44...`). 325 registros `__ath_sire_tra__`;
+  verificacion: 0 creaciones pendientes; las 110 automatizaciones previas identicas; sin cambios en reservas, huespedes,
+  asientos ni pagos. Respaldo: `deploy/prod-respaldo-2026-11-17.md`. Menu raiz *Registro SIRE/TRA*: https://atheron1.odoo.com/odoo?menu_id=1014.
+- Automatizaciones: **au_invite ACTIVA** (preparar enlace al confirmar / revocar al cancelar); **au_map APAGADA**
+  (formulario no recorrido en pantalla en produccion); **au_attempt APAGADA**. Emisor TRA y exportador SIRE apagados.
+- Prueba sintetica (reservas COT/2026/03899 y 03900, sin lineas, `SMOOBU-PRUEBA-SINTETICA-20261117[-B]`, contacto
+  `ZZ PRUEBA SINTETICA`, correo `example.invalid`): confirmar -> 1 enlace vigente (vence 23:59 Bogota del check-out) + nota
+  interna; repetir -> sin duplicado; cancelar -> revocado + nota; URL revocada = misma pagina que un token inventado;
+  inicio anonimo sin invitacion -> redirige al inicio sin crear respuestas; 0 correos al contacto. Ambas quedan canceladas
+  (no se borran). La automatizacion 1 existente pudo crear una tarea interna por la confirmacion.
+- No probado en produccion: fallo de base de datos dentro de la confirmacion (prohibido instalar restricciones);
+  cubierto por prueba unitaria con Python real tras la correccion `invalidate_all(flush=False)` y por la sexta ronda en la copia (variante anterior).
+
+## Historico
 
 ## Que se instala (inventario: `src/sire-tra/manifest.mjs`, todo con xmlid `__ath_sire_tra__.*`)
 - Modelos nuevos: `x_establishment`, `x_report_attempt` (+ 3 permisos).
