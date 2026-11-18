@@ -11,7 +11,10 @@ Menu **Registro SIRE/TRA** en Odoo.
 > **Reservas listas (18/11):** 03838 (201, en casa hoy), 03839 (301, 21-22 nov), 03840 (302, 2-3 dic) y 03841
 > (301, 11-13 dic) tienen su enlace en *Enlaces de registro* y una nota interna en la reserva con lo que falta
 > (numero de huespedes en 0, correo/telefono) y el siguiente paso. Envie cada enlace por la mensajeria del canal.
-> **Primer caso operativo: 03839.** Registre llegada y salida solo cuando ocurran. TRA/SIRE oficiales siguen apagados.
+> **Prioridad hoy: 03838 (huesped alojado en la 201, sale el 18/11).** Opcion A: enviar el enlace por Airbnb.
+> Opcion B: capturar en recepcion con el documento a la vista (*Huespedes* > *Nuevo*, origen *Recepcion*), y *Validar*.
+> **Ojo:** *Registrar llegada real* guarda la hora en que se pulsa; si se registra tarde, anote en la reserva la hora real.
+> **Siguiente caso: 03839.** Registre llegada y salida solo cuando ocurran. TRA/SIRE oficiales siguen apagados.
 
 ## Antes de la llegada
 1. Al **confirmar** una reserva que viene de Smoobu, Odoo deja el enlace de registro **preparado** (no lo envia). Una reserva en borrador no lo tiene.
