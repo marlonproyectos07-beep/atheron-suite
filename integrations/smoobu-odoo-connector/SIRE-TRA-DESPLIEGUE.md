@@ -11,8 +11,11 @@
   `...-C`, ya cancelada): principal extranjero (pasaporte, ES) + 1 acompanante (tarjeta de identidad, CO) -> pagina
   de gracias; Odoo creo 2 fichas *Recibido* con documento y paises del catalogo, consentimiento y version del aviso;
   respuestas brutas borradas; enlace *procesado*. Guardias: *Registrar llegada* sin validar y *Validar* sin habitacion
-  se rechazan con mensaje claro. **No ejecutado en produccion** (lo bloqueo el control de seguridad de la sesion):
-  validar con habitacion, llegada y salida reales sobre las fichas sinteticas; probado en la copia.
+  se rechazan con mensaje claro. Con autorizacion de Marlon se intento validar con la habitacion 201 asignada:
+  **bloqueado por configuracion pendiente** ("asignar habitacion fisica ... habitacion sin establecimiento"). En
+  produccion hay 0 establecimientos y ninguna unidad marcada fisica/derivada (paso 4). Hasta configurarlo con datos
+  reales (RNT, titular, operador, reportante SIRE), **Recepcion no puede validar ni registrar llegadas**. Se quito la
+  habitacion de las fichas sinteticas; la ocupacion de la 201 no cambio. Llegada y salida solo probadas en la copia.
 - Observacion: la pagina de gracias ofrece *Volver a responder*; esa nueva respuesta no queda ligada a la reserva y
   `au_map` la ignora (no crea fichas), pero queda como respuesta suelta en la encuesta.
 - Prueba sintetica (reservas COT/2026/03899 y 03900, sin lineas, `SMOOBU-PRUEBA-SINTETICA-20261117[-B]`, contacto

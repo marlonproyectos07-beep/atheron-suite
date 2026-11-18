@@ -4,7 +4,8 @@ Menu **Registro SIRE/TRA** en Odoo.
 
 > **Desde el 17/11/2026:** el enlace se prepara solo al confirmar y el formulario recibido se convierte solo en fichas
 > de *Huespedes* (verificado con un huesped ficticio). Ya se pueden enviar enlaces. Pendientes del dia: *Enlaces de
-> registro* (vigentes / error) y *Huespedes* > *Por validar*. Ignore las reservas `PRUEBA-SINTETICA` (canceladas) y sus
+> registro* (vigentes / error) y *Huespedes* > *Por validar*. **Validar y registrar llegada aun no funcionan**: falta
+> configurar el establecimiento y marcar las habitaciones (gerencia). Ignore las reservas `PRUEBA-SINTETICA` (canceladas) y sus
 > fichas *Zz ... Ficticio*.
 
 ## Antes de la llegada
