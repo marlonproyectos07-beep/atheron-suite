@@ -37,6 +37,16 @@ export function assertProductionTarget(env = process.env) {
   return { baseUrl: `https://${host}`, database: PROD_DB, apiKey: env.ODOO_API_KEY, kind: 'production' };
 }
 
+/**
+ * Produccion en el navegador (sesion de administrador de atheron1). Procedimiento PROPIO, separado del de la copia:
+ * solo en el host exacto de produccion y con la frase de aprobacion escrita. La copia sigue con assertBrowserTarget.
+ */
+export function assertProductionBrowserTarget(hostname, approval) {
+  if (approval !== PRODUCTION_APPROVAL) throw new ConnectorError('PRODUCTION_NOT_APPROVED');
+  if (String(hostname || '').toLowerCase() !== PROD_HOST) throw new ConnectorError('BROWSER_TARGET_NOT_PRODUCTION');
+  return PROD_DB;
+}
+
 /** Destino en el navegador (sesion de la propia copia). */
 export function assertBrowserTarget(hostname) {
   const h = String(hostname || '').toLowerCase();

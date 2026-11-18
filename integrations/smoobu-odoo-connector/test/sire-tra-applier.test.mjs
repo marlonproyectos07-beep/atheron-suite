@@ -210,3 +210,44 @@ test('evidencia restringida a administradores y validacion posterior', async () 
   const v = await verifyDeployment(o);
   assert.equal(v.checks[0].ok, true);
 });
+
+// --- Procedimiento de produccion (GOAL ATH-HOTELS-SIRE-TRA-001, 2026-11-17) ---
+test('produccion: las automatizaciones nacen apagadas y repetir no cambia su estado (ni reapaga una habilitada)', async () => {
+  const o = fakeOdoo();
+  await applyManifest(o, { apply: true, automationsActive: false });
+  const autos = () => o.t.get('base.automation');
+  assert.equal(autos().length, AUTOMATIONS.length);
+  assert.ok(autos().every((a) => a.active === false), 'todas apagadas al nacer');
+  const inv = autos().find((a) => a.name.startsWith('[SIRE/TRA] Preparar enlace'));
+  inv.active = true; // habilitada a mano tras verificar
+  const p2 = await applyManifest(o, { apply: true, automationsActive: false });
+  assert.equal(p2.create.length, 0);
+  assert.equal(inv.active, true, 'repetir no la reapaga');
+  assert.ok(autos().filter((a) => a !== inv).every((a) => a.active === false), 'ni enciende las demas');
+  const v = await verifyDeployment(o, { expectActive: false });
+  assert.equal(v.ok, true);
+});
+
+test('copia: el comportamiento historico (automatizaciones activas) no cambia', async () => {
+  const o = fakeOdoo();
+  await applyManifest(o, { apply: true });
+  assert.ok(o.t.get('base.automation').every((a) => a.active === true));
+});
+
+test('guardias: produccion en navegador exige host exacto y frase; la copia sigue rechazando produccion', async () => {
+  const { assertProductionBrowserTarget, assertBrowserTarget, PRODUCTION_APPROVAL } = await import('../src/sire-tra/guard.mjs');
+  assert.equal(assertProductionBrowserTarget('atheron1.odoo.com', PRODUCTION_APPROVAL), 'atheron1');
+  assert.throws(() => assertProductionBrowserTarget('atheron1.odoo.com', 'si'), /PRODUCTION_NOT_APPROVED/);
+  assert.throws(() => assertProductionBrowserTarget('atheron1-pruebas-20261108.odoo.com', PRODUCTION_APPROVAL), /BROWSER_TARGET_NOT_PRODUCTION/);
+  assert.throws(() => assertProductionBrowserTarget('evil.atheron1.odoo.com', PRODUCTION_APPROVAL), /BROWSER_TARGET_NOT_PRODUCTION/);
+  assert.throws(() => assertBrowserTarget('atheron1.odoo.com'), /BROWSER_TARGET_NOT_TEST_COPY/);
+});
+
+test('procedimiento de produccion: aplicar exige respaldo y simulacion limpia; solo maneja automatizaciones propias', async () => {
+  const { bootProduction } = await import('../src/sire-tra/prod-browser-entry.mjs');
+  const win = { location: { hostname: 'atheron1.odoo.com' }, fetch: async () => { throw new Error('sin red en la prueba'); } };
+  assert.throws(() => bootProduction({ ...win, location: { hostname: 'atheron1-pruebas-20261108.odoo.com' } }, 'si-aprobado-por-marlon'));
+  const p = bootProduction(win, 'si-aprobado-por-marlon');
+  await assert.rejects(p.apply(), /SNAPSHOT_REQUIRED/);
+  await assert.rejects(p.setAutomation('sa_invite_auto', true), /NOT_OUR_AUTOMATION/);
+});

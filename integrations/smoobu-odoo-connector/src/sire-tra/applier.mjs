@@ -58,7 +58,11 @@ export function fieldCompatibility(spec, existing) {
 
 const refsIn = (v) => [...JSON.stringify(v ?? '').matchAll(/\{\{ref:([a-z0-9_]+)\}\}|"ref":"([a-z0-9_]+)"/g)].map((m) => m[1] || m[2]);
 
-export async function applyManifest(odoo, { apply = false, log = () => {} } = {}) {
+/**
+ * automationsActive: true (copia de pruebas, comportamiento historico) crea y deja activas las automatizaciones.
+ * false (produccion): las crea APAGADAS y, al repetir, nunca toca su estado activo (no reapaga lo que se habilito a mano).
+ */
+export async function applyManifest(odoo, { apply = false, log = () => {}, automationsActive = true } = {}) {
   const plan = { mode: apply ? 'apply' : 'dry-run', create: [], update: [], adopt: [], reuse: [], blocked: [], warnings: [] };
   const ids = new Map(); // xmlid NS -> id
   const ours = new Set(); // `${model}:${id}`
@@ -223,7 +227,13 @@ export async function applyManifest(odoo, { apply = false, log = () => {} } = {}
   // automatizaciones
   for (const a of AUTOMATIONS) {
     const trig = a.triggerFields.length ? (await odoo.searchRead('ir.model.fields', [['model', '=', a.model], ['name', 'in', a.triggerFields]], ['id'])).map((f) => f.id) : [];
-    const vals = { name: a.name, model_id: modelIds.get(a.model), trigger: a.trigger, trigger_field_ids: [[6, 0, trig]], filter_domain: a.domain || false, action_server_ids: [[6, 0, [ids.get(a.action)]]], active: true };
+    const vals = { name: a.name, model_id: modelIds.get(a.model), trigger: a.trigger, trigger_field_ids: [[6, 0, trig]], filter_domain: a.domain || false, action_server_ids: [[6, 0, [ids.get(a.action)]]] };
+    if (automationsActive) vals.active = true;
+    else if (!ids.has(a.xmlid)) {
+      // apagada al nacer; si existe por nombre sin xmlid (ejecucion parcial) se adopta sin tocar su estado
+      const byName = await odoo.searchRead('base.automation', [['name', '=', a.name], ['active', 'in', [true, false]]], ['id']);
+      if (!byName.length) vals.active = false;
+    }
     await upsert('base.automation', a.xmlid, vals, [['name', '=', a.name]]);
   }
   // vistas, ventanas y menus con orden por dependencias
@@ -305,12 +315,14 @@ export async function snapshotConfig(odoo) {
 }
 
 /** Validacion posterior: la simulacion no debe crear nada y todo lo propio debe estar activo. */
-export async function verifyDeployment(odoo) {
-  const plan = await applyManifest(odoo);
+export async function verifyDeployment(odoo, { expectActive = true } = {}) {
+  const plan = await applyManifest(odoo, { automationsActive: expectActive });
   const autos = await odoo.searchRead('base.automation', [['active', 'in', [true, false]], ['name', 'in', AUTOMATIONS.map((a) => a.name)]], ['name', 'active']);
   const checks = [
     { id: 'V1_sin_creaciones_pendientes', ok: plan.create.length === 0 && plan.blocked.length === 0, detail: `${plan.create.length}/${plan.blocked.length}` },
-    { id: 'V2_automatizaciones_activas', ok: autos.length === AUTOMATIONS.length && autos.every((a) => a.active), detail: autos.length },
+    expectActive
+      ? { id: 'V2_automatizaciones_activas', ok: autos.length === AUTOMATIONS.length && autos.every((a) => a.active), detail: autos.length }
+      : { id: 'V2_automatizaciones_presentes', ok: autos.length === AUTOMATIONS.length, detail: autos.map((a) => `${a.name}:${a.active ? 'activa' : 'apagada'}`).join(' | ') },
   ];
   return { ok: checks.every((c) => c.ok), checks };
 }

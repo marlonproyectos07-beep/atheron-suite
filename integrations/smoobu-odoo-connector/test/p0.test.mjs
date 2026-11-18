@@ -137,8 +137,9 @@ test('cliente de escritura: guardias duras (autorizacion, objetivo, valores exac
 
 test('el unico lugar con capacidad de escritura es odoo-json2-p0-client.mjs y el borrado exige el id propio', async () => {
   const { readdirSync, readFileSync, statSync } = await import('node:fs');
-  const { join, relative } = await import('node:path');
-  const root = new URL('../src/', import.meta.url).pathname;
+  const { join, relative, sep } = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+  const root = fileURLToPath(new URL('../src/', import.meta.url)); // portable (Windows: evita C:C:)
   // Recorre TODO src/ (incluidas subcarpetas): un cliente de escritura en una subcarpeta no puede escapar a la politica.
   const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
   // Clientes con capacidad de escritura (red + metodo de mutacion). Cada uno tiene su propia guardia y sus pruebas.
@@ -147,10 +148,12 @@ test('el unico lugar con capacidad de escritura es odoo-json2-p0-client.mjs y el
   // sire-tra/browser-entry.mjs solo arranca en hosts de copia de pruebas (assertBrowserTarget). Ver test/sire-tra-*.test.mjs
   // ATH-HOTELS-SIRE-TRA-001: sync-copy-client.mjs es el modo COPIA del cliente de sincronizacion: solo acepta atheron1-pruebas-AAAAMMDD,
   // exige credencial distinta de la de produccion y su propia frase de armado, y repite la verificacion en cada escritura. Ver test/sync-copy-client.test.mjs
-  const WRITE_CAPABLE = ['odoo-json2-p0-client.mjs', 'sync-write-client.mjs', 'sync-copy-client.mjs', 'sync-pilot-client.mjs', 'sync-auto-client.mjs', 'sire-tra/odoo-rpc-node.mjs', 'sire-tra/browser-entry.mjs'];
+  // ATH-HOTELS-SIRE-TRA-001 (produccion): sire-tra/prod-browser-entry.mjs escribe por el transporte de browser-entry solo tras
+  // assertProductionBrowserTarget (host exacto + frase), respaldo y simulacion limpia; automatizaciones nacen apagadas. Ver test/sire-tra-applier.test.mjs
+  const WRITE_CAPABLE = ['odoo-json2-p0-client.mjs', 'sync-write-client.mjs', 'sync-copy-client.mjs', 'sync-pilot-client.mjs', 'sync-auto-client.mjs', 'sire-tra/odoo-rpc-node.mjs', 'sire-tra/browser-entry.mjs', 'sire-tra/prod-browser-entry.mjs'];
   const RAW_REQUEST = [...WRITE_CAPABLE, 'odoo-json2-client.mjs', 'odoo-json2-recompute-client.mjs'];
   for (const path of walk(root)) {
-    const f = relative(root, path);
+    const f = relative(root, path).split(sep).join('/');
     const src = readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
     const usesRequest = /\._request\(/.test(src);
     const doesNetwork = usesRequest || /\bfetch\(/.test(src);

@@ -57,7 +57,9 @@ class Cr:
 class Env:
     def __init__(self, st): self.st = st; self.survey_missing = st.get('survey_missing'); self.cr = Cr(st)
     def flush_all(self): self.st['sql'].append('flush')
-    def invalidate_all(self): self.st['sql'].append('invalidate')
+    # Odoo 17+: invalidate_all(flush=True) vuelca antes de invalidar; tras un error de base de datos la transaccion
+    # esta abortada y ese volcado lanzaria InFailedSqlTransaction dentro del except (bloquearia la confirmacion).
+    def invalidate_all(self, flush=True): self.st['sql'].append('invalidate' if not flush else 'invalidate+flush')
     def ref(self, xmlid, raise_if_not_found=True):
         if self.survey_missing: return False
         return Rec({'id': 1, 'access_token': 'SURVEY'})
@@ -343,8 +345,10 @@ test('contencion de fallos: un error en una reserva no se propaga, queda en el r
   assert.match(r[0].logs[0], /reserva 1 sin procesar: fallo inyectado/);
   assert.ok(r[0].slots.some((s) => s.x_sale_order_id === 2 && s.x_ath_state === 'invitado'), 'la otra reserva se prepara igual');
   assert.deepEqual(r[0].orderWrites[1], []);
-  // punto de guardado: uno por reserva; la fallida se deshace (invalida cache y vuelve al punto), la sana se libera
-  assert.deepEqual(r[0].sql.filter((q) => q !== 'flush'), ['SAVEPOINT ath_invite_sp', 'invalidate', 'ROLLBACK TO SAVEPOINT ath_invite_sp', 'SAVEPOINT ath_invite_sp', 'RELEASE SAVEPOINT ath_invite_sp']);
+  // punto de guardado: uno por reserva; la fallida vuelve al punto y DESPUES descarta la cache sin volcarla
+  // (volcar con la transaccion abortada lanzaria dentro del except); la sana se libera
+  assert.deepEqual(r[0].sql.filter((q) => q !== 'flush'), ['SAVEPOINT ath_invite_sp', 'ROLLBACK TO SAVEPOINT ath_invite_sp', 'invalidate', 'SAVEPOINT ath_invite_sp', 'RELEASE SAVEPOINT ath_invite_sp']);
+  assert.ok(!r[0].sql.includes('invalidate+flush'), 'nunca vuelca la cache tras el fallo');
 });
 
 test('sin fallo: cada reserva abre y libera su punto de guardado, y se vuelca el ORM antes de abrirlo', (t) => {

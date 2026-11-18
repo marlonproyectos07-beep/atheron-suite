@@ -220,8 +220,8 @@ if survey:
             process(order, survey, UI, base, today)
             env.cr.execute('RELEASE SAVEPOINT ath_invite_sp')
         except Exception as e:
-            env.invalidate_all()
             env.cr.execute('ROLLBACK TO SAVEPOINT ath_invite_sp')
+            env.invalidate_all(flush=False)
             log('SIRE/TRA puente: reserva %s sin procesar: %s' % (order.id, e), level='warning')`;
 
 const PY_REVOKE = String.raw`if not records:
