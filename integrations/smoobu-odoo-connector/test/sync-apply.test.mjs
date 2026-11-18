@@ -99,7 +99,7 @@ test('CREAR: reutiliza el contacto por correo exacto; correo repetido en dos con
   assert.equal(e.odoo.t['res.partner'].length, 1); assert.equal(e.odoo.t['sale.order'][0].partner_id, 5);
   const d = env({ 'res.partner': [{ id: 5, email: 'sintetico@example.invalid' }, { id: 6, email: 'sintetico@example.invalid' }] }, { 170400003: booking(170400003, '201', '2026-11-24', '2026-11-25', 85000) });
   const r = await run(d, [createOp(170400003, '201', '2026-11-24', '2026-11-25', 85000)]);
-  assert.deepEqual([r.results[0].code, d.odoo.t['sale.order'].length, d.writer.writes], ['CONTACTOS_DUPLICADOS', 0, 0]);
+  assert.deepEqual([r.results[0].code, d.odoo.t['sale.order'].length, d.writer.writes], ['CONTACTO_DUPLICADO_EN_ODOO', 0, 0]);
 });
 
 test('CREAR: si Smoobu cambio el precio o las noches se ocuparon desde el plan, no se escribe nada', async () => {
@@ -128,7 +128,7 @@ test('CONTACTOS: telefono reutiliza; mismo correo con otro nombre, dos coinciden
   for (const [seed, opts, code] of [
     [[{ id: 5, name: 'Pedro Otro Distinto', email: 'sintetico@example.invalid' }], {}, 'IDENTIDAD_AMBIGUA'],
     [[{ id: 5, name: 'Ana Sintetica', email: 'sintetico@example.invalid' }, { id: 6, name: 'Ana Sintetica', phone: '3001112233' }], { phone: '3001112233' }, 'IDENTIDAD_AMBIGUA'],
-    [[{ id: 5, name: 'Ana Sintetica', phone: '3001112233' }, { id: 6, name: 'Ana S', phone: '(300) 111-2233' }], { email: null, phone: '3001112233' }, 'CONTACTOS_DUPLICADOS'],
+    [[{ id: 5, name: 'Ana Sintetica', phone: '3001112233' }, { id: 6, name: 'Ana S', phone: '(300) 111-2233' }], { email: null, phone: '3001112233' }, 'CONTACTO_DUPLICADO_EN_ODOO'],
     [[{ id: 5, name: 'ANA SINTÉTICA FICTICIA' }], { email: null }, 'COINCIDENCIA_SOLO_POR_NOMBRE'],
   ]) { [e, op] = mk(seed, opts); const r = await run(e, [op]); assert.deepEqual([r.results[0].code, e.writer.writes], [code, 0], code); }
 });

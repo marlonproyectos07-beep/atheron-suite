@@ -119,7 +119,7 @@ jobs:
           if [ "$MAX" -gt "$ACK" ]; then
             echo "Ya hay un bloqueo pendiente (#$MAX > reconocido $ACK): la escritura sigue bloqueada."
           else
-            gh api -X POST "repos/$GH_REPO/issues" -f title="BLOQUEO-ESCRITURA-SYNC ejecucion $RUN_ID" -f body="Motivo: $MOTIVO. Sincronizacion programada Smoobu -> Odoo, ejecucion $RUN_ID. Desde ahora corre SOLO EN SOMBRA: no puede crear pedidos. Para desbloquear, gerencia revisa el fallo y fija la variable de Actions SYNC_DESBLOQUEO = DESBLOQUEO-<numero de esta incidencia>. Cerrar esta incidencia no desbloquea." --jq '"Bloqueo abierto: #" + (.number|tostring)'
+            gh api -X POST "repos/$GH_REPO/issues" -f title="BLOQUEO-ESCRITURA-SYNC ejecucion $RUN_ID" -f body="Motivo: $MOTIVO. Sincronizacion programada Smoobu -> Odoo, ejecucion $RUN_ID. Desde ahora corre SOLO EN SOMBRA: no puede crear pedidos. Para desbloquear, gerencia revisa el fallo y fija la variable de Actions SYNC_DESBLOQUEO = DESBLOQUEO-NNN, donde NNN es el numero de esta incidencia (por ejemplo, para la incidencia 111: DESBLOQUEO-111). Cerrar esta incidencia no desbloquea." --jq '"Bloqueo abierto: #" + (.number|tostring)'
           fi
           echo "::error::Escritura de la sincronizacion BLOQUEADA. Motivo: $MOTIVO. La vigilancia en sombra sigue activa."
           echo "### Escritura BLOQUEADA. Motivo: $MOTIVO. Sigue en sombra hasta SYNC_DESBLOQUEO de gerencia." >> "$GITHUB_STEP_SUMMARY"
