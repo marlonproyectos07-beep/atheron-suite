@@ -13,7 +13,7 @@ legales (operador y reportante SIRE) que la orden trataba como no acreditados; e
 |---|---|---|---|
 | `x_rnt_holder_id` | contacto 1934 (archivado; no requiere reactivarlo: el campo no tiene dominio y el ORM ya referencia ese contacto archivado en COT/2025/02149) | **Listo** | certificado RNT 235267; NIT corregido con nota de auditoria |
 | `x_address_partner_id` | contacto 2402 | **Listo** | direccion del certificado RNT, ya cargada |
-| `x_operator_company_id` | compania 5 ATHERON S.A.S | **Hipotesis** | actividad contable (paga el arriendo; compania de las reservas). Hay un "CONTRATO DE ARRENDAMIENTO SIN CODEUDOR.pdf" (Drive, 21/10/2026) que no se pudo leer (sin lector de PDF; la instalacion fue bloqueada) |
+| `x_operator_company_id` | compania 5 ATHERON S.A.S | **Hipotesis** | actividad contable (paga el arriendo; compania de las reservas). Sin documento que lo acredite; no bloquea la integracion |
 | `x_sire_reporter_id` | contacto ATHERON S.A.S | **No aplicar todavia** | Migracion registra "Persona que reporta: ATHERON SAS", empresa 119520 / ciudad 25899; eso no confirma usuario activo ni obligado actual |
 
 ## Aplicacion propuesta (cuando se apruebe)
@@ -25,10 +25,9 @@ Reversion: escribir `false` en el campo. Ninguno dispara automatizaciones ni afe
 ## Resultado (2026-11-18, aprobado por Marlon)
 - Aplicado por el mecanismo normal de aprobacion: `x_rnt_holder_id = 1934`, `x_address_partner_id = 2402`. Verificado.
 - Operador y reportante SIRE: **siguen vacios**.
-- Contrato "CONTRATO DE ARRENDAMIENTO SIN CODEUDOR.pdf" (leido en el visor de Drive): contrato No. 113 sobre el inmueble
-  **Calle 4 # 7-33, Centro Historico**, uso comercial, 01/05/2025 - 30/04/2032; arrendatario y co-arrendatario son
-  personas naturales (el co-arrendatario es el titular del RNT); arrendador: una inmobiliaria. **No es el inmueble de
-  Atheron Suite (Carrera 9 # 10-32)** y no menciona a ATHERON SAS: no acredita el operador.
+- Contrato "CONTRATO DE ARRENDAMIENTO SIN CODEUDOR.pdf": **EXCLUIDO como evidencia** (gerencia, 2026-11-18: pertenece a
+  otro hotel que se remodelara). No se derivo de el ninguna configuracion; el operador sigue sin vincular y no bloquea
+  la integracion.
 
 ## Contacto 958
 Conserva un NIT que no es suyo (es el del titular del RNT). Advertencia interna publicada; excluido de la identidad
