@@ -81,6 +81,15 @@ export const FIELDS = [
   ['x_guests_line', 'x_establishment_id', 'many2one', 'Establecimiento', { relation: 'x_establishment' }],
   ['x_guests_line', 'x_arrived_at', 'datetime', 'Llegada real', {}],
   ['x_guests_line', 'x_departed_at', 'datetime', 'Salida real', {}],
+  // Registro tardio: la hora REAL del movimiento la escribe Recepcion; la hora y el usuario de CAPTURA los pone Odoo.
+  ['x_guests_line', 'x_arrival_input', 'datetime', 'Hora real de llegada (a registrar)', {}],
+  ['x_guests_line', 'x_departure_input', 'datetime', 'Hora real de salida (a registrar)', {}],
+  ['x_guests_line', 'x_movement_reason', 'char', 'Motivo (registro tardío o corrección)', {}],
+  ['x_guests_line', 'x_arrival_captured_at', 'datetime', 'Llegada capturada el', { readonly: true }],
+  ['x_guests_line', 'x_arrival_captured_by', 'many2one', 'Llegada capturada por', { relation: 'res.users', readonly: true }],
+  ['x_guests_line', 'x_departure_captured_at', 'datetime', 'Salida capturada el', { readonly: true }],
+  ['x_guests_line', 'x_departure_captured_by', 'many2one', 'Salida capturada por', { relation: 'res.users', readonly: true }],
+  ['x_guests_line', 'x_movement_log', 'text', 'Bitácora de llegada y salida', { readonly: true }],
   ['x_guests_line', 'x_is_foreign', 'boolean', 'Extranjero', { store: true, readonly: true, depends: 'x_nationality', compute: "for r in self:\n    r['x_is_foreign'] = bool(r.x_nationality) and r.x_nationality.code != 'CO'" }],
   ['x_guests_line', 'x_sire_in_state', 'selection', 'SIRE entrada', { selection: STATES }],
   ['x_guests_line', 'x_sire_out_state', 'selection', 'SIRE salida', { selection: STATES }],
@@ -398,34 +407,127 @@ for r in records:
         raise UserError('No se puede invalidar: la llegada ya fue registrada (linea %s).' % r.id)
 records.write({'x_data_state': 'rechazado'})`;
 
-const PY_ARRIVE = String.raw`if not records:
+// Llegada y salida reales: la hora REAL la escribe Recepcion (x_arrival_input / x_departure_input); Odoo nunca usa la hora
+// actual por defecto. Hora y usuario de CAPTURA quedan aparte; si la captura es mas de 1 h posterior exige motivo. Cada
+// movimiento queda en la bitacora de la linea y en una nota interna de la reserva. Lo ya registrado no se cambia aqui:
+// para eso esta "Corregir hora" (con motivo, valor anterior y bloqueo si ya se reporto).
+const PY_MOVE_LIB = String.raw`now = datetime.datetime.now()
+LATE = datetime.timedelta(hours=1)
+SLACK = datetime.timedelta(minutes=5)
+
+def bog(dt):
+    return (dt - datetime.timedelta(hours=5)).strftime('%Y-%m-%d %H:%M') if dt else '-'
+
+def reason_of(r):
+    return ' '.join(('%s' % (r.x_movement_reason or '')).split())
+
+def log_line(r, text):
+    entry = '%s | %s | %s' % (bog(now), env.user.name, text)
+    return ((r.x_movement_log + '\n') if r.x_movement_log else '') + entry
+
+def note(r, text):
+    r.x_sale_order_id.message_post(body='Registro SIRE/TRA (linea %s): %s' % (r.id, text), message_type='comment', subtype_xmlid='mail.mt_note')
+`;
+
+const PY_ARRIVE = PY_MOVE_LIB + String.raw`if not records:
     raise UserError('Seleccione al menos un registro.')
-now = datetime.datetime.now()
 errors = []
 for r in records:
     o = r.x_sale_order_id
+    when = r.x_arrival_input
     if r.x_data_state != 'validado':
         errors.append('linea %s: datos no validados' % r.id)
     elif r.x_arrived_at:
-        errors.append('linea %s: llegada ya registrada' % r.id)
+        errors.append('linea %s: llegada ya registrada (para cambiarla use «Corregir hora de llegada/salida»)' % r.id)
     elif o.state != 'sale' or o.x_reservation_status in ('cancelled', 'no_show'):
         errors.append('linea %s: reserva no confirmada, cancelada o no-show' % r.id)
-    elif not (o.x_checkin and o.x_checkout and o.x_checkin - datetime.timedelta(days=1) <= now.date() <= o.x_checkout):
-        errors.append('linea %s: hoy está fuera de las fechas de la reserva %s' % (r.id, o.name))
+    elif not when:
+        errors.append('linea %s: escriba la hora REAL de llegada (campo «Hora real de llegada»); no se usa la hora actual por defecto' % r.id)
+    elif when > now + SLACK:
+        errors.append('linea %s: la hora real de llegada (%s) es futura' % (r.id, bog(when)))
+    elif not (o.x_checkin and o.x_checkout and o.x_checkin - datetime.timedelta(days=1) <= (when - datetime.timedelta(hours=5)).date() <= o.x_checkout):
+        errors.append('linea %s: la llegada real (%s) está fuera de las fechas de la reserva %s' % (r.id, bog(when), o.name))
+    elif now - when > LATE and not reason_of(r):
+        errors.append('linea %s: registro tardío (llegada %s, captura %s): escriba el motivo' % (r.id, bog(when), bog(now)))
 if errors:
     raise UserError('No se registró ninguna llegada.\n' + '\n'.join(errors))
 for r in records:
+    when = r.x_arrival_input
+    late = now - when > LATE
+    text = 'llegada real %s (hora Bogotá), capturada %s por %s%s' % (bog(when), bog(now), env.user.name, (' - registro tardío: %s' % reason_of(r)) if late else '')
     tra = 'pendiente' if r.x_establishment_id.x_tra_mode in ('manual', 'api') else 'no_aplica'
-    r.write({'x_arrived_at': now, 'x_sire_in_state': 'pendiente' if r.x_is_foreign else 'no_aplica', 'x_sire_out_state': 'no_aplica', 'x_tra_state': tra})`;
+    r.write({'x_arrived_at': when, 'x_arrival_captured_at': now, 'x_arrival_captured_by': env.user.id, 'x_arrival_input': False, 'x_movement_reason': False, 'x_movement_log': log_line(r, text), 'x_sire_in_state': 'pendiente' if r.x_is_foreign else 'no_aplica', 'x_sire_out_state': 'no_aplica', 'x_tra_state': tra})
+    note(r, text)`;
 
-const PY_DEPART = String.raw`if not records:
+const PY_DEPART = PY_MOVE_LIB + String.raw`if not records:
     raise UserError('Seleccione al menos un registro.')
-now = datetime.datetime.now()
-bad = [str(r.id) for r in records if not r.x_arrived_at or r.x_departed_at]
-if bad:
-    raise UserError('Salida no registrada (sin llegada o ya con salida): lineas %s' % ', '.join(bad))
+errors = []
 for r in records:
-    r.write({'x_departed_at': now, 'x_sire_out_state': 'pendiente' if r.x_is_foreign else 'no_aplica'})`;
+    when = r.x_departure_input
+    if not r.x_arrived_at or r.x_departed_at:
+        errors.append('linea %s: sin llegada o ya con salida' % r.id)
+    elif not when:
+        errors.append('linea %s: escriba la hora REAL de salida (campo «Hora real de salida»); no se usa la hora actual por defecto' % r.id)
+    elif when > now + SLACK:
+        errors.append('linea %s: la hora real de salida (%s) es futura' % (r.id, bog(when)))
+    elif when < r.x_arrived_at:
+        errors.append('linea %s: la salida (%s) es anterior a la llegada (%s)' % (r.id, bog(when), bog(r.x_arrived_at)))
+    elif now - when > LATE and not reason_of(r):
+        errors.append('linea %s: registro tardío (salida %s, captura %s): escriba el motivo' % (r.id, bog(when), bog(now)))
+if errors:
+    raise UserError('Salida no registrada.\n' + '\n'.join(errors))
+for r in records:
+    when = r.x_departure_input
+    late = now - when > LATE
+    text = 'salida real %s (hora Bogotá), capturada %s por %s%s' % (bog(when), bog(now), env.user.name, (' - registro tardío: %s' % reason_of(r)) if late else '')
+    r.write({'x_departed_at': when, 'x_departure_captured_at': now, 'x_departure_captured_by': env.user.id, 'x_departure_input': False, 'x_movement_reason': False, 'x_movement_log': log_line(r, text), 'x_sire_out_state': 'pendiente' if r.x_is_foreign else 'no_aplica'})
+    note(r, text)`;
+
+// Correccion explicita de una hora ya registrada: motivo obligatorio, valor anterior en bitacora y nota; nunca toca estados
+// de reporte; se niega si ese movimiento ya esta en envio, enviado o aceptado (se corrige en el portal, segun gerencia).
+const PY_FIX_MOVE = PY_MOVE_LIB + String.raw`if not records:
+    raise UserError('Seleccione al menos un registro.')
+SENT = ('en_envio', 'enviado', 'aceptado', 'incierto')
+errors = []
+plan = []
+for r in records:
+    a, d = r.x_arrival_input, r.x_departure_input
+    if not a and not d:
+        errors.append('linea %s: escriba la hora corregida en «Hora real de llegada» o «Hora real de salida»' % r.id)
+        continue
+    if not reason_of(r):
+        errors.append('linea %s: escriba el motivo de la corrección' % r.id)
+        continue
+    if a:
+        if not r.x_arrived_at:
+            errors.append('linea %s: no hay llegada que corregir (use «Registrar llegada real»)' % r.id)
+        elif r.x_tra_state in SENT or r.x_sire_in_state in SENT:
+            errors.append('linea %s: la llegada ya está en reporte (TRA %s / SIRE %s): no se corrige aquí' % (r.id, r.x_tra_state, r.x_sire_in_state))
+        elif a > now + SLACK or (r.x_departed_at and a > r.x_departed_at):
+            errors.append('linea %s: hora de llegada corregida no válida (%s)' % (r.id, bog(a)))
+    if d:
+        if not r.x_departed_at:
+            errors.append('linea %s: no hay salida que corregir (use «Registrar salida real»)' % r.id)
+        elif r.x_sire_out_state in SENT:
+            errors.append('linea %s: la salida ya está en reporte SIRE (%s): no se corrige aquí' % (r.id, r.x_sire_out_state))
+        elif d > now + SLACK or d < (a or r.x_arrived_at):
+            errors.append('linea %s: hora de salida corregida no válida (%s)' % (r.id, bog(d)))
+if errors:
+    raise UserError('No se corrigió ninguna hora.\n' + '\n'.join(errors))
+for r in records:
+    a, d = r.x_arrival_input, r.x_departure_input
+    vals = {'x_arrival_input': False, 'x_departure_input': False, 'x_movement_reason': False}
+    parts = []
+    if a:
+        parts.append('llegada %s -> %s' % (bog(r.x_arrived_at), bog(a)))
+        vals['x_arrived_at'] = a
+    if d:
+        parts.append('salida %s -> %s' % (bog(r.x_departed_at), bog(d)))
+        vals['x_departed_at'] = d
+    text = 'CORRECCIÓN %s por %s - motivo: %s' % ('; '.join(parts), env.user.name, reason_of(r))
+    vals['x_movement_log'] = log_line(r, text)
+    r.write(vals)
+    note(r, text)`;
 
 const PY_CLAIM = String.raw`F = {'sire_entrada': 'x_sire_in_state', 'sire_salida': 'x_sire_out_state', 'tra': 'x_tra_state'}
 system = env.context.get('ath_system')
@@ -538,6 +640,7 @@ export const SERVER_ACTIONS = [
   { xmlid: 'sa_reject', name: '[SIRE/TRA] Marcar datos no válidos', model: 'x_guests_line', bind: true, code: PY_REJECT },
   { xmlid: 'sa_arrive', name: '[SIRE/TRA] Registrar llegada real', model: 'x_guests_line', bind: true, code: PY_ARRIVE },
   { xmlid: 'sa_depart', name: '[SIRE/TRA] Registrar salida real', model: 'x_guests_line', bind: true, code: PY_DEPART },
+  { xmlid: 'sa_fix_move', name: '[SIRE/TRA] Corregir hora de llegada/salida', model: 'x_guests_line', bind: true, code: PY_FIX_MOVE },
   { xmlid: 'sa_claim', name: '[SIRE/TRA] Reclamar obligación (emisor)', model: 'x_guests_line', code: PY_CLAIM },
   { xmlid: 'sa_apply_attempt', name: '[SIRE/TRA] Aplicar intento', model: 'x_report_attempt', code: PY_APPLY_ATTEMPT },
   { xmlid: 'sa_sire_export', name: '[SIRE/TRA] Generar archivo SIRE', model: 'x_guests_line', bind: true, code: PY_SIRE_EXPORT },
@@ -619,6 +722,7 @@ export const VIEWS = [
 <button name="${R('sa_reject')}" type="action" string="Marcar no valido" invisible="x_data_state != 'recibido'"/>
 <button name="${R('sa_arrive')}" type="action" string="Registrar llegada real" class="btn-primary" invisible="x_data_state != 'validado' or x_arrived_at"/>
 <button name="${R('sa_depart')}" type="action" string="Registrar salida real" invisible="not x_arrived_at or x_departed_at"/>
+<button name="${R('sa_fix_move')}" type="action" string="Corregir hora de llegada/salida" invisible="not x_arrived_at"/>
 <button name="${R('act_attempt_new')}" type="action" string="Registrar resultado de reporte" context="{'default_x_guest_line_id': id}" invisible="not x_arrived_at"/>
 <field name="x_data_state" widget="statusbar" statusbar_visible="recibido,validado"/>
 </header>
@@ -653,8 +757,16 @@ export const VIEWS = [
 <field name="x_consent_at" readonly="1"/>
 </group>
 <group string="Estancia real">
+<field name="x_arrival_input" invisible="x_data_state != 'validado'" help="Fecha y hora en que el huésped llegó de verdad. Se escribe antes de pulsar «Registrar llegada real» (o para corregirla)."/>
+<field name="x_departure_input" invisible="not x_arrived_at" help="Fecha y hora en que el huésped salió de verdad. Se escribe antes de pulsar «Registrar salida real» (o para corregirla)."/>
+<field name="x_movement_reason" invisible="x_data_state != 'validado'" help="Obligatorio si se registra más de 1 hora después del movimiento, y en toda corrección."/>
 <field name="x_arrived_at" readonly="1"/>
+<field name="x_arrival_captured_at" readonly="1" invisible="not x_arrived_at"/>
+<field name="x_arrival_captured_by" readonly="1" invisible="not x_arrived_at"/>
 <field name="x_departed_at" readonly="1"/>
+<field name="x_departure_captured_at" readonly="1" invisible="not x_departed_at"/>
+<field name="x_departure_captured_by" readonly="1" invisible="not x_departed_at"/>
+<field name="x_movement_log" readonly="1" invisible="not x_movement_log"/>
 </group>
 <group string="Reportes">
 <field name="x_sire_in_state" readonly="1"/>

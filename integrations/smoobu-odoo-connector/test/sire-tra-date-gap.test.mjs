@@ -202,7 +202,7 @@ test('"Aplicar intento" (Python real) copia las fechas aceptadas y exige las fec
 test('el control no puede reabrir un reenvio: solo "Registrar llegada" escribe x_tra_state de forma directa y exige que no haya llegada previa', () => {
   const writers = SERVER_ACTIONS.filter((s) => s.code.includes("'x_tra_state':")).map((s) => s.xmlid);
   assert.deepEqual(writers, ['sa_arrive']);
-  assert.match(SERVER_ACTIONS.find((s) => s.xmlid === 'sa_arrive').code, /r\.x_arrived_at:\n\s+errors\.append\('linea %s: llegada ya registrada'/);
+  assert.match(SERVER_ACTIONS.find((s) => s.xmlid === 'sa_arrive').code, /r\.x_arrived_at:\n\s+errors\.append\('linea %s: llegada ya registrada/);
   // Unica automatizacion permitida sobre reservas: el puente al confirmar (`au_invite`). Corre dentro de la confirmacion:
   // no escribe en la reserva (solo crea/actualiza el registro de enlace y publica notas internas) y nunca lanza error.
   const onOrders = AUTOMATIONS.filter((a) => a.model === 'sale.order').map((a) => a.xmlid);
