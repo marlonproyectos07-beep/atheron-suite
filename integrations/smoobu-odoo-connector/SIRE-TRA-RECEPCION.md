@@ -8,9 +8,10 @@ Menu **Registro SIRE/TRA** en Odoo.
 > configurado y las habitaciones 201, 202, 203, 301 y 302 son *fisicas*: **Validar datos funciona** (asigne siempre una
 > de esas cinco; Casa Completa no sirve). Ignore las reservas `PRUEBA-SINTETICA` (canceladas) y sus fichas *Zz ... Ficticio*.
 >
-> **Caso real para revisar:** COT/2026/03839 (Smoobu, 21-22 nov) ya tiene su enlace en *Enlaces de registro*. Revise el
-> enlace y, si esta de acuerdo, envielo al huesped principal por el canal habitual. Las reservas confirmadas antes del
-> 17/11 (03838, 03840, 03841) no tienen enlace: generelo con *Accion* > **[SIRE/TRA] Generar enlace de registro**.
+> **Reservas listas (18/11):** 03838 (201, en casa hoy), 03839 (301, 21-22 nov), 03840 (302, 2-3 dic) y 03841
+> (301, 11-13 dic) tienen su enlace en *Enlaces de registro* y una nota interna en la reserva con lo que falta
+> (numero de huespedes en 0, correo/telefono) y el siguiente paso. Envie cada enlace por la mensajeria del canal.
+> **Primer caso operativo: 03839.** Registre llegada y salida solo cuando ocurran. TRA/SIRE oficiales siguen apagados.
 
 ## Antes de la llegada
 1. Al **confirmar** una reserva que viene de Smoobu, Odoo deja el enlace de registro **preparado** (no lo envia). Una reserva en borrador no lo tiene.
