@@ -51,3 +51,41 @@ Equivalencias de Node en el navegador: SHA-256/HMAC verificados con vectores est
   los navegadores; el uso de la credencial de git para la API fue bloqueado por el control de seguridad).
 - Conexion JSON-2 con clave de API en la copia.
 - Fusion del PR #112 y `DESBLOQUEO-111`: NO realizados.
+
+## Segunda ronda (misma fecha, 11:00-11:20 Bogota) - ejecutada por Claude en esta sesion
+Aclaracion de autoria: la evidencia anterior de este archivo (enlace desde borrador, formulario anonimo, validacion,
+llegada/salida con hora real, TRA simulado) la ejecuto Claude en esta misma sesion; no proviene de otro reporte.
+
+### Otra sesion en la copia
+COT/2026/03895 (`...0962`) la creo esta sesion (10:31 Bogota). COT/2026/03896 y 03897 (`...0981`, `...0982`) los creo OTRA
+sesion con el mismo usuario entre 10:53 y 10:58 (pedido, enlace, fichas e intentos). No se tocaron ni se borraron. Las
+pruebas de esta ronda usan ids `1704010xx`.
+
+### JSON-2 con clave de API: IMPEDIMENTO
+- Red desde el portatil: OK (`version_info` 200; `/json/2/...` responde 401 sin clave, como corresponde).
+- No hay clave exclusiva de la copia en este equipo: ninguna variable `ODOO_TEST_*`/`ODOO_*` en el entorno ni en archivos
+  locales revisados (solo nombres de variables). No se uso ninguna clave de produccion.
+- Para probarlo: crear en la copia una clave de API propia y dejarla en una variable de entorno local
+  `ODOO_TEST_API_KEY` (sin pegarla en el chat); luego `node scripts/sync-copy.mjs <archivo> [--apply]`.
+
+### sync-copy (misma logica del script, transporte por sesion web)
+| Paso | Resultado |
+|---|---|
+| Simulacion (`RecordingWriter`), lote de 3 | 2 `SIMULADA`, 1 `COINCIDENCIA_SOLO_POR_NOMBRE`; 6 escrituras registradas, 0 enviadas, 0 pedidos |
+| Aplicacion (`CopyWriteClient`) | 2 `APLICADA` (COT/2026/03898, 03899, borrador, enlace con "Falta: telefono"), 1 en revision; 6 escrituras |
+| Repeticion | 3 sin escribir (`PEDIDO_YA_EXISTE` x2 + revision); 0 escrituras; 2 pedidos, 2 contactos, 2 enlaces |
+| Nombre no identificable | `NOMBRE_NO_IDENTIFICABLE`, sin pedido |
+| Sin correo ni telefono | `APLICADA` (COT/2026/03900); contacto sin correo ni telefono inventados; enlace "Falta: telefono, correo" |
+| Contacto ambiguo vs referencia duplicada | ver primera ronda (sin cambio de codigo) |
+Aislamiento 8/8 al terminar. El script exige correo `@example.invalid`, por eso el caso sin correo se probo con `applyPlan`.
+
+### Produccion
+Sin cambios de codigo desde `f986889`: no se redesplego. Las acciones instaladas coinciden con el commit (sha256 de
+`sa_invite_auto`, `sa_arrive`, `sa_depart`, `sa_fix_move`: b682e6aabf, 57d4e50348, 97de05fb22, 62b527c1c1), 0 creaciones
+pendientes.
+
+### Decision lista para aprobacion (no ejecutada)
+1. Confirmar en GitHub (Settings > Secrets and variables > Actions > Variables) que `TRA_EMITTER_ENABLED`, `TRA_AUTO_SEND`
+   y `TRA_ENABLED` no existen o no valen `yes` / `yes-real` (no se pudieron leer desde esta sesion).
+2. Fusionar el PR #112 en `main` (trae la correccion del conector y `tra-emitter.yml` apagado por variables).
+3. Fijar `SYNC_DESBLOQUEO = DESBLOQUEO-111` y revisar la siguiente ejecucion programada.
