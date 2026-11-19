@@ -1,6 +1,6 @@
 /**
  * ATH-HOTELS-SIRE-TRA-001 · Manifiesto declarativo de lo que se crea en Odoo (y NADA mas).
- * Reutiliza sale.order, resource.resource, survey y x_guests_line; crea solo x_establishment y x_report_attempt.
+ * Reutiliza sale.order, resource.resource, survey y x_guests_line; crea solo x_establishment, x_report_attempt y x_tra_amount.
  * Todo registro lleva xmlid en el modulo NS (inventario, repeticion y reversion).
  * Sin valores por defecto de negocio: códigos SIRE, catalogos TRA y costo quedan vacios hasta verificarse.
  */
@@ -12,6 +12,7 @@ const STATES = sel(['no_aplica', 'No aplica'], ['pendiente', 'Pendiente'], ['en_
 export const MODELS = [
   { model: 'x_establishment', name: 'Establecimiento SIRE/TRA' },
   { model: 'x_report_attempt', name: 'Intento de reporte SIRE/TRA' },
+  { model: 'x_tra_amount', name: 'Importe pagado confirmado (TRA)' },
 ];
 
 /** [modelo, campo, tipo, etiqueta, extra] */
@@ -38,6 +39,9 @@ export const FIELDS = [
   ['x_establishment', 'x_tra_accommodation_type', 'char', 'TRA: tipo de acomodación (valor oficial)', {}],
   ['x_establishment', 'x_tra_cost_basis', 'selection', 'TRA: base del costo', { selection: sel(['total_estancia', 'Total de la estancia'], ['por_noche', 'Por noche']) }],
   ['x_establishment', 'x_tra_config_verified', 'boolean', 'TRA: configuración verificada con MinCIT', {}],
+  // Nombre que se envia a TRA segun el registro oficial (RNT), separado del nombre interno x_name, que no se envia.
+  ['x_establishment', 'x_tra_establishment_name', 'char', 'TRA: nombre del establecimiento (registro oficial RNT)', {}],
+  ['x_establishment', 'x_tra_establishment_name_source', 'char', 'TRA: fuente del nombre (documento y fecha)', {}],
   ['x_establishment', 'x_analytic_account_id', 'many2one', 'Cuenta analitica', { relation: 'account.analytic.account' }],
   // --- unidades: Casa Completa es derivada, nunca sexta habitación ---
   ['resource.resource', 'x_establishment_id', 'many2one', 'Establecimiento', { relation: 'x_establishment' }],
@@ -125,6 +129,21 @@ export const FIELDS = [
   ['x_report_attempt', 'x_evidence_name', 'char', 'Nombre de la evidencia', {}],
   ['x_report_attempt', 'x_note', 'text', 'Nota', {}],
   ['x_guests_line', 'x_attempt_ids', 'one2many', 'Intentos', { relation: 'x_report_attempt', relation_field: 'x_guest_line_id', readonly: true }],
+  // --- importe pagado confirmado (campo "costo" de TRA). NO es un pago contable ni lo crea: registra lo efectivamente
+  // pagado con su evidencia, moneda y fecha de corte. Sin estado confirmado (accion sa_amount_confirm) el emisor bloquea.
+  ['x_tra_amount', 'x_name', 'char', 'Descripción', {}],
+  ['x_tra_amount', 'x_sale_order_id', 'many2one', 'Reserva', { relation: 'sale.order', required: true, on_delete: 'restrict' }],
+  ['x_tra_amount', 'x_amount', 'float', 'Importe pagado confirmado', {}],
+  ['x_tra_amount', 'x_currency_id', 'many2one', 'Moneda', { relation: 'res.currency' }],
+  ['x_tra_amount', 'x_cutoff_date', 'date', 'Fecha de corte (pagos recibidos hasta)', {}],
+  ['x_tra_amount', 'x_evidence_kind', 'selection', 'Tipo de evidencia', { selection: sel(['comprobante_pago', 'Comprobante de pago (transferencia, datáfono, recibo de caja)'], ['liquidacion_canal', 'Liquidación o extracto del canal de venta'], ['factura_pagada', 'Factura con pago registrado'], ['extracto_bancario', 'Extracto bancario']) }],
+  ['x_tra_amount', 'x_evidence_ref', 'char', 'Referencia de la evidencia', {}],
+  ['x_tra_amount', 'x_evidence', 'binary', 'Evidencia (archivo)', {}],
+  ['x_tra_amount', 'x_evidence_name', 'char', 'Nombre del archivo de evidencia', {}],
+  ['x_tra_amount', 'x_state', 'selection', 'Estado', { selection: sel(['borrador', 'Reportado, sin confirmar'], ['confirmado', 'Confirmado con evidencia'], ['anulado', 'Anulado']) }],
+  ['x_tra_amount', 'x_confirmed_by', 'many2one', 'Confirmado por', { relation: 'res.users', readonly: true }],
+  ['x_tra_amount', 'x_confirmed_at', 'datetime', 'Confirmado el', { readonly: true }],
+  ['x_tra_amount', 'x_note', 'text', 'Nota', {}],
 ];
 
 export const ACLS = [
@@ -132,6 +151,10 @@ export const ACLS = [
   { xmlid: 'acl_establishment_admin', model: 'x_establishment', group: 'base.group_system', perms: [1, 1, 1, 0] },
   // solo leer y crear: el historial no se edita ni se borra desde la interfaz (el administrador puede cambiar esta regla)
   { xmlid: 'acl_attempt_user', model: 'x_report_attempt', group: 'base.group_user', perms: [1, 0, 1, 0] },
+  // importes: leer y crear; confirmar o anular solo por sus acciones (dejan quien y cuando). Nadie edita ni borra,
+  // tampoco el administrador (defecto D2 demostrado en la copia el 18/11/2026: el admin podia cambiar un confirmado).
+  { xmlid: 'acl_amount_user', model: 'x_tra_amount', group: 'base.group_user', perms: [1, 0, 1, 0] },
+  { xmlid: 'acl_amount_admin', model: 'x_tra_amount', group: 'base.group_system', perms: [1, 0, 1, 0] },
 ];
 
 // ---------------------------------------------------------------- acciones de servidor (Python, safe_eval)
@@ -670,6 +693,49 @@ for r in records:
 if not n:
     raise UserError('Ningún huésped de la seleccion tiene SIRE pendiente.')`;
 
+const PY_AMOUNT_CONFIRM = String.raw`if not records:
+    raise UserError('Seleccione un importe.')
+if len(records) != 1:
+    raise UserError('Confirme un importe a la vez.')
+r = records
+today = (datetime.datetime.utcnow() - datetime.timedelta(hours=5)).date()
+err = False
+if r.x_state == 'confirmado':
+    err = 'ya está confirmado'
+elif r.x_state == 'anulado':
+    err = 'está anulado; registre uno nuevo'
+elif not r.x_amount or r.x_amount <= 0:
+    err = 'falta el importe efectivamente pagado'
+elif not r.x_currency_id:
+    err = 'falta la moneda'
+elif r.x_currency_id.name != 'COP':
+    err = 'TRA exige el valor en pesos colombianos (COP)'
+elif not r.x_cutoff_date:
+    err = 'falta la fecha de corte'
+elif r.x_cutoff_date > today:
+    err = 'la fecha de corte no puede ser futura'
+elif not r.x_evidence_kind or not (r.x_evidence_ref or '').strip() or not r.x_evidence or not (r.x_evidence_name or '').strip():
+    err = 'falta la evidencia: tipo, referencia y archivo'
+elif env['x_tra_amount'].search_count([('x_sale_order_id', '=', r.x_sale_order_id.id), ('x_state', '=', 'confirmado'), ('id', '!=', r.id)]):
+    err = 'la reserva ya tiene un importe confirmado; anúlelo antes'
+if err:
+    raise UserError('No se confirmó el importe: %s.' % err)
+r.sudo().write({'x_state': 'confirmado', 'x_confirmed_by': env.user.id, 'x_confirmed_at': datetime.datetime.now()})`;
+
+const PY_AMOUNT_VOID = String.raw`if not records:
+    raise UserError('Seleccione un importe.')
+if len(records) != 1:
+    raise UserError('Anule un importe a la vez.')
+r = records
+if r.x_state == 'anulado':
+    raise UserError('El importe ya está anulado.')
+note = ((r.x_note or '') + '\nAnulado por %s el %s (UTC)' % (env.user.name, datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))).strip()
+r.sudo().write({'x_state': 'anulado', 'x_note': note})`;
+
+// Defecto D1 (demostrado en la copia el 18/11/2026): por el ORM se podia CREAR un importe ya confirmado, sin evidencia y con
+// confirmador falso. Esta accion, disparada al crear (au_amount_guard), rechaza cualquier estado o confirmacion de origen.
+const PY_AMOUNT_GUARD = String.raw`raise UserError('Los importes se registran sin estado ni confirmación. Solo la acción "Confirmar con evidencia" confirma y deja quién y cuándo.')`;
+
 export const SERVER_ACTIONS = [
   { xmlid: 'sa_invite', name: '[SIRE/TRA] Generar enlace de registro', model: 'sale.order', bind: true, code: PY_INVITE },
   { xmlid: 'sa_invite_auto', name: '[SIRE/TRA] Preparar enlace de registro (automático)', model: 'sale.order', code: PY_INVITE_AUTO },
@@ -684,6 +750,11 @@ export const SERVER_ACTIONS = [
   { xmlid: 'sa_apply_attempt', name: '[SIRE/TRA] Aplicar intento', model: 'x_report_attempt', code: PY_APPLY_ATTEMPT },
   { xmlid: 'sa_sire_export', name: '[SIRE/TRA] Generar archivo SIRE', model: 'x_guests_line', bind: true, code: PY_SIRE_EXPORT },
   { xmlid: 'sa_sire_mark', name: '[SIRE/TRA] Marcar cargado en portal SIRE', model: 'x_guests_line', bind: true, code: PY_SIRE_MARK },
+  // groups: sin grupo, Odoo exige permiso de escritura sobre el modelo para ejecutar la accion, y nadie lo tiene
+  // (defecto D3 demostrado en la copia: el usuario no podia confirmar ni anular). Con grupo, la escritura va por sudo.
+  { xmlid: 'sa_amount_confirm', name: '[SIRE/TRA] Confirmar importe pagado (con evidencia)', model: 'x_tra_amount', bind: true, groups: ['base.group_user'], code: PY_AMOUNT_CONFIRM },
+  { xmlid: 'sa_amount_void', name: '[SIRE/TRA] Anular importe', model: 'x_tra_amount', bind: true, groups: ['base.group_user'], code: PY_AMOUNT_VOID },
+  { xmlid: 'sa_amount_guard', name: '[SIRE/TRA] Rechazar importe creado con estado o confirmación', model: 'x_tra_amount', groups: ['base.group_user'], code: PY_AMOUNT_GUARD },
 ];
 
 export const AUTOMATIONS = [
@@ -691,6 +762,7 @@ export const AUTOMATIONS = [
   // Reserva confirmada (state = sale) que viene de Smoobu. Dispara al confirmarse o al completar fechas; un borrador no la activa.
   { xmlid: 'au_invite', name: '[SIRE/TRA] Preparar enlace al ingresar la reserva Smoobu y revocarlo al cancelar', model: 'sale.order', trigger: 'on_create_or_write', triggerFields: ['state', 'x_reservation_status', 'x_checkin', 'x_checkout', 'partner_id'], domain: "['&', ('x_pms_reference', 'ilike', 'SMOOBU-'), '|', ('state', 'in', ['draft', 'sent', 'sale', 'cancel']), ('x_reservation_status', 'in', ['cancelled', 'no_show'])]", action: 'sa_invite_auto' },
   { xmlid: 'au_attempt', name: '[SIRE/TRA] Aplicar intento registrado', model: 'x_report_attempt', trigger: 'on_create', triggerFields: [], domain: '', action: 'sa_apply_attempt' },
+  { xmlid: 'au_amount_guard', name: '[SIRE/TRA] Importe: rechazar estado o confirmación al crear', model: 'x_tra_amount', trigger: 'on_create', triggerFields: [], domain: "['|', '|', ('x_state', '!=', False), ('x_confirmed_by', '!=', False), ('x_confirmed_at', '!=', False)]", action: 'sa_amount_guard' },
 ];
 
 // ---------------------------------------------------------------- encuesta (captura unica, por invitacion)
@@ -862,9 +934,18 @@ export const VIEWS = [
 <group string="Identificación"><field name="x_name"/><field name="x_code"/><field name="x_active"/><field name="x_address_partner_id"/><field name="x_analytic_account_id"/></group>
 <group string="RNT y operador"><field name="x_rnt_number"/><field name="x_rnt_holder_id"/><field name="x_rnt_expiry"/><field name="x_operator_company_id"/></group>
 <group string="SIRE"><field name="x_sire_reporter_id"/><field name="x_sire_company_code"/><field name="x_sire_city_code"/><field name="x_sire_move_in_code"/><field name="x_sire_move_out_code"/><field name="x_sire_date_format"/><field name="x_sire_encoding"/><field name="x_sire_codes_verified"/><field name="x_sire_export_enabled"/></group>
-<group string="TRA"><field name="x_tra_mode"/><field name="x_tra_accommodation_type"/><field name="x_tra_cost_basis"/><field name="x_tra_config_verified"/></group>
+<group string="TRA"><field name="x_tra_mode"/><field name="x_tra_establishment_name"/><field name="x_tra_establishment_name_source"/><field name="x_tra_accommodation_type"/><field name="x_tra_cost_basis"/><field name="x_tra_config_verified"/></group>
 </group></sheet>
 </form>` },
+  { xmlid: 'view_amount_form', name: 'ath.sire.tra.amount.form', model: 'x_tra_amount', type: 'form', priority: 90, arch: `<form string="Importe pagado (TRA)">
+<header><button name="${R('sa_amount_confirm')}" type="action" string="Confirmar con evidencia" class="btn-primary" invisible="x_state in ('confirmado', 'anulado')"/><button name="${R('sa_amount_void')}" type="action" string="Anular" invisible="x_state == 'anulado'"/><field name="x_state" widget="statusbar" readonly="1"/></header>
+<sheet><group>
+<group string="Importe"><field name="x_sale_order_id" options="{'no_create': True}"/><field name="x_amount"/><field name="x_currency_id" options="{'no_create': True}"/><field name="x_cutoff_date"/></group>
+<group string="Evidencia"><field name="x_evidence_kind"/><field name="x_evidence_ref"/><field name="x_evidence" filename="x_evidence_name"/><field name="x_evidence_name" invisible="1"/></group>
+<group string="Confirmación"><field name="x_confirmed_by" readonly="1"/><field name="x_confirmed_at" readonly="1"/><field name="x_name"/><field name="x_note"/></group>
+</group></sheet>
+</form>` },
+  { xmlid: 'view_amount_list', name: 'ath.sire.tra.amount.list', model: 'x_tra_amount', type: 'list', priority: 90, arch: '<list string="Importes pagados (TRA)"><field name="x_sale_order_id"/><field name="x_amount"/><field name="x_currency_id"/><field name="x_cutoff_date"/><field name="x_evidence_kind"/><field name="x_evidence_ref"/><field name="x_state"/><field name="x_confirmed_by"/><field name="x_confirmed_at"/></list>' },
   { xmlid: 'view_est_list', name: 'ath.sire.tra.establishment.list', model: 'x_establishment', type: 'list', priority: 90, arch: '<list><field name="x_code"/><field name="x_name"/><field name="x_rnt_number"/><field name="x_tra_mode"/><field name="x_sire_export_enabled"/><field name="x_active"/></list>' },
   { xmlid: 'view_invite_list', name: 'ath.sire.tra.invite.list', model: 'survey.user_input', type: 'list', priority: 90, arch: '<list string="Enlaces de registro" create="0"><field name="create_date"/><field name="x_sale_order_id"/><field name="x_ath_state"/><field name="deadline"/><field name="x_ath_url" widget="CopyClipboardChar"/><field name="x_ath_contact_gap" optional="show" decoration-warning="x_ath_contact_gap"/><field name="x_ath_message" widget="CopyClipboardText" optional="hide"/><field name="x_ath_error" optional="show"/></list>' },
   { xmlid: 'view_invite_form', name: 'ath.sire.tra.invite.form', model: 'survey.user_input', type: 'form', priority: 90, arch: `<form string="Enlace de registro" create="0" edit="0">
@@ -883,6 +964,7 @@ export const WINDOW_ACTIONS = [
   { xmlid: 'act_attempt_new', ...W('x_report_attempt', 'Registrar resultado de reporte', ['view_attempt_form'], { target: 'new', view_mode: 'form' }) },
   { xmlid: 'act_invites', ...W('survey.user_input', 'Enlaces de registro', ['view_invite_list', 'view_invite_form'], { domain: "[('x_sale_order_id', '!=', False)]" }) },
   { xmlid: 'act_establishments', ...W('x_establishment', 'Establecimientos', ['view_est_list', 'view_est_form']) },
+  { xmlid: 'act_amounts', ...W('x_tra_amount', 'Importes pagados (TRA)', ['view_amount_list', 'view_amount_form']) },
   { xmlid: 'act_orders', ...W('sale.order', 'Reservas', [], { domain: "[('is_rental_order', '=', True)]" }) },
 ];
 
@@ -896,9 +978,10 @@ export const MENUS = [
   { xmlid: 'menu_date_gap', name: 'Discrepancia de fechas', parent: 'menu_root', action: 'act_date_gap', sequence: 6 },
   { xmlid: 'menu_attempts', name: 'Intentos y evidencia', parent: 'menu_root', action: 'act_attempts', sequence: 7 },
   { xmlid: 'menu_est', name: 'Establecimientos', parent: 'menu_root', action: 'act_establishments', sequence: 8 },
+  { xmlid: 'menu_amounts', name: 'Importes pagados (TRA)', parent: 'menu_root', action: 'act_amounts', sequence: 9 },
 ];
 
 /** Modelos técnicos que el aplicador puede tocar. Nada de datos de negocio. */
 export const WRITABLE_MODELS = Object.freeze(['ir.model', 'ir.model.fields', 'ir.model.access', 'ir.model.data', 'ir.actions.server', 'base.automation', 'ir.ui.view', 'ir.actions.act_window', 'ir.actions.act_window.view', 'ir.ui.menu', 'survey.survey', 'survey.question']);
 /** Modelos existentes de los que depende (deben existir antes). */
-export const REQUIRED_MODELS = Object.freeze(['sale.order', 'resource.resource', 'x_guests_line', 'survey.survey', 'survey.question', 'survey.user_input', 'l10n_latam.identification.type', 'res.country', 'res.city', 'res.partner', 'res.company', 'account.analytic.account', 'ir.attachment']);
+export const REQUIRED_MODELS = Object.freeze(['sale.order', 'resource.resource', 'x_guests_line', 'survey.survey', 'survey.question', 'survey.user_input', 'l10n_latam.identification.type', 'res.country', 'res.city', 'res.partner', 'res.company', 'account.analytic.account', 'ir.attachment', 'res.currency', 'res.users']);

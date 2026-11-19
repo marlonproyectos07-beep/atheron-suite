@@ -222,6 +222,8 @@ export async function applyManifest(odoo, { apply = false, log = () => {}, autom
   for (const s of SERVER_ACTIONS) {
     const vals = { name: s.name, model_id: modelIds.get(s.model), state: 'code', code: s.code };
     if (s.bind) Object.assign(vals, { binding_model_id: modelIds.get(s.model), binding_type: 'action', binding_view_types: 'list,form' });
+    // grupos que pueden ejecutarla (Odoo 19: group_ids). Sin grupo, Odoo exige escritura sobre el modelo.
+    if (s.groups) vals.group_ids = [[6, 0, await Promise.all(s.groups.map(extRef))]];
     await upsert('ir.actions.server', s.xmlid, vals, [['name', '=', s.name]]);
   }
   // automatizaciones

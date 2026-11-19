@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TRA_CATALOG_UNVERIFIED, bogotaDate, buildPayload, classify, createTraSimulator, emissionGates, emitStay } from '../src/sire-tra/tra-emitter.mjs';
+import { TRA_CATALOG_UNVERIFIED, bogotaDate, buildPayload, classify, confirmedCost, createTraSimulator, emissionGates, emitStay } from '../src/sire-tra/tra-emitter.mjs';
 import { assertBrowserTarget, assertProductionTarget, assertTestTarget } from '../src/sire-tra/guard.mjs';
 import { createTraHttp } from '../src/sire-tra/tra-http.mjs';
 
-const EST = { x_name: 'Atheron Suite (TEST)', x_rnt_number: '999999', x_tra_mode: 'api', x_tra_config_verified: true, x_tra_accommodation_type: 'Habitacion', x_tra_cost_basis: 'total_estancia' };
+const EST = { x_name: 'Atheron Suite (TEST)', x_rnt_number: '999999', x_tra_mode: 'api', x_tra_config_verified: true, x_tra_accommodation_type: 'Habitacion', x_tra_cost_basis: 'total_estancia', x_tra_establishment_name: 'Nombre RNT (TEST)' };
 const CAT = { verified: true, docTypes: TRA_CATALOG_UNVERIFIED.docTypes, reasons: { Vacaciones: 'Vacaciones' } };
 const ENV = { TRA_ENABLED: 'yes-real', TRA_TOKEN: 't' };
+const PAID = { id: 1, x_state: 'confirmado', x_amount: 450000.4, x_currency_id: [8, 'COP'], x_cutoff_date: '2026-11-10', x_evidence_kind: 'comprobante_pago', x_evidence_ref: 'REF-TEST', x_evidence_name: 'comprobante.pdf', x_confirmed_by: [2, 'u'], x_confirmed_at: '2026-11-10 12:00:00', write_date: '2026-11-10 12:00:00' };
 
 /** Odoo falso con la MISMA maquina de estados que las acciones de servidor (reclamo y aplicar intento). */
 function fakeOdoo(lines) {
@@ -18,7 +19,8 @@ function fakeOdoo(lines) {
     async searchRead(model, domain) {
       if (model === 'x_guests_line') return lines.filter((l) => l.x_arrived_at && l.x_data_state === 'validado').map((l) => ({ ...l }));
       if (model === 'l10n_latam.identification.type') return [{ id: 5, l10n_co_document_code: 'national_citizen_id' }, { id: 2, l10n_co_document_code: 'passport' }, { id: 10, l10n_co_document_code: 'PEP' }, { id: 7, l10n_co_document_code: 'civil_registration' }];
-      if (model === 'sale.order') return [{ id: 1, x_checkout: '2026-11-12', amount_total: 450000.4 }];
+      if (model === 'sale.order') return [{ id: 1, state: 'sale', x_checkout: '2026-11-12', amount_total: 450000.4 }];
+      if (model === 'x_tra_amount') return [{ ...PAID }];
       throw new Error(model + domain);
     },
     async claim(ids) {
@@ -43,13 +45,13 @@ function fakeOdoo(lines) {
   };
 }
 const line = (id, main, extra = {}) => ({ id, x_is_main: main, x_doc_type_id: [5, 'CC'], x_identity_number: `7000${id}`, x_given_names: 'Nombre', x_surname_1: 'Apellido', x_surname_2: false, x_residence_city_id: [1, 'ZIPAQUIRA'], x_residence_text: false, x_origin_city_id: [2, 'BOGOTA'], x_origin_text: false, x_travel_reason: 'Vacaciones', x_tra_room: '201', x_arrived_at: '2026-11-10 20:00:00', x_tra_state: 'pendiente', x_tra_external_id: false, x_data_state: 'validado', ...extra });
-const run = (odoo, tra, mode = 'real', est = EST, catalog = CAT, logs = []) => emitStay({ odoo, tra, orderId: 1, est, catalog, mode, runRef: 'r1', env: ENV, log: (e) => logs.push(e) });
+const run = (odoo, tra, mode = 'real', est = EST, catalog = CAT, logs = []) => emitStay({ odoo, tra, orderId: 1, est, catalog, mode, runRef: 'r1', env: ENV, log: (e) => logs.push(e), today: '2026-11-18' });
 
 test('puertas: sin configuracion oficial verificada no se reclama ni se envia', async () => {
   const cases = [[{ ...ENV, TRA_ENABLED: '' }, CAT, EST], [ENV, { ...CAT, verified: false }, EST], [ENV, CAT, { ...EST, x_tra_config_verified: false }], [{ TRA_ENABLED: 'yes-real' }, CAT, EST], [ENV, CAT, { ...EST, x_tra_mode: 'manual' }]];
   for (const [env, catalog, est] of cases) {
     const o = fakeOdoo([line(1, true)]); const sim = createTraSimulator();
-    const r = await emitStay({ odoo: o, tra: sim, orderId: 1, est, catalog, mode: 'real', runRef: 'r', env });
+    const r = await emitStay({ odoo: o, tra: sim, orderId: 1, est, catalog, mode: 'real', runRef: 'r', env, today: '2026-11-18' });
     assert.equal(r.stop, 'BLOQUEADO'); assert.equal(sim.calls.length, 0); assert.equal(o.lines[0].x_tra_state, 'pendiente');
   }
   assert.equal(emissionGates({ mode: 'otro', est: EST, catalog: CAT }).ok, false);
@@ -126,9 +128,12 @@ test('bitacora sin datos personales; payload segun el manual oficial', async () 
   await run(o, createTraSimulator(), 'real', EST, CAT, logs);
   const s = JSON.stringify(logs);
   for (const pii of ['Nombre', 'Apellido', '70001', '70002', 'ZIPAQUIRA']) assert.ok(!s.includes(pii), pii);
-  const { payload } = buildPayload({ line: { ...line(1, true), doc_code: 'national_citizen_id' }, main: true, order: { x_checkout: '2026-11-12', amount_total: 450000.4 }, est: EST, catalog: CAT, companions: 1 });
+  const order = { x_checkout: '2026-11-12', amount_total: 450000.4 };
+  const cost = confirmedCost({ amounts: [{ ...PAID, x_amount: 400000 }], est: EST, order, today: '2026-11-18' });
+  const { payload } = buildPayload({ line: { ...line(1, true), doc_code: 'national_citizen_id' }, main: true, order, est: EST, catalog: CAT, companions: 1, cost });
   assert.deepEqual(Object.keys(payload), ['tipo_identificacion', 'numero_identificacion', 'nombres', 'apellidos', 'cuidad_residencia', 'cuidad_procedencia', 'numero_habitacion', 'check_in', 'check_out', 'motivo', 'numero_acompanantes', 'tipo_acomodacion', 'costo', 'nombre_establecimiento', 'rnt_establecimiento']);
-  assert.equal(payload.costo, '450000');
+  assert.equal(payload.costo, '400000', 'importe confirmado, no la tarifa');
+  assert.equal(payload.nombre_establecimiento, 'Nombre RNT (TEST)', 'nombre del registro oficial, no x_name');
   assert.equal(payload.check_in, '2026-11-10');
 });
 

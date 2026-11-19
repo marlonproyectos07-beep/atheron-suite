@@ -251,3 +251,14 @@ test('procedimiento de produccion: aplicar exige respaldo y simulacion limpia; s
   await assert.rejects(p.apply(), /SNAPSHOT_REQUIRED/);
   await assert.rejects(p.setAutomation('sa_invite_auto', true), /NOT_OUR_AUTOMATION/);
 });
+
+test('acciones con grupo (importes TRA): el aplicador escribe group_ids; la guardia de creacion nace apagada', async () => {
+  const o = fakeOdoo();
+  await applyManifest(o, { apply: true, automationsActive: false });
+  const byName = (n) => o.t.get('ir.actions.server').find((a) => a.name === n);
+  for (const x of ['sa_amount_confirm', 'sa_amount_void', 'sa_amount_guard']) assert.deepEqual(byName(SERVER_ACTIONS.find((s) => s.xmlid === x).name).group_ids, [[6, 0, [1]]], x);
+  assert.equal(byName(SERVER_ACTIONS.find((s) => s.xmlid === 'sa_validate').name).group_ids, undefined, 'las demas acciones no cambian');
+  const guard = o.t.get('base.automation').find((a) => a.name === AUTOMATIONS.find((x) => x.xmlid === 'au_amount_guard').name);
+  assert.equal(guard.active, false);
+  assert.equal(guard.trigger, 'on_create');
+});
