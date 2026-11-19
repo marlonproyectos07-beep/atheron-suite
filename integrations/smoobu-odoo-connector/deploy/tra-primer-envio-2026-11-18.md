@@ -58,6 +58,14 @@ formulario del huesped, validacion con habitacion 203, confirmacion del pedido, 
 confirmado con evidencia, nombre TRA registrado y equivalencia verificada del motivo que declare el huesped.
 Smoobu reporta un anticipo "Paid"; es un reporte sin contrastar y no basta.
 
+Fuentes consultadas el 18/11/2026 (~19:30 Bogota), solo lectura:
+- Smoobu: reserva directa creada por el anfitrion; anticipo marcado "Paid" el 17/11, sin comprobante; sin mensajes del
+  huesped; sin correo ni telefono.
+- Odoo: pedido en borrador; pagado 0; sin facturas, transacciones, pagos ni movimientos bancarios atribuibles; sin
+  fichas; enlace de registro sin abrir.
+- Correo: sin comprobante del anticipo; los reportes internos de caja del 17 y 18/11 no lo detallan.
+Pendiente para el caso: comprobante del pago, formulario del huesped, validacion, confirmacion del pedido y llegada real.
+
 ## 6. Secuencia propuesta (cada paso con aprobacion)
 1. Secreto `TRA_TOKEN` con el token existente (correo del 25/02/2026). No se genera otro.
 2. Aplicar en produccion el manifiesto de esta PR (aplicador, frase y respaldo) y registrar el nombre TRA con su fuente.
