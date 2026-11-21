@@ -9,7 +9,7 @@ const FINANCIAL_PATTERNS = Object.freeze([
   { pattern: /\btransferiste\b/i, type: 'TRANSFERENCIA_SALIENTE', direction: 'SALIDA' },
   { pattern: /\bretiraste\b/i, type: 'RETIRO_EFECTIVO', direction: 'SALIDA' },
   { pattern: /\brecibiste\s+un\s+pago\b/i, type: 'PAGO_RECIBIDO', direction: 'ENTRADA' },
-  { pattern: /\brecibiste\b[^.]{0,70}\bpor\s+qr\b/i, type: 'RECAUDO_QR', direction: 'ENTRADA' },
+  { pattern: /\brecibiste\b[\s\S]{0,100}\bpor\s+qr\b/i, type: 'RECAUDO_QR', direction: 'ENTRADA' },
   { pattern: /\brecibiste\b/i, type: 'ABONO_RECIBIDO', direction: 'ENTRADA' },
   { pattern: /\bpagaste\b/i, type: 'PAGO_SALIENTE', direction: 'SALIDA' },
 ]);
