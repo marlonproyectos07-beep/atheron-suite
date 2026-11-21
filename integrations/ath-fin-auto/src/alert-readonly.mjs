@@ -30,7 +30,7 @@ function narrativeOnly(body) {
   return narrative;
 }
 
-function parseCOP(text) {
+export function parseCOP(text) {
   // Bancolombia sends both Colombian-style ($125.000,00) and US-style
   // ($54,000.00, $1,000,000) notifications. Reject ambiguous malformed values.
   const match = String(text).match(/\$\s*([0-9][0-9.,]*)/);
