@@ -31,9 +31,41 @@ function narrativeOnly(body) {
 }
 
 function parseCOP(text) {
-  const m = text.match(/\$\s*((?:\d{1,3}(?:\.\d{3})+|\d+)(?:,\d{1,2})?)/);
-  if (!m) return null;
-  const val = Number(m[1].replace(/\./g, '').replace(',', '.'));
+  // Bancolombia sends both Colombian-style ($125.000,00) and US-style
+  // ($54,000.00, $1,000,000) notifications. Reject ambiguous malformed values.
+  const match = String(text).match(/\$\s*([0-9][0-9.,]*)/);
+  if (!match) return null;
+  const raw = match[1].replace(/[.,]+$/, '');
+  if (!/^\d[\d.,]*$/.test(raw)) return null;
+
+  const hasComma = raw.includes(',');
+  const hasDot = raw.includes('.');
+  let normalized;
+
+  if (hasComma && hasDot) {
+    const decimal = raw.lastIndexOf(',') > raw.lastIndexOf('.') ? ',' : '.';
+    const thousands = decimal === '.' ? ',' : '.';
+    const idx = raw.lastIndexOf(decimal);
+    const integer = raw.slice(0, idx);
+    const fraction = raw.slice(idx + 1);
+    const quoted = thousands === '.' ? '\\.' : ',';
+    if (!/^\d{1,2}$/.test(fraction) ||
+        !new RegExp(`^\\d{1,3}(?:${quoted}\\d{3})+$`).test(integer)) return null;
+    normalized = integer.split(thousands).join('') + '.' + fraction;
+  } else if (hasComma || hasDot) {
+    const sep = hasComma ? ',' : '.';
+    const groups = raw.split(sep);
+    if (/^\d{1,3}$/.test(groups[0]) && groups.slice(1).every((s) => /^\d{3}$/.test(s))) {
+      normalized = groups.join('');
+    } else if (groups.length === 2 && /^\d+$/.test(groups[0]) && /^\d{1,2}$/.test(groups[1])) {
+      normalized = groups[0] + '.' + groups[1];
+    } else {
+      return null;
+    }
+  } else {
+    normalized = raw;
+  }
+  const val = Number(normalized);
   return Number.isFinite(val) && val > 0 ? val : null;
 }
 
