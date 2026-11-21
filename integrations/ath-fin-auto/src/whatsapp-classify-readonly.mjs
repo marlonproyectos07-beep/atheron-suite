@@ -6,8 +6,8 @@ import { parseCOP } from './alert-readonly.mjs';
 
 const CAJA_HOTELS = /\bcaja\s+(?:del?\s+)?hotel(?:es|s)?\b|\bcaja\s+atheron\s+hotel(?:es|s)?\b/i;
 const CAJA_SECURITY = /\bcaja\s+(?:de\s+)?security\b|\bcaja\s+(?:de\s+)?seguridad\b/i;
-const EXIT = /\b(?:retir[eéó]|retiramos|retiraron|retir[ao]|salieron|sali[oó]|sacamos|saqu[eé]|se\s+sac[oó]|egreso|entreg[uéóe]|pagu[eéó])\b/i;
-const ENTRY = /\b(?:entraron|ingresaron|recibimos|recib[ií]|ingres[oó]|consignaron|recaudo|abono)\b/i;
+const EXIT = /\b(?:retir[eéó]|retiramos|retiraron|retir[ao]|salieron|sali[oó]|sacamos|saqu[eé]|se\s+sac[oó]|egreso|entreg[uéóe]|pagu[eéó])(?=$|[\s,.!?;:])/i;
+const ENTRY = /\b(?:entraron|ingresaron|recibimos|recib[ií]|ingres[oó]|consignaron|recaudo|abono)(?=$|[\s,.!?;:])/i;
 const TECHNICAL = /\bATH-WA-TEST-[0-9]+\b|\bestamos\s+en\s+pruebas\s+y\s+queremos\s+saber\s+si\s+llega\s+el\s+mensaje\s+a\s+odoo\b/i;
 const CUSTOMER = /\b(?:reservar|reserva|habitaci[oó]n|precio|disponible|cu[aá]nto\s+cuesta|cotizaci[oó]n)\b/i;
 
