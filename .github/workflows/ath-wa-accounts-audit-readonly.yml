@@ -1,0 +1,85 @@
+# ATH-WA-ACCOUNTS-AUDIT-20261121
+# SOLO LECTURA: query metadata whatsapp.account in Odoo 19 via JSON-2.
+# Isolated branch; never schedules; no tokens, phone numbers, messages or names in logs.
+name: ATH-WA Accounts audit SOLO LECTURA
+
+on:
+  push:
+    branches:
+      - ath-wa-accounts-audit-readonly-20261121
+    paths:
+      - .github/workflows/ath-wa-accounts-audit-readonly.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Consultar solamente cuentas WhatsApp
+        env:
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, sys, urllib.parse, urllib.request, urllib.error
+
+          def finish(status, **details):
+              print('ATH-WA-ACCOUNTS-AUDIT ' + json.dumps({'status':status, **details}, ensure_ascii=False))
+              sys.exit(0 if status in ('OK','PERMISSION_BLOCKED') else 2)
+
+          base = os.getenv('ODOO_BASE_URL','').strip().rstrip('/')
+          database = os.getenv('ODOO_DATABASE','').strip()
+          key = os.getenv('ODOO_API_KEY','').strip()
+          parsed = urllib.parse.urlsplit(base)
+          if not key or len(key)<16 or not (parsed.scheme=='https' and parsed.hostname=='atheron1.odoo.com' and parsed.port in (None,443)
+             and parsed.username is None and parsed.password is None and not parsed.query and not parsed.fragment
+             and parsed.path.rstrip('/') in ('','/json/2') and database=='atheron1'):
+              finish('CONFIG_BLOCKED')
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, msg, headers, newurl):
+                  return None
+          http=urllib.request.build_opener(NoRedirect())
+
+          def call(method,payload):
+              url='https://atheron1.odoo.com/json/2/whatsapp.account/'+method
+              req=urllib.request.Request(url,data=json.dumps(payload).encode(),
+                  headers={'Authorization':'bearer '+key,'X-Odoo-Database':database,
+                           'Content-Type':'application/json; charset=utf-8'},
+                  method='POST')
+              with http.open(req,timeout=18) as response:
+                  if response.status!=200: raise ValueError('Unexpected HTTP')
+                  return json.loads(response.read(131072))
+
+          try:
+              metadata=call('fields_get',{'attributes':['type']})
+              if not isinstance(metadata,dict): finish('INVALID_SCHEMA')
+              wanted=[k for k in ('name','display_name','phone_number','active') if k in metadata]
+              if not wanted: finish('NO_SAFE_FIELDS')
+              entries=call('search_read',{'domain':[],'fields':wanted,'limit':100})
+              if not isinstance(entries,list): finish('INVALID_RESPONSE')
+              # Log ONLY categories and booleans. Never output phone numbers, names, raw API data, ids, secrets.
+              groups={'HOTELS':0,'SECURITY':0,'UNCLASSIFIED':0}
+              configured=0;active=0
+              for account in entries:
+                  label=str(account.get('name') or account.get('display_name') or '').lower()
+                  category=('HOTELS' if re.search(r'hotel|suite|hosped|atheron.*hot',label) else
+                            'SECURITY' if re.search(r'secur|segur|cctv',label) else 'UNCLASSIFIED')
+                  groups[category]+=1
+                  configured+=int(bool(account.get('phone_number')))
+                  active+=int(account.get('active') is True)
+              finish('OK',accounts_visible=len(entries),possible_limit=len(entries)>=100,
+                     categories=groups,with_phone_configured=configured if 'phone_number' in wanted else None,
+                     active_count=active if 'active' in wanted else None,
+                     observed_fields=wanted,api_calls=['fields_get','search_read'],
+                     write_operations=0,group_membership_verified=False)
+          except urllib.error.HTTPError as exc:
+              if exc.code in (401,403): finish('PERMISSION_BLOCKED',http_status=exc.code,write_operations=0)
+              finish('UPSTREAM_ERROR',http_status=exc.code,write_operations=0)
+          except (urllib.error.URLError,TimeoutError,ValueError,json.JSONDecodeError):
+              finish('READ_FAILED',write_operations=0)
+          PY
