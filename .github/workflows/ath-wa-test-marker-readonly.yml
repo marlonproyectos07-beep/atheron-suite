@@ -1,0 +1,90 @@
+# ATH-WA-TEST-20261121
+# Consultar por un marcador de prueba ficticio en mensajes WhatsApp Hotels.
+# SOLO lectura: 2 modelos, fields_get / search_read / search_count.
+# No imprimir mensajes, números, nombres, ids ni credenciales.
+name: ATH-WA Test marker SOLO LECTURA
+on:
+  push:
+    branches:
+      - ath-wa-accounts-audit-readonly-20261121
+    paths:
+      - '.github/workflows/ath-wa-test-marker-readonly.yml'
+permissions:
+  contents: read
+jobs:
+  test-marker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Validar si Odoo expone texto del mensaje de prueba
+        env:
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, sys, urllib.parse, urllib.request, urllib.error
+          def finish(status, **kw):
+              print('ATH-WA-MARKER-TEST '+json.dumps({'status':status,**kw}, ensure_ascii=False))
+              sys.exit(0 if status in ('OK','NO_TEXT_FIELD','NOT_FOUND','NO_MATCH') else 2)
+          base=os.environ.get('ODOO_BASE_URL','').rstrip('/')
+          db=os.environ.get('ODOO_DATABASE','')
+          key=os.environ.get('ODOO_API_KEY','')
+          parsed=urllib.parse.urlsplit(base)
+          if not (parsed.scheme=='https' and parsed.hostname=='atheron1.odoo.com'
+            and parsed.port in (None,443) and parsed.path.rstrip('/') in ('','/json/2')
+            and not parsed.username and not parsed.password and not parsed.query and not parsed.fragment
+            and db=='atheron1' and len(key)>=16):
+              finish('CONFIG_BLOCKED')
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, msg, headers, newurl): return None
+          http=urllib.request.build_opener(NoRedirect())
+          def call(model,method,params):
+              if model not in ('whatsapp.account','whatsapp.message','mail.message') or method not in ('fields_get','search_read','search_count'):
+                  raise RuntimeError('METHOD_NOT_ALLOWED')
+              endpoint='https://atheron1.odoo.com/json/2/'+model+'/'+method
+              req=urllib.request.Request(endpoint,data=json.dumps(params).encode('utf8'),
+                headers={'Authorization':'bearer '+key,'X-Odoo-Database':db,'Content-Type':'application/json'},
+                method='POST')
+              with http.open(req,timeout=20) as r:
+                if r.status!=200:raise RuntimeError('HTTP_INVALID')
+                return json.loads(r.read(131072))
+          def category(s):
+              s=str(s or '').lower()
+              return 'HOTELS' if re.search(r'hotel|suite|hosped',s) else 'SECURITY' if re.search(r'secur|segur|cctv',s) else 'OTHER'
+          marker='estamos en pruebas y queremos saber si llega el mensaje a odoo'
+          try:
+              af=call('whatsapp.account','fields_get',{'attributes':['type']})
+              wf=call('whatsapp.message','fields_get',{'attributes':['type','relation']})
+              has_body=wf.get('body',{}).get('type') in ('text','html','char')
+              has_mail_ref=wf.get('mail_message_id',{}).get('relation')=='mail.message'
+              accounts=call('whatsapp.account','search_read',{'domain':[],'fields':['id','name'],'limit':100})
+              if not isinstance(accounts,list) or len(accounts)>=100:finish('INVALID_ACCOUNTS')
+              hotels=[a['id'] for a in accounts if category(a.get('name'))=='HOTELS']
+              if len(hotels)!=1:finish('NO_UNIQUE_HOTELS_ACCOUNT',hotels_count=len(hotels))
+              domains=[
+                ('direct_body',[['wa_account_id','in',hotels],['message_type','=','inbound'],['body','ilike',marker]]) if has_body else None,
+                ('related_mail_body',[['wa_account_id','in',hotels],['message_type','=','inbound'],['mail_message_id.body','ilike',marker]]) if has_mail_ref else None
+              ]
+              counts={}
+              for choice in domains:
+                  if choice is None: continue
+                  which,domain=choice
+                  try:
+                      c=call('whatsapp.message','search_count',{'domain':domain})
+                      if not isinstance(c,int) or c<0:raise RuntimeError('COUNT_INVALID')
+                      counts[which]=c
+                  except urllib.error.HTTPError:
+                      counts[which]='UNSUPPORTED'
+              finish('OK' if any(isinstance(v,int) and v>0 for v in counts.values()) else 'NO_MATCH',
+                hotels_accounts=len(hotels),direct_body_available=has_body,
+                related_mail_message_available=has_mail_ref,
+                marker_match_count_by_method=counts,
+                only_exact_fictitious_marker=True,
+                body_values_returned=False,
+                customer_data_returned=False,write_operations=0)
+          except urllib.error.HTTPError as e:
+              finish('ODOO_READ_FAILED',http_status=e.code,write_operations=0)
+          except (urllib.error.URLError,RuntimeError,ValueError,KeyError,json.JSONDecodeError):
+              finish('READ_FAILED',write_operations=0)
+          PY
