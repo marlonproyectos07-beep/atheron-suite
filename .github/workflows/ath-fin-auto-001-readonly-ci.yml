@@ -1,0 +1,33 @@
+# ATH-FIN-AUTO-001 — tests con datos ficticios. NO se entregan secretos ni se
+# conectan bancos/Gmail/Odoo. No hay permisos de escritura ni despliegues.
+name: ATH-FIN-AUTO-001 Bancolombia read-only CI
+
+on:
+  push:
+    branches:
+      - ath-fin-auto-001-alerts-readonly
+    paths:
+      - 'integrations/ath-fin-auto/**'
+      - '.github/workflows/ath-fin-auto-001-readonly-ci.yml'
+  pull_request:
+    paths:
+      - 'integrations/ath-fin-auto/**'
+      - '.github/workflows/ath-fin-auto-001-readonly-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Comprobar sintaxis y ejecutar pruebas sinteticas (sin APIs ni secretos)
+        run: |
+          node --check integrations/ath-fin-auto/src/alert-readonly.mjs
+          cd integrations/ath-fin-auto
+          npm test
