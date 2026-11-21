@@ -109,3 +109,40 @@ test('la salida no contiene remitente, cuerpo, nombre ni saldo', () => {
   assert.equal(s.includes('Transferiste'),false);
   assert.equal(s.includes('balance'),false);
 });
+
+test('Bancolombia formato miles con coma: un millon COP, sin contabilizar', () => {
+  const r = classifyBankEmail(email('format-us-1',
+    'Bancolombia: Transferiste $1,000,000 desde tu cuenta *0136 a la cuenta *9999.'));
+  assert.equal(r.amountCop, 1000000);
+  assert.equal(r.paymentConfirmed, false);
+  assert.equal(r.writesToOdoo, 0);
+});
+
+test('Bancolombia formato mixto americano: 54,000.00 es 54000, no 54', () => {
+  const r = classifyBankEmail(email('format-us-2',
+    'Bancolombia: Recibiste $54,000.00 por QR de Cliente Ficticio en tu cuenta *0136.'));
+  assert.equal(r.amountCop, 54000);
+  assert.equal(r.type, 'RECAUDO_QR');
+  assert.equal(r.paymentConfirmed, false);
+});
+
+test('Bancolombia dos millones sin cuenta propia no demuestra titularidad', () => {
+  const r = classifyBankEmail(email('format-us-3',
+    'Bancolombia: Retiraste $2,000,000 en nuestro corresponsal ficticio.'));
+  assert.equal(r.amountCop, 2000000);
+  assert.equal(r.ownAccountLast4, null);
+  assert.equal(r.status, 'BLOQUEADO_CUENTA_DESCONOCIDA');
+});
+
+test('Formato colombiano con centavos conserva monto real', () => {
+  const r = classifyBankEmail(email('format-co-1',
+    'Bancolombia: Recibiste $123.456,78 en tu cuenta *0136.'));
+  assert.equal(r.amountCop, 123456.78);
+});
+
+test('No se da por bueno un importe mal formado', () => {
+  const r = classifyBankEmail(email('format-bad-1',
+    'Bancolombia: Transferiste $1,00,000 desde tu cuenta *0136.'));
+  assert.equal(r.amountCop, null);
+  assert.equal(r.status, 'REVISAR_MANUAL');
+});
