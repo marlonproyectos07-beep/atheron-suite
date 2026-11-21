@@ -48,7 +48,7 @@ function localReceivedDate(isoTime) {
   if (typeof isoTime !== 'string' || !isoTime) return null;
   const parsed = new Date(isoTime);
   if (Number.isNaN(parsed.getTime())) return null;
-  return new Intl.DateTimeFormat('en-CA', {
+  return new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'America/Bogota',
     year: 'numeric', month: '2-digit', day: '2-digit',
   }).format(parsed);
