@@ -58,7 +58,7 @@ jobs:
           try:
               metadata=call('fields_get',{'attributes':['type']})
               if not isinstance(metadata,dict): finish('INVALID_SCHEMA')
-              wanted=[k for k in ('name','display_name','phone_number','active') if k in metadata]
+              wanted=[k for k in ('name','display_name','phone_number','phone_uid','account_uid','app_uid','active') if k in metadata]
               if not wanted: finish('NO_SAFE_FIELDS')
               entries=call('search_read',{'domain':[],'fields':wanted,'limit':100})
               if not isinstance(entries,list): finish('INVALID_RESPONSE')
@@ -67,6 +67,8 @@ jobs:
               configured=0;active=0
               phones_by_category={'HOTELS':0,'SECURITY':0,'UNCLASSIFIED':0}
               active_by_category={'HOTELS':0,'SECURITY':0,'UNCLASSIFIED':0}
+              cloud_ids_by_category={'HOTELS':0,'SECURITY':0,'UNCLASSIFIED':0}
+              app_ids_by_category={'HOTELS':0,'SECURITY':0,'UNCLASSIFIED':0}
               for account in entries:
                   label=str(account.get('name') or account.get('display_name') or '').lower()
                   category=('HOTELS' if re.search(r'hotel|suite|hosped|atheron.*hot',label) else
@@ -76,9 +78,12 @@ jobs:
                   phones_by_category[category]+=int(bool(account.get('phone_number')))
                   active+=int(account.get('active') is True)
                   active_by_category[category]+=int(account.get('active') is True)
+                  cloud_ids_by_category[category]+=int(bool(account.get('phone_uid')) and bool(account.get('account_uid')))
+                  app_ids_by_category[category]+=int(bool(account.get('app_uid')))
               finish('OK',accounts_visible=len(entries),possible_limit=len(entries)>=100,
                      categories=groups,phones_by_category=phones_by_category,
-                     active_by_category=active_by_category,with_phone_configured=configured if 'phone_number' in wanted else None,
+                     active_by_category=active_by_category,cloud_ids_by_category=cloud_ids_by_category,
+                     app_ids_by_category=app_ids_by_category,with_phone_configured=configured if 'phone_number' in wanted else None,
                      active_count=active if 'active' in wanted else None,
                      observed_fields=wanted,api_calls=['fields_get','search_read'],
                      write_operations=0,group_membership_verified=False)
