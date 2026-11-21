@@ -1,0 +1,115 @@
+# ATH-WA-RECEPTION-AUDIT: Odoo WhatsApp messages read-only.
+# Do not print message text, PII, phone, credentials or record IDs.
+name: ATH-WA Inbound reception audit SOLO LECTURA
+on:
+  push:
+    branches:
+      - ath-wa-accounts-audit-readonly-20261121
+    paths:
+      - '.github/workflows/ath-wa-reception-audit-readonly.yml'
+
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Comprobar recepcion de mensajes por cuenta, solo metadatos
+        env:
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, sys, urllib.parse, urllib.request, urllib.error
+          from datetime import datetime, timedelta, timezone
+
+          def finish(status, **details):
+              print('ATH-WA-RECEPTION-AUDIT '+json.dumps({'status': status, **details}, ensure_ascii=False))
+              sys.exit(0 if status in ('OK','PERMISSION_BLOCKED','MODEL_NOT_AVAILABLE') else 2)
+
+          base=os.getenv('ODOO_BASE_URL','').rstrip('/')
+          db=os.getenv('ODOO_DATABASE','')
+          key=os.getenv('ODOO_API_KEY','')
+          parsed=urllib.parse.urlsplit(base)
+          if not (parsed.scheme=='https' and parsed.hostname=='atheron1.odoo.com'
+            and parsed.port in (None,443) and not parsed.username and not parsed.password
+            and not parsed.query and not parsed.fragment and parsed.path.rstrip('/') in ('','/json/2')
+            and db=='atheron1' and len(key)>=16):
+              finish('CONFIG_BLOCKED')
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, msg, headers, newurl): return None
+          http=urllib.request.build_opener(NoRedirect())
+          def call(model, method, params):
+              if model not in ('whatsapp.account','whatsapp.message') or method not in ('fields_get','search_read','search_count'):
+                  raise ValueError('READ_ONLY_ALLOWLIST_VIOLATION')
+              endpoint='https://atheron1.odoo.com/json/2/'+model+'/'+method
+              req=urllib.request.Request(endpoint,data=json.dumps(params).encode('utf-8'),
+                  headers={'Authorization':'bearer '+key,'X-Odoo-Database':db,'Content-Type':'application/json'},
+                  method='POST')
+              with http.open(req,timeout=20) as resp:
+                  if resp.status!=200: raise ValueError('BAD_RESPONSE')
+                  return json.loads(resp.read(200000))
+
+          def category(name):
+              s=str(name or '').lower()
+              return ('HOTELS' if re.search(r'hotel|suite|hosped|atheron.*hot',s)
+                else 'SECURITY' if re.search(r'secur|segur|cctv',s) else 'UNCLASSIFIED')
+
+          try:
+              meta=call('whatsapp.message','fields_get',{'attributes':['type','selection']})
+              if not isinstance(meta,dict): finish('INVALID_SCHEMA')
+              candidates=('wa_account_id','message_type','state','create_date','write_date','msg_uid','mobile_number')
+              present=[field for field in candidates if field in meta]
+              # Direction classification only when whatsapp.message.message_type exists and exposes inbound.
+              account_meta=call('whatsapp.account','fields_get',{'attributes':['type']})
+              account_fields=[k for k in ('id','name','display_name','active') if k in account_meta]
+              if 'id' not in account_fields or not {'wa_account_id','create_date','message_type'}.issubset(present):
+                  finish('SCHEMA_INSUFFICIENT',fields_present=present,account_fields_present=account_fields,write_operations=0)
+              accounts=call('whatsapp.account','search_read',{'domain':[],'fields':account_fields,'limit':100})
+              if not isinstance(accounts,list) or len(accounts)>=100: finish('ACCOUNT_READ_INCOMPLETE')
+              today=datetime.now(timezone.utc)
+              iso7=(today-timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
+              iso30=(today-timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')
+              result={k:{'configured_accounts':0,'inbound_7d':0,'inbound_30d':0,
+                        'outbound_30d':0,'any_30d':0,'latest_inbound_date_utc':None}
+                      for k in ('HOTELS','SECURITY','UNCLASSIFIED')}
+              for acct in accounts:
+                  label=category(acct.get('name') or acct.get('display_name'))
+                  t=result[label]
+                  t['configured_accounts']+=1
+                  account_id=acct['id'] # Internal only, never printed
+                  base_domain=[['wa_account_id','=',account_id]]
+                  def count(extra):
+                      result=call('whatsapp.message','search_count',{'domain':base_domain+extra})
+                      if not isinstance(result,int) or result<0: raise ValueError('INVALID_COUNT')
+                      return result
+                  t['any_30d']+=count([['create_date','>=',iso30]])
+                  t['inbound_7d']+=count([['message_type','=','inbound'],['create_date','>=',iso7]])
+                  t['inbound_30d']+=count([['message_type','=','inbound'],['create_date','>=',iso30]])
+                  t['outbound_30d']+=count([['message_type','=','outbound'],['create_date','>=',iso30]])
+                  latest=call('whatsapp.message','search_read',{'domain':base_domain+
+                      [['message_type','=','inbound']],'fields':['create_date'],
+                      'order':'create_date desc','limit':1})
+                  if not isinstance(latest,list): raise ValueError('INVALID_LATEST')
+                  if latest and latest[0].get('create_date'):
+                      date=str(latest[0]['create_date'])[:10]
+                      old=t['latest_inbound_date_utc']
+                      t['latest_inbound_date_utc']=max(old,date) if old else date
+              finish('OK',as_of_utc=today.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                     inspected_model='whatsapp.message',
+                     field_support={'wa_account_id':True,'message_type':True,'create_date':True},
+                     observed_message_type_selection=[
+                        str(x[0]) for x in meta.get('message_type',{}).get('selection',[])
+                        if str(x[0]) in ('inbound','outbound')],
+                     categories=result,
+                     message_bodies_read=False,phone_numbers_read=False,
+                     customers_read=False,write_operations=0)
+          except urllib.error.HTTPError as e:
+              status='PERMISSION_BLOCKED' if e.code in (401,403) else 'MODEL_NOT_AVAILABLE' if e.code==404 else 'UPSTREAM_ERROR'
+              finish(status,http_status=e.code,write_operations=0)
+          except (urllib.error.URLError,ValueError,json.JSONDecodeError,TimeoutError):
+              finish('READ_FAILED',write_operations=0)
+          PY
