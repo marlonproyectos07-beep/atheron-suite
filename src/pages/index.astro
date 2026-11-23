@@ -22,7 +22,7 @@ import ContactoWhatsApp from '../components/ContactoWhatsApp.astro';
 import { formularioContactoActivo } from '../data/ajustes';
 import { experiencias } from '../data/experiencias';
 import { fotoHero } from '../data/casa-colonial-centro';
-import { atributosWhatsApp, MENSAJE_DISPONIBILIDAD, MENSAJE_GRUPO } from '../data/whatsapp';
+import { atributosWhatsApp, MENSAJE_DISPONIBILIDAD, MENSAJE_GRUPO, NUMERO } from '../data/whatsapp';
 import { ORGANIZACION } from '../data/seo';
 
 /* Los cuatro hospedajes destacados salen de la misma coleccion que
@@ -77,14 +77,23 @@ const mosaico = publicados
 
 /* Ficha del negocio para Google y los asistentes de IA.
 
-   Aqui NO ponemos direccion ni telefono todavia: no los tenemos
-   confirmados. Solo se marca informacion que el visitante pueda
-   ver en la pagina; marcar datos inventados es motivo de
-   penalizacion. Se agregan cuando cierren los pendientes 8 y 22. */
+   Direccion y telefono confirmados por Marlon el 23-nov-2026 y ya
+   publicados en el pie de pagina, en la ficha del hotel y en la
+   ficha de Google (Cra. 9 #10-32, Zipaquira). Solo se marca
+   informacion que el visitante pueda ver en la pagina; marcar
+   datos inventados es motivo de penalizacion. */
 const fichaNegocio = {
   '@context': 'https://schema.org',
   ...ORGANIZACION,
   description: 'Colección de hospedajes seleccionados en Zipaquirá, Cundinamarca.',
+  telephone: `+${NUMERO}`,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Cra. 9 #10-32',
+    addressLocality: 'Zipaquirá',
+    addressRegion: 'Cundinamarca',
+    addressCountry: 'CO',
+  },
   areaServed: {
     '@type': 'City',
     name: 'Zipaquirá',

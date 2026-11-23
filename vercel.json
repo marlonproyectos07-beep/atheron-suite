@@ -21,6 +21,26 @@
       "source": "/blog/plantilla-articulo",
       "destination": "/blog",
       "permanent": true
+    },
+    {
+      "source": "/shop",
+      "destination": "/hospedajes",
+      "permanent": true
+    },
+    {
+      "source": "/shop/:path*",
+      "destination": "/hospedajes",
+      "permanent": true
+    },
+    {
+      "source": "/contactus",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/website/social/:path*",
+      "destination": "/",
+      "permanent": true
     }
   ],
   "headers": [
