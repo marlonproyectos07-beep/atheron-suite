@@ -63,21 +63,31 @@ jobs:
               re.search(r'hotel|suite|hosped',str(x.get('name') or ''),re.I)]
             if len(hotels)!=1 or not isinstance(hotels[0],int):
               finish('ACCOUNT_AMBIGUOUS',hotel_account_count=len(hotels))
+            account_ids=[a.get('id') for a in accounts if isinstance(a.get('id'),int)]
+            if not account_ids or len(account_ids)>=50:
+              finish('ACCOUNT_LIST_INCOMPLETE')
+            def group_for(account_id):
+              name=next((str(a.get('name') or '') for a in accounts if a.get('id')==account_id),'')
+              if re.search(r'hotel|suite|hosped',name,re.I):return 'HOTELS'
+              if re.search(r'secur|segur|cctv',name,re.I):return 'SECURITY'
+              return 'OTHER'
             cutoff=(datetime.now(timezone.utc)-timedelta(days=3)).strftime('%Y-%m-%d %H:%M:%S')
-            # Server-side filtered to explicit STAFF-ENROLL prefix; guest chats excluded.
+            # Solo mensajes que contengan prefijo explícito de matrícula,
+            # EN EL SERVIDOR ODOO, antes de que sus cuerpos salgan de Odoo.
             records=call('whatsapp.message','search_read',{'domain':[
-              ['wa_account_id','=',hotels[0]],['message_type','=','inbound'],
+              ['wa_account_id','in',account_ids],['message_type','=','inbound'],
               ['body','ilike','ATH-WA-ALTA-'],['create_date','>=',cutoff]
             ],'fields':['body','mobile_number','create_date','message_type','wa_account_id'],
               'order':'create_date desc','limit':100})
             if len(records)==100:
               finish('AMBIGUOUS',reason='ENROLLMENT_PAGE_FULL')
             matches={'PERSONAL':set(),'RECEPCION':set()}
+            locations={'PERSONAL':set(),'RECEPCION':set()}
             for rec in records:
               if rec.get('message_type')!='inbound':continue
               acc=rec.get('wa_account_id')
               acc=acc[0] if isinstance(acc,list) else acc
-              if acc!=hotels[0]:continue
+              if acc not in account_ids:continue
               body=rec.get('body')
               if not isinstance(body,str):continue
               cleaned=re.sub(r'<[^>]*>','',html.unescape(body)).strip()
@@ -87,16 +97,25 @@ jobs:
               digits=re.sub(r'\D','',mobile)
               if not 8<=len(digits)<=15:continue
               for label,target in EXPECTED.items():
-                if digest==target: matches[label].add(digits)
+                if digest==target:
+                  matches[label].add(digits)
+                  locations[label].add(group_for(acc))
             result={key:len(v) for key,v in matches.items()}
+            where={key:sorted(v) for key,v in locations.items()}
+            if any(v>1 for v in result.values()):
+              finish('AMBIGUOUS',verified_challenges=result,
+                accounts_with_matching_codes=where,
+                phone_numbers_logged=False,allowlist_persisted=False,odoo_writes=0)
             if all(v==1 for v in result.values()):
               distinct=next(iter(matches['PERSONAL']))!=next(iter(matches['RECEPCION']))
               finish('PAIR_FOUND' if distinct else 'AMBIGUOUS',
                 verified_challenges=result,distinct_senders=distinct,
+                accounts_with_matching_codes=where,
                 phone_numbers_logged=False,
                 allowlist_persisted=False,
                 messages_sent=0,odoo_writes=0)
             finish('WAITING',verified_challenges=result,
+              accounts_with_matching_codes=where,
               phone_numbers_logged=False,allowlist_persisted=False,odoo_writes=0)
           except urllib.error.HTTPError as exc:
             if exc.code in (401,403):finish('PERMISSION_BLOCKED',http_status=exc.code)
