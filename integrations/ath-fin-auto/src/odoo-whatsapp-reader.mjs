@@ -23,10 +23,10 @@ export function createOdooWhatsAppReader({ baseUrl, database, apiKey, fetchImpl 
         !Array.isArray(params.domain[1]) || params.domain[1].join('|') !== 'message_type|=|inbound' ||
         !Array.isArray(params.domain[2]) || params.domain[2][0] !== 'mobile_number' ||
         params.domain[2][1] !== 'in' || !Array.isArray(params.domain[2][2]) ||
-        params.domain[2][2].length < 1 || params.domain[2][2].some(s => !/^\\+?[1-9][0-9]{7,14}$/.test(s)) ||
+        params.domain[2][2].length < 1 || params.domain[2][2].some(s => !/^\+?[1-9][0-9]{7,14}$/.test(s)) ||
         !Array.isArray(params.domain[3]) || params.domain[3][0] !== 'create_date' ||
         params.domain[3][1] !== '>=' ||
-        !/^20\\d{2}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(params.domain[3][2])) {
+        !/^20\d{2}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(params.domain[3][2])) {
       throw new Error('READ_ONLY_ALLOWLIST_VIOLATION');
     }
     const endpoint = ORIGIN + '/json/2/whatsapp.message/search_read';
