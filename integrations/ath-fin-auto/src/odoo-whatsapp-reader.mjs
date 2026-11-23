@@ -16,7 +16,17 @@ export function createOdooWhatsAppReader({ baseUrl, database, apiKey, fetchImpl 
         !params || !Array.isArray(params.domain) || !Array.isArray(params.fields) ||
         params.order !== 'create_date asc,id asc' ||
         !Number.isSafeInteger(params.limit) || params.limit<1 || params.limit>100 ||
-        params.fields.join(',') !== 'id,wa_account_id,mobile_number,message_type,create_date,body') {
+        params.fields.join(',') !== 'id,wa_account_id,mobile_number,message_type,create_date,body' ||
+        params.domain.length !== 4 ||
+        !Array.isArray(params.domain[0]) || params.domain[0][0] !== 'wa_account_id' ||
+        params.domain[0][1] !== '=' || !Number.isSafeInteger(params.domain[0][2]) ||
+        !Array.isArray(params.domain[1]) || params.domain[1].join('|') !== 'message_type|=|inbound' ||
+        !Array.isArray(params.domain[2]) || params.domain[2][0] !== 'mobile_number' ||
+        params.domain[2][1] !== 'in' || !Array.isArray(params.domain[2][2]) ||
+        params.domain[2][2].length < 1 || params.domain[2][2].some(s => !/^\\+?[1-9][0-9]{7,14}$/.test(s)) ||
+        !Array.isArray(params.domain[3]) || params.domain[3][0] !== 'create_date' ||
+        params.domain[3][1] !== '>=' ||
+        !/^20\\d{2}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(params.domain[3][2])) {
       throw new Error('READ_ONLY_ALLOWLIST_VIOLATION');
     }
     const endpoint = ORIGIN + '/json/2/whatsapp.message/search_read';
