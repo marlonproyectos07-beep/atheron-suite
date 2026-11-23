@@ -66,7 +66,8 @@ export function createWahaGroupReceiver({
     if (!p || typeof p !== 'object') return rejected(400,'INVALID_MESSAGE');
     // WAHA may supply chatId, from, or to; group must be an EXACT match,
     // and not inferred from the human-readable group title.
-    const chatIds=[p.chatId,p.from,p.to].filter(s=>typeof s==='string' && GROUP_ID.test(s));
+    const chatIds=[...new Set([p.chatId,p.from,p.to]
+      .filter(s=>typeof s==='string' && GROUP_ID.test(s)))];
     if (chatIds.length!==1 || chatIds[0]!==allowedGroupId)
       return rejected(202,'GROUP_OUT_OF_SCOPE');
     if (p.fromMe===true) return rejected(202,'OUTGOING_IGNORED');
