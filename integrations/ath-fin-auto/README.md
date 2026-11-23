@@ -56,3 +56,30 @@ npm test
 ```
 
 El CI ejecuta estas pruebas sin secretos ni acceso a red.
+
+
+## ATH-WA-INGEST-002 — lector directo de mensajes Odoo (noviembre 2026)
+
+El piloto WhatsApp Hotels ha confirmado en vivo que `whatsapp.message` recibe mensajes entrantes y que se puede identificar el mensaje exacto de prueba mediante `search_count`, sin lectura de conversaciones privadas en logs.
+
+Nuevos módulos:
+
+- `src/whatsapp-classify-readonly.mjs`: clasifica mensajes autorizados como consulta de huésped, prueba, reporte Caja Hotels/Security; **nunca contabiliza**.
+- `src/odoo-whatsapp-poller.mjs`: limita toda búsqueda en Odoo desde el servidor usando ID de cuenta explícito, teléfonos de trabajadores autorizados, dirección inbound y fecha UTC. Si faltan cuenta/remitentes, **no consulta cuerpos**. Comprueba otra vez el alcance de cada fila; errores detienen el ciclo sin resultados.
+- `src/odoo-whatsapp-reader.mjs`: adaptador JSON-2 con destino fijo `atheron1.odoo.com`, modelo `whatsapp.message`, único método `search_read`, campos y dominio restringidos. No hay operaciones de escritura.
+- `test/odoo-whatsapp-poller.test.mjs`, `test/odoo-whatsapp-reader.test.mjs`: pruebas sintéticas, sin credenciales reales.
+
+**No se activa un polling continuo ni se crea una bandeja de datos privados en este PR.** El receptor es invocable, pero aún no tiene un programador y no puede almacenar/consultar resultados desde ChatGPT.
+
+### Requisitos para encender el ciclo automático
+
+1. Configuración cifrada de las cuentas Odoo IDs exactas (Hotels / Security) y lista de teléfonos de remitentes **internos** autorizados en formato exacto como figure en `whatsapp.message.mobile_number`. No extraer teléfonos de huéspedes por heurísticas.
+2. Servicio privado persistente o programador autenticado, fuera del repositorio público. La llave Odoo debe tener permisos mínimos de lectura.
+3. Registro privado durable de mensajes recibidos y huellas idempotentes, cursor persistente, reintentos, alarmas por falta de cobertura y paginación de lotes.
+4. Conexión privada de ChatGPT al registro de eventos, con permisos por negocio.
+5. Prueba controlada de dos reportes ficticios desde teléfonos autorizados; cotejar resultado en la bandeja, **cero escrituras**.
+6. Solo después de nueva autorización y un ambiente de pruebas: propuesta de asiento, cotejo de Caja Hotels/Odoo y publicación controlada.
+
+La Cloud API de Odoo está probada para **mensajes individuales**. La ingestión del grupo nativo WhatsApp `Cartera Atheron` **NO está conectada** y requiere una solución aparte; no afirmar que el grupo se está monitoreando.
+
+No introducir nunca datos financieros reales, teléfonos, nombres, textos de clientes ni claves en archivos GitHub, artefactos o logs de Actions.
