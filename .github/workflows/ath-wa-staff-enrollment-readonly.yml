@@ -1,0 +1,106 @@
+# ATH-WA-STAFF-ENROLL-001 — verificar DOS remitentes, sin publicar sus números.
+# No sincroniza WhatsApp, no envía mensajes y no almacena identidad en GitHub.
+# Solo consulta mensajes que ya tienen el prefijo de registro, en cuenta HOTELS.
+name: ATH-WA Staff enrollment TEST (no writes)
+on:
+  push:
+    branches:
+      - ath-wa-accounts-audit-readonly-20261121
+    paths:
+      - .github/workflows/ath-wa-staff-enrollment-readonly.yml
+permissions:
+  contents: read
+jobs:
+  enrollment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Verify unique challenge tokens and distinct senders without logging PII
+        env:
+          ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+          ODOO_DATABASE: ${{ vars.ODOO_DATABASE }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import hashlib, html, json, os, re, sys, urllib.parse, urllib.request, urllib.error
+          from datetime import datetime,timedelta,timezone
+          EXPECTED={
+            'PERSONAL':'69792f9bbe33eac4dca09364c5a369806cbb9f563127cc1af652bb261c1c0a98',
+            'RECEPCION':'9f8bbfd8cad0bebb7b732372f0c5c59a6e1293e2e37825750c90e7fd0271f9f5'
+          }
+          def finish(status, **data):
+            # Status and aggregate counts only: never phone, body, sender ID, account ID,
+            # names, raw Odoo error, email or message identifiers.
+            print('ATH-WA-STAFF-ENROLL '+json.dumps({'status':status,**data},ensure_ascii=False))
+            sys.exit(0 if status in ('WAITING','PAIR_FOUND','AMBIGUOUS','PERMISSION_BLOCKED') else 2)
+          base=os.getenv('ODOO_BASE_URL','').strip().rstrip('/')
+          db=os.getenv('ODOO_DATABASE','').strip()
+          token=os.getenv('ODOO_API_KEY','').strip()
+          u=urllib.parse.urlsplit(base)
+          if not (u.scheme=='https' and u.hostname=='atheron1.odoo.com' and u.port in (None,443)
+            and not u.username and not u.password and not u.query and not u.fragment
+            and u.path.rstrip('/') in ('','/json/2') and db=='atheron1' and len(token)>=16):
+            finish('CONFIG_BLOCKED')
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, req, fp, code, msg, headers, url): return None
+          client=urllib.request.build_opener(NoRedirect())
+          def call(model,method,arguments):
+            if (model,method) not in {('whatsapp.account','search_read'),('whatsapp.message','search_read')}:
+              raise ValueError('READ_ONLY_VIOLATION')
+            url='https://atheron1.odoo.com/json/2/'+model+'/'+method
+            req=urllib.request.Request(url,data=json.dumps(arguments).encode(),
+              headers={'Authorization':'bearer '+token,'X-Odoo-Database':db,'Content-Type':'application/json'},
+              method='POST')
+            with client.open(req,timeout=18) as result:
+              if result.status!=200:raise ValueError('READ_FAILURE')
+              response=json.loads(result.read(150000))
+              if not isinstance(response,list):raise ValueError('RESPONSE_INVALID')
+              return response
+          try:
+            accounts=call('whatsapp.account','search_read',{'domain':[],
+              'fields':['id','name'],'limit':50})
+            hotels=[x.get('id') for x in accounts if
+              re.search(r'hotel|suite|hosped',str(x.get('name') or ''),re.I)]
+            if len(hotels)!=1 or not isinstance(hotels[0],int):
+              finish('ACCOUNT_AMBIGUOUS',hotel_account_count=len(hotels))
+            cutoff=(datetime.now(timezone.utc)-timedelta(days=3)).strftime('%Y-%m-%d %H:%M:%S')
+            # Server-side filtered to explicit STAFF-ENROLL prefix; guest chats excluded.
+            records=call('whatsapp.message','search_read',{'domain':[
+              ['wa_account_id','=',hotels[0]],['message_type','=','inbound'],
+              ['body','ilike','ATH-WA-ALTA-'],['create_date','>=',cutoff]
+            ],'fields':['body','mobile_number','create_date','message_type','wa_account_id'],
+              'order':'create_date desc','limit':100})
+            if len(records)==100:
+              finish('AMBIGUOUS',reason='ENROLLMENT_PAGE_FULL')
+            matches={'PERSONAL':set(),'RECEPCION':set()}
+            for rec in records:
+              if rec.get('message_type')!='inbound':continue
+              acc=rec.get('wa_account_id')
+              acc=acc[0] if isinstance(acc,list) else acc
+              if acc!=hotels[0]:continue
+              body=rec.get('body')
+              if not isinstance(body,str):continue
+              cleaned=re.sub(r'<[^>]*>','',html.unescape(body)).strip()
+              digest=hashlib.sha256(cleaned.encode('utf-8')).hexdigest()
+              mobile=rec.get('mobile_number')
+              if not isinstance(mobile,str):continue
+              digits=re.sub(r'\D','',mobile)
+              if not 8<=len(digits)<=15:continue
+              for label,target in EXPECTED.items():
+                if digest==target: matches[label].add(digits)
+            result={key:len(v) for key,v in matches.items()}
+            if all(v==1 for v in result.values()):
+              distinct=next(iter(matches['PERSONAL']))!=next(iter(matches['RECEPCION']))
+              finish('PAIR_FOUND' if distinct else 'AMBIGUOUS',
+                verified_challenges=result,distinct_senders=distinct,
+                phone_numbers_logged=False,
+                allowlist_persisted=False,
+                messages_sent=0,odoo_writes=0)
+            finish('WAITING',verified_challenges=result,
+              phone_numbers_logged=False,allowlist_persisted=False,odoo_writes=0)
+          except urllib.error.HTTPError as exc:
+            if exc.code in (401,403):finish('PERMISSION_BLOCKED',http_status=exc.code)
+            finish('UPSTREAM_ERROR',http_status=exc.code)
+          except (ValueError,urllib.error.URLError,TimeoutError,json.JSONDecodeError):
+            finish('READ_FAILED')
+          PY
