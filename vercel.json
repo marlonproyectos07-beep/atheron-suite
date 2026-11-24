@@ -3,12 +3,12 @@
   "trailingSlash": false,
   "redirects": [
     {
-      "source": "/hospedajes/la-magia-de-zipaquira",
+      "source": "/hospedajes/la-magia-de-zipaquira.html",
       "destination": "/hospedajes/hotel-atheron-suite",
       "permanent": true
     },
     {
-      "source": "/hospedajes/la-magia-de-zipaquira.html",
+      "source": "/hospedajes/la-magia-de-zipaquira",
       "destination": "/hospedajes/hotel-atheron-suite",
       "permanent": true
     },
