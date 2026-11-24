@@ -7,6 +7,8 @@ import { AUTOMATIONS, FIELDS, SERVER_ACTIONS, VIEWS } from '../src/sire-tra/mani
 /**
  * Discrepancia de fechas tras la aceptacion de TRA (ATH-HOTELS-SIRE-TRA-001). Datos 100 % sinteticos.
  * Cubre: prorroga, salida anticipada, estancia sin cambios (sin alerta falsa), evidencia intacta y cero llamadas nuevas.
+ * Desde la respuesta MinCIT 2-2026-039958 el envio se hace tras la salida real: la discrepancia solo puede aparecer si la
+ * salida se corrige DESPUES de la aceptacion (accion "Corregir hora de llegada/salida").
  */
 const EST = { x_name: 'Atheron Suite (TEST)', x_rnt_number: '999999', x_tra_mode: 'api', x_tra_config_verified: true, x_tra_accommodation_type: 'Habitacion', x_tra_cost_basis: 'total_estancia', x_tra_establishment_name: 'Nombre RNT (TEST)' };
 const CAT = { verified: true, docTypes: TRA_CATALOG_UNVERIFIED.docTypes, reasons: { Vacaciones: 'Vacaciones' } };
@@ -20,10 +22,11 @@ function fakeOdoo(lines, order) {
   return {
     lines, attempts, order,
     async searchRead(model) {
-      if (model === 'x_guests_line') return lines.filter((l) => l.x_arrived_at && l.x_data_state === 'validado').map((l) => ({ ...l }));
+      if (model === 'x_guests_line') return lines.map((l) => ({ ...l }));
+      if (model === 'x_report_attempt') return [];
       if (model === 'l10n_latam.identification.type') return [{ id: 5, l10n_co_document_code: 'national_citizen_id' }];
       if (model === 'sale.order') return [{ id: 1, state: 'sale', x_checkout: order.x_checkout, amount_total: 450000 }];
-      if (model === 'x_tra_amount') return [{ id: 1, x_state: 'confirmado', x_amount: 450000, x_currency_id: [8, 'COP'], x_cutoff_date: '2026-11-10', x_evidence_kind: 'comprobante_pago', x_evidence_ref: 'REF-TEST', x_evidence_name: 'comprobante.pdf', x_confirmed_by: [2, 'u'], x_confirmed_at: '2026-11-10 12:00:00', write_date: '2026-11-10 12:00:00' }];
+      if (model === 'x_tra_amount') return [{ id: 1, x_state: 'confirmado', x_amount: 450000, x_currency_id: [8, 'COP'], x_cutoff_date: '2026-11-12', x_evidence_kind: 'comprobante_pago', x_evidence_ref: 'REF-TEST', x_evidence_name: 'comprobante.pdf', x_excludes_taxes: true, x_covers_all_guests: true, x_confirmed_by: [2, 'u'], x_confirmed_at: '2026-11-12 16:00:00', write_date: '2026-11-12 16:00:00' }];
       throw new Error(model);
     },
     async claim(ids) {
@@ -51,7 +54,7 @@ function fakeOdoo(lines, order) {
     },
   };
 }
-const line = (id, main) => ({ id, x_is_main: main, x_doc_type_id: [5, 'CC'], x_identity_number: `7000${id}`, x_given_names: 'Nombre', x_surname_1: 'Apellido', x_surname_2: false, x_residence_city_id: [1, 'ZIPAQUIRA'], x_residence_text: false, x_origin_city_id: [2, 'BOGOTA'], x_origin_text: false, x_travel_reason: 'Vacaciones', x_tra_room: '201', x_arrived_at: '2026-11-10 20:00:00', x_tra_state: 'pendiente', x_tra_external_id: false, x_data_state: 'validado', x_departed_at: false });
+const line = (id, main) => ({ id, x_is_main: main, x_doc_type_id: [5, 'CC'], x_identity_number: `7000${id}`, x_given_names: 'Nombre', x_surname_1: 'Apellido', x_surname_2: false, x_residence_city_id: [1, 'ZIPAQUIRA'], x_residence_text: false, x_origin_city_id: [2, 'BOGOTA'], x_origin_text: false, x_travel_reason: 'Vacaciones', x_tra_room: '201', x_arrived_at: '2026-11-10 20:00:00', x_tra_state: 'pendiente', x_tra_external_id: false, x_data_state: 'validado', x_departed_at: '2026-11-12 15:00:00' }); // 10:00 Bogota del 12
 const gapOf = (l, order) => dateGap({ traState: l.x_tra_state, reportedCheckout: l.x_tra_rep_checkout, departedAt: l.x_departed_at, orderCheckout: order.x_checkout });
 const run = (odoo, tra) => emitStay({ odoo, tra, orderId: 1, est: EST, catalog: CAT, mode: 'simulador', runRef: 'r', env: ENV, today: '2026-11-18' });
 
@@ -71,19 +74,19 @@ test('el intento aceptado conserva las fechas tal como se enviaron y la linea la
   for (const l of o.lines) { assert.equal(l.x_tra_rep_checkin, '2026-11-10'); assert.equal(l.x_tra_rep_checkout, '2026-11-12'); }
 });
 
-test('estancia sin cambios: ninguna alerta falsa (sin salida, salida el dia previsto, antes o despues de la medianoche UTC)', async () => {
+test('estancia sin cambios: ninguna alerta falsa (salida tal como se envio, misma fecha antes o despues de la medianoche UTC, cambio posterior de la reserva)', async () => {
   const { o, order } = await accepted();
-  assert.equal(gapOf(o.lines[0], order), false);
-  o.lines[0].x_departed_at = '2026-11-12 15:00:00'; // 10:00 Bogota del 12
   assert.equal(gapOf(o.lines[0], order), false);
   o.lines[0].x_departed_at = '2026-11-13 04:30:00'; // 23:30 Bogota del 12: sigue siendo el 12
   assert.equal(gapOf(o.lines[0], order), false);
+  order.x_checkout = '2026-11-14'; // con salida real registrada manda la salida real, no la reserva
+  assert.equal(gapOf(o.lines[0], order), false);
 });
 
-test('prorroga: alerta, evidencia original intacta y cero llamadas nuevas al simulador', async () => {
+test('prorroga (salida corregida despues de aceptar): alerta, evidencia original intacta y cero llamadas nuevas', async () => {
   const { o, sim, order } = await accepted();
   const before = structuredClone({ attempts: o.attempts, lines: o.lines.map((l) => ({ s: l.x_tra_state, id: l.x_tra_external_id, i: l.x_tra_rep_checkin, f: l.x_tra_rep_checkout })) });
-  order.x_checkout = '2026-11-14'; // Recepcion/Smoobu amplian la estancia despues de la aceptacion
+  o.lines[0].x_departed_at = '2026-11-14 15:00:00'; // Recepcion corrige la salida real despues de la aceptacion
   assert.equal(gapOf(o.lines[0], order), 'prorroga');
   const r = await run(o, sim);
   assert.equal(r.sent, 0);
@@ -93,8 +96,8 @@ test('prorroga: alerta, evidencia original intacta y cero llamadas nuevas al sim
   assert.deepEqual(o.lines.map((l) => ({ s: l.x_tra_state, id: l.x_tra_external_id, i: l.x_tra_rep_checkin, f: l.x_tra_rep_checkout })), before.lines, 'aceptacion y fechas reportadas intactas');
 });
 
-test('salida anticipada (salida real o reserva acortada): alerta, evidencia intacta y cero llamadas nuevas', async () => {
-  for (const change of [(o, order) => { o.lines[0].x_departed_at = '2026-11-11 15:00:00'; }, (o, order) => { order.x_checkout = '2026-11-11'; }, (o) => { o.lines[0].x_departed_at = '2026-11-12 03:00:00'; /* 22:00 Bogota del 11 */ }]) {
+test('salida anticipada (salida corregida despues de aceptar): alerta, evidencia intacta y cero llamadas nuevas', async () => {
+  for (const change of [(o) => { o.lines[0].x_departed_at = '2026-11-11 15:00:00'; }, (o) => { o.lines[0].x_departed_at = '2026-11-12 03:00:00'; /* 22:00 Bogota del 11 */ }]) {
     const { o, sim, order } = await accepted();
     const snapshot = structuredClone(o.attempts);
     change(o, order);

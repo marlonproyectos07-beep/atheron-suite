@@ -1,5 +1,5 @@
 {
- "fingerprint": "6ead35ac6e33321f",
+ "fingerprint": "6c30f3dde1efb5f2",
  "NS": "__ath_sire_tra__",
  "MODELS": [
   {
@@ -1241,6 +1241,20 @@
   ],
   [
    "x_tra_amount",
+   "x_excludes_taxes",
+   "boolean",
+   "El importe no incluye impuestos",
+   {}
+  ],
+  [
+   "x_tra_amount",
+   "x_covers_all_guests",
+   "boolean",
+   "Cubre el alojamiento del principal y de todos sus acompañantes",
+   {}
+  ],
+  [
+   "x_tra_amount",
    "x_state",
    "selection",
    "Estado",
@@ -1444,7 +1458,7 @@
    "groups": [
     "base.group_user"
    ],
-   "code": "if not records:\n    raise UserError('Seleccione un importe.')\nif len(records) != 1:\n    raise UserError('Confirme un importe a la vez.')\nr = records\ntoday = (datetime.datetime.utcnow() - datetime.timedelta(hours=5)).date()\nerr = False\nif r.x_state == 'confirmado':\n    err = 'ya está confirmado'\nelif r.x_state == 'anulado':\n    err = 'está anulado; registre uno nuevo'\nelif not r.x_amount or r.x_amount <= 0:\n    err = 'falta el importe efectivamente pagado'\nelif not r.x_currency_id:\n    err = 'falta la moneda'\nelif r.x_currency_id.name != 'COP':\n    err = 'TRA exige el valor en pesos colombianos (COP)'\nelif not r.x_cutoff_date:\n    err = 'falta la fecha de corte'\nelif r.x_cutoff_date > today:\n    err = 'la fecha de corte no puede ser futura'\nelif not r.x_evidence_kind or not (r.x_evidence_ref or '').strip() or not r.x_evidence or not (r.x_evidence_name or '').strip():\n    err = 'falta la evidencia: tipo, referencia y archivo'\nelif env['x_tra_amount'].search_count([('x_sale_order_id', '=', r.x_sale_order_id.id), ('x_state', '=', 'confirmado'), ('id', '!=', r.id)]):\n    err = 'la reserva ya tiene un importe confirmado; anúlelo antes'\nif err:\n    raise UserError('No se confirmó el importe: %s.' % err)\nr.sudo().write({'x_state': 'confirmado', 'x_confirmed_by': env.user.id, 'x_confirmed_at': datetime.datetime.now()})"
+   "code": "if not records:\n    raise UserError('Seleccione un importe.')\nif len(records) != 1:\n    raise UserError('Confirme un importe a la vez.')\nr = records\ntoday = (datetime.datetime.utcnow() - datetime.timedelta(hours=5)).date()\n# salida de la estancia en Bogota (UTC-5): la mas tardia; el costo es definitivo solo despues del check-out\nstay_lines = env['x_guests_line'].sudo().search([('x_sale_order_id', '=', r.x_sale_order_id.id)])\nnot_departed = False\nlast_departure = False\nfor gl in stay_lines:\n    if not gl.x_departed_at:\n        not_departed = True\n    else:\n        dd = (gl.x_departed_at - datetime.timedelta(hours=5)).date()\n        if not last_departure or dd > last_departure:\n            last_departure = dd\nerr = False\nif r.x_state == 'confirmado':\n    err = 'ya está confirmado'\nelif r.x_state == 'anulado':\n    err = 'está anulado; registre uno nuevo'\nelif not r.x_amount or r.x_amount <= 0:\n    err = 'falta el importe efectivamente pagado'\nelif not r.x_currency_id:\n    err = 'falta la moneda'\nelif r.x_currency_id.name != 'COP':\n    err = 'TRA exige el valor en pesos colombianos (COP)'\nelif not r.x_cutoff_date:\n    err = 'falta la fecha de corte'\nelif r.x_cutoff_date > today:\n    err = 'la fecha de corte no puede ser futura'\nelif not r.x_evidence_kind or not (r.x_evidence_ref or '').strip() or not r.x_evidence or not (r.x_evidence_name or '').strip():\n    err = 'falta la evidencia: tipo, referencia y archivo'\nelif not r.x_excludes_taxes:\n    err = 'falta la constancia de que el importe no incluye impuestos (MinCIT, 2-2026-039958)'\nelif not r.x_covers_all_guests:\n    err = 'falta la constancia de que cubre el alojamiento del principal y de todos sus acompañantes'\nelif not stay_lines or not_departed:\n    err = 'la estancia no tiene registrada la salida real de todos los huéspedes; el costo se confirma después del check-out'\nelif r.x_cutoff_date < last_departure:\n    err = 'la fecha de corte es anterior a la salida real de la estancia'\nelif env['x_tra_amount'].search_count([('x_sale_order_id', '=', r.x_sale_order_id.id), ('x_state', '=', 'confirmado'), ('id', '!=', r.id)]):\n    err = 'la reserva ya tiene un importe confirmado; anúlelo antes'\nif err:\n    raise UserError('No se confirmó el importe: %s.' % err)\nr.sudo().write({'x_state': 'confirmado', 'x_confirmed_by': env.user.id, 'x_confirmed_at': datetime.datetime.now()})"
   },
   {
    "xmlid": "sa_amount_void",
@@ -3218,7 +3232,7 @@
    "model": "x_tra_amount",
    "type": "form",
    "priority": 90,
-   "arch": "<form string=\"Importe pagado (TRA)\">\n<header><button name=\"{{ref:sa_amount_confirm}}\" type=\"action\" string=\"Confirmar con evidencia\" class=\"btn-primary\" invisible=\"x_state in ('confirmado', 'anulado')\"/><button name=\"{{ref:sa_amount_void}}\" type=\"action\" string=\"Anular\" invisible=\"x_state == 'anulado'\"/><field name=\"x_state\" widget=\"statusbar\" readonly=\"1\"/></header>\n<sheet><group>\n<group string=\"Importe\"><field name=\"x_sale_order_id\" options=\"{'no_create': True}\"/><field name=\"x_amount\"/><field name=\"x_currency_id\" options=\"{'no_create': True}\"/><field name=\"x_cutoff_date\"/></group>\n<group string=\"Evidencia\"><field name=\"x_evidence_kind\"/><field name=\"x_evidence_ref\"/><field name=\"x_evidence\" filename=\"x_evidence_name\"/><field name=\"x_evidence_name\" invisible=\"1\"/></group>\n<group string=\"Confirmación\"><field name=\"x_confirmed_by\" readonly=\"1\"/><field name=\"x_confirmed_at\" readonly=\"1\"/><field name=\"x_name\"/><field name=\"x_note\"/></group>\n</group></sheet>\n</form>"
+   "arch": "<form string=\"Importe pagado (TRA)\">\n<header><button name=\"{{ref:sa_amount_confirm}}\" type=\"action\" string=\"Confirmar con evidencia\" class=\"btn-primary\" invisible=\"x_state in ('confirmado', 'anulado')\"/><button name=\"{{ref:sa_amount_void}}\" type=\"action\" string=\"Anular\" invisible=\"x_state == 'anulado'\"/><field name=\"x_state\" widget=\"statusbar\" readonly=\"1\"/></header>\n<sheet>\n<div class=\"alert alert-info\" role=\"status\">Costo total del alojamiento del huésped principal y de todos sus acompañantes, sin impuestos (MinCIT, respuesta 2-2026-039958). Se confirma después de registrar la salida real, con fecha de corte igual o posterior a esa salida. Una tarifa o un anticipo no son el importe definitivo.</div>\n<group>\n<group string=\"Importe\"><field name=\"x_sale_order_id\" options=\"{'no_create': True}\"/><field name=\"x_amount\"/><field name=\"x_currency_id\" options=\"{'no_create': True}\"/><field name=\"x_cutoff_date\"/><field name=\"x_excludes_taxes\"/><field name=\"x_covers_all_guests\"/></group>\n<group string=\"Evidencia\"><field name=\"x_evidence_kind\"/><field name=\"x_evidence_ref\"/><field name=\"x_evidence\" filename=\"x_evidence_name\"/><field name=\"x_evidence_name\" invisible=\"1\"/></group>\n<group string=\"Confirmación\"><field name=\"x_confirmed_by\" readonly=\"1\"/><field name=\"x_confirmed_at\" readonly=\"1\"/><field name=\"x_name\"/><field name=\"x_note\"/></group>\n</group></sheet>\n</form>"
   },
   {
    "xmlid": "view_amount_list",
@@ -3226,7 +3240,7 @@
    "model": "x_tra_amount",
    "type": "list",
    "priority": 90,
-   "arch": "<list string=\"Importes pagados (TRA)\"><field name=\"x_sale_order_id\"/><field name=\"x_amount\"/><field name=\"x_currency_id\"/><field name=\"x_cutoff_date\"/><field name=\"x_evidence_kind\"/><field name=\"x_evidence_ref\"/><field name=\"x_state\"/><field name=\"x_confirmed_by\"/><field name=\"x_confirmed_at\"/></list>"
+   "arch": "<list string=\"Importes pagados (TRA)\"><field name=\"x_sale_order_id\"/><field name=\"x_amount\"/><field name=\"x_currency_id\"/><field name=\"x_cutoff_date\"/><field name=\"x_excludes_taxes\" optional=\"show\"/><field name=\"x_covers_all_guests\" optional=\"show\"/><field name=\"x_evidence_kind\"/><field name=\"x_evidence_ref\"/><field name=\"x_state\"/><field name=\"x_confirmed_by\"/><field name=\"x_confirmed_at\"/></list>"
   },
   {
    "xmlid": "view_est_list",

@@ -81,3 +81,17 @@ Intentos creados: 1 `error_previo` y 22 `aceptado`, todos con canal `simulador`.
 8. Corrección o anulación de un registro enviado, incluido un cambio de fechas posterior a la aceptación (prórroga o salida anticipada): vía, costo y plazo.
 
 Las preguntas quedan en `CONSULTA-MINCIT-BORRADOR.md`, sin enviar.
+
+## 7. Respuesta oficial 2-2026-039958 (23/11/2026) frente a la sección 6
+
+Detalle y fuente en `deploy/tra-grupo1-manual-y-respuesta-2026-11-24.md`. Resumen parafraseado:
+
+| Punto de la sección 6 | Respuesta oficial | Estado |
+|---|---|---|
+| 1. Confirmación | Módulo de consulta https://pms.mincit.gov.co/login/ (usuario = RNT); sin `code` no se escribió el registro | Resuelto: comprobación en el portal |
+| 2. Valores de la API | Documento y acomodación: texto, seguir el Grupo 2 (recomendación). Motivo: lista exacta, rechaza otros valores, **sin adjuntar la lista** | Motivo sigue pendiente; `verified: false` |
+| 3-4. PEP, PPT, D.N.I, T.I como principal | No se responden | Pendiente |
+| 5. `costo` | Total del alojamiento del principal y sus acompañantes, **sin impuestos**; texto, formato libre | Parcial: siete reglas sin aclarar |
+| 6. `tipo_acomodacion` | Texto; seguir el Grupo 2 | Pendiente de fijar el valor |
+| 7. Ciudades | Texto libre; extranjeras por su nombre en español | Resuelto |
+| 8. Corrección o anulación | No se modifica ni reenvía; se pide el borrado por correo a soporte | Resuelto: procedimiento documentado |

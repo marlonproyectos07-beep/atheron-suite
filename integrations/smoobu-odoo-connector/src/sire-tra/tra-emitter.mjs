@@ -5,6 +5,15 @@
  * Reglas: principal antes que acompanantes; el resultado del principal se persiste antes de seguir;
  * nunca se reenvia un principal aceptado; no se reintenta a ciegas tras timeout o resultado incierto;
  * sin configuracion oficial verificada no se envia nada. La bitacora no lleva datos personales.
+ *
+ * MinCIT, respuesta oficial 2-2026-039958 (23/11/2026, radicado 1-2026-041876): los registros se envian cuando se
+ * realiza el check-out y solo completos; no se pueden modificar ni reenviar (solo pedir su borrado a soporte).
+ * Por eso: CERO envios antes de registrar la salida real de TODOS los huespedes de la estancia, y check_out = esa
+ * salida real (no la fecha prevista de la reserva).
+ * Advertencia VERBAL del asesor MinCIT (reunion del 24/11/2026, comunicada por Marlon; sin respaldo escrito): alterar
+ * el JSON y repetir peticiones fallidas puede provocar bloqueos. El mecanismo no esta documentado; aqui solo se
+ * reduce la exposicion: JSON con las claves y el orden del manual, sin campos propios, una peticion por ficha, se
+ * detiene al primer fallo y limita los reenvios tras fallo (MAX_FAILED_REAL_ATTEMPTS).
  */
 export const TRA_CATALOG_UNVERIFIED = Object.freeze({
   verified: false,
@@ -17,8 +26,35 @@ export const TRA_CATALOG_UNVERIFIED = Object.freeze({
   reasons: {},
 });
 
-export const LINE_FIELDS = ['id', 'x_is_main', 'x_doc_type_id', 'x_identity_number', 'x_given_names', 'x_surname_1', 'x_surname_2', 'x_residence_city_id', 'x_residence_text', 'x_origin_city_id', 'x_origin_text', 'x_travel_reason', 'x_tra_room', 'x_arrived_at', 'x_tra_state', 'x_tra_external_id', 'x_data_state'];
+export const LINE_FIELDS = ['id', 'x_is_main', 'x_doc_type_id', 'x_identity_number', 'x_given_names', 'x_surname_1', 'x_surname_2', 'x_residence_city_id', 'x_residence_text', 'x_origin_city_id', 'x_origin_text', 'x_travel_reason', 'x_tra_room', 'x_arrived_at', 'x_departed_at', 'x_tra_state', 'x_tra_external_id', 'x_data_state'];
 const name = (m2o) => (Array.isArray(m2o) ? m2o[1] : '') || '';
+
+// ------------------------------------------------------------------ JSON oficial (manual Grupo 1, PMS)
+// Claves y orden EXACTOS del ejemplo del manual (incluida la grafia "cuidad_*"). El emisor construye el cuerpo
+// recorriendo estas listas: no puede salir una clave de mas, de menos ni en otro orden.
+// /one/ (huesped principal): todos los valores van como texto entre comillas, como en el ejemplo del manual.
+export const TRA_ONE_KEYS = Object.freeze(['tipo_identificacion', 'numero_identificacion', 'nombres', 'apellidos', 'cuidad_residencia', 'cuidad_procedencia', 'numero_habitacion', 'motivo', 'numero_acompanantes', 'check_in', 'check_out', 'tipo_acomodacion', 'costo', 'nombre_establecimiento', 'rnt_establecimiento']);
+// /two/ (acompanante): texto, salvo "padre", que el manual muestra sin comillas (numerico) = "code" devuelto por /one/.
+export const TRA_TWO_KEYS = Object.freeze(['tipo_identificacion', 'numero_identificacion', 'nombres', 'apellidos', 'cuidad_residencia', 'cuidad_procedencia', 'numero_habitacion', 'check_in', 'check_out', 'padre']);
+// Tabla de tipos del manual para /one/: numero_identificacion, numero_acompanantes y rnt_establecimiento son
+// "numerico" (aunque el ejemplo los entrecomilla). Se envian como texto de solo digitos; lo demas no se envia.
+export const TRA_ONE_DIGITS = Object.freeze(['numero_identificacion', 'numero_acompanantes', 'rnt_establecimiento']);
+const DIGITS = /^\d+$/;
+
+/**
+ * Fecha de salida de la estancia (AAAA-MM-DD, Bogota): la mas tardia de las salidas reales. null si alguna ficha no
+ * tiene salida real registrada (la estancia no ha terminado y no se reporta).
+ */
+export function stayDeparture(lines = []) {
+  if (!lines.length) return null;
+  let last = '';
+  for (const l of lines) {
+    const d = bogotaDate(l.x_departed_at);
+    if (!d) return null;
+    if (d > last) last = d;
+  }
+  return last;
+}
 
 /** Fecha local de Bogota (UTC-5, sin horario de verano) de un datetime UTC de Odoo "AAAA-MM-DD HH:MM:SS". */
 export function bogotaDate(utc) {
@@ -58,23 +94,33 @@ export function emissionGates({ mode, env = {}, catalog, est }) {
 const own = (obj, key) => (obj && typeof key === 'string' && Object.prototype.hasOwnProperty.call(obj, key) && typeof obj[key] === 'string' ? obj[key] : '');
 function docType(line, catalog) { return own(catalog.docTypes, line.doc_code); }
 
-// ------------------------------------------------------------------ importe pagado confirmado (campo "costo")
+// ------------------------------------------------------------------ importe confirmado (campo "costo")
 // Res. 409 de 2022 (MinCIT), art. 2: "valor total pagado por el servicio de alojamiento"; manual Grupo 2, 4.12: en pesos
-// colombianos. La tarifa contratada (amount_total del pedido) NO lo sustituye: solo se informa como referencia.
-// Fuente unica: un registro x_tra_amount del pedido, CONFIRMADO con evidencia, moneda COP y fecha de corte. El "Paid" de
-// Smoobu u otro reporte sin evidencia se puede anotar como borrador, pero no habilita el envio.
+// colombianos. MinCIT, respuesta 2-2026-039958, punto 7: el costo total de alojamiento lo determinan el huesped
+// principal y sus acompanantes y NO incluye impuestos; campo de texto, formato libre.
+// La tarifa contratada (amount_total del pedido) NO lo sustituye, ni un anticipo: solo se informa como referencia.
+// Fuente unica: un registro x_tra_amount del pedido, CONFIRMADO con evidencia, moneda COP, fecha de corte no anterior
+// a la salida real de la estancia y constancia expresa de que excluye impuestos y cubre al principal y a todos sus
+// acompanantes. El "Paid" de Smoobu u otro reporte sin evidencia se puede anotar como borrador, pero no habilita el envio.
+// Reglas que la respuesta oficial NO aclara (no las decide el codigo; ver deploy/tra-grupo1-...): saldo pendiente
+// (pagado vs facturado), comision o retencion de canales, descuentos y reembolsos, consumos y servicios adicionales,
+// varias habitaciones o grupos con varios principales, pagos en otra moneda, decimales.
 export const EST_FIELDS = ['x_name', 'x_rnt_number', 'x_tra_mode', 'x_tra_config_verified', 'x_tra_accommodation_type', 'x_tra_cost_basis', 'x_tra_establishment_name'];
 export const ORDER_FIELDS = ['id', 'state', 'x_reservation_status', 'x_checkout', 'amount_total'];
-export const AMOUNT_FIELDS = ['id', 'x_state', 'x_amount', 'x_currency_id', 'x_cutoff_date', 'x_evidence_kind', 'x_evidence_ref', 'x_evidence_name', 'x_confirmed_by', 'x_confirmed_at', 'write_date'];
+export const AMOUNT_FIELDS = ['id', 'x_state', 'x_amount', 'x_currency_id', 'x_cutoff_date', 'x_evidence_kind', 'x_evidence_ref', 'x_evidence_name', 'x_excludes_taxes', 'x_covers_all_guests', 'x_confirmed_by', 'x_confirmed_at', 'write_date'];
 export const EVIDENCE_KINDS = Object.freeze(['comprobante_pago', 'liquidacion_canal', 'factura_pagada', 'extracto_bancario']);
-/** Sin importe: falta el dato (no es un dato invalido). */
-export const COST_MISSING = Object.freeze(['IMPORTE_AUSENTE', 'IMPORTE_SIN_CONFIRMAR']);
+/** Sin importe: falta el dato (no es un dato invalido). IMPORTE_ESPERA_SALIDA: la estancia aun no termino. */
+export const COST_MISSING = Object.freeze(['IMPORTE_AUSENTE', 'IMPORTE_SIN_CONFIRMAR', 'IMPORTE_ESPERA_SALIDA']);
 const utcMs = (s) => (s ? new Date(`${String(s).replace(' ', 'T')}Z`).getTime() : NaN);
 
 /** Fecha de hoy en Bogota (AAAA-MM-DD) para una marca de tiempo en ms. */
 export function bogotaToday(ms) { return new Date(ms - 5 * 3600 * 1000).toISOString().slice(0, 10); }
 
-export function confirmedCost({ amounts = [], est, order, today }) {
+/**
+ * @param {string|null} departure  salida de la estancia (stayDeparture). Sin ella el importe no puede ser definitivo:
+ *                                  un corte anterior a la salida seria un anticipo o un pago parcial.
+ */
+export function confirmedCost({ amounts = [], est, order, today, departure }) {
   const rate = order && Number.isFinite(order.amount_total) ? order.amount_total : null;
   const fail = (code) => ({ ok: false, code, rate });
   if (!est || est.x_tra_cost_basis !== 'total_estancia') return fail('COSTO_BASE_NO_ADMITIDA');
@@ -82,15 +128,19 @@ export function confirmedCost({ amounts = [], est, order, today }) {
   // un registro sin estado o en borrador es un reporte (p. ej. el "Paid" de Smoobu) sin contrastar: no habilita el envio
   if (!confirmed.length) return fail(amounts.some((a) => a.x_state !== 'anulado') ? 'IMPORTE_SIN_CONFIRMAR' : 'IMPORTE_AUSENTE');
   if (confirmed.length > 1) return fail('IMPORTE_AMBIGUO');
+  if (!departure) return fail('IMPORTE_ESPERA_SALIDA');
   const a = confirmed[0];
   if (!a.x_confirmed_by || !a.x_confirmed_at) return fail('IMPORTE_SIN_CONFIRMACION_REGISTRADA');
   const confirmedAt = utcMs(a.x_confirmed_at);
   const written = utcMs(a.write_date);
   if (!Number.isFinite(confirmedAt) || !Number.isFinite(written) || written > confirmedAt + 1000) return fail('IMPORTE_MODIFICADO_TRAS_CONFIRMAR');
   if (!EVIDENCE_KINDS.includes(a.x_evidence_kind) || !String(a.x_evidence_ref || '').trim() || !String(a.x_evidence_name || '').trim()) return fail('IMPORTE_SIN_EVIDENCIA');
+  if (a.x_excludes_taxes !== true) return fail('IMPORTE_SIN_CONSTANCIA_SIN_IMPUESTOS');
+  if (a.x_covers_all_guests !== true) return fail('IMPORTE_SIN_CONSTANCIA_ALCANCE');
   if (name(a.x_currency_id) !== 'COP') return fail('IMPORTE_MONEDA_NO_COP');
   if (!a.x_cutoff_date) return fail('IMPORTE_SIN_FECHA_CORTE');
   if (!today || String(a.x_cutoff_date) > today) return fail('IMPORTE_FECHA_CORTE_FUTURA');
+  if (String(a.x_cutoff_date) < departure) return fail('IMPORTE_CORTE_ANTES_DE_SALIDA');
   const v = Number(a.x_amount);
   if (!Number.isFinite(v) || v <= 0) return fail('IMPORTE_INVALIDO');
   return { ok: true, code: 'OK', value: String(Math.round(v)), rate, differsFromRate: rate !== null && Math.round(rate) !== Math.round(v), cutoff: String(a.x_cutoff_date), amountId: a.id };
@@ -107,36 +157,44 @@ export function reasonStatus(line, catalog) {
   return 'MOTIVO_SIN_EQUIVALENCIA';
 }
 
-export function buildPayload({ line, main, order, est, catalog, companions, padre, cost }) {
-  const common = {
+/**
+ * Cuerpo de /one/ (main) o /two/ con las claves, el orden y los tipos del manual. Solo sustituye valores.
+ * check_in / check_out = llegada y salida REALES de la ficha (fecha de Bogota), nunca la fecha prevista de la reserva.
+ * `order` se conserva en la firma por compatibilidad; ningun valor del pedido se envia.
+ */
+export function buildPayload({ line, main, est, catalog, companions, padre, cost }) {
+  const values = {
     tipo_identificacion: docType(line, catalog),
-    numero_identificacion: line.x_identity_number || '',
+    numero_identificacion: String(line.x_identity_number || ''),
     nombres: line.x_given_names || '',
     apellidos: [line.x_surname_1, line.x_surname_2].filter(Boolean).join(' '),
     cuidad_residencia: name(line.x_residence_city_id) || line.x_residence_text || '', // nombre de campo tal cual en el manual oficial
     cuidad_procedencia: name(line.x_origin_city_id) || line.x_origin_text || '',
     numero_habitacion: line.x_tra_room || '',
     check_in: bogotaDate(line.x_arrived_at),
-    check_out: order.x_checkout || '',
+    check_out: bogotaDate(line.x_departed_at),
   };
-  let payload;
   if (main) {
-    payload = {
-      ...common,
+    Object.assign(values, {
       motivo: own(catalog.reasons, line.x_travel_reason),
       numero_acompanantes: String(companions),
       tipo_acomodacion: est.x_tra_accommodation_type || '',
-      // importe pagado confirmado; nunca la tarifa del pedido
+      // importe confirmado sin impuestos; nunca la tarifa del pedido ni un anticipo
       costo: cost?.ok ? cost.value : '',
       // nombre segun el registro oficial (RNT), separado del nombre interno x_name, que nunca se envia
       nombre_establecimiento: String(est.x_tra_establishment_name || '').trim(),
-      rnt_establecimiento: est.x_rnt_number || '',
-    };
-  } else payload = { ...common, padre: Number(padre) };
-  let missing = Object.entries(payload).filter(([, v]) => v === '' || (typeof v === 'number' && !Number.isFinite(v))).map(([k]) => k);
+      rnt_establecimiento: String(est.x_rnt_number || ''),
+    });
+  } else values.padre = Number(padre);
+  const payload = Object.fromEntries((main ? TRA_ONE_KEYS : TRA_TWO_KEYS).map((k) => [k, values[k]]));
+  let missing = Object.entries(payload).filter(([, v]) => v === '' || v === undefined || (typeof v === 'number' && !Number.isFinite(v))).map(([k]) => k);
   const invalid = [];
   if (main && payload.tipo_identificacion && Array.isArray(catalog.mainDocTypes) && !catalog.mainDocTypes.includes(line.doc_code)) invalid.push('tipo_identificacion');
+  if (main) for (const k of TRA_ONE_DIGITS) if (payload[k] !== '' && !DIGITS.test(payload[k])) invalid.push(k);
+  if (!main && payload.padre !== undefined && Number.isFinite(payload.padre) && !(Number.isInteger(payload.padre) && payload.padre > 0)) invalid.push('padre');
+  if (payload.check_in && payload.check_out && payload.check_out < payload.check_in) invalid.push('check_out');
   if (main && !cost?.ok && cost?.code && !COST_MISSING.includes(cost.code)) { invalid.push('costo'); missing = missing.filter((k) => k !== 'costo'); }
+  missing = missing.filter((k) => !invalid.includes(k));
   return { payload, missing, invalid };
 }
 
@@ -164,6 +222,34 @@ async function attachDocCodes(odoo, lines) {
 }
 
 const STATUS = (k, missing, invalid) => (invalid.includes(k) ? 'no_admitido' : missing.includes(k) ? 'falta' : 'ok');
+
+/** Estados que exigen revision humana (portal PMS) antes de cualquier otro envio de la estancia. */
+export const REVIEW_STATES = Object.freeze(['en_envio', 'enviado', 'incierto', 'rechazado']);
+/**
+ * Peticiones reales fallidas (rechazado o incierto) admitidas por ficha. Tras un fallo, Recepcion comprueba el portal y,
+ * si no aparece, marca "no recibido": se admite UN reenvio revisado. Al segundo fallo la ficha queda bloqueada y se
+ * escala a soporte. Es una precaucion propia ante la advertencia verbal del asesor, no una regla del MinCIT.
+ */
+export const MAX_FAILED_REAL_ATTEMPTS = 2;
+
+async function failedRealAttempts(odoo, lineIds) {
+  if (!lineIds.length) return new Map();
+  const rows = await odoo.searchRead('x_report_attempt', [['x_guest_line_id', 'in', lineIds], ['x_system', '=', 'tra'], ['x_channel', '=', 'api_tra'], ['x_result', 'in', ['rechazado', 'incierto']]], ['x_guest_line_id']);
+  const n = new Map();
+  for (const r of rows) { const id = Array.isArray(r.x_guest_line_id) ? r.x_guest_line_id[0] : r.x_guest_line_id; n.set(id, (n.get(id) || 0) + 1); }
+  return n;
+}
+
+/** Codigos de una ficha que impiden reportar la estancia (sin mirar el payload). */
+function lineBlocks(l, failed) {
+  const codes = [];
+  if (l.x_data_state !== 'validado') codes.push('FICHA_NO_VALIDADA');
+  if (!l.x_arrived_at) codes.push('SIN_LLEGADA_REAL');
+  if (!l.x_departed_at) codes.push('SIN_SALIDA_REAL');
+  if (REVIEW_STATES.includes(l.x_tra_state)) codes.push(`TRA_${String(l.x_tra_state).toUpperCase()}_REVISAR`);
+  if (l.x_tra_state !== 'aceptado' && (failed.get(l.id) || 0) >= MAX_FAILED_REAL_ATTEMPTS) codes.push('INTENTOS_FALLIDOS_REPETIDOS');
+  return codes;
+}
 
 /**
  * Comprobacion completa SIN envio de una estancia: lee el pedido, todas sus fichas, el importe confirmado y el
@@ -193,7 +279,9 @@ export async function checkStay({ odoo, orderId, catalog, env = {}, today }) {
     if (!est.x_tra_accommodation_type) out.blocks.push('TIPO_ACOMODACION_SIN_REGISTRAR');
   }
   const amounts = await odoo.searchRead('x_tra_amount', [['x_sale_order_id', '=', orderId], ['x_state', '!=', 'anulado']], AMOUNT_FIELDS);
-  const cost = confirmedCost({ amounts, est, order, today });
+  const departure = stayDeparture(lines);
+  if (lines.length && !departure) out.blocks.push('ESTANCIA_SIN_SALIDA_REAL');
+  const cost = confirmedCost({ amounts, est, order, today, departure });
   out.cost = { code: cost.code, differs_from_rate: cost.ok ? cost.differsFromRate : null };
   if (!cost.ok) out.blocks.push(cost.code);
   const mains = lines.filter((l) => l.x_is_main);
@@ -201,11 +289,9 @@ export async function checkStay({ odoo, orderId, catalog, env = {}, today }) {
   if (!lines.length) out.blocks.push('SIN_FICHAS');
   else if (!mains.length) out.blocks.push('SIN_PRINCIPAL');
   else if (mains.length > 1) out.blocks.push('VARIOS_PRINCIPALES');
+  const failed = await failedRealAttempts(odoo, lines.map((l) => l.id));
   for (const l of lines) {
-    const codes = [];
-    if (l.x_data_state !== 'validado') codes.push('FICHA_NO_VALIDADA');
-    if (!l.x_arrived_at) codes.push('SIN_LLEGADA_REAL');
-    if (['en_envio', 'enviado', 'incierto', 'rechazado'].includes(l.x_tra_state)) codes.push(`TRA_${String(l.x_tra_state).toUpperCase()}_REVISAR`);
+    const codes = lineBlocks(l, failed);
     const done = l.x_tra_state === 'aceptado';
     if (!done && l.x_data_state === 'validado' && l.x_arrived_at && l.x_tra_state === 'pendiente') out.pending += 1;
     const { payload, missing, invalid } = buildPayload({ line: l, main: l.x_is_main, order, est: est || {}, catalog, companions: companions.length, padre: 1, cost });
@@ -229,13 +315,18 @@ export async function checkStay({ odoo, orderId, catalog, env = {}, today }) {
 export async function emitStay({ odoo, tra, orderId, est, catalog, mode, runRef, env = {}, log = () => {}, today }) {
   const gate = emissionGates({ mode, env, catalog, est });
   if (!gate.ok) { log({ event: 'gate_closed', orderId, reasons: gate.reasons }); return { orderId, stop: 'BLOQUEADO', reasons: gate.reasons, sent: 0 }; }
-  const lines = await odoo.searchRead('x_guests_line', [['x_sale_order_id', '=', orderId], ['x_data_state', '=', 'validado'], ['x_arrived_at', '!=', false]], LINE_FIELDS);
+  // TODAS las fichas de la estancia: si alguna no esta validada, sin llegada o sin salida real, no se envia nada
+  const lines = await odoo.searchRead('x_guests_line', [['x_sale_order_id', '=', orderId]], LINE_FIELDS);
+  const out = { orderId, main: null, companions: [], sent: 0 };
+  const failed = await failedRealAttempts(odoo, lines.map((l) => l.id));
+  const blocking = [...new Set(lines.filter((l) => l.x_tra_state !== 'aceptado').flatMap((l) => lineBlocks(l, failed)))];
+  if (!lines.length) blocking.push('SIN_FICHAS');
+  if (blocking.length) { log({ event: 'stay_not_ready', orderId, reasons: blocking }); return { ...out, stop: 'ESTANCIA_NO_LISTA', reasons: blocking }; }
   await attachDocCodes(odoo, lines);
   const [order] = await odoo.searchRead('sale.order', [['id', '=', orderId]], ORDER_FIELDS);
   const amounts = await odoo.searchRead('x_tra_amount', [['x_sale_order_id', '=', orderId], ['x_state', '!=', 'anulado']], AMOUNT_FIELDS);
-  const cost = confirmedCost({ amounts, est, order, today });
+  const cost = confirmedCost({ amounts, est, order, today, departure: stayDeparture(lines) });
   const mains = lines.filter((l) => l.x_is_main);
-  const out = { orderId, main: null, companions: [], sent: 0 };
   if (mains.length !== 1) return { ...out, stop: mains.length ? 'VARIOS_PRINCIPALES' : 'SIN_PRINCIPAL' };
   const main = mains[0];
   const companions = lines.filter((l) => !l.x_is_main);
@@ -276,7 +367,12 @@ export async function emitStay({ odoo, tra, orderId, est, catalog, mode, runRef,
   } else if (main.x_tra_state !== 'aceptado' || !code) {
     return { ...out, stop: `PRINCIPAL_${main.x_tra_state || 'sin_estado'}` };
   }
-  for (const c of companions.filter((l) => l.x_tra_state === 'pendiente')) out.companions.push(await sendOne(c, false, code));
+  // se detiene al primer acompanante que no quede aceptado: no se encadenan peticiones fallidas
+  for (const c of companions.filter((l) => l.x_tra_state === 'pendiente')) {
+    const r = await sendOne(c, false, code);
+    out.companions.push(r);
+    if (r.result !== 'aceptado') return { ...out, stop: `ACOMPANANTE_${r.result}` };
+  }
   return out;
 }
 

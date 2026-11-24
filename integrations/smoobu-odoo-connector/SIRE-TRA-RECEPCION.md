@@ -37,7 +37,8 @@ Menu **Registro SIRE/TRA** en Odoo.
    - corregir nacionalidad, ciudades o documento si hace falta;
    - **Validar datos**. Si falta algo, Odoo dice que y no valida nada.
 6. **Registrar llegada real** (uno a uno o varios con *Accion*). Solo aqui nacen las obligaciones:
-   SIRE entrada (solo extranjeros) y TRA (todos).
+   SIRE entrada (solo extranjeros) y TRA (todos). **TRA queda pendiente y NO se envia hasta el check-out**: el MinCIT
+   (respuesta 2-2026-039958) pide enviar los registros completos al realizar el check-out.
 
 ## Reportar
 - **SIRE**: *Hoja guiada SIRE* muestra los datos en el orden del formulario del portal. Cargar en el portal SIRE,
@@ -47,14 +48,24 @@ Menu **Registro SIRE/TRA** en Odoo.
 - **TRA**: mientras el emisor por API este apagado, usar *Hoja guiada TRA* en el portal TRA y registrar el resultado
   con evidencia (captura de "Huespedes registrados"). Nota 18/11/2026: el portal del RNT 235267 (grupo PMS) solo
   muestra "Mis Huespedes" y "Generar token"; no se encontro formulario de registro manual.
-- **Importe pagado (TRA)**: en *Importes pagados (TRA)* registrar lo efectivamente pagado, en COP, con fecha de corte y
-  evidencia (comprobante, liquidacion del canal, factura pagada o extracto) y pulsar *Confirmar con evidencia*. La
-  tarifa de la reserva no sirve. Un "Paid" de Smoobu u otro reporte sin soporte se puede anotar, pero sin confirmar
-  no habilita el envio. No se crean ni modifican pagos contables.
-- **Incierto** (no se sabe si llego): revisar el portal. Si aparece: *Aceptado* con evidencia. Si no aparece: *Comprobado: no recibido* (vuelve a pendiente). Nunca reenviar sin revisar.
+- **Importe (TRA)**: **despues de registrar la salida real de todos los huespedes**, en *Importes pagados (TRA)*
+  registrar el costo total del alojamiento del principal y de todos sus acompanantes, **sin impuestos**, en COP, con
+  fecha de corte igual o posterior a la salida y evidencia (comprobante, liquidacion del canal, factura pagada o
+  extracto). Marcar las dos constancias (*no incluye impuestos* y *cubre al principal y a todos sus acompanantes*) y
+  pulsar *Confirmar con evidencia*. La tarifa de la reserva y un anticipo no sirven. Un "Paid" de Smoobu u otro
+  reporte sin soporte se puede anotar, pero sin confirmar no habilita el envio. No se crean ni modifican pagos
+  contables. Casos dudosos (saldo pendiente, comision del canal, descuentos, consumos extra, varias habitaciones): no
+  confirmar; consultar (ver `deploy/tra-grupo1-manual-y-respuesta-2026-11-24.md`).
+- **Incierto** (no se sabe si llego): revisar el portal PMS (https://pms.mincit.gov.co/login/, usuario = RNT). Si
+  aparece: *Aceptado* con evidencia. Si no aparece: *Comprobado: no recibido* (vuelve a pendiente). Nunca reenviar sin
+  revisar. Tras **dos** fallos reales de la misma ficha el emisor la bloquea (`INTENTOS_FALLIDOS_REPETIDOS`): soporte.
+- **Registro enviado por error o con datos equivocados**: no se puede modificar ni reenviar. Pedir el borrado por correo
+  a soporte MinCIT (procedimiento en `deploy/tra-grupo1-manual-y-respuesta-2026-11-24.md`).
 
 ## A la salida
-7. **Registrar salida real** > nace SIRE salida (extranjeros). Reportar igual que la entrada.
+7. **Registrar salida real** de cada huesped > nace SIRE salida (extranjeros). Reportar igual que la entrada.
+   Con la salida de **todos** registrada y el importe confirmado, la estancia queda lista para TRA (el envio sigue
+   apagado hasta revisar el primer caso).
 
 ## Limites que hay que saber
 - Hay un solo usuario de Odoo: el historial no identifica a la persona; el campo *Actor* es declarado.
