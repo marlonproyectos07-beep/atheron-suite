@@ -40,6 +40,25 @@
     U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* Letra de respaldo con las medidas de Fraunces.
+
+   Causa medida el 24/11/2026 (ORDEN ATH-WEB-SEO-122): Fraunces es
+   entre un 14 % y un 18 % mas ancha que Times New Roman normal. En movil el
+   titulo "Hotel Colonial Confort" cabia en UNA linea con la letra de
+   respaldo y pasa a DOS cuando llega Fraunces; todo lo que hay debajo
+   del titulo baja 41 px (CLS 0,1276, siempre el bloque .hero__datos).
+
+   Esta cara reserva el mismo ancho antes de que llegue la fuente: usa
+   Times New Roman (o su equivalente Liberation Serif), agrandada un
+   115 %, y el navegador la usa SOLO mientras Fraunces no ha llegado.
+   Si el aparato no tiene ninguna de las dos, no se aplica y todo queda
+   como estaba. No cambia lo que se ve cuando Fraunces ya esta. */
+@font-face {
+  font-family: 'Fraunces respaldo';
+  src: local('Times New Roman'), local('Liberation Serif'), local('TimesNewRomanPSMT');
+  size-adjust: 115%;
+}
+
 /* ------------------------------------------------------------
    1. VARIABLES (design tokens)
    Se declaran en :root y se usan con var(--nombre)
@@ -79,7 +98,7 @@
 
   /* Tipografías: títulos conservan Fraunces; texto usa la pila nativa
      del sistema para evitar descargar otra fuente de ~48 KB en móvil. */
-  --fuente-titulo: "Fraunces", Georgia, "Times New Roman", serif;
+  --fuente-titulo: "Fraunces", "Fraunces respaldo", Georgia, "Times New Roman", serif;
   --fuente-texto: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 
   /* Escala de espacios (múltiplos consistentes = diseño ordenado) */
