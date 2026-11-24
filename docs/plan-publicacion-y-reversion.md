@@ -20,9 +20,8 @@ de la API de GitHub.
 ## Antes de publicar
 
 1. Dirección aprueba el informe final y las decisiones pendientes.
-2. Punto de restauración: crear la etiqueta `checkpoint/main-pre-atheron-hotels-2026-11-23` en `36c7f03`.
-   **No se pudo crear desde esta sesión** (GitHub devolvió 403 al subir etiquetas): lo hace dirección o se autoriza otra vía.
-   Mientras tanto, `36c7f03` es el punto de restauración de hecho.
+2. Punto de restauración: la rama `restore/main-pre-atheron-hotels-2026-11-24` apunta a `36c7f03` y ya existe en GitHub.
+   La etiqueta no se pudo subir desde esta sesión (403); la rama la sustituye. No borrarla ni moverla.
 3. Confirmar que `main` no se movió (`git merge-base origin/main <rama>` debe seguir en `36c7f03`).
    Si el panel `/admin` guardó algo, hay que reconciliar antes.
 4. Vista previa del último commit del PR: revisar portada, `/hospedajes`, una ficha y el blog.
@@ -55,16 +54,25 @@ de la API de GitHub.
 Disparadores: algún redirect en bucle o 404, ficha principal caída, botón de WhatsApp con número
 equivocado, Lighthouse por debajo de 95, o error de datos estructurados en Search Console.
 
-**Opción A — la más rápida (2 minutos): *Instant Rollback* en Vercel.**
-Panel de Vercel > proyecto `atheron-suite` > Deployments > despliegue `dqqza909v` (commit `36c7f03`) > Promote / Instant Rollback.
-Requiere sesión iniciada. Ojo: tras un rollback manual Vercel puede dejar de asignar solo
-los dominios a los despliegues nuevos; habrá que volver a promover para retomar el flujo normal.
+Qué está comprobado y qué no:
 
-**Opción B — por Git (5 minutos):**
+| Vía | Estado |
+|---|---|
+| `git revert -m 1` de la fusión | **Simulado en local**: el árbol resultante es idéntico al de `36c7f03`. `main` no está protegida y la cuenta de trabajo puede empujar. |
+| Despliegues anteriores de Vercel | **Verificado**: `atheron-suite-dqqza909v` (36c7f03) abre y muestra el sitio antiguo. El anterior, `atheron-suite-bvrq4ggq9` (fe64f05), no se abrió. |
+| *Instant Rollback* del panel de Vercel | **No probado**: el panel pide iniciar sesión. Solo lo puede hacer dirección. |
+| Rama `restore/main-pre-atheron-hotels-2026-11-24` | **Verificada** en GitHub. |
+
+**Opción A — por Git (5 minutos):**
 `git checkout main && git revert -m 1 <commit-de-fusion> && git push origin main`.
 Vercel despliega el estado anterior.
 
-**Opción C — volver al punto de restauración:** el commit `36c7f03` (o su etiqueta, cuando exista).
+**Opción B — *Instant Rollback* en Vercel (2 minutos, no probado):**
+Panel > proyecto `atheron-suite` > Deployments > `dqqza909v` > Promote / Instant Rollback.
+Tras un rollback manual Vercel puede dejar de asignar solo los dominios a los despliegues nuevos;
+habrá que volver a promover para retomar el flujo normal.
+
+**Opción C — restaurar desde la rama de restauración:** llevar `main` a `36c7f03` (requiere autorización, porque reescribe historia).
 
 Qué NO se revierte con nada de esto: Google Business (fichas ya corregidas), Odoo, WhatsApp.
 Esos no se tocan en esta publicación.
