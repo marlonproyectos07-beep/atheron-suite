@@ -7,7 +7,7 @@ insignia: 'D'
 # src/data/grupos.ts: publicar el edificio y sus apartamentos a la vez
 # contaría las mismas camas dos veces en el total de la página de grupos.
 perteneceA: edificio-algarra
-titulo: Dúplex en Algarra, Zipaquirá | Atheron Suite
+titulo: Dúplex en Algarra, Zipaquirá | ATHERON HOTELS
 descripcion: Dúplex en el sector de Algarra, Zipaquirá. Una habitación, un baño, cocina, wifi y zona de trabajo. Alojamiento aliado comercializado por Atheron Suite. Consulta disponibilidad por WhatsApp.
 ogTitulo: Dúplex en Algarra, Zipaquirá
 ogDescripcion: Apartamento independiente en Algarra, Zipaquirá, con cocina equipada, wifi y zona de trabajo.
