@@ -24,7 +24,8 @@ export const url = (ruta: string): string =>
 export const ORGANIZACION = {
   '@type': 'Organization',
   '@id': `${DOMINIO}/#organizacion`,
-  name: 'Atheron Suite',
+  name: 'ATHERON HOTELS',
+  legalName: 'Atheron S.A.S.',
   url: `${DOMINIO}/`,
   logo: `${DOMINIO}/assets/img/marca/atheron-icono-180.png`,
 } as const;

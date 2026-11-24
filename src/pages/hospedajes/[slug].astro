@@ -13,7 +13,11 @@ import { migaDePan, url, ORGANIZACION } from '../../data/seo';
 import { atributosWhatsApp } from '../../data/whatsapp';
 
 export async function getStaticPaths() {
-  const fichas = await getCollection('hospedajes');
+  /* Los hospedaje-02 a 07 son plantillas vacias (sin nombre, fotos ni
+     precios): no se enlazan ni entran al sitemap y no se generan. */
+  const fichas = (await getCollection('hospedajes')).filter(
+    (f) => !/^hospedaje-0\d$/.test(f.id),
+  );
   return fichas.map((ficha) => ({
     params: { slug: ficha.id },
     props: { ficha },
@@ -35,7 +39,7 @@ const casa = d.casaCompleta ?? null;
    Zipaquira; con la primera casa en Cogua, esos cinco textos habrian
    mandado al huesped al municipio equivocado. El valor por defecto
    sigue siendo Zipaquira, asi que las fichas de antes no cambian. */
-const mensajeInteres = `Hola, me interesa ${d.nombre} de Atheron Suite en ${d.localidad}.`;
+const mensajeInteres = `Hola, me interesa ${d.nombre} de ATHERON HOTELS en ${d.localidad}.`;
 /* Sin foto principal no hay portada fotografica que valga: las fichas
    en obra todavia no la tienen y pedirla reventaba el build. */
 const heroFoto = d.heroFoto && Boolean(d.fotoPrincipal);
@@ -256,7 +260,7 @@ function idHabitacion(nombre) {
       )}
       <div class="contenedor hero__contenido">
         <span class="hero__etiqueta">{d.zona}</span>
-        <h1 class="hero__titulo"><Marca texto={d.nombre} pendiente={!d.publicado} /></h1>
+        <h1 class="hero__titulo"><Marca texto={d.nombre} /></h1>
         <p class="hero__texto">
           <Marca texto={d.presentacion} pendiente={d.presentacionPendiente} />
         </p>

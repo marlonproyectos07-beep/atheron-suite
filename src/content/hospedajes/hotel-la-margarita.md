@@ -2,23 +2,24 @@
 nombre: Hotel La Margarita
 publicado: false
 grupos:
-  visible: true
-  capacidad: 40
+  visible: false
+  capacidad: 1
   tipo: maxima
-  nota: Atheron ha alojado grupos de hasta 40 personas; inventario sujeto a confirmacion.
+  nota: Capacidad sin confirmar; no se publica.
+aliado: true
 orden: 6
 insignia: '06'
 modalidad: habitaciones
-titulo: Hotel La Margarita en Zipaquirá | Hospedaje aliado para grupos
-descripcion: Hotel aliado en Zipaquirá, Cundinamarca, cerca del centro histórico y de la Catedral de Sal. Alojamiento para grupos gestionado por Atheron Suite.
-ogTitulo: Hotel La Margarita | Zipaquirá
-ogDescripcion: Hotel aliado en Zipaquirá, cerca del centro histórico y de la Catedral de Sal. Consulta disponibilidad con Atheron Suite.
-avisoBorrador: Ficha en preparacion. La galeria real ya esta integrada; faltan confirmar el inventario completo de habitaciones, los horarios y las condiciones operativas del hotel.
-avisoAliado: Alojamiento aliado comercializado por Atheron Suite. La disponibilidad, la operacion y la entrega de las habitaciones se coordinan con la administracion del hotel.
-zona: Barrio La Esmeralda
+titulo: Hotel La Margarita en Zipaquirá | Hotel aliado de ATHERON HOTELS
+descripcion: Hotel aliado de ATHERON HOTELS en Zipaquirá, Cundinamarca. Consulta disponibilidad y condiciones por WhatsApp.
+ogTitulo: Hotel La Margarita | Hotel aliado en Zipaquirá
+ogDescripcion: Hotel aliado de ATHERON HOTELS en Zipaquirá. Consulta disponibilidad por WhatsApp.
+avisoBorrador: Información del hotel aliado en confirmación. Consulta disponibilidad y condiciones por WhatsApp.
+avisoAliado: Hotel aliado de ATHERON HOTELS. La disponibilidad, la operación y la entrega de las habitaciones se coordinan con la administración del hotel.
+zona: Zipaquirá
 localidad: Zipaquirá
 departamento: Cundinamarca
-presentacion: Hotel aliado en Zipaquirá, cerca del centro histórico y de la Catedral de Sal, con capacidad para acoger grupos grandes.
+presentacion: Hotel aliado de ATHERON HOTELS en Zipaquirá, Cundinamarca.
 presentacionPendiente: false
 fotoTarjeta: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-01-habitacion.webp
 fotoTarjetaAlt: Habitación de Hotel La Margarita con cama doble y camarote
@@ -42,69 +43,34 @@ galeria:
   - imagen: /assets/img/hospedajes/hotel-la-margarita/hotel-la-margarita-08-acceso-recepcion.webp
     alt: Acceso a la recepcion y zonas interiores de Hotel La Margarita
 datos:
-  - numero: Hasta 40
-    texto: Huéspedes en grupo
+  - numero: Aliado
+    texto: Hotel aliado de ATHERON HOTELS
     pendiente: false
-  - numero: RNT 29756
-    texto: Registro Nacional de Turismo
-    pendiente: false
-  - numero: Desde $ 65.000
-    texto: Por persona por noche
-    pendiente: false
-tituloDescripcion: Un aliado en Zipaquirá para grupos grandes
+tituloDescripcion: Un hotel aliado en Zipaquirá
 tituloDescripcionPendiente: false
 caracteristicas:
-  - texto: Wifi
+  - texto: Hotel aliado, reservas coordinadas con ATHERON HOTELS
     pendiente: false
-  - texto: Televisión por cable en las habitaciones
-    pendiente: false
-  - texto: Cerca del centro histórico y de la Catedral de Sal
-    pendiente: false
-  - texto: Establecimiento con Registro Nacional de Turismo vigente
-    pendiente: false
-listadoSector: Barrio La Esmeralda
-listadoSegundoDato: Hasta 40
-listadoSegundoDatoSufijo: ' huéspedes'
+listadoSector: Zipaquirá
+listadoSegundoDato: Hotel aliado
+listadoSegundoDatoSufijo: ''
 listadoEnlaceTexto: Revisar información de Hotel La Margarita
-resumen: Hotel aliado en Zipaquirá, cerca del centro histórico, con capacidad para grupos de hasta 40 personas.
-precio: Desde $ 65.000 por persona
+resumen: Hotel aliado en Zipaquirá. Consulta disponibilidad y condiciones con ATHERON HOTELS.
+precio: Consultar
 precioPendiente: false
-habitaciones:
-  - nombre: Habitación familiar fotografiada
-    huespedes: Por confirmar
-    camas: 1 cama doble y 1 camarote visibles
-    banos: Por confirmar
-    descripcion: >-
-      Habitación con cama doble, camarote y televisión, tal como aparece en la
-      galeria publica del hotel. La capacidad exacta y el inventario completo
-      de habitaciones quedan sujetos a confirmacion de la administracion.
-    pendiente: false
+habitaciones: []
 heroFoto: true
 heroEncuadre: center 43%
-tarifas:
-  etiqueta: Tarifas
-  titulo: Una tarifa clara por persona
-  desde: Desde $ 65.000 por persona por noche
-  cubre: Una persona por noche
-  intro: La tarifa se confirma segun el numero de huéspedes y las fechas. Para grupos grandes cotizamos el alojamiento completo.
-  regla: $ 65.000 por cada huésped por noche.
-  nota: Tarifa base de referencia. El valor final se confirma antes de reservar.
-  cta: Cotizar alojamiento
-  mensaje: 'Hola, quiero cotizar Hotel La Margarita en Zipaquirá. Somos [numero] personas y estas son mis fechas:'
 antesDeReservar:
   etiqueta: Antes de reservar
   titulo: Condiciones importantes
   intro: Estas son las condiciones confirmadas hasta hoy. Las que falten se publican cuando el hotel las confirme.
   condiciones:
     - titulo: Alojamiento aliado
-      texto: El hotel no es propiedad de Atheron Suite. Nosotros coordinamos la reserva y la administracion del hotel opera el alojamiento.
-    - titulo: Capacidad para grupos
-      texto: Hemos alojado grupos de hasta 40 personas. La disponibilidad para un grupo completo se confirma antes de reservar.
-    - titulo: Registro Nacional de Turismo
-      texto: El establecimiento figura en el Registro Nacional de Turismo con el numero 29756.
-    - titulo: Inventario sujeto a confirmacion
-      texto: La distribucion de camas y habitaciones disponibles para cada grupo se confirma antes de reservar. No asumimos que toda la capacidad este disponible para todas las fechas.
-descripcionZona: En Zipaquirá, cerca del centro histórico y de la Catedral de Sal. La direccion exacta y las instrucciones de llegada se entregan al confirmar la reserva.
+      texto: El hotel no es propiedad de ATHERON HOTELS. Nosotros coordinamos la reserva y la administración del hotel opera el alojamiento.
+    - titulo: Disponibilidad y condiciones
+      texto: La disponibilidad, las tarifas y las condiciones se confirman por WhatsApp antes de reservar.
+descripcionZona: En Zipaquirá, Cundinamarca. La dirección exacta y las instrucciones de llegada se entregan al confirmar la reserva.
 descripcionZonaPendiente: false
 distancias: []
 horarios: []
@@ -115,39 +81,25 @@ nombreAnterior: ''
 mapaNota: El punto publico de Google esta confirmado. La direccion e instrucciones de llegada se entregan al confirmar la reserva.
 mapaNotaPendiente: false
 direccionPublica: false
-experiencias:
-  - titulo: Catedral de Sal
-    texto: El recorrido subterraneo mas visitado del municipio, dentro del entorno del centro de Zipaquirá.
-    pendiente: false
-  - titulo: Centro histórico
-    texto: Restaurantes, comercio y plazas del centro de Zipaquirá se encuentran en el entorno.
-    pendiente: false
+experiencias: []
 tituloContacto: Consulta disponibilidad en Hotel La Margarita
 datosContacto:
   - Zipaquirá, Cundinamarca
-  - Alojamiento aliado para grupos
-  - Hasta 40 huéspedes, sujeto a confirmacion previa
-  - Reservas gestionadas por Atheron Suite
+  - Hotel aliado de ATHERON HOTELS
+  - Reservas gestionadas por ATHERON HOTELS
 calle: ''
 latitud: null
 longitud: null
 checkin: ''
 checkout: ''
-comodidades:
-  - Wifi
-  - Televisión por cable
-actualizado: '2026-09-04'
+comodidades: []
+actualizado: '2026-11-23'
 ---
 
-Hotel La Margarita es un alojamiento aliado en Zipaquirá, cerca del centro
-histórico y de la Catedral de Sal. Atheron Suite coordina la reserva y la
-administracion del hotel opera el alojamiento.
 
-Es la opcion que proponemos cuando el grupo es grande: ya hemos coordinado
-estancias de hasta 40 personas. La tarifa parte de $ 65.000 por persona por
-noche y se confirma segun el numero de huéspedes y las fechas.
+Hotel La Margarita es un alojamiento aliado en Zipaquirá. ATHERON HOTELS
+coordina la reserva y la administración del hotel opera el alojamiento.
 
-El establecimiento figura en el Registro Nacional de Turismo con el numero
-29756. La galeria muestra fotografias reales de la ficha publica del hotel. El
-inventario completo de habitaciones, los horarios de entrada y salida y las
-demas condiciones se publican cuando la administracion los confirme.
+La disponibilidad, las tarifas y las condiciones se confirman por WhatsApp
+antes de reservar. Los datos que el hotel aún no ha confirmado no se
+publican.
