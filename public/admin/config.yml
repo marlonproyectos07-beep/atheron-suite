@@ -99,7 +99,7 @@ collections:
     label: Hospedajes
     label_singular: Hospedaje
     description: >-
-      Los siete hospedajes. Marca "Publicado" solo cuando la ficha
+      Todos los hospedajes del portafolio. Marca "Publicado" solo cuando la ficha
       tenga nombre real, fotos y precio: esa casilla la saca en
       Google y la mete en el mapa del sitio a la vez.
     folder: src/content/hospedajes
