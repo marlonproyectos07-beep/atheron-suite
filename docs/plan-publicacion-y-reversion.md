@@ -20,7 +20,9 @@ de la API de GitHub.
 ## Antes de publicar
 
 1. Dirección aprueba el informe final y las decisiones pendientes.
-2. Punto de restauración: etiqueta `checkpoint/main-pre-atheron-hotels-2026-11-23` en `36c7f03`.
+2. Punto de restauración: crear la etiqueta `checkpoint/main-pre-atheron-hotels-2026-11-23` en `36c7f03`.
+   **No se pudo crear desde esta sesión** (GitHub devolvió 403 al subir etiquetas): lo hace dirección o se autoriza otra vía.
+   Mientras tanto, `36c7f03` es el punto de restauración de hecho.
 3. Confirmar que `main` no se movió (`git merge-base origin/main <rama>` debe seguir en `36c7f03`).
    Si el panel `/admin` guardó algo, hay que reconciliar antes.
 4. Vista previa del último commit del PR: revisar portada, `/hospedajes`, una ficha y el blog.
@@ -62,7 +64,7 @@ los dominios a los despliegues nuevos; habrá que volver a promover para retomar
 `git checkout main && git revert -m 1 <commit-de-fusion> && git push origin main`.
 Vercel despliega el estado anterior.
 
-**Opción C — volver al punto de restauración:** `checkpoint/main-pre-atheron-hotels-2026-11-23` (= `36c7f03`).
+**Opción C — volver al punto de restauración:** el commit `36c7f03` (o su etiqueta, cuando exista).
 
 Qué NO se revierte con nada de esto: Google Business (fichas ya corregidas), Odoo, WhatsApp.
 Esos no se tocan en esta publicación.
