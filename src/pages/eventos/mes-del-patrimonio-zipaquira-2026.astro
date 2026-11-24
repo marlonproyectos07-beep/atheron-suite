@@ -21,7 +21,17 @@ const ficha = {
   '@context': 'https://schema.org',
   '@graph': [
     { '@type': 'BlogPosting', '@id': `${url(articulo.ruta)}#articulo`, headline: articulo.titulo, description: articulo.descripcion, url: url(articulo.ruta), datePublished: articulo.publicado, dateModified: articulo.modificado, inLanguage: 'es-CO', author: { '@type': 'Organization', name: articulo.autor }, publisher: { '@id': ORGANIZACION['@id'] }, citation: articulo.fuentes.map((f) => f.url ?? f.titulo), mainEntityOfPage: url(articulo.ruta) },
-    ...agenda.map((a) => ({ '@type': 'Event', name: a.titulo, startDate: `${a.fecha}T${a.hora24}:00-05:00`, location: { '@type': 'Place', name: a.lugar, address: { '@type': 'PostalAddress', addressLocality: 'Zipaquirá', addressRegion: 'Cundinamarca', addressCountry: 'CO' } }, url: fuentePrograma })),
+    ...agenda.map((a) => ({ '@type': 'Event', name: a.titulo,
+      /* Solo datos que ya estan en la pagina y en la fuente. La descripcion se arma con
+         la fecha, la hora, el lugar y las condiciones publicadas. El organizador es la
+         pagina que publica la programacion (Cultura Zipaquirá, verificado el 24-nov-2026).
+         El estado refleja la programacion publicada: no se encontro aviso de cancelacion
+         ni de aplazamiento. NO se declara performer: la fuente no publica artistas ni
+         ponentes, y recorridos, trueque y ruta no tienen interprete. */
+      description: `${a.titulo}, actividad del Mes del Patrimonio Cultural de Zipaquirá: ${a.dia} de 2026, a las ${a.hora24} h. Lugar: ${a.lugar}. ${a.condicion}`,
+      eventStatus: 'https://schema.org/EventScheduled',
+      organizer: { '@type': 'Organization', name: 'Cultura Zipaquirá', url: fuentePrograma },
+      startDate: `${a.fecha}T${a.hora24}:00-05:00`, location: { '@type': 'Place', name: a.lugar, address: { '@type': 'PostalAddress', addressLocality: 'Zipaquirá', addressRegion: 'Cundinamarca', addressCountry: 'CO' } }, url: fuentePrograma })),
     ORGANIZACION,
     migaDePan([{ nombre: 'Inicio', ruta: '/' }, { nombre: 'Blog', ruta: '/blog' }, { nombre: 'Mes del Patrimonio 2026', ruta: articulo.ruta }], `${url(articulo.ruta)}#miga`),
   ],

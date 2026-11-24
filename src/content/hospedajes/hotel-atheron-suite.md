@@ -373,7 +373,7 @@ horarios:
 direccionPublica: true
 mapaBbox: -74.002874%2C5.026163%2C-73.997514%2C5.029363
 mapaTitulo: 'Mapa con la ubicación del Hotel Atheron Suite en la Cra. 9 #10-32 de Zipaquirá'
-enlaceMapa: 'https://maps.app.goo.gl/v8SN7csVkdZiFF9WA'
+enlaceMapa: 'https://www.google.com/maps?cid=5661077607776007100'
 nombreAnterior: Hospedaje La Magia de Zipaquirá
 mapaNota: ''
 mapaNotaPendiente: false

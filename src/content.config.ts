@@ -278,6 +278,11 @@ const hospedajes = defineCollection({
       })
       .optional(),
 
+    /* Hotel aliado: lo comercializa ATHERON HOTELS pero no es propio.
+       Aparece en la portada y en el listado aunque su ficha siga sin
+       publicar, y solo con los datos que esten confirmados. */
+    aliado: z.boolean().default(false),
+
     /* Numero que se ve en la insignia de la tarjeta del listado. */
     insignia: z.string(),
 

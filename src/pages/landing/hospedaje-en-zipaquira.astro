@@ -21,13 +21,40 @@ import { ctaLandingHospedaje } from '../../data/navegacion';
 import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
 import { formularioContactoActivo } from '../../data/ajustes';
 import { atributosWhatsApp } from '../../data/whatsapp';
+import { ORGANIZACION, migaDePan, url } from '../../data/seo';
+import { getCollection } from 'astro:content';
+
+/* El numero sale de las fichas publicadas, no se escribe a mano. */
+const totalHospedajes = (await getCollection('hospedajes')).filter((f) => f.data.publicado).length;
+
+const fichaLanding = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${url('/landing/hospedaje-en-zipaquira')}#pagina`,
+      url: url('/landing/hospedaje-en-zipaquira'),
+      name: 'Alojamiento y hospedaje en Zipaquirá',
+      inLanguage: 'es-CO',
+      isPartOf: { '@id': ORGANIZACION['@id'] },
+      about: { '@type': 'City', name: 'Zipaquirá' },
+      breadcrumb: { '@id': `${url('/landing/hospedaje-en-zipaquira')}#miga` },
+    },
+    ORGANIZACION,
+    migaDePan([
+      { nombre: 'Inicio', ruta: '/' },
+      { nombre: 'Alojamiento en Zipaquirá' },
+    ], `${url('/landing/hospedaje-en-zipaquira')}#miga`),
+  ],
+};
 ---
 
 <Base
-  titulo="Hospedaje en Zipaquirá | Atheron Suite"
-  descripcion="Hospedaje comodo en Zipaquirá, Cundinamarca, cerca de la Catedral de Sal y del centro histórico. Consulta disponibilidad con Atheron Suite."
+  titulo="Alojamiento y hospedaje en Zipaquirá | ATHERON HOTELS"
+  descripcion="Alojamiento en Zipaquirá a minutos de la Catedral de Sal y del centro histórico. Cuéntanos tus fechas y ATHERON HOTELS te responde con opciones reales."
   ruta="/landing/hospedaje-en-zipaquira"
-  ogDescripcion="Siete hospedajes seleccionados a minutos de la Catedral de Sal. Consulta disponibilidad por WhatsApp."
+  jsonLd={fichaLanding}
+  ogDescripcion="Hospedajes seleccionados a minutos de la Catedral de Sal. Consulta disponibilidad por WhatsApp."
 >
 
   <Cabecera cta={ctaLandingHospedaje} />
@@ -43,11 +70,11 @@ import { atributosWhatsApp } from '../../data/whatsapp';
         <span class="hero__etiqueta">Zipaquirá, Cundinamarca</span>
 
         <h1 class="hero__titulo">
-          Tu hospedaje en Zipaquirá, <em>listo y sin vueltas</em>
+          Tu alojamiento en Zipaquirá, <em>listo y sin vueltas</em>
         </h1>
 
         <p class="hero__texto">
-          Siete hospedajes seleccionados a pocos minutos de la Catedral de Sal
+          {totalHospedajes} hospedajes seleccionados a pocos minutos de la Catedral de Sal
           y del centro histórico. Nos cuentas tus fechas y te respondemos con
           opciones reales, no con un catalogo interminable.
         </p>
@@ -58,7 +85,7 @@ import { atributosWhatsApp } from '../../data/whatsapp';
 
         <div class="hero__datos">
           <div class="dato">
-            <span class="dato__numero">7</span>
+            <span class="dato__numero">{totalHospedajes}</span>
             <span class="dato__texto">Opciones de hospedaje</span>
           </div>
           <div class="dato">
@@ -408,7 +435,7 @@ import { atributosWhatsApp } from '../../data/whatsapp';
           <p>Escribenos hoy y te confirmamos disponibilidad para tus fechas.</p>
           <div class="grupo-botones grupo-botones--centrado">
             <a class="boton boton--acento boton--grande" href="#consultar">Consultar ahora</a>
-            <a class="boton boton--claro boton--grande" href="/hospedajes">Ver los 7 hospedajes</a>
+            <a class="boton boton--claro boton--grande" href="/hospedajes">Ver los {totalHospedajes} hospedajes</a>
           </div>
         </div>
       </div>

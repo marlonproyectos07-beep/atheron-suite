@@ -414,6 +414,10 @@
 /* El rotulo de la foto pierde contraste sobre el azul noche: es el
    mismo caso que .seccion--oscura, resuelto igual. */
 .crece .foto-proyecto__rotulo--real { color: var(--color-blanco); }
+/* El rotulo "conceptual" (#a16207) daba 3,62:1 sobre #0f172a y Lighthouse
+   lo marcaba en accesibilidad (96). Un ambar claro mantiene la distincion
+   con el rotulo real y supera 4,5:1. */
+.crece .foto-proyecto__rotulo--conceptual { color: #fcd34d; }
 .crece .foto-proyecto__aviso,
 .crece .foto-proyecto__texto { color: rgba(255, 255, 255, .82); }
 

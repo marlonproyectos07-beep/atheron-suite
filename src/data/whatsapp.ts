@@ -47,7 +47,7 @@ export const NUMERO_VISIBLE = '+57 318 898 3167';
    justo la friccion que estamos quitando.
    ------------------------------------------------------------ */
 export const MENSAJE_DISPONIBILIDAD =
-  'Hola, quiero consultar disponibilidad en Atheron Suite.\n\n' +
+  'Hola, quiero consultar disponibilidad en ATHERON HOTELS.\n\n' +
   'Fecha de llegada:\n' +
   'Fecha de salida:\n' +
   'Número de huéspedes:';

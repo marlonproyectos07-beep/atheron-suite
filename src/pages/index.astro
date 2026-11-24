@@ -22,8 +22,8 @@ import ContactoWhatsApp from '../components/ContactoWhatsApp.astro';
 import { formularioContactoActivo } from '../data/ajustes';
 import { experiencias } from '../data/experiencias';
 import { fotoHero } from '../data/casa-colonial-centro';
-import { atributosWhatsApp, MENSAJE_DISPONIBILIDAD, MENSAJE_GRUPO } from '../data/whatsapp';
-import { ORGANIZACION } from '../data/seo';
+import { atributosWhatsApp, MENSAJE_DISPONIBILIDAD, MENSAJE_GRUPO, NUMERO } from '../data/whatsapp';
+import { ORGANIZACION, url } from '../data/seo';
 
 /* Los cuatro hospedajes destacados salen de la misma coleccion que
    alimenta el listado y las fichas. Antes estaban escritos a mano
@@ -39,7 +39,7 @@ const publicados = (await getCollection('hospedajes'))
    está validada en data.grupos; la ficha conserva su noindex mientras
    no esté publicada. */
 const destacados = (await getCollection('hospedajes'))
-  .filter((f) => f.data.grupos?.visible)
+  .filter((f) => f.data.grupos?.visible || f.data.aliado)
   .sort((a, b) => a.data.orden - b.data.orden)
   .slice(0, 6);
 
@@ -77,14 +77,29 @@ const mosaico = publicados
 
 /* Ficha del negocio para Google y los asistentes de IA.
 
-   Aqui NO ponemos direccion ni telefono todavia: no los tenemos
-   confirmados. Solo se marca informacion que el visitante pueda
-   ver en la pagina; marcar datos inventados es motivo de
-   penalizacion. Se agregan cuando cierren los pendientes 8 y 22. */
+   Direccion y telefono confirmados por Marlon el 23-nov-2026 y ya
+   publicados en el pie de pagina, en la ficha del hotel y en la
+   ficha de Google (Cra. 9 #10-32, Zipaquira). Solo se marca
+   informacion que el visitante pueda ver en la pagina; marcar
+   datos inventados es motivo de penalizacion. */
 const fichaNegocio = {
   '@context': 'https://schema.org',
   ...ORGANIZACION,
-  description: 'Colección de hospedajes seleccionados en Zipaquirá, Cundinamarca.',
+  description: 'ATHERON HOTELS reúne hoteles y alojamientos en Zipaquirá, Cundinamarca. Atheron Suite es su hotel principal.',
+  subOrganization: {
+    '@type': 'LodgingBusiness',
+    '@id': `${url('/hospedajes/hotel-atheron-suite')}#negocio`,
+    name: 'Atheron Suite',
+    url: url('/hospedajes/hotel-atheron-suite'),
+  },
+  telephone: `+${NUMERO}`,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Cra. 9 #10-32',
+    addressLocality: 'Zipaquirá',
+    addressRegion: 'Cundinamarca',
+    addressCountry: 'CO',
+  },
   areaServed: {
     '@type': 'City',
     name: 'Zipaquirá',
@@ -97,10 +112,10 @@ const fichaNegocio = {
 ---
 
 <Base
-  titulo="Atheron Suite | Hospedajes con alma en Zipaquirá, Cundinamarca"
-  descripcion="Atheron Suite reúne hospedajes seleccionados en Zipaquirá, Cundinamarca. Estancias cómodas a minutos de la Catedral de Sal y del centro histórico."
+  titulo="Hoteles en Zipaquirá | ATHERON HOTELS"
+  descripcion="ATHERON HOTELS reúne hoteles y alojamientos en Zipaquirá, a minutos de la Catedral de Sal. Atheron Suite es nuestro hotel principal. Consulta disponibilidad."
   ruta="/"
-  ogTitulo="Atheron Suite | Hospedajes en Zipaquirá, Cundinamarca"
+  ogTitulo="ATHERON HOTELS | Hoteles y hospedajes en Zipaquirá"
   ogDescripcion="Hospedajes seleccionados en Zipaquirá, a minutos de la Catedral de Sal y del centro histórico."
   {/* Vista previa al compartir. Es la MISMA fotografia real que abre el
       mosaico, no la imagen del hero: la del hero esta generada con IA y
@@ -218,7 +233,7 @@ const fichaNegocio = {
             se ocultan, que es donde el alto de pantalla es el problema. */}
         <div class="hero__datos">
           <div class="dato">
-            <span class="dato__numero">7</span>
+            <span class="dato__numero">{publicados.length}</span>
             <span class="dato__texto">Hospedajes</span>
           </div>
           <div class="dato">
@@ -296,7 +311,7 @@ const fichaNegocio = {
           <span class="etiqueta">Quienes somos</span>
           <h2>Una colección, no un directorio</h2>
           <p class="texto-grande texto-suave" style="margin-block: var(--esp-2) var(--esp-3);">
-            Atheron Suite nace en Zipaquirá con hospedajes seleccionados uno por uno.
+            ATHERON HOTELS reúne en Zipaquirá hospedajes seleccionados uno por uno.
             No listamos todo lo que existe: mostramos los lugares donde nosotros mismos
             nos quedariamos.
           </p>
@@ -363,7 +378,7 @@ const fichaNegocio = {
          rapido que su capacidad": nada de eso esta confirmado. Aqui NO
          se afirma que Atheron alojara al grupo, ni que la ciudad
          careciera de alojamiento, ni se presenta como estadistica
-         oficial. "Opera y profesionaliza siete hospedajes" vive solo en
+         oficial. "Opera y profesionaliza varios hospedajes" vive solo en
          el articulo, donde tiene contexto.
          ============================================================ */}
     <section class="seccion seccion--oscura" id="historia">
@@ -451,7 +466,6 @@ const fichaNegocio = {
         <div class="grid hospedajes-home__grid aparecer">
 
           {destacados.map(({ id, data }) => {
-            const enObra = !data.publicado;
             return (
               <article class="tarjeta">
                 <div class="tarjeta__media">
@@ -479,21 +493,21 @@ const fichaNegocio = {
                 </div>
                 <div class="tarjeta__cuerpo">
                   <h3 class="tarjeta__titulo">
-                    <a href={`/hospedajes/${id}`}><Marca texto={data.nombre} pendiente={enObra} /></a>
+                    <a href={`/hospedajes/${id}`}><Marca texto={data.nombre} /></a>
                   </h3>
                   <p class="tarjeta__meta">
-                    <span><Marca texto={data.listadoSector} pendiente={enObra} /></span>
+                    <span><Marca texto={data.listadoSector} /></span>
                     {data.grupos ? (
                       <span>
                         {data.grupos.tipo === 'maxima' ? 'Hasta ' : ''}
                         {data.grupos.capacidad} huéspedes
                       </span>
                     ) : (
-                      <span><Marca texto={data.listadoSegundoDato} pendiente={enObra} />{data.listadoSegundoDatoSufijo}</span>
+                      <span><Marca texto={data.listadoSegundoDato} />{data.listadoSegundoDatoSufijo}</span>
                     )}
                   </p>
                   <p class="texto-suave">
-                    <Marca texto={data.resumen} pendiente={enObra} />
+                    <Marca texto={data.resumen} />
                   </p>
                   <div class="tarjeta__pie">
                     <span class="tarjeta__precio tarjeta__precio--consulta">Opciones según alojamiento y ocupación</span>
@@ -777,7 +791,7 @@ const fichaNegocio = {
 
           </form>
           ) : (
-            <ContactoWhatsApp mensaje="Hola, quiero información sobre los hospedajes de Atheron Suite en Zipaquirá." />
+            <ContactoWhatsApp mensaje="Hola, quiero información sobre los hospedajes de ATHERON HOTELS en Zipaquirá." />
           )}
         </div>
 

@@ -82,7 +82,7 @@ const fichaCatalogo = {
       '@type': 'CollectionPage',
       '@id': `${url('/hospedajes')}#pagina`,
       url: url('/hospedajes'),
-      name: 'Hoteles y hospedajes en Zipaquirá | Atheron Suite',
+      name: 'Hoteles y hospedajes en Zipaquirá | ATHERON HOTELS',
       description:
         'Encuentra hoteles, casas y alojamientos para parejas, familias y grupos en Zipaquirá y Neusa. Conoce fotos, ubicación y disponibilidad con Atheron Suite.',
       inLanguage: 'es-CO',
@@ -93,7 +93,7 @@ const fichaCatalogo = {
     {
       '@type': 'ItemList',
       '@id': `${url('/hospedajes')}#lista`,
-      name: 'Hospedajes de Atheron Suite',
+      name: 'Hospedajes de ATHERON HOTELS',
       numberOfItems: listables.length,
       itemListElement: listables.map((f, i) => ({
         '@type': 'ListItem',
@@ -112,10 +112,10 @@ const fichaCatalogo = {
 ---
 
 <Base
-  titulo="Hoteles y hospedajes en Zipaquirá | Atheron Suite"
-  descripcion="Encuentra hoteles, casas y alojamientos para parejas, familias y grupos en Zipaquirá y Neusa. Conoce fotos, ubicación y disponibilidad con Atheron Suite."
+  titulo="Hoteles y alojamiento en Zipaquirá | ATHERON HOTELS"
+  descripcion="Hoteles, casas y apartamentos en Zipaquirá y Neusa para parejas, familias y grupos. Conoce Atheron Suite, nuestro hotel principal, y los hoteles aliados."
   ruta="/hospedajes"
-  ogTitulo="Hospedajes en Zipaquirá | Atheron Suite"
+  ogTitulo="Hoteles y alojamiento en Zipaquirá | ATHERON HOTELS"
   ogDescripcion="Hospedajes seleccionados en Zipaquirá, Cundinamarca. Mira habitaciones, fotos y ubicación."
   {/* La misma fotografia real que abre la pagina. */}
   imagen={fotoHero?.src}
@@ -158,7 +158,7 @@ const fichaCatalogo = {
       )}
       <div class="contenedor hero__contenido">
         <span class="hero__etiqueta">Hospedajes en Zipaquirá</span>
-        <h1 class="hero__titulo">Hospedajes Atheron en Zipaquirá</h1>
+        <h1 class="hero__titulo">Hoteles y alojamiento en Zipaquirá</h1>
         <p class="hero__texto">
           Casas, habitaciones y alojamientos seleccionados para parejas,
           familias y grupos. Encuentra el espacio que mejor se adapta a tu viaje.
@@ -278,7 +278,7 @@ const fichaCatalogo = {
                 </div>
                 <div class="tarjeta__cuerpo">
 
-                  {enObra && <span class="etiqueta">Ficha en preparación</span>}
+                  {enObra && <span class="etiqueta">{data.aliado ? 'Hotel aliado' : 'Ficha en preparación'}</span>}
 
                   <h2 class="tarjeta__titulo">
                     {mostrarEnlace
@@ -347,7 +347,7 @@ const fichaCatalogo = {
                   <a class="boton boton--whatsapp boton--bloque"
                      {...atributosWhatsApp(
                        enObra
-                         ? `Hola, quisiera consultar el estado del alojamiento ${data.nombre} de Atheron Suite en ${data.localidad}.`
+                         ? `Hola, quisiera consultar el estado del alojamiento ${data.nombre} de ATHERON HOTELS en ${data.localidad}.`
                          : mensajeDisponibilidadDe(`${data.nombre}, en ${data.localidad}`),
                        { origen: 'catalogo_tarjeta', propiedad: data.nombre },
                      )}>
