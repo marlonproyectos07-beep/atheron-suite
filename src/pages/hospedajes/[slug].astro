@@ -11,6 +11,7 @@ import ContactoWhatsApp from '../../components/ContactoWhatsApp.astro';
 import { formularioContactoActivo } from '../../data/ajustes';
 import { migaDePan, url, ORGANIZACION } from '../../data/seo';
 import { atributosWhatsApp } from '../../data/whatsapp';
+import { reservaTitulo } from '../../data/reserva-titulo';
 
 export async function getStaticPaths() {
   /* Los hospedaje-02 a 07 son plantillas vacias (sin nombre, fotos ni
@@ -260,6 +261,8 @@ function idHabitacion(nombre) {
       )}
       <div class="contenedor hero__contenido">
         <span class="hero__etiqueta">{d.zona}</span>
+        {/* Reserva las lineas que ocupara el titulo con Fraunces: ver src/data/reserva-titulo.ts */}
+        {reservaTitulo(d.nombre) && <style is:inline set:html={reservaTitulo(d.nombre)}></style>}
         <h1 class="hero__titulo"><Marca texto={d.nombre} /></h1>
         <p class="hero__texto">
           <Marca texto={d.presentacion} pendiente={d.presentacionPendiente} />
