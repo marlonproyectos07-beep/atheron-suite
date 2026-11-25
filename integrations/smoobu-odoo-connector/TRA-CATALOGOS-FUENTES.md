@@ -95,3 +95,15 @@ Detalle y fuente en `deploy/tra-grupo1-manual-y-respuesta-2026-11-24.md`. Resume
 | 6. `tipo_acomodacion` | Texto; seguir el Grupo 2 | Pendiente de fijar el valor |
 | 7. Ciudades | Texto libre; extranjeras por su nombre en español | Resuelto |
 | 8. Corrección o anulación | No se modifica ni reenvía; se pide el borrado por correo a soporte | Resuelto: procedimiento documentado |
+
+### 7.1 Manual Grupo 2 leido en el PDF oficial (24/11/2026)
+Fuente: `tramincit.gov.co/tarjeta/media/docs/Manual-Grupo-2-Usuarios-Directos-Conectados.pdf` (texto extraido del PDF).
+- 4.2 y 5.2, numero de identificacion: solo numeros, sin puntos ni caracteres especiales. Solo el Pasaporte admite
+  letras y numeros.
+- 4.6, habitacion, cama o plaza: en el formulario, entero mayor que 0; "1" si se aloja en toda la vivienda turistica.
+  Para la API la respuesta oficial dice texto libre (punto 8).
+- 4.8: con 0 acompanantes se escribe 0.
+- 4.11, tipo de acomodacion: lista desplegable, sin enumerar. En viviendas turisticas, si se toma todo el
+  apartamento, la casa o la finca, se elige ese tipo. No trata el alquiler por habitacion.
+- 4.12, valor total pagado: el valor que paga el huesped principal por el alojamiento completo, de el y de sus
+  acompanantes. Solo numeros, en pesos colombianos (el formulario pone los puntos de miles).

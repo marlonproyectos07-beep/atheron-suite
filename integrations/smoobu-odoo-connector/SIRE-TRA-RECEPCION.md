@@ -54,11 +54,12 @@ Menu **Registro SIRE/TRA** en Odoo.
   extracto). Marcar las dos constancias (*no incluye impuestos* y *cubre al principal y a todos sus acompanantes*) y
   pulsar *Confirmar con evidencia*. La tarifa de la reserva y un anticipo no sirven. Un "Paid" de Smoobu u otro
   reporte sin soporte se puede anotar, pero sin confirmar no habilita el envio. No se crean ni modifican pagos
-  contables. Casos dudosos (saldo pendiente, comision del canal, descuentos, consumos extra, varias habitaciones): no
-  confirmar; consultar (ver `deploy/tra-grupo1-manual-y-respuesta-2026-11-24.md`).
+  contables. Si la estancia tiene saldo pendiente, comision del canal, descuentos, consumos extra, varias
+  habitaciones o pago en otra moneda, es una decision pendiente de Marlon (seccion 6 de
+  `deploy/tra-grupo1-manual-y-respuesta-2026-11-24.md`): preguntar antes de confirmar.
 - **Incierto** (no se sabe si llego): revisar el portal PMS (https://pms.mincit.gov.co/login/, usuario = RNT). Si
   aparece: *Aceptado* con evidencia. Si no aparece: *Comprobado: no recibido* (vuelve a pendiente). Nunca reenviar sin
-  revisar. Tras **dos** fallos reales de la misma ficha el emisor la bloquea (`INTENTOS_FALLIDOS_REPETIDOS`): soporte.
+  revisar: el emisor nunca reintenta solo.
 - **Registro enviado por error o con datos equivocados**: no se puede modificar ni reenviar. Pedir el borrado por correo
   a soporte MinCIT (procedimiento en `deploy/tra-grupo1-manual-y-respuesta-2026-11-24.md`).
 

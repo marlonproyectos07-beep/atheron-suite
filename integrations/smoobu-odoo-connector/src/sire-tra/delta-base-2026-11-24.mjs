@@ -1,0 +1,17 @@
+/**
+ * Contenido de PRODUCCION antes del despliegue minimo TRA Grupo 1 (2026-11-24): exactamente lo que instalo el
+ * manifiesto de main e93ea57 (huella 6ead35ac6e33321f) en los tres objetos que cambian. Comprobado el 24/11/2026 en
+ * atheron1 por sha256 (accion 2040, vistas 6872 y 6873). Sirve para detectar deriva antes de escribir y como
+ * contenido de reversion. Generado desde deploy/sire-tra-manifest.json de e93ea57; no editar a mano.
+ */
+export const DELTA_BASE = Object.freeze({
+ "manifestFingerprint": "6ead35ac6e33321f",
+ "commit": "e93ea57",
+ "serverActions": {
+  "sa_amount_confirm": "if not records:\n    raise UserError('Seleccione un importe.')\nif len(records) != 1:\n    raise UserError('Confirme un importe a la vez.')\nr = records\ntoday = (datetime.datetime.utcnow() - datetime.timedelta(hours=5)).date()\nerr = False\nif r.x_state == 'confirmado':\n    err = 'ya está confirmado'\nelif r.x_state == 'anulado':\n    err = 'está anulado; registre uno nuevo'\nelif not r.x_amount or r.x_amount <= 0:\n    err = 'falta el importe efectivamente pagado'\nelif not r.x_currency_id:\n    err = 'falta la moneda'\nelif r.x_currency_id.name != 'COP':\n    err = 'TRA exige el valor en pesos colombianos (COP)'\nelif not r.x_cutoff_date:\n    err = 'falta la fecha de corte'\nelif r.x_cutoff_date > today:\n    err = 'la fecha de corte no puede ser futura'\nelif not r.x_evidence_kind or not (r.x_evidence_ref or '').strip() or not r.x_evidence or not (r.x_evidence_name or '').strip():\n    err = 'falta la evidencia: tipo, referencia y archivo'\nelif env['x_tra_amount'].search_count([('x_sale_order_id', '=', r.x_sale_order_id.id), ('x_state', '=', 'confirmado'), ('id', '!=', r.id)]):\n    err = 'la reserva ya tiene un importe confirmado; anúlelo antes'\nif err:\n    raise UserError('No se confirmó el importe: %s.' % err)\nr.sudo().write({'x_state': 'confirmado', 'x_confirmed_by': env.user.id, 'x_confirmed_at': datetime.datetime.now()})"
+ },
+ "views": {
+  "view_amount_form": "<form string=\"Importe pagado (TRA)\">\n<header><button name=\"{{ref:sa_amount_confirm}}\" type=\"action\" string=\"Confirmar con evidencia\" class=\"btn-primary\" invisible=\"x_state in ('confirmado', 'anulado')\"/><button name=\"{{ref:sa_amount_void}}\" type=\"action\" string=\"Anular\" invisible=\"x_state == 'anulado'\"/><field name=\"x_state\" widget=\"statusbar\" readonly=\"1\"/></header>\n<sheet><group>\n<group string=\"Importe\"><field name=\"x_sale_order_id\" options=\"{'no_create': True}\"/><field name=\"x_amount\"/><field name=\"x_currency_id\" options=\"{'no_create': True}\"/><field name=\"x_cutoff_date\"/></group>\n<group string=\"Evidencia\"><field name=\"x_evidence_kind\"/><field name=\"x_evidence_ref\"/><field name=\"x_evidence\" filename=\"x_evidence_name\"/><field name=\"x_evidence_name\" invisible=\"1\"/></group>\n<group string=\"Confirmación\"><field name=\"x_confirmed_by\" readonly=\"1\"/><field name=\"x_confirmed_at\" readonly=\"1\"/><field name=\"x_name\"/><field name=\"x_note\"/></group>\n</group></sheet>\n</form>",
+  "view_amount_list": "<list string=\"Importes pagados (TRA)\"><field name=\"x_sale_order_id\"/><field name=\"x_amount\"/><field name=\"x_currency_id\"/><field name=\"x_cutoff_date\"/><field name=\"x_evidence_kind\"/><field name=\"x_evidence_ref\"/><field name=\"x_state\"/><field name=\"x_confirmed_by\"/><field name=\"x_confirmed_at\"/></list>"
+ }
+});

@@ -2,9 +2,10 @@
  * Cliente HTTP real de la API TRA (pms.mincit.gov.co). Solo se construye con token y nunca registra
  * el cuerpo ni la cabecera. El emisor decide si se puede usar (puertas de emissionGates).
  *
- * Manual oficial Grupo 1, PMS (Res. 409 de 2022, version 02-02-2023), "Headers": `Authorization` = `token <token>`
- * (la palabra token, un espacio y el token). El cuerpo es el JSON del manual ("raw" JSON en Postman), de ahi el
- * Content-Type. Una sola peticion por llamada: este cliente no reintenta nunca.
+ * [OFICIAL] Manual Grupo 1, PMS (Res. 409 de 2022, version 02-02-2023), "Headers": `Authorization` = `token <token>`
+ * (la palabra token, un espacio y el token); cuerpo JSON.
+ * [PROPIA] `Content-Type: application/json` (el manual no lo nombra; es lo que envia Postman con cuerpo "raw" JSON)
+ * y una sola peticion por llamada: este cliente no reintenta nunca.
  */
 export const TRA_BASE_URL = 'https://pms.mincit.gov.co';
 

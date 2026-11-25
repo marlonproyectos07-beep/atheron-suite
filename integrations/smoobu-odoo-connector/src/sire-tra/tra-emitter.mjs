@@ -6,14 +6,15 @@
  * nunca se reenvia un principal aceptado; no se reintenta a ciegas tras timeout o resultado incierto;
  * sin configuracion oficial verificada no se envia nada. La bitacora no lleva datos personales.
  *
- * MinCIT, respuesta oficial 2-2026-039958 (23/11/2026, radicado 1-2026-041876): los registros se envian cuando se
- * realiza el check-out y solo completos; no se pueden modificar ni reenviar (solo pedir su borrado a soporte).
- * Por eso: CERO envios antes de registrar la salida real de TODOS los huespedes de la estancia, y check_out = esa
- * salida real (no la fecha prevista de la reserva).
- * Advertencia VERBAL del asesor MinCIT (reunion del 24/11/2026, comunicada por Marlon; sin respaldo escrito): alterar
- * el JSON y repetir peticiones fallidas puede provocar bloqueos. El mecanismo no esta documentado; aqui solo se
- * reduce la exposicion: JSON con las claves y el orden del manual, sin campos propios, una peticion por ficha, se
- * detiene al primer fallo y limita los reenvios tras fallo (MAX_FAILED_REAL_ATTEMPTS).
+ * Origen de cada regla (detalle en deploy/tra-grupo1-manual-y-respuesta-2026-11-24.md, seccion 2):
+ *  [OFICIAL]  MinCIT, respuesta 2-2026-039958 (23/11/2026): envio al realizar el check-out, registros completos, sin
+ *             modificacion ni reenvio (solo borrado por soporte); costo del principal y acompanantes sin impuestos.
+ *             Manual Grupo 1: endpoints, cabecera, claves y tipos. Manual Grupo 2 (recomendado por la respuesta):
+ *             documento solo digitos salvo Pasaporte (4.2, 5.2); valor en COP, solo numeros (4.12).
+ *  [VERBAL]   Asesor MinCIT, reunion del 24/11/2026 (comunicada por Marlon, sin respaldo escrito): alterar el JSON y
+ *             repetir peticiones fallidas puede provocar bloqueos. Mecanismo desconocido; no se supone ninguno.
+ *  [PROPIA]   Decisiones tecnicas nuestras, marcadas asi en el codigo: parar al primer fallo, esperar revision
+ *             humana antes de cualquier otro envio de la estancia, no redondear ni alterar valores.
  */
 export const TRA_CATALOG_UNVERIFIED = Object.freeze({
   verified: false,
@@ -36,10 +37,25 @@ const name = (m2o) => (Array.isArray(m2o) ? m2o[1] : '') || '';
 export const TRA_ONE_KEYS = Object.freeze(['tipo_identificacion', 'numero_identificacion', 'nombres', 'apellidos', 'cuidad_residencia', 'cuidad_procedencia', 'numero_habitacion', 'motivo', 'numero_acompanantes', 'check_in', 'check_out', 'tipo_acomodacion', 'costo', 'nombre_establecimiento', 'rnt_establecimiento']);
 // /two/ (acompanante): texto, salvo "padre", que el manual muestra sin comillas (numerico) = "code" devuelto por /one/.
 export const TRA_TWO_KEYS = Object.freeze(['tipo_identificacion', 'numero_identificacion', 'nombres', 'apellidos', 'cuidad_residencia', 'cuidad_procedencia', 'numero_habitacion', 'check_in', 'check_out', 'padre']);
-// Tabla de tipos del manual para /one/: numero_identificacion, numero_acompanantes y rnt_establecimiento son
-// "numerico" (aunque el ejemplo los entrecomilla). Se envian como texto de solo digitos; lo demas no se envia.
-export const TRA_ONE_DIGITS = Object.freeze(['numero_identificacion', 'numero_acompanantes', 'rnt_establecimiento']);
+// [OFICIAL] Tabla de tipos del manual Grupo 1 para /one/: numero_acompanantes y rnt_establecimiento son "numerico"
+// (el ejemplo los entrecomilla): texto de solo digitos.
+export const TRA_ONE_DIGITS = Object.freeze(['numero_acompanantes', 'rnt_establecimiento']);
 const DIGITS = /^\d+$/;
+/**
+ * Documento del huesped principal (/one/ numero_identificacion).
+ *  [OFICIAL] Manual Grupo 1: "numerico". Manual Grupo 2, 4.2 (la respuesta 2-2026-039958 recomienda seguir el Grupo 2):
+ *            solo numeros, sin puntos ni caracteres especiales; solo el Pasaporte admite letras y numeros.
+ *  -> C.C, T.I y C.E: solo digitos; si no, DATO_NO_ADMITIDO (nunca se corrige el valor).
+ *  -> Pasaporte con letras: el Grupo 2 lo admite pero el Grupo 1 dice "numerico" para la API. NO RESUELTO: excepcion
+ *     especifica (EXCEPCION_PENDIENTE), sin alterar el valor y sin afectar a los demas casos.
+ * En /two/ (acompanante) el manual Grupo 1 declara texto: no se valida aqui.
+ */
+export function mainDocumentStatus(docCode, value) {
+  const v = String(value || '');
+  if (!v) return 'falta';
+  if (DIGITS.test(v)) return 'ok';
+  return docCode === 'passport' && /^[A-Za-z0-9]+$/.test(v) ? 'excepcion' : 'invalido';
+}
 
 /**
  * Fecha de salida de la estancia (AAAA-MM-DD, Bogota): la mas tardia de las salidas reales. null si alguna ficha no
@@ -111,6 +127,8 @@ export const AMOUNT_FIELDS = ['id', 'x_state', 'x_amount', 'x_currency_id', 'x_c
 export const EVIDENCE_KINDS = Object.freeze(['comprobante_pago', 'liquidacion_canal', 'factura_pagada', 'extracto_bancario']);
 /** Sin importe: falta el dato (no es un dato invalido). IMPORTE_ESPERA_SALIDA: la estancia aun no termino. */
 export const COST_MISSING = Object.freeze(['IMPORTE_AUSENTE', 'IMPORTE_SIN_CONFIRMAR', 'IMPORTE_ESPERA_SALIDA']);
+/** Casos no resueltos por las fuentes oficiales: no se envian ni se alteran (decision pendiente). */
+export const COST_EXCEPTIONS = Object.freeze(['EXCEPCION_IMPORTE_CON_DECIMALES']);
 const utcMs = (s) => (s ? new Date(`${String(s).replace(' ', 'T')}Z`).getTime() : NaN);
 
 /** Fecha de hoy en Bogota (AAAA-MM-DD) para una marca de tiempo en ms. */
@@ -143,7 +161,9 @@ export function confirmedCost({ amounts = [], est, order, today, departure }) {
   if (String(a.x_cutoff_date) < departure) return fail('IMPORTE_CORTE_ANTES_DE_SALIDA');
   const v = Number(a.x_amount);
   if (!Number.isFinite(v) || v <= 0) return fail('IMPORTE_INVALIDO');
-  return { ok: true, code: 'OK', value: String(Math.round(v)), rate, differsFromRate: rate !== null && Math.round(rate) !== Math.round(v), cutoff: String(a.x_cutoff_date), amountId: a.id };
+  // [OFICIAL] Grupo 2, 4.12: solo numeros, en pesos. [PROPIA] un importe con decimales no se redondea: excepcion.
+  if (!Number.isInteger(v)) return fail('EXCEPCION_IMPORTE_CON_DECIMALES');
+  return { ok: true, code: 'OK', value: String(v), rate, differsFromRate: rate !== null && rate !== v, cutoff: String(a.x_cutoff_date), amountId: a.id };
 }
 
 // ------------------------------------------------------------------ motivo de viaje
@@ -189,13 +209,20 @@ export function buildPayload({ line, main, est, catalog, companions, padre, cost
   const payload = Object.fromEntries((main ? TRA_ONE_KEYS : TRA_TWO_KEYS).map((k) => [k, values[k]]));
   let missing = Object.entries(payload).filter(([, v]) => v === '' || v === undefined || (typeof v === 'number' && !Number.isFinite(v))).map(([k]) => k);
   const invalid = [];
+  const pending = []; // excepciones especificas no resueltas: no se envian, no se alteran
   if (main && payload.tipo_identificacion && Array.isArray(catalog.mainDocTypes) && !catalog.mainDocTypes.includes(line.doc_code)) invalid.push('tipo_identificacion');
-  if (main) for (const k of TRA_ONE_DIGITS) if (payload[k] !== '' && !DIGITS.test(payload[k])) invalid.push(k);
+  if (main) {
+    const doc = mainDocumentStatus(line.doc_code, payload.numero_identificacion);
+    if (doc === 'invalido') invalid.push('numero_identificacion');
+    if (doc === 'excepcion') pending.push('numero_identificacion');
+    for (const k of TRA_ONE_DIGITS) if (payload[k] !== '' && !DIGITS.test(payload[k])) invalid.push(k);
+  }
+  // [PROPIA] coherencia minima: padre entero positivo (el manual lo toma del "code" devuelto) y salida >= llegada
   if (!main && payload.padre !== undefined && Number.isFinite(payload.padre) && !(Number.isInteger(payload.padre) && payload.padre > 0)) invalid.push('padre');
   if (payload.check_in && payload.check_out && payload.check_out < payload.check_in) invalid.push('check_out');
-  if (main && !cost?.ok && cost?.code && !COST_MISSING.includes(cost.code)) { invalid.push('costo'); missing = missing.filter((k) => k !== 'costo'); }
-  missing = missing.filter((k) => !invalid.includes(k));
-  return { payload, missing, invalid };
+  if (main && !cost?.ok && cost?.code && !COST_MISSING.includes(cost.code)) (COST_EXCEPTIONS.includes(cost.code) ? pending : invalid).push('costo');
+  missing = missing.filter((k) => !invalid.includes(k) && !pending.includes(k));
+  return { payload, missing, invalid, pending };
 }
 
 export function classify(res) {
@@ -221,33 +248,22 @@ async function attachDocCodes(odoo, lines) {
   for (const l of lines) l.doc_code = codeOf.get(Array.isArray(l.x_doc_type_id) ? l.x_doc_type_id[0] : 0) || '';
 }
 
-const STATUS = (k, missing, invalid) => (invalid.includes(k) ? 'no_admitido' : missing.includes(k) ? 'falta' : 'ok');
+const STATUS = (k, missing, invalid, pending = []) => (invalid.includes(k) ? 'no_admitido' : pending.includes(k) ? 'excepcion_pendiente' : missing.includes(k) ? 'falta' : 'ok');
 
-/** Estados que exigen revision humana (portal PMS) antes de cualquier otro envio de la estancia. */
-export const REVIEW_STATES = Object.freeze(['en_envio', 'enviado', 'incierto', 'rechazado']);
 /**
- * Peticiones reales fallidas (rechazado o incierto) admitidas por ficha. Tras un fallo, Recepcion comprueba el portal y,
- * si no aparece, marca "no recibido": se admite UN reenvio revisado. Al segundo fallo la ficha queda bloqueada y se
- * escala a soporte. Es una precaucion propia ante la advertencia verbal del asesor, no una regla del MinCIT.
+ * [PROPIA] Estados que exigen revision humana en el portal PMS antes de cualquier otro envio de la estancia. Nunca hay
+ * reintento automatico: un rechazado o incierto solo vuelve a "pendiente" cuando Recepcion registra "Comprobado: no
+ * recibido" tras mirar el portal (la respuesta oficial, punto 12, indica que la confirmacion se hace alli).
  */
-export const MAX_FAILED_REAL_ATTEMPTS = 2;
-
-async function failedRealAttempts(odoo, lineIds) {
-  if (!lineIds.length) return new Map();
-  const rows = await odoo.searchRead('x_report_attempt', [['x_guest_line_id', 'in', lineIds], ['x_system', '=', 'tra'], ['x_channel', '=', 'api_tra'], ['x_result', 'in', ['rechazado', 'incierto']]], ['x_guest_line_id']);
-  const n = new Map();
-  for (const r of rows) { const id = Array.isArray(r.x_guest_line_id) ? r.x_guest_line_id[0] : r.x_guest_line_id; n.set(id, (n.get(id) || 0) + 1); }
-  return n;
-}
+export const REVIEW_STATES = Object.freeze(['en_envio', 'enviado', 'incierto', 'rechazado']);
 
 /** Codigos de una ficha que impiden reportar la estancia (sin mirar el payload). */
-function lineBlocks(l, failed) {
+function lineBlocks(l) {
   const codes = [];
   if (l.x_data_state !== 'validado') codes.push('FICHA_NO_VALIDADA');
   if (!l.x_arrived_at) codes.push('SIN_LLEGADA_REAL');
-  if (!l.x_departed_at) codes.push('SIN_SALIDA_REAL');
+  if (!l.x_departed_at) codes.push('SIN_SALIDA_REAL'); // [OFICIAL] envio al check-out (2-2026-039958, punto 15)
   if (REVIEW_STATES.includes(l.x_tra_state)) codes.push(`TRA_${String(l.x_tra_state).toUpperCase()}_REVISAR`);
-  if (l.x_tra_state !== 'aceptado' && (failed.get(l.id) || 0) >= MAX_FAILED_REAL_ATTEMPTS) codes.push('INTENTOS_FALLIDOS_REPETIDOS');
   return codes;
 }
 
@@ -289,19 +305,18 @@ export async function checkStay({ odoo, orderId, catalog, env = {}, today }) {
   if (!lines.length) out.blocks.push('SIN_FICHAS');
   else if (!mains.length) out.blocks.push('SIN_PRINCIPAL');
   else if (mains.length > 1) out.blocks.push('VARIOS_PRINCIPALES');
-  const failed = await failedRealAttempts(odoo, lines.map((l) => l.id));
   for (const l of lines) {
-    const codes = lineBlocks(l, failed);
+    const codes = lineBlocks(l);
     const done = l.x_tra_state === 'aceptado';
     if (!done && l.x_data_state === 'validado' && l.x_arrived_at && l.x_tra_state === 'pendiente') out.pending += 1;
-    const { payload, missing, invalid } = buildPayload({ line: l, main: l.x_is_main, order, est: est || {}, catalog, companions: companions.length, padre: 1, cost });
-    const fields = Object.fromEntries(Object.keys(payload).filter((k) => k !== 'padre').map((k) => [k, STATUS(k, missing, invalid)]));
+    const { payload, missing, invalid, pending } = buildPayload({ line: l, main: l.x_is_main, order, est: est || {}, catalog, companions: companions.length, padre: 1, cost });
+    const fields = Object.fromEntries(Object.keys(payload).filter((k) => k !== 'padre').map((k) => [k, STATUS(k, missing, invalid, pending)]));
     if (l.x_is_main) {
       const rs = reasonStatus(l, catalog);
       if (rs !== 'OK') { fields.motivo = 'falta'; codes.push(rs); }
       if (fields.costo !== 'ok') fields.costo = cost.code;
     } else fields.padre = 'tras_aceptar_principal';
-    for (const [k, v] of Object.entries(fields)) if (v !== 'ok' && v !== 'tras_aceptar_principal' && !(k === 'costo' && v === cost.code && out.blocks.includes(cost.code))) codes.push(`CAMPO_${k}`);
+    for (const [k, v] of Object.entries(fields)) if (v !== 'ok' && v !== 'tras_aceptar_principal' && !(k === 'costo' && v === cost.code && out.blocks.includes(cost.code))) codes.push(v === 'excepcion_pendiente' ? `EXCEPCION_PENDIENTE_${k}` : `CAMPO_${k}`);
     out.lines.push({ id: l.id, main: !!l.x_is_main, tra: l.x_tra_state || null, codes: done ? [] : [...new Set(codes)], fields });
   }
   out.gates = emissionGates({ mode: 'real', env, catalog, est }).reasons;
@@ -318,8 +333,7 @@ export async function emitStay({ odoo, tra, orderId, est, catalog, mode, runRef,
   // TODAS las fichas de la estancia: si alguna no esta validada, sin llegada o sin salida real, no se envia nada
   const lines = await odoo.searchRead('x_guests_line', [['x_sale_order_id', '=', orderId]], LINE_FIELDS);
   const out = { orderId, main: null, companions: [], sent: 0 };
-  const failed = await failedRealAttempts(odoo, lines.map((l) => l.id));
-  const blocking = [...new Set(lines.filter((l) => l.x_tra_state !== 'aceptado').flatMap((l) => lineBlocks(l, failed)))];
+  const blocking = [...new Set(lines.filter((l) => l.x_tra_state !== 'aceptado').flatMap((l) => lineBlocks(l)))];
   if (!lines.length) blocking.push('SIN_FICHAS');
   if (blocking.length) { log({ event: 'stay_not_ready', orderId, reasons: blocking }); return { ...out, stop: 'ESTANCIA_NO_LISTA', reasons: blocking }; }
   await attachDocCodes(odoo, lines);
@@ -345,9 +359,10 @@ export async function emitStay({ odoo, tra, orderId, est, catalog, mode, runRef,
   const sendOne = async (line, isMain, padre) => {
     const claimed = await odoo.claim([line.id], 'tra', runRef);
     if (!claimed.includes(line.id)) return { lineId: line.id, result: 'no_reclamado' };
-    const { payload, missing, invalid } = buildPayload({ line, main: isMain, order, est, catalog, companions: companions.length, padre, cost });
-    if (missing.length || invalid.length) {
-      const cls = { result: 'error_previo', code: missing.length ? `DATOS_INCOMPLETOS:${missing.join(',')}` : `DATO_NO_ADMITIDO:${invalid.join(',')}` };
+    const { payload, missing, invalid, pending } = buildPayload({ line, main: isMain, order, est, catalog, companions: companions.length, padre, cost });
+    if (missing.length || invalid.length || pending.length) {
+      const code = missing.length ? `DATOS_INCOMPLETOS:${missing.join(',')}` : invalid.length ? `DATO_NO_ADMITIDO:${invalid.join(',')}` : `EXCEPCION_PENDIENTE:${pending.join(',')}`;
+      const cls = { result: 'error_previo', code };
       await record(line, cls, 0, null);
       return { lineId: line.id, ...cls };
     }
@@ -367,7 +382,8 @@ export async function emitStay({ odoo, tra, orderId, est, catalog, mode, runRef,
   } else if (main.x_tra_state !== 'aceptado' || !code) {
     return { ...out, stop: `PRINCIPAL_${main.x_tra_state || 'sin_estado'}` };
   }
-  // se detiene al primer acompanante que no quede aceptado: no se encadenan peticiones fallidas
+  // [PROPIA] se detiene al primer acompanante que no quede aceptado: no se encadenan peticiones fallidas (advertencia
+  // verbal); los demas esperan a que Recepcion revise el portal y lance otra ejecucion manual
   for (const c of companions.filter((l) => l.x_tra_state === 'pendiente')) {
     const r = await sendOne(c, false, code);
     out.companions.push(r);

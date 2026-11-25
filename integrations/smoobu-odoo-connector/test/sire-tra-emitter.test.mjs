@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MAX_FAILED_REAL_ATTEMPTS, TRA_CATALOG_UNVERIFIED, TRA_ONE_KEYS, TRA_TWO_KEYS, bogotaDate, buildPayload, classify, confirmedCost, createTraSimulator, emissionGates, emitStay, stayDeparture } from '../src/sire-tra/tra-emitter.mjs';
+import { TRA_CATALOG_UNVERIFIED, TRA_ONE_KEYS, TRA_TWO_KEYS, bogotaDate, buildPayload, classify, confirmedCost, createTraSimulator, emissionGates, emitStay, stayDeparture } from '../src/sire-tra/tra-emitter.mjs';
 import { assertBrowserTarget, assertProductionTarget, assertTestTarget } from '../src/sire-tra/guard.mjs';
 import { createTraHttp, traHeaders } from '../src/sire-tra/tra-http.mjs';
 
 const EST = { x_name: 'Atheron Suite (TEST)', x_rnt_number: '999999', x_tra_mode: 'api', x_tra_config_verified: true, x_tra_accommodation_type: 'Habitacion', x_tra_cost_basis: 'total_estancia', x_tra_establishment_name: 'Nombre RNT (TEST)' };
 const CAT = { verified: true, docTypes: TRA_CATALOG_UNVERIFIED.docTypes, reasons: { Vacaciones: 'Vacaciones' } };
 const ENV = { TRA_ENABLED: 'yes-real', TRA_TOKEN: 't' };
-const PAID = { id: 1, x_state: 'confirmado', x_amount: 450000.4, x_currency_id: [8, 'COP'], x_cutoff_date: '2026-11-12', x_evidence_kind: 'comprobante_pago', x_evidence_ref: 'REF-TEST', x_evidence_name: 'comprobante.pdf', x_excludes_taxes: true, x_covers_all_guests: true, x_confirmed_by: [2, 'u'], x_confirmed_at: '2026-11-12 16:00:00', write_date: '2026-11-12 16:00:00' };
+const PAID = { id: 1, x_state: 'confirmado', x_amount: 450000, x_currency_id: [8, 'COP'], x_cutoff_date: '2026-11-12', x_evidence_kind: 'comprobante_pago', x_evidence_ref: 'REF-TEST', x_evidence_name: 'comprobante.pdf', x_excludes_taxes: true, x_covers_all_guests: true, x_confirmed_by: [2, 'u'], x_confirmed_at: '2026-11-12 16:00:00', write_date: '2026-11-12 16:00:00' };
 
 /** Odoo falso con la MISMA maquina de estados que las acciones de servidor (reclamo y aplicar intento). */
 function fakeOdoo(lines) {
@@ -18,7 +18,6 @@ function fakeOdoo(lines) {
     lines, attempts,
     async searchRead(model, domain) {
       if (model === 'x_guests_line') return lines.map((l) => ({ ...l })); // todas las fichas de la estancia
-      if (model === 'x_report_attempt') return attempts.filter((a) => a.x_system === 'tra' && a.x_channel === 'api_tra' && ['rechazado', 'incierto'].includes(a.x_result)).map((a) => ({ x_guest_line_id: a.x_guest_line_id }));
       if (model === 'l10n_latam.identification.type') return [{ id: 5, l10n_co_document_code: 'national_citizen_id' }, { id: 2, l10n_co_document_code: 'passport' }, { id: 10, l10n_co_document_code: 'PEP' }, { id: 7, l10n_co_document_code: 'civil_registration' }];
       if (model === 'sale.order') return [{ id: 1, state: 'sale', x_checkout: '2026-11-14', amount_total: 450000.4 }]; // fecha prevista distinta de la salida real
       if (model === 'x_tra_amount') return [{ ...PAID }];
@@ -79,20 +78,18 @@ test('principal aceptado y acompanante rechazado: se detiene, no se reenvia el p
   assert.deepEqual(sim.calls.map((c) => c.kind), ['one', 'two', 'two', 'two']);
 });
 
-test('reenvios tras fallo: uno revisado; al segundo fallo real la ficha queda bloqueada para soporte', async () => {
-  assert.equal(MAX_FAILED_REAL_ATTEMPTS, 2);
-  const o = fakeOdoo([line(1, true), line(2, false)]);
-  const sim = createTraSimulator(['ok', '400', '400']);
-  await run(o, sim);
-  o.lines[1].x_tra_state = 'pendiente'; // primer "no recibido"
-  const r2 = await run(o, sim);
-  assert.equal(r2.companions[0].result, 'rechazado');
-  o.lines[1].x_tra_state = 'pendiente'; // segundo "no recibido"
-  const r3 = await run(o, sim);
-  assert.equal(r3.stop, 'ESTANCIA_NO_LISTA');
-  assert.deepEqual(r3.reasons, ['INTENTOS_FALLIDOS_REPETIDOS']);
-  assert.equal(sim.calls.length, 3);
-  assert.equal(o.lines[1].x_tra_state, 'pendiente', 'no se reclama');
+test('sin reintentos automaticos: tras un rechazo o un incierto no hay otra llamada hasta la revision humana', async () => {
+  for (const step of ['400', 'timeout']) {
+    const o = fakeOdoo([line(1, true), line(2, false)]);
+    const sim = createTraSimulator(['ok', step, 'ok']);
+    await run(o, sim);
+    for (let i = 0; i < 3; i += 1) await run(o, sim); // ejecuciones repetidas sin revision
+    assert.equal(sim.calls.length, 2, `${step}: ninguna llamada nueva sin revision`);
+    o.lines[1].x_tra_state = 'pendiente'; // "Comprobado: no recibido" tras mirar el portal
+    const r = await run(o, sim);
+    assert.equal(r.companions[0].result, 'aceptado', 'el reenvio revisado se admite (sin limite numerico propio)');
+    assert.equal(sim.calls.length, 3);
+  }
 });
 
 test('antes del check-out: cero envios, cero reclamos y cero intentos (falte la salida de uno o de todos)', async () => {
@@ -207,20 +204,32 @@ test('JSON oficial: con los valores del ejemplo del manual, /one/ sale byte a by
   assert.equal(two.payload.numero_identificacion, 'AB123456', 'en /two/ el documento es texto');
 });
 
-test('tipos numericos del manual en /one/: documento del principal y RNT solo digitos; si no, error previo sin llamada', async () => {
-  const est = { ...EST };
-  const p = (extra, e = est) => buildPayload({ line: { ...line(1, true), doc_code: 'passport', ...extra }, main: true, est: e, catalog: CAT, companions: 0, cost: { ok: true, value: '1' } });
-  assert.deepEqual(p({ x_identity_number: 'AB123456' }).invalid, ['numero_identificacion']);
-  assert.deepEqual(p({ x_identity_number: ' 123' }).invalid, ['numero_identificacion'], 'no se recorta ni se altera el valor');
-  assert.deepEqual(p({ x_identity_number: '123456' }).invalid, []);
-  assert.deepEqual(p({}, { ...EST, x_rnt_number: 'RNT-1' }).invalid, ['rnt_establecimiento']);
-  assert.deepEqual(p({ x_departed_at: '2026-11-09 15:00:00' }).invalid, ['check_out'], 'salida anterior a la llegada');
+test('documento del principal: C.C/T.I/C.E solo digitos; pasaporte con letras = excepcion especifica, sin alterar ni bloquear lo demas', async () => {
+  const p = (doc, number, e = EST) => buildPayload({ line: { ...line(1, true), doc_code: doc, x_identity_number: number }, main: true, est: e, catalog: CAT, companions: 0, cost: { ok: true, value: '1' } });
+  assert.deepEqual([p('national_citizen_id', '1012345678').invalid, p('national_citizen_id', '1012345678').pending], [[], []], 'C.C valida: sin bloqueo');
+  assert.deepEqual([p('passport', '123456789').invalid, p('passport', '123456789').pending], [[], []], 'pasaporte numerico: sin bloqueo');
+  const pa = p('passport', 'AB123456');
+  assert.deepEqual([pa.invalid, pa.pending, pa.missing], [[], ['numero_identificacion'], []], 'pasaporte alfanumerico: excepcion pendiente');
+  assert.equal(pa.payload.numero_identificacion, 'AB123456', 'el valor no se altera');
+  assert.deepEqual(p('national_citizen_id', '1.012.345').invalid, ['numero_identificacion'], 'Grupo 2, 4.2: sin puntos');
+  assert.deepEqual(p('national_citizen_id', ' 123').invalid, ['numero_identificacion'], 'no se recorta ni se altera');
+  assert.deepEqual(p('passport', 'AB-1234').invalid, ['numero_identificacion'], 'Grupo 2, 4.2: sin caracteres especiales');
+  assert.deepEqual(p('national_citizen_id', '123', { ...EST, x_rnt_number: 'RNT-1' }).invalid, ['rnt_establecimiento']);
+  assert.deepEqual(buildPayload({ line: { ...line(1, true), doc_code: 'national_citizen_id', x_departed_at: '2026-11-09 15:00:00' }, main: true, est: EST, catalog: CAT, companions: 0, cost: { ok: true, value: '1' } }).invalid, ['check_out'], 'salida anterior a la llegada');
+  // acompanante con pasaporte alfanumerico: /two/ declara texto; se envia tal cual
+  const two = buildPayload({ line: { ...line(2, false), doc_code: 'passport', x_identity_number: 'AB123456' }, main: false, est: EST, catalog: CAT, padre: 5 });
+  assert.deepEqual([two.invalid, two.pending], [[], []]);
+  // en el emisor: excepcion del principal = error previo sin llamada; un caso con C.C sigue su curso
   const o = fakeOdoo([line(1, true, { x_doc_type_id: [2, 'PA'], x_identity_number: 'AB123456' })]);
   const sim = createTraSimulator();
   const r = await run(o, sim);
-  assert.equal(r.main.code, 'DATO_NO_ADMITIDO:numero_identificacion');
+  assert.equal(r.main.code, 'EXCEPCION_PENDIENTE:numero_identificacion');
   assert.equal(sim.calls.length, 0);
   assert.equal(o.lines[0].x_tra_state, 'pendiente');
+  const ok = fakeOdoo([line(1, true), line(2, false, { x_doc_type_id: [2, 'PA'], x_identity_number: 'AB123456' })]);
+  const s2 = createTraSimulator();
+  const r2 = await run(ok, s2);
+  assert.deepEqual([r2.main.result, r2.companions[0].result], ['aceptado', 'aceptado']);
 });
 
 test('simulador permitido sin catalogo verificado; real no', async () => {

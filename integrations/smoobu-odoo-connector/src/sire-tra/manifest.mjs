@@ -963,7 +963,7 @@ export const VIEWS = [
   { xmlid: 'view_amount_form', name: 'ath.sire.tra.amount.form', model: 'x_tra_amount', type: 'form', priority: 90, arch: `<form string="Importe pagado (TRA)">
 <header><button name="${R('sa_amount_confirm')}" type="action" string="Confirmar con evidencia" class="btn-primary" invisible="x_state in ('confirmado', 'anulado')"/><button name="${R('sa_amount_void')}" type="action" string="Anular" invisible="x_state == 'anulado'"/><field name="x_state" widget="statusbar" readonly="1"/></header>
 <sheet>
-<div class="alert alert-info" role="status">Costo total del alojamiento del huésped principal y de todos sus acompañantes, sin impuestos (MinCIT, respuesta 2-2026-039958). Se confirma después de registrar la salida real, con fecha de corte igual o posterior a esa salida. Una tarifa o un anticipo no son el importe definitivo.</div>
+<div class="alert alert-info" role="status">Costo total del alojamiento del huésped principal y de todos sus acompañantes, sin impuestos (MinCIT, respuesta 2-2026-039958). Regla interna: se confirma después de registrar la salida real, con fecha de corte igual o posterior a esa salida; una tarifa o un anticipo no son el importe definitivo.</div>
 <group>
 <group string="Importe"><field name="x_sale_order_id" options="{'no_create': True}"/><field name="x_amount"/><field name="x_currency_id" options="{'no_create': True}"/><field name="x_cutoff_date"/><field name="x_excludes_taxes"/><field name="x_covers_all_guests"/></group>
 <group string="Evidencia"><field name="x_evidence_kind"/><field name="x_evidence_ref"/><field name="x_evidence" filename="x_evidence_name"/><field name="x_evidence_name" invisible="1"/></group>

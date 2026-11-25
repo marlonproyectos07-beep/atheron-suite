@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const src = new URL('../src/', import.meta.url);
-const parts = ['errors.mjs', 'sire-tra/guard.mjs', 'sire-tra/manifest.mjs', 'sire-tra/applier.mjs', 'sire-tra/browser-entry.mjs', 'sire-tra/prod-browser-entry.mjs'];
+const parts = ['errors.mjs', 'sire-tra/guard.mjs', 'sire-tra/manifest.mjs', 'sire-tra/applier.mjs', 'sire-tra/delta-base-2026-11-24.mjs', 'sire-tra/delta.mjs', 'sire-tra/browser-entry.mjs', 'sire-tra/prod-browser-entry.mjs'];
 const body = parts.map((p) => readFileSync(new URL(p, src), 'utf8').replace(/\r\n/g, '\n')
   .replace(/^import [^;]+;\n/gm, '')
   .replace(/^export (const|function|class|async function) /gm, '$1 ')).join('\n');

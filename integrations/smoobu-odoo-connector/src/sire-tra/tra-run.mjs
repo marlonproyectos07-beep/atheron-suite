@@ -8,9 +8,10 @@
  *    bloqueos (pedido, fichas, llegada, importe confirmado, nombre TRA, motivo, puertas). Termina en error si el
  *    pedido no tiene TRA pendiente o si algun dato bloquea. Nunca escribe ni contacta al MinCIT.
  *  - programado (schedule): envia solo con TRA_AUTO_SEND=yes; si no, solo lista ids. No admite pedido. Solo lista
- *    estancias con salida real registrada (MinCIT 2-2026-039958: el envio se hace al check-out).
+ *    estancias con salida real registrada ([OFICIAL] MinCIT 2-2026-039958: el envio se hace al check-out).
  * El envio real repite la comprobacion completa y no envia nada si algo bloquea; ademas pasa por emissionGates.
- * Se detiene en la primera estancia con una peticion real fallida (rechazada o incierta): no se encadenan fallos.
+ * [PROPIA] Se detiene en la primera estancia con una peticion real fallida (rechazada o incierta): no se encadenan
+ * fallos (advertencia verbal del 24/11). Nunca hay reintento automatico.
  * Las salidas solo llevan ids y codigos: nunca datos de huespedes ni importes.
  */
 import { bogotaToday, checkStay, emitStay } from './tra-emitter.mjs';

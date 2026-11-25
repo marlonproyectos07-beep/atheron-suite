@@ -66,6 +66,12 @@ test('pago sin respaldo o con datos no admitidos: bloqueado como dato invalido',
   assert.equal(cc([A()], { ...EST, x_tra_cost_basis: 'por_noche' }).code, 'COSTO_BASE_NO_ADMITIDA');
   assert.equal(confirmedCost({ amounts: [A()], est: EST, order: ORDER, today: undefined, departure: DEP }).code, 'IMPORTE_FECHA_CORTE_FUTURA', 'sin fecha de hoy no se acepta el corte');
   assert.equal(cc([A({ x_cutoff_date: '2026-11-20' })]).ok, true, 'corte posterior a la salida: admitido');
+  // importe con decimales: no se redondea; excepcion especifica (Grupo 2, 4.12: solo numeros)
+  const dec = cc([A({ x_amount: 65000.5 })]);
+  assert.equal(dec.code, 'EXCEPCION_IMPORTE_CON_DECIMALES');
+  const bp = buildPayload({ line, main: true, order: ORDER, est: EST, catalog: CAT, companions: 0, cost: dec });
+  assert.deepEqual([bp.payload.costo, bp.invalid, bp.pending], ['', [], ['costo']]);
+  assert.equal(cc([A({ x_amount: 65000 })]).value, '65000');
 });
 
 test('nombre enviado a TRA: el del registro oficial, nunca el nombre interno', () => {

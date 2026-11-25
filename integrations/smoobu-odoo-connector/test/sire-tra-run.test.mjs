@@ -36,7 +36,6 @@ export function fakeOdoo({ lines = [], orders = {}, amounts = [], est = EST } = 
       if (model === 'x_guests_line') return where(lines, domain);
       if (model === 'x_establishment') return where(est ? [est] : [], domain);
       if (model === 'x_tra_amount') return where(amounts, domain);
-      if (model === 'x_report_attempt') return where(calls.creates, domain);
       if (model === 'l10n_latam.identification.type') return [{ id: 5, l10n_co_document_code: 'national_citizen_id' }];
       if (model === 'sale.order') { const id = domain[0][2]; return orders[id] === null ? [] : [{ id, state: 'sale', x_reservation_status: false, x_checkout: '2026-11-19', amount_total: 65000, ...(orders[id] || {}) }]; }
       throw new Error(model);
@@ -282,21 +281,16 @@ test('programado: se detiene en la primera estancia con una peticion fallida; la
   assert.equal(ok.payloads.length, 4);
 });
 
-test('reenvio tras rechazo revisado: se admite uno; al segundo fallo real la comprobacion bloquea para soporte', async () => {
-  const h = harness({ lines: [g(1, 1, true)], amounts: [paid(1)] }, ['400', '400']);
-  const env = { ...OPEN, TRA_ONLY_ORDER: '1' };
-  await run(h, true, env);
-  assert.equal(h.odoo.lines[0].x_tra_state, 'rechazado');
-  const blocked = await run(h, true, env);
-  assert.equal(blocked.out.code, 'PEDIDO_SIN_TRA_PENDIENTE', 'rechazado sin revisar: no hay nada pendiente');
-  h.odoo.lines[0].x_tra_state = 'pendiente'; // Recepcion: "no recibido" tras revisar el portal
-  await run(h, true, env);
-  assert.equal(h.payloads.length, 2);
-  h.odoo.lines[0].x_tra_state = 'pendiente';
-  const r = await run(h, true, env);
+test('comprobacion: pasaporte alfanumerico del principal = excepcion especifica; el mismo caso con C.C queda listo', async () => {
+  const h = harness({ lines: [g(1, 1, true, { x_doc_type_id: [2, 'PA'], x_identity_number: 'AB123456' })], amounts: [paid(1)] });
+  h.odoo.searchRead = ((orig) => async (model, domain, fields) => (model === 'l10n_latam.identification.type' ? [{ id: 2, l10n_co_document_code: 'passport' }] : orig(model, domain, fields)))(h.odoo.searchRead);
+  const r = await run(h, false, { TRA_ONLY_ORDER: '1' });
   assert.equal(r.out.code, 'DATOS_NO_LISTOS');
-  assert.ok(r.out.check.lines[0].codes.includes('INTENTOS_FALLIDOS_REPETIDOS'));
-  assert.equal(h.payloads.length, 2, 'sin tercera peticion');
+  assert.equal(r.out.check.lines[0].fields.numero_identificacion, 'excepcion_pendiente');
+  assert.deepEqual(r.out.check.lines[0].codes, ['EXCEPCION_PENDIENTE_numero_identificacion']);
+  assert.ok(!JSON.stringify(r.out).includes('AB123456'));
+  const ok = await run(harness({ lines: [g(1, 1, true)], amounts: [paid(1)] }), false, { TRA_ONLY_ORDER: '1' });
+  assert.equal(ok.out.check.ready_data, true);
 });
 
 test('script real (scripts/tra-emit.mjs): rechazos sin ninguna peticion de red', () => {

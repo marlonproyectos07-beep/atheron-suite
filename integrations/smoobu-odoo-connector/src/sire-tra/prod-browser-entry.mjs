@@ -2,6 +2,7 @@ import { assertProductionBrowserTarget } from './guard.mjs';
 import { AUTOMATIONS, NS } from './manifest.mjs';
 import { applyManifest, disableManifest, snapshotConfig, verifyDeployment } from './applier.mjs';
 import { createBrowserOdoo } from './browser-entry.mjs';
+import { applyDelta, planDelta, revertDelta, verifyDelta } from './delta.mjs';
 
 /**
  * Procedimiento ESPECIFICO de produccion (atheron1.odoo.com), en la sesion de administrador del navegador.
@@ -13,11 +14,13 @@ import { createBrowserOdoo } from './browser-entry.mjs';
  *  - las automatizaciones nacen APAGADAS y repetir no cambia su estado;
  *  - habilitar o apagar solo afecta automatizaciones con xmlid del modulo propio, una a una;
  *  - la reversion suave (disable) no borra nada; aqui no se expone la reversion dura.
+ *  - despliegue minimo (delta.mjs): planDelta (solo lecturas + respaldo) -> applyDelta (exige respaldo de
+ *    configuracion y plan limpio de la misma sesion) -> verifyDelta; revertDelta(respaldo) devuelve accion y vistas.
  */
 export function bootProduction(win, approval) {
   const db = assertProductionBrowserTarget(win.location.hostname, approval);
   const odoo = createBrowserOdoo(win.fetch.bind(win));
-  const state = { snapshot: null, plan: null };
+  const state = { snapshot: null, plan: null, delta: null };
   const ownAutomation = async (xmlid) => {
     if (!AUTOMATIONS.some((a) => a.xmlid === xmlid)) throw Object.assign(new Error('NOT_OUR_AUTOMATION'), { code: 'NOT_OUR_AUTOMATION' });
     const r = await odoo.searchRead('ir.model.data', [['module', '=', NS], ['name', '=', xmlid], ['model', '=', 'base.automation']], ['res_id']);
@@ -46,6 +49,17 @@ export function bootProduction(win, approval) {
       return applyManifest(odoo, { apply: true, log, automationsActive: false });
     },
     verify: () => verifyDeployment(odoo, { expectActive: false }),
+    /** Despliegue minimo: plan de solo lectura con el respaldo exacto de lo que se reemplazaria. */
+    async planDelta() { state.delta = await planDelta(odoo); return state.delta; },
+    /** Respaldo del plan como texto JSON (guardarlo fuera de Odoo antes de aplicar). */
+    deltaBackup() { return state.delta ? JSON.stringify(state.delta.backup) : null; },
+    async applyDelta(log = () => {}) {
+      if (!state.snapshot) throw Object.assign(new Error('SNAPSHOT_REQUIRED'), { code: 'SNAPSHOT_REQUIRED' });
+      if (!state.delta || state.delta.blocked.length || !state.delta.changes.length) throw Object.assign(new Error('CLEAN_DELTA_PLAN_REQUIRED'), { code: 'CLEAN_DELTA_PLAN_REQUIRED' });
+      return applyDelta(odoo, state.delta, { log });
+    },
+    verifyDelta: () => verifyDelta(odoo),
+    revertDelta: (backup) => revertDelta(odoo, typeof backup === 'string' ? JSON.parse(backup) : backup),
     disable: (opts = {}) => disableManifest(odoo, opts),
     async setAutomation(xmlid, active) {
       const id = await ownAutomation(xmlid);
