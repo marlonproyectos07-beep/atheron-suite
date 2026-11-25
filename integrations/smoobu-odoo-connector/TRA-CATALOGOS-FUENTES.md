@@ -89,7 +89,7 @@ Detalle y fuente en `deploy/tra-grupo1-manual-y-respuesta-2026-11-24.md`. Resume
 | Punto de la sección 6 | Respuesta oficial | Estado |
 |---|---|---|
 | 1. Confirmación | Módulo de consulta https://pms.mincit.gov.co/login/ (usuario = RNT); sin `code` no se escribió el registro | Resuelto: comprobación en el portal |
-| 2. Valores de la API | Documento y acomodación: texto, seguir el Grupo 2 (recomendación). Motivo: lista exacta, rechaza otros valores, **sin adjuntar la lista** | Motivo sigue pendiente; `verified: false` |
+| 2. Valores de la API | Documento y acomodación: texto, seguir el Grupo 2 (recomendación). Motivo: lista exacta, rechaza otros valores, **sin adjuntar la lista** | Motivo: solo `Trabajo` tiene respaldo (ejemplo oficial del manual Grupo 1); las demás equivalencias, pendientes por estancia. Sin puerta global de catálogo |
 | 3-4. PEP, PPT, D.N.I, T.I como principal | No se responden | Pendiente |
 | 5. `costo` | Total del alojamiento del principal y sus acompañantes, **sin impuestos**; texto, formato libre | Parcial: siete reglas sin aclarar |
 | 6. `tipo_acomodacion` | Texto; seguir el Grupo 2 | Pendiente de fijar el valor |

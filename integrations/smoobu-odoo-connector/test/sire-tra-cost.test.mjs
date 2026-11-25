@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { TRA_CATALOG_UNVERIFIED, buildPayload, confirmedCost, reasonStatus } from '../src/sire-tra/tra-emitter.mjs';
-import { ACLS, AUTOMATIONS, FIELDS, MODELS, SERVER_ACTIONS } from '../src/sire-tra/manifest.mjs';
+import { ACLS, AUTOMATIONS, FIELDS, MODELS, SERVER_ACTIONS, surveyQuestions } from '../src/sire-tra/manifest.mjs';
+const SURVEY_REASONS = surveyQuestions().find((q) => q.key === 'p_reason').answers;
 
 // ATH-HOTELS-SIRE-TRA-001 · importe pagado confirmado, nombre TRA y motivo. Datos sinteticos.
 const EST = { x_name: 'Nombre interno', x_tra_establishment_name: 'Nombre RNT', x_rnt_number: '999999', x_tra_accommodation_type: 'Casa', x_tra_cost_basis: 'total_estancia' };
@@ -95,13 +96,22 @@ test('motivo: solo la equivalencia verificada del texto declarado; la propuesta 
   }
 });
 
-test('catalogo del repositorio: sin verificar, sin equivalencias de envio y con propuestas documentadas con fuente', () => {
+test('catalogo del repositorio: sin puerta global; solo equivalencias con fuente oficial; propuestas nunca se envian', () => {
   const cat = JSON.parse(readFileSync(new URL('../tra-catalog.json', import.meta.url), 'utf8'));
-  assert.equal(cat.verified, false);
-  assert.deepEqual(cat.reasons, {});
+  assert.equal(cat.catalogoCompleto, false);
+  assert.equal('verified' in cat, false, 'ya no hay puerta global de catalogo');
+  assert.deepEqual(cat.reasons, { Trabajo: 'Trabajo' }, 'solo el valor del ejemplo oficial del manual Grupo 1');
+  for (const k of Object.keys(cat.reasons)) assert.match(cat._fuentesReasons?.[k] || '', /^OFICIAL:/, `fuente oficial de ${k}`);
   const proposed = Object.keys(cat.reasonsProposed || {});
   assert.ok(proposed.length > 0);
-  for (const k of proposed) assert.ok(cat._fuentesMotivo?.[k], `fuente de la propuesta ${k}`);
+  for (const k of proposed) {
+    assert.ok(cat._fuentesMotivo?.[k], `fuente de la propuesta ${k}`);
+    assert.ok(!(k in cat.reasons), `${k} no se envia`);
+  }
+  // el formulario de Atheron no ofrece "Trabajo": ninguna opcion del formulario se envia hoy (pendientes por estancia)
+  const options = SURVEY_REASONS;
+  assert.ok(!options.includes('Trabajo'));
+  for (const o of options) assert.notEqual(reasonStatus({ x_travel_reason: o }, cat), 'OK', o);
 });
 
 test('manifiesto: x_tra_amount con evidencia, moneda y corte; confirmar exige todo y no toca contabilidad', () => {

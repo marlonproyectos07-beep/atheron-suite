@@ -5,7 +5,7 @@ import { assertBrowserTarget, assertProductionTarget, assertTestTarget } from '.
 import { createTraHttp, traHeaders } from '../src/sire-tra/tra-http.mjs';
 
 const EST = { x_name: 'Atheron Suite (TEST)', x_rnt_number: '999999', x_tra_mode: 'api', x_tra_config_verified: true, x_tra_accommodation_type: 'Habitacion', x_tra_cost_basis: 'total_estancia', x_tra_establishment_name: 'Nombre RNT (TEST)' };
-const CAT = { verified: true, docTypes: TRA_CATALOG_UNVERIFIED.docTypes, reasons: { Vacaciones: 'Vacaciones' } };
+const CAT = { docTypes: TRA_CATALOG_UNVERIFIED.docTypes, reasons: { Vacaciones: 'Vacaciones' } };
 const ENV = { TRA_ENABLED: 'yes-real', TRA_TOKEN: 't' };
 const PAID = { id: 1, x_state: 'confirmado', x_amount: 450000, x_currency_id: [8, 'COP'], x_cutoff_date: '2026-11-12', x_evidence_kind: 'comprobante_pago', x_evidence_ref: 'REF-TEST', x_evidence_name: 'comprobante.pdf', x_excludes_taxes: true, x_covers_all_guests: true, x_confirmed_by: [2, 'u'], x_confirmed_at: '2026-11-12 16:00:00', write_date: '2026-11-12 16:00:00' };
 
@@ -48,13 +48,15 @@ const line = (id, main, extra = {}) => ({ id, x_is_main: main, x_doc_type_id: [5
 const run = (odoo, tra, mode = 'real', est = EST, catalog = CAT, logs = []) => emitStay({ odoo, tra, orderId: 1, est, catalog, mode, runRef: 'r1', env: ENV, log: (e) => logs.push(e), today: '2026-11-18' });
 
 test('puertas: sin configuracion oficial verificada no se reclama ni se envia', async () => {
-  const cases = [[{ ...ENV, TRA_ENABLED: '' }, CAT, EST], [ENV, { ...CAT, verified: false }, EST], [ENV, CAT, { ...EST, x_tra_config_verified: false }], [{ TRA_ENABLED: 'yes-real' }, CAT, EST], [ENV, CAT, { ...EST, x_tra_mode: 'manual' }]];
+  const cases = [[{ ...ENV, TRA_ENABLED: '' }, CAT, EST], [ENV, CAT, { ...EST, x_tra_config_verified: false }], [{ TRA_ENABLED: 'yes-real' }, CAT, EST], [ENV, CAT, { ...EST, x_tra_mode: 'manual' }]];
   for (const [env, catalog, est] of cases) {
     const o = fakeOdoo([line(1, true)]); const sim = createTraSimulator();
     const r = await emitStay({ odoo: o, tra: sim, orderId: 1, est, catalog, mode: 'real', runRef: 'r', env, today: '2026-11-18' });
     assert.equal(r.stop, 'BLOQUEADO'); assert.equal(sim.calls.length, 0); assert.equal(o.lines[0].x_tra_state, 'pendiente');
   }
   assert.equal(emissionGates({ mode: 'otro', est: EST, catalog: CAT }).ok, false);
+  // sin puerta global de catalogo: un catalogo incompleto no cierra el envio (el motivo se valida por estancia)
+  assert.equal(emissionGates({ mode: 'real', env: ENV, est: EST, catalog: { ...CAT, catalogoCompleto: false } }).ok, true);
 });
 
 test('principal aceptado y acompanante rechazado: se detiene, no se reenvia el principal y el acompanante solo tras "no recibido"', async () => {
@@ -232,9 +234,20 @@ test('documento del principal: C.C/T.I/C.E solo digitos; pasaporte con letras = 
   assert.deepEqual([r2.main.result, r2.companions[0].result], ['aceptado', 'aceptado']);
 });
 
-test('simulador permitido sin catalogo verificado; real no', async () => {
+test('motivo: una estancia sin equivalencia respaldada queda pendiente sin bloquear a las demas', async () => {
+  const cat = { ...CAT, reasons: { Trabajo: 'Trabajo' } };
+  const pending = fakeOdoo([line(1, true, { x_travel_reason: 'Negocios o motivos profesionales' })]);
+  const s1 = createTraSimulator();
+  const r1 = await run(pending, s1, 'real', EST, cat);
+  assert.equal(r1.main.result, 'error_previo');
+  assert.equal(r1.main.code, 'DATOS_INCOMPLETOS:motivo');
+  assert.equal(s1.calls.length, 0);
+  const backed = fakeOdoo([line(1, true, { x_travel_reason: 'Trabajo' })]);
+  const s2 = createTraSimulator();
+  const r2 = await run(backed, s2, 'real', EST, cat);
+  assert.equal(r2.main.result, 'aceptado');
   const o = fakeOdoo([line(1, true)]);
-  const r = await run(o, createTraSimulator(), 'simulador', EST, { ...CAT, verified: false });
+  const r = await run(o, createTraSimulator(), 'simulador', EST, CAT);
   assert.equal(r.main.result, 'aceptado');
   assert.equal(o.attempts[0].x_channel, 'simulador');
 });

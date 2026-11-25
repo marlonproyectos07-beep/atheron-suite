@@ -6,7 +6,7 @@
 #   Con "send" repite la comprobacion y no envia nada si algo bloquea.
 # - Programado (cada hora, preparado 2026-11-18): autorizacion independiente; envia SOLO si ademas TRA_AUTO_SEND == 'yes'
 #   (el script lo vuelve a comprobar); si no, solo lista ids. No admite pedido.
-# En ambos casos el emisor exige TRA_ENABLED=yes-real, TRA_TOKEN, catalogo verificado y establecimiento en modo API con
+# En ambos casos el emisor exige TRA_ENABLED=yes-real, TRA_TOKEN, motivo con equivalencia respaldada y establecimiento en modo API con
 # configuracion verificada, y solo reporta estancias con TODOS sus huespedes VALIDADOS, con LLEGADA y SALIDA REALES
 # (MinCIT 2-2026-039958: envio al check-out; check_out = salida real). Antes del check-out: cero envios.
 # Cada linea se reclama antes de enviar (sin duplicados), un resultado incierto no se reenvia a ciegas y el recorrido se
@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       send:
-        description: 'Enviar de verdad (exige TRA_ENABLED=yes-real, token y catalogo verificado)'
+        description: 'Enviar de verdad (exige TRA_ENABLED=yes-real, token y motivo con equivalencia respaldada)'
         type: boolean
         default: false
       order_id:

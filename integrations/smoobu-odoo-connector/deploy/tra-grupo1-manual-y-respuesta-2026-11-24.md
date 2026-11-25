@@ -37,7 +37,9 @@ escrito; **PROPIA** = decision tecnica nuestra; **MARLON** = instruccion de gere
 | Documento del acompanante: texto | OFICIAL | Grupo 1 | sin validacion |
 | Registro Civil solo acompanantes | OFICIAL | Grupo 2, 4.1 y 5.1 | `mainDocTypes` |
 | RNT y `numero_acompanantes`: digitos | OFICIAL | Grupo 1 "numerico" | `TRA_ONE_DIGITS` |
-| `motivo` exacto de la lista de la API | OFICIAL | punto 5 (lista no entregada) | `reasons: {}`, `verified: false` |
+| `motivo` exacto de la lista de la API | OFICIAL | punto 5 (lista no entregada) | solo equivalencias con fuente oficial (`reasons`) |
+| `Trabajo` como valor de `motivo` | OFICIAL | ejemplo del cuerpo /one/ del manual Grupo 1; respalda ese valor, no la lista | `reasons: {"Trabajo": "Trabajo"}` |
+| Sin puerta global de catalogo | MARLON (25/11) | una lista incompleta no bloquea los valores respaldados | `emissionGates` |
 | `tipo_acomodacion` texto, segun el Grupo 2 | OFICIAL | punto 6; Grupo 2, 4.11 | seccion 5 |
 | Costo del principal y sus acompanantes, sin impuestos | OFICIAL | punto 7; Grupo 2, 4.12 | seccion 6 |
 | Costo en COP y solo numeros | OFICIAL | Grupo 2, 4.12 | `IMPORTE_MONEDA_NO_COP` |
@@ -150,33 +152,53 @@ Odoo recalcule su cron. Codigo: `src/sire-tra/delta.mjs`; contenido previo exact
 siguen con el contenido de la rama; si alguien las cambio, se detiene sin escribir. Los dos campos se quedan sin uso y
 no se borran. Despues se revierte la fusion. Mientras el emisor este apagado no hay efecto operativo.
 
-**Copia de pruebas:** `atheron1-pruebas-20261108` ya no existe (odoo.com: "does not exist (anymore?)").
-- Alternativa concreta, con autorizacion: duplicar atheron1 como `atheron1-pruebas-20261125` (el unico patron que
-  aceptan los scripts) con "propositos de prueba", siguiendo PROCEDIMIENTO-COPIA-PRUEBAS.md, y comprobar el
-  aislamiento (8/8).
-- Ensayo: el paquete de la copia (`node scripts/sire-tra-bundle.mjs`) ya expone `planDelta`, `applyDelta`,
-  `verifyDelta` y `revertDelta`. Se aplica el delta, se prueba "Confirmar con evidencia" con datos sinteticos (sin
-  casillas, sin salida, corte anterior, completo) y se revierte. La copia vence al dia siguiente.
-- El delta no toca automatizaciones, asi que no reactiva el cron 48.
-- Sin copia: aplicar directamente con el plan de solo lectura, el respaldo y la verificacion. Los cinco objetos solo se
-  usan a mano (0 importes) y el emisor esta apagado.
+**Ensayo en copia (25/11/2026, autorizado por Marlon): HECHO.** Detalle en
+`deploy/tra-delta-ensayo-copia-2026-11-25.md`. Copia `atheron1-pruebas-20261125`, aislada 8/8.
+- Plan: 5 cambios y 0 bloqueos (los mismos ids que produccion).
+- Aplicacion en 6,3 s; verificacion `ok`.
+- Automatizaciones y cron 48 sin cambio.
+- Vistas cargan.
+- La accion responde como se espera en los 5 casos sinteticos.
+- Reversion: accion y vistas vuelven byte a byte a la base; los campos se conservan.
+Produccion seguia en la base el 25/11 (sha256 de la accion 2040 y de las vistas 6872 y 6873; los campos no existen).
 
 ## 12. Bloqueos reales para un primer caso valido
-1. **`TRA_TOKEN` no existe** en GitHub. Lo crea Marlon en Settings > Secrets and variables > Actions > New repository
-   secret, con el token existente (correo del 25/02/2026). Claude no maneja el token. No se genera otro: invalidaria
+1. **`TRA_TOKEN` no existe** en GitHub. Lo crea Marlon con el token existente (correo del 25/02/2026) en Settings >
+   Secrets and variables > Actions > New repository secret. Claude no maneja el token. No se genera otro: invalidaria
    el actual (punto 3).
-2. **Motivo:** la API exige el valor exacto (punto 5) y no hay lista. Sin el valor exacto del motivo declarado no se
-   envia, y el catalogo sigue con `verified: false`. Hace falta la lista del MinCIT, o al menos el rotulo exacto del
-   motivo del caso.
-3. **Despliegue del delta y fusion de la PR**, con aprobacion.
-4. **Un caso real cerrado:** fichas validadas, llegada y salida reales, importe confirmado.
-5. **Puertas finales**, por decision de Marlon tras revisar ese caso: `x_tra_config_verified`,
+2. **Despliegue del delta y fusion de la PR**, con aprobacion.
+3. **Un caso real cerrado.** Lectura de produccion del 25/11: no existe ninguno (seccion 12.1).
+4. **Puertas finales**, por decision de Marlon tras revisar ese caso: `x_tra_config_verified`,
    `TRA_ENABLED=yes-real`, `TRA_EMITTER_ENABLED=yes`, `TRA_AUTO_SEND=no`, y una sola ejecucion manual.
+
+**Motivo: bloqueo por estancia, no global.**
+- `Trabajo` tiene respaldo oficial (ejemplo del manual Grupo 1) y se envia si el huesped declara exactamente
+  `Trabajo`.
+- Las siete opciones del formulario de Atheron no tienen equivalencia respaldada. Asignar `Trabajo` a "Negocios o
+  motivos profesionales" seria una inferencia. Quedan pendientes solo para la estancia que las declare.
+- Para que un caso real salga hace falta que su motivo tenga respaldo.
 
 No bloquean el primer caso:
 - un pasaporte alfanumerico o un importe con decimales: excepciones solo de esos casos;
 - `tipo_acomodacion`: ya es `Casa`;
 - las decisiones de costo de la seccion 6, si el caso no tiene esos elementos.
+
+### 12.1 Caso candidato (solo lectura de produccion, 25/11/2026)
+**No hay ningun caso real cerrado.** En Odoo hay 7 fichas y ninguna tiene llegada ni salida real registradas. Hay
+0 importes y 0 intentos. Ningun enlace de registro de una reserva real se ha abierto.
+
+| Reserva | Estado | Fechas previstas | Fichas | Falta |
+|---|---|---|---|---|
+| COT/2026/03901 | **cancelada** | 17-18/11 | 2 validadas (principal y acompanante), motivo "Vacaciones, recreacion u ocio" | No es una estancia valida (pedido cancelado, importe 0) |
+| COT/2026/03839 | confirmada | 21-22/11 | ninguna | formulario, validacion, llegada y salida reales, importe con evidencia, motivo con respaldo |
+| COT/2026/03838 (Airbnb) | confirmada | 17-18/11 | 1 en borrador, sin datos | lo mismo |
+| COT/2026/03875 | confirmada | 8-9/11 | 3 sin datos | lo mismo |
+| COT/2026/03776 | confirmada | 23-25/10 | 1 sin datos | lo mismo |
+| COT/2026/03905 | borrador | 18-19/11 | ninguna | confirmar el pedido y todo lo anterior |
+
+En las estancias ya pasadas, la llegada y la salida reales solo se pueden registrar con las horas reales que conozca
+Recepcion; la accion exige un motivo si el registro es tardio. No se completan por inferencia. Lo mas directo es una
+estancia proxima tratada en tiempo real: enlace, formulario, validacion, llegada, salida e importe tras el check-out.
 
 ## 13. Primer envio desde Odoo
 1. Comprobacion sin envio (`workflow_dispatch`, `order_id`, sin `send`): `ready_data: true`.
@@ -186,7 +208,7 @@ No bloquean el primer caso:
 5. Volver las variables a `no`.
 
 ## 14. Preguntas para MinCIT
-1. Lista exacta de `motivo`.
+1. Lista exacta de `motivo` (o el rotulo exacto de cada opcion del formulario de Atheron).
 2. Pasaporte con letras en `/one/`.
 3. `tipo_acomodacion` para el alquiler por habitacion en una casa turistica.
 4. Las decisiones de costo de la seccion 6.

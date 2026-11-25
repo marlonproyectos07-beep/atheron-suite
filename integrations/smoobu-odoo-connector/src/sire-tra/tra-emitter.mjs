@@ -16,10 +16,11 @@
  *  [PROPIA]   Decisiones tecnicas nuestras, marcadas asi en el codigo: parar al primer fallo, esperar revision
  *             humana antes de cualquier otro envio de la estancia, no redondear ni alterar valores.
  */
+/** Catalogo por defecto (sin tra-catalog.json): sin ninguna equivalencia de motivo, asi que ningun principal sale. */
 export const TRA_CATALOG_UNVERIFIED = Object.freeze({
-  verified: false,
-  // Valores vistos en el manual oficial (ejemplos "C.C" y "Pasaporte") y en la capacitacion publica del formulario;
-  // la lista completa de la API no esta publicada: verificar con MinCIT antes de habilitar.
+  catalogoCompleto: false,
+  // [OFICIAL] rotulos del manual Grupo 2 (4.1, 5.1), recomendado por la respuesta 2-2026-039958 (punto 4), y ejemplo
+  // "C.C" del manual Grupo 1. No hay lista completa de la API.
   docTypes: { national_citizen_id: 'C.C', passport: 'Pasaporte', id_card: 'T.I', foreign_resident_card: 'C.E', civil_registration: 'Registro Civil' },
   // Manual oficial Grupo 2 (formulario web), 4.1 y 5.1: el huesped principal admite Pasaporte, T.I, C.C y C.E;
   // "Registro Civil" solo aparece para acompanantes. Un principal con otro tipo no se envia.
@@ -100,7 +101,7 @@ export function emissionGates({ mode, env = {}, catalog, est }) {
   if (mode === 'real') {
     if (env.TRA_ENABLED !== 'yes-real') reasons.push('TRA_ENABLED_APAGADO');
     if (!env.TRA_TOKEN) reasons.push('SIN_TOKEN');
-    if (!catalog?.verified) reasons.push('CATALOGO_NO_VERIFICADO');
+    // Sin puerta global de catalogo: cada valor se envia solo si tiene respaldo propio (motivo: reasonStatus por estancia).
     if (est && !est.x_tra_config_verified) reasons.push('CONFIG_ESTABLECIMIENTO_NO_VERIFICADA');
     if (est && !est.x_rnt_number) reasons.push('SIN_RNT');
   } else if (mode !== 'simulador') reasons.push('MODO_INVALIDO');
@@ -167,8 +168,10 @@ export function confirmedCost({ amounts = [], est, order, today, departure }) {
 }
 
 // ------------------------------------------------------------------ motivo de viaje
-// Se envia SOLO la equivalencia verificada (catalog.reasons) del texto que declaro el huesped (x_travel_reason, que no se
-// modifica). catalog.reasonsProposed documenta propuestas con su fuente y NUNCA se usa para enviar.
+// [OFICIAL] la API exige el valor exacto de su lista (2-2026-039958, punto 5); la lista no se ha entregado.
+// Se envia SOLO una equivalencia con respaldo oficial (catalog.reasons; fuente en _fuentesReasons) del texto que
+// declaro el huesped (x_travel_reason, que no se modifica). Una estancia cuyo motivo no tiene equivalencia respaldada
+// queda pendiente; las demas no se bloquean. catalog.reasonsProposed (fuente no oficial) NUNCA se usa para enviar.
 export function reasonStatus(line, catalog) {
   const declared = String(line.x_travel_reason || '').trim();
   if (!declared) return 'MOTIVO_NO_DECLARADO';

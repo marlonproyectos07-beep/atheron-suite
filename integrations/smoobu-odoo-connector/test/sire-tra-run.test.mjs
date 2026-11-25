@@ -10,7 +10,7 @@ import { ODOO_MAX_ID, parseOrderId, runEmitter } from '../src/sire-tra/tra-run.m
 
 // ATH-HOTELS-SIRE-TRA-001 · recorrido del emisor (scripts/tra-emit.mjs -> runEmitter). Datos 100 % sinteticos.
 export const EST = { id: 1, x_active: true, x_name: 'Nombre interno (TEST)', x_tra_establishment_name: 'Nombre RNT (TEST)', x_rnt_number: '999999', x_tra_mode: 'api', x_tra_config_verified: true, x_tra_accommodation_type: 'Casa', x_tra_cost_basis: 'total_estancia' };
-export const CAT = { verified: true, docTypes: TRA_CATALOG_UNVERIFIED.docTypes, mainDocTypes: TRA_CATALOG_UNVERIFIED.mainDocTypes, reasons: { Vacaciones: 'Vacaciones' } };
+export const CAT = { docTypes: TRA_CATALOG_UNVERIFIED.docTypes, mainDocTypes: TRA_CATALOG_UNVERIFIED.mainDocTypes, reasons: { Vacaciones: 'Vacaciones' } };
 const OPEN = { TRA_ENABLED: 'yes-real', TRA_TOKEN: 'token-sintetico' };
 const NOW = () => Date.UTC(2026, 10, 19, 22, 0, 0); // 19/11/2026 17:00 en Bogota, despues del check-out
 export const paid = (order, extra = {}) => ({ id: 100 + order, x_sale_order_id: [order, `P${order}`], x_state: 'confirmado', x_amount: 65000, x_currency_id: [8, 'COP'], x_cutoff_date: '2026-11-19', x_evidence_kind: 'comprobante_pago', x_evidence_ref: `REF-${order}`, x_evidence_name: 'comprobante.pdf', x_excludes_taxes: true, x_covers_all_guests: true, x_confirmed_by: [2, 'u'], x_confirmed_at: '2026-11-19 18:00:00', write_date: '2026-11-19 18:00:00', ...extra });
@@ -115,7 +115,7 @@ test('manual con pedido sin TRA pendiente: error en comprobacion y envio, con el
 
 test('comprobacion completa sin envio: todos los campos y bloqueos, sin valores en la salida', async () => {
   const h = harness({ lines: [g(1, 1, true, { x_travel_reason: 'Salud' }), g(2, 1, false, { x_data_state: 'recibido', x_arrived_at: false, x_departed_at: false, x_tra_state: false })], amounts: [paid(1, { x_state: false })], est: { ...EST, x_tra_establishment_name: '' } });
-  const r = await run(h, false, { TRA_ONLY_ORDER: '1' }, { ...CAT, verified: false, reasonsProposed: { Salud: 'Salud y atencion medica' } });
+  const r = await run(h, false, { TRA_ONLY_ORDER: '1' }, { ...CAT, reasonsProposed: { Salud: 'Salud y atencion medica' } });
   assert.equal(r.exitCode, 1);
   assert.equal(r.out.code, 'DATOS_NO_LISTOS');
   const c = r.out.check;
@@ -132,7 +132,7 @@ test('comprobacion completa sin envio: todos los campos y bloqueos, sin valores 
   assert.ok(comp.codes.includes('FICHA_NO_VALIDADA') && comp.codes.includes('SIN_LLEGADA_REAL') && comp.codes.includes('CAMPO_check_in'));
   assert.ok(comp.codes.includes('SIN_SALIDA_REAL') && comp.codes.includes('CAMPO_check_out'));
   assert.equal(m.fields.check_out, 'ok', 'el principal ya salio; la estancia no, porque falta el acompanante');
-  assert.ok(c.gates.includes('CATALOGO_NO_VERIFICADO'));
+  assert.ok(!c.gates.includes('CATALOGO_NO_VERIFICADO'), 'sin puerta global de catalogo');
   assert.equal(c.ready_data, false);
   const s = JSON.stringify(r.out);
   for (const v of ['Nombre1', 'Apellido', '911', 'CIUDAD', 'Salud', '65000', 'REF-1', 'Nombre RNT', 'Nombre interno']) assert.ok(!s.includes(v), `la salida publica no lleva ${v}`);
@@ -201,8 +201,8 @@ test('envio real sin importe confirmado o con pago sin respaldo: bloqueado sin l
 });
 
 test('envio real con puertas cerradas y datos completos: error visible, cero llamadas y cero escrituras', async () => {
-  for (const [env, catalog] of [[{ TRA_ENABLED: 'no', TRA_TOKEN: 't' }, CAT], [{ TRA_ENABLED: 'yes-real' }, CAT], [OPEN, { ...CAT, verified: false }]]) {
-    const h = harness(READY());
+  for (const [env, catalog, est] of [[{ TRA_ENABLED: 'no', TRA_TOKEN: 't' }, CAT], [{ TRA_ENABLED: 'yes-real' }, CAT], [OPEN, CAT, { ...EST, x_tra_config_verified: false }]]) {
+    const h = harness({ ...READY(), ...(est ? { est } : {}) });
     const r = await run(h, true, { ...env, TRA_ONLY_ORDER: '1' }, catalog);
     assert.equal(r.exitCode, 1);
     assert.equal(r.out.code, 'PUERTAS_CERRADAS');

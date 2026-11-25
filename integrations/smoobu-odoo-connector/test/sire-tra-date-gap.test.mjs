@@ -11,7 +11,7 @@ import { AUTOMATIONS, FIELDS, SERVER_ACTIONS, VIEWS } from '../src/sire-tra/mani
  * salida se corrige DESPUES de la aceptacion (accion "Corregir hora de llegada/salida").
  */
 const EST = { x_name: 'Atheron Suite (TEST)', x_rnt_number: '999999', x_tra_mode: 'api', x_tra_config_verified: true, x_tra_accommodation_type: 'Habitacion', x_tra_cost_basis: 'total_estancia', x_tra_establishment_name: 'Nombre RNT (TEST)' };
-const CAT = { verified: true, docTypes: TRA_CATALOG_UNVERIFIED.docTypes, reasons: { Vacaciones: 'Vacaciones' } };
+const CAT = { docTypes: TRA_CATALOG_UNVERIFIED.docTypes, reasons: { Vacaciones: 'Vacaciones' } };
 const ENV = { TRA_ENABLED: 'yes-real', TRA_TOKEN: 't' };
 
 /** Odoo falso: misma maquina de estados que "Aplicar intento"; copia las fechas aceptadas a la linea como la accion real. */
