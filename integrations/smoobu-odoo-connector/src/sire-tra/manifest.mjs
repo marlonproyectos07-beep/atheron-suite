@@ -140,6 +140,10 @@ export const FIELDS = [
   ['x_tra_amount', 'x_evidence_ref', 'char', 'Referencia de la evidencia', {}],
   ['x_tra_amount', 'x_evidence', 'binary', 'Evidencia (archivo)', {}],
   ['x_tra_amount', 'x_evidence_name', 'char', 'Nombre del archivo de evidencia', {}],
+  // MinCIT, respuesta oficial 2-2026-039958, punto 7: costo total de alojamiento del principal y sus acompanantes, sin
+  // impuestos. Constancias expresas de quien registra; sin ellas no se confirma ni se envia.
+  ['x_tra_amount', 'x_excludes_taxes', 'boolean', 'El importe no incluye impuestos', {}],
+  ['x_tra_amount', 'x_covers_all_guests', 'boolean', 'Cubre el alojamiento del principal y de todos sus acompañantes', {}],
   ['x_tra_amount', 'x_state', 'selection', 'Estado', { selection: sel(['borrador', 'Reportado, sin confirmar'], ['confirmado', 'Confirmado con evidencia'], ['anulado', 'Anulado']) }],
   ['x_tra_amount', 'x_confirmed_by', 'many2one', 'Confirmado por', { relation: 'res.users', readonly: true }],
   ['x_tra_amount', 'x_confirmed_at', 'datetime', 'Confirmado el', { readonly: true }],
@@ -699,6 +703,17 @@ if len(records) != 1:
     raise UserError('Confirme un importe a la vez.')
 r = records
 today = (datetime.datetime.utcnow() - datetime.timedelta(hours=5)).date()
+# salida de la estancia en Bogota (UTC-5): la mas tardia; el costo es definitivo solo despues del check-out
+stay_lines = env['x_guests_line'].sudo().search([('x_sale_order_id', '=', r.x_sale_order_id.id)])
+not_departed = False
+last_departure = False
+for gl in stay_lines:
+    if not gl.x_departed_at:
+        not_departed = True
+    else:
+        dd = (gl.x_departed_at - datetime.timedelta(hours=5)).date()
+        if not last_departure or dd > last_departure:
+            last_departure = dd
 err = False
 if r.x_state == 'confirmado':
     err = 'ya está confirmado'
@@ -716,6 +731,14 @@ elif r.x_cutoff_date > today:
     err = 'la fecha de corte no puede ser futura'
 elif not r.x_evidence_kind or not (r.x_evidence_ref or '').strip() or not r.x_evidence or not (r.x_evidence_name or '').strip():
     err = 'falta la evidencia: tipo, referencia y archivo'
+elif not r.x_excludes_taxes:
+    err = 'falta la constancia de que el importe no incluye impuestos (MinCIT, 2-2026-039958)'
+elif not r.x_covers_all_guests:
+    err = 'falta la constancia de que cubre el alojamiento del principal y de todos sus acompañantes'
+elif not stay_lines or not_departed:
+    err = 'la estancia no tiene registrada la salida real de todos los huéspedes; el costo se confirma después del check-out'
+elif r.x_cutoff_date < last_departure:
+    err = 'la fecha de corte es anterior a la salida real de la estancia'
 elif env['x_tra_amount'].search_count([('x_sale_order_id', '=', r.x_sale_order_id.id), ('x_state', '=', 'confirmado'), ('id', '!=', r.id)]):
     err = 'la reserva ya tiene un importe confirmado; anúlelo antes'
 if err:
@@ -939,13 +962,15 @@ export const VIEWS = [
 </form>` },
   { xmlid: 'view_amount_form', name: 'ath.sire.tra.amount.form', model: 'x_tra_amount', type: 'form', priority: 90, arch: `<form string="Importe pagado (TRA)">
 <header><button name="${R('sa_amount_confirm')}" type="action" string="Confirmar con evidencia" class="btn-primary" invisible="x_state in ('confirmado', 'anulado')"/><button name="${R('sa_amount_void')}" type="action" string="Anular" invisible="x_state == 'anulado'"/><field name="x_state" widget="statusbar" readonly="1"/></header>
-<sheet><group>
-<group string="Importe"><field name="x_sale_order_id" options="{'no_create': True}"/><field name="x_amount"/><field name="x_currency_id" options="{'no_create': True}"/><field name="x_cutoff_date"/></group>
+<sheet>
+<div class="alert alert-info" role="status">Costo total del alojamiento del huésped principal y de todos sus acompañantes, sin impuestos (MinCIT, respuesta 2-2026-039958). Regla interna: se confirma después de registrar la salida real, con fecha de corte igual o posterior a esa salida; una tarifa o un anticipo no son el importe definitivo.</div>
+<group>
+<group string="Importe"><field name="x_sale_order_id" options="{'no_create': True}"/><field name="x_amount"/><field name="x_currency_id" options="{'no_create': True}"/><field name="x_cutoff_date"/><field name="x_excludes_taxes"/><field name="x_covers_all_guests"/></group>
 <group string="Evidencia"><field name="x_evidence_kind"/><field name="x_evidence_ref"/><field name="x_evidence" filename="x_evidence_name"/><field name="x_evidence_name" invisible="1"/></group>
 <group string="Confirmación"><field name="x_confirmed_by" readonly="1"/><field name="x_confirmed_at" readonly="1"/><field name="x_name"/><field name="x_note"/></group>
 </group></sheet>
 </form>` },
-  { xmlid: 'view_amount_list', name: 'ath.sire.tra.amount.list', model: 'x_tra_amount', type: 'list', priority: 90, arch: '<list string="Importes pagados (TRA)"><field name="x_sale_order_id"/><field name="x_amount"/><field name="x_currency_id"/><field name="x_cutoff_date"/><field name="x_evidence_kind"/><field name="x_evidence_ref"/><field name="x_state"/><field name="x_confirmed_by"/><field name="x_confirmed_at"/></list>' },
+  { xmlid: 'view_amount_list', name: 'ath.sire.tra.amount.list', model: 'x_tra_amount', type: 'list', priority: 90, arch: '<list string="Importes pagados (TRA)"><field name="x_sale_order_id"/><field name="x_amount"/><field name="x_currency_id"/><field name="x_cutoff_date"/><field name="x_excludes_taxes" optional="show"/><field name="x_covers_all_guests" optional="show"/><field name="x_evidence_kind"/><field name="x_evidence_ref"/><field name="x_state"/><field name="x_confirmed_by"/><field name="x_confirmed_at"/></list>' },
   { xmlid: 'view_est_list', name: 'ath.sire.tra.establishment.list', model: 'x_establishment', type: 'list', priority: 90, arch: '<list><field name="x_code"/><field name="x_name"/><field name="x_rnt_number"/><field name="x_tra_mode"/><field name="x_sire_export_enabled"/><field name="x_active"/></list>' },
   { xmlid: 'view_invite_list', name: 'ath.sire.tra.invite.list', model: 'survey.user_input', type: 'list', priority: 90, arch: '<list string="Enlaces de registro" create="0"><field name="create_date"/><field name="x_sale_order_id"/><field name="x_ath_state"/><field name="deadline"/><field name="x_ath_url" widget="CopyClipboardChar"/><field name="x_ath_contact_gap" optional="show" decoration-warning="x_ath_contact_gap"/><field name="x_ath_message" widget="CopyClipboardText" optional="hide"/><field name="x_ath_error" optional="show"/></list>' },
   { xmlid: 'view_invite_form', name: 'ath.sire.tra.invite.form', model: 'survey.user_input', type: 'form', priority: 90, arch: `<form string="Enlace de registro" create="0" edit="0">

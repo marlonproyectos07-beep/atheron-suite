@@ -81,3 +81,29 @@ Intentos creados: 1 `error_previo` y 22 `aceptado`, todos con canal `simulador`.
 8. Corrección o anulación de un registro enviado, incluido un cambio de fechas posterior a la aceptación (prórroga o salida anticipada): vía, costo y plazo.
 
 Las preguntas quedan en `CONSULTA-MINCIT-BORRADOR.md`, sin enviar.
+
+## 7. Respuesta oficial 2-2026-039958 (23/11/2026) frente a la sección 6
+
+Detalle y fuente en `deploy/tra-grupo1-manual-y-respuesta-2026-11-24.md`. Resumen parafraseado:
+
+| Punto de la sección 6 | Respuesta oficial | Estado |
+|---|---|---|
+| 1. Confirmación | Módulo de consulta https://pms.mincit.gov.co/login/ (usuario = RNT); sin `code` no se escribió el registro | Resuelto: comprobación en el portal |
+| 2. Valores de la API | Documento y acomodación: texto, seguir el Grupo 2 (recomendación). Motivo: lista exacta, rechaza otros valores, **sin adjuntar la lista** | Motivo: solo `Trabajo` tiene respaldo (ejemplo oficial del manual Grupo 1); las demás equivalencias, pendientes por estancia. Sin puerta global de catálogo |
+| 3-4. PEP, PPT, D.N.I, T.I como principal | No se responden | Pendiente |
+| 5. `costo` | Total del alojamiento del principal y sus acompañantes, **sin impuestos**; texto, formato libre | Parcial: siete reglas sin aclarar |
+| 6. `tipo_acomodacion` | Texto; seguir el Grupo 2 | Pendiente de fijar el valor |
+| 7. Ciudades | Texto libre; extranjeras por su nombre en español | Resuelto |
+| 8. Corrección o anulación | No se modifica ni reenvía; se pide el borrado por correo a soporte | Resuelto: procedimiento documentado |
+
+### 7.1 Manual Grupo 2 leido en el PDF oficial (24/11/2026)
+Fuente: `tramincit.gov.co/tarjeta/media/docs/Manual-Grupo-2-Usuarios-Directos-Conectados.pdf` (texto extraido del PDF).
+- 4.2 y 5.2, numero de identificacion: solo numeros, sin puntos ni caracteres especiales. Solo el Pasaporte admite
+  letras y numeros.
+- 4.6, habitacion, cama o plaza: en el formulario, entero mayor que 0; "1" si se aloja en toda la vivienda turistica.
+  Para la API la respuesta oficial dice texto libre (punto 8).
+- 4.8: con 0 acompanantes se escribe 0.
+- 4.11, tipo de acomodacion: lista desplegable, sin enumerar. En viviendas turisticas, si se toma todo el
+  apartamento, la casa o la finca, se elige ese tipo. No trata el alquiler por habitacion.
+- 4.12, valor total pagado: el valor que paga el huesped principal por el alojamiento completo, de el y de sus
+  acompanantes. Solo numeros, en pesos colombianos (el formulario pone los puntos de miles).

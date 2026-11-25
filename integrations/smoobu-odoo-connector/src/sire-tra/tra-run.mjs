@@ -7,8 +7,11 @@
  *    Sin --send hace la COMPROBACION COMPLETA de la estancia (checkStay): todos los campos del payload y todos los
  *    bloqueos (pedido, fichas, llegada, importe confirmado, nombre TRA, motivo, puertas). Termina en error si el
  *    pedido no tiene TRA pendiente o si algun dato bloquea. Nunca escribe ni contacta al MinCIT.
- *  - programado (schedule): envia solo con TRA_AUTO_SEND=yes; si no, solo lista ids. No admite pedido.
+ *  - programado (schedule): envia solo con TRA_AUTO_SEND=yes; si no, solo lista ids. No admite pedido. Solo lista
+ *    estancias con salida real registrada ([OFICIAL] MinCIT 2-2026-039958: el envio se hace al check-out).
  * El envio real repite la comprobacion completa y no envia nada si algo bloquea; ademas pasa por emissionGates.
+ * [PROPIA] Se detiene en la primera estancia con una peticion real fallida (rechazada o incierta): no se encadenan
+ * fallos (advertencia verbal del 24/11). Nunca hay reintento automatico.
  * Las salidas solo llevan ids y codigos: nunca datos de huespedes ni importes.
  */
 import { bogotaToday, checkStay, emitStay } from './tra-emitter.mjs';
@@ -30,6 +33,8 @@ export function triggerOf(env = {}) {
 }
 
 const fail = (out) => ({ exitCode: 1, out: { ok: false, ...out } });
+/** Hubo al menos una peticion real y alguna ficha no quedo aceptada. */
+export const failedRequest = (r) => (r?.sent || 0) > 0 && [r.main, ...(r.companions || [])].some((x) => x && x.result !== 'aceptado');
 /** Copia publicable de la comprobacion (sin el registro del establecimiento). */
 const publicCheck = ({ est, ...rest }) => rest;
 
@@ -59,7 +64,7 @@ export async function runEmitter({ send, env = {}, catalog, odoo, makeTra, log =
   } else {
     if (env.TRA_ONLY_ORDER !== undefined && String(env.TRA_ONLY_ORDER).trim() !== '') return fail({ mode, trigger, code: 'PEDIDO_NO_ADMITIDO_EN_PROGRAMADO' });
     if (send && env.TRA_AUTO_SEND !== 'yes') return fail({ mode, trigger, code: 'ENVIO_PROGRAMADO_NO_AUTORIZADO' });
-    const pending = await odoo.searchRead('x_guests_line', [['x_tra_state', '=', 'pendiente'], ['x_arrived_at', '!=', false]], ['x_sale_order_id']);
+    const pending = await odoo.searchRead('x_guests_line', [['x_tra_state', '=', 'pendiente'], ['x_arrived_at', '!=', false], ['x_departed_at', '!=', false]], ['x_sale_order_id']);
     const ids = [...new Set(pending.map((l) => l.x_sale_order_id && l.x_sale_order_id[0]).filter(Boolean))];
     if (!send) return { exitCode: 0, out: { ok: true, mode, trigger, orders_with_pending_tra: ids } };
     orders = [];
@@ -70,9 +75,12 @@ export async function runEmitter({ send, env = {}, catalog, odoo, makeTra, log =
   let client = null;
   const tra = { post: (kind, payload) => { client ??= makeTra(); return client.post(kind, payload); } };
   const results = [];
+  let halted = null;
   for (const { orderId, check } of orders) {
     if (!check.ready_to_send) { results.push({ orderId, stop: check.ready_data ? 'BLOQUEADO' : 'DATOS_NO_LISTOS', reasons: check.ready_data ? check.gates : [...check.blocks, ...check.lines.flatMap((l) => l.codes)] }); continue; }
-    results.push(await emitStay({ odoo, tra, orderId, est: check.est, catalog, mode: 'real', runRef, env, log, today }));
+    const r = await emitStay({ odoo, tra, orderId, est: check.est, catalog, mode: 'real', runRef, env, log, today });
+    results.push(r);
+    if (failedRequest(r)) { halted = { orderId, code: 'DETENIDO_TRAS_FALLO' }; break; }
   }
-  return { exitCode: 0, out: { ok: true, mode, trigger, runRef, results } };
+  return { exitCode: 0, out: { ok: true, mode, trigger, runRef, results, ...(halted ? { halted } : {}) } };
 }

@@ -10,12 +10,12 @@ import { ODOO_MAX_ID, parseOrderId, runEmitter } from '../src/sire-tra/tra-run.m
 
 // ATH-HOTELS-SIRE-TRA-001 · recorrido del emisor (scripts/tra-emit.mjs -> runEmitter). Datos 100 % sinteticos.
 export const EST = { id: 1, x_active: true, x_name: 'Nombre interno (TEST)', x_tra_establishment_name: 'Nombre RNT (TEST)', x_rnt_number: '999999', x_tra_mode: 'api', x_tra_config_verified: true, x_tra_accommodation_type: 'Casa', x_tra_cost_basis: 'total_estancia' };
-export const CAT = { verified: true, docTypes: TRA_CATALOG_UNVERIFIED.docTypes, mainDocTypes: TRA_CATALOG_UNVERIFIED.mainDocTypes, reasons: { Vacaciones: 'Vacaciones' } };
+export const CAT = { docTypes: TRA_CATALOG_UNVERIFIED.docTypes, mainDocTypes: TRA_CATALOG_UNVERIFIED.mainDocTypes, reasons: { Vacaciones: 'Vacaciones' } };
 const OPEN = { TRA_ENABLED: 'yes-real', TRA_TOKEN: 'token-sintetico' };
-const NOW = () => Date.UTC(2026, 10, 18, 22, 0, 0); // 18/11/2026 17:00 en Bogota
-export const paid = (order, extra = {}) => ({ id: 100 + order, x_sale_order_id: [order, `P${order}`], x_state: 'confirmado', x_amount: 65000, x_currency_id: [8, 'COP'], x_cutoff_date: '2026-11-18', x_evidence_kind: 'comprobante_pago', x_evidence_ref: `REF-${order}`, x_evidence_name: 'comprobante.pdf', x_confirmed_by: [2, 'u'], x_confirmed_at: '2026-11-18 15:00:00', write_date: '2026-11-18 15:00:00', ...extra });
+const NOW = () => Date.UTC(2026, 10, 19, 22, 0, 0); // 19/11/2026 17:00 en Bogota, despues del check-out
+export const paid = (order, extra = {}) => ({ id: 100 + order, x_sale_order_id: [order, `P${order}`], x_state: 'confirmado', x_amount: 65000, x_currency_id: [8, 'COP'], x_cutoff_date: '2026-11-19', x_evidence_kind: 'comprobante_pago', x_evidence_ref: `REF-${order}`, x_evidence_name: 'comprobante.pdf', x_excludes_taxes: true, x_covers_all_guests: true, x_confirmed_by: [2, 'u'], x_confirmed_at: '2026-11-19 18:00:00', write_date: '2026-11-19 18:00:00', ...extra });
 
-export const g = (id, order, main, extra = {}) => ({ id, x_sale_order_id: [order, `P${order}`], x_establishment_id: [1, 'E'], x_is_main: main, x_doc_type_id: [5, 'CC'], x_identity_number: `9${order}${id}`, x_given_names: `Nombre${order}`, x_surname_1: 'Apellido', x_surname_2: false, x_residence_city_id: [1, 'CIUDAD'], x_residence_text: false, x_origin_city_id: [2, 'ORIGEN'], x_origin_text: false, x_travel_reason: 'Vacaciones', x_tra_room: String(200 + order), x_arrived_at: '2026-11-18 20:00:00', x_tra_state: 'pendiente', x_tra_external_id: false, x_data_state: 'validado', ...extra });
+export const g = (id, order, main, extra = {}) => ({ id, x_sale_order_id: [order, `P${order}`], x_establishment_id: [1, 'E'], x_is_main: main, x_doc_type_id: [5, 'CC'], x_identity_number: `9${order}${id}`, x_given_names: `Nombre${order}`, x_surname_1: 'Apellido', x_surname_2: false, x_residence_city_id: [1, 'CIUDAD'], x_residence_text: false, x_origin_city_id: [2, 'ORIGEN'], x_origin_text: false, x_travel_reason: 'Vacaciones', x_tra_room: String(200 + order), x_arrived_at: '2026-11-18 20:00:00', x_departed_at: '2026-11-19 15:00:00', x_tra_state: 'pendiente', x_tra_external_id: false, x_data_state: 'validado', ...extra });
 
 /** Odoo falso que respeta los dominios y cuenta lecturas y escrituras. */
 export function fakeOdoo({ lines = [], orders = {}, amounts = [], est = EST } = {}) {
@@ -57,9 +57,9 @@ export function fakeOdoo({ lines = [], orders = {}, amounts = [], est = EST } = 
   };
 }
 
-export function harness(data) {
+export function harness(data, script = []) {
   const odoo = fakeOdoo(data);
-  const sim = createTraSimulator();
+  const sim = createTraSimulator(script);
   const payloads = [];
   let made = 0;
   const makeTra = () => { made += 1; return { post: (kind, p) => { payloads.push({ kind, p }); return sim.post(kind, p); } }; };
@@ -114,15 +114,15 @@ test('manual con pedido sin TRA pendiente: error en comprobacion y envio, con el
 });
 
 test('comprobacion completa sin envio: todos los campos y bloqueos, sin valores en la salida', async () => {
-  const h = harness({ lines: [g(1, 1, true, { x_travel_reason: 'Salud' }), g(2, 1, false, { x_data_state: 'recibido', x_arrived_at: false, x_tra_state: false })], amounts: [paid(1, { x_state: false })], est: { ...EST, x_tra_establishment_name: '' } });
-  const r = await run(h, false, { TRA_ONLY_ORDER: '1' }, { ...CAT, verified: false, reasonsProposed: { Salud: 'Salud y atencion medica' } });
+  const h = harness({ lines: [g(1, 1, true, { x_travel_reason: 'Salud' }), g(2, 1, false, { x_data_state: 'recibido', x_arrived_at: false, x_departed_at: false, x_tra_state: false })], amounts: [paid(1, { x_state: false })], est: { ...EST, x_tra_establishment_name: '' } });
+  const r = await run(h, false, { TRA_ONLY_ORDER: '1' }, { ...CAT, reasonsProposed: { Salud: 'Salud y atencion medica' } });
   assert.equal(r.exitCode, 1);
   assert.equal(r.out.code, 'DATOS_NO_LISTOS');
   const c = r.out.check;
-  assert.deepEqual(c.blocks.sort(), ['IMPORTE_SIN_CONFIRMAR', 'NOMBRE_TRA_SIN_REGISTRAR']);
+  assert.deepEqual(c.blocks.sort(), ['ESTANCIA_SIN_SALIDA_REAL', 'IMPORTE_SIN_CONFIRMAR', 'NOMBRE_TRA_SIN_REGISTRAR']);
   assert.equal(c.cost.code, 'IMPORTE_SIN_CONFIRMAR');
   const [m, comp] = c.lines;
-  assert.deepEqual(Object.keys(m.fields), ['tipo_identificacion', 'numero_identificacion', 'nombres', 'apellidos', 'cuidad_residencia', 'cuidad_procedencia', 'numero_habitacion', 'check_in', 'check_out', 'motivo', 'numero_acompanantes', 'tipo_acomodacion', 'costo', 'nombre_establecimiento', 'rnt_establecimiento']);
+  assert.deepEqual(Object.keys(m.fields), ['tipo_identificacion', 'numero_identificacion', 'nombres', 'apellidos', 'cuidad_residencia', 'cuidad_procedencia', 'numero_habitacion', 'motivo', 'numero_acompanantes', 'check_in', 'check_out', 'tipo_acomodacion', 'costo', 'nombre_establecimiento', 'rnt_establecimiento']);
   assert.equal(m.fields.motivo, 'falta');
   assert.ok(m.codes.includes('MOTIVO_EQUIVALENCIA_NO_VERIFICADA'), 'la propuesta no se usa para enviar');
   assert.equal(m.fields.costo, 'IMPORTE_SIN_CONFIRMAR');
@@ -130,7 +130,9 @@ test('comprobacion completa sin envio: todos los campos y bloqueos, sin valores 
   assert.ok(m.codes.includes('CAMPO_nombre_establecimiento'));
   assert.equal(m.fields.tipo_acomodacion, 'ok');
   assert.ok(comp.codes.includes('FICHA_NO_VALIDADA') && comp.codes.includes('SIN_LLEGADA_REAL') && comp.codes.includes('CAMPO_check_in'));
-  assert.ok(c.gates.includes('CATALOGO_NO_VERIFICADO'));
+  assert.ok(comp.codes.includes('SIN_SALIDA_REAL') && comp.codes.includes('CAMPO_check_out'));
+  assert.equal(m.fields.check_out, 'ok', 'el principal ya salio; la estancia no, porque falta el acompanante');
+  assert.ok(!c.gates.includes('CATALOGO_NO_VERIFICADO'), 'sin puerta global de catalogo');
   assert.equal(c.ready_data, false);
   const s = JSON.stringify(r.out);
   for (const v of ['Nombre1', 'Apellido', '911', 'CIUDAD', 'Salud', '65000', 'REF-1', 'Nombre RNT', 'Nombre interno']) assert.ok(!s.includes(v), `la salida publica no lleva ${v}`);
@@ -155,6 +157,7 @@ test('comprobacion con datos completos: lista para enviar salvo puertas; nunca u
 test('envio real con importe confirmado distinto de la tarifa: se envia lo pagado; solo el pedido elegido', async () => {
   const data = READY();
   data.amounts = [paid(1, { x_amount: 58500 }), paid(2)];
+  data.orders = { 1: { x_checkout: '2026-11-21' } }; // fecha prevista de la reserva distinta de la salida real
   const h = harness(data);
   const r = await run(h, true, { ...OPEN, TRA_ONLY_ORDER: '1', GITHUB_RUN_ID: '9' });
   assert.equal(r.exitCode, 0);
@@ -165,6 +168,9 @@ test('envio real con importe confirmado distinto de la tarifa: se envia lo pagad
   assert.equal(one.costo, '58500', 'importe confirmado, no la tarifa 65000');
   assert.equal(one.nombre_establecimiento, 'Nombre RNT (TEST)');
   assert.equal(one.motivo, 'Vacaciones');
+  assert.equal(one.check_out, '2026-11-19', 'salida real, no la fecha prevista');
+  assert.deepEqual(Object.keys(one), ['tipo_identificacion', 'numero_identificacion', 'nombres', 'apellidos', 'cuidad_residencia', 'cuidad_procedencia', 'numero_habitacion', 'motivo', 'numero_acompanantes', 'check_in', 'check_out', 'tipo_acomodacion', 'costo', 'nombre_establecimiento', 'rnt_establecimiento']);
+  assert.deepEqual(Object.keys(h.payloads.find((x) => x.kind === 'two').p), ['tipo_identificacion', 'numero_identificacion', 'nombres', 'apellidos', 'cuidad_residencia', 'cuidad_procedencia', 'numero_habitacion', 'check_in', 'check_out', 'padre']);
   assert.deepEqual(h.payloads.map((x) => x.kind), ['one', 'two']);
   assert.deepEqual(h.odoo.calls.claims.flat().sort(), [1, 2]);
   assert.equal(h.odoo.lines[2].x_tra_state, 'pendiente');
@@ -179,6 +185,9 @@ test('envio real sin importe confirmado o con pago sin respaldo: bloqueado sin l
     [[paid(1, { x_state: 'borrador' })], 'IMPORTE_SIN_CONFIRMAR'],
     [[paid(1, { x_evidence_ref: '', x_evidence_name: '' })], 'IMPORTE_SIN_EVIDENCIA'],
     [[paid(1, { x_state: 'anulado' })], 'IMPORTE_AUSENTE'],
+    [[paid(1, { x_excludes_taxes: false })], 'IMPORTE_SIN_CONSTANCIA_SIN_IMPUESTOS'],
+    [[paid(1, { x_covers_all_guests: false })], 'IMPORTE_SIN_CONSTANCIA_ALCANCE'],
+    [[paid(1, { x_cutoff_date: '2026-11-18' })], 'IMPORTE_CORTE_ANTES_DE_SALIDA'], // anticipo cobrado antes del check-out
   ];
   for (const [amounts, code] of variants) {
     const h = harness({ lines: [g(1, 1, true)], amounts });
@@ -192,8 +201,8 @@ test('envio real sin importe confirmado o con pago sin respaldo: bloqueado sin l
 });
 
 test('envio real con puertas cerradas y datos completos: error visible, cero llamadas y cero escrituras', async () => {
-  for (const [env, catalog] of [[{ TRA_ENABLED: 'no', TRA_TOKEN: 't' }, CAT], [{ TRA_ENABLED: 'yes-real' }, CAT], [OPEN, { ...CAT, verified: false }]]) {
-    const h = harness(READY());
+  for (const [env, catalog, est] of [[{ TRA_ENABLED: 'no', TRA_TOKEN: 't' }, CAT], [{ TRA_ENABLED: 'yes-real' }, CAT], [OPEN, CAT, { ...EST, x_tra_config_verified: false }]]) {
+    const h = harness({ ...READY(), ...(est ? { est } : {}) });
     const r = await run(h, true, { ...env, TRA_ONLY_ORDER: '1' }, catalog);
     assert.equal(r.exitCode, 1);
     assert.equal(r.out.code, 'PUERTAS_CERRADAS');
@@ -223,6 +232,65 @@ test('programado: autorizacion independiente (TRA_AUTO_SEND), sin pedido, y no e
   const h4 = harness(READY());
   const r4 = await run(h4, true, { ...OPEN, TRA_TRIGGER: 'workflow_dispatch', TRA_AUTO_SEND: 'yes' });
   assert.equal(r4.out.code, 'PEDIDO_VACIO', 'TRA_AUTO_SEND no amplia el alcance manual');
+});
+
+test('antes del check-out: cero envios en manual y programado (falte la salida del principal o de un acompanante)', async () => {
+  const variants = [
+    [g(1, 1, true, { x_departed_at: false }), g(2, 1, false, { x_departed_at: false })],
+    [g(1, 1, true), g(2, 1, false, { x_departed_at: false })],
+    [g(1, 1, true, { x_departed_at: false }), g(2, 1, false)],
+  ];
+  for (const lines of variants) {
+    for (const send of [false, true]) {
+      const h = harness({ lines: lines.map((l) => ({ ...l })), amounts: [paid(1)] });
+      const r = await run(h, send, { ...OPEN, TRA_ONLY_ORDER: '1' });
+      assert.equal(r.exitCode, 1);
+      assert.equal(r.out.code, 'DATOS_NO_LISTOS');
+      assert.ok(r.out.check.blocks.includes('ESTANCIA_SIN_SALIDA_REAL'));
+      assert.ok(r.out.check.blocks.includes('IMPORTE_ESPERA_SALIDA'), 'sin salida el importe no es definitivo');
+      assert.ok(r.out.check.lines.some((l) => l.codes.includes('SIN_SALIDA_REAL')));
+      assert.equal(h.made(), 0);
+      assert.equal(writes(h.odoo), 0);
+    }
+    const hs = harness({ lines: lines.map((l) => ({ ...l })), amounts: [paid(1)] });
+    const rs = await run(hs, true, { ...OPEN, TRA_TRIGGER: 'schedule', TRA_AUTO_SEND: 'yes' });
+    assert.ok(rs.out.results.every((x) => x.stop === 'DATOS_NO_LISTOS'));
+    assert.equal(hs.made(), 0);
+    assert.equal(writes(hs.odoo), 0);
+  }
+  // el listado programado solo incluye fichas con salida real
+  const hl = harness({ lines: [g(1, 1, true, { x_departed_at: false }), g(3, 2, true)], amounts: [paid(1), paid(2)] });
+  const rl = await run(hl, false, { TRA_TRIGGER: 'schedule' });
+  assert.deepEqual(rl.out.orders_with_pending_tra, [2]);
+  assert.ok(hl.odoo.calls.reads.find((x) => x.model === 'x_guests_line').domain.some(([f, op, v]) => f === 'x_departed_at' && op === '!=' && v === false));
+});
+
+test('programado: se detiene en la primera estancia con una peticion fallida; las demas no se tocan', async () => {
+  for (const step of ['400', 'timeout', '500']) {
+    const h = harness(READY(), [step]);
+    const r = await run(h, true, { ...OPEN, TRA_TRIGGER: 'schedule', TRA_AUTO_SEND: 'yes' });
+    assert.equal(r.out.results.length, 1, step);
+    assert.deepEqual(r.out.halted, { orderId: 1, code: 'DETENIDO_TRAS_FALLO' });
+    assert.equal(h.payloads.length, 1, 'una sola peticion');
+    assert.deepEqual(h.odoo.calls.claims.flat(), [1]);
+    assert.equal(h.odoo.lines[2].x_tra_state, 'pendiente');
+  }
+  const ok = harness(READY());
+  const r = await run(ok, true, { ...OPEN, TRA_TRIGGER: 'schedule', TRA_AUTO_SEND: 'yes' });
+  assert.equal(r.out.halted, undefined);
+  assert.equal(ok.payloads.length, 4);
+});
+
+test('comprobacion: pasaporte alfanumerico del principal = excepcion especifica; el mismo caso con C.C queda listo', async () => {
+  const h = harness({ lines: [g(1, 1, true, { x_doc_type_id: [2, 'PA'], x_identity_number: 'AB123456' })], amounts: [paid(1)] });
+  h.odoo.searchRead = ((orig) => async (model, domain, fields) => (model === 'l10n_latam.identification.type' ? [{ id: 2, l10n_co_document_code: 'passport' }] : orig(model, domain, fields)))(h.odoo.searchRead);
+  const r = await run(h, false, { TRA_ONLY_ORDER: '1' });
+  assert.equal(r.out.code, 'DATOS_NO_LISTOS');
+  assert.equal(r.out.check.lines[0].fields.numero_identificacion, 'excepcion_pendiente');
+  assert.deepEqual(r.out.check.lines[0].codes, ['EXCEPCION_PENDIENTE_numero_identificacion']);
+  assert.ok(!JSON.stringify(r.out).includes('AB123456'));
+  const ok = await run(harness({ lines: [g(1, 1, true)], amounts: [paid(1)] }), false, { TRA_ONLY_ORDER: '1' });
+  assert.equal(ok.out.check.ready_data, true);
 });
 
 test('script real (scripts/tra-emit.mjs): rechazos sin ninguna peticion de red', () => {

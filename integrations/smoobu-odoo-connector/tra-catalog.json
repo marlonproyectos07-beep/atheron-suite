@@ -1,6 +1,7 @@
 {
- "verified": false,
- "_nota": "Contrastado 2026-11-08 con fuentes oficiales (ver TRA-CATALOGOS-FUENTES.md). Los rotulos de documento coinciden con el manual oficial del formulario web (Grupo 2) y el ejemplo 'C.C' del manual PMS (Res. 409 de 2022, version 02-02-2023), pero ese manual declara todos los campos como 'texto' y no publica lista de valores de la API. Motivos y tipo de acomodacion: sin lista oficial publicada. Cambiar verified a true solo con confirmacion escrita del MinCIT.",
+ "catalogoCompleto": false,
+ "_nota": "Ya no hay una puerta global de catalogo: cada valor se envia solo si tiene respaldo oficial propio. catalogoCompleto=false significa que el MinCIT no ha entregado la lista completa de ninguna categoria; es informativo y no bloquea. Documento: rotulos del manual Grupo 2 (4.1, 5.1), que la respuesta 2-2026-039958 recomienda seguir, y el ejemplo 'C.C' del manual Grupo 1. Motivo: solo las equivalencias de 'reasons', cada una con su fuente en '_fuentesReasons'.",
+ "_respuestaOficial": "MinCIT, respuesta 2-2026-039958 (23/11/2026, radicado 1-2026-041876), parafraseada: tipo_identificacion y tipo_acomodacion son texto y se RECOMIENDA seguir los tipos del formulario web (Grupo 2); motivo: la API rechaza valores fuera de su lista y deben ser exactos, pero la respuesta NO adjunta la lista; ciudades y numero_habitacion: texto libre, ciudades extranjeras por su nombre en espanol. Nada de esto verifica el catalogo: verified sigue en false y reasons vacio hasta tener la lista exacta de motivos por escrito. Los ejemplos del manual ('C.C', 'Pasaporte', 'Trabajo', 'Casa') son ejemplos, no listas completas.",
  "docTypes": {
   "national_citizen_id": "C.C",
   "passport": "Pasaporte",
@@ -14,8 +15,13 @@
   "id_card",
   "foreign_resident_card"
  ],
- "reasons": {},
- "_notaMotivo": "'reasons' es la UNICA equivalencia que se envia y sigue vacia: no hay lista oficial publicada ni respuesta escrita del MinCIT. 'reasonsProposed' es solo documentacion (el emisor nunca la envia): clave = texto exacto que declara el huesped en el formulario (x_travel_reason, que no se modifica); valor = rotulo observado en el formulario web TRA. Solo se proponen los rotulos observados; Salud, Educacion, Religion y Otro quedan sin propuesta.",
+ "reasons": {
+  "Trabajo": "Trabajo"
+ },
+ "_fuentesReasons": {
+  "Trabajo": "OFICIAL: manual Grupo 1 (PMS, Res. 409 de 2022, version 02-02-2023), cuerpo de ejemplo de /one/ con \"motivo\":\"Trabajo\". Respalda solo este valor exacto como valor del campo; no es la lista completa (la respuesta 2-2026-039958, punto 5, dice que la API exige valores exactos de su lista y no la adjunta). La clave es el texto declarado por el huesped: solo aplica si declara exactamente 'Trabajo'. El formulario de Atheron hoy no ofrece esa opcion; asignar 'Trabajo' a otra opcion (p. ej. 'Negocios o motivos profesionales') seria una inferencia sin respaldo."
+ },
+ "_notaMotivo": "'reasons' son las UNICAS equivalencias que se envian, cada una con fuente oficial en '_fuentesReasons'. Clave = texto exacto que declara el huesped (x_travel_reason, que no se modifica); valor = texto que se envia. Las opciones del formulario de Atheron sin equivalencia respaldada quedan pendientes (MOTIVO_EQUIVALENCIA_NO_VERIFICADA o MOTIVO_SIN_EQUIVALENCIA) solo para la estancia que las declare. 'reasonsProposed' es documentacion (fuente no oficial) y nunca se envia.",
  "reasonsProposed": {
   "Vacaciones, recreación u ocio": "Vacaciones, recreo y ocio",
   "Visita a familiares o amigos": "Visitas a familiares y a amigos",
@@ -34,7 +40,7 @@
   "Registro Civil": "oficial: manual Grupo 2, 5.1, solo acompanantes; el manual de no conectados (Excel) lo abrevia R.C",
   "mainDocTypes": "oficial: manual Grupo 2, 4.1 (principal: Pasaporte, T.I, C.C, C.E)",
   "PEP_PPT_DNI": "sin respaldo oficial: P.E.P y D.N.I solo aparecen en una guia no oficial; PPT no aparece en ninguna fuente. No se mapean: el emisor los deja en error previo.",
-  "reasons": "sin lista oficial: el manual Grupo 2, 4.7 remite a una lista desplegable sin enumerarla; ejemplo de la API: 'Trabajo'.",
+  "reasons": "Lista no publicada: manual Grupo 2, 4.7, remite a una lista desplegable sin enumerarla. Respaldo por valor en '_fuentesReasons' (hoy solo 'Trabajo', ejemplo oficial del manual Grupo 1).",
   "tipo_acomodacion": "sin lista oficial: ejemplo de la API 'Casa'; manual Grupo 2, 4.11 cita apartamento, casa o finca para vivienda turistica completa."
  }
 }
