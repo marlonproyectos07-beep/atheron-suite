@@ -174,8 +174,9 @@ Produccion seguia en la base el 25/11 (sha256 de la accion 2040 y de las vistas 
 **Motivo: bloqueo por estancia, no global.**
 - `Trabajo` tiene respaldo oficial (ejemplo del manual Grupo 1) y se envia si el huesped declara exactamente
   `Trabajo`.
-- Las siete opciones del formulario de Atheron no tienen equivalencia respaldada. Asignar `Trabajo` a "Negocios o
-  motivos profesionales" seria una inferencia. Quedan pendientes solo para la estancia que las declare.
+- Desde el 26/11/2026 el formulario ofrece `Trabajo` (`tra-motivo-trabajo-produccion-2026-11-26.md`). Las otras siete
+  opciones no tienen equivalencia respaldada: asignar `Trabajo` a "Negocios o motivos profesionales" seria una
+  inferencia (RIET 2008). Quedan pendientes solo para la estancia que las declare.
 - Para que un caso real salga hace falta que su motivo tenga respaldo.
 
 No bloquean el primer caso:
