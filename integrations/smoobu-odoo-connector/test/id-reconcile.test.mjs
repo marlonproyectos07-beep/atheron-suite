@@ -99,3 +99,44 @@ test('seguridad: sin propuestas ni escrituras, y el informe no lleva nombres, te
   assert.ok(r.perReservation.every((x) => x.writesEnabled === false));
   for (const banned of ['PRIVADO', 'privado@', '0000000000', 'Nequi', 'pago ', 'Booking.com']) assert.ok(!out.includes(banned), `no debe aparecer: ${banned}`);
 });
+
+// ATH-SYNC-RES-2026-11-26: reserva de Booking con VARIAS habitaciones (Smoobu la parte en una reserva por habitacion con el
+// MISMO ID de Booking). Caso real del 22/11/2026 (ids sinteticos): el pedido creado para una habitacion casaba tambien con
+// la otra por el ID de Booking -> PEDIDO_COMPARTIDO_POR_VARIAS_RESERVAS -> DUPLICADO_DETECTADO -> sincronizacion apagada.
+test('Booking con varias habitaciones: el ID de Booking compartido no casa pedidos; solo el ID de Smoobu; sin falso duplicado', async () => {
+  const { duplicatesIn } = await import('../src/sync-auto.mjs');
+  const APT = { 201: 3557506, 202: 3557511 };
+  const bk = (id, unit) => ({ id, type: 'reservation', arrival: '2026-12-24', departure: '2026-12-25', apartment: { id: APT[unit], name: 'UNIDAD_PRIVADA' }, channel: { id: 7192171, name: 'Booking.com' }, 'guest-name': 'NOMBRE_PRIVADO_HUESPED', 'reference-id': '5000000001' });
+  const bookings = [bk(170000202, '202'), bk(170000201, '201')];
+  const ord = (id, ref, units) => ({ id, name: `COT/T/${id}`, state: 'draft', x_pms_reference: ref, x_booking_source: 'booking_com', x_checkin: '2026-12-24', x_checkout: '2026-12-25', units });
+
+  // 1) estado real: un solo pedido, el de la 202, con su ID de Smoobu y el ID de Booking compartido
+  const r1 = reconcileByIds({ bookings, window, orders: [ord(90, 'Smoobu 170000202 / Booking 5000000001', ['202'])], slots: [] });
+  const v1 = byId(r1);
+  assert.notEqual(v1[170000202].verdict, 'AMBIGUOUS', 'la 202 casa con su pedido por el ID de Smoobu');
+  assert.equal(v1[170000202].matchedBy, 'SMOOBU_ID+OTA_ID');
+  assert.equal(v1[170000201].verdict, 'MISSING_IN_ODOO', 'la 201 no tiene pedido propio');
+  assert.deepEqual(v1[170000201].odooOrders, [], 'el pedido de la 202 no se le asigna');
+  assert.deepEqual(duplicatesIn(r1), [], 'no es un duplicado: la sincronizacion no se apaga');
+
+  // 2) con un pedido por habitacion, cada reserva casa con el suyo
+  const r2 = reconcileByIds({ bookings, window, orders: [ord(90, 'Smoobu 170000202 / Booking 5000000001', ['202']), ord(91, 'Smoobu 170000201 / Booking 5000000001', ['201'])], slots: [] });
+  const v2 = byId(r2);
+  assert.deepEqual([v2[170000202].odooOrders.map((o) => o.id), v2[170000201].odooOrders.map((o) => o.id)], [[90], [91]]);
+  assert.ok(![v2[170000202], v2[170000201]].some((x) => x.verdict === 'AMBIGUOUS'));
+  assert.deepEqual(duplicatesIn(r2), []);
+
+  // 3) un pedido que solo lleva el ID de Booking compartido (sin ID de Smoobu): revision humana, nunca se crea otro
+  const r3 = reconcileByIds({ bookings, window, orders: [ord(92, 'Booking 5000000001', ['202'])], slots: [] });
+  for (const x of r3.perReservation) assert.deepEqual([x.verdict, x.reason], ['AMBIGUOUS', 'ID_OTA_COMPARTIDO_SIN_ID_SMOOBU']);
+  assert.deepEqual(duplicatesIn(r3), []);
+
+  // 4) un ID de Booking que NO esta compartido sigue casando por OTA como antes
+  const r4 = reconcileByIds({ bookings: [bookings[0]], window, orders: [ord(93, 'Booking 5000000001', ['202'])], slots: [] });
+  assert.equal(r4.perReservation[0].matchedBy, 'OTA_ID');
+
+  // 5) dos pedidos con el MISMO ID de Smoobu siguen siendo duplicado real (la proteccion no se debilita)
+  const r5 = reconcileByIds({ bookings, window, orders: [ord(90, 'Smoobu 170000202 / Booking 5000000001', ['202']), ord(94, 'Smoobu 170000202', ['202'])], slots: [] });
+  assert.deepEqual([byId(r5)[170000202].verdict, byId(r5)[170000202].reason], ['AMBIGUOUS', 'VARIOS_PEDIDOS_CON_EL_MISMO_ID']);
+  assert.equal(duplicatesIn(r5).length, 1);
+});

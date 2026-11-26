@@ -166,7 +166,16 @@ export function reconcileByIds({ bookings, window, orders, slots, dayuseSlots = 
   const overlapsOf = (id) => overlapPairs.filter((p) => p.includes(id)).map((p) => (p[0] === id ? p[1] : p[0]));
 
   // que pedidos de Odoo apuntan a cada reserva (solo por ID etiquetado)
-  const matchesFor = (c) => parsedOrders.filter((o) => o.refs.smoobu.includes(String(c.id)) || (c.otaRef && (o.refs.booking.includes(c.otaRef) || o.refs.airbnb.includes(c.otaRef))));
+  // ATH-SYNC-RES-2026-11-26: una reserva de Booking/Airbnb con VARIAS habitaciones llega de Smoobu como varias reservas
+  // (una por habitacion) con el MISMO ID OTA. Ese ID no identifica una sola reserva: entonces solo se concilia por el ID
+  // de Smoobu. Un pedido que solo lleva ese ID OTA compartido (sin ID de Smoobu) no se puede asignar a una habitacion:
+  // queda en revision humana (ID_OTA_COMPARTIDO_SIN_ID_SMOOBU), que no es un duplicado ni detiene la sincronizacion.
+  const otaCount = new Map();
+  for (const c of inScope) if (c.otaRef) otaCount.set(c.otaRef, (otaCount.get(c.otaRef) ?? 0) + 1);
+  const sharedOta = (ref) => !!ref && (otaCount.get(ref) ?? 0) > 1;
+  const byOta = (o, ref) => o.refs.booking.includes(ref) || o.refs.airbnb.includes(ref);
+  const matchesFor = (c) => parsedOrders.filter((o) => o.refs.smoobu.includes(String(c.id)) || (c.otaRef && !sharedOta(c.otaRef) && byOta(o, c.otaRef)));
+  const sharedOtaWithoutSmoobu = (c) => (sharedOta(c.otaRef) ? parsedOrders.filter((o) => !o.refs.smoobu.length && byOta(o, c.otaRef)) : []);
   const unlabeledFor = (c) => parsedOrders.filter((o) => o.refs.unlabeled.includes(String(c.id)) || (c.otaRef && o.refs.unlabeled.includes(c.otaRef)));
   const orderUsage = new Map();
   for (const c of inScope) for (const o of matchesFor(c)) orderUsage.set(o.id, [...(orderUsage.get(o.id) ?? []), c.id]);
@@ -191,6 +200,7 @@ export function reconcileByIds({ bookings, window, orders, slots, dayuseSlots = 
       const active = matched.filter((o) => !isCancelledOrder(o));
       return active.length ? verdict(VERDICTS.CONFLICT, 'CANCELADA_EN_SMOOBU_VIGENTE_EN_ODOO') : verdict(VERDICTS.CANCELLED, matched.length ? 'CANCELADA_EN_AMBOS' : 'CANCELADA_SIN_PEDIDO_EN_ODOO');
     }
+    if (sharedOtaWithoutSmoobu(c).length) return verdict(VERDICTS.AMBIGUOUS, 'ID_OTA_COMPARTIDO_SIN_ID_SMOOBU');
     // ATH-CEO-PMS-101: un pedido CANCELADO sustituido por otro vigente con el mismo ID (p. ej. intercambio de habitacion)
     // no es un duplicado; si queda exactamente un pedido vigente, se concilia contra ese.
     const live = matched.filter((o) => !isCancelledOrder(o));
