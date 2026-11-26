@@ -1,5 +1,5 @@
 {
- "fingerprint": "b2ae7ad126356ce1",
+ "fingerprint": "7008c5bc870584f3",
  "NS": "__ath_sire_tra__",
  "MODELS": [
   {
@@ -1648,6 +1648,7 @@
     "Salud",
     "Educación",
     "Religión",
+    "Trabajo",
     "Otro"
    ]
   },
