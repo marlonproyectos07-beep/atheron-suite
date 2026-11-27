@@ -3,6 +3,7 @@ import { AUTOMATIONS, NS } from './manifest.mjs';
 import { applyManifest, disableManifest, snapshotConfig, verifyDeployment } from './applier.mjs';
 import { createBrowserOdoo } from './browser-entry.mjs';
 import { applyDelta, planDelta, revertDelta, verifyDelta } from './delta.mjs';
+import { applyMotivo, planMotivo, revertMotivo, verifyMotivo } from './delta-motivo-2026-11-26.mjs';
 
 /**
  * Procedimiento ESPECIFICO de produccion (atheron1.odoo.com), en la sesion de administrador del navegador.
@@ -20,7 +21,7 @@ import { applyDelta, planDelta, revertDelta, verifyDelta } from './delta.mjs';
 export function bootProduction(win, approval) {
   const db = assertProductionBrowserTarget(win.location.hostname, approval);
   const odoo = createBrowserOdoo(win.fetch.bind(win));
-  const state = { snapshot: null, plan: null, delta: null };
+  const state = { snapshot: null, plan: null, delta: null, motivo: null };
   const ownAutomation = async (xmlid) => {
     if (!AUTOMATIONS.some((a) => a.xmlid === xmlid)) throw Object.assign(new Error('NOT_OUR_AUTOMATION'), { code: 'NOT_OUR_AUTOMATION' });
     const r = await odoo.searchRead('ir.model.data', [['module', '=', NS], ['name', '=', xmlid], ['model', '=', 'base.automation']], ['res_id']);
@@ -59,6 +60,16 @@ export function bootProduction(win, approval) {
       return applyDelta(odoo, state.delta, { log });
     },
     verifyDelta: () => verifyDelta(odoo),
+    /** Formulario: opcion 'Trabajo' en "Motivo principal del viaje" (plan de solo lectura con respaldo de las opciones). */
+    async planMotivo() { state.motivo = await planMotivo(odoo); return state.motivo; },
+    motivoBackup() { return state.motivo ? JSON.stringify(state.motivo.backup) : null; },
+    async applyMotivo() {
+      if (!state.snapshot) throw Object.assign(new Error('SNAPSHOT_REQUIRED'), { code: 'SNAPSHOT_REQUIRED' });
+      if (!state.motivo || state.motivo.blocked || state.motivo.status !== 'pendiente') throw Object.assign(new Error('CLEAN_MOTIVO_PLAN_REQUIRED'), { code: 'CLEAN_MOTIVO_PLAN_REQUIRED' });
+      return applyMotivo(odoo, state.motivo);
+    },
+    verifyMotivo: () => verifyMotivo(odoo, state.motivo?.backup ?? null),
+    revertMotivo: (backup) => revertMotivo(odoo, typeof backup === 'string' ? JSON.parse(backup) : backup),
     revertDelta: (backup) => revertDelta(odoo, typeof backup === 'string' ? JSON.parse(backup) : backup),
     disable: (opts = {}) => disableManifest(odoo, opts),
     async setAutomation(xmlid, active) {

@@ -108,10 +108,10 @@ test('catalogo del repositorio: sin puerta global; solo equivalencias con fuente
     assert.ok(cat._fuentesMotivo?.[k], `fuente de la propuesta ${k}`);
     assert.ok(!(k in cat.reasons), `${k} no se envia`);
   }
-  // el formulario de Atheron no ofrece "Trabajo": ninguna opcion del formulario se envia hoy (pendientes por estancia)
+  // formulario (26/11/2026): ofrece "Trabajo", que se envia tal cual; el resto de opciones quedan pendientes por estancia
   const options = SURVEY_REASONS;
-  assert.ok(!options.includes('Trabajo'));
-  for (const o of options) assert.notEqual(reasonStatus({ x_travel_reason: o }, cat), 'OK', o);
+  assert.ok(options.includes('Trabajo'));
+  for (const o of options) assert.equal(reasonStatus({ x_travel_reason: o }, cat) === 'OK', o === 'Trabajo', o);
 });
 
 test('manifiesto: x_tra_amount con evidencia, moneda y corte; confirmar exige todo y no toca contabilidad', () => {

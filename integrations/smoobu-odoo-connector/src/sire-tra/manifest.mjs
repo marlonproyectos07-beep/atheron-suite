@@ -791,8 +791,12 @@ export const AUTOMATIONS = [
 // ---------------------------------------------------------------- encuesta (captura unica, por invitacion)
 export const MAX_COMPANIONS = 21; // grupo de hasta 22 personas
 const DOC_CHOICES = ['Cédula de ciudadanía (Colombia)', 'Tarjeta de identidad (Colombia)', 'Registro civil (Colombia)', 'Cédula de extranjería (Colombia)', 'Pasaporte', 'PEP', 'PPT'];
-// Lista PROPIA de captura; su equivalencia con el catalogo TRA esta pendiente (el emisor no envia sin catalogo verificado).
-const REASONS = ['Vacaciones, recreación u ocio', 'Visita a familiares o amigos', 'Negocios o motivos profesionales', 'Salud', 'Educación', 'Religión', 'Otro'];
+// Lista de captura. 'Trabajo' (26/11/2026) es el valor del ejemplo oficial del manual Grupo 1 y se envia tal cual; las
+// demas opciones no tienen equivalencia respaldada (tra-catalog.json). 'Negocios o motivos profesionales' NO se asigna a
+// 'Trabajo': en estadistica de turismo (RIET 2008) designa viajes por negocios o actividad profesional y excluye el empleo
+// en una entidad del lugar visitado; el MinCIT no publica que significa 'Trabajo'. Sin opcion por defecto.
+// Las opciones existentes conservan id, texto y orden relativo; 'Trabajo' se inserta antes de 'Otro'.
+export const REASONS = Object.freeze(['Vacaciones, recreación u ocio', 'Visita a familiares o amigos', 'Negocios o motivos profesionales', 'Salud', 'Educación', 'Religión', 'Trabajo', 'Otro']);
 
 function guestQuestions(prefix, label, trigger) {
   const t = trigger ? { triggerKey: 'p_companions', triggerMin: trigger } : {};
